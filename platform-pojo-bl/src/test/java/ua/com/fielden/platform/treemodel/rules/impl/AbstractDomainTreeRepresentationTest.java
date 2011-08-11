@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.DomainTreeManagerAndEnhancer1;
@@ -21,6 +20,8 @@ import ua.com.fielden.platform.domain.tree.EntityWithStringKeyType;
 import ua.com.fielden.platform.domain.tree.EntityWithoutKeyType;
 import ua.com.fielden.platform.domain.tree.EvenSlaverEntity;
 import ua.com.fielden.platform.domain.tree.MasterEntity;
+import ua.com.fielden.platform.domain.tree.MasterEntityForIncludedPropertiesLogic;
+import ua.com.fielden.platform.domain.tree.MasterEntityWithUnionForIncludedPropertiesLogic;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.treemodel.rules.Function;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty.CalculatedPropertyCategory;
@@ -33,6 +34,14 @@ import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeMan
  *
  */
 public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest {
+    @Override
+    protected Set<Class<?>> createRootTypes() {
+	final Set<Class<?>> rootTypes = super.createRootTypes();
+	rootTypes.add(MasterEntityForIncludedPropertiesLogic.class);
+	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
+	return rootTypes;
+    }
+
     /**
      * Creates testing representation.
      * @param rootTypes
@@ -261,16 +270,17 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     }
 
     ////////////////////// 1.6. Included properties with order //////////////////////
-    @Test @Ignore
-    public void test_that_included_properties_and_their_order_are_correct() {
-	// TODO 1 : continue testing
-	// TODO 2 : very slow performance
-	assertEquals("Not root type -- should return empty list of included properties.", Collections.emptyList(), dtm().getRepresentation().includedProperties(EntityWithoutKeyType.class));
-	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp"), dtm().getRepresentation().includedProperties(EntityWithStringKeyType.class));
-	assertEquals("Incorrect included properties.", Arrays.asList(""), dtm().getRepresentation().includedProperties(EntityWithNormalNature.class));
-	// assertEquals("Incorrect included properties.", Arrays.asList(""), dtm().getRepresentation().includedProperties(MasterEntity.class));
+    @Test
+    public void test_that_order_of_included_properties_is_correct_and_circular_references_manage_Dummy_property() {
+	assertEquals("Not root type -- should return empty list of included properties.", Collections.unmodifiableList(Collections.emptyList()), dtm().getRepresentation().includedProperties(EntityWithoutKeyType.class));
+	assertEquals("Incorrect included properties.", Collections.unmodifiableList(Arrays.asList("", "desc", "integerProp")), dtm().getRepresentation().includedProperties(EntityWithStringKeyType.class));
+	assertEquals("Incorrect included properties.", Collections.unmodifiableList(Arrays.asList("")), dtm().getRepresentation().includedProperties(EntityWithNormalNature.class));
+	assertEquals("Incorrect included properties.", Collections.unmodifiableList(Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp")), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+    }
 
-	// EvenSlaverEntity root type ("integerProp"+"doubleProp" composite key)
+    @Test
+    public void test_that_included_properties_for_union_entities_hierarchy_are_correct_and_manage_Common_and_Union_properties() {
+	assertEquals("Incorrect included properties.", Collections.unmodifiableList(Arrays.asList("", "desc", "unionEntityProp", "unionEntityProp.common-properties", "unionEntityProp.common-properties.desc", "unionEntityProp.common-properties.commonProp", "unionEntityProp.unionProp1", "unionEntityProp.unionProp1.nonCommonPropFrom1", "unionEntityProp.unionProp2", "unionEntityProp.unionProp2.nonCommonPropFrom2")), dtm().getRepresentation().includedProperties(MasterEntityWithUnionForIncludedPropertiesLogic.class));
     }
 
     ////////////////////////////////////////////////////////////////

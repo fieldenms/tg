@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -51,6 +52,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private final Set<Pair<Class<?>, String>> excludedProperties;
     private final ITickRepresentation firstTick;
     private final ITickRepresentation secondTick;
+    /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
     private final transient Map<Class<?>, List<String>> includedProperties;
 
     /**
@@ -85,22 +87,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    throw new IllegalStateException(e);
 	}
 
+	// this field unfortunately should be lazy loaded due to heavy-weight nature (deep, circular tree of properties)
 	includedProperties = createRootsMap();
-	// TODO below is the implementation for "included properties". It is very slow! All trees should be built here! (or not? Maybe lazy?)
-//	for (final Class<?> rootType : this.rootTypes) {
-//	    // initialise included properties using isExcluded contract and manually excluded properties
-//	    final List<String> includedProps = new ArrayList<String>();
-//	    if (!isExcludedImmutably(rootType, "")) { // the entity itself is included -- add it to "included properties" list
-//		includedProps.add("");
-//		if (!EntityUtils.isEntityType(rootType)) {
-//		    throw new IllegalArgumentException("Can not add children properties to non-entity type [" + rootType.getSimpleName() + "] in path [" + rootType.getSimpleName() + "=>" + "" + "].");
-//		}
-//		includedProps.addAll(addConcreteProperties(rootType, "", true, constructKeysAndProperties(rootType)));
-//		includedProperties.put(rootType, includedProps);
-//	    } else {
-//		includedProperties.put(rootType, includedProps);
-//	    }
-//	}
     }
 
     private List<String> addConcreteProperties(final Class<?> rootType, final String path, final boolean initialisation, final List<Field> fieldsAndKeys) {
@@ -108,7 +96,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	for (final Field field : fieldsAndKeys) {
 	    final String property = (StringUtils.isEmpty(path)) ? field.getName() : (path + "." + field.getName());
 
-	    final String COMMON_SUFFIX = ".common properties", DUMMY_SUFFIX = ".dummy property";
+	    final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
 
 	    final String propertyNameWithoutCommonSuffix = property.replaceAll(COMMON_SUFFIX, "");
 	    if (!isExcludedImmutably(rootType, propertyNameWithoutCommonSuffix)) {
@@ -135,9 +123,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 			newIncludedProps.addAll(addConcreteProperties(rootType, property, initialisation, commonAndUnion.getValue()));
 		    } else if (EntityUtils.isUnionEntityType(parentType)) { // property under "union entity"
 			// the property under "union entity" should have only "non-common" properties added
-			final Pair<List<Field>, List<Field>> parentCommonAndUnion = commonAndUnion((Class<? extends AbstractUnionEntity>) parentType);
 			final List<Field> propertiesWithoutCommon = constructKeysAndProperties(propertyType);
-			propertiesWithoutCommon.removeAll(parentCommonAndUnion.getKey());
+			final List<String> parentCommonNames = AbstractUnionEntity.commonProperties((Class<? extends AbstractUnionEntity>) parentType);
+			propertiesWithoutCommon.removeAll(constructKeysAndProperties(propertyType, parentCommonNames));
 			newIncludedProps.addAll(addConcreteProperties(rootType, property, initialisation, propertiesWithoutCommon));
 		    } else { // collectional or non-collectional entity property
 			newIncludedProps.addAll(addConcreteProperties(rootType, property, initialisation, constructKeysAndProperties(propertyType)));
@@ -295,9 +283,33 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	excludedProperties.add(key(root, property));
     }
 
+    /**
+     * Getter of mutable "included properties" cache for internal purposes.
+     *
+     * @param root
+     * @return
+     */
+    protected List<String> includedPropertiesMutable(final Class<?> root) {
+	if (includedProperties.get(root) == null) { // not yet loaded
+	    final Date st = new Date();
+	    // initialise included properties using isExcluded contract and manually excluded properties
+	    final List<String> includedProps = new ArrayList<String>();
+	    if (!isExcludedImmutably(root, "")) { // the entity itself is included -- add it to "included properties" list
+		includedProps.add("");
+		if (!EntityUtils.isEntityType(root)) {
+		    throw new IllegalArgumentException("Can not add children properties to non-entity type [" + root.getSimpleName() + "] in path [" + root.getSimpleName() + "=>" + "" + "].");
+		}
+		includedProps.addAll(addConcreteProperties(root, "", true, constructKeysAndProperties(root)));
+	    }
+	    includedProperties.put(root, includedProps);
+	    System.out.println("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + includedProps.size() + " included properties => [" + includedProps + "].");
+	}
+        return includedProperties.get(root);
+    }
+
     @Override
     public List<String> includedProperties(final Class<?> root) {
-        return includedProperties.get(root) == null ? Collections.unmodifiableList(new ArrayList<String>()) : Collections.unmodifiableList(includedProperties.get(root));
+        return Collections.unmodifiableList(includedPropertiesMutable(root));
     }
 
     /**
