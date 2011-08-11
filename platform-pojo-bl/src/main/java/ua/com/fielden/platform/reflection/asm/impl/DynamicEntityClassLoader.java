@@ -1,0 +1,198 @@
+package ua.com.fielden.platform.reflection.asm.impl;
+
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+import ua.com.fielden.platform.reflection.asm.api.NewProperty;
+import ua.com.fielden.platform.utils.Pair;
+
+import com.google.inject.asm.ClassReader;
+import com.google.inject.asm.ClassWriter;
+
+/**
+ * A class loader for dynamically constructed or modified entity types.
+ * <p>
+ * All created types should be loaded by the same instance as used for type modification.
+ *
+ * This class is NOT thread safe!!! Nor should it be!
+ *
+ * @author TG Team
+ */
+public class DynamicEntityClassLoader extends ClassLoader {
+
+    private final Map<String, Pair<Class<?>, byte[]>> cache = new HashMap<String, Pair<Class<?>, byte[]>>();
+    private final DynamicTypeNamingService namingService;
+
+    public DynamicEntityClassLoader(final ClassLoader parent) {
+	super(parent);
+	this.namingService = new DynamicTypeNamingService();
+    }
+
+    private byte[] currentType;
+    private String currentName;
+
+    /**
+     * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
+     *
+     * @param typeName
+     * @return
+     * @throws ClassNotFoundException
+     */
+    public DynamicEntityClassLoader startModification(final String typeName) throws ClassNotFoundException {
+	if (skipAdaptation(typeName)) {
+	    throw new IllegalArgumentException("Java system classes should not be enhanced.");
+	}
+	// try loading the specified type by either actually loading from disk or finding it in cache
+	if (cache.get(typeName) != null) {
+	    currentType = cache.get(typeName).getValue();
+	    currentName = typeName;
+	} else {
+	    final String resource = typeName.replace('.', '/') + ".class";
+	    final InputStream is = getResourceAsStream(resource);
+
+	    try {
+		final ClassReader cr = new ClassReader(is);
+		final ClassWriter cw = new ClassWriter(0);
+		final DoNothingAdapter cv = new DoNothingAdapter(cw);
+		cr.accept(cv, 0);
+		currentType = cw.toByteArray();
+		currentName = typeName;
+	    } catch (final Exception e) {
+		throw new ClassNotFoundException(typeName, e);
+	    }
+	}
+
+	return this;
+    }
+
+    /**
+     * Adds the specified properties to the type. The provided properties are checked for conflicts with the type being modified -- only non-conflicting ones are added.
+     * Also, duplicate properties are eliminated.
+     *
+     * TODO cover with unit tests
+     *
+     * @param properties
+     * @return
+     */
+    public DynamicEntityClassLoader addProperties(final NewProperty... properties) {
+	if (currentType == null || currentName == null) {
+	    throw new IllegalStateException("Current type or name are not specified.");
+	}
+
+	if (properties == null || properties.length == 0) {
+	    return this;
+	}
+
+	final Map<String, NewProperty> propertiesToAdd = new HashMap<String, NewProperty>();
+	for (final NewProperty prop : properties) {
+	    propertiesToAdd.put(prop.name, prop);
+	}
+
+	try {
+	    final ClassReader cr = new ClassReader(currentType);
+	    final ClassWriter cw = new ClassWriter(0);
+	    final AdvancedAddPropertyAdapter cv = new AdvancedAddPropertyAdapter(cw, namingService, propertiesToAdd);
+	    cr.accept(cv, 0);
+	    currentType = cw.toByteArray();
+	    currentName = cv.getEnhancedName().replace('/', '.');
+	} catch (final Exception e) {
+	    e.printStackTrace();
+	    throw new IllegalStateException(e);
+	}
+
+	return this;
+    }
+
+    /**
+     * Modifies type's properties with the specified information.
+     *
+     *  TODO cover with unit tests
+     *
+     * @param propertyReplacements
+     * @return
+     */
+    public DynamicEntityClassLoader modifyProperties(final NewProperty... propertyReplacements) {
+	if (currentType == null || currentName == null) {
+	    throw new IllegalStateException("Current type or name are not specified.");
+	}
+
+	if (propertyReplacements == null || propertyReplacements.length == 0) {
+	    return this;
+	}
+
+	final Map<String, NewProperty> propertiesToAdapt = new HashMap<String, NewProperty>();
+	for (final NewProperty prop : propertyReplacements) {
+	    propertiesToAdapt.put(prop.name, prop);
+	}
+
+	try {
+	    final ClassReader cr = new ClassReader(currentType);
+	    final ClassWriter cw = new ClassWriter(0);
+	    final AdvancedModifyPropertyAdapter cv = new AdvancedModifyPropertyAdapter(cw, namingService, propertiesToAdapt);
+	    cr.accept(cv, 0);
+	    currentType = cw.toByteArray();
+	    currentName = cv.getEnhancedName().replace('/', '.');
+	} catch (final Exception e) {
+	    throw new IllegalStateException(e);
+	}
+
+	return this;
+    }
+
+    public Class<?> endModification() {
+	final Class<?> klass = defineClass(currentName, currentType, 0, currentType.length);
+	cache.put(currentName, new Pair<Class<?>, byte[]>(klass, currentType));
+
+	currentType = null;
+	currentName = null;
+	return klass;
+    }
+
+    public Class<?> defineClass(final byte[] currentType) {
+	final Class<?> klass = defineClass(null, currentType, 0, currentType.length);
+	cache.put(klass.getName(), new Pair<Class<?>, byte[]>(klass, currentType));
+	return klass;
+    }
+
+    private boolean skipAdaptation(final String name) {
+	return name.startsWith("java.");
+    }
+
+    public static boolean isEnhanced(final Class<?> type) {
+	return type.getName().contains(DynamicTypeNamingService.APPENDIX);
+    }
+
+    /**
+     * Returns an original type for the specified one (the type from which <code>type</code> was generated). If <code>type</code> is not enhanced -- returns the same
+     * <code>type</code>.
+     *
+     * @param type
+     * @return
+     */
+    public static Class<?> getOriginalType(final Class<?> type) {
+	final String typeName = type.getName();
+	if (isEnhanced(type)) {
+	    final String originalTypeName = typeName.substring(0, typeName.indexOf(DynamicTypeNamingService.APPENDIX));
+	    try {
+		return ClassLoader.getSystemClassLoader().loadClass(originalTypeName);
+	    } catch (final ClassNotFoundException e) {
+		throw new IllegalStateException(e);
+	    }
+	} else {
+	    return type;
+	}
+    }
+
+    public String getCurrentName() {
+        return currentName;
+    }
+
+    public Class<?> getCachedClass(final String name) {
+	return cache.containsKey(name) ? cache.get(name).getKey() : null;
+    }
+
+    public byte[] getCachedByteArray(final String name) {
+	return cache.containsKey(name) ? cache.get(name).getValue() : null;
+    }
+}

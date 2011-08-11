@@ -1,0 +1,72 @@
+package ua.com.fielden.platform.dao;
+
+import java.lang.reflect.Field;
+
+import ua.com.fielden.platform.reflection.Finder;
+
+public class UsernameSetterMixin {
+
+    public static final void setUsername(final String username, final Object usernameObtainer, final Field obtainerUsernameField) {
+	if (obtainerUsernameField.getType() != String.class) {
+	    throw new IllegalArgumentException("Field for holding username must be of time String.");
+	}
+
+	final String prevUsername;
+	final boolean accessFlag = obtainerUsernameField.isAccessible();
+	try {
+	    obtainerUsernameField.setAccessible(true);
+	    prevUsername = (String) obtainerUsernameField.get(usernameObtainer);
+	} catch (final Exception e) {
+	    throw new IllegalStateException(e);
+	} finally {
+	    obtainerUsernameField.setAccessible(accessFlag);
+	}
+
+	if (username == null) {
+	    throw new IllegalArgumentException("Username of value null is not an acceptable value.");
+	} else if (prevUsername != null && !prevUsername.equals(username)) {
+	    throw new IllegalStateException("Username should be assigned only once during DAO instance life cycle.");
+	} else if (prevUsername == null) {
+	    final boolean thisFlag = obtainerUsernameField.isAccessible();
+	    try {
+		obtainerUsernameField.setAccessible(true);
+		obtainerUsernameField.set(usernameObtainer, username);
+	    } catch (final Exception e) {
+		throw new IllegalStateException(e);
+	    } finally {
+		obtainerUsernameField.setAccessible(thisFlag);
+	    }
+	    // assigned username to all other aggregated DAO instances
+	    for (final Field field : Finder.getFieldsOfSpecifiedType(usernameObtainer.getClass(), IEntityDao.class)) {
+		final boolean flag = field.isAccessible();
+		try {
+		    field.setAccessible(true);
+		    final IEntityDao<?> dao = (IEntityDao<?>) field.get(usernameObtainer);
+		    if (dao != null) {
+			dao.setUsername(username);
+		    }
+		} catch (final Exception e) {
+		    throw new IllegalStateException(e);
+		} finally {
+		    field.setAccessible(flag);
+		}
+	    }
+	    // assigned username to all other aggregated DAO instances
+	    for (final Field field : Finder.getFieldsOfSpecifiedType(usernameObtainer.getClass(), IEntityAggregatesDao.class)) {
+		final boolean flag = field.isAccessible();
+		try {
+		    field.setAccessible(true);
+		    final IEntityAggregatesDao dao = (IEntityAggregatesDao) field.get(usernameObtainer);
+		    if (dao != null) {
+			dao.setUsername(username);
+		    }
+		} catch (final Exception e) {
+		    throw new IllegalStateException(e);
+		} finally {
+		    field.setAccessible(flag);
+		}
+	    }
+	}
+    }
+
+}

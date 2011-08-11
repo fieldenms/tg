@@ -1,0 +1,427 @@
+package ua.com.fielden.platform.entity.query;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
+import ua.com.fielden.platform.domain.TgVehicle;
+import ua.com.fielden.platform.domain.TgWorkOrder;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.query;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.query.model.builders.QueryBuilder;
+import ua.com.fielden.platform.entity.query.model.elements.ArithmeticalOperator;
+import ua.com.fielden.platform.entity.query.model.elements.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.model.elements.ComparisonTestModel;
+import ua.com.fielden.platform.entity.query.model.elements.CompoundConditionModel;
+import ua.com.fielden.platform.entity.query.model.elements.CompoundSingleOperand;
+import ua.com.fielden.platform.entity.query.model.elements.ConditionsModel;
+import ua.com.fielden.platform.entity.query.model.elements.DayOfModel;
+import ua.com.fielden.platform.entity.query.model.elements.EntParam;
+import ua.com.fielden.platform.entity.query.model.elements.EntProp;
+import ua.com.fielden.platform.entity.query.model.elements.EntQuery;
+import ua.com.fielden.platform.entity.query.model.elements.EntQueryCompoundSourceModel;
+import ua.com.fielden.platform.entity.query.model.elements.EntQuerySourceAsEntity;
+import ua.com.fielden.platform.entity.query.model.elements.EntQuerySourcesModel;
+import ua.com.fielden.platform.entity.query.model.elements.EntValue;
+import ua.com.fielden.platform.entity.query.model.elements.ExistenceTestModel;
+import ua.com.fielden.platform.entity.query.model.elements.Expression;
+import ua.com.fielden.platform.entity.query.model.elements.GroupModel;
+import ua.com.fielden.platform.entity.query.model.elements.GroupedConditionsModel;
+import ua.com.fielden.platform.entity.query.model.elements.GroupsModel;
+import ua.com.fielden.platform.entity.query.model.elements.JoinType;
+import ua.com.fielden.platform.entity.query.model.elements.LogicalOperator;
+import ua.com.fielden.platform.entity.query.model.elements.MonthOfModel;
+import ua.com.fielden.platform.entity.query.model.elements.NullTestModel;
+import ua.com.fielden.platform.entity.query.model.elements.YieldModel;
+import ua.com.fielden.platform.entity.query.model.elements.YieldsModel;
+import static org.junit.Assert.assertEquals;
+
+public class QueryModelCompositionTest {
+
+    @Ignore
+    @Test
+    public void test_query_model1() {
+	final AggregatedResultQueryModel a =
+		query.select(AbstractEntity.class, "a").where().beginExpr().beginExpr().beginExpr().beginExpr().prop("a").add().param("v").endExpr().endExpr().endExpr().endExpr().gt().val(1)
+		.and()
+		.begin().beginExpr().param("a").mult().beginExpr().param("v").add().prop("c").endExpr().endExpr().eq().prop("d").and().prop("ad").isNotNull().end()
+		.and()
+		.upperCase().beginExpr().prop("bbb").add().prop("aaa").endExpr().like().upperCase().val("AaA").and().prop("SomeDate").gt().now().and().yearOf().prop("LastChange").eq().round().beginExpr().prop("prop1").add().prop("prop2").endExpr().to(1)
+		.and()
+		.param("a").eq().ifNull().prop("interProp").then().val(1)
+		.and()
+		.prop("aaa").eq().countDays().between().beginExpr().beginExpr().prop("Start1").add().prop("Start2").endExpr().endExpr().and().ifNull().prop("End").then().now()
+		.and()
+		.prop("haha").in().props("p1", "p2", "p3")
+		.and()
+		.param("AAA").in().values(1, 2, 3).modelAsAggregate();
+
+	final String expString = "SELECT\nFROM ua.com.fielden.platform.entity.AbstractEntity AS a\nWHERE (((($a + :v)))) > 1 AND ((:a * (:v + $c)) = $d AND $ad IS NOT NULL) AND UPPERCASE($bbb + $aaa) LIKE UPPERCASE(AaA) AND $SomeDate > NOW() AND YEAR($LastChange) = ROUND(($prop1 + $prop2), 1) AND :a = COALESCE($interProp, 1) AND $aaa = DATEDIFF(COALESCE($End, NOW()), (($Start1 + $Start2))) AND $haha IN ($p1, $p2, $p3) AND :AAA IN (1, 2, 3)";
+	assertEquals("Incorrect query model string representation", expString, a.toString());
+
+	final Object b = query.select(a, "a_alias").where().prop("a_alias.p1").eq().val(100).and().prop("a_alias.p2").like().anyOfValues("%AC", "%AB", "DD%").model();
+	System.out.println(b.toString());
+    }
+
+    @Ignore
+    @Test
+    public void test_expressions() {
+	assertEquals("Incorrect expression model string representation", "1 + :a + 2", query.expr().val(1).add().param("a").add().val(2).model().toString());
+	assertEquals("Incorrect expression model string representation", "1", query.expr().val(1).model().toString());
+	assertEquals("Incorrect expression model string representation", "1 + :a + AVG(SUM($fuelCost)) + NOW() * SECOND(NOW())", query.expr().val(1).add().param("a").add().avgOf().expr(query.expr().sumOf().prop("fuelCost").model()).add().now().mult().expr(query.expr().secondOf().now().model()).model().toString());
+    }
+
+    @Ignore
+    @Test
+    public void test_query_model2() {
+	final AggregatedResultQueryModel a1 =
+		query.select(AbstractEntity.class, "a").where().prop("a.subProp.desc").like().val("%AAA%").
+		yield().prop("a").as("newProp1AkaA").
+		yield().model(null).as("newPropFromModel").
+		modelAsAggregate();
+    }
+
+    @Ignore
+    @Test
+    public void test_query_model3() {
+	final Object a = query.select(AbstractEntity.class, "a")
+	    .join(AbstractEntity.class, "b")
+	    .on().prop("a").eq().prop("v").and()
+	    .begin().begin().beginExpr().prop("a").add().param("v").endExpr().eq().prop("c").end().end()
+	    .and()
+	    .expr(null).eq().expr(null).and()
+	    .prop("a")
+	    	.eq()
+	    .beginExpr()
+	    	.prop("1").sub().prop("2")
+	    .endExpr()
+	    	.and().anyOfModels(null, null).eq().beginExpr().prop("a").endExpr()
+	    	.and()
+	    .beginExpr().beginExpr().beginExpr().beginExpr().param("1").add().param("2").endExpr().add().beginExpr().param("1").div().prop("2").endExpr().endExpr().endExpr().endExpr().eq().val(false)
+	    .and()
+	    .notExists(null)
+	    .where()
+	    .countDays().between().prop("1").and().prop("2").eq().beginExpr().countDays().between().model(null).and().model(null).endExpr().and()
+	    .prop("1").ne().param("a")
+	.and().beginExpr().prop("1").add().beginExpr().prop("1").add().prop("2").add().beginExpr().beginExpr().param("1").div().param("2").endExpr().div().beginExpr().param("3").endExpr().endExpr().endExpr().sub().prop("2").endExpr().eq().prop("a")
+	.and().beginExpr().prop("2").endExpr().eq().beginExpr().prop("1").sub().prop("2").endExpr()
+	.and().begin().prop("asa").isNull().end()
+	.and().beginExpr().prop("dsd").endExpr().eq().param("ss").and().prop("a").like().beginExpr().val(1).add().val(3).endExpr().and()
+	.begin().beginExpr().prop("1").sub().prop("2").endExpr().eq().prop("3").and()
+		.begin().beginExpr().prop("1").sub().val(2).endExpr().isNotNull().and()
+			.begin().exists(null).and().beginExpr().prop("1").div().val(2).mult().val(3).endExpr().eq().beginExpr().prop("1").add().prop("2").endExpr()
+			.end()
+		.end()
+	.end().and()
+	.countDays().between().beginExpr().beginExpr().beginExpr().val(1).sub().val(2).endExpr().endExpr().endExpr()
+	.and()
+	.beginExpr().beginExpr().beginExpr().param("1").div().param("2").endExpr().endExpr().endExpr()
+	.eq()
+	.countDays().between().prop("1").and().now()
+	.and()
+	.beginExpr().param("1").sub().upperCase().prop("1").endExpr().gt().all(null).and().val(1).isNotNull()
+	.and()
+	.beginExpr().prop("1").add().prop("2").endExpr().in().model(null)
+	.and()
+	.ifNull().prop("1").then().upperCase().val("AaAv")
+		.eq()
+	.beginExpr().ifNull().beginExpr().prop("1").add().prop("2").endExpr().then().now().sub().val(1).endExpr()
+	.and()
+	.anyOfModels(null, null).eq().prop("a")
+	.and()
+	.begin().begin().prop("a").eq().beginExpr().beginExpr().beginExpr().beginExpr().now().endExpr().endExpr().endExpr().endExpr().and().begin().beginExpr().beginExpr().beginExpr().beginExpr().now().endExpr().endExpr().endExpr().endExpr().eq().beginExpr().beginExpr().beginExpr().beginExpr().param("a").endExpr().endExpr().endExpr().add().beginExpr().beginExpr().beginExpr().prop("a").endExpr().endExpr().endExpr().endExpr().end().end().end()
+	.or()
+	.caseWhen().prop("1").eq().prop("2").and().val(1).ge().val(2).then().val(1).end().ge().param("bb")
+	.and()
+//	.begin().begin().condition(null).and().condition(null).or().prop("1").isNotNull().and().condition(null).and().prop("2").ge().caseWhen().condition(null).then().val(1).end().end().end()
+//	.and()
+//	.condition(null)
+//	.and()
+	.beginExpr().prop("a").add().prop("b").endExpr().in().props()
+	.groupBy().param("aaa")
+	.groupBy().prop("a")
+	.groupBy().beginExpr().param("11").add().prop("2").mult().val(100).endExpr()
+	.yield().param("a").as("a").yield().param("b").as("b")
+	.yield().countDays().between().model(null).and().beginExpr().beginExpr().beginExpr().beginExpr().param("1").endExpr().endExpr().endExpr().endExpr().as("myExp")
+	.yield().beginExpr().beginExpr().ifNull().prop("1").then().now().endExpr().endExpr().as("mySecondExp")
+	.yield().beginExpr().avgOf().beginExpr().prop("1").add().param("2").endExpr().add().val(3).endExpr().as("avg_from1+3")
+	.yield().avgOf().beginExpr().beginExpr().prop("1").add().prop("2").endExpr().endExpr().as("avg_of_1+2")
+	.yield().beginExpr().beginExpr().avgOf().beginExpr().beginExpr().beginExpr().beginExpr().countDays().between().prop("1").and().val(100).endExpr().endExpr().endExpr().endExpr().add().val(2).endExpr().div().val(100).endExpr().as("alias")
+	.yield().beginExpr().beginExpr().sumOf().prop("1").add().avgOf().prop("2").add().beginExpr().avgOf().beginExpr().beginExpr().beginExpr().beginExpr().val(2).endExpr().endExpr().endExpr().endExpr().endExpr().endExpr().add().avgOf().beginExpr().val(2).add().prop("p1").endExpr().endExpr().as("alias")
+	.yield().caseWhen().prop("1").eq().prop("2").and().val(1).ge().val(2).then().val(1).end().as("aaa")
+	.yield().round().prop("a").to(10).as("1")
+	.yield().param("aa").as("aaa")
+	.yield().countOf().prop("1").as("a")
+	.yield().yearOf().now().as("b")
+	.yield().join("b").as("c")
+	.yield().countAll().as("recCount")
+	.orderBy().prop("1").asc()
+	.orderBy().model(null).asc()
+	//.model()
+	;
+    }
+
+    @Test
+    public void test_simple_query_model_01() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().prop("model").isNotNull().and().prop("eqclass").isNull().model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntProp("eqclass"), false)));
+	final ConditionsModel exp = new ConditionsModel(new NullTestModel(new EntProp("model"), true), others);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_02() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().prop("model").gt().val(100).and().prop("eqClass").lt().prop("limit").model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	others.add(new CompoundConditionModel(LogicalOperator.AND, new ComparisonTestModel(new EntProp("eqClass"), ComparisonOperator.LT, new EntProp("limit"))));
+	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(new EntProp("model"), ComparisonOperator.GT, new EntValue(100)), others);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_03() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().prop("model").isNotNull().and().param("eqclass").isNull().model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntParam("eqclass"), false)));
+	final ConditionsModel exp = new ConditionsModel(new NullTestModel(new EntProp("model"), true), others);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_04() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().begin().prop("model").isNotNull().and().prop("eqclass").isNull().end().model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntProp("eqclass"), false)));
+	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new NullTestModel(new EntProp("model"), true), others);
+	final ConditionsModel exp2 = new ConditionsModel(exp, new ArrayList<CompoundConditionModel>());
+	assertEquals("models are different", exp2, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_05() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().begin().prop("model").isNotNull().and().prop("eqclass").isNull().end().and().prop("currStation").isNotNull().model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntProp("eqclass"), false)));
+	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new NullTestModel(new EntProp("model"), true), others);
+	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
+	others2.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntProp("currStation"), true)));
+	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
+	assertEquals("models are different", exp2, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_06() {
+	final EntityResultQueryModel<AbstractEntity> aa = query.select(TgVehicle.class).model();
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().prop("model").isNotNull().and().exists(aa).model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	others.add(new CompoundConditionModel(LogicalOperator.AND, new ExistenceTestModel(false, new QueryBuilder(aa).getQry())));
+	final ConditionsModel exp = new ConditionsModel(new NullTestModel(new EntProp("model"), true), others);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_07() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().anyOfProps("model", "eqClass").isNotNull().model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	others.add(new CompoundConditionModel(LogicalOperator.OR, new NullTestModel(new EntProp("eqClass"), true)));
+	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new NullTestModel(new EntProp("model"), true), others);
+	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
+	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
+	assertEquals("models are different", exp2, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_08() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().beginExpr().prop("model").add().prop("eqClass").endExpr().isNull().model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
+	compSingleOperands.add(new CompoundSingleOperand(new EntProp("eqClass"), ArithmeticalOperator.ADD));
+	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
+	final ConditionsModel exp = new ConditionsModel(new NullTestModel(expression, false), others);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_09() {
+	final ExpressionModel expr = query.expr().prop("model").add().prop("eqClass").model();
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().expr(expr).isNull().model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
+	compSingleOperands.add(new CompoundSingleOperand(new EntProp("eqClass"), ArithmeticalOperator.ADD));
+	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
+	final ConditionsModel exp = new ConditionsModel(new NullTestModel(expression, false), others);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_10() {
+	final ExpressionModel expr0 = query.expr().prop("model").mult().prop("eqClass").model();
+	final ExpressionModel expr = query.expr().prop("model").add().expr(expr0).model();
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().expr(expr).isNull().model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+
+	final List<CompoundSingleOperand> compSingleOperands0 = new ArrayList<CompoundSingleOperand>();
+	compSingleOperands0.add(new CompoundSingleOperand(new EntProp("eqClass"), ArithmeticalOperator.MULT));
+	final Expression expression0 = new Expression(new EntProp("model"), compSingleOperands0);
+
+
+	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
+	compSingleOperands.add(new CompoundSingleOperand(expression0, ArithmeticalOperator.ADD));
+	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
+	final ConditionsModel exp = new ConditionsModel(new NullTestModel(expression, false), others);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_11() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().dayOf().prop("initDate").gt().val(15).and().prop("eqClass").lt().prop("limit").model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	others.add(new CompoundConditionModel(LogicalOperator.AND, new ComparisonTestModel(new EntProp("eqClass"), ComparisonOperator.LT, new EntProp("limit"))));
+	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(new DayOfModel(new EntProp("initDate")), ComparisonOperator.GT, new EntValue(15)), others);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_12() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().monthOf().prop("initDate").gt().val(3).and().prop("eqClass").lt().prop("limit").model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	others.add(new CompoundConditionModel(LogicalOperator.AND, new ComparisonTestModel(new EntProp("eqClass"), ComparisonOperator.LT, new EntProp("limit"))));
+	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(new MonthOfModel(new EntProp("initDate")), ComparisonOperator.GT, new EntValue(3)), others);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_13() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").model();
+	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getSources());
+    }
+
+    @Test
+    public void test_simple_query_model_14() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class).model();
+	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, null), others);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getSources());
+    }
+
+    @Test
+    public void test_simple_query_model_15() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").join(TgWorkOrder.class, "wo").on().prop("a").eq().prop("b").model();
+
+	final ConditionsModel condition = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
+
+	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
+	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo"), JoinType.IJ, condition));
+
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
+	final Object act = new QueryBuilder(a).getQry().getSources();
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getSources());
+    }
+
+    @Test
+    public void test_simple_query_model_16() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").join(TgWorkOrder.class, "wo").on().prop("a").eq().prop("b").leftJoin(TgWorkOrder.class, "wo2").on().prop("a2").eq().prop("b2").model();
+
+	final ConditionsModel condition1 = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
+	final ConditionsModel condition2 = new ConditionsModel(new ComparisonTestModel(new EntProp("a2"), ComparisonOperator.EQ, new EntProp("b2")), new ArrayList<CompoundConditionModel>());
+
+	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
+	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo"), JoinType.IJ, condition1));
+	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo2"), JoinType.LJ, condition2));
+
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
+	final Object act = new QueryBuilder(a).getQry().getSources();
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getSources());
+    }
+
+    @Test
+    public void test_simple_query_model_17() {
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").join(TgWorkOrder.class, "wo").on().prop("a").eq().prop("b").leftJoin(TgWorkOrder.class, "wo2").on().prop("a2").eq().prop("b2")
+	.where().dayOf().prop("initDate").gt().val(15).and().prop("eqClass").lt().prop("limit").model();
+
+	final ConditionsModel condition1 = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
+	final ConditionsModel condition2 = new ConditionsModel(new ComparisonTestModel(new EntProp("a2"), ComparisonOperator.EQ, new EntProp("b2")), new ArrayList<CompoundConditionModel>());
+
+	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
+	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo"), JoinType.IJ, condition1));
+	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo2"), JoinType.LJ, condition2));
+
+	final EntQuery act = new QueryBuilder(a).getQry();
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
+	assertEquals("models are different", exp, act.getSources());
+
+	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
+	others2.add(new CompoundConditionModel(LogicalOperator.AND, new ComparisonTestModel(new EntProp("eqClass"), ComparisonOperator.LT, new EntProp("limit"))));
+	final ConditionsModel exp2 = new ConditionsModel(new ComparisonTestModel(new DayOfModel(new EntProp("initDate")), ComparisonOperator.GT, new EntValue(15)), others2);
+	assertEquals("models are different", exp2, act.getConditions());
+    }
+
+    @Test
+    public void test_simple_query_model_18() {
+	final EntityResultQueryModel<TgWorkOrder> a = query.select(TgVehicle.class).yield().prop("eqClass").modelAsEntity(TgWorkOrder.class);
+	final List<YieldModel> yields = new ArrayList<YieldModel>();
+	yields.add(new YieldModel(new EntProp("eqClass"), "id"));
+	final YieldsModel exp = new YieldsModel(yields);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getYields());
+    }
+
+    @Test
+    public void test_simple_query_model_19() {
+	final EntityResultQueryModel<TgWorkOrder> a = query.select(TgVehicle.class).yield().prop("eqClass").as("ec").yield().prop("model").as("m").modelAsEntity(TgWorkOrder.class);
+	final List<YieldModel> yields = new ArrayList<YieldModel>();
+	yields.add(new YieldModel(new EntProp("eqClass"), "ec"));
+	yields.add(new YieldModel(new EntProp("model"), "m"));
+	final YieldsModel exp = new YieldsModel(yields);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getYields());
+    }
+
+    @Test
+    public void test_simple_query_model_20() {
+	final EntityResultQueryModel<TgWorkOrder> a = query.select(TgVehicle.class).yield().prop("eqClass").as("ec").yield().beginExpr().prop("model").add().param("param").endExpr().as("m").modelAsEntity(TgWorkOrder.class);
+	final List<YieldModel> yields = new ArrayList<YieldModel>();
+	yields.add(new YieldModel(new EntProp("eqClass"), "ec"));
+	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
+	compSingleOperands.add(new CompoundSingleOperand(new EntParam("param"), ArithmeticalOperator.ADD));
+	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
+	yields.add(new YieldModel(expression, "m"));
+	final YieldsModel exp = new YieldsModel(yields);
+	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getYields());
+    }
+
+    @Test
+    public void test_simple_query_model_21() {
+	final EntityResultQueryModel<TgWorkOrder> a = query.select(TgVehicle.class).groupBy().prop("eqClass").yield().prop("eqClass").modelAsEntity(TgWorkOrder.class);
+	final EntQuery act = new QueryBuilder(a).getQry();
+
+	final List<YieldModel> yields = new ArrayList<YieldModel>();
+	yields.add(new YieldModel(new EntProp("eqClass"), "id"));
+	final YieldsModel exp = new YieldsModel(yields);
+
+	assertEquals("models are different", exp, act.getYields());
+	final List<GroupModel> groups = new ArrayList<GroupModel>();
+	groups.add(new GroupModel(new EntProp("eqClass")));
+	final GroupsModel exp2 = new GroupsModel(groups);
+	assertEquals("models are different", exp2, act.getGroups());
+    }
+
+    @Test
+    public void test_simple_query_model_22() {
+	final EntityResultQueryModel<AbstractEntity> a1 = query.select(TgVehicle.class).model();
+	final EntityResultQueryModel<AbstractEntity> a2 = query.select(TgWorkOrder.class).model();
+	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class, "v").where().existsAnyOf(a1, a2).model();
+	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
+	others.add(new CompoundConditionModel(LogicalOperator.OR, new ExistenceTestModel(false, new QueryBuilder(a2).getQry())));
+	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ExistenceTestModel(false, new QueryBuilder(a1).getQry()), others);
+	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
+	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
+	assertEquals("models are different", exp2, new QueryBuilder(a).getQry().getConditions());
+    }
+}

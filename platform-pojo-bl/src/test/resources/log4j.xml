@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration debug="false">
+<!--
+		An appender is an output destination, such as the console or a file;
+		names of appenders are arbitrarily chosen.
+		
+		Appenders are active only when they are associated with at least one logger. 
+		The same appender can be associated with several loggers.
+	-->
+	
+	
+	<!-- STDOUT appender - should be used for loggers when logging onto a console is required -->
+	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="%d{yyyy-MMM-dd@HH:mm:ss} %X{user} %X{PID} %X{MEM} %5p %c{1} %C{1}:%-3L &quot;%m&quot;%n" />
+		</layout>
+	</appender>
+
+	<!-- 
+		Once all the appenders are defied, it is possible to define all required loggers, which can be associated with one or more appenders.
+		Loggers are named and can be accessed from the code by name. 
+		
+		However, log4j recognises hierarchical structure of logger names. For example, a logger with name "fielden" would be a parent to a logger with name "fielden.subpackage".
+		Also, if one tries to obtain a logger by class and there is no logger with the full class name of that class then the closes in the hierarchy logger is returned.
+		
+		For example, if there is class "fielden.MyListenerClass" and there is no logger with that name, then the call Logger.getLogger(MyListenerClass.class) will return logger with name "fielden".
+		It is important to note that loggers in the hierarchy propagate messages upwards to the parent. That is, having loggers "fielden" and "fielden.subpackage", would result in two messages when logging from child logger "fielden.subpackage".
+		This is of course is the subject of associated appenders and log levels defined for each of them. The easiest way to prevent propagation is to set child logger property additivity="false".
+		
+		Also there is the root logger that is at the top of the loggers' hierarchy, which is also the default one. 
+	 -->
+
+	<!--
+		Logger of top level category 'ua.com.fielden.platform'. Additional logger can be added any time if required.
+	-->
+	<logger name="ua.com.fielden.platform" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<!--
+		Logger of category ua.com.fielden.platform.entity 
+	 -->
+	<logger name="ua.com.fielden.platform.entity" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
+	
+	<!-- 
+	  The root category is a parent to all loggers.
+	  This means that if someone (e.g. third party library) is trying to obtain a nonexisting logger then root would be used instead.  
+	  -->
+	<root> 
+		<level value="error" /> 
+		<appender-ref ref="stdout" />		 
+	</root>
+</log4j:configuration>

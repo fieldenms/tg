@@ -1,0 +1,17 @@
+package ua.com.fielden.platform.entity.query.model;
+
+import java.util.List;
+
+import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
+import ua.com.fielden.platform.utils.Pair;
+
+public abstract class SingleResultQueryModel extends UnorderedQueryModel {
+
+    SingleResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
+	super(tokens);
+    }
+
+    <T> SingleResultQueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType) {
+	super(tokens, resultType);
+    }
+}
