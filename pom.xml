@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>fielden</groupId>
+	<artifactId>platform-parent</artifactId>
+	<packaging>pom</packaging>
+	<version>1.1-SNAPSHOT</version>
+	<name>Trident Genesis Platform Parent</name>
+	<description>
+		Trident Genesis is an application platform designed for
+		development of ERP type applications supporting Client/Server
+		and
+		RIA/ROA architectures.
+	</description>
+	<url>https://www.fielden.com.ua/trac/pnl-tg/
+	</url>
+	<inceptionYear>2008</inceptionYear>
+	<organization>
+		<name>Fielden Management Services</name>
+		<url>http://www.fielden.com.au/</url>
+	</organization>
+	<developers>
+		<developer>
+			<id>01es</id>
+			<url></url>
+			<name>Oles Hodych</name>
+			<organization>FMS.ua</organization>
+			<organizationUrl>
+				http://www.fielden.com.ua/
+			</organizationUrl>
+			<email>oles@fielden.com.au</email>
+			<timezone>+2</timezone>
+			<roles>
+				<role>owner</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>nazar</id>
+			<url></url>
+			<name>Nazar Chaykivskyy</name>
+			<organization>FMS.ua</organization>
+			<organizationUrl>
+				http://www.fielden.com.ua/
+			</organizationUrl>
+			<email>nazar@fielden.com.au</email>
+			<timezone>+2</timezone>
+			<roles>
+				<role>owner</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>jhou</id>
+			<url></url>
+			<name>Yura Prokopiv</name>
+			<organization>FMS.ua</organization>
+			<organizationUrl>
+				http://www.fielden.com.ua/
+			</organizationUrl>
+			<email>jhou@fielden.com.au</email>
+			<timezone>+2</timezone>
+			<roles>
+				<role>owner</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>oleh</id>
+			<url></url>
+			<name>Oleh Maykovych</name>
+			<organization>FMS.ua</organization>
+			<organizationUrl>
+				http://www.fielden.com.ua/
+			</organizationUrl>
+			<email>oleh@fielden.com.au</email>
+			<timezone>+2</timezone>
+			<roles>
+				<role>owner</role>
+			</roles>
+		</developer>
+	</developers>
+	<modules>
+		<module>../platform-db-evolution</module>
+		<module>../platform-dao</module>
+		<module>../platform-web-resources</module>
+		<module>../platform-pojo-bl</module>
+		<module>../platform-rao</module>
+		<module>../platform-ui</module>
+	</modules>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.guice</groupId>
+			<artifactId>guice</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>aopalliance</groupId>
+			<artifactId>aopalliance</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.13</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+			<version>3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.0.4</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-jexl</groupId>
+			<artifactId>commons-jexl</artifactId>
+			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>1.6</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>1.4</version>
+			<type>jar</type>
+		</dependency>
+	</dependencies>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<source>1.6</source>
+						<target>1.6</target>
+					</configuration>
+				</plugin>
+
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>findbugs-maven-plugin</artifactId>
+					<version>1.2</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+		<plugins>
+			<plugin>
+				<groupId>org.jvnet.maven.incrementalbuild</groupId>
+				<artifactId>incremental-build-plugin</artifactId>
+				<version>1.3</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>incremental-build</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>1.2</version>
+			</plugin>
+		</plugins>
+	</reporting>
+
+	<issueManagement>
+		<system>FMS Trac</system>
+		<url>https://www.fielden.com.ua/trac/pnl-tg/report
+		</url>
+	</issueManagement>
+
+	<distributionManagement>
+		<repository>
+			<id>Releases</id>
+			<name>Internal Releases</name>
+			<url>http://kid:8090/nexus/content/repositories/releases</url>
+		</repository>
+
+		<snapshotRepository>
+			<id>Snapshots</id>
+			<name>Internal Snapshots</name>
+			<url>http://kid:8090/nexus/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<scm>
+		<connection>
+			scm:svn:https://kid/svn/trident-genesis/trunk
+		</connection>
+		<developerConnection>
+			scm:svn:https://kid/svn/trident-genesis/trunk
+		</developerConnection>
+	</scm>
+
+</project>
