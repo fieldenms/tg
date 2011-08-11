@@ -1,0 +1,43 @@
+<dataset>
+	<USER_ROLE _ID="1" _VERSION="0" KEY_="role1" DESC_="role desc 1"/>
+	<USER_ROLE _ID="2" _VERSION="0" KEY_="role2" DESC_="role desc 2"/>
+	<USER_ROLE _ID="3" _VERSION="0" KEY_="role3" DESC_="role desc 3"/>
+	<USER_ROLE _ID="4" _VERSION="0" KEY_="role4" DESC_="role desc 4"/>
+	<USER_ROLE _ID="5" _VERSION="0" KEY_="role5" DESC_="role desc 5"/>
+	<USER_ROLE _ID="6" _VERSION="0" KEY_="role6" DESC_="role desc 6"/>
+	<USER_ROLE _ID="7" _VERSION="0" KEY_="role7" DESC_="role desc 7"/>
+	<USER_ROLE _ID="8" _VERSION="0" KEY_="role8" DESC_="role desc 8"/>
+	
+	<RMA_PERSON ID_COLUMN="1" VERSION_COLUMN="0" PERSON_NO="user1" PERSON_DESC="user desc 1" PASSWORD="userpass1"/>
+	<RMA_PERSON ID_COLUMN="2" VERSION_COLUMN="0" PERSON_NO="user2" PERSON_DESC="user desc 2" PASSWORD="userpass2"/>
+	<RMA_PERSON ID_COLUMN="3" VERSION_COLUMN="0" PERSON_NO="user3" PERSON_DESC="user desc 3" PASSWORD="userpass3"/>
+	<RMA_PERSON ID_COLUMN="4" VERSION_COLUMN="0" PERSON_NO="user4" PERSON_DESC="user desc 4" PASSWORD="userpass4"/>
+	
+	<CRAFT _ID="1" _VERSION="0"	KEY_="user1" DESC_="user desc 1" IS_BASE="Y" USER_NAME="user 1" USER_PASSWORD="userpass1"/> <!-- base user -->
+	<CRAFT _ID="2" _VERSION="0"	KEY_="user2" DESC_="user desc 2" IS_BASE="Y" USER_NAME="user 2" USER_PASSWORD="userpass2"/> <!-- base user -->
+	<CRAFT _ID="3" _VERSION="0"	KEY_="user3" DESC_="user desc 3" IS_BASE="Y" USER_NAME="user 3" USER_PASSWORD="userpass3"/> <!-- base user -->
+	<CRAFT _ID="4" _VERSION="0"	KEY_="user4" DESC_="user desc 4" IS_BASE="Y" USER_NAME="user 4" USER_PASSWORD="userpass4"/> <!-- base user -->
+	
+
+	<USER_ROLE_ASSOCIATION _ID="1" _VERSION="0" ID_CRAFT="1" ID_USER_ROLE="1"/>
+	<USER_ROLE_ASSOCIATION _ID="2" _VERSION="0" ID_CRAFT="1" ID_USER_ROLE="2"/>
+	<USER_ROLE_ASSOCIATION _ID="3" _VERSION="0" ID_CRAFT="2" ID_USER_ROLE="3"/>
+	<USER_ROLE_ASSOCIATION _ID="4" _VERSION="0" ID_CRAFT="2" ID_USER_ROLE="4"/>
+	<USER_ROLE_ASSOCIATION _ID="5" _VERSION="0" ID_CRAFT="3" ID_USER_ROLE="5"/>
+	<USER_ROLE_ASSOCIATION _ID="6" _VERSION="0" ID_CRAFT="3" ID_USER_ROLE="6"/>
+	<USER_ROLE_ASSOCIATION _ID="7" _VERSION="0" ID_CRAFT="4" ID_USER_ROLE="7"/>
+	<USER_ROLE_ASSOCIATION _ID="8" _VERSION="0" ID_CRAFT="4" ID_USER_ROLE="8"/>
+	
+	<SECURITY_ROLE_ASSOCIATION _ID="1" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.FirstLevelSecurityToken1" ID_USER_ROLE="1"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="2" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.FirstLevelSecurityToken1" ID_USER_ROLE="2"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="3" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.FirstLevelSecurityToken2" ID_USER_ROLE="3"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="4" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.FirstLevelSecurityToken2" ID_USER_ROLE="4"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="5" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.SecondLevelSecurityToken1" ID_USER_ROLE="5"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="6" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.SecondLevelSecurityToken1" ID_USER_ROLE="6"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="7" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.SecondLevelSecurityToken2" ID_USER_ROLE="7"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="8" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.SecondLevelSecurityToken2" ID_USER_ROLE="8"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="9" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.ThirdLevelSecurityToken1" ID_USER_ROLE="1"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="10" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.ThirdLevelSecurityToken1" ID_USER_ROLE="2"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="11" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.ThirdLevelSecurityToken2" ID_USER_ROLE="3"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="12" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.ThirdLevelSecurityToken2" ID_USER_ROLE="4"/>
+</dataset>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"
+[<!ENTITY % globals SYSTEM "classpath://test_mappings/globals4test.dtd">%globals;]>
+
+<hibernate-mapping default-access="field">
+
+			<class name="&Bogie;" table="RMA_BOGIE">
+				&CommonEntityId;
+				&CommonEntityVersion;
+				<property name="key" column="ROTABLE_NO" type="string" />
+				<property name="desc" column="ROTABLE_DESC" type="string" />
+			
+				<any name="location" id-type="long" meta-type="string">
+    				<meta-value value="WSHOP" class="&Workshop;"/>
+	    			<meta-value value="WASLOT" class="&WagonSlot;"/>
+    				<meta-value value="ADVPOS" class="&AdvicePosition;"/>
+    				<column name="CURRENT_LOCATION_TYPE"/>
+    				<column name="CURRENT_LOCATION"/>
+				</any>
+				<property name="status" column="ROTABLE_STATUS" type="&RotableStatusType;" not-null="true" />
+				<many-to-one name="rotableClass" class="&BogieClass;" column="EQCLASS" />
+				<list name="slots"> 
+					<key column="BOGIE" />
+					<list-index column="POSITION" base="1" />
+					<one-to-many class="&BogieSlot;" />
+				</list>
+			</class>
+
+			<class name="&Wheelset;" table="RMA_WHEELSET">
+				&CommonEntityId;
+				&CommonEntityVersion;
+				<property name="key" column="ROTABLE_NO" type="string" />
+				<property name="desc" column="ROTABLE_DESC" type="string" />
+			
+				<any name="location" id-type="long" meta-type="string">
+    				<meta-value value="WSHOP" class="&Workshop;"/>
+    				<meta-value value="BOSLOT" class="&BogieSlot;"/>
+    				<meta-value value="ADVPOS" class="&AdvicePosition;"/>
+    				<column name="CURRENT_LOCATION_TYPE"/>
+    				<column name="CURRENT_LOCATION"/>
+				</any>
+				<property name="status" column="ROTABLE_STATUS" type="&RotableStatusType;" not-null="true" />
+				<many-to-one name="rotableClass" class="&WheelsetClass;"  column="EQCLASS"/>
+			</class>
+
+
+		<class name="&Wagon;" table="RMA_WAGON">
+			&CommonEntityId;
+			&CommonEntityVersion;
+			<property name="key" column="EQUIPNO" type="string" />
+			<property name="desc" column="EQ_DESC" type="string" />
+			<property name="serialNo" column="SERIALNO" type="string" />
+			<many-to-one name="wagonClass" class="&WagonClass;" column="EQCLASS" />
+
+			<list name="slots"> 
+				<key column="WAGON" />
+				<list-index column="POSITION" base="1" />
+				<one-to-many class="&WagonSlot;" />
+			</list>
+		</class>
+</hibernate-mapping>

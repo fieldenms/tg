@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"
+[<!ENTITY % globals SYSTEM "classpath://test_mappings/globals4test.dtd">%globals;]>
+
+<hibernate-mapping default-access="field">
+   	
+    <class name="&WagonClass;" table="RMA_WAGONCLASS">
+        &CommonEntityId;
+        &CommonEntityVersion;
+		<property name="key" column="EQCLASS" type="string"/>            
+		<property name="desc" column="EQCLASS_DESC" type="string"/>            
+        <property name="numberOfBogies" column="NO_OF_BOGIES"/>
+        <property name="numberOfWheelsets" column="NO_OF_WHEELSETS"/>
+        <property name="tonnage" column="TONNAGE"/>
+        
+   		<set name="compatibles"> <!-- fetch="join" cascade="save-update" -->
+	   		<key column="WAGON_CLASS"/>
+	   		<one-to-many class="&WagonClassCompatibility;"/>
+		</set>        
+	</class>        
+</hibernate-mapping>

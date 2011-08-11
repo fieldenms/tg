@@ -1,0 +1,16 @@
+<dataset>
+	<COMPLEX_KEY_ENTITY _ID="1" _VERSION="0" DESC_="ckentity desc 1" />
+	<COMPLEX_KEY_ENTITY _ID="2" _VERSION="0" DESC_="ckentity desc 2" />
+	<COMPLEX_KEY_ENTITY _ID="3" _VERSION="0" DESC_="ckentity desc 3" />
+	<COMPLEX_KEY_ENTITY _ID="4" _VERSION="0" DESC_="ckentity desc 4" />
+
+	<COMPOSITE_ENTITY _ID="1" _VERSION="0" KEY_="sentity1" DESC_="sentity desc 1" />
+	<COMPOSITE_ENTITY _ID="2" _VERSION="0" KEY_="sentity2" DESC_="sentity desc 2" />
+	<COMPOSITE_ENTITY _ID="3" _VERSION="0" KEY_="sentity3" DESC_="sentity desc 3" />
+	<COMPOSITE_ENTITY _ID="4" _VERSION="0" KEY_="sother1" DESC_="sentity desc 3" />
+
+	<COMPOSITE_ENTITY_KEY _ID="1" _VERSION="0" KEY_="centity1" DESC_="centity desc 1"/>
+	<COMPOSITE_ENTITY_KEY _ID="2" _VERSION="0" KEY_="centity2" DESC_="centity desc 2"/>
+	<COMPOSITE_ENTITY_KEY _ID="3" _VERSION="0" KEY_="centity3" DESC_="centity desc 3"/>
+	<COMPOSITE_ENTITY_KEY _ID="4" _VERSION="0" KEY_="cother1" DESC_="centity desc 3"/>
+</dataset>

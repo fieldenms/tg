@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+"-//Hibernate/Hibernate Configuration DTD//EN"
+"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
+<!-- Hibernate configurtion for unit tests -->
+<hibernate-configuration>
+
+	<session-factory>
+		<property name="hibernate.connection.url">jdbc:h2:src/test/resources/db/testdb</property> 
+		<property name="hibernate.connection.driver_class">org.h2.Driver</property>
+		<property name="dialect">org.hibernate.dialect.H2Dialect</property>
+		<property name="hibernate.connection.username">sa</property>
+		<property name="hibernate.connection.password"></property>
+		
+		<property name="current_session_context_class">thread</property>
+		
+		<property name="show_sql">false</property>
+		<property name="format_sql">true</property>
+		
+		<mapping resource="test_mappings/EqpItems.hbm.xml"/>
+		<mapping resource="test_mappings/RotableClass.hbm.xml"/>
+		<mapping resource="test_mappings/BogieClassCompatibility.hbm.xml"/>
+		<mapping resource="test_mappings/WagonClassCompatibility.hbm.xml"/>
+		<mapping resource="test_mappings/WagonClass.hbm.xml"/>
+		<mapping resource="test_mappings/EqpLocations.hbm.xml"/>
+		<mapping resource="test_mappings/WorkOrder.hbm.xml"/>
+		<mapping resource="test_mappings/Advice.hbm.xml"/>
+		
+		<mapping resource="test_mappings/Person.hbm.xml"/>
+	</session-factory>
+	
+</hibernate-configuration>

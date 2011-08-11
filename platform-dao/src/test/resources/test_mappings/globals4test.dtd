@@ -1,0 +1,35 @@
+<!-- Global settings imported by all XMl mapping files.
+     You can customize this file on deployment to keep your
+     mapping files portable. -->
+
+<!ENTITY CommonEntityId SYSTEM "classpath://test_mappings/CommonEntityId.xml">
+<!ENTITY CommonEntityVersion SYSTEM "classpath://test_mappings/CommonEntityVersion.xml">
+<!ENTITY SimpleKey SYSTEM "classpath://test_mappings/SimpleKey.xml">
+<!ENTITY SimpleDesc SYSTEM "classpath://test_mappings/SimpleDesc.xml">
+
+<!ENTITY DateTimeType "ua.com.fielden.platform.persistence.types.DateTimeType">
+<!ENTITY PropertyDescriptorType "ua.com.fielden.platform.persistence.types.PropertyDescriptorType">
+
+<!-- ... add test specific aliases when needed -->
+<!ENTITY RotableClass "ua.com.fielden.platform.test.domain.entities.RotableClass">
+<!ENTITY BogieClassCompatibility "ua.com.fielden.platform.test.domain.entities.BogieClassCompatibility">
+<!ENTITY WagonClassCompatibility "ua.com.fielden.platform.test.domain.entities.WagonClassCompatibility">
+<!ENTITY WagonClass "ua.com.fielden.platform.test.domain.entities.WagonClass">
+<!ENTITY Equipment "ua.com.fielden.platform.test.domain.entities.Equipment">
+<!ENTITY Bogie "ua.com.fielden.platform.test.domain.entities.Bogie">
+<!ENTITY Wheelset "ua.com.fielden.platform.test.domain.entities.Wheelset">
+<!ENTITY Rotable "ua.com.fielden.platform.test.domain.entities.Rotable">
+<!ENTITY BogieClass "ua.com.fielden.platform.test.domain.entities.BogieClass">
+<!ENTITY WheelsetClass "ua.com.fielden.platform.test.domain.entities.WheelsetClass">
+<!ENTITY Wagon "ua.com.fielden.platform.test.domain.entities.Wagon">
+<!ENTITY Workshop "ua.com.fielden.platform.test.domain.entities.Workshop">
+<!ENTITY WorkOrder "ua.com.fielden.platform.test.domain.entities.WorkOrder">
+<!ENTITY WagonSlot "ua.com.fielden.platform.test.domain.entities.WagonSlot">
+<!ENTITY BogieSlot "ua.com.fielden.platform.test.domain.entities.BogieSlot">
+<!ENTITY RotableLocation "ua.com.fielden.platform.test.domain.entities.RotableLocation">
+<!ENTITY Advice "ua.com.fielden.platform.test.domain.entities.Advice">
+<!ENTITY AdvicePosition "ua.com.fielden.platform.test.domain.entities.AdvicePosition">
+<!ENTITY RotableStatusType "ua.com.fielden.platform.test.types.RotableStatusType">
+
+<!ENTITY Person "ua.com.fielden.platform.test.domain.entities.Person">
+<!ENTITY UserAndRoleAssociation "ua.com.fielden.platform.security.user.UserAndRoleAssociation">

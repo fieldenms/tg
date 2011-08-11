@@ -1,0 +1,3 @@
+<version name="version" column="VERSION_COLUMN" type="long"
+	access="field" insert="false">
+</version>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"
+[<!ENTITY % globals SYSTEM "classpath://test_mappings/globals4test.dtd">%globals;]>
+
+
+<hibernate-mapping default-access="field">
+    <class name="&WagonClassCompatibility;" table="RMA_WAGON_BOGIE_CLASS_XREF">
+        &CommonEntityId;
+        &CommonEntityVersion;
+		<many-to-one name="wagonClass" class="&WagonClass;" column="WAGON_CLASS"/>
+		<many-to-one name="bogieClass" class="&BogieClass;" column="BOGIE_CLASS"/>
+        <property name="status" column="RECORD_STATUS"/>
+	</class>        
+</hibernate-mapping>

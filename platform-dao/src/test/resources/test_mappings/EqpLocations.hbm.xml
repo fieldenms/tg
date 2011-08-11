@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"
+[<!ENTITY % globals SYSTEM "classpath://test_mappings/globals4test.dtd">%globals;]>
+
+<hibernate-mapping default-access="field">
+   	
+		<class name="&WagonSlot;" table="RMA_WAGON_SLOT">
+			&CommonEntityId;
+			&CommonEntityVersion;
+			<many-to-one name="wagon" class="&Wagon;" column="WAGON"/>
+			<property name="position" column="POSITION"/>
+			<many-to-one name="bogie" class="&Bogie;" column="BOGIE"/>
+		</class>
+       
+		<class name="&BogieSlot;" table="RMA_BOGIE_SLOT">
+			&CommonEntityId;
+			&CommonEntityVersion;
+			<many-to-one name="bogie" class="&Bogie;" column="BOGIE"/>
+			<property name="position" column="POSITION"/>
+			<many-to-one name="wheelset" class="&Wheelset;" column="WHEELSET"/>
+		</class>
+		
+		<class name="&Workshop;" table="RMA_WORKSHOP">
+			&CommonEntityId;
+			&CommonEntityVersion;
+			<property name="key" column="WORKSHOP" type="string"/>            
+			<property name="desc" column="WORKSHOP_DESC" type="string"/>
+			<property name="contractorWorkshop" column="IS_CONTRACTOR" type="yes_no"/>	
+		</class>
+		
+		<class name="&AdvicePosition;" table="RMA_ADVICE_POSITION">
+			&CommonEntityId;
+			&CommonEntityVersion;
+			<many-to-one name="advice" class="&Advice;" column="ADVICE"/>
+			<property name="position" column="POSITION"/>
+			<any name="rotable"
+    	 			id-type="long"
+     				meta-type="string">
+    				<meta-value value="BO" class="&Bogie;"/>
+	    			<meta-value value="WS" class="&Wheelset;"/>
+    				<column name="ROTABLE_TYPE"/>
+    				<column name="ROTABLE"/>
+			</any>
+			<many-to-one name="sendingWorkshop" class="&Workshop;" column="SENDING_WORKSHOP"/>
+			<many-to-one name="receivingWorkshop" class="&Workshop;" column="RECEIVING_WORKSHOP"/>
+			<many-to-one name="placedBy" class="&Person;" column="PLACED_BY"/>
+			<property name="placementDate" column="PLACEMENT_DATE" type="timestamp"/>
+			<property name="received" column="IS_RECEIVED" type="yes_no"/>			
+			<property name="receivedDate" column="RECEIVED_DATE" type="timestamp"/>
+			<property name="removeBearing" column="REMOVE_BEARING" type="yes_no"/>
+		</class>
+</hibernate-mapping>

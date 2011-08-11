@@ -1,0 +1,29 @@
+<dataset>
+	<RMA_WAGONCLASS/>
+	
+	<RMA_WORKSHOP/>
+	
+	<RMA_ROTCLASS/>
+	
+	<RMA_WAGON/>
+
+	<RMA_WAGON_BOGIE_CLASS_XREF/>
+
+	<RMA_BOGIE_WSET_CLASS_XREF/>
+	
+	<RMA_BOGIE/>
+	<RMA_WHEELSET/>
+
+	<RMA_WAGON_SLOT/>
+
+	<RMA_BOGIE_SLOT/>
+
+	<RMA_ADVICE/>
+
+	<RMA_ADVICE_POSITION/>
+	
+	<RMA_PERSON/>
+	
+	<RMA_WODET/>
+			
+</dataset>	
