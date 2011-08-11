@@ -79,12 +79,12 @@
 		</developer>
 	</developers>
 	<modules>
-		<module>../platform-db-evolution</module>
-		<module>../platform-dao</module>
-		<module>../platform-web-resources</module>
-		<module>../platform-pojo-bl</module>
-		<module>../platform-rao</module>
-		<module>../platform-ui</module>
+		<module>platform-db-evolution</module>
+		<module>platform-dao</module>
+		<module>platform-web-resources</module>
+		<module>platform-pojo-bl</module>
+		<module>platform-rao</module>
+		<module>platform-ui</module>
 	</modules>
 
 	<properties>
