@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"
+[<!ENTITY % globals SYSTEM "classpath://mappings/globals-example.dtd">%globals;]>
+
+<hibernate-mapping default-access="field">
+   	
+    <class name="&RotableLocation;" abstract="true">
+        
+        <id name="id" column="C_ID" type="long">
+            <generator class="seqhilo">
+            	<param name="sequence">COMMON_RMA_SEQUENCE</param>
+				<param name="max_lo">0</param>
+            </generator>
+        </id>
+        
+		<union-subclass name="&WagonSlot;" table="RMA_WAGON_SLOT">
+			<many-to-one name="wagon" class="&Wagon;" lazy="false" column="WAGON"/>
+			<property name="position" column="POSITION"/>
+		</union-subclass>
+       
+		<union-subclass name="&BogieSlot;" table="RMA_BOGIE_SLOT">
+			<many-to-one name="bogie" class="&Bogie;" lazy="false" column="BOGIE"/>
+			<property name="position" column="POSITION"/>
+		</union-subclass>
+		
+		<union-subclass name="&Workshop;" table="RMA_WORKSHOP" lazy="false">
+			<property name="key" column="WORKSHOP" type="string"/>            
+			<property name="desc" column="WORKSHOP_DESC" type="string"/>
+			<property name="contractorWorkshop" column="IS_CONTRACTOR" type="yes_no"/>	
+		</union-subclass>
+		
+		<union-subclass name="&AdvicePosition;" table="RMA_ADVICE_POSITION">
+			<many-to-one name="advice" class="&Advice;" lazy="false" column="ADVICE"/>
+			<property name="position" column="POSITION"/>
+			<many-to-one name="rotable" class="&Rotable;" lazy="false" column="ROTABLE"/>
+			<many-to-one name="sendingWorkshop" class="&Workshop;" lazy="false" column="SENDING_WORKSHOP"/>
+			<many-to-one name="receivingWorkshop" class="&Workshop;" lazy="false" column="RECEIVING_WORKSHOP"/>
+			<many-to-one name="placedBy" class="&Person;" lazy="false" column="PLACED_BY"/>
+			<property name="placementDate" column="PLACEMENT_DATE" type="timestamp"/>
+			<property name="received" column="IS_RECEIVED" type="yes_no"/>			
+			<property name="receivedDate" column="RECEIVED_DATE" type="timestamp"/>
+			<property name="removeBearing" column="REMOVE_BEARING" type="yes_no"/>
+		</union-subclass>
+		
+	</class>        
+</hibernate-mapping>

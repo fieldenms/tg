@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"
+[<!ENTITY % globals SYSTEM "classpath://mappings/globals-example.dtd">%globals;]>
+
+<hibernate-mapping default-access="field">
+   	
+    <class
+        name="&RotableClass;" table="RMA_ROTCLASS">
+        <id name="id" column="C_ID" type="long">
+            <generator class="native"/>
+        </id>
+        
+        <discriminator column="CLASS_TYPE" type="string"/>
+
+		<property name="key" column="EQCLASS" type="string"/>            
+		<property name="desc" column="EQCLASS_DESC" type="string"/>            
+        <property name="tonnage" column="TONNAGE"/>
+		
+        
+        <subclass
+            name="&BogieClass;"
+            discriminator-value="BO">
+       		<set name="compatibles" lazy="false" fetch="join" cascade="save-update">
+	    		<key column="BOGIE_CLASS"/>
+	     		<one-to-many class="&BogieClassCompatibility;"/>
+			</set>
+        </subclass>
+
+        <subclass
+            name="&WheelsetClass;"
+            discriminator-value="WS">
+        </subclass>
+        
+	</class>        
+</hibernate-mapping>

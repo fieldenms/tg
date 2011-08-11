@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"
+[<!ENTITY % globals SYSTEM "classpath://usermappings/globalsforuserexample.dtd">%globals;]>
+
+<hibernate-mapping default-access="field">
+    <class name="&SecurityRoleAssociation;" table="SECURITY_ASSOCIATION">
+        &CommonEntityId;
+        &CommonEntityVersion;
+        
+		<property name="securityToken" column="TOKEN" type="&SecurityTokenType;"/>
+		<many-to-one name="role" class="&UserRole;" column="ROLE_ID"/>
+	</class>        
+</hibernate-mapping>

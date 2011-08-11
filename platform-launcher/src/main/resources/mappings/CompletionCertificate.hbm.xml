@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"
+[<!ENTITY % globals SYSTEM "classpath://mappings/globals-example.dtd">%globals;]>
+
+<hibernate-mapping default-access="field">
+   	
+    <class name="&CompletionCertificate;" table="RMA_COMPLETION_CERTIFICATE">
+        <id name="id" column="C_ID" type="long" access="property">
+            <generator class="native"/>
+        </id>
+        
+		<property name="key" column="CC_NO" type="long"/>            
+		<property name="desc" column="CC_DESC" type="string"/>
+		<property name="status" column="CC_STATUS" type="&CompletionCertificateStatusType;" not-null="true"/>
+		<property name="dateRaised" column="RAISED_DATE" type="timestamp"/>
+		<property name="dateAccepted" column="ACCEPTED_DATE" type="timestamp"/>
+				
+		<many-to-one name="initiatedAt" class="&Workshop;" lazy="false" column="INITIATED_AT"/>
+		<many-to-one name="initiatedBy" class="&Person;" lazy="false" column="INITIATED_BY"/>
+		<many-to-one name="acceptedBy" class="&Person;" lazy="false" column="ACCEPTED_BY"/>
+		
+		<set name="entries" cascade="save-update" lazy="false">
+			<key column="CC_NO"/>
+			<one-to-many class="&CompletionCertificateEntry;"/>
+		</set>
+		       
+	</class>        
+</hibernate-mapping>

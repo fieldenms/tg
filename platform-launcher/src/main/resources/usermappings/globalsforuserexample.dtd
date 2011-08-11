@@ -1,0 +1,7 @@
+<!ENTITY CommonEntityId SYSTEM "classpath://usermappings/CommonEntityId.xml">
+<!ENTITY CommonEntityVersion SYSTEM "classpath://usermappings/CommonEntityVersion.xml">
+<!ENTITY UserRole "ua.com.fielden.platform.security.user.UserRole">
+<!ENTITY UserAndRoleAssociation "ua.com.fielden.platform.security.user.UserAndRoleAssociation">
+<!ENTITY Person "ua.com.fielden.platform.example.entities.Person">
+<!ENTITY SecurityRoleAssociation "ua.com.fielden.platform.security.user.SecurityRoleAssociation">
+<!ENTITY SecurityTokenType "ua.com.fielden.platform.persistence.types.SecurityTokenType">

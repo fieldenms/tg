@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"
+[<!ENTITY % globals SYSTEM "classpath://mappings/globals-example.dtd">%globals;]>
+
+<hibernate-mapping default-access="field">
+   	
+    <class name="&Advice;" table="RMA_ADVICE">
+        <id name="id" column="C_ID" type="long" access="property">
+            <generator class="native"/>
+        </id>
+        
+		<property name="key" column="ADVICE_NO" type="long"/>            
+		<property name="desc" column="ADVICE_DESC" type="string"/>
+		<property name="dateRaised" column="RAISED_DATE" type="timestamp"/>
+		<property name="dateDispatched" column="DISPATCHED_DATE" type="timestamp"/>
+		<many-to-one name="dispatchedToWorkshop" class="&Workshop;" lazy="false" column="DISPATCH_TO_WORKSHOP"/>
+		<property name="road" column="IS_ROAD" type="yes_no"/>
+		
+		<property name="received" column="IS_RECEIVED" type="yes_no"/>
+		
+		<many-to-one name="carrier" class="&Wagon;" lazy="false" column="CARRIER_WAGON"/>
+		<many-to-one name="initiatedAtWorkshop" class="&Workshop;" lazy="false" column="INIT_AT_WORKSHOP"/>		
+		
+		<list name="positions" cascade="save-update" lazy="false">
+			<key column="ADVICE"/>
+			<list-index column="POSITION" base="1"/>
+			<one-to-many class="&AdvicePosition;"/>
+		</list>
+		       
+	</class>        
+</hibernate-mapping>

@@ -1,0 +1,7 @@
+<id name="id" column="ID_COLUMN" type="long" access="property">
+	<generator class="seqhilo">
+		<param name="sequence">COMMON_RMA_SEQUENCE</param>
+		<param name="max_lo">1000</param>
+	</generator>
+</id>
+		

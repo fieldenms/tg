@@ -1,0 +1,33 @@
+<!-- Global settings imported by all XMl mapping files.
+     You can customise this file on deployment to keep your
+     mapping files portable. -->
+
+<!-- monetary user types -->
+<!ENTITY MoneyUserType "ua.com.fielden.platform.persistence.types.MoneyUserType">
+<!ENTITY InspectedEntity "ua.com.fielden.platform.example.swing.ei.InspectedEntity">
+<!-- other types -->
+<!ENTITY RotableClass "ua.com.fielden.platform.example.entities.RotableClass">
+<!ENTITY BogieClassCompatibility "ua.com.fielden.platform.example.entities.BogieClassCompatibility">
+<!ENTITY WagonClassCompatibility "ua.com.fielden.platform.example.entities.WagonClassCompatibility">
+<!ENTITY WagonClass "ua.com.fielden.platform.example.entities.WagonClass">
+<!ENTITY Equipment "ua.com.fielden.platform.example.entities.Equipment">
+<!ENTITY Bogie "ua.com.fielden.platform.example.entities.Bogie">
+<!ENTITY Wheelset "ua.com.fielden.platform.example.entities.Wheelset">
+<!ENTITY Rotable "ua.com.fielden.platform.example.entities.Rotable">
+<!ENTITY BogieClass "ua.com.fielden.platform.example.entities.BogieClass">
+<!ENTITY WheelsetClass "ua.com.fielden.platform.example.entities.WheelsetClass">
+<!ENTITY Wagon "ua.com.fielden.platform.example.entities.Wagon">
+<!ENTITY Workshop "ua.com.fielden.platform.example.entities.Workshop">
+<!ENTITY WorkOrder "ua.com.fielden.platform.example.entities.WorkOrder">
+<!ENTITY WagonSlot "ua.com.fielden.platform.example.entities.WagonSlot">
+<!ENTITY BogieSlot "ua.com.fielden.platform.example.entities.BogieSlot">
+<!ENTITY RotableLocation "ua.com.fielden.platform.example.entities.RotableLocation">
+<!ENTITY Advice "ua.com.fielden.platform.example.entities.Advice">
+<!ENTITY AdvicePosition "ua.com.fielden.platform.example.entities.AdvicePosition">
+<!ENTITY Person "ua.com.fielden.platform.example.entities.Person">
+<!ENTITY CompletionCertificate "ua.com.fielden.platform.example.entities.CompletionCertificate">
+<!ENTITY CompletionCertificateEntry "ua.com.fielden.platform.example.entities.CompletionCertificateEntry">
+<!ENTITY RotableStatusType "ua.com.fielden.platform.example.entities.types.RotableStatusType">
+<!ENTITY CompletionCertificateStatusType "ua.com.fielden.platform.example.entities.types.CompletionCertificateStatusType">
+<!ENTITY UserRole "ua.com.fielden.platform.security.user.UserRole">
+<!ENTITY UserAndRoleAssociation "ua.com.fielden.platform.security.user.UserAndRoleAssociation">

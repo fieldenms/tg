@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"
+[<!ENTITY % globals SYSTEM "classpath://mappings/globals-example.dtd">%globals;]>
+
+<hibernate-mapping default-access="field">
+   	
+    <class name="&CompletionCertificateEntry;" table="RMA_COMPLETION_CERTIFICATE_ENTRY">
+        <id name="id" column="C_ID" type="long" access="property">
+            <generator class="native"/>
+        </id>
+        	
+		<many-to-one name="completionCertificate" class="&CompletionCertificate;" lazy="false" column="CC_NO"/>
+		<many-to-one name="rotable" class="&Rotable;" lazy="false" column="ROTABLE"/>
+		
+		<property name="date" column="CREATED_DATE" type="timestamp"/>
+		<property name="completed" column="COMPLETED" type="yes_no"/>
+		<property name="price" type="&MoneyUserType;">
+			<column name="amount"/>
+			<column name="currency"/>
+		</property>
+		       
+	</class>        
+</hibernate-mapping>

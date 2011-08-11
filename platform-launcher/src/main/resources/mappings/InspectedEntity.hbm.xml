@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"
+[<!ENTITY % globals SYSTEM "classpath://mappings/globals-example.dtd">%globals;]>
+
+<hibernate-mapping default-access="field">
+   	
+    <class name="&InspectedEntity;" table="INSPECTED_ENTITIES" lazy="false">
+        <id name="id" column="ID_COLUMN" type="long" access="property">
+            <generator class="native"/>
+        </id>
+        
+		<property name="key" column="KEY" type="string" unique-key="true"/>            
+		<property name="desc" column="DESC" type="string"/>
+		<property name="intProperty" column="INT_PROPERTY" type="integer"/>
+		<property name="decimalProperty" column="DECIMAL_PROPERTY" type="big_decimal"/>
+		<property name="moneyProperty" type="&MoneyUserType;">
+			<column name="MONEY_PROPERTY"/>
+			<column name="MONEY_PROPERTY_CURRENCY"/>
+		</property>		
+		<property name="dateProperty" column="DATE_PROPERTY" type="timestamp"/>
+		<property name="booleanProperty" column="BOOLEAN_PROPERTY" type="yes_no"/>
+    	<many-to-one name="entityPropertyOne" class="&InspectedEntity;" column="ENTITY_PROPERTY_ONE" lazy="proxy"/>
+    	<many-to-one name="entityPropertyTwo" class="&InspectedEntity;" column="ENTITY_PROPERTY_TWO" lazy="proxy"/>
+	</class>        
+</hibernate-mapping>
