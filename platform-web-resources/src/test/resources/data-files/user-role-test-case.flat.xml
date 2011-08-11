@@ -1,0 +1,50 @@
+<dataset>
+    <NUMBERS _ID="1" NUMBKEY="WO" WONOINC="500"  _VERSION="0"/>
+	<UNIQUE_ID _ID="1" NEXT_VALUE="13"/>
+
+	<USER_ROLE _ID="1" _VERSION="0" KEY_="role1" DESC_="role desc 1"/>
+	<USER_ROLE _ID="2" _VERSION="0" KEY_="role2" DESC_="role desc 2"/>
+	<USER_ROLE _ID="3" _VERSION="0" KEY_="role3" DESC_="role desc 3"/>
+	<USER_ROLE _ID="4" _VERSION="0" KEY_="role4" DESC_="role desc 4"/>
+	<USER_ROLE _ID="5" _VERSION="0" KEY_="role5" DESC_="role desc 5"/>
+	<USER_ROLE _ID="6" _VERSION="0" KEY_="role6" DESC_="role desc 6"/>
+	<USER_ROLE _ID="7" _VERSION="0" KEY_="role7" DESC_="role desc 7"/>
+	<USER_ROLE _ID="8" _VERSION="0" KEY_="role8" DESC_="role desc 8"/>
+	
+
+ 	<CRAFT _ID="1" KEY_="PERSON-1" DESC_="desc" USER_NAME="USER-1" USER_PASSWORD="PASSWORD-1" _VERSION="0"
+	CT_MAINTSUPERVISOR="N" CT_ORIGINATOR="N" CT_AUTHORISOR="N" CT_ISSUER="N" CT_BUYER="N" CT_PLANNER="N"
+	RATE="0.0" OVERTIME_RATE="0.0" IS_BASE = "N"/>
+	<CRAFT _ID="2" KEY_="PERSON-2" DESC_="desc" USER_NAME="USER-2" USER_PASSWORD="PASSWORD-2" _VERSION="0"
+	CT_MAINTSUPERVISOR="N" CT_ORIGINATOR="N" CT_AUTHORISOR="N" CT_ISSUER="N" CT_BUYER="N" CT_PLANNER="N"
+	RATE="0.0" OVERTIME_RATE="0.0" IS_BASE = "N"/>
+	<CRAFT _ID="3" KEY_="PERSON-3" DESC_="desc" USER_NAME="USER-3" USER_PASSWORD="PASSWORD-3" _VERSION="0"
+	CT_MAINTSUPERVISOR="N" CT_ORIGINATOR="N" CT_AUTHORISOR="N" CT_ISSUER="N" CT_BUYER="N" CT_PLANNER="N"
+	RATE="0.0" OVERTIME_RATE="0.0" IS_BASE = "N"/>
+	<CRAFT _ID="4" KEY_="PERSON-4" DESC_="desc" USER_NAME="USER-4" USER_PASSWORD="PASSWORD-4" _VERSION="0"
+	CT_MAINTSUPERVISOR="N" CT_ORIGINATOR="N" CT_AUTHORISOR="N" CT_ISSUER="N" CT_BUYER="N" CT_PLANNER="N"
+	RATE="0.0" OVERTIME_RATE="0.0" IS_BASE = "N"/>
+	
+	
+	<USER_ROLE_ASSOCIATION _ID="1" _VERSION="0" ID_CRAFT="1" ID_USER_ROLE="1"/>
+	<USER_ROLE_ASSOCIATION _ID="2" _VERSION="0" ID_CRAFT="1" ID_USER_ROLE="2"/>
+	<USER_ROLE_ASSOCIATION _ID="3" _VERSION="0" ID_CRAFT="2" ID_USER_ROLE="3"/>
+	<USER_ROLE_ASSOCIATION _ID="4" _VERSION="0" ID_CRAFT="2" ID_USER_ROLE="4"/>
+	<USER_ROLE_ASSOCIATION _ID="5" _VERSION="0" ID_CRAFT="3" ID_USER_ROLE="5"/>
+	<USER_ROLE_ASSOCIATION _ID="6" _VERSION="0" ID_CRAFT="3" ID_USER_ROLE="6"/>
+	<USER_ROLE_ASSOCIATION _ID="7" _VERSION="0" ID_CRAFT="4" ID_USER_ROLE="7"/>
+	<USER_ROLE_ASSOCIATION _ID="8" _VERSION="0" ID_CRAFT="4" ID_USER_ROLE="8"/>
+	
+	<SECURITY_ROLE_ASSOCIATION _ID="1" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.FirstLevelSecurityToken1" ID_USER_ROLE="1"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="2" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.FirstLevelSecurityToken1" ID_USER_ROLE="2"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="3" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.FirstLevelSecurityToken2" ID_USER_ROLE="3"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="4" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.FirstLevelSecurityToken2" ID_USER_ROLE="4"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="5" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.SecondLevelSecurityToken1" ID_USER_ROLE="5"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="6" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.SecondLevelSecurityToken1" ID_USER_ROLE="6"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="7" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.SecondLevelSecurityToken2" ID_USER_ROLE="7"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="8" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.SecondLevelSecurityToken2" ID_USER_ROLE="8"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="9" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.ThirdLevelSecurityToken1" ID_USER_ROLE="1"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="10" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.ThirdLevelSecurityToken1" ID_USER_ROLE="2"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="11" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.ThirdLevelSecurityToken2" ID_USER_ROLE="3"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="12" _VERSION="0" TOKEN="ua.com.fielden.web.security.userroleaccosication.ThirdLevelSecurityToken2" ID_USER_ROLE="4"/>
+</dataset>
