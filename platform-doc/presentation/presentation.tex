@@ -1,0 +1,191 @@
+\documentclass[10pt]{beamer}
+\mode<presentation>
+  {
+    \usetheme{CambridgeUS}
+    \setbeamercovered{transparent}
+  }
+\usefonttheme[]{serif}
+\usepackage[english,ukrainian]{babel}
+\usepackage[OT1,T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+
+
+\mathchardef\ordinarycolon\mathcode`\:
+\mathcode`\:=\string"8000
+\begingroup \catcode`\:=\active
+  \gdef:{\mathrel{\mathop\ordinarycolon}}
+\endgroup
+\setlength{\parindent}{1cm} \setlength{\parskip}{1ex plus 0.5ex
+minus 0.2ex}
+
+%----------------------------------------------------------------
+\title{Trident Genesis}
+\subtitle{The Software Development Platform}
+
+\author{FMS}
+\institute{Fielden R'n'D}
+
+\date{Lviv -- 2009}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%title%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\frame{\titlepage}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Making of Software}
+\frame{
+	\frametitle{Software development with Delphi: Problems I}
+	\Large{
+	\begin{itemize}
+  	\item High level of development complexity -- too much of tech details.
+  	\item Poor to none code reuse.
+  	\item Referential integrity issues.
+	\item Concurrent data modification issues.
+	\item No unit tests to ensure business logic is not broken after modification.
+	\end{itemize}
+      }
+}
+\frame{
+	\frametitle{Software development with Delphi: Problems II}
+	\Large{
+	\begin{itemize}
+	\item Hardcoded values.
+	\item Data duplication at the DB level (no surrogate IDs).
+	\item Difficult to modify UI layout due to pixel precision positioning.
+	\item User interface usability issues (intrusive validation etc).
+	\item RDBMS dependency (SP + proprietary features).
+	\end{itemize}
+      }
+}
+\frame{
+	\frametitle{Browser-based web applications with Java}
+	\Large{
+	\begin{itemize}
+  	\item Browser dependency.
+  	\item Lack of UI richness and interactiveness (HTML limitation, session management)
+  	\item Complex development model (HTML, CSS, JavaScript, AJAX, Web-framework...) -- huge!
+	\item Still too much of technical details.
+	\end{itemize}
+      }
+}
+\frame{
+	\frametitle{Domain-Driven Design}
+	\Large{
+	\begin{block}{}
+	 Software design approach based on two premises:
+	\end{block}
+	\begin{itemize}
+  	\item Complex domain designs should be based on a business model.
+  	\item The primary focus should be on the domain and domain logic -- not a particular technology used to implement the system.
+	\end{itemize}
+	}
+}
+\frame{
+	\frametitle{Domain-Driven Design: Metaphors}
+	\Large{
+	\begin{itemize}
+  	\item Entities: continuity and identity.
+  	\item Value Objects: aggregated data.
+  	\item Services: business logic
+	\item Repositories: methods for storing domain objects.
+	\item Factories: methods for creating domain objects.
+	\end{itemize}
+	}
+}
+\section{Trident Genesis Platform}
+\frame{
+	\frametitle{What is TG?}
+	\Large{
+	\begin{block}{}
+	Trident Genesis (TG) is an application platform for developing rich internet applications where the main emphasis is made on Domain-Driven Design.
+	\end{block}
+	\begin{block}{}
+	The platform tries to take away the technical hurdles as much as possible while providing a complete control to developers (i.e. no code generation, no special tools etc.).
+	\end{block}
+      }
+}
+\frame{
+	\frametitle{Core Principles I}
+	\Large{
+	\begin{itemize}
+  	\item Domain centric application development with a life cycle revolving around business entities and logic.
+  	\item Easy development of business entities by providing common implementation for identity, equality, natural ordering etc.
+  	\item Declarative programming.
+	\item Highly configurable.
+	\item Web-enabled -- supports REST architecture.
+	\item Client Application Framework for life cycle management.
+	\end{itemize}
+      }
+}
+\frame{
+	\frametitle{Core Principles II}
+	\Large{
+	\begin{itemize}
+	\item Ease of user interface (UI) development in a domain centric way.
+	\item Scalable architecture -- caters for development of small and large business systems.
+	\item RDBMS independent by means of using O/R Mapper.
+	\item Based on well-known FOSS Java technologies such as Guice, Hibernate, Swing reducing the learning curve.
+	\item Pure Java (no need to know HTML, CSS, JavaScript and other browser-related technologies)
+	\end{itemize}
+      }
+}
+\frame{
+	\frametitle{Main Advantages}
+	\Large{
+	\begin{itemize}
+	\item Improves maintainability (5-20 times code reduction)
+	\item Increases speed of development.
+	\item Enables truly Rich Internet Application development.
+	\item Covers a complete development life cycle -- from DB to UI.
+	\item OS and RDBMS independent.
+	\item Ensures data integrity automatically (covers concurrent modifications)
+	\item Based on pure Java (single technology -- reduces learning curve)
+	\end{itemize}
+      }
+}
+\frame{
+	\frametitle{Business Model around TG}
+	\Large{
+	\begin{itemize}
+	\item The problems TG solves are not unique to FMS.
+	\item TG is a viable solution for others.
+	\item We eat our own dog food -- very important for adoption by others.
+	\item Dual licensing (FOSS and commercial) to gain popularity.
+	\item Commercial support including training and mentoring.
+	\item The audience: existing Java and non-Java developers in ISV firms as well as IT departments for in-house custom solution development.
+	\end{itemize}
+      }
+}
+\frame{
+	\frametitle{Future directions}
+	\Large{
+	\begin{itemize}
+	\item TG development patterns.
+	\item Development tools (Eclipse Plug-ins) for automating creation of business entities and stubs for associated business rules.
+	\item Ready to use business solutions for specific business domains (EAM, ERP, CRM).
+	\item Domain Specific Languages using Scala.
+	\item TG-based SaaS solutions.
+	\end{itemize}
+      }
+}
+
+\section{Other}
+\frame{
+	\frametitle{FMS.ua Development Infrastructure}
+	\Large{
+	\begin{itemize}
+	\item Eclipse IDE -- used for development of TG and TG-based solutions.
+	\item Trac -- requirement and bug tracking management tool.
+	\item Hudson -- continuous integration (CI) tool.
+	\item Maven -- a software project management and comprehension tool.
+	\item Sonar -- code quality management tool.
+	\item Subversion -- a version control system.
+	\end{itemize}
+      }
+}
+
+\end{document}
