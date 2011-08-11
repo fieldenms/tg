@@ -1,0 +1,237 @@
+% Oles Hodych June 2011
+%test commit
+
+%\documentclass[graybox,envcountchap,sectrefs]{svmono}
+%\documentclass[a4paper,graybox,envcountchap,sectrefs,12pt]{svmono}
+%\documentclass[b5paper,oneside,12pt]{svmono}
+\documentclass[a4paper,oneside,12pt]{svmono} %
+
+\usepackage{makeidx}         % allows index generation
+\usepackage{multicol}        % used for the two-column index
+\usepackage[bottom]{footmisc}% places footnotes at page bottom
+
+\usepackage{indentfirst}         % first paragraph indent
+
+% Налагодження кодування шрифта, кодування вхідного файла
+% та вибір необхідних мов
+%\usepackage[T2A]{fontenc}
+\usepackage[cp1251]{inputenc}
+\usepackage[english,ukrainian,russian]{babel}
+%\usepackage[english]{babel}
+
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{alltt}
+\usepackage{moreverb}
+\usepackage{setspace}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{multirow}
+\usepackage{bigstrut}
+\usepackage{makecell}
+\usepackage[table]{xcolor}
+\usepackage{tabularx}
+\usepackage{wrapfig}% використаний замість пакету floatflt, який був вилучений із texlive що посмачається із ubuntu 10.04.
+\usepackage{url}
+\usepackage{array}
+\usepackage{booktabs}
+% Підключення необхідних пакетів. Наприклад,
+% Пакети AMS для підтримки математики, теорем, спеціальних шрифтів
+%\usepackage[intlimits]{amsmath}
+%\allowdisplaybreaks
+\usepackage{amssymb}
+%\usepackage{amsthm}
+% Налагодження нумерованих списків
+\usepackage{enumerate}
+% Гіпертекстові документи
+%\usepackage{hyperref}
+% або лише спеціальне форматування URL
+%\usepackage{url}
+% У списку літератури зворотні вказівки на посилання
+%\usepackage{backref}
+% Сортування посилань
+%\usepackage[noadjust]{cite}
+% Останні два пакети несумісні між собою. Крім того, конфліктують з цим класом!
+
+% Налагодження параметрів сторінки (зокрема берегів).
+% Наприклад, за допомогою пакета geometry
+\usepackage{geometry}
+%\geometry{hmargin={30mm,15mm},vmargin={26mm,26mm}}
+%\geometry{total={14cm,20.5cm},includehead}
+%\geometry{hmargin={20mm,20mm},vmargin={20mm,20mm}}
+%\geometry{mag=1414}
+
+%\usepackage{color}
+
+% TikZ
+\usepackage[version=0.96]{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,shapes,shapes.arrows,shapes.misc,snakes,automata,backgrounds,petri,patterns,positioning,scopes,chains,matrix,decorations.pathmorphing,shadows,calc}
+
+% Пакет crop дає змогу забрати весь текст або графіку з проекту
+
+\let\origcolor\color
+\expandafter\let\csname origcolor \expandafter\endcsname\csname color \endcsname
+\let\origtextcolor\textcolor
+\expandafter\let\csname origtextcolor \expandafter\endcsname\csname textcolor \endcsname
+% there is also `\pagecolor` but it isn't of relevance here
+
+\newcommand{\restorecolorcmds}{%
+    \let\color\origcolor
+    \expandafter\let\csname color \expandafter\endcsname\csname origcolor \endcsname
+    \let\textcolor\origtextcolor
+    \expandafter\let\csname textcolor \expandafter\endcsname\csname origtextcolor \endcsname
+    \color{black}%
+}
+
+%\newcommand{\restorecolorcmds}{}
+
+%\usepackage[notext]{crop}
+%\usepackage{crop}
+
+% b/w or color images selection
+
+\newcommand*\colorgraphics{\restorecolorcmds} % print them
+%\newcommand*\colorgraphics{\crop[nographics] \color{white} } % don’t!
+
+\newcommand*\monographics{\restorecolorcmds} % print them
+%\newcommand*\monographics{\crop[nographics] \color{white} } % don’t!
+
+
+% Інформація про використані пакети тощо.
+% Може знадобитися для відлагодження класу документа
+%\listfiles
+
+% custom commands
+\def\argmin{\mathop{\rm arg\,min}} %define \argmin command
+
+\begin{document}
+\selectlanguage{english}
+%\spacing{1.4}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%% Tkz styles %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\tikzset{
+  terminal/.style={
+    % The shape:
+    rounded rectangle, 
+    minimum height=10mm,
+    minimum width=80mm,
+    % The border:
+    very thick,
+    draw=black!50,
+    %draw=green!50!black!50,         % 50% red and 50% black,
+                                  % and that mixed with 50% white
+    % The filling:
+    %top color=white,              % a shading that is white at the top...
+    %bottom color=green!50!black!20, % and something else at the bottom
+    % Font
+    font=\itshape,text centered,text width=80mm
+  },
+  decision/.style={
+    inner sep=1pt,
+    % The shape:
+    diamond,    
+    minimum width=80mm,
+    % The rest
+    very thick,draw=black!50,
+    %top color=white,bottom color=black!20,
+    font=\ttfamily,text centered,text width=80mm
+  },
+  process/.style={
+    % The shape:
+    rectangle,
+    % The size:
+    minimum height=20mm,
+    minimum width=80mm,
+    % The rest
+    very thick,draw=black!50,
+    %top color=white,bottom color=black!20,
+    font=\ttfamily,text centered,text width=80mm%,text depth=15mm
+  },  
+  data/.style={
+    % The shape:    
+    trapezium,
+    trapezium left angle=50, 
+    trapezium right angle=130,
+    %trapezium stretches=true,
+    trapezium stretches body,
+    minimum height=20mm,
+    minimum width=80mm,
+    % The rest
+    very thick,draw=black!50,
+    %top color=white,bottom color=black!20,
+    font=\ttfamily,
+    text centered,text width=80mm%,text depth=15mm
+  },
+  dot/.style={
+    circle,
+    minimum height=1mm,    
+    fill=black
+  },
+  thickline/.style={draw, line width=5pt, color=black},
+  line/.style={draw, very thick, color=black!50,rounded corners},
+  help-lines/.style={draw, very thin, color=black!50},
+  arrow/.style={draw, very thick, color=black!50, -latex',rounded corners},
+  helper-arrow/.style={draw, very thin, color=black, -latex'},
+  dashed-line/.style={draw, dashed, color=black},
+  point/.style={coordinate}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\author{Oles~Hodych, Nazar~Chaykivskyy, Yura~Prokopiv, Oleh~Maykovych}
+\title{TG or not TG}
+\subtitle{The Developer's Guide}
+\date{}
+\maketitle
+
+\frontmatter%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \include{parts/00-frontmatter/dedic}
+% \include{parts/00-frontmatter/foreword}
+\include{parts/00-frontmatter/preface}
+% \include{parts/00-frontmatter/acknow}
+
+% Зміст
+\setcounter{tocdepth}{2} % контролює рівень заголовків, які повинні відображатись у змісті
+\begin{spacing}{1}
+  \tableofcontents
+\end{spacing}
+\nocite{*}
+
+% \include{acronym}
+
+
+\mainmatter%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\include{parts/01-part/01-part}
+\include{parts/01-part/chapters/00-quick-start/quick-start}
+\include{parts/01-part/chapters/01-platform-architecture/platform-architecture}
+\include{parts/01-part/chapters/02-the-model/the-model}
+\include{parts/01-part/chapters/03-ui-construction/ui-construction}
+\include{parts/01-part/chapters/04-roa/roa}
+\include{parts/01-part/chapters/05-entity-query/entity-query}
+\include{parts/01-part/chapters/06-built-in-analytics/built-in-analytics}
+\include{parts/01-part/chapters/07-visualisation-and-interactivity/visualisation-and-interactivity}
+\include{parts/01-part/chapters/08-putting-all-together/putting-all-together}
+
+\include{parts/02-part/02-part}
+\include{parts/02-part/chapters/01-entity-models/entity-models}
+\include{parts/02-part/chapters/02-mapping-strategies/mapping-strategies}
+\include{parts/02-part/chapters/03-ui-patterns/ui-patterns}
+\include{parts/02-part/chapters/04-creation-of-web-resources/creation-of-web-resources}
+\include{parts/02-part/chapters/05-entity-query-patterns/entity-query-patterns}
+\include{parts/02-part/chapters/06-security-patterns/security-patterns}
+
+\include{parts/03-bibliography/bibliography}%   Список використаних джерел
+
+\backmatter%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\include{glossary}
+%\include{solutions}
+\printindex
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}

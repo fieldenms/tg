@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE vymmap>
+<vymmap  version="1.12.2" author="" comment="" date="2011-06-15" backgroundColor="#ffffff" selectionColor="#ffff00" linkStyle="StylePolyParabel" linkColor="#0000ff" defXLinkColor="#e6e6e6" defXLinkWidth="1">
+    <mapcenter absPosX="-1686" absPosY="-246" hideLink="false" x1="-1686" y1="-246" x2="-1265" y2="-212" incImgV="false" incImgH="false">
+        <heading >Domain Tree Representation / Manager</heading>
+        <frame  frameType="Rectangle" penColor="#000000" brushColor="#ffffff" padding="0" borderWidth="1" />
+        <branch relPosX="206" relPosY="-80" hideLink="false" x1="-1427" y1="-309" x2="-1225" y2="-281" incImgV="false" incImgH="false">
+            <heading  textColor="#000000">Calculated properties</heading>
+            <frame  frameType="Rectangle" penColor="#110500" brushColor="#ffffff" padding="0" borderWidth="2" />
+            <standardflag>lamp</standardflag>
+            <floatimage  relPosX="-434" relPosY="-462" hideLink="true" useOrientation="true" saveInMap="true" floatExport="true" zPlane="65" href="file:images/DomainTree-image-1.png" orgName="calcProp.png" />
+            <branch hideLink="false" x1="-1205" y1="-529" x2="-1085" y2="-503" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Editor (UI)</heading>
+                <standardflag>2arrow-up</standardflag>
+                <standardflag>cross-red</standardflag>
+                <branch hideLink="false" x1="-1065" y1="-581" x2="-789" y2="-555" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Calculated properties editable EGI</heading>
+                    <standardflag>questionmark</standardflag>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-1065" y1="-555" x2="-798" y2="-529" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Origination property context (Totals)</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-1065" y1="-529" x2="-885" y2="-503" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Apply / Discard actions</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-1065" y1="-503" x2="-820" y2="-477" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Different types of calc properties</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-1065" y1="-477" x2="-769" y2="-451" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Shortcuts(AVG..MIN;YEAR..DAY;ALL..ANY)</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+            </branch>
+            <branch hideLink="false" x1="-1205" y1="-334" x2="-1127" y2="-308" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Categories</heading>
+                <branch hideLink="false" x1="-1107" y1="-438" x2="-857" y2="-412" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">&quot;Attributed (ALL/ANY) collections&quot;</heading>
+                    <htmlnote  fonthint="var">
+
+<html><head><meta name="qrichtext" content="1"></meta><style type="text/css">
+p, li { white-space: pre-wrap; }
+</style></head><body style=" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">Expressions in form of single atom:</span></p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;"></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">1) &quot;collectional selection&quot; atoms:</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">&quot;</span><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384;">ALL([Vehicle.fuelUsages.oilQuantity - 500]</span><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">&quot;, &quot;ANY(Vehicle.fuelCards.Number)&quot;</span></p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;"></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">These properties could only be </span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">1) queried (not resulted and not used in other calculated properties etc.)</span></p></body></html>
+                    </htmlnote>
+                    <branch hideLink="false" x1="-837" y1="-451" x2="-744" y2="-425" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">Query</heading>
+                        <standardflag>2arrow-up</standardflag>
+                        <standardflag>cross-red</standardflag>
+                    </branch>
+                    <branch hideLink="false" x1="-837" y1="-425" x2="-766" y2="-399" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">Result</heading>
+                        <standardflag>stopsign</standardflag>
+                    </branch>
+                </branch>
+                <branch hideLink="false" x1="-1107" y1="-360" x2="-895" y2="-334" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">&quot;Aggregated property&quot; (simple)</heading>
+                    <branch hideLink="false" x1="-875" y1="-399" x2="-829" y2="-373" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">Totals</heading>
+                    </branch>
+                    <branch hideLink="false" x1="-875" y1="-373" x2="-692" y2="-347" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">Chart analysis aggregation</heading>
+                    </branch>
+                    <branch hideLink="false" x1="-875" y1="-347" x2="-694" y2="-321" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">Pivot analysis aggregation</heading>
+                    </branch>
+                    <branch hideLink="false" x1="-875" y1="-321" x2="-723" y2="-295" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">Query + Result</heading>
+                        <standardflag>2arrow-up</standardflag>
+                        <standardflag>cross-red</standardflag>
+                    </branch>
+                </branch>
+                <branch hideLink="false" x1="-1107" y1="-282" x2="-892" y2="-256" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">&quot;Aggregated collections&quot;</heading>
+                    <standardflag>smiley-omb</standardflag>
+                    <htmlnote  fonthint="var">
+
+<html><head><meta name="qrichtext" content="1"></meta><style type="text/css">
+p, li { white-space: pre-wrap; }
+</style></head><body style=" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">Expressions that contain the following atoms:</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">1) simple atoms:</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">&quot;4&quot;, &quot;A5678&quot;, &quot;[</span><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384;">Vehicle.</span><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">techDetails.tankCapacity]&quot;</span></p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;"></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">2) collectional aggregation atoms:</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">&quot;</span><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384;">SUM([Vehicle.fuelUsages.oilQuantity]</span><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">&quot;, &quot;MAX(Vehicle.fuelCards.Number)&quot;</span></p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;"></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">============================</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">These properties could be maintained exactly as simple properties. They could be </span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">1) queried</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">2) resulted</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">3) used in other calculated properties</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">4) used as &quot;distribution&quot; properties for analyses (including pivot)</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">etc.</span></p></body></html>
+                    </htmlnote>
+                    <branch hideLink="false" x1="-872" y1="-295" x2="-756" y2="-269" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">Query</heading>
+                        <standardflag>2arrow-up</standardflag>
+                        <standardflag>questionmark</standardflag>
+                        <standardflag>cross-red</standardflag>
+                    </branch>
+                    <branch hideLink="false" x1="-872" y1="-269" x2="-755" y2="-243" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">Result</heading>
+                        <standardflag>arrow-up</standardflag>
+                        <standardflag>questionmark</standardflag>
+                        <standardflag>cross-red</standardflag>
+                    </branch>
+                </branch>
+                <branch hideLink="false" x1="-1107" y1="-230" x2="-843" y2="-204" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Expression (inside collection or not)</heading>
+                    <htmlnote  fonthint="var">
+
+<html><head><meta name="qrichtext" content="1"></meta><style type="text/css">
+p, li { white-space: pre-wrap; }
+</style></head><body style=" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">Expressions that contains only the following atoms:</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">1) simple atoms:</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">&quot;4&quot;, &quot;A5678&quot;, &quot;[</span><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384;">Vehicle.</span><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">techDetails.tankCapacity]&quot;</span></p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;"></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">==================================</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">These properties could be maintained exactly as simple properties. They could be </span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">1) queried</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">2) resulted</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">3) used in other calculated properties</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">4) used as &quot;distribution&quot; properties for analyses (including pivot)</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Nimbus Sans l'; font-size:14pt; font-weight:384; color:#000000;">etc.</span></p></body></html>
+                    </htmlnote>
+                    <branch hideLink="false" x1="-823" y1="-243" x2="-730" y2="-217" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">Query</heading>
+                        <standardflag>2arrow-up</standardflag>
+                        <standardflag>cross-red</standardflag>
+                    </branch>
+                    <branch hideLink="false" x1="-823" y1="-217" x2="-729" y2="-191" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">Result</heading>
+                        <standardflag>2arrow-up</standardflag>
+                        <standardflag>cross-red</standardflag>
+                    </branch>
+                </branch>
+            </branch>
+            <branch hideLink="false" x1="-1205" y1="-139" x2="-980" y2="-113" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Representation logic (1 week)</heading>
+                <standardflag>hook-green</standardflag>
+                <branch hideLink="false" x1="-960" y1="-191" x2="-810" y2="-165" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">For All Categories:</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-960" y1="-165" x2="-866" y2="-139" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Excluding</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-960" y1="-139" x2="-868" y2="-113" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Disabling</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-960" y1="-113" x2="-805" y2="-87" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Available functions</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-960" y1="-87" x2="-917" y2="-61" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">...</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+            </branch>
+            <branch hideLink="false" x1="-1205" y1="-61" x2="-985" y2="-35" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Calc =&gt; Manager integration</heading>
+                <standardflag>hook-green</standardflag>
+            </branch>
+            <branch hideLink="false" x1="-1205" y1="-35" x2="-1026" y2="-9" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Domain generation</heading>
+                <standardflag>hook-green</standardflag>
+                <standardflag>smiley-good</standardflag>
+            </branch>
+        </branch>
+        <branch relPosX="-375" relPosY="225" hideLink="false" x1="-1851" y1="-4" x2="-1530" y2="24" incImgV="false" incImgH="false">
+            <heading  textColor="#000000">Analysis (Simple + Pivot + Lifecycle)</heading>
+            <standardflag>hook-green</standardflag>
+            <branch hideLink="false" x1="-2055" y1="-68" x2="-1871" y2="-42" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Add to Distribution Tick</heading>
+                <standardflag>hook-green</standardflag>
+                <branch hideLink="false" x1="-2140" y1="-94" x2="-2075" y2="-68" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">order</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2165" y1="-68" x2="-2075" y2="-42" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">selection</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2118" y1="-42" x2="-2075" y2="-16" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">...</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+            </branch>
+            <branch hideLink="false" x1="-2058" y1="36" x2="-1871" y2="62" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Add to Aggregation Tick</heading>
+                <standardflag>hook-green</standardflag>
+                <branch hideLink="false" x1="-2168" y1="-16" x2="-2078" y2="10" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">selection</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2163" y1="10" x2="-2078" y2="36" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">ordering</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2143" y1="36" x2="-2078" y2="62" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">order</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2204" y1="62" x2="-2078" y2="88" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">column widths</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2121" y1="88" x2="-2078" y2="114" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">...</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+            </branch>
+        </branch>
+        <branch relPosX="-110" relPosY="54" hideLink="false" x1="-1586" y1="-175" x2="-1505" y2="-147" incImgV="false" incImgH="false">
+            <heading  textColor="#000000">Global</heading>
+            <standardflag>cross-red</standardflag>
+            <branch hideLink="false" x1="-1829" y1="-187" x2="-1606" y2="-161" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">List of EntityCentre Managers</heading>
+                <standardflag>cross-red</standardflag>
+                <branch hideLink="false" x1="-1911" y1="-239" x2="-1849" y2="-213" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">save</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-1901" y1="-213" x2="-1849" y2="-187" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">init</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-1927" y1="-187" x2="-1849" y2="-161" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">discard</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-1948" y1="-161" x2="-1849" y2="-135" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">isChanged</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-1892" y1="-135" x2="-1849" y2="-109" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">...</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+            </branch>
+            <branch hideLink="false" x1="-1831" y1="-109" x2="-1606" y2="-83" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">default locators (type-centric)</heading>
+                <standardflag>cross-red</standardflag>
+            </branch>
+        </branch>
+        <branch relPosX="-467" relPosY="-80" hideLink="false" x1="-1943" y1="-309" x2="-1808" y2="-281" incImgV="false" incImgH="false">
+            <heading  textColor="#000000">Entity Centre</heading>
+            <standardflag>hook-green</standardflag>
+            <branch hideLink="false" x1="-2119" y1="-425" x2="-1963" y2="-399" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Add to Criteria Tick</heading>
+                <standardflag>hook-green</standardflag>
+                <branch hideLink="false" x1="-2213" y1="-542" x2="-2139" y2="-516" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">values</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2227" y1="-516" x2="-2139" y2="-490" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">negation</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2223" y1="-490" x2="-2139" y2="-464" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">isEmpty</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2280" y1="-464" x2="-2139" y2="-438" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">criterion position</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2182" y1="-438" x2="-2139" y2="-412" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">...</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2277" y1="-360" x2="-2139" y2="-334" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">locator manager</heading>
+                    <standardflag>hook-green</standardflag>
+                    <branch hideLink="false" x1="-2359" y1="-412" x2="-2297" y2="-386" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">save</heading>
+                        <standardflag>hook-green</standardflag>
+                    </branch>
+                    <branch hideLink="false" x1="-2349" y1="-386" x2="-2297" y2="-360" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">init</heading>
+                        <standardflag>hook-green</standardflag>
+                    </branch>
+                    <branch hideLink="false" x1="-2375" y1="-360" x2="-2297" y2="-334" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">discard</heading>
+                        <standardflag>hook-green</standardflag>
+                    </branch>
+                    <branch hideLink="false" x1="-2396" y1="-334" x2="-2297" y2="-308" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">isChanged</heading>
+                        <standardflag>hook-green</standardflag>
+                    </branch>
+                    <branch hideLink="false" x1="-2340" y1="-308" x2="-2297" y2="-282" incImgV="false" incImgH="false">
+                        <heading  textColor="#000000">...</heading>
+                        <standardflag>hook-green</standardflag>
+                    </branch>
+                </branch>
+            </branch>
+            <branch hideLink="false" x1="-2111" y1="-243" x2="-1963" y2="-217" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Add to Result Tick</heading>
+                <standardflag>hook-green</standardflag>
+                <branch hideLink="false" x1="-2266" y1="-282" x2="-2131" y2="-256" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">column position</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2216" y1="-256" x2="-2131" y2="-230" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">ordering</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2250" y1="-230" x2="-2131" y2="-204" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">column width</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2174" y1="-204" x2="-2131" y2="-178" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">...</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+            </branch>
+            <branch hideLink="false" x1="-2160" y1="-126" x2="-1963" y2="-100" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">List of Analysis Managers</heading>
+                <standardflag>hook-green</standardflag>
+                <branch hideLink="false" x1="-2242" y1="-178" x2="-2180" y2="-152" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">save</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2232" y1="-152" x2="-2180" y2="-126" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">init</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2258" y1="-126" x2="-2180" y2="-100" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">discard</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2279" y1="-100" x2="-2180" y2="-74" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">isChanged</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2223" y1="-74" x2="-2180" y2="-48" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">...</heading>
+                    <standardflag>hook-green</standardflag>
+                </branch>
+            </branch>
+        </branch>
+        <branch relPosX="-249" relPosY="-154" hideLink="false" x1="-1725" y1="-383" x2="-1580" y2="-355" incImgV="false" incImgH="false">
+            <heading  textColor="#000000">Persistence</heading>
+            <standardflag>smiley-good</standardflag>
+            <standardflag>hook-green</standardflag>
+            <branch hideLink="false" x1="-1926" y1="-395" x2="-1745" y2="-369" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Save/discard, cloning...</heading>
+                <standardflag>hook-green</standardflag>
+            </branch>
+            <branch hideLink="false" x1="-1842" y1="-369" x2="-1745" y2="-343" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">DB aspect</heading>
+                <standardflag>cross-red</standardflag>
+            </branch>
+        </branch>
+        <branch relPosX="-31" relPosY="-330" hideLink="false" x1="-1664" y1="-559" x2="-1496" y2="-531" incImgV="false" incImgH="false">
+            <heading  textColor="#000000">TG integration</heading>
+            <standardflag>smiley-sad</standardflag>
+            <standardflag>cross-red</standardflag>
+            <branch hideLink="false" x1="-1916" y1="-675" x2="-1684" y2="-649" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Entities Tree Integration</heading>
+                <standardflag>clock</standardflag>
+                <standardflag>smiley-omb</standardflag>
+                <standardflag>cross-red</standardflag>
+            </branch>
+            <branch hideLink="false" x1="-2015" y1="-610" x2="-1684" y2="-558" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Dynamic Crit replacing with Bind API + DTM + dummy (generated!) entity</heading>
+                <standardflag>clock</standardflag>
+                <standardflag>smiley-omb</standardflag>
+                <standardflag>cross-red</standardflag>
+                <branch hideLink="false" x1="-2187" y1="-649" x2="-2035" y2="-623" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Criteria DND Panel</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2242" y1="-623" x2="-2035" y2="-597" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Property Binders, Enhancer</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2171" y1="-597" x2="-2035" y2="-571" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">EntityDescriptor</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2170" y1="-571" x2="-2035" y2="-545" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">Property Editors</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+                <branch hideLink="false" x1="-2078" y1="-545" x2="-2035" y2="-519" incImgV="false" incImgH="false">
+                    <heading  textColor="#000000">...</heading>
+                    <standardflag>cross-red</standardflag>
+                </branch>
+            </branch>
+            <branch hideLink="false" x1="-1910" y1="-519" x2="-1684" y2="-493" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Entity Centre replacing</heading>
+                <standardflag>clock</standardflag>
+                <standardflag>smiley-omb</standardflag>
+                <standardflag>cross-red</standardflag>
+            </branch>
+            <branch hideLink="false" x1="-1928" y1="-493" x2="-1684" y2="-467" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Simple analysis replacing</heading>
+                <standardflag>clock</standardflag>
+                <standardflag>smiley-omb</standardflag>
+                <standardflag>cross-red</standardflag>
+            </branch>
+            <branch hideLink="false" x1="-1916" y1="-467" x2="-1684" y2="-441" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Pivot analysis replacing</heading>
+                <standardflag>clock</standardflag>
+                <standardflag>smiley-omb</standardflag>
+                <standardflag>cross-red</standardflag>
+            </branch>
+            <branch hideLink="false" x1="-1944" y1="-441" x2="-1684" y2="-415" incImgV="false" incImgH="false">
+                <heading  textColor="#000000">Lyfecycle analysis replacing</heading>
+                <standardflag>clock</standardflag>
+                <standardflag>smiley-omb</standardflag>
+                <standardflag>cross-red</standardflag>
+            </branch>
+        </branch>
+    </mapcenter>
+    <select>bo:2</select>
+</vymmap>

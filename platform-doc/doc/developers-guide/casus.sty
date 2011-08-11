@@ -1,0 +1,193 @@
+%%
+%% This is file `casus.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% vakthesis.dtx  (with options: `casus')
+%% 
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from casus.sty.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file vakthesis.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+\ProvidesPackage{casus}
+  [2004/02/20 v0.01 Casus (OMB)]
+%% Створити список правил відмінювання
+\def\declinenoun{}
+\def\declineadjective{}
+\newcommand{\declension}[1]{%
+  \def\@partofspeech{noun}%
+  \@split@declension#1.}
+\def\@split@declension#1. {%
+  \ifx\relax#1\relax
+  \else
+    \@split@entry#1.
+    \expandafter\@split@declension
+  \fi}
+\def\@split@entry{\@ifnextchar[\@extract@partofspeech
+  {\expandafter\csname @split@entry@\@partofspeech\endcsname}}
+\def\@extract@partofspeech[#1] {\def\@partofspeech{#1}%
+  \expandafter\csname @split@entry@\@partofspeech\endcsname}
+\def\@split@entry@noun#1 #2 #3 #4 #5 #6 #7. {%
+  \g@addto@macro\declinenoun{\entry{#1}{#2}{#3}{#4}{#5}{#6}{#7}}}
+\def\@split@entry@adjective#1 #2 #3 #4 #5 #6. {%
+  \g@addto@macro\declineadjective{\entry{#1}{#2}{#3}{#4}{#5}{#6}}}
+%% Приклад правил
+\declension{% цей рядок обов'язково повинен закінчуватися знаком %
+[noun]
+-ніверситет ніверситету ніверситету ніверситет ніверситетом ніверситеті ніверситете.
+-нститут нституту нституту нститут нститутом нституті нституте.
+-кадемія кадемії кадемії кадемію кадемією кадемії кадеміє.
+-ехнікум ехнікуму ехнікуму ехнікум ехнікумом ехнікумі ехнікуме.
+-оледж оледжу оледжу оледж оледжом оледжі оледже.
+-іністерство іністерства іністерству іністерство іністерством іністерстві іністерство.
+-ентр ентру ентру ентр ентром ентрі ентре.
+-омплекс омплексу омплексу омплекс омплексом омплексі омплексе.
+-б'єднання б'єднання б'єднанню б'єднання б'єднанням б'єднанні б'єднання.
+%% I відміна
+%%   тверда група
+-га ги зі гу гою зі го.
+-ка ки ці ку кою ці ко.
+-ха хи сі ху хою сі хо.
+-а и і у ою і о.
+%%   м'яка група
+-я і і ю ею і е.
+-ія ії ії ію ією ії іє.
+%%   мішана група
+-жа жі жі жу жею жі же.
+-ча чі чі чу чею чі че.
+-ша ші ші шу шею ші ше.
+-ща щі щі щу щею щі ще.
+[adjective]
+-ий ого ому ий им ому.
+-а ої ій у ою ій.
+-е ого ому е им ому.
+-ій ього ьому ій ім ьому.
+-я ьої ій ю ьою ій.
+-є ього ьому є ім ьому.
+}
+\newif\if@unknownword
+%% Відмінок #2 для слова #3
+%%     ukr        rus           eng
+%% N 0 називний   именительный  nominative
+%% G 1 родовий    родительный   genitive
+%% D 2 давальний  дательный     dative
+%% A 3 знахідний  винительный   accusative
+%% I 4 орудний    творительный  instrumental
+%% L 5 місцевий                 locative
+%%                              ablative(орудно-місцевий в Latin)
+%%                предложный    prepositional
+%% V 6 кличний                  vocative
+\newcommand{\case}[3][noun]{%
+  \def\@partofspeech{#1}%
+  \def\@temp{adjective}%
+%% з кирилецею (Н, Р, Д, ...) не працює
+  \def\@numbercase{\if N#20\else\if G#21\else\if D#22\else
+    \if A#23\else\if I#24\else\if L#25\else\if V#26\else
+    7\fi\fi\fi\fi\fi\fi\fi}%
+  \def\@worda{}%
+  \ifnum\@numbercase>6
+    \def\@worda{#3}\typeout{Unknown caseID: `#2'.}%
+  \else
+    \ifx\@partofspeech\@temp
+      \ifnum\@numbercase=6
+        \def\@worda{#3}%
+        \typeout{Adjective does not have vocative case.}%
+      \else
+        \@declineword{#3}\@nil
+      \fi
+    \else
+      \@declineword{#3}\@nil
+    \fi
+  \fi
+  \@worda}
+\def\@declineword#1\@nil{%
+  \ifx\relax#1\relax
+  \else
+    \@unknownwordfalse
+    \def\entry{\expandafter
+      \csname @case@\@partofspeech\endcsname
+      {\@numbercase}{\ifx\@worda\@empty\else-\fi#1}}%
+    \def\lastentry{\@unknownwordtrue}%
+    \expandafter\csname decline\@partofspeech\endcsname\lastentry
+    \if@unknownword
+      \@shift#1\@nil
+    \else
+      \g@addto@macro\@worda{\@wordb}%
+    \fi
+  \fi}
+\def\@shift#1{\g@addto@macro\@worda{#1}\@declineword}
+\def\@case@noun#1#2#3#4#5#6#7#8#9{%
+  \edef\@tempa{#2}\edef\@tempb{#3}%
+  \ifx\@tempa\@tempb
+    \def\@wordb{\ifcase#1 \@ifnextchar-\@gobble\relax#3\or
+      #4\or#5\or#6\or#7\or#8\or#9\fi}%
+    \expandafter\@gobbleallentries
+  \fi}
+\def\@case@adjective#1#2#3#4#5#6#7#8{%
+  \edef\@tempa{#2}\edef\@tempb{#3}%
+  \ifx\@tempa\@tempb
+    \def\@wordb{\ifcase#1 \@ifnextchar-\@gobble\relax#3\or
+      #4\or#5\or#6\or#7\or#8\fi}%
+    \expandafter\@gobbleallentries
+  \fi}
+\def\@gobbleallentries#1\lastentry{}
+%% Парадигма слова
+\newcommand{\paradigm}[2][noun]{%
+\begin{list}{}{\itemsep0pt\parsep0pt\def\makelabel##1{##1\hfil}}
+\item[Н.] \case[#1]{N}{#2}
+\item[Р.] \case[#1]{G}{#2}
+\item[Д.] \case[#1]{D}{#2}
+\item[З.] \case[#1]{A}{#2}
+\item[О.] \case[#1]{I}{#2}
+\item[М.] \case[#1]{L}{#2}
+\ifthenelse{\equal{#1}{noun}}{\item[Кл.] \case[#1]{V}{#2}}{}
+\end{list}}
+%% Перетворити речення #2 до відмінка #1
+\newcommand{\transformsentence}[2]{%
+  \def\@case{#1}%
+  \def\@processword##1{\case[adjective]{\@case}{##1} }%
+  \expandafter\@split@sentence#2 }
+\def\@split@sentence#1 {%
+  \ifx\relax#1\relax
+    \unskip
+  \else
+    \ifthenelse{\equal{#1}{університет}\or\equal{#1}{Університет}\or
+                \equal{#1}{інститут}\or\equal{#1}{Інститут}\or
+                \equal{#1}{академія}\or\equal{#1}{Академія}\or
+                \equal{#1}{технікум}\or\equal{#1}{Технікум}\or
+                \equal{#1}{коледж}\or\equal{#1}{Коледж}\or
+                \equal{#1}{міністерство}\or\equal{#1}{Міністерство}\or
+                \equal{#1}{центр}\or\equal{#1}{Центр}\or
+                \equal{#1}{комплекс}\or\equal{#1}{Комплекс}\or
+                \equal{#1}{об'єднання}\or\equal{#1}{Об'єднання}}
+      {\case[noun]{\@case}{#1}
+       \def\@processword##1{##1 }}
+      {\@processword{#1}}%
+    \expandafter\@split@sentence
+  \fi}
+%% Повний набір перетворень речення #1 для тестування
+\newcommand{\fullset}[1]{%
+\begin{list}{}{\itemsep0pt\parsep0pt\def\makelabel##1{##1\hfil}}
+\item[Н.] #1
+\item[Р.] \transformsentence{G}{#1}
+\item[Д.] \transformsentence{D}{#1}
+\item[З.] \transformsentence{A}{#1}
+\item[О.] \transformsentence{I}{#1}
+\item[М.] \transformsentence{L}{#1}
+\item[Кл.]\transformsentence{V}{#1}
+\end{list}}
+\endinput
+%%
+%% End of file `casus.sty'.

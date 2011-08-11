@@ -1,0 +1,127 @@
+\documentclass[notumble,12pt]{leaflet}
+\usepackage[cp1251]{inputenc}
+\usepackage[T2A]{fontenc}
+%\usepackage[utf8]{inputenc}
+\usepackage[english, ukrainian]{babel}
+%\usepackage{times} -- should not be used as it conflicts with T2A (needed for ukrainian language support) messing up headins' format.
+\usepackage{setspace}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{transparent}
+
+\definecolor{fms-blue}{rgb}{0.13,0.09,0.23}
+
+\AddToBackground{1}{  
+    %\put(0,0){\transparent{0.0}{\textcolor{Black}{\rule{\paperwidth}{\paperheight}}}}
+    
+     \put(75,400){
+         \includegraphics[width=45mm]{images/lp.png}% //
+     }
+     \put(25,78){
+         \includegraphics[width=40mm]{images/fmslogo.png}% //
+     }
+      \put(160,76){
+         \includegraphics[width=32mm]{images/ikni-logo.png}% //
+     }
+    
+}
+\AddToBackground{2}{
+  \put(-5,0){
+        \includegraphics[width=3.01\paperwidth,height=1.15\paperheight]{images/globe-cut-rev.png}% // 
+    }
+  \put(0,0){\transparent{0.5}{\textcolor{RoyalBlue}{\rule{\paperwidth}{\paperheight}}}}
+}
+
+\AddToBackground{3}{
+  \put(0,0){\transparent{0.5}{\textcolor{ForestGreen}{\rule{\paperwidth}{\paperheight}}}}
+}
+
+\AddToBackground{4}{
+  \put(0,0){\transparent{0.5}{\textcolor{BurntOrange}{\rule{\paperwidth}{\paperheight}}}}
+}
+
+\AddToBackground{5}{
+    \put(-5,0){
+        \includegraphics[width=3.01\paperwidth,height=1.15\paperheight]{images/globe-cut.png}% // 
+    }
+     \put(0,0){%
+   %      \put(0,0){\transparent{0.0}{\textcolor{black}{\rule{\paperwidth}{\paperheight}}}}
+     }
+}
+
+\AddToBackground{6}{  
+  %\put(0,0){\transparent{0.0}{\textcolor{black}{\rule{\paperwidth}{\paperheight}}}}
+}
+
+\CutLine*{1}
+\CutLine*{2}
+\CutLine*{3}
+\CutLine*{4}
+\CutLine*{5}
+\CutLine*{6}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\newcommand{\hRule}{\rule{\linewidth}{0.2mm}}
+\newcommand{\VRule}{\rule{\linewidth}{0.0mm}}
+
+\begin{document}
+\color{White}
+
+\VRule \\[4.8cm]
+
+\begin{spacing}{1.5}
+\begin{center}
+\HRule \\[0.4cm]
+{\Large 
+\textbf{ Навчально -- дослідна лабораторія\linebreak[4]``Технологій моделювання предметно-орієнтованих інформаційних систем''}}\\[0.4cm]
+\HRule \\
+\end{center}
+\end{spacing}
+
+\newpage
+
+\section{Українським інформацій\-ним тех\-но\-логіям -- перспективу розвитку}
+
+  Нині Україна посідає чільне місце серед держав, що надають послуги аутсорсингу розроблення програмного забезпечення.
+  Водночас, практично відсутні напрацювання у напрямку розвитку власних інформаційних технологій.
+  Усвідомлюючи гостру необхідність підготовки фахівців зі створення новітніх технологій моделювання інформаційних систем, на базі кафедри ``Інформаційних систем та мереж'' Національного університету ``Львівська політехніка'' планується відкриття навчально-дослідної лабораторії ``Технологій моделювання предметно-орієнтованих інформаційних систем''.
+
+  Новоутворена лабораторія функціонуватиме за підтримки і у тісній співпраці з \mbox{Fielden} Management Services Pty. Ltd., яка є однією із провідних австралійських компаній, що спеціалізується на розробленні програмного забезпечення управління основними фондами великих підприємств.
+  Метою цієї співраці є створення мовно-орієнтованої технології моделювання інформаційних систем, яка базуватиметься на розробленій компанією \mbox{Fielden} Management Services Pty. Ltd. аплікаційній платформі Trident Genesis\textsuperscript{\tiny{TM}}.
+
+  Trident Genesis\textsuperscript{\tiny{TM}} є ключовою технологічною розробкою компанії, яка забезпечує створення інформаційних систем у предметно-орієнтований спосіб і суттєве спрощення використання основних складових сучасної інформаційної системи.
+
+
+\section{Про учасників проекту}
+
+  \textbf{Володимир Пасічник} --- доктор технічних наук, професор, Лауреат державної премії України в галузі науки і техніки, завідувач кафедри ``Інформаційні системи та мережі'' Національного університету ``Львівська політехніка''.
+  Вихованець наукової школи Інституту кібернетики ім. В.М.~Глуш\-кова. 
+  Учасник та керівник багатьох міжнародних наукових проектів та науково-дослідних розробок. 
+  Відмінник освіти України, нагороджений нагрудним знаком МОН України ``За наукові досягнення''. 
+  Голова Львівської асоціації інформатиків, віце-президент Української асоціації фахівців інформаційних технологій (УАФІТ).
+  Наукові інтереси охоплюють сферу інформаційного моделювання, систем баз даних і знань. 
+
+  \textbf{Микола Добротвір} --- засновник і президент компанії \mbox{Fielden} Management Services Pty. Ltd. (1982 рік).
+  Фахівець з 25-ти літнім стажем роботи в індустрії пошуку і розроблення нафто-газових родовищ.
+  За професійну діяльність обіймав посади від провідного інженера компанії ``Global Engineering'' до CEO ``Foster Wheeler Petroleum Development Ltd'' -- однієї з найбільших інженерних компаній світу.  
+  Досвідчений керівник, завдяки якому, \mbox{Fielden} Management Services Pty. Ltd. стала однією з провідних австралійських компаній з надання послуг розроблення та підтримки інформаційних систем.
+  Серед клієнтів компанії -- Asciano, Orica, Airways Corporation of New Zealand, Ambulance Service of New South Wales.
+
+  \textbf{Олесь Годич} --- кандидат технічних \mbox{наук}, доцент кафедри ``Інформаційні системи та мережі'' Національного університету ``Львівська політехніка''.
+  Учасник спільних із \mbox{Fielden} Management Services Pty. Ltd. проектів.
+  Сфера наукових інтересів лежить у площині проблематик дискретної математики, штучного інтелекту і технологій предметно-орієнтованого моделювання інформаційних систем.
+
+  \textbf{Назар Чайківський} --- інженер-дослідник кафедри ``Інформаційні системи та мережі'' Національного університету ``Львівська політехніка''. 
+  Розробляв і впроваджував ERP інформаційні системи в компанії Nestl\'{e} S.A.
+  Учасник спільних із \mbox{Fielden} Management Services Pty. Ltd. проектів.  
+  Сфера інтересів лежить у площині аналізу даних і технологій моделювання інформаційних систем.
+
+  \textbf{Юрій Прокопів} --- асистент кафедри ``Інформаційні системи та мережі'' Національного університету ``Львівська політехніка''.
+  Учасник спільних із \mbox{Fielden} Management Services Pty. Ltd. проектів.
+  Сфера наукових інтересів лежить у площині проблематик мовно-орієнтованого моделювання інформаційних систем та HCI технологій.
+
+  \textbf{Олег Майкович} --- інженер-дослідник кафедри ``Інформаційні системи та мережі'' Національного університету ``Львівська політехніка''.   
+  Учасник спільних із \mbox{Fielden} Management Services Pty. Ltd. проектів.  
+  Сфера інтересів лежить у площині технологій моделювання інформаційних систем та комп'ютерної графіки.
+
+\end{document}
+
