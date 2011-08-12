@@ -218,13 +218,13 @@
 		<repository>
 			<id>Releases</id>
 			<name>Internal Releases</name>
-			<url>https://www.fielden.com.ua:8090/nexus/content/repositories/releases</url>
+			<url>http://www.fielden.com.ua:8090/nexus/content/repositories/releases</url>
 		</repository>
 
 		<snapshotRepository>
 			<id>Snapshots</id>
 			<name>Internal Snapshots</name>
-			<url>https://www.fielden.com.ua:8090/nexus/content/repositories/snapshots</url>
+			<url>http://www.fielden.com.ua:8090/nexus/content/repositories/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
 
