@@ -223,10 +223,10 @@
 
 	<scm>
 		<connection>
-			scm:svn:https://kid/svn/trident-genesis/trunk
+			scm:svn:http://kid/svn/trident-genesis/trunk
 		</connection>
 		<developerConnection>
-			scm:svn:https://kid/svn/trident-genesis/trunk
+			scm:svn:http://kid/svn/trident-genesis/trunk
 		</developerConnection>
 	</scm>
 
