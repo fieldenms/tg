@@ -7,8 +7,12 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntParam;
 import ua.com.fielden.platform.entity.query.model.elements.EntProp;
+import ua.com.fielden.platform.entity.query.model.elements.EntQuery;
+import ua.com.fielden.platform.entity.query.model.elements.EntSet;
+import ua.com.fielden.platform.entity.query.model.elements.EntSetFromQryModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntValue;
 import ua.com.fielden.platform.entity.query.model.elements.Functions;
+import ua.com.fielden.platform.entity.query.model.structure.ISetOperand;
 import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
@@ -174,6 +178,37 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	default:
 	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
 	}
+    }
+
+    protected ISetOperand getModelForSetOperand(final TokenCategory cat, final Object value) {
+	TokenCategory singleCat;
+
+	switch (cat) {
+	case SET_OF_PROPS:
+	    singleCat = TokenCategory.PROP;
+	    break;
+	case SET_OF_VALUES:
+	    singleCat = TokenCategory.VAL;
+	    break;
+	case SET_OF_PARAMS:
+	    singleCat = TokenCategory.PARAM;
+	    break;
+	case SET_OF_EXPR_TOKENS:
+	    singleCat = TokenCategory.EXPR_TOKENS;
+	    break;
+	case EQUERY_TOKENS:
+	    return new EntSetFromQryModel((EntQuery) getModelForSingleOperand(cat, value));
+	default:
+	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
+	}
+
+	final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
+
+	for (final Object singleValue : (List<Object>) value) {
+	    result.add(getModelForSingleOperand(singleCat, singleValue));
+	}
+
+	return new EntSet(result);
     }
 
     protected ISingleOperand getModelForSingleOperand(final Pair<TokenCategory, Object> pair) {
