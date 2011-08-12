@@ -188,6 +188,13 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<tagBase>https://www.fielden.com.ua/svn/trident-genesis/tags/releases</tagBase>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -211,22 +218,22 @@
 		<repository>
 			<id>Releases</id>
 			<name>Internal Releases</name>
-			<url>http://kid:8090/nexus/content/repositories/releases</url>
+			<url>https://www.fielden.com.ua:8090/nexus/content/repositories/releases</url>
 		</repository>
 
 		<snapshotRepository>
 			<id>Snapshots</id>
 			<name>Internal Snapshots</name>
-			<url>http://kid:8090/nexus/content/repositories/snapshots</url>
+			<url>https://www.fielden.com.ua:8090/nexus/content/repositories/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
 
 	<scm>
 		<connection>
-			scm:svn:http://kid/svn/trident-genesis/trunk
+			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/trunk
 		</connection>
 		<developerConnection>
-			scm:svn:http://kid/svn/trident-genesis/trunk
+			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/trunk
 		</developerConnection>
 	</scm>
 
