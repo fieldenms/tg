@@ -170,11 +170,11 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	} else if (isPlainLikeTest()) {
 	    return  getResultForPlainLikeTest();
 	} else if (isMultipleVsSingleLikeTest()) {
-	    throw new RuntimeException("Unable to get result - not implemented yet");
+	    return getResultForMultipleVsSingleLikeTest();
 	} else if (isMultipleVsMultipleLikeTest()) {
 	    throw new RuntimeException("Unable to get result - not implemented yet");
 	} else if (isSingleVsMultipleLikeTest()) {
-	    throw new RuntimeException("Unable to get result - not implemented yet");
+	    return getResultForSingleVsMultipleLikeTest();
 	} else if (isPlainILikeTest()) {
 	    throw new RuntimeException("Unable to get result - not implemented yet");
 	} else if (isMultipleVsSingleILikeTest()) {
@@ -268,6 +268,29 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	final ISingleOperand firstOperand = getModelForSingleOperand(firstCat(), firstValue());
 	final ISingleOperand secondOperand = getModelForSingleOperand(thirdCat(), thirdValue());
 	return new Pair<TokenCategory, Object>(TokenCategory.LIKE_TEST, new LikeTestModel(firstOperand, secondOperand, (Boolean) secondValue()));
+    }
+
+    private Pair<TokenCategory, Object> getResultForMultipleVsSingleLikeTest() {
+	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
+	final ISingleOperand singleOperand = getModelForSingleOperand(thirdCat(), thirdValue());
+	final List<ICondition> conditions = new ArrayList<ICondition>();
+	for (final ISingleOperand operand : operands) {
+	    conditions.add(new LikeTestModel(operand, singleOperand, (Boolean) secondValue()));
+	}
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	return new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, getGroup(conditions, logicalOperator));
+    }
+
+    private Pair<TokenCategory, Object> getResultForSingleVsMultipleLikeTest() {
+	final List<ISingleOperand> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
+	final ISingleOperand singleOperand = getModelForSingleOperand(firstCat(), firstValue());
+
+	final List<ICondition> conditions = new ArrayList<ICondition>();
+	for (final ISingleOperand operand : operands) {
+	    conditions.add(new LikeTestModel(singleOperand, operand, (Boolean) secondValue()));
+	}
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	return new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, getGroup(conditions, logicalOperator));
     }
 
     private Pair<TokenCategory, Object> getResultForPlainExistenceTest() {

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
 
@@ -39,7 +39,7 @@ public class EntValue implements ISingleOperand {
     }
 
     @Override
-    public List<String> getPropNames() {
-	return new ArrayList<String>();
+    public Set<String> getPropNames() {
+	return new HashSet<String>();
     }
 }

@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.model.structure.ICondition;
 import ua.com.fielden.platform.entity.query.model.structure.IPropertyCollector;
@@ -48,8 +49,8 @@ public class ConditionsModel implements IPropertyCollector {
     }
 
     @Override
-    public List<String> getPropNames() {
-	final List<String> result = new ArrayList<String>();
+    public Set<String> getPropNames() {
+	final Set<String> result = new HashSet<String>();
 	result.addAll(getFirstCondition().getPropNames());
 
 	for (final CompoundConditionModel compCondModel : getOtherConditions()) {

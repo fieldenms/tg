@@ -43,4 +43,8 @@ public class EntQuerySourceAsEntity implements IEntQuerySource {
 	    return false;
 	return true;
     }
+
+    public String getAlias() {
+        return alias;
+    }
 }

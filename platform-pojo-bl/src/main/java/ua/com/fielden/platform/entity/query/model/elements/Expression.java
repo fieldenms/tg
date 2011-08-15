@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
 
@@ -49,8 +50,8 @@ public class Expression implements ISingleOperand {
     }
 
     @Override
-    public List<String> getPropNames() {
-	final List<String> result = new ArrayList<String>();
+    public Set<String> getPropNames() {
+	final Set<String> result = new HashSet<String>();
 	result.addAll(first.getPropNames());
 	for (final CompoundSingleOperand compSingleOperand : items) {
 	    result.addAll(compSingleOperand.getOperand().getPropNames());

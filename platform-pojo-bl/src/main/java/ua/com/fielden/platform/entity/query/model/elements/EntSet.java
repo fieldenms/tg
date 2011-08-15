@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.model.structure.ISetOperand;
 import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
@@ -15,8 +16,8 @@ public class EntSet implements ISetOperand{
     }
 
     @Override
-    public List<String> getPropNames() {
-	final List<String> result = new ArrayList<String>();
+    public Set<String> getPropNames() {
+	final Set<String> result = new HashSet<String>();
 	for (final ISingleOperand operand : operands) {
 	    result.addAll(operand.getPropNames());
 	}

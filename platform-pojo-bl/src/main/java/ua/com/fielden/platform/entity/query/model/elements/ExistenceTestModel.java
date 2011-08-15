@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.model.structure.ICondition;
 
@@ -42,7 +42,7 @@ public class ExistenceTestModel implements ICondition {
     }
 
     @Override
-    public List<String> getPropNames() {
+    public Set<String> getPropNames() {
 	return subQuery.getPropNames();
     }
 }

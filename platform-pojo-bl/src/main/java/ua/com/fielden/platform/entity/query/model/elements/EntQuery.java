@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
 
@@ -79,8 +79,8 @@ public class EntQuery implements ISingleOperand {
     }
 
     @Override
-    public List<String> getPropNames() {
-	final List<String> result = new ArrayList<String>();
+    public Set<String> getPropNames() {
+	final Set<String> result = new HashSet<String>();
 
 	result.addAll(getPropNamesFromYields());
 	result.addAll(getPropNamesFromGroups());
@@ -90,24 +90,35 @@ public class EntQuery implements ISingleOperand {
 	return result;
     }
 
-    private List<String> getPropNamesFromYields() {
-	final List<String> result = new ArrayList<String>();
+    public Set<String> getQrySourcesNames() {
+	final Set<String> result = new HashSet<String>();
+	if (sources.getMain().getAlias() != null) {
+	    result.add(sources.getMain().getAlias());
+	}
+	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
+	    result.add(compSource.getSource().getAlias());
+	}
+	return result;
+    }
+
+    private Set<String> getPropNamesFromYields() {
+	final Set<String> result = new HashSet<String>();
 	for (final YieldModel yield : yields.getYields()) {
 	    result.addAll(yield.getOperand().getPropNames());
 	}
 	return result;
     }
 
-    private List<String> getPropNamesFromGroups() {
-	final List<String> result = new ArrayList<String>();
+    private Set<String> getPropNamesFromGroups() {
+	final Set<String> result = new HashSet<String>();
 	for (final GroupModel group : groups.getGroups()) {
 	    result.addAll(group.getOperand().getPropNames());
 	}
 	return result;
     }
 
-    private List<String> getPropNamesFromSources() {
-	final List<String> result = new ArrayList<String>();
+    private Set<String> getPropNamesFromSources() {
+	final Set<String> result = new HashSet<String>();
 	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
 	    result.addAll(compSource.getPropNames());
 	}

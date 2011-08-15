@@ -2,7 +2,9 @@ package ua.com.fielden.platform.entity.query;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -46,28 +48,62 @@ import ua.com.fielden.platform.entity.query.model.elements.SetTestModel;
 import ua.com.fielden.platform.entity.query.model.elements.YieldModel;
 import ua.com.fielden.platform.entity.query.model.elements.YieldsModel;
 import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
+import ua.com.fielden.platform.entity.query.model.transformation.QueryModelEnhancer;
 import static org.junit.Assert.assertEquals;
 
 public class QueryModelCompositionTest {
+
 
     @Ignore
     @Test
     public void test_query_model1() {
 	final AggregatedResultQueryModel a =
-		query.select(AbstractEntity.class, "a").where().beginExpr().beginExpr().beginExpr().beginExpr().prop("a").add().param("v").endExpr().endExpr().endExpr().endExpr().gt().val(1)
+		query.select(AbstractEntity.class, "a")
+		.where()
+			.beginExpr()
+				.beginExpr()
+					.beginExpr()
+						.beginExpr()
+							.prop("a").add().param("v")
+						.endExpr()
+					.endExpr()
+				.endExpr()
+			.endExpr().gt().val(1)
 		.and()
-		.begin().beginExpr().param("a").mult().beginExpr().param("v").add().prop("c").endExpr().endExpr().eq().prop("d").and().prop("ad").isNotNull().end()
+			.begin()
+				.beginExpr()
+					.param("a").mult().
+							beginExpr()
+								.param("v").add().prop("c")
+							.endExpr()
+				.endExpr().eq().prop("d")
+			.and()
+				.prop("ad").isNotNull()
+			.end()
 		.and()
-		.upperCase().beginExpr().prop("bbb").add().prop("aaa").endExpr().like().upperCase().val("AaA").and().prop("SomeDate").gt().now().and().yearOf().prop("LastChange").eq().round().beginExpr().prop("prop1").add().prop("prop2").endExpr().to(1)
+			.upperCase()
+				.beginExpr()
+					.prop("bbb").add().prop("aaa")
+				.endExpr()
+			.like()
+			.upperCase().val("AaA")
 		.and()
-		.param("a").eq().ifNull().prop("interProp").then().val(1)
+			.prop("SomeDate").gt().now()
 		.and()
-		.prop("aaa").eq().countDays().between().beginExpr().beginExpr().prop("Start1").add().prop("Start2").endExpr().endExpr().and().ifNull().prop("End").then().now()
+			.yearOf().prop("LastChange").eq().round()
+								.beginExpr()
+									.prop("prop1").add().prop("prop2")
+								.endExpr().to(1)
 		.and()
-		.prop("haha").in().props("p1", "p2", "p3")
+			.param("a").eq().ifNull().prop("interProp").then().val(1)
 		.and()
-		.param("AAA").in().values(1, 2, 3).modelAsAggregate();
-
+			.prop("aaa").eq().countDays().between().beginExpr().beginExpr().prop("Start1").add().prop("Start2").endExpr().endExpr().and().ifNull().prop("End").then().now()
+		.and()
+			.prop("haha").in().props("p1", "p2", "p3")
+		.and()
+			.param("AAA").in().values(1, 2, 3)
+		.modelAsAggregate();
+	new QueryBuilder(a).getQry().getPropNames();
 	final String expString = "SELECT\nFROM ua.com.fielden.platform.entity.AbstractEntity AS a\nWHERE (((($a + :v)))) > 1 AND ((:a * (:v + $c)) = $d AND $ad IS NOT NULL) AND UPPERCASE($bbb + $aaa) LIKE UPPERCASE(AaA) AND $SomeDate > NOW() AND YEAR($LastChange) = ROUND(($prop1 + $prop2), 1) AND :a = COALESCE($interProp, 1) AND $aaa = DATEDIFF(COALESCE($End, NOW()), (($Start1 + $Start2))) AND $haha IN ($p1, $p2, $p3) AND :AAA IN (1, 2, 3)";
 	assertEquals("Incorrect query model string representation", expString, a.toString());
 
@@ -173,12 +209,68 @@ public class QueryModelCompositionTest {
 	;
     }
 
+    @Test
+    public void test_prop_collector() {
+	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).where().prop("model.desc").like().val("MERC%").
+	groupBy().prop("eqClass.desc").
+	yield().beginExpr().prop("volume").add().prop("weight").endExpr().as("calc").modelAsAggregate();
+	final Set<String> exp = new HashSet<String>();
+	exp.add("model.desc");
+	exp.add("eqClass.desc");
+	exp.add("weight");
+	exp.add("volume");
+	assertEquals("models are different", exp, new QueryBuilder(qry).getQry().getPropNames());
+    }
+
+    @Test
+    public void test_prop_collector_with_subquery() {
+	final EntityResultQueryModel<TgVehicleModel> vehModelsQry = query.select(TgVehicleModel.class).where().prop("make").isNotNull().model();
+	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).where().prop("model").in().model(vehModelsQry).
+	groupBy().prop("eqClass.desc").
+	yield().beginExpr().prop("volume").add().prop("weight").endExpr().as("calc").modelAsAggregate();
+	final Set<String> exp = new HashSet<String>();
+	exp.add("model");
+	exp.add("eqClass.desc");
+	exp.add("weight");
+	exp.add("volume");
+	exp.add("make");
+	assertEquals("models are different", exp, new QueryBuilder(qry).getQry().getPropNames());
+    }
+
+    @Test
+    public void test_source_names_collector() {
+	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).modelAsAggregate();
+	final Set<String> exp = new HashSet<String>();
+	assertEquals("models are different", exp, new QueryBuilder(qry).getQry().getQrySourcesNames());
+    }
+
+    @Test
+    public void test_source_names_collector_with_joins() {
+	final AggregatedResultQueryModel qry = query.select(TgVehicle.class, "v").where().prop("v.model.desc").like().val("MERC%").
+	groupBy().prop("v.eqClass.desc").
+	yield().beginExpr().prop("v.volume").add().prop("v.weight").endExpr().as("calc").modelAsAggregate();
+	final Set<String> exp = new HashSet<String>();
+	exp.add("v");
+	assertEquals("models are different", exp, new QueryBuilder(qry).getQry().getQrySourcesNames());
+    }
+
+    @Test
+    public void test_source_names_collector2() {
+	final AggregatedResultQueryModel qry = query.select(TgVehicle.class, "v").leftJoin(TgVehicleModel.class, "v.model").on().prop("v.model").eq().prop("v.model.id").
+	where().prop("v.model.desc").like().val("MERC%").
+	groupBy().prop("v.eqClass.desc").
+	yield().beginExpr().prop("v.volume").add().prop("v.weight").endExpr().as("calc").modelAsAggregate();
+	final Set<String> exp = new HashSet<String>();
+	exp.add("v");
+	exp.add("v.model");
+	assertEquals("models are different", exp, new QueryBuilder(qry).getQry().getQrySourcesNames());
+    }
 
     @Test
     public void test_like() {
-	final EntityResultQueryModel<TgVehicle> a = query.select(TgVehicle.class).where().prop("model.desc").like().val("MERC%").model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().prop("model.desc").like().val("MERC%").model();
 	final ConditionsModel exp = new ConditionsModel(new LikeTestModel(new EntProp("model.desc"), new EntValue("MERC%"), false), new ArrayList<CompoundConditionModel>());
-	assertEquals("models are different", exp, new QueryBuilder(a).getQry().getConditions());
+	assertEquals("models are different", exp, new QueryBuilder(qry).getQry().getConditions());
     }
 
     @Test
@@ -502,5 +594,15 @@ public class QueryModelCompositionTest {
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
 	assertEquals("models are different", exp2, new QueryBuilder(a).getQry().getConditions());
+    }
+
+    @Test
+    public void test_prop_names_grouping_by_source_name() {
+	final QueryModelEnhancer qme = new QueryModelEnhancer();
+
+
+
+
+
     }
 }
