@@ -1,4 +1,4 @@
-\documentclass[notumble,12pt]{leaflet}
+\documentclass[nofoldmark,notumble,12pt]{leaflet}%
 \usepackage[cp1251]{inputenc}
 \usepackage[T2A]{fontenc}
 
@@ -11,6 +11,11 @@
 \usepackage{graphicx}
 \usepackage{subfigure}
 \usepackage{wrapfig}
+
+%\usepackage{geometry}
+%\geometry{hmargin={10mm,10mm},vmargin={10mm,10mm}}
+%\geometry{total={20mm,297mm}} %,includehead
+%\geometry{mag=1414}
 
 \definecolor{fms-blue}{rgb}{0.13,0.09,0.23}
 
@@ -32,39 +37,39 @@
   \put(-5,0){
         \includegraphics[width=3.01\paperwidth,height=1.15\paperheight]{images/globe-cut-rev.png}% // 
     }
-  \put(0,0){\transparent{0.5}{\textcolor{BlueGreen}{\rule{\paperwidth}{\paperheight}}}}
+  \put(0,0){\transparent{0.5}{\textcolor{RoyalBlue}{\rule{3.01\paperwidth}{1.15\paperheight}}}}
 
 }
 
-\AddToBackground{3}{
-  %\put(0,0){\transparent{0.5}{\textcolor{ForestGreen}{\rule{\paperwidth}{\paperheight}}}}
-  \put(0,0){\transparent{0.5}{\textcolor{BlueViolet}{\rule{\paperwidth}{\paperheight}}}}
-}
+% \AddToBackground{3}{
+%   %\put(0,0){\transparent{0.5}{\textcolor{ForestGreen}{\rule{\paperwidth}{\paperheight}}}}
+%   \put(0,0){\transparent{0.5}{\textcolor{RoyalBlue}{\rule{\paperwidth}{\paperheight}}}}
+% }
 
-\AddToBackground{4}{
-  %\put(0,0){\transparent{0.5}{\textcolor{BurntOrange}{\rule{\paperwidth}{\paperheight}}}}
-  \put(0,0){\transparent{0.5}{\textcolor{RoyalBlue}{\rule{\paperwidth}{\paperheight}}}}
-}
+% \AddToBackground{4}{
+%   %\put(0,0){\transparent{0.5}{\textcolor{BurntOrange}{\rule{\paperwidth}{\paperheight}}}}
+%   \put(0,0){\transparent{0.5}{\textcolor{RoyalBlue}{\rule{\paperwidth}{\paperheight}}}}
+% }
 
 \AddToBackground{5}{
     \put(-5,0){
         \includegraphics[width=3.01\paperwidth,height=1.15\paperheight]{images/globe-cut.png}% // 
     }
      \put(0,0){%
-         \put(0,0){\transparent{0.5}{\textcolor{MidnightBlue}{\rule{\paperwidth}{\paperheight}}}}
+         \put(0,0){\transparent{0.5}{\textcolor{RoyalBlue}{\rule{\paperwidth}{\paperheight}}}}
      }
 }
 
-\AddToBackground{6}{  
-  %\put(0,0){\transparent{0.0}{\textcolor{black}{\rule{\paperwidth}{\paperheight}}}}
-}
+% \AddToBackground{6}{  
+%   %\put(0,0){\transparent{0.0}{\textcolor{black}{\rule{\paperwidth}{\paperheight}}}}
+% }
 
-\CutLine*{1}
-\CutLine*{2}
-\CutLine*{3}
-\CutLine*{4}
-\CutLine*{5}
-\CutLine*{6}
+%\CutLine*{1}
+%\CutLine*{2}
+%\CutLine*{3}
+%\CutLine*{4}
+%\CutLine*{5}
+%\CutLine*{6}
 
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 \newcommand{\hRule}{\rule{\linewidth}{0.2mm}}
@@ -79,21 +84,21 @@
 \begin{center}
 \HRule \\[0.4cm]
 {\Large 
-\textbf{ Навчально -- дослідна лабораторія\linebreak[4]``Технологій моделювання предметно-орієнтованих інформаційних систем''}}\\[0.4cm]
+\textbf{ Навчально-дослідна лабораторія\linebreak[4]``Технології моделювання предметно-орієнтованих інформаційних систем''}}\\[0.4cm]
 \HRule \\
 \end{center}
 \end{spacing}
 
 \newpage
-
+\color{White}
 \section{Українським інформацій\-ним тех\-но\-логіям -- перспективу розвитку}
 
   Нині Україна посідає чільне місце серед держав, що надають послуги аутсорсингу розроблення програмного забезпечення.
   Водночас, практично відсутні напрацювання у напрямку розвитку власних інформаційних технологій.
-  Усвідомлюючи гостру необхідність підготовки фахівців зі створення новітніх технологій моделювання інформаційних систем, на базі кафедри ``Інформаційних систем та мереж'' Національного університету ``Львівська політехніка'' планується відкриття навчально-дослідної лабораторії ``Технологій моделювання предметно-орієнтованих інформаційних систем''.
+  Усвідомлюючи гостру необхідність підготовки фахівців зі створення новітніх технологій моделювання інформаційних систем, на базі кафедри ``Інформаційні системи та мережі'' Національного університету ``Львівська політехніка'' планується відкриття навчально-дослідної лабораторії ``Технології моделювання предметно-орієнтованих інформаційних систем''.
 
   Новоутворена лабораторія функціонуватиме за підтримки і у тісній співпраці з \mbox{Fielden} Management Services Pty. Ltd., яка є однією із провідних австралійських компаній, що спеціалізується на розробленні програмного забезпечення управління основними фондами великих підприємств.
-  Метою цієї співраці є створення мовно-орієнтованої технології моделювання інформаційних систем, яка базуватиметься на розробленій компанією \mbox{Fielden} Management Services Pty. Ltd. аплікаційній платформі Trident Genesis\textsuperscript{\tiny{TM}}.
+  Метою цієї співпраці є створення мовно-орієнтованої технології моделювання інформаційних систем, яка базуватиметься на розробленій компанією \mbox{Fielden} Management Services Pty. Ltd. аплікаційній платформі Trident Genesis\textsuperscript{\tiny{TM}}.
 
   Trident Genesis\textsuperscript{\tiny{TM}} є ключовою технологічною розробкою компанії, яка забезпечує створення інформаційних систем у предметно-орієнтований спосіб і суттєве спрощення використання основних складових сучасної інформаційної системи.
 
@@ -107,7 +112,7 @@
     \end{center}
     \vspace{-25pt}
   \end{wrapfigure}
-  \textbf{Володимир Пасічник} --- доктор технічних наук, професор, Лауреат державної премії України в галузі науки і техніки, завідувач кафедри ``Інформаційні системи та мережі'' Національного університету ``Львівська політехніка''.
+  \textbf{Володимир Пасічник} --- доктор технічних наук, професор, Лауреат Державної премії України в галузі науки і техніки, завідувач кафедри ``Інформаційні системи та мережі'' Національного університету ``Львівська політехніка''.
   Вихованець наукової школи Інституту кібернетики ім. В.М.~Глуш\-кова. 
   Учасник та керівник багатьох міжнародних наукових проектів та науково-дослідних розробок. 
   Відмінник освіти України, нагороджений нагрудним знаком МОН України ``За наукові досягнення''. 
@@ -122,7 +127,7 @@
     \vspace{-25pt}
   \end{wrapfigure}
   \textbf{Микола Добротвір} --- засновник і президент компанії \mbox{Fielden} Management Services Pty. Ltd. (1982 рік).
-  Фахівець з 25-ти літнім стажем роботи в індустрії пошуку і розроблення нафто-газових родовищ.
+  Фахівець з 25-літнім стажем роботи в індустрії пошуку і розроблення нафтогазових родовищ.
   За професійну діяльність обіймав посади від провідного інженера компанії ``Global Engineering'' до CEO ``Foster Wheeler Petroleum Development Ltd'' -- однієї з найбільших інженерних компаній світу.  
   Досвідчений керівник, завдяки якому, \mbox{Fielden} Management Services Pty. Ltd. стала однією з провідних австралійських компаній з надання послуг розроблення та підтримки інформаційних систем.
   Серед клієнтів компанії -- Asciano, Orica, Airways Corporation of New Zealand, Ambulance Service of New South Wales.
@@ -182,12 +187,16 @@
   \null
   \vfill
   \small
-  \begin{center}  
+  \begin{center}
+  Національний університет\linebreak[4]``Львівська політехніка''\linebreak[4]
+  Інститут комп'ютерних наук\linebreak[4]та інформаційних технологій\linebreak[4]
+  Кафедра ``Інформаційні системи та мережі''
   79013, м.~Львів, вул.~Митрополита Андрея, 5,
   \linebreak[4]4-й навчальний корпус, кім. 122
   \end{center}
 
   \begin{center}
+  Fielden Management Services Pty. Ltd.\linebreak[4]
   3\textsuperscript{rd} Floor, 55 Exhibition Street,\linebreak[4]
   Melbourne, VIC 3000,\linebreak[4]AUSTRALIA
   \end{center}
