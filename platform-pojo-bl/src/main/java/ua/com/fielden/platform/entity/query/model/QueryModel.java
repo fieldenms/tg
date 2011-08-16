@@ -48,27 +48,33 @@ public class QueryModel {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof QueryModel))
+	}
+	if (!(obj instanceof QueryModel)) {
 	    return false;
+	}
 	final QueryModel other = (QueryModel) obj;
-	if (lightweight != other.lightweight)
+	if (lightweight != other.lightweight) {
 	    return false;
+	}
 	if (resultType == null) {
-	    if (other.resultType != null)
+	    if (other.resultType != null) {
 		return false;
-	} else if (!resultType.equals(other.resultType))
+	    }
+	} else if (!resultType.equals(other.resultType)) {
 	    return false;
+	}
 	if (tokens == null) {
-	    if (other.tokens != null)
+	    if (other.tokens != null) {
 		return false;
-	} else if (!tokens.equals(other.tokens))
+	    }
+	} else if (!tokens.equals(other.tokens)) {
 	    return false;
+	}
 	return true;
     }
-
-
 }

@@ -14,6 +14,11 @@ public class ExistenceTestModel implements ICondition {
     }
 
     @Override
+    public Set<String> getPropNames() {
+	return subQuery.getPropNames();
+    }
+
+    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
@@ -24,25 +29,26 @@ public class ExistenceTestModel implements ICondition {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (getClass() != obj.getClass())
+	}
+	if (!(obj instanceof ExistenceTestModel)) {
 	    return false;
+	}
 	final ExistenceTestModel other = (ExistenceTestModel) obj;
-	if (negated != other.negated)
+	if (negated != other.negated) {
 	    return false;
+	}
 	if (subQuery == null) {
-	    if (other.subQuery != null)
+	    if (other.subQuery != null) {
 		return false;
-	} else if (!subQuery.equals(other.subQuery))
+	    }
+	} else if (!subQuery.equals(other.subQuery)) {
 	    return false;
+	}
 	return true;
-    }
-
-    @Override
-    public Set<String> getPropNames() {
-	return subQuery.getPropNames();
     }
 }

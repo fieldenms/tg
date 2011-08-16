@@ -17,6 +17,13 @@ public class NullTestModel implements ICondition {
     }
 
     @Override
+    public Set<String> getPropNames() {
+	final Set<String> result = new HashSet<String>();
+	result.addAll(operand.getPropNames());
+	return result;
+    }
+
+    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
@@ -27,27 +34,26 @@ public class NullTestModel implements ICondition {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof NullTestModel))
+	}
+	if (!(obj instanceof NullTestModel)) {
 	    return false;
+	}
 	final NullTestModel other = (NullTestModel) obj;
-	if (negated != other.negated)
+	if (negated != other.negated) {
 	    return false;
+	}
 	if (operand == null) {
-	    if (other.operand != null)
+	    if (other.operand != null) {
 		return false;
-	} else if (!operand.equals(other.operand))
+	    }
+	} else if (!operand.equals(other.operand)) {
 	    return false;
+	}
 	return true;
-    }
-
-    @Override
-    public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	result.addAll(operand.getPropNames());
-	return result;
     }
 }

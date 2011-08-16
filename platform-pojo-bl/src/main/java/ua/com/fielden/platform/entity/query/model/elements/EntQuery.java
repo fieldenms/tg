@@ -36,49 +36,6 @@ public class EntQuery implements ISingleOperand {
     }
 
     @Override
-    public int hashCode() {
-	final int prime = 31;
-	int result = 1;
-	result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
-	result = prime * result + ((groups == null) ? 0 : groups.hashCode());
-	result = prime * result + ((sources == null) ? 0 : sources.hashCode());
-	result = prime * result + ((yields == null) ? 0 : yields.hashCode());
-	return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-	if (this == obj)
-	    return true;
-	if (obj == null)
-	    return false;
-	if (getClass() != obj.getClass())
-	    return false;
-	final EntQuery other = (EntQuery) obj;
-	if (conditions == null) {
-	    if (other.conditions != null)
-		return false;
-	} else if (!conditions.equals(other.conditions))
-	    return false;
-	if (groups == null) {
-	    if (other.groups != null)
-		return false;
-	} else if (!groups.equals(other.groups))
-	    return false;
-	if (sources == null) {
-	    if (other.sources != null)
-		return false;
-	} else if (!sources.equals(other.sources))
-	    return false;
-	if (yields == null) {
-	    if (other.yields != null)
-		return false;
-	} else if (!yields.equals(other.yields))
-	    return false;
-	return true;
-    }
-
-    @Override
     public Set<String> getPropNames() {
 	final Set<String> result = new HashSet<String>();
 
@@ -123,5 +80,59 @@ public class EntQuery implements ISingleOperand {
 	    result.addAll(compSource.getPropNames());
 	}
 	return result;
+    }
+
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
+	result = prime * result + ((groups == null) ? 0 : groups.hashCode());
+	result = prime * result + ((sources == null) ? 0 : sources.hashCode());
+	result = prime * result + ((yields == null) ? 0 : yields.hashCode());
+	return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	if (this == obj) {
+	    return true;
+	}
+	if (obj == null) {
+	    return false;
+	}
+	if (!(obj instanceof EntQuery)) {
+	    return false;
+	}
+	final EntQuery other = (EntQuery) obj;
+	if (conditions == null) {
+	    if (other.conditions != null) {
+		return false;
+	    }
+	} else if (!conditions.equals(other.conditions)) {
+	    return false;
+	}
+	if (groups == null) {
+	    if (other.groups != null) {
+		return false;
+	    }
+	} else if (!groups.equals(other.groups)) {
+	    return false;
+	}
+	if (sources == null) {
+	    if (other.sources != null) {
+		return false;
+	    }
+	} else if (!sources.equals(other.sources)) {
+	    return false;
+	}
+	if (yields == null) {
+	    if (other.yields != null) {
+		return false;
+	    }
+	} else if (!yields.equals(other.yields)) {
+	    return false;
+	}
+	return true;
     }
 }

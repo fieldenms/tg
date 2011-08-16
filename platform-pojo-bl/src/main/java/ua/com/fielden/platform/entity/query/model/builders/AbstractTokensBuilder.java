@@ -41,6 +41,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	    setChild(new MonthOfBuilder(this));
 	    break;
 	default:
+	    // TODO implement the rest
 	    throw new RuntimeException("Unrecognised function token: " + function);
 	}
     }
@@ -66,6 +67,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 		tokens.add(new Pair<TokenCategory, Object>(cat, value));
 		break;
 	    }
+	    System.out.println("adding: " + cat + " - " + value);
 
 	    if (isClosing()) {
 		parent.finaliseChild();
@@ -123,32 +125,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     protected TokenCategory getLastCat() {
-	return tokens.get(tokens.size() - 1).getKey();
-    }
-
-    @Override
-    public int hashCode() {
-	final int prime = 31;
-	int result = 1;
-	result = prime * result + ((tokens == null) ? 0 : tokens.hashCode());
-	return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-	if (this == obj)
-	    return true;
-	if (obj == null)
-	    return false;
-	if (!(obj instanceof AbstractTokensBuilder))
-	    return false;
-	final AbstractTokensBuilder other = (AbstractTokensBuilder) obj;
-	if (tokens == null) {
-	    if (other.tokens != null)
-		return false;
-	} else if (!tokens.equals(other.tokens))
-	    return false;
-	return true;
+	return tokens.size() > 0 ? tokens.get(tokens.size() - 1).getKey() : null;
     }
 
     protected ITokensBuilder getChild() {
@@ -174,7 +151,6 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	    return (ISingleOperand) new StandAloneExpressionBuilder(null, (ExpressionModel) value).getResult().getValue();
 	case EQUERY_TOKENS:
 	    return new QueryBuilder((QueryModel) value).getQry();
-	    //throw new RuntimeException("Not implemented yet");
 	default:
 	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
 	}

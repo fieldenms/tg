@@ -14,6 +14,11 @@ public class EntValue implements ISingleOperand {
     }
 
     @Override
+    public Set<String> getPropNames() {
+	return new HashSet<String>();
+    }
+
+    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
@@ -23,23 +28,23 @@ public class EntValue implements ISingleOperand {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof EntValue))
+	}
+	if (!(obj instanceof EntValue)) {
 	    return false;
+	}
 	final EntValue other = (EntValue) obj;
 	if (value == null) {
-	    if (other.value != null)
+	    if (other.value != null) {
 		return false;
-	} else if (!value.equals(other.value))
+	    }
+	} else if (!value.equals(other.value)) {
 	    return false;
+	}
 	return true;
-    }
-
-    @Override
-    public Set<String> getPropNames() {
-	return new HashSet<String>();
     }
 }

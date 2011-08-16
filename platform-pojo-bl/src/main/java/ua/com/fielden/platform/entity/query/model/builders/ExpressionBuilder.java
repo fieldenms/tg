@@ -19,7 +19,7 @@ public class ExpressionBuilder extends AbstractTokensBuilder {
 
     @Override
     public boolean isClosing() {
-	return getLastCat().equals(TokenCategory.END_EXPR);
+	return TokenCategory.END_EXPR.equals(getLastCat());
     }
 
     @Override

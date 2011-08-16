@@ -31,23 +31,30 @@ public class YieldModel {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof YieldModel))
+	}
+	if (!(obj instanceof YieldModel)) {
 	    return false;
+	}
 	final YieldModel other = (YieldModel) obj;
 	if (alias == null) {
-	    if (other.alias != null)
+	    if (other.alias != null) {
 		return false;
-	} else if (!alias.equals(other.alias))
+	    }
+	} else if (!alias.equals(other.alias)) {
 	    return false;
+	}
 	if (operand == null) {
-	    if (other.operand != null)
+	    if (other.operand != null) {
 		return false;
-	} else if (!operand.equals(other.operand))
+	    }
+	} else if (!operand.equals(other.operand)) {
 	    return false;
+	}
 	return true;
     }
 }

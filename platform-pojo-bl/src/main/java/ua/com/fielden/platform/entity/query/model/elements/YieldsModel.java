@@ -24,19 +24,23 @@ public class YieldsModel {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof YieldsModel))
+	}
+	if (!(obj instanceof YieldsModel)) {
 	    return false;
+	}
 	final YieldsModel other = (YieldsModel) obj;
 	if (yields == null) {
-	    if (other.yields != null)
+	    if (other.yields != null) {
 		return false;
-	} else if (!yields.equals(other.yields))
+	    }
+	} else if (!yields.equals(other.yields)) {
 	    return false;
+	}
 	return true;
     }
-
 }

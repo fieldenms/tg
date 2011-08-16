@@ -43,27 +43,36 @@ public class QuantifiedTestModel implements ICondition {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof QuantifiedTestModel))
+	}
+	if (!(obj instanceof QuantifiedTestModel)) {
 	    return false;
+	}
 	final QuantifiedTestModel other = (QuantifiedTestModel) obj;
 	if (leftOperand == null) {
-	    if (other.leftOperand != null)
+	    if (other.leftOperand != null) {
 		return false;
-	} else if (!leftOperand.equals(other.leftOperand))
+	    }
+	} else if (!leftOperand.equals(other.leftOperand)) {
 	    return false;
-	if (operator != other.operator)
+	}
+	if (operator != other.operator) {
 	    return false;
-	if (quantifier != other.quantifier)
+	}
+	if (quantifier != other.quantifier) {
 	    return false;
+	}
 	if (rightOperand == null) {
-	    if (other.rightOperand != null)
+	    if (other.rightOperand != null) {
 		return false;
-	} else if (!rightOperand.equals(other.rightOperand))
+	    }
+	} else if (!rightOperand.equals(other.rightOperand)) {
 	    return false;
+	}
 	return true;
     }
 }

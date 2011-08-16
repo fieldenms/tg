@@ -39,25 +39,33 @@ public class SetTestModel implements ICondition {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof SetTestModel))
+	}
+	if (!(obj instanceof SetTestModel)) {
 	    return false;
+	}
 	final SetTestModel other = (SetTestModel) obj;
 	if (leftOperand == null) {
-	    if (other.leftOperand != null)
+	    if (other.leftOperand != null) {
 		return false;
-	} else if (!leftOperand.equals(other.leftOperand))
+	    }
+	} else if (!leftOperand.equals(other.leftOperand)) {
 	    return false;
-	if (negated != other.negated)
+	}
+	if (negated != other.negated) {
 	    return false;
+	}
 	if (rightOperand == null) {
-	    if (other.rightOperand != null)
+	    if (other.rightOperand != null) {
 		return false;
-	} else if (!rightOperand.equals(other.rightOperand))
+	    }
+	} else if (!rightOperand.equals(other.rightOperand)) {
 	    return false;
+	}
 	return true;
     }
 }

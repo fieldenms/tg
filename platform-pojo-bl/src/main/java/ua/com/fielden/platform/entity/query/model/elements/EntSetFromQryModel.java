@@ -27,18 +27,23 @@ public class EntSetFromQryModel implements ISetOperand {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof EntSetFromQryModel))
+	}
+	if (!(obj instanceof EntSetFromQryModel)) {
 	    return false;
+	}
 	final EntSetFromQryModel other = (EntSetFromQryModel) obj;
 	if (model == null) {
-	    if (other.model != null)
+	    if (other.model != null) {
 		return false;
-	} else if (!model.equals(other.model))
+	    }
+	} else if (!model.equals(other.model)) {
 	    return false;
+	}
 	return true;
     }
 }

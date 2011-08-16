@@ -6,13 +6,12 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class QueryModelResult extends SubQueryModelResult {
+    private final Map<String, Object> paramValues = new HashMap<String, Object>();
+    private final SortedMap<String, ResultPropertyInfo> yieldedPropsInfo = new TreeMap<String, ResultPropertyInfo>();
 
     public QueryModelResult(final Class resultType, final String sql) {
 	super(resultType, sql);
     }
-
-    private final Map<String, Object> paramValues = new HashMap<String, Object>();
-    private final SortedMap<String, ResultPropertyInfo> yieldedPropsInfo = new TreeMap<String, ResultPropertyInfo>();
 
     public Map<String, Object> getParamValues() {
 	return paramValues;
@@ -57,28 +56,37 @@ public class QueryModelResult extends SubQueryModelResult {
 
 	@Override
 	public boolean equals(final Object obj) {
-	    if (this == obj)
+	    if (this == obj) {
 		return true;
-	    if (obj == null)
+	    }
+	    if (obj == null) {
 		return false;
-	    if (!(obj instanceof ResultPropertyInfo))
+	    }
+	    if (!(obj instanceof ResultPropertyInfo)) {
 		return false;
+	    }
 	    final ResultPropertyInfo other = (ResultPropertyInfo) obj;
 	    if (name == null) {
-		if (other.name != null)
+		if (other.name != null) {
 		    return false;
-	    } else if (!name.equals(other.name))
+		}
+	    } else if (!name.equals(other.name)) {
 		return false;
+	    }
 	    if (sqlAlias == null) {
-		if (other.sqlAlias != null)
+		if (other.sqlAlias != null) {
 		    return false;
-	    } else if (!sqlAlias.equals(other.sqlAlias))
+		}
+	    } else if (!sqlAlias.equals(other.sqlAlias)) {
 		return false;
+	    }
 	    if (type == null) {
-		if (other.type != null)
+		if (other.type != null) {
 		    return false;
-	    } else if (!type.equals(other.type))
+		}
+	    } else if (!type.equals(other.type)) {
 		return false;
+	    }
 	    return true;
 	}
     }

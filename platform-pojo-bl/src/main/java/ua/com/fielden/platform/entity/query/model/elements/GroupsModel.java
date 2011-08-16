@@ -24,19 +24,23 @@ public class GroupsModel {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof GroupsModel))
+	}
+	if (!(obj instanceof GroupsModel)) {
 	    return false;
+	}
 	final GroupsModel other = (GroupsModel) obj;
 	if (groups == null) {
-	    if (other.groups != null)
+	    if (other.groups != null) {
 		return false;
-	} else if (!groups.equals(other.groups))
+	    }
+	} else if (!groups.equals(other.groups)) {
 	    return false;
+	}
 	return true;
     }
-
 }

@@ -34,18 +34,23 @@ public class EntSet implements ISetOperand{
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof EntSet))
+	}
+	if (!(obj instanceof EntSet)) {
 	    return false;
+	}
 	final EntSet other = (EntSet) obj;
 	if (operands == null) {
-	    if (other.operands != null)
+	    if (other.operands != null) {
 		return false;
-	} else if (!operands.equals(other.operands))
+	    }
+	} else if (!operands.equals(other.operands)) {
 	    return false;
+	}
 	return true;
     }
 }

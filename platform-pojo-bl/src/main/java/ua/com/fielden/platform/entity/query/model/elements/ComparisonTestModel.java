@@ -18,6 +18,14 @@ public class ComparisonTestModel implements ICondition {
     }
 
     @Override
+    public Set<String> getPropNames() {
+	final Set<String> result = new HashSet<String>();
+	result.addAll(leftOperand.getPropNames());
+	result.addAll(rightOperand.getPropNames());
+	return result;
+    }
+
+    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
@@ -29,33 +37,33 @@ public class ComparisonTestModel implements ICondition {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof ComparisonTestModel))
+	}
+	if (!(obj instanceof ComparisonTestModel)) {
 	    return false;
+	}
 	final ComparisonTestModel other = (ComparisonTestModel) obj;
 	if (leftOperand == null) {
-	    if (other.leftOperand != null)
+	    if (other.leftOperand != null) {
 		return false;
-	} else if (!leftOperand.equals(other.leftOperand))
+	    }
+	} else if (!leftOperand.equals(other.leftOperand)) {
 	    return false;
-	if (operator != other.operator)
+	}
+	if (operator != other.operator) {
 	    return false;
+	}
 	if (rightOperand == null) {
-	    if (other.rightOperand != null)
+	    if (other.rightOperand != null) {
 		return false;
-	} else if (!rightOperand.equals(other.rightOperand))
+	    }
+	} else if (!rightOperand.equals(other.rightOperand)) {
 	    return false;
+	}
 	return true;
-    }
-
-    @Override
-    public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	result.addAll(leftOperand.getPropNames());
-	result.addAll(rightOperand.getPropNames());
-	return result;
     }
 }

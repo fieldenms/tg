@@ -24,18 +24,23 @@ public class GroupModel {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof GroupModel))
+	}
+	if (!(obj instanceof GroupModel)) {
 	    return false;
+	}
 	final GroupModel other = (GroupModel) obj;
 	if (operand == null) {
-	    if (other.operand != null)
+	    if (other.operand != null) {
 		return false;
-	} else if (!operand.equals(other.operand))
+	    }
+	} else if (!operand.equals(other.operand)) {
 	    return false;
+	}
 	return true;
     }
 }

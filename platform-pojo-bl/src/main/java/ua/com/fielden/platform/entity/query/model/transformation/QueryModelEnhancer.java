@@ -20,6 +20,9 @@ public class QueryModelEnhancer {
 	}
 
 	final List<String> reversedAliases = Arrays.asList(sourcesNames.toArray(new String[]{}));
+
+	// TODO: to ensure that source names have correct register (lower case)
+
 	Collections.sort(reversedAliases, Collections.reverseOrder());
 
 	final List<String> propNamesMod = Arrays.asList(propNames.toArray(new String[0]));
@@ -35,4 +38,5 @@ public class QueryModelEnhancer {
 
 	return result;
     }
+
 }

@@ -13,6 +13,10 @@ public class EntQuerySourceAsEntity implements IEntQuerySource {
 	this.alias = alias;
     }
 
+    public String getAlias() {
+        return alias;
+    }
+
     @Override
     public int hashCode() {
 	final int prime = 31;
@@ -24,27 +28,30 @@ public class EntQuerySourceAsEntity implements IEntQuerySource {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof EntQuerySourceAsEntity))
+	}
+	if (!(obj instanceof EntQuerySourceAsEntity)) {
 	    return false;
+	}
 	final EntQuerySourceAsEntity other = (EntQuerySourceAsEntity) obj;
 	if (alias == null) {
-	    if (other.alias != null)
+	    if (other.alias != null) {
 		return false;
-	} else if (!alias.equals(other.alias))
+	    }
+	} else if (!alias.equals(other.alias)) {
 	    return false;
+	}
 	if (entityType == null) {
-	    if (other.entityType != null)
+	    if (other.entityType != null) {
 		return false;
-	} else if (!entityType.equals(other.entityType))
+	    }
+	} else if (!entityType.equals(other.entityType)) {
 	    return false;
+	}
 	return true;
-    }
-
-    public String getAlias() {
-        return alias;
     }
 }

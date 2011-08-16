@@ -12,6 +12,14 @@ public class CompoundConditionModel {
 	this.condition = condition;
     }
 
+    public LogicalOperator getLogicalOperator() {
+        return logicalOperator;
+    }
+
+    public ICondition getCondition() {
+        return condition;
+    }
+
     @Override
     public int hashCode() {
 	final int prime = 31;
@@ -23,28 +31,26 @@ public class CompoundConditionModel {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (!(obj instanceof CompoundConditionModel))
+	}
+	if (!(obj instanceof CompoundConditionModel)) {
 	    return false;
+	}
 	final CompoundConditionModel other = (CompoundConditionModel) obj;
 	if (condition == null) {
-	    if (other.condition != null)
+	    if (other.condition != null) {
 		return false;
-	} else if (!condition.equals(other.condition))
+	    }
+	} else if (!condition.equals(other.condition)) {
 	    return false;
-	if (logicalOperator != other.logicalOperator)
+	}
+	if (logicalOperator != other.logicalOperator) {
 	    return false;
+	}
 	return true;
-    }
-
-    public LogicalOperator getLogicalOperator() {
-        return logicalOperator;
-    }
-
-    public ICondition getCondition() {
-        return condition;
     }
 }
