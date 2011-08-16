@@ -79,6 +79,7 @@
 		</developer>
 	</developers>
 	<modules>
+		<module>platform-application-bootstrap</module>
 		<module>platform-db-evolution</module>
 		<module>platform-dao</module>
 		<module>platform-web-resources</module>
@@ -182,6 +183,18 @@
 				<artifactId>maven-source-plugin</artifactId>
 				<executions>
 					<execution>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
 						<goals>
 							<goal>jar</goal>
 						</goals>
