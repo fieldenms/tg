@@ -141,7 +141,7 @@ public abstract class AbstractDomainTree {
      * @param <T> -- a type of values in map
      * @return
      */
-    protected static <T> Map<Pair<Class<?>, String>, T> createPropertiesMap() {
+    public static <T> Map<Pair<Class<?>, String>, T> createPropertiesMap() {
 	return new HashMap<Pair<Class<?>,String>, T>() {
 	    private static final long serialVersionUID = -1754488088205944423L;
 
@@ -201,7 +201,7 @@ public abstract class AbstractDomainTree {
      * @param property
      * @return
      */
-    protected static Pair<Class<?>, String> key(final Class<?> root, final String property) {
+    public static Pair<Class<?>, String> key(final Class<?> root, final String property) {
 	return new Pair<Class<?>, String>(root, property);
     }
 

@@ -240,6 +240,22 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
+	public boolean addStructureChangedListener(final IStructureChangedListener listener) {
+	    return base.addStructureChangedListener(listener);
+	}
+
+	@Override
+	public boolean removeStructureChangedListener(final IStructureChangedListener listener) {
+	    return base.removeStructureChangedListener(listener);
+	}
+
+	@Override
+	public void warmUp(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    base.warmUp(enhancer.getManagedType(root), property);
+	}
+
+	@Override
 	public Set<Class<?>> rootTypes() {
 	    return base.rootTypes();
 	}

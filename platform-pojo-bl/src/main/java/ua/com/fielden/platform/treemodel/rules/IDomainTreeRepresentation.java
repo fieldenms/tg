@@ -68,22 +68,45 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      * The list fully reflects {@link #isExcludedImmutably(Class, String)} contract (+manually excluded properties) and adds an order
      * of properties -- currently the order is ["key" or key members => "desc" (if exists) => other properties in order as declared in domain].
      *
-     * <br><br>
-     * TODO calculated? what order?
-     *
      * @param root -- a root type that contains included properties.
      * @return
      */
     List<String> includedProperties(final Class<?> root);
 
-//    /**
-//     * TODO Loads properties for some node if properties were not loaded before.
-//     *
-//     * @param node
-//     *            - to be expanded (to make an attempt)
-//     * @return true - if properties were successfully loaded, false - if nothing happened.
-//     */
-//    boolean warmUp(final String node);
+    public interface IStructureChangedListener {
+	/**
+	 * Invokes after successful adding of property into its own branch of a tree.
+	 *
+	 * @param root
+	 * @param property
+	 */
+	void propertyAdded(final Class<?> root, final String property);
+
+	/**
+	 * Invokes after successful removal of property from its own branch of a tree.
+	 *
+	 * @param root
+	 * @param property
+	 */
+	void propertyRemoved(final Class<?> root, final String property);
+    }
+
+    boolean addStructureChangedListener(final IStructureChangedListener listener);
+
+    boolean removeStructureChangedListener(final IStructureChangedListener listener);
+
+    /**
+     * The structure of properties in case of circular references can be "not loaded" to some level of properties.
+     * The method tries to load missing tree branch of "included properties" ({@link #includedProperties(Class)} contract).
+     *
+     * Example : "Vehicle.replacing.dummy-property" has been loaded, but "Vehicle.replacing.replacedBy.status" should be selected.
+     * This method should be used to load missing properties.
+     *
+     * @param root -- a root type that contains property.
+     * @param property -- a dot-notation expression that defines a property to be "warmed up"
+     *
+     */
+    void warmUp(final Class<?> root, final String property);
 
     /**
      * Defines a contract for what properties have which functions available. If no functions are available -- the calculated properties could not be created.<br><br>

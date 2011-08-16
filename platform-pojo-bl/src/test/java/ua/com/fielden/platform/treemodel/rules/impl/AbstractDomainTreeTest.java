@@ -309,7 +309,7 @@ public abstract class AbstractDomainTreeTest {
 		if (fieldValue == null) {
 		    return false;
 		} else {
-		    if (originalInstance != null) {
+		    if (!Modifier.isStatic(field.getModifiers()) && originalInstance != null) {
 			final Object originalFieldValue = Finder.getFieldValue(field, originalInstance);
 			assertFalse("The references of corresponding fields should be distinct. Field = [" + field + "]; value original = [" + originalFieldValue + "]; value new = [" + fieldValue + "].", fieldValue == originalFieldValue);
 		    }
