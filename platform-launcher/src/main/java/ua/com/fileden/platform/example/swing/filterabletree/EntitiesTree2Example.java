@@ -7,8 +7,8 @@ import java.util.List;
 
 import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.branding.SplashController;
-import ua.com.fielden.platform.domain.tree.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.example.entities.Vehicle;
 import ua.com.fielden.platform.swing.treewitheditors.EntitiesTree2;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
@@ -35,7 +35,7 @@ public class EntitiesTree2Example extends AbstractUiApplication{
 
     @Override
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
-	final EntitiesTreeModel2 treeModel = createTreeModel(MasterEntityForIncludedPropertiesLogic.class); // Vehicle.class);
+	final EntitiesTreeModel2 treeModel = createTreeModel(/*MasterEntityForIncludedPropertiesLogic*/Vehicle.class); // Vehicle.class);
 	final EntitiesTree2 treeTable = new EntitiesTree2(treeModel, "selection criteria");
 	//	final FilterableTreePanel filterableTreePanel = new FilterableTreePanel(treeTable, "filter items");
 	treeTable.setPreferredSize(new Dimension(640, 480));

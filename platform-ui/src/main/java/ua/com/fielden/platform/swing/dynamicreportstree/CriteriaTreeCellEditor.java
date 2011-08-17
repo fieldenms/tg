@@ -23,10 +23,10 @@ import ua.com.fielden.platform.entity.annotation.Collectional;
 import ua.com.fielden.platform.equery.AnalysisPropertyAggregationFunction;
 import ua.com.fielden.platform.equery.PropertyAggregationFunction;
 import ua.com.fielden.platform.swing.treewitheditors.EntitiesTree;
-import ua.com.fielden.platform.swing.treewitheditors.ITooltipProvider;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTreeParameterCellEditor;
 import ua.com.fielden.platform.treemodel.CriteriaTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
+import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 /**
  * Cell editor for criteria tree.

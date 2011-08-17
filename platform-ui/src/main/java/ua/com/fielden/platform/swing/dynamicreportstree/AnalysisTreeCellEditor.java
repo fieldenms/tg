@@ -29,10 +29,10 @@ import ua.com.fielden.platform.swing.components.smart.autocompleter.Autocomplete
 import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.TwoPropertyListCellRenderer;
 import ua.com.fielden.platform.swing.components.textfield.UpperCaseTextField;
 import ua.com.fielden.platform.swing.treewitheditors.EntitiesTree;
-import ua.com.fielden.platform.swing.treewitheditors.ITooltipProvider;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTreeParameterCellEditor;
 import ua.com.fielden.platform.treemodel.AnalysisTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
+import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 public class AnalysisTreeCellEditor extends MultipleCheckboxTreeParameterCellEditor {
     private static final long serialVersionUID = 4239011036384304748L;

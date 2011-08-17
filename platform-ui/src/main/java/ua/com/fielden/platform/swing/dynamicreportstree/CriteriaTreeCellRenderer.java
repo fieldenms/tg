@@ -6,12 +6,12 @@ import javax.swing.tree.TreePath;
 
 import ua.com.fielden.platform.equery.PropertyAggregationFunction;
 import ua.com.fielden.platform.swing.menu.filter.AbstractFilterableTreeModel;
-import ua.com.fielden.platform.swing.treewitheditors.ITooltipProvider;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTree;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTreeCellRenderer;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTreeCellRendererWithParameter;
 import ua.com.fielden.platform.treemodel.CriteriaTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel;
+import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 public class CriteriaTreeCellRenderer extends MultipleCheckboxTreeCellRendererWithParameter {
 

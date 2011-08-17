@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.treewitheditors;
+package ua.com.fielden.platform.treemodel.rules;
 
 import javax.swing.tree.TreeNode;
 

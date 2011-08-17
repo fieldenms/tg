@@ -73,6 +73,12 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      */
     List<String> includedProperties(final Class<?> root);
 
+    /**
+     * A listener interface for structural changes of property structures (e.g. trees, lists etc.).
+     *
+     * @author TG Team
+     *
+     */
     public interface IStructureChangedListener {
 	/**
 	 * Invokes after successful adding of property into its own branch of a tree.
@@ -91,8 +97,20 @@ public interface IDomainTreeRepresentation extends IRootTyped {
 	void propertyRemoved(final Class<?> root, final String property);
     }
 
+    /**
+     * Adds a structural changes listener, which is necessary to reflect structural changes on depending models (Entities tree model etc.).
+     *
+     * @param listener
+     * @return
+     */
     boolean addStructureChangedListener(final IStructureChangedListener listener);
 
+    /**
+     * Removes a previously added structural changes listener, which was necessary to reflect structural changes on depending models (Entities tree model etc.).
+     *
+     * @param listener
+     * @return
+     */
     boolean removeStructureChangedListener(final IStructureChangedListener listener);
 
     /**

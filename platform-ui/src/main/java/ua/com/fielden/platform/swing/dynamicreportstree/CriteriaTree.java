@@ -10,9 +10,9 @@ import javax.swing.tree.TreePath;
 
 import ua.com.fielden.platform.swing.treewitheditors.CheckBoxTreeComponent;
 import ua.com.fielden.platform.swing.treewitheditors.FilterMultipleCheckboxTreeCellRenderer;
-import ua.com.fielden.platform.swing.treewitheditors.ITooltipProvider;
 import ua.com.fielden.platform.swing.treewitheditors.ITreeCheckingModelComponent;
 import ua.com.fielden.platform.treemodel.CriteriaTreeModel;
+import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 /**
  * A tree for dynamic entity query criteria with totals.

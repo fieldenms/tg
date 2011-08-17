@@ -15,6 +15,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
+
 public abstract class MultipleCheckboxTreeCellRendererWithParameter extends JPanel implements IMultipleCheckboxTreeCellRenderer {
 
     private static final long serialVersionUID = 8009223588555582433L;

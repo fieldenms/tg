@@ -21,11 +21,11 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
  * Tree with common expanding/collapsing logic.
- * 
+ *
  * @author Jhou
- * 
+ *
  */
-public class Tree extends JTree{
+public class Tree extends JTree {
     private static final long serialVersionUID = 3213197322869746054L;
 
     // expanding/collapsing actions:
@@ -57,7 +57,7 @@ public class Tree extends JTree{
 
     /**
      * Collapses all nodes that can be collapsed. There can be at most one node that cannot be collapsed, which is determined by its <code>canClose</code> method.
-     * 
+     *
      * @return
      */
     public Tree collapseAll() {
@@ -72,7 +72,7 @@ public class Tree extends JTree{
 
     /**
      * Collapse all but selected node.
-     * 
+     *
      * @return
      */
     public Tree collapseAllExceptSelected() {
@@ -90,7 +90,7 @@ public class Tree extends JTree{
 
     /**
      * Determines whether the {@code treePath} can be collapsed or not
-     * 
+     *
      * @param treePath
      * @return
      */
@@ -188,7 +188,7 @@ public class Tree extends JTree{
 
     /**
      * Expands all tree nodes of the tree
-     * 
+     *
      * @return
      */
     public Tree expandAll() {
@@ -207,7 +207,7 @@ public class Tree extends JTree{
     /**
      * Returns list of <code>numOfPaths</code> paths those starts from specified startPath. Uses depth-first search to build the paths.<br>
      * Throws NullPointerException if startPath is null.
-     * 
+     *
      * @param startPath
      * @param pathsToExpand
      * @param numOfPaths
@@ -232,7 +232,7 @@ public class Tree extends JTree{
 
     /**
      * Convenient method that collects paths to expand for next available tree path for start path.
-     * 
+     *
      * @param startPath - the path for which available one should be found.
      * @param pathsToExpand - the list of paths to expand.
      * @param numOfPaths - number of paths those must be expanded.
@@ -245,7 +245,7 @@ public class Tree extends JTree{
 
     /**
      * Returns value that indicates whether specified node is dummy node or not.
-     * 
+     *
      * @param lastPathComponent
      * @return
      */
@@ -256,7 +256,7 @@ public class Tree extends JTree{
 
     /**
      * Returns next available {@link TreePath} for specified one. This method uses back tracking to identify available path.
-     * 
+     *
      * @param startPath
      * @return
      */
@@ -278,7 +278,7 @@ public class Tree extends JTree{
 
     /**
      * Returns the number of rows visible in the viewport.
-     * 
+     *
      * @return
      */
     private int getViewportRowCount(final int rowHeight){

@@ -9,6 +9,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 
 import ua.com.fielden.platform.swing.menu.filter.FilterableTreeModel;
+import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 /**
  * Cell renderer for MultipleCheckboxTree with bold filtered nodes.

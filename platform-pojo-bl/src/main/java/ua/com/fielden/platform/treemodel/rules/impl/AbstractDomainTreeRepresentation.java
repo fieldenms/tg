@@ -46,7 +46,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentation {
     private static final long serialVersionUID = -7380151828208534611L;
-    private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
+    public static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
 
     private final Set<Class<?>> rootTypes;
     private final Set<Pair<Class<?>, String>> excludedProperties;
@@ -93,13 +93,18 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	includedProperties = createRootsMap();
     }
 
-    private List<String> addConcreteProperties(final Class<?> rootType, final String path, final List<Field> fieldsAndKeys) {
+    /**
+     * Constructs recursively the list of properties using given list of fields.
+     *
+     * @param rootType
+     * @param path
+     * @param fieldsAndKeys
+     * @return
+     */
+    private List<String> constructProperties(final Class<?> rootType, final String path, final List<Field> fieldsAndKeys) {
 	final List<String> newIncludedProps = new ArrayList<String>();
 	for (final Field field : fieldsAndKeys) {
 	    final String property = (StringUtils.isEmpty(path)) ? field.getName() : (path + "." + field.getName());
-
-//	    final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
-
 	    final String propertyNameWithoutCommonSuffix = property.replaceAll(COMMON_SUFFIX, "");
 	    if (!isExcludedImmutably(rootType, propertyNameWithoutCommonSuffix)) {
 		newIncludedProps.add(property);
@@ -111,7 +116,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
 		// add the children for "property" based on its nature
 		if (EntityUtils.isEntityType(propertyType)) {
-		    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(rootType, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
+		    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(rootType, propertyNameWithoutCommonSuffix, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
 		    final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
 		    if (propertyTypeWasInHierarchyBefore && !isKeyPart) {
 			newIncludedProps.add(property + DUMMY_SUFFIX);
@@ -120,17 +125,17 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 			// a new tree branch should be created for "common" properties under "property"
 			final String commonBranch = property + COMMON_SUFFIX;
 			newIncludedProps.add(commonBranch); // final DefaultMutableTreeNode nodeForCommonProperties = addHotNode("common", null, false, klassNode, new Pair<String, String>("Common", TitlesDescsGetter.italic("<b>Common properties</b>")));
-			newIncludedProps.addAll(addConcreteProperties(rootType, commonBranch, commonAndUnion.getKey()));
+			newIncludedProps.addAll(constructProperties(rootType, commonBranch, commonAndUnion.getKey()));
 			// "union" properties should be added directly to "property"
-			newIncludedProps.addAll(addConcreteProperties(rootType, property, commonAndUnion.getValue()));
+			newIncludedProps.addAll(constructProperties(rootType, property, commonAndUnion.getValue()));
 		    } else if (EntityUtils.isUnionEntityType(parentType)) { // property under "union entity"
 			// the property under "union entity" should have only "non-common" properties added
 			final List<Field> propertiesWithoutCommon = constructKeysAndProperties(propertyType);
 			final List<String> parentCommonNames = AbstractUnionEntity.commonProperties((Class<? extends AbstractUnionEntity>) parentType);
 			propertiesWithoutCommon.removeAll(constructKeysAndProperties(propertyType, parentCommonNames));
-			newIncludedProps.addAll(addConcreteProperties(rootType, property, propertiesWithoutCommon));
+			newIncludedProps.addAll(constructProperties(rootType, property, propertiesWithoutCommon));
 		    } else { // collectional or non-collectional entity property
-			newIncludedProps.addAll(addConcreteProperties(rootType, property, constructKeysAndProperties(propertyType)));
+			newIncludedProps.addAll(constructProperties(rootType, property, constructKeysAndProperties(propertyType)));
 		    }
 		}
 	    }
@@ -138,6 +143,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	return newIncludedProps;
     }
 
+    /**
+     * Determines the lists of common and union fields for concrete union entity type.
+     *
+     * @param unionClass
+     * @return
+     */
     private Pair<List<Field>, List<Field>> commonAndUnion(final Class<? extends AbstractUnionEntity> unionClass) {
 	final List<Field> unionProperties = AbstractUnionEntity.unionProperties(unionClass);
 	final Class<? extends AbstractEntity> concreteUnionClass = (Class<? extends AbstractEntity>) (unionProperties.get(0).getType());
@@ -166,6 +177,13 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	return fieldsAndKeys;
     }
 
+    /**
+     * Forms a list of fields for "type" in order ["key" or key members => "desc" (if exists) => other properties in order as declared in domain] and chooses only fields with <code>names</code>.
+     *
+     * @param type
+     * @param names
+     * @return
+     */
     private List<Field> constructKeysAndProperties(final Class<?> type, final List<String> names) {
 	final List<Field> allProperties = constructKeysAndProperties(type);
 	final List<Field> properties = new ArrayList<Field>();
@@ -286,7 +304,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     }
 
     /**
-     * TODO doc
+     * An {@link ArrayList} specific implementation which listens to structure modifications (add / remove elements) and fires appropriate events.
      *
      * @author TG Team
      *
@@ -377,7 +395,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		if (!EntityUtils.isEntityType(root)) {
 		    throw new IllegalArgumentException("Can not add children properties to non-entity type [" + root.getSimpleName() + "] in path [" + root.getSimpleName() + "=>" + "" + "].");
 		}
-		includedProps.addAll(addConcreteProperties(root, "", constructKeysAndProperties(root)));
+		includedProps.addAll(constructProperties(root, "", constructKeysAndProperties(root)));
 	    }
 	    includedProperties.put(root, includedProps);
 	    System.out.println("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + includedProps.size() + " included properties => [" + includedProps + "].");
@@ -401,7 +419,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     }
 
     /**
-     * TODO doc
+     * This method loads all missing properties on the tree path as defined in <code>fromPath</code> and <code>toPath</code> for type <code>root</code>.
+     * Please note that property <code>fromPath</code> should be loaded itself (perhaps without its children).
      *
      * @param root
      * @param fromPath
@@ -413,7 +432,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    if (includedPropertiesMutable(root).contains(fromPath + DUMMY_SUFFIX)) { // the property is circular and has no children loaded -- it has to be done now
 		final int index = includedPropertiesMutable(root).indexOf(fromPath + DUMMY_SUFFIX);
 		includedPropertiesMutable(root).remove(fromPath + DUMMY_SUFFIX); // remove dummy property
-		includedPropertiesMutable(root).addAll(index, addConcreteProperties(root, fromPath, constructKeysAndProperties(PropertyTypeDeterminator.determinePropertyType(root, fromPath))));
+		includedPropertiesMutable(root).addAll(index, constructProperties(root, fromPath, constructKeysAndProperties(PropertyTypeDeterminator.determinePropertyType(root, fromPath))));
 	    }
 	    if (!EntityUtils.equalsEx(fromPath, toPath)) { // not the leaf is trying to be warmed up
 		final String part = "".equals(fromPath) ? toPath : toPath.replaceFirst(fromPath + ".", "");
@@ -428,9 +447,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     @Override
     public void warmUp(final Class<?> root, final String property) {
-	illegalExcludedProperties(this, root, property, "Could not 'warm up' an 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "]. Only properties that are not excluded can be 'warmed up'.");
+	final Date st = new Date();
+	final String propertyNameWithoutCommonSuffix = property.replaceAll(COMMON_SUFFIX, "");
+	illegalExcludedProperties(this, root, propertyNameWithoutCommonSuffix, "Could not 'warm up' an 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "]. Only properties that are not excluded can be 'warmed up'.");
 	includedPropertiesMutable(root); // ensure "included properties" to be loaded
 	warmUp(root, "", property);
+	System.out.println("Warmed up root's [" + root.getSimpleName() + "] property [" + property + "] within " + (new Date().getTime() - st.getTime()) + "ms.");
     }
 
     /**

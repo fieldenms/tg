@@ -9,13 +9,13 @@ import javax.swing.tree.TreePath;
 
 import ua.com.fielden.platform.equery.AnalysisPropertyAggregationFunction;
 import ua.com.fielden.platform.swing.menu.filter.AbstractFilterableTreeModel;
-import ua.com.fielden.platform.swing.treewitheditors.ITooltipProvider;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTree;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTreeCellRenderer;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTreeCellRendererWithParameter;
 import ua.com.fielden.platform.treemodel.AnalysisTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
+import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 public class AnalysisTreeCellRenderer extends MultipleCheckboxTreeCellRendererWithParameter {
     private static final long serialVersionUID = -1815282873942753876L;

@@ -26,6 +26,7 @@ import javax.swing.tree.TreePath;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
+import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 /**
  * Implementation of the {@link IMultipleCheckboxTreeCellRenderer}

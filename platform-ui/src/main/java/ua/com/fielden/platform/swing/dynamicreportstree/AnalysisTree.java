@@ -16,10 +16,10 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.treewitheditors.CheckBoxTreeComponent;
 import ua.com.fielden.platform.swing.treewitheditors.FilterMultipleCheckboxTreeCellRenderer;
-import ua.com.fielden.platform.swing.treewitheditors.ITooltipProvider;
 import ua.com.fielden.platform.swing.treewitheditors.ITreeCheckingModelComponent;
 import ua.com.fielden.platform.treemodel.AnalysisTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
+import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class AnalysisTree extends AbstractTree {

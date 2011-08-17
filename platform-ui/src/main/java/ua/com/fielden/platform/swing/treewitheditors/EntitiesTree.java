@@ -29,6 +29,7 @@ import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
+import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 /**
  * The tree with entities and sub-properties and 2 check-boxes for each node. Contains features like filtering, toolTips and node's enablement.

@@ -24,10 +24,10 @@ import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
 import ua.com.fielden.platform.swing.treewitheditors.CheckBoxTreeComponent;
 import ua.com.fielden.platform.swing.treewitheditors.EntitiesTree;
 import ua.com.fielden.platform.swing.treewitheditors.FilterMultipleCheckboxTreeCellRenderer;
-import ua.com.fielden.platform.swing.treewitheditors.ITooltipProvider;
 import ua.com.fielden.platform.swing.treewitheditors.ITreeCheckingModelComponent;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTree;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
+import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 public class AbstractTreeCellEditor extends AbstractCellEditor implements TreeCellEditor {
 
