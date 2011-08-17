@@ -3,7 +3,6 @@ package ua.com.fielden.platform.client;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
@@ -20,13 +19,18 @@ import org.restlet.data.Protocol;
 import ua.com.fielden.platform.application.update.ApplicationUpdateFeedback;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.client.config.IMainMenuBinder;
+import ua.com.fielden.platform.client.session.AppSessionController;
 import ua.com.fielden.platform.client.ui.DefaultApplicationMainPanel;
 import ua.com.fielden.platform.client.ui.menu.TreeMenuFactory;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.rao.RestClientUtil;
+import ua.com.fielden.platform.security.ClientAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.login.StyledLoginScreen;
+import ua.com.fielden.platform.swing.login.StyledLoginScreenModel;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.menu.UndockableTreeMenuWithTabs;
 import ua.com.fielden.platform.swing.menu.api.ITreeMenuFactory;
@@ -38,6 +42,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.update.IClientApplicationRestarter;
 import ua.com.fielden.platform.update.ReferenceDependancyController;
 import ua.com.fielden.platform.update.Updater;
+import ua.com.fielden.platform.utils.ResourceLoader;
 
 import com.google.inject.Injector;
 import com.jidesoft.plaf.LookAndFeelFactory;
@@ -50,6 +55,99 @@ import com.jidesoft.plaf.LookAndFeelFactory;
  */
 public class WebClentStartupUtility {
 
+    /**
+     * Constructs and displays login prompt. Successful login results in the invocation of the passed in {@link IClientLauncher} contract.
+     *
+     * @param injector
+     * @param autoudate
+     * @param restUtil
+     * @param sessionController
+     * @param authenticationModel
+     * @param launcher
+     * @param logger
+     */
+    public static void showLoginPrompt(//
+	    final Injector injector, //
+	    final boolean autoudate, //
+	    final RestClientUtil restUtil, //
+	    final AppSessionController sessionController, //
+	    final ClientAuthenticationModel authenticationModel, //
+	    final IClientLauncher launcher,//
+	    final Logger logger) {
+	SwingUtilitiesEx.invokeLater(new Runnable() {
+	    @Override
+	    public void run() {
+		try {
+		    JFrame.setDefaultLookAndFeelDecorated(true);
+		    JDialog.setDefaultLookAndFeelDecorated(true);
+
+		    // installing Nimbus LnF once again in order to correctly draw check box as table renderer
+		    // this installation should be performed after main frame was created
+		    SwingUtilitiesEx.installNimbusLnFifPossible();
+
+		    // prepare the login prompt
+		    final StyledLoginScreenModel loginScreenModel = new StyledLoginScreenModel(authenticationModel, "Login Screen", ResourceLoader.getIcon("images/styled-login-scr-background.png")) {
+			@Override
+			protected void authenticationPassed(final StyledLoginScreen loginScreen, final Result result) {
+			    final User user = (User) result.getInstance();
+			    try {
+				sessionController.persist(user.getKey(), restUtil.getPrivateKey());
+				launcher.launch(null, loginScreen, restUtil, injector, autoudate, sessionController, logger);
+			    } catch (final Exception ex) {
+				ex.printStackTrace();
+				new DialogWithDetails(null, "Could not persist user settings.", ex).setVisible(true);
+				System.exit(1);
+			    }
+			}
+		    };
+		    final StyledLoginScreen loginScreen = new StyledLoginScreen(loginScreenModel);
+		    loginScreen.setVisible(true);
+
+		} catch (final Exception ex) {
+		    throw new IllegalStateException("Could not start application.", ex);
+		} // try
+	    }// run
+	});
+    }
+
+    /**
+     * Handles update of the client application. Exists the JVM in case an exceptional situaton.
+     *
+     * @param splash
+     * @param loginScreen
+     * @param restUtil
+     * @param autoudate
+     * @param restarter
+     * @param logger
+     */
+    public static void handleAutoupdate(//
+	    final SplashController splash,//
+	    final StyledLoginScreen loginScreen,//
+	    final RestClientUtil restUtil,//
+	    final boolean autoudate,//
+	    final IClientApplicationRestarter restarter,//
+	    final Logger logger) {
+	if (autoudate) {
+	    try {
+		logger.info("Running autoupdate...");
+		new Updater(System.getProperty("user.dir"), new ReferenceDependancyController(restUtil), new ApplicationUpdateFeedback(splash, loginScreen, restarter)).run();
+	    } catch (final Exception ex) {
+		try {
+		    SwingUtilitiesEx.invokeAndWaitIfPossible(new Runnable() {
+			@Override
+			public void run() {
+			    final DialogWithDetails dialog = new DialogWithDetails(null, "Exception during update", ex);
+			    dialog.setVisible(true);
+			}
+		    });
+		} catch (final Exception e) {
+		    e.printStackTrace();
+		}
+		logger.info("Exiting the system...");
+		System.exit(1);
+	    }
+	}
+    }
 
     /**
      * Constructs and displays the main application window with prior validation of user credentials.
@@ -258,14 +356,6 @@ public class WebClentStartupUtility {
 		ToolTipManager.sharedInstance().setDismissDelay(1000 * 300);
 	    }
 	});
-    }
-
-    /**
-     * Instantiates a new updater for the client application.
-     */
-    public static Updater getUpdater(final SplashController splash, final StyledLoginScreen loginScreen, final RestClientUtil restUtil, final IClientApplicationRestarter restarter)
-	    throws IOException {
-	return new Updater(System.getProperty("user.dir"), new ReferenceDependancyController(restUtil), new ApplicationUpdateFeedback(splash, loginScreen, restarter));
     }
 
 }
