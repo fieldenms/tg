@@ -17,11 +17,14 @@ import org.jfree.ui.RefineryUtilities;
 import org.restlet.data.Protocol;
 
 import ua.com.fielden.platform.application.update.ApplicationUpdateFeedback;
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.client.config.IMainMenuBinder;
 import ua.com.fielden.platform.client.session.AppSessionController;
 import ua.com.fielden.platform.client.ui.DefaultApplicationMainPanel;
-import ua.com.fielden.platform.client.ui.menu.TreeMenuFactory;
+import ua.com.fielden.platform.client.ui.menu.LocalTreeMenuFactory;
+import ua.com.fielden.platform.client.ui.menu.RemoteTreeMenuFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.security.ClientAuthenticationModel;
@@ -280,7 +283,8 @@ public class WebClentStartupUtility {
 	    final IMainMenuBinder mmBuilder,//
 	    final TreeMenuItem<?> menuItems, //
 	    final UndockableTreeMenuWithTabs<?> menu) {
-	final ITreeMenuFactory menuFactory = new TreeMenuFactory(menuItems, menu, injector);
+	final IApplicationSettings settings = injector.getInstance(IApplicationSettings.class);
+	final ITreeMenuFactory menuFactory = Workflows.development.equals(Workflows.valueOf(settings.workflow())) ? new LocalTreeMenuFactory(menuItems, menu, injector) : new RemoteTreeMenuFactory(menuItems, menu, injector);
 	mmBuilder.bindMainMenuItemFactories(menuFactory);
 	final List<MainMenuItem> itemsFromCloud = mmBuilder.getMainMenuItemController().loadMenuSkeletonStructure();
 

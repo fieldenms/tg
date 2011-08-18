@@ -3,16 +3,16 @@ package ua.com.fielden.platform.ui.config.api.interaction;
 import java.util.List;
 
 /**
- * {@link IConfigurationController} for entity centers.
- * 
- * @author oleh
- * 
+ * A contract for configuration and management of entity centres.
+ *
+ * @author TG Team
+ *
  */
 public interface ICenterConfigurationController extends IConfigurationController, ICenterConfigurationManager {
 
     /**
      * Returns the key for the principle entity center.
-     * 
+     *
      * @param forType
      *            - type for which entity center key should be generated.
      * @return
@@ -21,7 +21,7 @@ public interface ICenterConfigurationController extends IConfigurationController
 
     /**
      * Returns the key for the non principle entity center specified with appropriate principle entity center and name of the non principle center.
-     * 
+     *
      * @param principleCenterKey
      *            - key for appropriate principle entity center.
      * @param nonPrincipleCenterName
@@ -32,7 +32,7 @@ public interface ICenterConfigurationController extends IConfigurationController
 
     /**
      * Returns all non principle entity centers for principle specified with principleCenterKey parameter.
-     * 
+     *
      * @param principleCenterKey
      *            - specifies principle entity center for which non principle centers should be retrieved.
      * @return
@@ -41,7 +41,7 @@ public interface ICenterConfigurationController extends IConfigurationController
 
     /**
      * Determines whether specified non principle entity center name is valid or not.
-     * 
+     *
      * @param principleCenterKey
      *            - the principle entity center key for which nonPrincipleCenterName must be validated.
      * @param nonPrincipleCenterName

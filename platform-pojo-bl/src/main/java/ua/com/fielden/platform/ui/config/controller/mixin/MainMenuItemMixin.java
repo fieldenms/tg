@@ -19,9 +19,9 @@ import com.google.inject.Inject;
 
 /**
  * A mixin to avoid code duplication for providing RAO and DAP implementations of {@link IMainMenuItemController}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class MainMenuItemMixin {
 
@@ -37,8 +37,8 @@ public final class MainMenuItemMixin {
 
     /**
      * Retrieves all main menu items (without respective configurations) for the currently logged in user and structures a corresponding hierarchical structure. <br>
-     * Please note that the main menu consists of instances representing principal items as well as the "save as" items, which are derive dynamically.
-     * 
+     * Please note that the main menu consists of instances representing principal items as well as the "save as" items, which are derived dynamically.
+     *
      * @return
      */
     public final List<MainMenuItem> loadMenuSkeletonStructure() {
@@ -53,13 +53,21 @@ public final class MainMenuItemMixin {
 	return buildMenuHierarchy(allItems);
     }
 
+    /**
+     * Obtains a linear list of all menu items stored in the cloud.
+     * Obtains the list of invisible for the current user items.
+     * Sets visibility of the items in the linear list based on this result, which depends on whether user is a base user or otherwise.
+     * In case of a non-base user, invisible menu items are removed from the resultant list returned by this method.
+     *
+     * @return -- a liner list of relevant for the current user menu items with property set visibility.
+     */
     public final List<MainMenuItem> findPrincipalMenuItems() {
 	// identify user ID to be used for menu information retrieval
 	final Long ownerId = user.isBase() ? user.getId() : user.getBasedOnUser().getId();
 
 	// get all items
 	final IQueryOrderedModel<MainMenuItem> model = select(MainMenuItem.class).orderBy("order asc").model();
-	final List<MainMenuItem> linearItems = mmiController.getEntities(model, new fetchAll<MainMenuItem>(MainMenuItem.class));
+	final List<MainMenuItem> allItemsAsLinearList = mmiController.getEntities(model, new fetchAll<MainMenuItem>(MainMenuItem.class));
 
 	// get those that are marked as invisible
 	final IQueryOrderedModel<MainMenuItem> invisibleItemsModel = select(MainMenuItem.class, "mm").join(MainMenuItemInvisibility.class, "viz").on() //
@@ -69,11 +77,11 @@ public final class MainMenuItemMixin {
 	final List<MainMenuItem> invisibleItems = mmiController.getEntities(invisibleItemsModel, new fetchAll<MainMenuItem>(MainMenuItem.class)); // could be optimized by not fetching all
 
 	if (user.isBase()) { // set visibility property for menu items, which does not take into account hierarchical structure
-	    for (final MainMenuItem item : linearItems) {
+	    for (final MainMenuItem item : allItemsAsLinearList) {
 		item.setVisible(!invisibleItems.contains(item));
 	    }
 	} else { // set visibility property for menu items and remove invisible ones
-	    for (final Iterator<MainMenuItem> iter = linearItems.iterator(); iter.hasNext();) {
+	    for (final Iterator<MainMenuItem> iter = allItemsAsLinearList.iterator(); iter.hasNext();) {
 		final MainMenuItem item = iter.next();
 		if (invisibleItems.contains(item)) {
 		    iter.remove();
@@ -83,15 +91,15 @@ public final class MainMenuItemMixin {
 	    }
 	}
 
-	return linearItems;
+	return allItemsAsLinearList;
     }
 
     /**
      * Returns a linear list of non-persistent menu items created based on entity centre configurations that are related to the currently logged in user.
      * <p>
-     * IMPORTANT: visibility for created items is not set here as it can only be determined the the state of the parental menu item. The necessary processing should happen upon
+     * IMPORTANT: visibility for created items is not set here as it can only be determined from the state of the parental menu item. The necessary processing should happen upon
      * construction of the menu hierarchy.
-     * 
+     *
      * @return
      */
     public final List<MainMenuItem> findSaveAsMenuItems() {
@@ -127,7 +135,7 @@ public final class MainMenuItemMixin {
 
     /**
      * Builds menu hierarchy out of the list of all menu items.
-     * 
+     *
      * @param linearItems
      * @return
      */
