@@ -103,23 +103,26 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
 	@Override
 	public List<String> checkedProperties(final Class<?> root) {
-	    // TODO Auto-generated method stub
-	    return null;
+	    // inject an enhanced type into method implementation
+	    return base.checkedProperties(enhancer.getManagedType(root));
 	}
 
 	@Override
 	public void swap(final Class<?> root, final String property1, final String property2) {
-	    // TODO Auto-generated method stub
+	    // inject an enhanced type into method implementation
+	    base.swap(enhancer.getManagedType(root), property1, property2);
 	}
 
 	@Override
 	public void move(final Class<?> root, final String what, final String beforeWhat) {
-	    // TODO Auto-generated method stub
+	    // inject an enhanced type into method implementation
+	    base.move(enhancer.getManagedType(root), what, beforeWhat);
 	}
 
 	@Override
 	public void moveToTheEnd(final Class<?> root, final String what) {
-	    // TODO Auto-generated method stub
+	    // inject an enhanced type into method implementation
+	    base.moveToTheEnd(enhancer.getManagedType(root), what);
 	}
 
 	protected IDomainTreeEnhancer enhancer() {

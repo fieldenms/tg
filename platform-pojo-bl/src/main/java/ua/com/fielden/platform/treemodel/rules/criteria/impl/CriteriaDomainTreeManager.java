@@ -130,7 +130,7 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 	 * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr", "tr" and "serialiser" fields.
 	 */
 	public AddToCriteriaTickManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	    this(AbstractDomainTree.createSet(), serialiser, AbstractDomainTree.<Object>createPropertiesMap(), AbstractDomainTree.<Object>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum>createPropertiesMap(), AbstractDomainTree.<MnemonicEnum>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), null, new LocatorManager(serialiser, rootTypes));
+	    this(AbstractDomainTree.createSet(), AbstractDomainTree.<List<String>>createRootsMap(), serialiser, AbstractDomainTree.<Object>createPropertiesMap(), AbstractDomainTree.<Object>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum>createPropertiesMap(), AbstractDomainTree.<MnemonicEnum>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), AbstractDomainTree.<Boolean>createPropertiesMap(), null, new LocatorManager(serialiser, rootTypes));
 	}
 
 	/**
@@ -138,8 +138,8 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 	 *
 	 * @param serialiser
 	 */
-	protected AddToCriteriaTickManager(final Set<Pair<Class<?>, String>> checkedProperties, final ISerialiser serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Integer columnsNumber, final LocatorManager locatorManager) {
-	    super(checkedProperties);
+	protected AddToCriteriaTickManager(final Set<Pair<Class<?>, String>> manuallyCheckedProperties, final Map<Class<?>, List<String>> checkedProperties, final ISerialiser serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Integer columnsNumber, final LocatorManager locatorManager) {
+	    super(manuallyCheckedProperties, checkedProperties);
 	    this.serialiser = serialiser;
 
 	    this.propertiesValues1 = createPropertiesMap();
@@ -391,7 +391,8 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 
 	    @Override
 	    public AddToCriteriaTickManager read(final ByteBuffer buffer) {
-		final Set<Pair<Class<?>, String>> checkedProperties = readValue(buffer, HashSet.class);
+		final Set<Pair<Class<?>, String>> manuallyCheckedProperties = readValue(buffer, HashSet.class);
+		final Map<Class<?>, List<String>> checkedProperties = readValue(buffer, HashMap.class);
 		final Map<Pair<Class<?>, String>, Object> propertiesValues1 = readValue(buffer, HashMap.class);
 		final Map<Pair<Class<?>, String>, Object> propertiesValues2 = readValue(buffer, HashMap.class);
 		final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1 = readValue(buffer, HashMap.class);
@@ -403,11 +404,12 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 		final Map<Pair<Class<?>, String>, Boolean> propertiesNots = readValue(buffer, HashMap.class);
 		final Integer columnsNumber = readValue(buffer, Integer.class);
 		final LocatorManager locatorManager = readValue(buffer, LocatorManager.class);
-		return new AddToCriteriaTickManager(checkedProperties, kryo(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
+		return new AddToCriteriaTickManager(manuallyCheckedProperties, checkedProperties, kryo(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
 	    }
 
 	    @Override
 	    public void write(final ByteBuffer buffer, final AddToCriteriaTickManager manager) {
+		writeValue(buffer, manager.manuallyCheckedProperties());
 		writeValue(buffer, manager.checkedProperties());
 		writeValue(buffer, manager.propertiesValues1);
 		writeValue(buffer, manager.propertiesValues2);

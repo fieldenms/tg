@@ -48,8 +48,10 @@ public abstract class AbstractDomainTreeTest {
     private final IDomainTreeManagerAndEnhancer dtm;
     {
 	dtm = createManager(serialiser = createSerialiser(createFactory()), createRootTypes());
-	manageTestingDTM(dtm);
-	enhanceDomainWithCalculatedPropertiesOfDifferentTypes(dtm);
+	if (dtm != null) {
+	    manageTestingDTM(dtm);
+	    enhanceDomainWithCalculatedPropertiesOfDifferentTypes(dtm);
+	}
     }
 
     /**

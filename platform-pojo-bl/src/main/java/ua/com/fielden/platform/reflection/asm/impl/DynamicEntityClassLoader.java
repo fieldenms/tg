@@ -151,6 +151,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
 
     public Class<?> defineClass(final byte[] currentType) {
 	final Class<?> klass = defineClass(null, currentType, 0, currentType.length);
+	// resolveClass(klass); // TODO does newly defined class should be resolved?
 	cache.put(klass.getName(), new Pair<Class<?>, byte[]>(klass, currentType));
 	return klass;
     }

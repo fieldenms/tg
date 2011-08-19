@@ -47,8 +47,8 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 
     /** Holds a set of root types to work with. */
     private final Set<Class<?>> rootTypes;
-    /** Holds byte arrays of <b>enhanced</b> (and only <b>enhanced</b>) types mapped to their original root types. */
-    private final Map<Class<?>, ByteArray> originalAndEnhancedRootTypesArrays;
+    /** Holds byte arrays of <b>enhanced</b> (and only <b>enhanced</b>) types mapped to their original root types. The first item in the list is "enhanced root type's" array. */
+    private final Map<Class<?>, List<ByteArray>> originalAndEnhancedRootTypesArrays;
     /** Holds current domain differences from "standard" domain (all calculated properties for all root types). */
     private final Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> calculatedProperties;
     /** Holds a current (and already applied / loaded) snapshot of domain -- consists of a pairs of root types: [original -> real] (or [original -> original] in case of not enhanced type) */
@@ -98,7 +98,7 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      * @param originalAndEnhancedRootTypesArrays -- a map of pair [original => enhanced class byte array] root types
      */
     public DomainTreeEnhancer(final Set<Class<?>> rootTypes) {
-	this(rootTypes, new HashMap<Class<?>, ByteArray>(), null);
+	this(rootTypes, new HashMap<Class<?>, List<ByteArray>>(), null);
     }
 
     /**
@@ -106,7 +106,7 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      *
      * @param originalAndEnhancedRootTypesArrays -- a map of pair [original => enhanced class byte array] root types
      */
-    public DomainTreeEnhancer(final Set<Class<?>> rootTypes, final Map<Class<?>, ByteArray> originalAndEnhancedRootTypesArrays) {
+    public DomainTreeEnhancer(final Set<Class<?>> rootTypes, final Map<Class<?>, List<ByteArray>> originalAndEnhancedRootTypesArrays) {
 	this(rootTypes, originalAndEnhancedRootTypesArrays, null);
     }
 
@@ -116,11 +116,11 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      * @param originalAndEnhancedRootTypesArrays -- a map of pair [original => enhanced class byte array] root types
      * @param calculatedProperties -- current version of calculated properties
      */
-    public DomainTreeEnhancer(final Set<Class<?>> rootTypes, final Map<Class<?>, ByteArray> originalAndEnhancedRootTypesArrays, final Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> calculatedProperties) {
+    public DomainTreeEnhancer(final Set<Class<?>> rootTypes, final Map<Class<?>, List<ByteArray>> originalAndEnhancedRootTypesArrays, final Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> calculatedProperties) {
 	this.rootTypes = new HashSet<Class<?>>();
 	this.rootTypes.addAll(rootTypes);
 
-	this.originalAndEnhancedRootTypesArrays = new HashMap<Class<?>, ByteArray>();
+	this.originalAndEnhancedRootTypesArrays = new HashMap<Class<?>, List<ByteArray>>();
 	this.originalAndEnhancedRootTypesArrays.putAll(originalAndEnhancedRootTypesArrays);
 
 	// Initialise a map with enhanced (or not) types. A new instance of classLoader is needed for loading enhanced "byte arrays".
@@ -129,18 +129,25 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 	for (final Class<?> rootType : this.rootTypes) {
 	    this.originalAndEnhancedRootTypes.put(rootType, rootType);
 	}
-	for (final Entry<Class<?>, ByteArray> entry : this.originalAndEnhancedRootTypesArrays.entrySet()) {
-	    this.originalAndEnhancedRootTypes.put(entry.getKey(), classLoader.defineClass(entry.getValue().getArray()));
+	for (final Entry<Class<?>, List<ByteArray>> entry : this.originalAndEnhancedRootTypesArrays.entrySet()) {
+	    final List<ByteArray> arrays = new ArrayList<ByteArray>(entry.getValue());
+	    if (!arrays.isEmpty()) {
+		this.originalAndEnhancedRootTypes.put(entry.getKey(), classLoader.defineClass(arrays.get(0).getArray()));
+		arrays.remove(0);
+		for (final ByteArray array : arrays) {
+		    classLoader.defineClass(array.getArray());
+		}
+	    }
 	}
 
 	this.calculatedProperties = new HashMap<Pair<Class<?>, String>, Map<String, ICalculatedProperty>>();
 	this.calculatedProperties.putAll(calculatedProperties == null ? extractAll(originalAndEnhancedRootTypes) : calculatedProperties);
     }
 
-    private static Map<Class<?>, Pair<Class<?>, byte[]>> createOriginalAndEnhancedRootTypesFromRootTypes(final Set<Class<?>> rootTypes) {
-	final Map<Class<?>, Pair<Class<?>, byte[]>> originalAndEnhancedRootTypes = new HashMap<Class<?>, Pair<Class<?>, byte[]>>();
+    private static Map<Class<?>, Pair<Class<?>, List<byte[]>>> createOriginalAndEnhancedRootTypesFromRootTypes(final Set<Class<?>> rootTypes) {
+	final Map<Class<?>, Pair<Class<?>, List<byte[]>>> originalAndEnhancedRootTypes = new HashMap<Class<?>, Pair<Class<?>, List<byte[]>>>();
 	for (final Class<?> rootType : rootTypes) {
-	    originalAndEnhancedRootTypes.put(rootType, new Pair<Class<?>, byte[]>(rootType, null));
+	    originalAndEnhancedRootTypes.put(rootType, new Pair<Class<?>, List<byte[]>>(rootType, new ArrayList<byte[]>()));
 	}
 	return originalAndEnhancedRootTypes;
     }
@@ -154,14 +161,16 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
     @Override
     public void apply() {
 	//////////// Performs migration [calculatedProperties => originalAndEnhancedRootTypes] ////////////
-	final Map<Class<?>, Pair<Class<?>, byte[]>> freshOriginalAndEnhancedRootTypes = generateHierarchy(originalAndEnhancedRootTypes.keySet(), calculatedProperties);
+	final Map<Class<?>, Pair<Class<?>, List<byte[]>>> freshOriginalAndEnhancedRootTypes = generateHierarchy(originalAndEnhancedRootTypes.keySet(), calculatedProperties);
 	originalAndEnhancedRootTypes.clear();
 	originalAndEnhancedRootTypesArrays.clear();
-	for (final Entry<Class<?>, Pair<Class<?>, byte[]>> entry : freshOriginalAndEnhancedRootTypes.entrySet()) {
+	for (final Entry<Class<?>, Pair<Class<?>, List<byte[]>>> entry : freshOriginalAndEnhancedRootTypes.entrySet()) {
 	    originalAndEnhancedRootTypes.put(entry.getKey(), entry.getValue().getKey());
-	    if (entry.getValue().getValue() != null) {
-		originalAndEnhancedRootTypesArrays.put(entry.getKey(), new ByteArray(entry.getValue().getValue()));
+	    final List<ByteArray> arrays = new ArrayList<ByteArray>();
+	    for (final byte[] array : entry.getValue().getValue()) {
+		arrays.add(new ByteArray(array));
 	    }
+	    originalAndEnhancedRootTypesArrays.put(entry.getKey(), arrays);
 	}
     }
 
@@ -172,11 +181,11 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      * @param calculatedProperties
      * @return
      */
-    protected static Map<Class<?>, Pair<Class<?>, byte[]>> generateHierarchy(final Set<Class<?>> rootTypes, final Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> calculatedProperties) {
+    protected static Map<Class<?>, Pair<Class<?>, List<byte[]>>> generateHierarchy(final Set<Class<?>> rootTypes, final Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> calculatedProperties) {
 	// single classLoader instance is needed for single "apply" transaction
 	final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 
-	final Map<Class<?>, Pair<Class<?>, byte[]>> originalAndEnhancedRootTypes = createOriginalAndEnhancedRootTypesFromRootTypes(rootTypes);
+	final Map<Class<?>, Pair<Class<?>, List<byte[]>>> originalAndEnhancedRootTypes = createOriginalAndEnhancedRootTypesFromRootTypes(rootTypes);
 
 	// iterate through calculated property places (e.g. Vehicle.class+"" or WorkOrder.class+"veh.status") with no care about order
 	for (final Entry<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> placeAndProps : calculatedProperties.entrySet()) {
@@ -201,13 +210,21 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 		// determine a "real" parent type:
 		final Class<?> realParentToBeEnhanced = StringUtils.isEmpty(path) ? realRoot : PropertyTypeDeterminator.determinePropertyType(realRoot, path);
 		try {
+		    final List<byte[]> existingByteArrays = new ArrayList<byte[]>(originalAndEnhancedRootTypes.get(originalRoot).getValue());
+
 		    // generate & load new type enhanced by calculated properties
 		    final Class<?> realParentEnhanced = classLoader.startModification(realParentToBeEnhanced.getName()).addProperties(newProperties).endModification();
 		    // propagate enhanced type to root
-		    final Class<?> rootAfterPropagation = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path, classLoader);
-		    final byte[] rootAfterPropagationArray = classLoader.getCachedByteArray(rootAfterPropagation.getName());
+		    final Pair<Class<?>, List<byte[]>> rootAfterPropagationAndAdditionalByteArrays = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path, classLoader);
+		    final Class<?> rootAfterPropagation = rootAfterPropagationAndAdditionalByteArrays.getKey();
+		    // insert new byte arrays into beginning (the first item is an array of root type)
+		    if (existingByteArrays.isEmpty()) {
+			existingByteArrays.addAll(rootAfterPropagationAndAdditionalByteArrays.getValue());
+		    } else {
+			existingByteArrays.addAll(0, rootAfterPropagationAndAdditionalByteArrays.getValue());
+		    }
 		    // replace relevant root type in cache
-		    originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, byte[]>(rootAfterPropagation, rootAfterPropagationArray));
+		    originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, List<byte[]>>(rootAfterPropagation, existingByteArrays));
 		} catch (final ClassNotFoundException e) {
 		    e.printStackTrace();
 		    logger.error(e);
@@ -227,9 +244,13 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      * @param classLoader
      * @return
      */
-    protected static Class<?> propagateEnhancedTypeToRoot(final Class<?> enhancedType, final Class<?> root, final String path, final DynamicEntityClassLoader classLoader) {
+    protected static Pair<Class<?>, List<byte[]>> propagateEnhancedTypeToRoot(final Class<?> enhancedType, final Class<?> root, final String path, final DynamicEntityClassLoader classLoader) {
+	final List<byte[]> additionalByteArrays = new ArrayList<byte[]>();
+	// add a byte array corresponding to "enhancedType"
+	additionalByteArrays.add(classLoader.getCachedByteArray(enhancedType.getName()));
+
 	if (StringUtils.isEmpty(path)) { // replace current root type with new one
-	    return enhancedType;
+	    return new Pair<Class<?>, List<byte[]>>(enhancedType, additionalByteArrays);
 	}
 	final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(root, path);
 
@@ -240,8 +261,14 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 	    final boolean isCollectional = Collection.class.isAssignableFrom(PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), true, false));
 	    final NewProperty propertyToBeModified = !isCollectional ? NewProperty.changeType(nameOfThePropertyToAdapt, enhancedType) : NewProperty.changeTypeSignature(nameOfThePropertyToAdapt, enhancedType);
 	    final Class<?> nextEnhancedType = classLoader.startModification(nameOfTheTypeToAdapt).modifyProperties(propertyToBeModified).endModification();
+	    //	    // add a byte array corresponding to "nextEnhancedType"
+	    //	    additionalByteArrays.add(classLoader.getCachedByteArray(nextEnhancedType.getName()));
+
 	    final String nextProp = PropertyTypeDeterminator.isDotNotation(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
-	    return propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp, classLoader);
+	    final Pair<Class<?>, List<byte[]>> lastTypeThatIsRootAndPropagatedArrays = propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp, classLoader);
+	    additionalByteArrays.addAll(0, lastTypeThatIsRootAndPropagatedArrays.getValue());
+
+	    return new Pair<Class<?>, List<byte[]>>(lastTypeThatIsRootAndPropagatedArrays.getKey(), additionalByteArrays);
 	} catch (final ClassNotFoundException e) {
 	    e.printStackTrace();
 	    logger.error(e);
@@ -379,7 +406,7 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 	@Override
 	public DomainTreeEnhancer read(final ByteBuffer buffer) {
 	    final Set<Class<?>> rootTypes = readValue(buffer, HashSet.class);
-	    final Map<Class<?>, ByteArray> originalAndEnhancedRootTypesArrays = readValue(buffer, HashMap.class);
+	    final Map<Class<?>, List<ByteArray>> originalAndEnhancedRootTypesArrays = readValue(buffer, HashMap.class);
 	    final Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> calculatedProperties = readValue(buffer, HashMap.class);
 	    return new DomainTreeEnhancer(rootTypes, originalAndEnhancedRootTypesArrays, calculatedProperties);
 	}
