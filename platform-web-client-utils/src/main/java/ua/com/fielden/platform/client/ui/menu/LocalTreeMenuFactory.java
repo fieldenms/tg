@@ -32,7 +32,7 @@ public class LocalTreeMenuFactory implements ITreeMenuFactory {
 	this.root = root;
 	this.menu = menu;
 	this.injector = injector;
-	this.defaultFactory = new TreeMenuItemFactory();
+	this.defaultFactory = new DefaultTreeMenuItemFactory();
     }
 
     @Override

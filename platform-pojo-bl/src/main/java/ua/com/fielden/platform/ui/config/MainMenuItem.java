@@ -94,7 +94,6 @@ public class MainMenuItem extends AbstractEntity<String> {
     }
 
     public MainMenuItem addChild(final MainMenuItem child) {
-	// TODO check if hierarchy will be correct once the child is added
 	if (child.getParent() != null && !child.getParent().equals(this)) {
 	    throw new Result(this, new IllegalArgumentException("Menu item " + child + " already has a parent."));
 	}

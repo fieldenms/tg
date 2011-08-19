@@ -39,7 +39,7 @@ public class RemoteTreeMenuFactory implements ITreeMenuFactory {
 	this.root = root;
 	this.menu = menu;
 	this.injector = injector;
-	this.defaultFactory = new TreeMenuItemFactory();
+	this.defaultFactory = new DefaultTreeMenuItemFactory();
 	this.eccController = injector.getInstance(IEntityCentreConfigController.class);
 	this.userProvider = injector.getInstance(IUserProvider.class);
 	this.mmiController = injector.getInstance(IMainMenuItemInvisibilityController.class);

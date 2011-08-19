@@ -473,7 +473,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 		    } else {
 			visibilityItem.setState(false);
 		    }
-		    if (!(treeMenuItem instanceof MiRemovableDynamicReport) && !(treeMenuItem instanceof TreeMenuItemWrapper)) {
+		    if (!(treeMenuItem instanceof MiSaveAsConfiguration) && !(treeMenuItem instanceof TreeMenuItemWrapper)) {
 			visibilityItem.setEnabled(true);
 		    } else {
 			visibilityItem.setEnabled(false);
@@ -553,7 +553,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
     }
 
     private void setChildrenVisible(final TreeMenuItem<?> menuItem, final boolean visible) {
-	if ((menuItem instanceof MiRemovableDynamicReport) || (menuItem instanceof TreeMenuItemWrapper)) {
+	if ((menuItem instanceof MiSaveAsConfiguration) || (menuItem instanceof TreeMenuItemWrapper)) {
 	    return;
 	}
 	if (menuItem.getChildCount() > 0) {
@@ -589,7 +589,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
     private void setParentListVisible(final TreeMenuItem<?> menuItem, final boolean visible) {
 	TreeMenuItem<?> parentItem = (TreeMenuItem<?>) menuItem.getParent();
 	while (parentItem != null) {
-	    if (!(parentItem instanceof MiRemovableDynamicReport) && !(parentItem instanceof TreeMenuItemWrapper)) {
+	    if (!(parentItem instanceof MiSaveAsConfiguration) && !(parentItem instanceof TreeMenuItemWrapper)) {
 		parentItem.setVisible(visible);
 	    }
 	    parentItem = (TreeMenuItem<?>) parentItem.getParent();
@@ -597,7 +597,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
     }
 
     private void setMenuItemVisible(final TreeMenuItem<?> menuItem, final boolean visible) {
-	if ((menuItem instanceof MiRemovableDynamicReport) || (menuItem instanceof TreeMenuItemWrapper)) {
+	if ((menuItem instanceof MiSaveAsConfiguration) || (menuItem instanceof TreeMenuItemWrapper)) {
 	    return;
 	}
 	menuItem.setVisible(visible);
@@ -605,7 +605,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 
     private void traceTree(final TreePath treePath, final boolean visible) {
 	final Object lastPathComponent = treePath.getLastPathComponent();
-	if ((lastPathComponent instanceof MiRemovableDynamicReport) || (lastPathComponent instanceof TreeMenuItemWrapper)) {
+	if ((lastPathComponent instanceof MiSaveAsConfiguration) || (lastPathComponent instanceof TreeMenuItemWrapper)) {
 	    return;
 	}
 	final TreeMenuItem<?> node = (TreeMenuItem) treePath.getLastPathComponent();

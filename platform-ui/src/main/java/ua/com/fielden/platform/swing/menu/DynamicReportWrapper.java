@@ -58,7 +58,7 @@ public class DynamicReportWrapper<T extends AbstractEntity, DAO extends IEntityD
     @Override
     public void buildUi() {
 	getHoldingPanel().setLayout(new MigLayout("fill, insets 0", "[fill, grow]", "[c,grow,fill]"));
-	getDynamicCriteriaModelBuilder().init(getHoldingPanel(), actionChangerBuilder, panelBuilder, false, !(getAssociatedTreeMenuItem() instanceof MiRemovableDynamicReport));
+	getDynamicCriteriaModelBuilder().init(getHoldingPanel(), actionChangerBuilder, panelBuilder, false, !(getAssociatedTreeMenuItem() instanceof MiSaveAsConfiguration));
 	treeMenu.updateSelectedMenuItem();
     }
 

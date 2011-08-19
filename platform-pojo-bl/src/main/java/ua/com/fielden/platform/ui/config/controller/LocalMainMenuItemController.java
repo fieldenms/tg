@@ -10,9 +10,20 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 
+/**
+ * The main menu controller, which constructs the menu from the Java configuration without accessing menu configuration stored in the could.
+ * This implementation is intended purely for use as part of the development framework.
+ *
+ * @author TG Team
+ *
+ */
 public class LocalMainMenuItemController implements IMainMenuItemController {
 
     private String username;
+
+    public LocalMainMenuItemController() {
+
+    }
 
     @Override
     public List<MainMenuItem> loadMenuSkeletonStructure() {

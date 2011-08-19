@@ -10,7 +10,7 @@ import ua.com.fielden.platform.swing.review.DynamicEntityReview;
 import ua.com.fielden.platform.swing.review.DynamicEntityReviewWithTabs;
 
 /**
- * {@link TreeMenuItem} that wraps it's parent {@link MiRemovableDynamicReport} node.
+ * {@link TreeMenuItem} that wraps it's parent {@link MiSaveAsConfiguration} node.
  * 
  * @author oleh
  * 
@@ -23,7 +23,7 @@ public class TreeMenuItemWrapper<T extends AbstractEntity, DAO extends IEntityDa
     private static final long serialVersionUID = -5587449424202672352L;
 
     /**
-     * Creates new {@link TreeMenuItemWrapper} instance with specified title and {@link MiRemovableDynamicReport} that must be wrapped.
+     * Creates new {@link TreeMenuItemWrapper} instance with specified title and {@link MiSaveAsConfiguration} that must be wrapped.
      * 
      * @param title
      * @param removableDynamicItem
@@ -78,7 +78,7 @@ public class TreeMenuItemWrapper<T extends AbstractEntity, DAO extends IEntityDa
 
     @Override
     public void setParent(final MutableTreeNode newParent) {
-	if (newParent != null && !(newParent instanceof MiRemovableDynamicReport)) {
+	if (newParent != null && !(newParent instanceof MiSaveAsConfiguration)) {
 	    throw new IllegalArgumentException("The parent of this tree menu item wrapper must be an instance of MiRemovableDynamicReport class");
 	} else {
 	    super.setParent(newParent);
@@ -86,16 +86,16 @@ public class TreeMenuItemWrapper<T extends AbstractEntity, DAO extends IEntityDa
     }
 
     @Override
-    public MiRemovableDynamicReport<T, DAO, R> getParent() {
-	return (MiRemovableDynamicReport<T, DAO, R>) super.getParent();
+    public MiSaveAsConfiguration<T, DAO, R> getParent() {
+	return (MiSaveAsConfiguration<T, DAO, R>) super.getParent();
     }
 
     /**
-     * Returns wrapped {@link MiRemovableDynamicReport} instance.
+     * Returns wrapped {@link MiSaveAsConfiguration} instance.
      * 
      * @return
      */
-    public MiRemovableDynamicReport<T, DAO, R> getWrappedTreeMenuItem() {
+    public MiSaveAsConfiguration<T, DAO, R> getWrappedTreeMenuItem() {
 	return getParent();
     }
 

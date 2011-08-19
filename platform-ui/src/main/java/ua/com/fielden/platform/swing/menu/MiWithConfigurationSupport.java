@@ -38,12 +38,12 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import com.google.inject.Injector;
 
 /**
- * Base class for implementing ad hoc report {@link TreeMenuItem}s.
- * 
+ * The base class for implementing menu items, which require configuration support. Mainly used for representing entity center related menu items.
+ *
  * @author TG Team
- * 
+ *
  */
-public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extends IEntityDao<T>, R extends AbstractEntity> extends MiWithVisibilityProvider<DynamicReportWrapper<T, DAO, R>> {
+public abstract class MiWithConfigurationSupport<T extends AbstractEntity, DAO extends IEntityDao<T>, R extends AbstractEntity> extends MiWithVisibilityProvider<DynamicReportWrapper<T, DAO, R>> {
 
     private static final long serialVersionUID = -4608369671314218118L;
     private final ICenterConfigurationController centerController;
@@ -53,8 +53,8 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
     private final Class<DAO> daoClass;
 
     /**
-     * Creates new {@link MiParentDynamicReport} instance and generates all his children reports. Unlike parent report, Children reports can be remove.
-     * 
+     * Creates new {@link MiWithConfigurationSupport} instance and generates all his children reports. Unlike parent report, Children reports can be remove.
+     *
      * @param treeMenu
      * @param injector
      * @param resultantEntityClass
@@ -62,7 +62,7 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
      * @param view
      * @param visibilityProvider
      */
-    public MiParentDynamicReport(final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ICenterConfigurationController centerConfigurationController, final Class<R> resultantEntityClass, final Class<DAO> daoClass, final DynamicReportWrapper<T, DAO, R> view, final ITreeMenuItemVisibilityProvider visibilityProvider) {
+    public MiWithConfigurationSupport(final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ICenterConfigurationController centerConfigurationController, final Class<R> resultantEntityClass, final Class<DAO> daoClass, final DynamicReportWrapper<T, DAO, R> view, final ITreeMenuItemVisibilityProvider visibilityProvider) {
 	super(view, visibilityProvider);
 	this.treeMenu = treeMenu;
 	this.injector = injector;
@@ -79,7 +79,7 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 	final String principleKey = getView().getDynamicCriteriaModelBuilder().getKey();
 	for (final String nonPrincipleName : centerController.getNonPrincipleCenters(principleKey)) {
 	    final DynamicCriteriaModelBuilder<T, DAO, R> newModelBuilder = getDynamicCriteriaModelBuilderFor(centerController.generateKeyForNonPrincipleCenter(principleKey, nonPrincipleName), nonPrincipleName);
-	    final MiRemovableDynamicReport<T, DAO, R> newTreeMenuItem = new MiRemovableDynamicReport<T, DAO, R>(nonPrincipleName, getView().getInfo(), newModelBuilder, treeMenu);
+	    final MiSaveAsConfiguration<T, DAO, R> newTreeMenuItem = new MiSaveAsConfiguration<T, DAO, R>(nonPrincipleName, getView().getInfo(), newModelBuilder, treeMenu);
 	    newTreeMenuItem.getView().setSaveAction(newModelBuilder.createSaveAction());
 	    newTreeMenuItem.getView().setSaveAsAction(createSaveAsAction(newModelBuilder));
 	    newTreeMenuItem.getView().setRemoveAction(createRemoveAction(newTreeMenuItem));
@@ -91,7 +91,7 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
     /**
      * Creates analysis (aggregating and lifecycle) action panel, that holds actions : "addAggregationAnalysis", "removeAnalysis"(any) and, possibly, "addLifecycleAnalysis".
      * "Add lifecycle analysis" action appears only in case when at least one "monitoring" property exists inside entity class.
-     * 
+     *
      * @return
      */
     public ActionPanelBuilder createAnalysisActionPanel(final TreeMenuItem<?> tmi) {
@@ -106,8 +106,8 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
     }
 
     /**
-     * 
-     * 
+     *
+     *
      * @return
      */
     protected ICenterConfigurationController getCenterController() {
@@ -116,7 +116,7 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 
     /**
      * Returns {@link DynamicCriteriaModelBuilder} instance generated for the file specified with filePath parameter.
-     * 
+     *
      * @param key
      *            - specified file for which {@link DynamicCriteriaModelBuilder} instance must be created.
      * @param reportName
@@ -127,10 +127,10 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 
     /**
      * Returns new instance of {@link IEntityReviewFactory}. For the associated report type.
-     * 
+     *
      * @param reportName
      *            TODO
-     * 
+     *
      * @return
      */
     protected abstract IEntityReviewFactory<T, DAO, R> createEntityReviewFactory(String reportName);
@@ -141,7 +141,7 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 
     /**
      * Returns {@link Injector} instance needed for generating {@link DynamicCriteriaModelBuilder} instances.
-     * 
+     *
      * @return
      */
     protected Injector getInjector() {
@@ -150,7 +150,7 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 
     /**
      * returns class instance of the entity used in the resultant grid in the ad hoc report.
-     * 
+     *
      * @return
      */
     protected Class<R> getResultantEntityClass() {
@@ -159,7 +159,7 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 
     /**
      * Returns {@link Class} instance of the dao class needed for generating {@link DynamicCriteriaModelBuilder} instances
-     * 
+     *
      * @return
      */
     protected Class<DAO> getDaoClass() {
@@ -168,7 +168,7 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 
     /**
      * Creates "Save as" action that allows to save current report in to the new file.
-     * 
+     *
      * @param modelBuilder
      * @return
      */
@@ -208,13 +208,13 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 	    @Override
 	    public void afterSave(final boolean isClosing) {
 		final DynamicCriteriaModelBuilder<T, DAO, R> newCriteriaModelBuilder = getDynamicCriteriaModelBuilderFor(getKeyToSave(), saveReportDialog.getEnteredFileName());
-		final MiRemovableDynamicReport<T, DAO, R> newTreeMenuItem = new MiRemovableDynamicReport<T, DAO, R>(saveReportDialog.getEnteredFileName(), getView().getInfo(), newCriteriaModelBuilder, treeMenu);
+		final MiSaveAsConfiguration<T, DAO, R> newTreeMenuItem = new MiSaveAsConfiguration<T, DAO, R>(saveReportDialog.getEnteredFileName(), getView().getInfo(), newCriteriaModelBuilder, treeMenu);
 		newTreeMenuItem.getView().setSaveAction(newCriteriaModelBuilder.createSaveAction());
 		newTreeMenuItem.getView().setSaveAsAction(createSaveAsAction(newCriteriaModelBuilder));
 		newTreeMenuItem.getView().setRemoveAction(createRemoveAction(newTreeMenuItem));
 		newTreeMenuItem.getView().setPanelBuilder(createAnalysisActionPanel(newTreeMenuItem));
 		addItem(newTreeMenuItem);
-		treeMenu.getModel().getOriginModel().reload(MiParentDynamicReport.this);
+		treeMenu.getModel().getOriginModel().reload(MiWithConfigurationSupport.this);
 		if (!isClosing) {
 		    treeMenu.activateOrOpenItem(newTreeMenuItem);
 		}
@@ -236,11 +236,11 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 
     /**
      * Creates "remove" action that allows to remove children ad hoc reports.
-     * 
+     *
      * @param reportItem
      * @return
      */
-    public ActionChanger<?> createRemoveAction(final MiRemovableDynamicReport<T, DAO, R> reportItem) {
+    public ActionChanger<?> createRemoveAction(final MiSaveAsConfiguration<T, DAO, R> reportItem) {
 	return new ActionChanger<Void>("Delete") {
 
 	    private static final long serialVersionUID = 4540755873256648991L;
@@ -331,8 +331,8 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 			reviewWithTabs.selectTab(addTabDialog.getEnteredTabName());
 		    } else {
 			reviewWithTabs.addNewAnalysisTabSheet(addTabDialog.getEnteredTabName(), reportType);
-			if (parentTreeItem instanceof MiRemovableDynamicReport) {
-			    ((MiRemovableDynamicReport<T, DAO, R>) parentTreeItem).addItem(new TreeMenuItemWrapper<T, DAO, R>(addTabDialog.getEnteredTabName(), parentTreeItem.isGroupItem()));
+			if (parentTreeItem instanceof MiSaveAsConfiguration) {
+			    ((MiSaveAsConfiguration<T, DAO, R>) parentTreeItem).addItem(new TreeMenuItemWrapper<T, DAO, R>(addTabDialog.getEnteredTabName(), parentTreeItem.isGroupItem()));
 			    treeMenu.getModel().getOriginModel().reload(parentTreeItem);
 			}
 		    }
@@ -343,7 +343,7 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 
     /**
      * Returns action that removes analysis report.
-     * 
+     *
      * @param parentTreeItem
      * @return
      */
@@ -393,8 +393,8 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 		    final DynamicEntityReviewWithTabs<T, DAO, R> reviewWithTabs = (DynamicEntityReviewWithTabs<T, DAO, R>) review;
 		    final String name = reviewWithTabs.getSelectedTabTitle();
 		    final JComponent component = reviewWithTabs.removeAnalysisTabSheet(name);
-		    if (component != null && parentTreeItem instanceof MiRemovableDynamicReport) {
-			final TreeMenuItemWrapper<T, DAO, R> itemToRemove = getChildByName((MiRemovableDynamicReport<T, DAO, R>) parentTreeItem, name);
+		    if (component != null && parentTreeItem instanceof MiSaveAsConfiguration) {
+			final TreeMenuItemWrapper<T, DAO, R> itemToRemove = getChildByName((MiSaveAsConfiguration<T, DAO, R>) parentTreeItem, name);
 			if (itemToRemove == null) {
 			    return;
 			}
@@ -403,7 +403,7 @@ public abstract class MiParentDynamicReport<T extends AbstractEntity, DAO extend
 		}
 	    }
 
-	    private TreeMenuItemWrapper<T, DAO, R> getChildByName(final MiRemovableDynamicReport<T, DAO, R> report, final String name) {
+	    private TreeMenuItemWrapper<T, DAO, R> getChildByName(final MiSaveAsConfiguration<T, DAO, R> report, final String name) {
 		for (int childIndex = 0; childIndex < report.getChildCount(); childIndex++) {
 		    final TreeNode node = report.getChildAt(childIndex);
 		    if (node instanceof TreeMenuItemWrapper && ((TreeMenuItemWrapper<T, DAO, R>) node).toString().equals(name)) {
