@@ -42,6 +42,7 @@ import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.update.IClientApplicationRestarter;
 import ua.com.fielden.platform.update.ReferenceDependancyController;
 import ua.com.fielden.platform.update.Updater;
@@ -273,7 +274,7 @@ public class WebClentStartupUtility {
      * @param splash
      * @param loginScreen
      * @param injector
-     * @param mmBuilder
+     * @param mmBinder
      * @param menuItems
      * @param menu
      */
@@ -282,13 +283,14 @@ public class WebClentStartupUtility {
 	    final SplashController splash,//
 	    final StyledLoginScreen loginScreen,//
 	    final Injector injector, //
-	    final IMainMenuBinder mmBuilder,//
+	    final IMainMenuBinder mmBinder,//
 	    final TreeMenuItem<?> menuItems, //
 	    final UndockableTreeMenuWithTabs<?> menu) {
 	final IApplicationSettings settings = injector.getInstance(IApplicationSettings.class);
 	final ITreeMenuFactory menuFactory = Workflows.development.equals(Workflows.valueOf(settings.workflow())) ? new LocalTreeMenuFactory(menuItems, menu, injector) : new RemoteTreeMenuFactory(menuItems, menu, injector);
-	mmBuilder.bindMainMenuItemFactories(menuFactory);
-	final List<MainMenuItem> itemsFromCloud = mmBuilder.getMainMenuItemController().build(restUtil.getUsername());
+	mmBinder.bindMainMenuItemFactories(menuFactory);
+	final IMainMenuStructureBuilder mmsBuilder = injector.getInstance(IMainMenuStructureBuilder.class);
+	final List<MainMenuItem> itemsFromCloud = mmsBuilder.build(restUtil.getUsername());
 
 	message("Building user configurations...", splash, loginScreen);
 
