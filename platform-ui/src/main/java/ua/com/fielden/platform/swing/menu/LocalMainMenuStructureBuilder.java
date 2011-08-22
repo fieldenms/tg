@@ -6,12 +6,11 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 
 import com.google.inject.Inject;
 
 /**
- * An abstraction for constructing structure of the application main menu based on concrete classes implementing corresponding menu items.
+ * An factory for constructing structure of the application main menu based on concrete classes implementing corresponding menu items.
  * <p>
  * In order to construct menu like this:
  * <pre>
@@ -53,7 +52,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class LocalMainMenuStructureBuilder implements IMainMenuStructureBuilder {
+public final class LocalMainMenuStructureBuilder {
 
     private long id = 0;
     private int order = 0;
@@ -112,8 +111,7 @@ public class LocalMainMenuStructureBuilder implements IMainMenuStructureBuilder 
      *
      * @return
      */
-    @Override
-    public List<MainMenuItem> build(final String username) {
+    public List<MainMenuItem> build() {
 	return Collections.unmodifiableList(menuItems);
     }
 }

@@ -33,7 +33,7 @@ public class MainMenuStructureBuilderTest {
 	     .push(TreeMenuItem.class).pop()
 	.pop();
 
-	final List<MainMenuItem> menu = builder.build("irrelevant" /*irrelevant*/);
+	final List<MainMenuItem> menu = builder.build();
 	assertEquals("Incorrect number of first level items", 2, menu.size());
 	assertEquals("Incorrect number of sub items of the first item", 1, menu.get(0).getChildren().size());
 	assertEquals("Incorrect number of sub items of the second item", 2, menu.get(1).getChildren().size());

@@ -11,6 +11,7 @@ public class LocalTreeMenuItemVisibilityProvider implements ITreeMenuItemVisibil
 
     @Override
     public void setVisible(final boolean visible) {
+	throw new UnsupportedOperationException("Application if running in development mode. This operation has no affect.\nPlease consider switching to the deploment mode.");
     }
 
     @Override
