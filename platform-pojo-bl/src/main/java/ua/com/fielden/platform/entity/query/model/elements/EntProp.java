@@ -3,8 +3,6 @@ package ua.com.fielden.platform.entity.query.model.elements;
 import java.util.HashSet;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
-
 public class EntProp implements ISingleOperand {
     private final String name;
 

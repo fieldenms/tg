@@ -5,8 +5,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 abstract class AbstractFunctionBuilder extends AbstractTokensBuilder {
 
-    protected AbstractFunctionBuilder(final AbstractTokensBuilder parent) {
-	super(parent);
+    protected AbstractFunctionBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
+	super(parent, dbVersion);
     }
 
     @Override

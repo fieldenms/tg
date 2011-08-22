@@ -2,8 +2,6 @@ package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.query.model.structure.IEntQuerySource;
-import ua.com.fielden.platform.entity.query.model.structure.IPropertyCollector;
 
 public class EntQueryCompoundSourceModel implements IPropertyCollector {
     private final IEntQuerySource source;

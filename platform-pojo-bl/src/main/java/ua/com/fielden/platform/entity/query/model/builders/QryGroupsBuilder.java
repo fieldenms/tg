@@ -10,8 +10,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QryGroupsBuilder extends AbstractTokensBuilder {
 
-    protected QryGroupsBuilder(final AbstractTokensBuilder parent) {
-	super(parent);
+    protected QryGroupsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
+	super(parent, dbVersion);
     }
 
     @Override

@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.query.model.structure.ISetOperand;
 
 public class EntSetFromQryModel implements ISetOperand {
     private final EntQuery model;

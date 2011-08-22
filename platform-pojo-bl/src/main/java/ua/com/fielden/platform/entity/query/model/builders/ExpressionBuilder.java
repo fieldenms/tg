@@ -7,14 +7,14 @@ import java.util.List;
 import ua.com.fielden.platform.entity.query.model.elements.ArithmeticalOperator;
 import ua.com.fielden.platform.entity.query.model.elements.CompoundSingleOperand;
 import ua.com.fielden.platform.entity.query.model.elements.Expression;
-import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
+import ua.com.fielden.platform.entity.query.model.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
 public class ExpressionBuilder extends AbstractTokensBuilder {
 
-    protected ExpressionBuilder(final AbstractTokensBuilder parent) {
-	super(parent);
+    protected ExpressionBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
+	super(parent, dbVersion);
     }
 
     @Override

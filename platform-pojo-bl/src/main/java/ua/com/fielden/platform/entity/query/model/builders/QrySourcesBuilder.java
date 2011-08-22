@@ -6,15 +6,15 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.query.model.elements.EntQueryCompoundSourceModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntQuerySourcesModel;
-import ua.com.fielden.platform.entity.query.model.structure.IEntQuerySource;
+import ua.com.fielden.platform.entity.query.model.elements.IEntQuerySource;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder extends AbstractTokensBuilder {
 
-    protected QrySourcesBuilder(final AbstractTokensBuilder parent) {
-	super(parent);
-	setChild(new QrySourceBuilder(this));
+    protected QrySourcesBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
+	super(parent, dbVersion);
+	setChild(new QrySourceBuilder(this, dbVersion));
     }
 
     @Override
@@ -23,7 +23,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
 	case INNER_JOIN: //eats token
 	case LEFT_JOIN: //eats token
 	    finaliseChild();
-	    setChild(new CompoundQrySourceBuilder(this, cat, value));
+	    setChild(new CompoundQrySourceBuilder(this, getDbVersion(), cat, value));
 	    break;
 	default:
 	    super.add(cat, value);

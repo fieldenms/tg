@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.entity.query.model.builders;
 
+import ua.com.fielden.platform.entity.query.model.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.elements.YieldModel;
-import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
 public class YieldBuilder extends AbstractTokensBuilder {
 
-    protected YieldBuilder(final AbstractTokensBuilder parent) {
-	super(parent);
+    protected YieldBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
+	super(parent, dbVersion);
     }
 
     @Override

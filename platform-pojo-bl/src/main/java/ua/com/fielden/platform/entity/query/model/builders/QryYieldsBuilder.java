@@ -10,8 +10,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QryYieldsBuilder extends AbstractTokensBuilder {
 
-    protected QryYieldsBuilder(final AbstractTokensBuilder parent) {
-	super(parent);
+    protected QryYieldsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
+	super(parent, dbVersion);
     }
 
     @Override

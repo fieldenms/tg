@@ -13,25 +13,18 @@ import ua.com.fielden.platform.entity.query.model.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.model.elements.EntValue;
 import ua.com.fielden.platform.entity.query.model.elements.ExistenceTestModel;
 import ua.com.fielden.platform.entity.query.model.elements.GroupedConditionsModel;
+import ua.com.fielden.platform.entity.query.model.elements.ICondition;
+import ua.com.fielden.platform.entity.query.model.elements.ISetOperand;
+import ua.com.fielden.platform.entity.query.model.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.elements.LikeTestModel;
 import ua.com.fielden.platform.entity.query.model.elements.LogicalOperator;
 import ua.com.fielden.platform.entity.query.model.elements.NullTestModel;
+import ua.com.fielden.platform.entity.query.model.elements.QuantifiedTestModel;
+import ua.com.fielden.platform.entity.query.model.elements.Quantifier;
 import ua.com.fielden.platform.entity.query.model.elements.SetTestModel;
-import ua.com.fielden.platform.entity.query.model.structure.ICondition;
-import ua.com.fielden.platform.entity.query.model.structure.ISetOperand;
-import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
-/**
-* existence test, grouped conditions, null test, like test, comparison test, set test, quantified test:
-*
-* COMPARISON_TEST: ANY vs 1, 1 vs ANY, ANY vs ANY
-* (I)LIKE_TEST: ANY vs 1, 1 vs ANY, ANY vs ANY
-* IN_TEST: ANY vs 1
-* NULL_TEST: ANY vs 1
-* QUANTIFIED_TEST: ANY vs 1
-*/
 public class ConditionBuilder extends AbstractTokensBuilder {
     private final static List<TokenCategory> singleOperands = Arrays.asList(new TokenCategory[] {TokenCategory.PROP, TokenCategory.PARAM, TokenCategory.VAL, TokenCategory.EXPR, TokenCategory.FUNCTION_MODEL, TokenCategory.EQUERY_TOKENS, TokenCategory.EXPR_TOKENS});
     private final static List<TokenCategory> mutlipleAnyOperands = Arrays.asList(new TokenCategory[] {TokenCategory.ANY_OF_PROPS, TokenCategory.ANY_OF_PARAMS, TokenCategory.ANY_OF_VALUES, TokenCategory.ANY_OF_EQUERY_TOKENS, TokenCategory.ANY_OF_EXPR_TOKENS});
@@ -39,13 +32,13 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     private final static List<TokenCategory> mutlipleOperands = new ArrayList<TokenCategory>();
     private final static List<TokenCategory> setOperands = Arrays.asList(new TokenCategory[] {TokenCategory.SET_OF_PROPS, TokenCategory.SET_OF_PARAMS, TokenCategory.SET_OF_VALUES, TokenCategory.EQUERY_TOKENS, TokenCategory.SET_OF_EXPR_TOKENS});
     private final static List<TokenCategory> quantifiers = Arrays.asList(new TokenCategory[] {TokenCategory.ANY_OPERATOR, TokenCategory.ALL_OPERATOR});
-    {
+    static {
 	mutlipleOperands.addAll(mutlipleAllOperands);
 	mutlipleOperands.addAll(mutlipleAnyOperands);
     }
 
-    protected ConditionBuilder(final AbstractTokensBuilder parent) {
-	super(parent);
+    protected ConditionBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
+	super(parent, dbVersion);
     }
 
     private boolean isPlainExistenceTest() {
@@ -186,14 +179,33 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	} else if (isPlainSetTest()) {
 	    return getResultForPlainSetTest();
 	} else if (isMultipleSetTest()) {
-	    throw new RuntimeException("Unable to get result - not implemented yet");
+	    return getResultForMultipleSetTest();
 	} else if (isPlainQuantifiedTest()) {
-	    throw new RuntimeException("Unable to get result - not implemented yet");
+	    return getResultForPlainQuantifiedTest();
 	} else if (isMultipleQuantifiedTest()) {
-	    throw new RuntimeException("Unable to get result - not implemented yet");
+	    return getResultForMultipleQuantifiedTest();
 	} else {
 	    throw new RuntimeException("Unrecognised result");
 	}
+    }
+
+    private Pair<TokenCategory, Object> getResultForPlainQuantifiedTest() {
+	final ISingleOperand firstOperand = getModelForSingleOperand(firstCat(), firstValue());
+	final EntQuery secondOperand = (EntQuery) getModelForSingleOperand(thirdCat(), thirdValue());
+	final Quantifier quantifier = TokenCategory.ANY_OPERATOR.equals(thirdCat()) ? Quantifier.ANY : Quantifier.ALL;
+	return new Pair<TokenCategory, Object>(TokenCategory.QUANTIFIED_TEST, new QuantifiedTestModel(firstOperand, (ComparisonOperator) secondValue(), quantifier, secondOperand));
+    }
+
+    private Pair<TokenCategory, Object> getResultForMultipleQuantifiedTest() {
+	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
+	final EntQuery secondOperand = (EntQuery) getModelForSingleOperand(thirdCat(), thirdValue());
+	final Quantifier quantifier = TokenCategory.ANY_OPERATOR.equals(thirdCat()) ? Quantifier.ANY : Quantifier.ALL;
+	final List<ICondition> conditions = new ArrayList<ICondition>();
+	for (final ISingleOperand operand : operands) {
+	    conditions.add(new QuantifiedTestModel(operand, (ComparisonOperator) secondValue(), quantifier, secondOperand));
+	}
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	return new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, getGroup(conditions, logicalOperator));
     }
 
     private GroupedConditionsModel getGroup(final List<ICondition> conditions, final LogicalOperator logicalOperator) {
@@ -263,11 +275,10 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	return new Pair<TokenCategory, Object>(TokenCategory.COMPARISON_TEST, new ComparisonTestModel(firstOperand, (ComparisonOperator) secondValue(), secondOperand));
     }
 
-
     private Pair<TokenCategory, Object> getResultForPlainLikeTest() {
 	final ISingleOperand firstOperand = getModelForSingleOperand(firstCat(), firstValue());
 	final ISingleOperand secondOperand = getModelForSingleOperand(thirdCat(), thirdValue());
-	return new Pair<TokenCategory, Object>(TokenCategory.LIKE_TEST, new LikeTestModel(firstOperand, secondOperand, (Boolean) secondValue()));
+	return new Pair<TokenCategory, Object>(TokenCategory.LIKE_TEST, new LikeTestModel(firstOperand, secondOperand, (Boolean) secondValue(), false));
     }
 
     private Pair<TokenCategory, Object> getResultForMultipleVsSingleLikeTest() {
@@ -275,7 +286,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	final ISingleOperand singleOperand = getModelForSingleOperand(thirdCat(), thirdValue());
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
-	    conditions.add(new LikeTestModel(operand, singleOperand, (Boolean) secondValue()));
+	    conditions.add(new LikeTestModel(operand, singleOperand, (Boolean) secondValue(), false));
 	}
 	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
 	return new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, getGroup(conditions, logicalOperator));
@@ -287,20 +298,32 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
-	    conditions.add(new LikeTestModel(singleOperand, operand, (Boolean) secondValue()));
+	    conditions.add(new LikeTestModel(singleOperand, operand, (Boolean) secondValue(), false));
 	}
 	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
 	return new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, getGroup(conditions, logicalOperator));
     }
 
     private Pair<TokenCategory, Object> getResultForPlainExistenceTest() {
-	return new Pair<TokenCategory, Object>(TokenCategory.EXISTENCE_TEST, new ExistenceTestModel((Boolean) firstValue(), new QueryBuilder((QueryModel) secondValue()).getQry()));
+	return new Pair<TokenCategory, Object>(TokenCategory.EXISTENCE_TEST, new ExistenceTestModel((Boolean) firstValue(), getQueryBuilder().getQry((QueryModel) secondValue())));
     }
 
     private Pair<TokenCategory, Object> getResultForPlainSetTest() {
 	final ISingleOperand firstOperand = getModelForSingleOperand(firstCat(), firstValue());
 	final ISetOperand setOperand = getModelForSetOperand(thirdCat(), thirdValue());
 	return new Pair<TokenCategory, Object>(TokenCategory.SET_TEST, new SetTestModel(firstOperand, (Boolean) secondValue(), setOperand));
+    }
+
+    private Pair<TokenCategory, Object> getResultForMultipleSetTest() {
+	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
+	final ISetOperand setOperand = getModelForSetOperand(thirdCat(), thirdValue());
+
+	final List<ICondition> conditions = new ArrayList<ICondition>();
+	for (final ISingleOperand operand : operands) {
+	    conditions.add(new SetTestModel(operand, (Boolean) secondValue(), setOperand));
+	}
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	return new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, getGroup(conditions, logicalOperator));
     }
 
     private Pair<TokenCategory, Object> getResultForMultipleExistenceTest() {

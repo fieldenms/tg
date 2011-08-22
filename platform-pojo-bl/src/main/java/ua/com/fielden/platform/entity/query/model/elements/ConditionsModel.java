@@ -4,8 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.query.model.structure.ICondition;
-import ua.com.fielden.platform.entity.query.model.structure.IPropertyCollector;
 
 
 public class ConditionsModel implements IPropertyCollector {

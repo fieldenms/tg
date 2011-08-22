@@ -8,14 +8,14 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.elements.ArithmeticalOperator;
 import ua.com.fielden.platform.entity.query.model.elements.CompoundSingleOperand;
 import ua.com.fielden.platform.entity.query.model.elements.Expression;
-import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
+import ua.com.fielden.platform.entity.query.model.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
 public class StandAloneExpressionBuilder extends AbstractTokensBuilder {
 
-    protected StandAloneExpressionBuilder(final AbstractTokensBuilder parent, final ExpressionModel exprModel) {
-	super(parent);
+    protected StandAloneExpressionBuilder(final DbVersion dbVersion, final ExpressionModel exprModel) {
+	super(null, dbVersion);
 
 	for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
 	    add(tokenPair.getKey(), tokenPair.getValue());

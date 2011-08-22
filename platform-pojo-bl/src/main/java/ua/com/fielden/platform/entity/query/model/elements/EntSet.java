@@ -4,8 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.query.model.structure.ISetOperand;
-import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
 
 public class EntSet implements ISetOperand{
     private final List<ISingleOperand> operands;

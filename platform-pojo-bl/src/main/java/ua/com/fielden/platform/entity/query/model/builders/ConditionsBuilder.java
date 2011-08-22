@@ -6,15 +6,15 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.query.model.elements.CompoundConditionModel;
 import ua.com.fielden.platform.entity.query.model.elements.ConditionsModel;
-import ua.com.fielden.platform.entity.query.model.structure.ICondition;
+import ua.com.fielden.platform.entity.query.model.elements.ICondition;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
 public class ConditionsBuilder extends AbstractTokensBuilder {
 
-    protected ConditionsBuilder(final AbstractTokensBuilder parent) {
-	super(parent);
-	setChild(new ConditionBuilder(this));
+    protected ConditionsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
+	super(parent, dbVersion);
+	setChild(new ConditionBuilder(this, dbVersion));
     }
 
     @Override

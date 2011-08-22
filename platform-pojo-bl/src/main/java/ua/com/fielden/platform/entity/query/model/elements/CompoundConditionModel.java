@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import ua.com.fielden.platform.entity.query.model.structure.ICondition;
 
 
 public class CompoundConditionModel {

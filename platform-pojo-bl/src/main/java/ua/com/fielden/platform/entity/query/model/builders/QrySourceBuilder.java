@@ -12,8 +12,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourceBuilder extends AbstractTokensBuilder {
 
-    protected QrySourceBuilder(final AbstractTokensBuilder parent) {
-	super(parent);
+    protected QrySourceBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
+	super(parent, dbVersion);
     }
 
     private boolean isEntityTypeAsSourceTest() {
@@ -37,7 +37,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
 	final List<QueryModel> models = (List<QueryModel>) firstValue();
 	final List<EntQuery> queries = new ArrayList<EntQuery>();
 	for (final QueryModel qryModel : models) {
-	    queries.add(new QueryBuilder(qryModel).getQry());
+	    queries.add(getQueryBuilder().getQry(qryModel));
 	}
 
 	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new EntQuerySourceAsModel((String) secondValue(), queries.toArray(new EntQuery[]{})));

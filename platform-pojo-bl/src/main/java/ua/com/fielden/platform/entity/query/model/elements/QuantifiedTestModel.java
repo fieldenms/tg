@@ -3,17 +3,13 @@ package ua.com.fielden.platform.entity.query.model.elements;
 import java.util.HashSet;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.query.model.structure.ICondition;
-import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
-import ua.com.fielden.platform.entity.query.tokens.QueryTokens;
-
 public class QuantifiedTestModel implements ICondition {
     private final ISingleOperand leftOperand;
     private final EntQuery rightOperand;
-    private final QueryTokens quantifier;
-    private final QueryTokens operator;
+    private final Quantifier quantifier;
+    private final ComparisonOperator operator;
 
-    public QuantifiedTestModel(final ISingleOperand leftOperand, final QueryTokens operator, final QueryTokens quantifier, final EntQuery rightOperand) {
+    public QuantifiedTestModel(final ISingleOperand leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final EntQuery rightOperand) {
 	this.leftOperand = leftOperand;
 	this.rightOperand = rightOperand;
 	this.operator = operator;

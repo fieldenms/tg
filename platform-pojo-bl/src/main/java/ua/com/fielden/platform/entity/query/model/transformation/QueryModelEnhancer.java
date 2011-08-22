@@ -29,7 +29,7 @@ public class QueryModelEnhancer {
 	for (final String alias : reversedAliases) {
 	    for (final Iterator<String> iterator = propNamesMod.iterator(); iterator.hasNext();) {
 		final String propName = iterator.next();
-		if (propName.toLowerCase().startsWith(alias.toLowerCase()) && propName.equalsIgnoreCase(alias)) {
+		if (propName.toLowerCase().startsWith(alias.toLowerCase()) && !propName.equalsIgnoreCase(alias)) {
 		    result.get(alias).add(propName);
 		    iterator.remove();
 		}

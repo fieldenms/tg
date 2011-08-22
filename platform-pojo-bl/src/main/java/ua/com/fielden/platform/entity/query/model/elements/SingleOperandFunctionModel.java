@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.query.model.elements;
 import java.util.HashSet;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
 
 abstract class SingleOperandFunctionModel implements ISingleOperand {
 

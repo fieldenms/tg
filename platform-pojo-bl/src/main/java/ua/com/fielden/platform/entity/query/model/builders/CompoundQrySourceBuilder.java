@@ -2,24 +2,24 @@ package ua.com.fielden.platform.entity.query.model.builders;
 
 import ua.com.fielden.platform.entity.query.model.elements.ConditionsModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntQueryCompoundSourceModel;
+import ua.com.fielden.platform.entity.query.model.elements.IEntQuerySource;
 import ua.com.fielden.platform.entity.query.model.elements.JoinType;
-import ua.com.fielden.platform.entity.query.model.structure.IEntQuerySource;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
 
-    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final TokenCategory cat, final Object value) {
-	super(parent);
+    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final TokenCategory cat, final Object value) {
+	super(parent, dbVersion);
 	getTokens().add(new Pair<TokenCategory, Object>(cat, value));
-	setChild(new QrySourceBuilder(this));
+	setChild(new QrySourceBuilder(this, dbVersion));
     }
 
     @Override
     public void add(final TokenCategory cat, final Object value) {
 	switch (cat) {
 	case ON: //eats token
-	    setChild(new ConditionsBuilder(this));
+	    setChild(new ConditionsBuilder(this, getDbVersion()));
 	    break;
 	default:
 	    super.add(cat, value);

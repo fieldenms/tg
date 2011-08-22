@@ -1,14 +1,12 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.structure.IEntQuerySource;
 
 public class EntQuerySourceAsEntity implements IEntQuerySource {
     private final Class<? extends AbstractEntity> entityType;
     private final String alias;
 
     public EntQuerySourceAsEntity(final Class<? extends AbstractEntity> entityType, final String alias) {
-	super();
 	this.entityType = entityType;
 	this.alias = alias;
     }

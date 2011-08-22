@@ -12,8 +12,8 @@ import ua.com.fielden.platform.entity.query.model.elements.EntSet;
 import ua.com.fielden.platform.entity.query.model.elements.EntSetFromQryModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntValue;
 import ua.com.fielden.platform.entity.query.model.elements.Functions;
-import ua.com.fielden.platform.entity.query.model.structure.ISetOperand;
-import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
+import ua.com.fielden.platform.entity.query.model.elements.ISetOperand;
+import ua.com.fielden.platform.entity.query.model.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -27,18 +27,37 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private final ITokensBuilder parent;
     private ITokensBuilder child;
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
+    private final DbVersion dbVersion;
+    private final QueryBuilder queryBuilder;
 
-    protected AbstractTokensBuilder(final AbstractTokensBuilder parent) {
+    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
 	this.parent = parent;
+	this.dbVersion = dbVersion;
+	this.queryBuilder = new QueryBuilder(dbVersion);
     }
 
     private void add (final Functions function) {
 	switch (function) {
+	case SUM:
+	    setChild(new SumOfBuilder(this, dbVersion));
+	    break;
+	case COUNT:
+	    setChild(new CountOfBuilder(this, dbVersion));
+	    break;
+	case AVERAGE:
+	    setChild(new AverageOfBuilder(this, dbVersion));
+	    break;
+	case MIN:
+	    setChild(new MinOfBuilder(this, dbVersion));
+	    break;
+	case MAX:
+	    setChild(new MaxOfBuilder(this, dbVersion));
+	    break;
 	case DAY:
-	    setChild(new DayOfBuilder(this));
+	    setChild(new DayOfBuilder(this, dbVersion));
 	    break;
 	case MONTH:
-	    setChild(new MonthOfBuilder(this));
+	    setChild(new MonthOfBuilder(this, dbVersion));
 	    break;
 	default:
 	    // TODO implement the rest
@@ -52,16 +71,16 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	} else {
 	    switch (cat) {
 	    case BEGIN_EXPR: //eats token
-		setChild(new ExpressionBuilder(this));
+		setChild(new ExpressionBuilder(this, dbVersion));
 		break;
 	    case FUNCTION: //eats token
 		add((Functions) value);
 		break;
 	    case BEGIN_COND: //eats token
-		setChild(new GroupedConditionsBuilder(this, (Boolean) value));
+		setChild(new GroupedConditionsBuilder(this, dbVersion, (Boolean) value));
 		break;
 	    case LOGICAL_OPERATOR:
-		setChild(new CompoundConditionBuilder(this, cat, value));
+		setChild(new CompoundConditionBuilder(this, dbVersion, cat, value));
 		break;
 	    default:
 		tokens.add(new Pair<TokenCategory, Object>(cat, value));
@@ -148,9 +167,11 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case FUNCTION_MODEL:
 	    return (ISingleOperand) value;
 	case EXPR_TOKENS:
-	    return (ISingleOperand) new StandAloneExpressionBuilder(null, (ExpressionModel) value).getResult().getValue();
+	    return (ISingleOperand) new StandAloneExpressionBuilder(dbVersion, (ExpressionModel) value).getResult().getValue();
 	case EQUERY_TOKENS:
-	    return new QueryBuilder((QueryModel) value).getQry();
+	case ALL_OPERATOR:
+	case ANY_OPERATOR:
+	    return queryBuilder.getQry((QueryModel) value);
 	default:
 	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
 	}
@@ -222,5 +243,13 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	}
 
 	return result;
+    }
+
+    public DbVersion getDbVersion() {
+        return dbVersion;
+    }
+
+    protected QueryBuilder getQueryBuilder() {
+        return queryBuilder;
     }
 }

@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import ua.com.fielden.platform.entity.query.model.structure.ISingleOperand;
+import ua.com.fielden.platform.entity.query.model.structure.IQueryItem;
+import ua.com.fielden.platform.entity.query.model.structure.IQuerySourceItem;
 
-public class YieldModel {
+
+public class YieldModel implements IQuerySourceItem {
     private final ISingleOperand operand;
     private final String alias;
 
@@ -56,5 +58,17 @@ public class YieldModel {
 	    return false;
 	}
 	return true;
+    }
+
+    @Override
+    public void addReference(final IQueryItem referencingItem) {
+	// TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void removeReference(final IQueryItem referencingItem) {
+	// TODO Auto-generated method stub
+
     }
 }

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.query.model.structure;
+package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.Set;
 
