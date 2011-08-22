@@ -24,6 +24,7 @@ import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.roa.HttpHeaders;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -574,11 +575,16 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
 
     @Override
     public void setUsername(final String username) {
-	throw new UnsupportedOperationException("Setting username is not required at the client side, and this fact most likely points to a programming mistake.");
+	// can safely be ignored
     }
 
     @Override
     public String getUsername() {
-	throw new UnsupportedOperationException("Getting username is not required at the client side, and this fact most likely points to a programming mistake.");
+	return restUtil.getUsername();
+    }
+
+    @Override
+    public User getUser() {
+	return restUtil.getUser();
     }
 }

@@ -219,4 +219,9 @@ public class UserControllerForTestPurposes implements IUserController {
     public String getUsername() {
 	throw new UnsupportedOperationException("Getting username is not required at the client side, and this fact most likely points to a programming mistake.");
     }
+
+    @Override
+    public User getUser() {
+	return user;
+    }
 }

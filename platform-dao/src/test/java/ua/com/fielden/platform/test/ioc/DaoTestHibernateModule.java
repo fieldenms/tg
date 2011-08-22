@@ -57,10 +57,12 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigControllerDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigControllerDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigControllerDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
+import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
 
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
@@ -107,6 +109,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);
 	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
 	bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
+	bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
 
 	bind(IDaoFactory.class).toInstance(getDaoFactory());
 	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);

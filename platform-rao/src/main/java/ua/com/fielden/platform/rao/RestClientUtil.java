@@ -517,6 +517,7 @@ public final class RestClientUtil implements IUserProvider {
 		try {
 		    user = userController.findUser(username);
 		} catch (final Exception e) {
+		    logger.warn("User " + username + " could not be found.", e);
 		}
 	    }
 	}

@@ -187,7 +187,7 @@ public class WebClentStartupUtility {
 		SwingUtilitiesEx.installNimbusLnFifPossible();
 
 		if (restUtil.isUserConfigured()) {
-		    createAndRunMainApplicationFrame(splash, loginScreen, injector, emm, mmBinder, caption, dim, icon);
+		    createAndRunMainApplicationFrame(restUtil, splash, loginScreen, injector, emm, mmBinder, caption, dim, icon);
 		}
 	    }// run
 	});
@@ -210,6 +210,7 @@ public class WebClentStartupUtility {
     }
 
     private static void createAndRunMainApplicationFrame(//
+	    final RestClientUtil restUtil, //
 	    final SplashController splash,//
 	    final StyledLoginScreen loginScreen,//
 	    final Injector injector,//
@@ -231,7 +232,7 @@ public class WebClentStartupUtility {
 	    @Override
 	    public void run() {
 		try {
-		    buildMainMenu(splash, loginScreen, injector, mmBuilder, menuItems, menu);
+		    buildMainMenu(restUtil, splash, loginScreen, injector, mmBuilder, menuItems, menu);
 
 		    SwingUtilitiesEx.invokeLater(new Runnable() {
 			@Override
@@ -277,6 +278,7 @@ public class WebClentStartupUtility {
      * @param menu
      */
     private static void buildMainMenu(//
+	    final RestClientUtil restUtil,//
 	    final SplashController splash,//
 	    final StyledLoginScreen loginScreen,//
 	    final Injector injector, //
@@ -286,7 +288,7 @@ public class WebClentStartupUtility {
 	final IApplicationSettings settings = injector.getInstance(IApplicationSettings.class);
 	final ITreeMenuFactory menuFactory = Workflows.development.equals(Workflows.valueOf(settings.workflow())) ? new LocalTreeMenuFactory(menuItems, menu, injector) : new RemoteTreeMenuFactory(menuItems, menu, injector);
 	mmBuilder.bindMainMenuItemFactories(menuFactory);
-	final List<MainMenuItem> itemsFromCloud = mmBuilder.getMainMenuItemController().loadMenuSkeletonStructure();
+	final List<MainMenuItem> itemsFromCloud = mmBuilder.getMainMenuItemController().build(restUtil.getUsername());
 
 	message("Building user configurations...", splash, loginScreen);
 

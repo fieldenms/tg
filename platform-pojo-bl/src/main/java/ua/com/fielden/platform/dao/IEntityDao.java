@@ -9,6 +9,7 @@ import ua.com.fielden.platform.equery.EntityAggregates;
 import ua.com.fielden.platform.equery.fetch;
 import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.security.user.User;
 
 /**
  * Defines a contract that should be implemented by any data access object being that a Hibernate or REST driven implementation.
@@ -27,6 +28,14 @@ public interface IEntityDao<T extends AbstractEntity> {
      */
     void setUsername(final String username);
     String getUsername();
+
+    /**
+     * Should return the current application user.
+     *
+     * @return
+     */
+    abstract User getUser();
+
 
     /**
      * Should return an entity type the DAO is managing.

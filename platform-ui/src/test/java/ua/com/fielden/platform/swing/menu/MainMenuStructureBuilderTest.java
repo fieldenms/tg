@@ -13,7 +13,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 /**
- * Test correct construction of the main menu structure using {@link MainMenuStructureBuilder}.
+ * Test correct construction of the main menu structure using {@link LocalMainMenuStructureBuilder}.
  *
  * @author TG Team
  *
@@ -24,7 +24,7 @@ public class MainMenuStructureBuilderTest {
 
     @Test
     public void test_menu_construction() {
-	final MainMenuStructureBuilder builder = injector.getInstance(MainMenuStructureBuilder.class)
+	final LocalMainMenuStructureBuilder builder = injector.getInstance(LocalMainMenuStructureBuilder.class)
 	.push(TreeMenuItem.class)
 	     .push(TreeMenuItem.class).pop()
 	.pop()
@@ -33,7 +33,7 @@ public class MainMenuStructureBuilderTest {
 	     .push(TreeMenuItem.class).pop()
 	.pop();
 
-	final List<MainMenuItem> menu = builder.build();
+	final List<MainMenuItem> menu = builder.build("irrelevant" /*irrelevant*/);
 	assertEquals("Incorrect number of first level items", 2, menu.size());
 	assertEquals("Incorrect number of sub items of the first item", 1, menu.get(0).getChildren().size());
 	assertEquals("Incorrect number of sub items of the second item", 2, menu.get(1).getChildren().size());

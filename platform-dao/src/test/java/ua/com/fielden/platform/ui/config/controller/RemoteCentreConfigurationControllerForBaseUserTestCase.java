@@ -13,7 +13,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
 import ua.com.fielden.platform.ui.config.controller.menu_items.PrincipleMenuItem1;
 import ua.com.fielden.platform.ui.config.controller.menu_items.PrincipleMenuItem1_2_1;
@@ -22,14 +22,15 @@ import ua.com.fielden.platform.ui.config.impl.interaction.RemoteCentreConfigurat
 
 /**
  * A test case for {@link RemoteCentreConfigurationController} as applicable to a base user.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class RemoteCentreConfigurationControllerForBaseUserTestCase extends DbDrivenTestCase {
     private final IUserDao userDao = injector.getInstance(IUserDao.class);
     private final IEntityCentreConfigController eccController = injector.getInstance(IEntityCentreConfigController.class);
-    private final IMainMenuItemController mmiController = injector.getInstance(IMainMenuItemController.class);
+    //private final IMainMenuItemController mmiController = injector.getInstance(IMainMenuItemController.class);
+    private final IMainMenuStructureBuilder menuBuilder = injector.getInstance(IMainMenuStructureBuilder.class);
     private List<MainMenuItem> tree;
 
     private final IUserProvider baseUserProvider = new IUserProvider() {
@@ -52,8 +53,8 @@ public class RemoteCentreConfigurationControllerForBaseUserTestCase extends DbDr
     public void setUp() throws Exception {
 	super.setUp();
 	if (tree == null) { // minor instantiation optimisation
-	    mmiController.setUsername("B-USER");
-	    tree = mmiController.loadMenuSkeletonStructure();
+	    //mmiController.setUsername("B-USER");
+	    tree = menuBuilder.build("B-USER");
 	    principle1_2_1 = tree.get(0).getChildren().get(1).getChildren().get(0);
 	    ccController1_2_1 = new RemoteCentreConfigurationController(eccController, principle1_2_1, baseUserProvider);
 	    principleCentreKey1_2_1 = ccController1_2_1.generateKeyForPrincipleCenter(PrincipleMenuItem1_2_1.class);

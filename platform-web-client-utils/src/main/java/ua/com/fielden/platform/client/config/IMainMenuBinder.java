@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.client.config;
 
 import ua.com.fielden.platform.swing.menu.api.ITreeMenuFactory;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 
 
 /**
@@ -12,5 +12,5 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
  */
 public interface IMainMenuBinder {
     void bindMainMenuItemFactories(final ITreeMenuFactory menuFactory);
-    IMainMenuItemController getMainMenuItemController();
+    IMainMenuStructureBuilder getMainMenuItemController();
 }

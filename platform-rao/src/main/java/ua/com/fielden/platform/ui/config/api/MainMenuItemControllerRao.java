@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.ui.config.api;
 
-import java.util.List;
-
 import ua.com.fielden.platform.rao.CommonEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.rao.WebResourceType;
@@ -32,10 +30,10 @@ public class MainMenuItemControllerRao extends CommonEntityRao<MainMenuItem> imp
 	return WebResourceType.SYSTEM;
     }
 
-    @Override
-    public List<MainMenuItem> loadMenuSkeletonStructure() {
-	mixin.setUser(restUtil.getUser());
-	return mixin.loadMenuSkeletonStructure();
-    }
+//    @Override
+//    public List<MainMenuItem> build() {
+//	mixin.setUser(restUtil.getUser());
+//	return mixin.loadMenuSkeletonStructure();
+//    }
 
 }

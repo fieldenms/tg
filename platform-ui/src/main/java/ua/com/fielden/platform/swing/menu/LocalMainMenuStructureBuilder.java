@@ -6,6 +6,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 
 import com.google.inject.Inject;
 
@@ -52,7 +53,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class MainMenuStructureBuilder {
+public class LocalMainMenuStructureBuilder implements IMainMenuStructureBuilder {
 
     private long id = 0;
     private int order = 0;
@@ -61,7 +62,7 @@ public class MainMenuStructureBuilder {
     private MainMenuItem currentItem = null;
 
     @Inject
-    public MainMenuStructureBuilder(final EntityFactory factory) {
+    public LocalMainMenuStructureBuilder(final EntityFactory factory) {
 	this.factory = factory;
     }
 
@@ -72,7 +73,7 @@ public class MainMenuStructureBuilder {
      * @param miType
      * @return
      */
-    public MainMenuStructureBuilder push(final Class<? extends TreeMenuItem> miType) {
+    public LocalMainMenuStructureBuilder push(final Class<? extends TreeMenuItem> miType) {
 	final MainMenuItem item = factory.newEntity(MainMenuItem.class, ++id, miType.getName());
 	if (currentItem == null) { // first level item is being added (i.e. under the root)
 	    // instantiate item
@@ -96,7 +97,7 @@ public class MainMenuStructureBuilder {
      *
      * @return
      */
-    public MainMenuStructureBuilder pop() {
+    public LocalMainMenuStructureBuilder pop() {
 	if (currentItem == null) {
 	    throw new IllegalStateException("The current menu level is the highest. No where to pop.");
 	}
@@ -111,7 +112,8 @@ public class MainMenuStructureBuilder {
      *
      * @return
      */
-    public List<MainMenuItem> build() {
+    @Override
+    public List<MainMenuItem> build(final String username) {
 	return Collections.unmodifiableList(menuItems);
     }
 }

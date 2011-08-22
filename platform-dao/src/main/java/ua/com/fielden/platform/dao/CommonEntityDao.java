@@ -39,6 +39,8 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 
 import com.google.inject.Inject;
@@ -70,6 +72,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity> extends Abstract
     private String username;
 
     private final IFilter filter;
+
+    @Inject
+    private IUserDao userDao;
 
     /**
      * A principle constructor.
@@ -664,5 +669,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity> extends Abstract
 
     protected EntityFactory getEntityFactory() {
 	return entityFactory;
+    }
+
+    @Override
+    public User getUser() {
+	return userDao.findByKey(getUsername());
     }
 }
