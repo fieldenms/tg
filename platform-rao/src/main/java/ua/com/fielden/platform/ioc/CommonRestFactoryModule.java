@@ -12,9 +12,11 @@ import ua.com.fielden.platform.rao.RestClientUtil;
  */
 public class CommonRestFactoryModule extends RestPropertyFactoryModule {
 
-    public CommonRestFactoryModule(final RestClientUtil restUtil) {
+    public CommonRestFactoryModule(final RestClientUtil restUtil, final boolean initEntityFactory) {
 	super(restUtil);
-	entityFactory.setModule(this);
+	if (initEntityFactory) {
+	    entityFactory.setModule(this);
+	}
     }
 
     @Override
@@ -23,4 +25,5 @@ public class CommonRestFactoryModule extends RestPropertyFactoryModule {
 
 	bind(IReportDao.class).toInstance(new ReportRao(restUtil));
     }
+
 }

@@ -14,7 +14,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 public class CommonRestFactoryModuleForTestingPurposes extends CommonRestFactoryModule {
 
     public CommonRestFactoryModuleForTestingPurposes(final RestClientUtil restUtil) {
-	super(restUtil);
+	super(restUtil, true);
     }
 
     @Override
