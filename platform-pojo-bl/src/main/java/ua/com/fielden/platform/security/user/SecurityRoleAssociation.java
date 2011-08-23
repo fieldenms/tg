@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.security.user;
 
-import java.util.Comparator;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -12,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.types.markers.ISecurityTokenType;
+import ua.com.fielden.platform.utils.ClassComparator;
 
 /**
  * Entity that represents the association between the {@link ISecurityToken} and the {@link UserRole} entities.
@@ -41,21 +40,7 @@ public class SecurityRoleAssociation extends AbstractEntity<DynamicEntityKey> {
      */
     protected SecurityRoleAssociation() {
 	final DynamicEntityKey key = new DynamicEntityKey(this);
-	key.addKeyMemberComparator(1, new Comparator<Class<?>>() {
-	    @Override
-	    public int compare(final Class<?> thisClass, final Class<?> thatClass) {
-		final String thisValue = thisClass != null ? thisClass.getName() : null;
-		final String thatValue = thatClass != null ? thatClass.getName() : null;
-		if (thisValue == null && thatValue == null) {
-		    return 0;
-		}
-		if (thisValue != null) {
-		    return thisValue.compareTo(thatValue);
-		}
-		return -1; // if thisValue is null than it is smaller than thatValue
-	    }
-
-	});
+	key.addKeyMemberComparator(1, new ClassComparator());
 	setKey(key);
     }
 

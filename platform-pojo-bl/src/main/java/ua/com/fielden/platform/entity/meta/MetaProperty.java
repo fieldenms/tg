@@ -115,8 +115,8 @@ public class MetaProperty implements Comparable<MetaProperty> {
      * @param validators
      */
     public MetaProperty(final AbstractEntity<?> entity, final Field field, final Class<?> type, //
-    final boolean isKey, final boolean isCollectional, final Class<?> propertyAnnotationType, final boolean calculated, final boolean upperCase,//
-    final Map<ValidationAnnotation, Pair<IValidator, Result>> validators, final IMetaPropertyDefiner definer, final String[] dependentPropertyNames) {
+	    final boolean isKey, final boolean isCollectional, final Class<?> propertyAnnotationType, final boolean calculated, final boolean upperCase,//
+	    final Map<ValidationAnnotation, Pair<IValidator, Result>> validators, final IMetaPropertyDefiner definer, final String[] dependentPropertyNames) {
 	this.entity = entity;
 	this.name = field.getName();
 	this.type = type;
@@ -635,7 +635,7 @@ public class MetaProperty implements Comparable<MetaProperty> {
 	return this;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     public final AbstractEntity getEntity() {
 	return entity;
     }
@@ -814,12 +814,12 @@ public class MetaProperty implements Comparable<MetaProperty> {
     @SuppressWarnings("unchecked")
     private void putValidator(final ValidationAnnotation valAnnotation) {
 	getValidators().put(valAnnotation, //
-	new Pair(new IValidator() {
-	    @Override
-	    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-		return null;
-	    }
-	}, null));
+		new Pair(new IValidator() {
+		    @Override
+		    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+			return null;
+		    }
+		}, null));
     }
 
     /**
@@ -942,10 +942,10 @@ public class MetaProperty implements Comparable<MetaProperty> {
     }
 
     public boolean isAssigned() {
-        return assigned;
+	return assigned;
     }
 
     public void setAssigned(final boolean hasAssignedValue) {
-        this.assigned = hasAssignedValue;
+	this.assigned = hasAssignedValue;
     }
 }

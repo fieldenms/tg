@@ -150,7 +150,7 @@ public class EntityView {
 	freshEntity.setList(list1); //null);
 
 	freshEntity.setStringList(//new ArrayList<String>(Arrays.asList("MAENA", "NAME 3")));
-	null);
+		null);
 
 	// check initial updating for validation results
 	//	    entity.getMetaProperty(Entity.PROPERTY_BIG_DECIMAL).setValidationResult(ValidationAnnotation.NOT_NULL,
@@ -219,7 +219,7 @@ public class EntityView {
 	    // this property commits on focus lost
 	    final BoundedValidationLayer<JTextField> stringFieldOFL = ComponentFactory.createStringTextField(entity, Entity.PROPERTY_STRING, true, "string text field OFL", MIXED_CASE);
 	    stringFieldOFL.setPreferredSize(new Dimension(250, 25));
-	    final BoundedValidationLayer<JTextField> stringFieldOTC = ComponentFactory.createTriggeredStringTextField(entity, Entity.PROPERTY_STRING, saveButtonTrigger, "string text field OTC");
+	    final BoundedValidationLayer<JTextField> stringFieldOTC = ComponentFactory.createTriggeredStringTextField(entity, Entity.PROPERTY_STRING, saveButtonTrigger, true, "string text field OTC");
 	    stringFieldOTC.setPreferredSize(new Dimension(250, 25));
 	    final BoundedValidationLayer<ReadOnlyLabel> label1 = ComponentFactory.createLabel(entity, Entity.PROPERTY_STRING, "PROPERTY_STRING");
 	    panel.add(createPropertyPanel(stringFieldOKT, stringFieldOFL, stringFieldOTC, label1));
@@ -233,8 +233,8 @@ public class EntityView {
 	    panel.add(createPropertyPanel(passwordFieldOKT, passwordFieldOFL, null, null));
 
 	    // string areas
-	    final BoundedValidationLayer<JTextArea> stringTextAreaOKT = ComponentFactory.createStringTextArea(entity, Entity.PROPERTY_STRING, false, "string text area OKT", new SimpleOnCommitSysoutMessageAction("onKeyTyped OnCommitAction for string text area"));
-	    final BoundedValidationLayer<JTextArea> stringTextAreaOFL = ComponentFactory.createStringTextArea(entity, Entity.PROPERTY_STRING, true, "string text area OFL", new SimpleOnCommitSysoutMessageAction("onFocusLost OnCommitAction for string text area"));
+	    final BoundedValidationLayer<JTextArea> stringTextAreaOKT = ComponentFactory.createStringTextArea(entity, Entity.PROPERTY_STRING, false, true, "string text area OKT", new SimpleOnCommitSysoutMessageAction("onKeyTyped OnCommitAction for string text area"));
+	    final BoundedValidationLayer<JTextArea> stringTextAreaOFL = ComponentFactory.createStringTextArea(entity, Entity.PROPERTY_STRING, true, true, "string text area OFL", new SimpleOnCommitSysoutMessageAction("onFocusLost OnCommitAction for string text area"));
 	    final BoundedValidationLayer<JTextArea> stringTextAreaOTC = ComponentFactory.createTriggeredStringTextArea(entity, Entity.PROPERTY_STRING, saveButtonTrigger, "string text area OTC", new SimpleOnCommitSysoutMessageAction("onTriggerCommit OnCommitAction for string text area"));
 	    final BoundedValidationLayer<ReadOnlyLabel> label7 = ComponentFactory.createLabel(entity, Entity.PROPERTY_STRING, "PROPERTY_STRING");
 	    panel.add(createPropertyPanel(stringTextAreaOKT, stringTextAreaOFL, stringTextAreaOTC, label7));
@@ -347,7 +347,7 @@ public class EntityView {
 	    commitFocusOwnerButton.setFocusable(false);
 	    commitFocusOwnerButton.setMnemonic('c');
 	    panel.add(createPropertyPanel(new JButton(new CommitBufferAction()), //
-	    new JButton(new FlushBufferAction()), new JButton(new ShowValueHolderValueAction()), commitFocusOwnerButton));
+		    new JButton(new FlushBufferAction()), new JButton(new ShowValueHolderValueAction()), commitFocusOwnerButton));
 
 	    // stringBinding autocompleters :
 	    panel.add(createPropertyPanel(null, new JLabel("String autocompleters :"), null, null));
@@ -557,13 +557,13 @@ public class EntityView {
 	final JPanel panel1 = new JPanel(new VerticalLayout());
 	for (int i = 0; i < 30; i++) {
 	    panel1.add(createPropertyPanel(//
-	    //		    new JXDatePicker(), new JXDatePicker(), new JXDatePicker(), new JXDatePicker()
+		    //		    new JXDatePicker(), new JXDatePicker(), new JXDatePicker(), new JXDatePicker()
 
-	    ComponentFactory.createBoundedJXDatePicker(entity, Entity.PROPERTY_DATE, "vaidation layer for BoundedJXDatePicker", false, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()),
-	    ComponentFactory.createBoundedJXDatePicker(entity, Entity.PROPERTY_DATE, "vaidation layer for BoundedJXDatePicker", false, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()),
-	    ComponentFactory.createBoundedJXDatePicker(entity, Entity.PROPERTY_DATE, "vaidation layer for BoundedJXDatePicker", false, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()),
-	    ComponentFactory.createBoundedJXDatePicker(entity, Entity.PROPERTY_DATE, "vaidation layer for BoundedJXDatePicker", false, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()) //
-	    //
+		    ComponentFactory.createBoundedJXDatePicker(entity, Entity.PROPERTY_DATE, "vaidation layer for BoundedJXDatePicker", false, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()),
+		    ComponentFactory.createBoundedJXDatePicker(entity, Entity.PROPERTY_DATE, "vaidation layer for BoundedJXDatePicker", false, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()),
+		    ComponentFactory.createBoundedJXDatePicker(entity, Entity.PROPERTY_DATE, "vaidation layer for BoundedJXDatePicker", false, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()),
+		    ComponentFactory.createBoundedJXDatePicker(entity, Entity.PROPERTY_DATE, "vaidation layer for BoundedJXDatePicker", false, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()) //
+		    //
 	    ));
 	}
 

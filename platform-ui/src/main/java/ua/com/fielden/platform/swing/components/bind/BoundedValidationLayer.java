@@ -51,8 +51,8 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
     private static final long serialVersionUID = -4862787312025734939L;
 
     public static final Color 	INVALID_COLOUR = new Color(190, 0, 0, 90), //
-    				REQUIRED_COLOUR = new Color(120, 186, 244, 90), //
-    				WARNING_COLOUR = new Color(255, 255, 65, 90);
+    REQUIRED_COLOUR = new Color(120, 186, 244, 90), //
+    WARNING_COLOUR = new Color(255, 255, 65, 90);
 
     private IOnCommitActionable onCommitActionable;
 
@@ -64,11 +64,11 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 
     private Color colourOnTop = null;
 
-    public BoundedValidationLayer(final T component, final String originalToolTipText) {
+    public BoundedValidationLayer(final T component, final String originalToolTipText, final boolean selectAfterFocusGained){
 	super(component);
 	this.setUI(new BoundedValidationUi(component));
 	getIncapsulatedComponent().setToolTipText(this.originalToolTipText = originalToolTipText);
-	if (getIncapsulatedComponent() instanceof JTextComponent) {
+	if (getIncapsulatedComponent() instanceof JTextComponent && selectAfterFocusGained) {
 	    getIncapsulatedComponent().addFocusListener(new FocusListener() {
 		@Override
 		public void focusGained(final FocusEvent e) {
@@ -81,6 +81,10 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 		}
 	    });
 	}
+    }
+
+    public BoundedValidationLayer(final T component, final String originalToolTipText) {
+	this(component, originalToolTipText, true);
     }
 
     public JComponent getIncapsulatedComponent() {

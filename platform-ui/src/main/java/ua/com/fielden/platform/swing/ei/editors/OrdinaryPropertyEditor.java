@@ -3,14 +3,11 @@ package ua.com.fielden.platform.swing.ei.editors;
 import static ua.com.fielden.platform.swing.components.bind.ComponentFactory.EditorCase.MIXED_CASE;
 import static ua.com.fielden.platform.swing.components.bind.ComponentFactory.EditorCase.UPPER_CASE;
 
-import java.awt.KeyboardFocusManager;
-import java.awt.event.ActionEvent;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.EnumSet;
 
-import javax.swing.AbstractAction;
 import javax.swing.InputMap;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -19,13 +16,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -47,6 +42,7 @@ import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.DynamicProperty;
 import ua.com.fielden.platform.swing.review.RadioButtonPanel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
+import ua.com.fielden.platform.swing.utils.TabAction;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -138,7 +134,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 	    }
 
 	    if (length > 50) {
-		final BoundedValidationLayer<JTextArea> component = ComponentFactory.createStringTextArea(entity, bindingPropertyName, true, desc);
+		final BoundedValidationLayer<JTextArea> component = ComponentFactory.createStringTextArea(entity, bindingPropertyName, true, true, desc);
 		// let's now handle TAB and shift TAB key press to enforce focus traversal instead of \t character insertion
 		final JTextArea area = component.getView();
 		final InputMap im = area.getInputMap();
@@ -253,55 +249,6 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 	    return dynamicEntity.isEmptyValue(propertyName);
 	} else {
 	    return false;
-	}
-    }
-
-    /**
-     * A calls to handle TAB and SHIFT+TAB key press.
-     * 
-     * 
-     */
-    private static class TabAction extends AbstractAction {
-	private static final long serialVersionUID = 1L;
-
-	private boolean forward;
-
-	public TabAction(final boolean forward) {
-	    this.forward = forward;
-	}
-
-	public void actionPerformed(final ActionEvent e) {
-	    if (forward) {
-		tabForward();
-	    } else {
-		tabBackward();
-	    }
-	}
-
-	private void tabForward() {
-	    final KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-	    manager.focusNextComponent();
-
-	    SwingUtilities.invokeLater(new Runnable() {
-		public void run() {
-		    if (manager.getFocusOwner() instanceof JScrollBar) {
-			manager.focusNextComponent();
-		    }
-		}
-	    });
-	}
-
-	private void tabBackward() {
-	    final KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-	    manager.focusPreviousComponent();
-
-	    SwingUtilities.invokeLater(new Runnable() {
-		public void run() {
-		    if (manager.getFocusOwner() instanceof JScrollBar) {
-			manager.focusPreviousComponent();
-		    }
-		}
-	    });
 	}
     }
 }

@@ -56,6 +56,7 @@ import ua.com.fielden.platform.security.dao.UserRoleDao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
+import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.serialisation.ClientSerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.snappy.ISnappyDao;
@@ -113,6 +114,7 @@ public class ExampleRmaHibernateModule extends CommonFactoryModule {
 	bind(IUserRoleDao.class).to(UserRoleDao.class).in(Scopes.SINGLETON);
 	bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class).in(Scopes.SINGLETON);
 	bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class).in(Scopes.SINGLETON);
+	bind(IUserDao.class).to(UserController.class).in(Scopes.SINGLETON);
 
 	bind(IUserController.class).to(UserController.class).in(Scopes.SINGLETON);
 	bind(ISecurityTokenController.class).to(SecurityTokenController.class).in(Scopes.SINGLETON);

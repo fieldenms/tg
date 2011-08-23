@@ -107,7 +107,7 @@ public class ComponentFactory {
 	return textField;
     }
 
-    private static JTextArea createTextArea(final AbstractDocumentFilter abstractDocumentFilter) {
+    public static JTextArea createTextArea(final AbstractDocumentFilter abstractDocumentFilter) {
 	final JTextArea textArea = new JTextArea() {
 	    private static final long serialVersionUID = -54713246930625222L;
 
@@ -260,9 +260,9 @@ public class ComponentFactory {
 	editIntFormat.setMaximumIntegerDigits(10);
 	editIntFormat.setParseIntegerOnly(true);
 	return decimal ? //
-	(new Pair<NumberFormat, NumberFormat>(new DecimalFormat("#,##0.00"), new DecimalFormat("0.0###################")))
+		(new Pair<NumberFormat, NumberFormat>(new DecimalFormat("#,##0.00"), new DecimalFormat("0.0###################")))
 		: //
-		(new Pair<NumberFormat, NumberFormat>(NumberFormat.getIntegerInstance(), editIntFormat));
+		    (new Pair<NumberFormat, NumberFormat>(NumberFormat.getIntegerInstance(), editIntFormat));
     }
 
     /**
@@ -364,6 +364,10 @@ public class ComponentFactory {
      */
     static <T extends JComponent> BoundedValidationLayer createBoundedValidationLayer(final T component, final String originalToolTipText) {
 	return new BoundedValidationLayer<T>(component, originalToolTipText);
+    }
+
+    static <T extends JComponent> BoundedValidationLayer createBoundedValidationLayer(final T component, final String originalToolTipText, final boolean selectAfterFocusGained) {
+	return new BoundedValidationLayer<T>(component, originalToolTipText, selectAfterFocusGained);
     }
 
     // ================================== creation methods with binding logic! ======================================
@@ -575,9 +579,9 @@ public class ComponentFactory {
      * @param bufferedPropertyWrapper
      * @return
      */
-    public static BoundedValidationLayer<JTextField> createTriggeredStringTextField(final IBindingEntity entity, final String propertyName, final ValueModel triggerChannel, final String originalToolTipText, final IOnCommitAction... actions) {
+    public static BoundedValidationLayer<JTextField> createTriggeredStringTextField(final IBindingEntity entity, final String propertyName, final ValueModel triggerChannel, final boolean selectAfterFocusGained,final String originalToolTipText, final IOnCommitAction... actions) {
 	final JTextField textField = createTextField(FilterFactory.createStringDocumentFilter(), EditorCase.MIXED_CASE);
-	final BoundedValidationLayer<JTextField> boundedValidationLayer = createBoundedValidationLayer(textField, originalToolTipText);
+	final BoundedValidationLayer<JTextField> boundedValidationLayer = createBoundedValidationLayer(textField, originalToolTipText, selectAfterFocusGained);
 	Binder.bindTriggeredStringTextAreaOrField(boundedValidationLayer, entity, propertyName, triggerChannel, actions);
 	return boundedValidationLayer;
     }
@@ -591,9 +595,9 @@ public class ComponentFactory {
      *            - true to commit on focus lost, false - to commit on key typed!!
      * @return
      */
-    public static BoundedValidationLayer<JTextArea> createStringTextArea(final IBindingEntity entity, final String propertyName, final boolean commitOnFocusLost, final String toolTip, final IOnCommitAction... actions) {
+    public static BoundedValidationLayer<JTextArea> createStringTextArea(final IBindingEntity entity, final String propertyName, final boolean commitOnFocusLost, final boolean selectAfterFocusGained, final String toolTip, final IOnCommitAction... actions) {
 	final JTextArea textArea = createTextArea(FilterFactory.createStringWithEnterDocumentFilter());
-	final BoundedValidationLayer<JTextArea> boundedValidationLayer = createBoundedValidationLayer(textArea, toolTip);
+	final BoundedValidationLayer<JTextArea> boundedValidationLayer = createBoundedValidationLayer(textArea, toolTip, selectAfterFocusGained);
 	Binder.bindStringTextAreaOrField(boundedValidationLayer, entity, propertyName, commitOnFocusLost, actions);
 	return boundedValidationLayer;
     }
