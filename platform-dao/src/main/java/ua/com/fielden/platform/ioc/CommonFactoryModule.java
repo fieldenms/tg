@@ -15,12 +15,13 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
  */
 public class CommonFactoryModule extends PropertyFactoryModule {
 
-    public CommonFactoryModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator) {
+    public CommonFactoryModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator, final boolean initFactories) {
 	super(sessionFactory, mappingExtractor, mappingsGenerator);
-	daoFactory.setModule(this);
-	entityFactory.setModule(this);
+	if (initFactories) {
+	    daoFactory.setModule(this);
+	    entityFactory.setModule(this);
+	}
     }
-
 
     protected EntityFactory getEntityFactory() {
 	return entityFactory;
