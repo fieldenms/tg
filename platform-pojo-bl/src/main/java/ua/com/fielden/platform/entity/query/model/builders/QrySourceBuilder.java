@@ -25,16 +25,16 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     }
 
     private boolean isEntityModelAsSourceTest() {
-	return getSize() == 2 && TokenCategory.QRY_MODEL_AS_QRY_SOURCE.equals(firstCat()) && TokenCategory.QRY_SOURCE_ALIAS.equals(secondCat());
+	return getSize() == 2 && TokenCategory.QRY_MODELS_AS_QRY_SOURCE.equals(firstCat()) && TokenCategory.QRY_SOURCE_ALIAS.equals(secondCat());
     }
 
     private boolean isEntityModelAsSourceWithoutAliasTest() {
-	return getSize() == 2 && TokenCategory.QRY_MODEL_AS_QRY_SOURCE.equals(firstCat());
+	return getSize() == 1 && TokenCategory.QRY_MODELS_AS_QRY_SOURCE.equals(firstCat());
     }
 
     @Override
     public boolean isClosing() {
-	return false; //isEntityTypeAsSourceTest() || isEntityModelAsSourceTest();
+	return false;
     }
 
     @Override
@@ -60,8 +60,10 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     public Pair<TokenCategory, Object> getResult() {
 	if (isEntityTypeAsSourceTest() || isEntityTypeAsSourceWithoutAliasTest()) {
 	    return getResultForEntityTypeAsSource();
-	} else {
+	} else if (isEntityModelAsSourceTest() || isEntityModelAsSourceWithoutAliasTest()) {
 	    return getResultForEntityModelAsSource();
+	} else {
+	    throw new RuntimeException("Unable to get result - unrecognised state.");
 	}
     }
 }

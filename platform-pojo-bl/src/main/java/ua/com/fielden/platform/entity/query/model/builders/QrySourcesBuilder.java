@@ -45,7 +45,6 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
     public Pair<TokenCategory, Object> getResult() {
 	if (getChild() != null) {
 	    finaliseChild();
-	    //throw new RuntimeException("Unable to produce result - unfinished model state!");
 	}
 	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
 	final IEntQuerySource mainSource = (IEntQuerySource) iterator.next().getValue();

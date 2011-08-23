@@ -86,7 +86,6 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 		tokens.add(new Pair<TokenCategory, Object>(cat, value));
 		break;
 	    }
-	    System.out.println("adding: " + cat + " - " + value);
 
 	    if (isClosing()) {
 		parent.finaliseChild();

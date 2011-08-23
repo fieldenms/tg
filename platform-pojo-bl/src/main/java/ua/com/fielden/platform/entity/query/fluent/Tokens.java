@@ -34,7 +34,7 @@ final class Tokens {
 
     @Override
     public String toString() {
-        return tokens.toString();
+	return tokens.toString();
     }
 
     private Tokens add(final TokenCategory cat, final Object value) {
@@ -44,12 +44,12 @@ final class Tokens {
 
     private Tokens add(final TokenCategory cat1, final Object value1, final TokenCategory cat2, final Object value2) {
 	add(cat1, value1);
-	return add (cat2, value2);
+	return add(cat2, value2);
     }
 
     private Tokens add(final TokenCategory cat1, final Object value1, final TokenCategory cat2, final Object value2, final TokenCategory cat3, final Object value3) {
 	add(cat1, value1, cat2, value2);
-	return add (cat3, value3);
+	return add(cat3, value3);
     }
 
     private List<Object> getListFromArray(final Object... items) {
@@ -225,7 +225,7 @@ final class Tokens {
     }
 
     public Tokens to(final Integer precision) {
-	return add(TokenCategory.VAL, precision); //return add(new ParamToken(new QueryParameter(null, precision)));
+	return add(TokenCategory.VAL, precision);
     }
 
     public Tokens ifNull() {
@@ -348,8 +348,8 @@ final class Tokens {
 	return add(TokenCategory.QUERY_TOKEN, QueryTokens.ORDER_BY);
     }
 
-    public <E extends AbstractEntity> Tokens from(final Class<E> entityType, final String alias) {
-	return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType, TokenCategory.QRY_SOURCE_ALIAS, alias);
+    public <E extends AbstractEntity> Tokens joinAlias(final String alias) {
+	return add(TokenCategory.QRY_SOURCE_ALIAS, alias);
     }
 
     public <E extends AbstractEntity> Tokens from(final Class<E> entityType) {
@@ -376,31 +376,43 @@ final class Tokens {
 	return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
-    public <E extends AbstractEntity> Tokens joinAlias(final String alias) {
-	return add(TokenCategory.QRY_SOURCE_ALIAS, alias);
-    }
-
     public <E extends AbstractEntity> Tokens leftJoin(final Class<E> entityType) {
 	return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
-    public <E extends AbstractEntity> Tokens innerJoin(final AggregatedResultQueryModel model) {
-	return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model);
+    public <E extends AbstractEntity> Tokens innerJoin(final AggregatedResultQueryModel... sourceModels) {
+	if (sourceModels.length >= 1) {
+	    return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+	} else {
+	    throw new RuntimeException("No models have been specified as a source in from statement!");
+	}
     }
 
-    public <E extends AbstractEntity> Tokens innerJoin(final EntityResultQueryModel<E> model) {
-	return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model);
+    public <E extends AbstractEntity> Tokens innerJoin(final EntityResultQueryModel<E>... sourceModels) {
+	if (sourceModels.length >= 1) {
+	    return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+	} else {
+	    throw new RuntimeException("No models have been specified as a source in from statement!");
+	}
     }
 
-    public <E extends AbstractEntity> Tokens leftJoin(final AggregatedResultQueryModel model) {
-	return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model);
+    public <E extends AbstractEntity> Tokens leftJoin(final AggregatedResultQueryModel... sourceModels) {
+	if (sourceModels.length >= 1) {
+	    return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+	} else {
+	    throw new RuntimeException("No models have been specified as a source in from statement!");
+	}
     }
 
-    public <E extends AbstractEntity> Tokens leftJoin(final EntityResultQueryModel<E> model) {
-	return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model);
+    public <E extends AbstractEntity> Tokens leftJoin(final EntityResultQueryModel<E>... sourceModels) {
+	if (sourceModels.length >= 1) {
+	    return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+	} else {
+	    throw new RuntimeException("No models have been specified as a source in from statement!");
+	}
     }
 
     public List<Pair<TokenCategory, Object>> getTokens() {
-        return tokens;
+	return tokens;
     }
 }

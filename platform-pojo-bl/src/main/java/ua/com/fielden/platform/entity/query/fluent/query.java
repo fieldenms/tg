@@ -11,7 +11,7 @@ public class query {
 	return new FromAlias((new Tokens()).from(entityType));
     }
 
-    public static <T extends AbstractEntity> IFromAlias select(final EntityResultQueryModel... sourceQueryModels) {
+    public static <T extends AbstractEntity> IFromAlias select(final EntityResultQueryModel<T>... sourceQueryModels) {
 	return new FromAlias((new Tokens()).from(sourceQueryModels));
     }
 
@@ -19,7 +19,7 @@ public class query {
 	return new FromAlias((new Tokens()).from(sourceQueryModels));
     }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static IStandAloneExprOperand expr() {
 	return new StandAloneExpOperand(new Tokens());

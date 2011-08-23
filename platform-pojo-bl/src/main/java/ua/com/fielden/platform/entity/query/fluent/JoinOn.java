@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinCondition;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinWhere0;
 
-
 class JoinOn extends AbstractQueryLink implements IJoinCondition {
 
     JoinOn(final Tokens queryTokens) {

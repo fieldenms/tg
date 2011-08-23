@@ -13,8 +13,6 @@ public class DefaultFilter implements IFilter {
 
      @Override
     public <T extends AbstractEntity> EntityResultQueryModel<T> enhance(final Class<T> entityType, final String username) {
-	// TODO Auto-generated method stub
 	return null;
     }
-
 }
