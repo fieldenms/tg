@@ -147,7 +147,7 @@ public class FluencyApiTest extends TestCase {
 	final AggregatedResultQueryModel model4 = query.select(AbstractEntity.class).yield().beginExpr().prop("prop1").add().prop("prop2").endExpr().as("sumOfProps").yield().model(null).as("newCalcProp").modelAsAggregate();
 	//
 	//aliases are required of joining is used
-	query.select(AbstractEntity.class, "a").join(AbstractEntity.class, "b").on().prop("a.id").eq().prop("b.id").model();
+	query.select(AbstractEntity.class, "a").join(AbstractEntity.class).as("b").on().prop("a.id").eq().prop("b.id").model();
 
     }
 

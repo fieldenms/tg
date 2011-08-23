@@ -20,13 +20,26 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
 	return getSize() == 2 && TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE.equals(firstCat()) && TokenCategory.QRY_SOURCE_ALIAS.equals(secondCat());
     }
 
+    private boolean isEntityTypeAsSourceWithoutAliasTest() {
+	return getSize() == 1 && TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE.equals(firstCat());
+    }
+
     private boolean isEntityModelAsSourceTest() {
 	return getSize() == 2 && TokenCategory.QRY_MODEL_AS_QRY_SOURCE.equals(firstCat()) && TokenCategory.QRY_SOURCE_ALIAS.equals(secondCat());
     }
 
+    private boolean isEntityModelAsSourceWithoutAliasTest() {
+	return getSize() == 2 && TokenCategory.QRY_MODEL_AS_QRY_SOURCE.equals(firstCat());
+    }
+
     @Override
     public boolean isClosing() {
-	return isEntityTypeAsSourceTest() || isEntityModelAsSourceTest();
+	return false; //isEntityTypeAsSourceTest() || isEntityModelAsSourceTest();
+    }
+
+    @Override
+    public boolean canBeClosed() {
+	return isEntityTypeAsSourceTest() || isEntityModelAsSourceTest() || isEntityModelAsSourceWithoutAliasTest() || isEntityTypeAsSourceWithoutAliasTest();
     }
 
     private Pair<TokenCategory, Object> getResultForEntityTypeAsSource() {
@@ -45,7 +58,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-	if (isEntityTypeAsSourceTest()) {
+	if (isEntityTypeAsSourceTest() || isEntityTypeAsSourceWithoutAliasTest()) {
 	    return getResultForEntityTypeAsSource();
 	} else {
 	    return getResultForEntityModelAsSource();

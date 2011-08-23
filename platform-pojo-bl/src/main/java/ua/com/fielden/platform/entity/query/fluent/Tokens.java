@@ -353,7 +353,7 @@ final class Tokens {
     }
 
     public <E extends AbstractEntity> Tokens from(final Class<E> entityType) {
-	return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType, TokenCategory.QRY_SOURCE_ALIAS, null);
+	return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
     public Tokens from(final String alias, final AggregatedResultQueryModel... sourceModels) {
@@ -372,28 +372,32 @@ final class Tokens {
 	}
     }
 
-    public <E extends AbstractEntity> Tokens innerJoin(final Class<E> entityType, final String alias) {
-	return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType, TokenCategory.QRY_SOURCE_ALIAS, alias);
+    public <E extends AbstractEntity> Tokens innerJoin(final Class<E> entityType) {
+	return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
-    public <E extends AbstractEntity> Tokens leftJoin(final Class<E> entityType, final String alias) {
-	return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType, TokenCategory.QRY_SOURCE_ALIAS, alias);
+    public <E extends AbstractEntity> Tokens joinAlias(final String alias) {
+	return add(TokenCategory.QRY_SOURCE_ALIAS, alias);
     }
 
-    public <E extends AbstractEntity> Tokens innerJoin(final AggregatedResultQueryModel model, final String alias) {
-	return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model, TokenCategory.QRY_SOURCE_ALIAS, alias);
+    public <E extends AbstractEntity> Tokens leftJoin(final Class<E> entityType) {
+	return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
-    public <E extends AbstractEntity> Tokens innerJoin(final EntityResultQueryModel<E> model, final String alias) {
-	return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model, TokenCategory.QRY_SOURCE_ALIAS, alias);
+    public <E extends AbstractEntity> Tokens innerJoin(final AggregatedResultQueryModel model) {
+	return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model);
     }
 
-    public <E extends AbstractEntity> Tokens leftJoin(final AggregatedResultQueryModel model, final String alias) {
-	return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model, TokenCategory.QRY_SOURCE_ALIAS, alias);
+    public <E extends AbstractEntity> Tokens innerJoin(final EntityResultQueryModel<E> model) {
+	return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model);
     }
 
-    public <E extends AbstractEntity> Tokens leftJoin(final EntityResultQueryModel<E> model, final String alias) {
-	return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model, TokenCategory.QRY_SOURCE_ALIAS, alias);
+    public <E extends AbstractEntity> Tokens leftJoin(final AggregatedResultQueryModel model) {
+	return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model);
+    }
+
+    public <E extends AbstractEntity> Tokens leftJoin(final EntityResultQueryModel<E> model) {
+	return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.QRY_MODEL_AS_QRY_SOURCE, model);
     }
 
     public List<Pair<TokenCategory, Object>> getTokens() {

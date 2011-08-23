@@ -113,7 +113,7 @@ public class QueryModelCompositionTest {
     @Test
     public void test_query_model3() {
 	final Object a = query.select(AbstractEntity.class, "a")
-	    .join(AbstractEntity.class, "b")
+	    .join(AbstractEntity.class).as("b")
 	    .on().prop("a").eq().prop("v").and()
 	    .begin().begin().beginExpr().prop("a").add().param("v").endExpr().eq().prop("c").end().end()
 	    .and()
@@ -236,7 +236,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_source_names_collector2() {
-	final AggregatedResultQueryModel qry = query.select(TgVehicle.class, "v").leftJoin(TgVehicleModel.class, "v.model").on().prop("v.model").eq().prop("v.model.id").
+	final AggregatedResultQueryModel qry = query.select(TgVehicle.class, "v").leftJoin(TgVehicleModel.class).as("v.model").on().prop("v.model").eq().prop("v.model.id").
 	where().prop("v.model.desc").like().val("MERC%").
 	groupBy().prop("v.eqClass.desc").
 	yield().beginExpr().prop("v.volume").add().prop("v.weight").endExpr().as("calc").modelAsAggregate();
@@ -248,7 +248,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_query_sources1() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").join(TgWorkOrder.class, "wo").on().prop("a").eq().prop("b").model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").join(TgWorkOrder.class).as("wo").on().prop("a").eq().prop("b").model();
 
 	final ConditionsModel condition = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
 
@@ -260,8 +260,21 @@ public class QueryModelCompositionTest {
     }
 
     @Test
+    public void test_query_sources_with_explicit_join_and_without_aliases() {
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").join(TgWorkOrder.class).on().prop("a").eq().prop("b").model();
+
+	final ConditionsModel condition = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
+
+	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
+	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, null), JoinType.IJ, condition));
+
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
+	assertEquals("models are different", exp, qb.getQry(qry).getSources());
+    }
+
+    @Test
     public void test_query_sources2() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").join(TgWorkOrder.class, "wo").on().prop("a").eq().prop("b").leftJoin(TgWorkOrder.class, "wo2").on().prop("a2").eq().prop("b2").model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").join(TgWorkOrder.class).as("wo").on().prop("a").eq().prop("b").leftJoin(TgWorkOrder.class).as("wo2").on().prop("a2").eq().prop("b2").model();
 
 	final ConditionsModel condition1 = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
 	final ConditionsModel condition2 = new ConditionsModel(new ComparisonTestModel(new EntProp("a2"), ComparisonOperator.EQ, new EntProp("b2")), new ArrayList<CompoundConditionModel>());
@@ -276,7 +289,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_query_sources3() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").join(TgWorkOrder.class, "wo").on().prop("a").eq().prop("b").leftJoin(TgWorkOrder.class, "wo2").on().prop("a2").eq().prop("b2")
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").join(TgWorkOrder.class).as("wo").on().prop("a").eq().prop("b").leftJoin(TgWorkOrder.class).as("wo2").on().prop("a2").eq().prop("b2")
 	.where().dayOf().prop("initDate").gt().val(15).and().prop("eqClass").lt().prop("limit").model();
 
 	final ConditionsModel condition1 = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());

@@ -12,16 +12,17 @@ public class query {
 	return new PlainJoin((new Tokens()).from(entityType));
     }
 
-    public static <T extends AbstractEntity> IJoin select(final Class<T> entityType, final String alias) {
-	return new Join((new Tokens()).from(entityType, alias));
-    }
-
     public static <T extends AbstractEntity> IPlainJoin select(final EntityResultQueryModel... sourceQueryModels) {
 	return new PlainJoin((new Tokens()).from(null, sourceQueryModels));
     }
 
     public static <T extends AbstractEntity> IPlainJoin select(final AggregatedResultQueryModel... sourceQueryModels) {
 	return new PlainJoin((new Tokens()).from(null, sourceQueryModels));
+    }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    public static <T extends AbstractEntity> IJoin select(final Class<T> entityType, final String alias) {
+	return new Join((new Tokens()).from(entityType, alias));
     }
 
     public static IJoin select(final EntityResultQueryModel sourceQueryModel, final String alias) {
@@ -31,6 +32,8 @@ public class query {
     public static IJoin select(final AggregatedResultQueryModel sourceQueryModel, final String alias) {
 	return new Join((new Tokens()).from(alias, sourceQueryModel));
     }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static IStandAloneExprOperand expr() {
 	return new StandAloneExpOperand(new Tokens());

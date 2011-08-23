@@ -209,27 +209,41 @@ public interface EntityQueryProgressiveInterfaces {
         T endExpr();
     }
 
-    /**
-     * Interface that forms part of Entity Query API needed specifically to support type checking and proper auto-completion for chaining of API methods. This interface caters for
-     * different kind of <em>JOIN</em> clauses in the query.
-     *
-     * @author TG Team
-     *
-     */
+//    public interface IJoin<J> {
+//
+//        <T extends AbstractEntity> IJoinAlias<J> join(final Class<T> entityType);
+//
+//        <T extends AbstractEntity> IJoinAlias<J> leftJoin(final Class<T> entityType);
+//
+//        <T extends AbstractEntity> IJoinAlias<J> join(final EntityResultQueryModel<T> model);
+//
+//        <T extends AbstractEntity> IJoinAlias<J> join(final AggregatedResultQueryModel model);
+//
+//        <T extends AbstractEntity> IJoinAlias<J> leftJoin(final EntityResultQueryModel<T> model);
+//
+//        <T extends AbstractEntity> IJoinAlias<J> leftJoin(final AggregatedResultQueryModel model);
+//
+//    }
+
+
     public interface IJoin extends IPlainJoin {
 
-        <T extends AbstractEntity> IJoinCondition join(final Class<T> entityType, String alias);
+        <T extends AbstractEntity> IJoinAlias<IJoinCondition> join(final Class<T> entityType);
 
-        <T extends AbstractEntity> IJoinCondition leftJoin(final Class<T> entityType, String alias);
+        <T extends AbstractEntity> IJoinAlias<IJoinCondition> leftJoin(final Class<T> entityType);
 
-        <T extends AbstractEntity> IJoinCondition join(final EntityResultQueryModel<T> model, String alias);
+        <T extends AbstractEntity> IJoinAlias<IJoinCondition> join(final EntityResultQueryModel<T> model);
 
-        <T extends AbstractEntity> IJoinCondition join(final AggregatedResultQueryModel model, String alias);
+        <T extends AbstractEntity> IJoinAlias<IJoinCondition> leftJoin(final EntityResultQueryModel<T> model);
 
-        <T extends AbstractEntity> IJoinCondition leftJoin(final EntityResultQueryModel<T> model, String alias);
+        <T extends AbstractEntity> IJoinAlias<IJoinCondition> join(final AggregatedResultQueryModel model);
 
-        <T extends AbstractEntity> IJoinCondition leftJoin(final AggregatedResultQueryModel model, String alias);
+        <T extends AbstractEntity> IJoinAlias<IJoinCondition> leftJoin(final AggregatedResultQueryModel model);
 
+    }
+
+    interface IJoinAlias<T> extends IJoinCondition {
+        T as(String alias);
     }
 
     public interface IPlainJoin extends ICompleted {

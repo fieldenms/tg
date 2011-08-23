@@ -19,6 +19,7 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
     public void add(final TokenCategory cat, final Object value) {
 	switch (cat) {
 	case ON: //eats token
+	    finaliseChild();
 	    setChild(new ConditionsBuilder(this, getDbVersion()));
 	    break;
 	default:
