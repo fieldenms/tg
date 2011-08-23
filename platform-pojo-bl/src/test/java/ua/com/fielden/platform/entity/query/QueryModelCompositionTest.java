@@ -61,7 +61,7 @@ public class QueryModelCompositionTest {
     @Test
     public void test_query_model1() {
 	final AggregatedResultQueryModel a =
-		query.select(TgWorkOrder.class, "wo")
+		query.select(TgWorkOrder.class).as("wo")
 		.where().beginExpr().beginExpr().beginExpr().beginExpr().prop("wo.actCost.amount").mult().param("costMultiplier").endExpr().add().prop("wo.estCost.amount").div().param("costDivider").endExpr().add().prop("wo.yearlyCost.amount").endExpr().div().val(12).endExpr().gt().val(1000)
 		.and()
 		.begin()
@@ -72,7 +72,7 @@ public class QueryModelCompositionTest {
 		.modelAsAggregate();
 	qb.getQry(a);//.getPropNames();
 
-	query.select(TgWorkOrder.class, "wo").where()
+	query.select(TgWorkOrder.class).where()
 		.upperCase()
 				.beginExpr()
 					.prop("bbb").add().prop("aaa")
@@ -98,7 +98,7 @@ public class QueryModelCompositionTest {
 
 	final String expString = "SELECT\nFROM ua.com.fielden.platform.entity.AbstractEntity AS a\nWHERE (((($a + :v)))) > 1 AND ((:a * (:v + $c)) = $d AND $ad IS NOT NULL) AND UPPERCASE($bbb + $aaa) LIKE UPPERCASE(AaA) AND $SomeDate > NOW() AND YEAR($LastChange) = ROUND(($prop1 + $prop2), 1) AND :a = COALESCE($interProp, 1) AND $aaa = DATEDIFF(COALESCE($End, NOW()), (($Start1 + $Start2))) AND $haha IN ($p1, $p2, $p3) AND :AAA IN (1, 2, 3)";
 
-	final Object b = query.select(a, "a_alias").where().prop("a_alias.p1").eq().val(100).and().prop("a_alias.p2").like().anyOfValues("%AC", "%AB", "DD%").model();
+	final Object b = query.select(a).as("a_alias").where().prop("a_alias.p1").eq().val(100).and().prop("a_alias.p2").like().anyOfValues("%AC", "%AB", "DD%").model();
     }
 
     @Ignore
@@ -112,7 +112,7 @@ public class QueryModelCompositionTest {
     @Ignore
     @Test
     public void test_query_model3() {
-	final Object a = query.select(AbstractEntity.class, "a")
+	final Object a = query.select(AbstractEntity.class).as("a")
 	    .join(AbstractEntity.class).as("b")
 	    .on().prop("a").eq().prop("v").and()
 	    .begin().begin().beginExpr().prop("a").add().param("v").endExpr().eq().prop("c").end().end()
@@ -226,7 +226,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_source_names_collector_with_joins() {
-	final AggregatedResultQueryModel qry = query.select(TgVehicle.class, "v").where().prop("v.model.desc").like().val("MERC%").
+	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).as("v").where().prop("v.model.desc").like().val("MERC%").
 	groupBy().prop("v.eqClass.desc").
 	yield().beginExpr().prop("v.volume").add().prop("v.weight").endExpr().as("calc").modelAsAggregate();
 	final Set<String> exp = new HashSet<String>();
@@ -236,7 +236,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_source_names_collector2() {
-	final AggregatedResultQueryModel qry = query.select(TgVehicle.class, "v").leftJoin(TgVehicleModel.class).as("v.model").on().prop("v.model").eq().prop("v.model.id").
+	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).as("v").leftJoin(TgVehicleModel.class).as("v.model").on().prop("v.model").eq().prop("v.model.id").
 	where().prop("v.model.desc").like().val("MERC%").
 	groupBy().prop("v.eqClass.desc").
 	yield().beginExpr().prop("v.volume").add().prop("v.weight").endExpr().as("calc").modelAsAggregate();
@@ -248,7 +248,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_query_sources1() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").join(TgWorkOrder.class).as("wo").on().prop("a").eq().prop("b").model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").join(TgWorkOrder.class).as("wo").on().prop("a").eq().prop("b").model();
 
 	final ConditionsModel condition = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
 
@@ -261,7 +261,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_query_sources_with_explicit_join_and_without_aliases() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").join(TgWorkOrder.class).on().prop("a").eq().prop("b").model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").join(TgWorkOrder.class).on().prop("a").eq().prop("b").model();
 
 	final ConditionsModel condition = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
 
@@ -274,7 +274,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_query_sources2() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").join(TgWorkOrder.class).as("wo").on().prop("a").eq().prop("b").leftJoin(TgWorkOrder.class).as("wo2").on().prop("a2").eq().prop("b2").model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").join(TgWorkOrder.class).as("wo").on().prop("a").eq().prop("b").leftJoin(TgWorkOrder.class).as("wo2").on().prop("a2").eq().prop("b2").model();
 
 	final ConditionsModel condition1 = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
 	final ConditionsModel condition2 = new ConditionsModel(new ComparisonTestModel(new EntProp("a2"), ComparisonOperator.EQ, new EntProp("b2")), new ArrayList<CompoundConditionModel>());
@@ -289,7 +289,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_query_sources3() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").join(TgWorkOrder.class).as("wo").on().prop("a").eq().prop("b").leftJoin(TgWorkOrder.class).as("wo2").on().prop("a2").eq().prop("b2")
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").join(TgWorkOrder.class).as("wo").on().prop("a").eq().prop("b").leftJoin(TgWorkOrder.class).as("wo2").on().prop("a2").eq().prop("b2")
 	.where().dayOf().prop("initDate").gt().val(15).and().prop("eqClass").lt().prop("limit").model();
 
 	final ConditionsModel condition1 = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
@@ -311,8 +311,8 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_query_with_derived_sources() {
-	final EntityResultQueryModel<TgVehicle> subQry = query.select(TgVehicle.class, "v").where().prop("v.model").isNotNull().model();
-	final EntityResultQueryModel<TgVehicle> qry = query.select(subQry, "v").where().prop("v.model").isNotNull().model();
+	final EntityResultQueryModel<TgVehicle> subQry = query.select(TgVehicle.class).as("v").where().prop("v.model").isNotNull().model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(subQry).as("v").where().prop("v.model").isNotNull().model();
 
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsModel("v", qb.getQry(subQry)), new ArrayList<EntQueryCompoundSourceModel>());
 	assertEquals("models are different", exp, qb.getQry(qry).getSources());
@@ -424,7 +424,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_01() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().prop("model").isNotNull().and().prop("eqclass").isNull().model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().prop("model").isNotNull().and().prop("eqclass").isNull().model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntProp("eqclass"), false)));
 	final ConditionsModel exp = new ConditionsModel(new NullTestModel(new EntProp("model"), true), others);
@@ -433,7 +433,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_02() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().prop("model").gt().val(100).and().prop("eqClass").lt().prop("limit").model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().prop("model").gt().val(100).and().prop("eqClass").lt().prop("limit").model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new ComparisonTestModel(new EntProp("eqClass"), ComparisonOperator.LT, new EntProp("limit"))));
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(new EntProp("model"), ComparisonOperator.GT, new EntValue(100)), others);
@@ -442,7 +442,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_03() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().prop("model").isNotNull().and().param("eqclass").isNull().model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().prop("model").isNotNull().and().param("eqclass").isNull().model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntParam("eqclass"), false)));
 	final ConditionsModel exp = new ConditionsModel(new NullTestModel(new EntProp("model"), true), others);
@@ -451,7 +451,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_04() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().begin().prop("model").isNotNull().and().prop("eqclass").isNull().end().model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().begin().prop("model").isNotNull().and().prop("eqclass").isNull().end().model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntProp("eqclass"), false)));
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new NullTestModel(new EntProp("model"), true), others);
@@ -461,7 +461,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_05() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().begin().prop("model").isNotNull().and().prop("eqclass").isNull().end().and().prop("currStation").isNotNull().model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().begin().prop("model").isNotNull().and().prop("eqclass").isNull().end().and().prop("currStation").isNotNull().model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntProp("eqclass"), false)));
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new NullTestModel(new EntProp("model"), true), others);
@@ -474,7 +474,7 @@ public class QueryModelCompositionTest {
     @Test
     public void test_simple_query_model_06() {
 	final EntityResultQueryModel<TgVehicle> subQry = query.select(TgVehicle.class).model();
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().prop("model").isNotNull().and().exists(subQry).model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().prop("model").isNotNull().and().exists(subQry).model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new ExistenceTestModel(false, qb.getQry(subQry))));
 	final ConditionsModel exp = new ConditionsModel(new NullTestModel(new EntProp("model"), true), others);
@@ -483,7 +483,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_07() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().anyOfProps("model", "eqClass").isNotNull().model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().anyOfProps("model", "eqClass").isNotNull().model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.OR, new NullTestModel(new EntProp("eqClass"), true)));
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new NullTestModel(new EntProp("model"), true), others);
@@ -494,7 +494,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_08() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().beginExpr().prop("model").add().prop("eqClass").endExpr().isNull().model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().beginExpr().prop("model").add().prop("eqClass").endExpr().isNull().model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
 	compSingleOperands.add(new CompoundSingleOperand(new EntProp("eqClass"), ArithmeticalOperator.ADD));
@@ -506,7 +506,7 @@ public class QueryModelCompositionTest {
     @Test
     public void test_simple_query_model_09() {
 	final ExpressionModel expr = query.expr().prop("model").add().prop("eqClass").model();
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().expr(expr).isNull().model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().expr(expr).isNull().model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
 	compSingleOperands.add(new CompoundSingleOperand(new EntProp("eqClass"), ArithmeticalOperator.ADD));
@@ -519,7 +519,7 @@ public class QueryModelCompositionTest {
     public void test_simple_query_model_10() {
 	final ExpressionModel expr0 = query.expr().prop("model").mult().prop("eqClass").model();
 	final ExpressionModel expr = query.expr().prop("model").add().expr(expr0).model();
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().expr(expr).isNull().model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().expr(expr).isNull().model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 
 	final List<CompoundSingleOperand> compSingleOperands0 = new ArrayList<CompoundSingleOperand>();
@@ -536,7 +536,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_11() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().dayOf().prop("initDate").gt().val(15).and().prop("eqClass").lt().prop("limit").model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().dayOf().prop("initDate").gt().val(15).and().prop("eqClass").lt().prop("limit").model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new ComparisonTestModel(new EntProp("eqClass"), ComparisonOperator.LT, new EntProp("limit"))));
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(new DayOfModel(new EntProp("initDate")), ComparisonOperator.GT, new EntValue(15)), others);
@@ -545,7 +545,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_12() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().monthOf().prop("initDate").gt().val(3).and().prop("eqClass").lt().prop("limit").model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().monthOf().prop("initDate").gt().val(3).and().prop("eqClass").lt().prop("limit").model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new ComparisonTestModel(new EntProp("eqClass"), ComparisonOperator.LT, new EntProp("limit"))));
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(new MonthOfModel(new EntProp("initDate")), ComparisonOperator.GT, new EntValue(3)), others);
@@ -554,7 +554,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_13() {
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").model();
 	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
 	assertEquals("models are different", exp, qb.getQry(qry).getSources());
@@ -620,7 +620,7 @@ public class QueryModelCompositionTest {
     public void test_simple_query_model_22() {
 	final EntityResultQueryModel<TgVehicle> subQry1 = query.select(TgVehicle.class).model();
 	final EntityResultQueryModel<TgWorkOrder> subQry2 = query.select(TgWorkOrder.class).model();
-	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class, "v").where().existsAnyOf(subQry1, subQry2).model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().existsAnyOf(subQry1, subQry2).model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.OR, new ExistenceTestModel(false, qb.getQry(subQry2))));
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ExistenceTestModel(false, qb.getQry(subQry1)), others);
@@ -636,7 +636,7 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_expressions1() {
-	final EntityResultQueryModel<TgWorkOrder> qry =  query.select(TgWorkOrder.class, "wo").where().beginExpr().beginExpr().beginExpr().beginExpr().prop("wo.actCost.amount").mult().param("costMultiplier").endExpr().add().prop("wo.estCost.amount").div().param("costDivider").endExpr().add().prop("wo.yearlyCost.amount").endExpr().div().val(12).endExpr().gt().val(1000).model();
+	final EntityResultQueryModel<TgWorkOrder> qry =  query.select(TgWorkOrder.class).as("wo").where().beginExpr().beginExpr().beginExpr().beginExpr().prop("wo.actCost.amount").mult().param("costMultiplier").endExpr().add().prop("wo.estCost.amount").div().param("costDivider").endExpr().add().prop("wo.yearlyCost.amount").endExpr().div().val(12).endExpr().gt().val(1000).model();
 	// ((((wo.actCost.amount * :costMultiplier) + wo.estCost.amount / :costDivider) + wo.yearlyCost.amount) / 12 )
 	final Expression expressionModel1 = new Expression(new EntProp("wo.actCost.amount"), Arrays.asList(new CompoundSingleOperand[]{new CompoundSingleOperand(new EntParam("costMultiplier"), ArithmeticalOperator.MULT)}));
 	final Expression expressionModel2 = new Expression(expressionModel1, Arrays.asList(new CompoundSingleOperand[]{new CompoundSingleOperand(new EntProp("wo.estCost.amount"), ArithmeticalOperator.ADD), new CompoundSingleOperand(new EntParam("costDivider"), ArithmeticalOperator.DIV)}));

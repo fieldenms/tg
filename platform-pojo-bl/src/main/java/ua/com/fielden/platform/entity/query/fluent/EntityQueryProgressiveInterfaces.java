@@ -228,22 +228,26 @@ public interface EntityQueryProgressiveInterfaces {
 
     public interface IJoin extends IPlainJoin {
 
-        <T extends AbstractEntity> IJoinAlias<IJoinCondition> join(final Class<T> entityType);
+        <T extends AbstractEntity> IJoinAlias join(final Class<T> entityType);
 
-        <T extends AbstractEntity> IJoinAlias<IJoinCondition> leftJoin(final Class<T> entityType);
+        <T extends AbstractEntity> IJoinAlias leftJoin(final Class<T> entityType);
 
-        <T extends AbstractEntity> IJoinAlias<IJoinCondition> join(final EntityResultQueryModel<T> model);
+        <T extends AbstractEntity> IJoinAlias join(final EntityResultQueryModel<T> model);
 
-        <T extends AbstractEntity> IJoinAlias<IJoinCondition> leftJoin(final EntityResultQueryModel<T> model);
+        <T extends AbstractEntity> IJoinAlias leftJoin(final EntityResultQueryModel<T> model);
 
-        <T extends AbstractEntity> IJoinAlias<IJoinCondition> join(final AggregatedResultQueryModel model);
+        IJoinAlias join(final AggregatedResultQueryModel model);
 
-        <T extends AbstractEntity> IJoinAlias<IJoinCondition> leftJoin(final AggregatedResultQueryModel model);
+        IJoinAlias leftJoin(final AggregatedResultQueryModel model);
 
     }
 
-    interface IJoinAlias<T> extends IJoinCondition {
-        T as(String alias);
+    interface IJoinAlias extends IJoinCondition {
+	IJoinCondition as(String alias);
+    }
+
+    interface IFromAlias extends IJoin {
+	IJoin as(String alias);
     }
 
     public interface IPlainJoin extends ICompleted {

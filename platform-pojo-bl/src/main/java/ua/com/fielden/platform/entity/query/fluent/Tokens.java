@@ -356,17 +356,17 @@ final class Tokens {
 	return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
-    public Tokens from(final String alias, final AggregatedResultQueryModel... sourceModels) {
+    public Tokens from(final AggregatedResultQueryModel... sourceModels) {
 	if (sourceModels.length >= 1) {
-	    return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels), TokenCategory.QRY_SOURCE_ALIAS, alias);
+	    return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
 	    throw new RuntimeException("No models have been specified as a source in from statement!");
 	}
     }
 
-    public Tokens from(final String alias, final EntityResultQueryModel... sourceModels) {
+    public Tokens from(final EntityResultQueryModel... sourceModels) {
 	if (sourceModels.length >= 1) {
-	    return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels), TokenCategory.QRY_SOURCE_ALIAS, alias);
+	    return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
 	    throw new RuntimeException("No models have been specified as a source in from statement!");
 	}

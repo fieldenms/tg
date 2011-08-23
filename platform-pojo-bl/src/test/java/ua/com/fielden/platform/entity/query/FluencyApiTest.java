@@ -71,7 +71,7 @@ public class FluencyApiTest extends TestCase {
 
     public void test_IPlainJoin(){
 	final EntityQueryProgressiveInterfaces.IPlainJoin qry = query.select(AbstractEntity.class);
-	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "modelAsAggregate", "modelAsEntity" ,"where", "groupBy", "orderBy", "yield"});
+	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "modelAsAggregate", "modelAsEntity" ,"where", "groupBy", "orderBy", "yield", "as", "join", "leftJoin"});
 	assertNull(result, result);
     }
 
@@ -147,7 +147,7 @@ public class FluencyApiTest extends TestCase {
 	final AggregatedResultQueryModel model4 = query.select(AbstractEntity.class).yield().beginExpr().prop("prop1").add().prop("prop2").endExpr().as("sumOfProps").yield().model(null).as("newCalcProp").modelAsAggregate();
 	//
 	//aliases are required of joining is used
-	query.select(AbstractEntity.class, "a").join(AbstractEntity.class).as("b").on().prop("a.id").eq().prop("b.id").model();
+	query.select(AbstractEntity.class).as("a").join(AbstractEntity.class).as("b").on().prop("a.id").eq().prop("b.id").model();
 
     }
 
@@ -246,7 +246,7 @@ public class FluencyApiTest extends TestCase {
 	final EntityQueryProgressiveInterfaces.IFunctionLastArgument<EntityQueryProgressiveInterfaces.IComparisonOperator0> q25 = query.select(AbstractEntity.class).where().monthOf();
 	final EntityQueryProgressiveInterfaces.IFunctionLastArgument<EntityQueryProgressiveInterfaces.IComparisonOperator0> q26 = query.select(AbstractEntity.class).where().yearOf();
 
-	final EntityQueryProgressiveInterfaces.IJoin qry1  = query.select(AbstractEntity.class, "alias");
+	final EntityQueryProgressiveInterfaces.IJoin qry1  = query.select(AbstractEntity.class).as("alias");
 	//query.select(AggregatedResultQueryModel... sourceQueryModels);
 	//query.select(EntityResultQueryModel... sourceQueryModels);
 	//query.select(EntityResultQueryModel sourceQueryModel, String alias)

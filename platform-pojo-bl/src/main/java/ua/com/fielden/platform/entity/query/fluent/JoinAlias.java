@@ -4,7 +4,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinCondition;
 
 
-class JoinAlias extends JoinOn implements IJoinAlias<IJoinCondition> {
+class JoinAlias extends JoinOn implements IJoinAlias {
 
     JoinAlias(final Tokens queryTokens) {
 	super(queryTokens);
