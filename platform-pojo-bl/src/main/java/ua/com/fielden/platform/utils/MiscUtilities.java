@@ -3,12 +3,14 @@ package ua.com.fielden.platform.utils;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.swing.filechooser.FileFilter;
 
@@ -95,8 +97,38 @@ public class MiscUtilities {
 	return sb.toString();
     }
 
+    /**
+     * Converts a string value to an instance of {@link InputStream} using UTF-8 encoding.
+     *
+     * @param value
+     * @return
+     * @throws UnsupportedEncodingException
+     */
     public static InputStream convertToInputStream(final String value) throws UnsupportedEncodingException {
 	return new ByteArrayInputStream(value.getBytes("UTF-8"));
     }
 
+    /**
+     * Loads the specified property file returning a corresponding instance of {@link Properties}.
+     *
+     * @param fileName
+     * @return
+     * @throws Exception
+     */
+    public static Properties propertyExtractor(final String fileName) throws Exception {
+	InputStream st = null;
+	Properties props = null;
+	try {
+	    st = new FileInputStream(fileName);
+	    props = new Properties();
+	    props.load(st);
+	    return props;
+	} finally {
+	    try {
+		st.close();
+	    } catch (final Exception e) {
+		e.printStackTrace(); // can be ignored
+	    }
+	}
+    }
 }

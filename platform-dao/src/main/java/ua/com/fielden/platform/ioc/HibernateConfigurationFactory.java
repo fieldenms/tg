@@ -1,0 +1,89 @@
+package ua.com.fielden.platform.ioc;
+
+import java.util.Map;
+import java.util.Properties;
+
+import org.hibernate.cfg.Configuration;
+
+import ua.com.fielden.platform.dao.MappingsGenerator;
+
+import com.google.inject.Guice;
+
+/**
+ * Hibernate configuration factory. All Hibernate specific properties should be passed as {@link Properties} values.
+ * The following list of properties is supported:
+ * <ul>
+ * <li> <i><font color="981515">hibernate.connection.url</font></i> -- required;
+ * <li> <i><font color="981515">hibernate.connection.driver_class</font></i> -- required;
+ * <li> <i><font color="981515">hibernate.dialect</font></i> -- required;
+ * <li> <i><font color="981515">hibernate.connection.username</font></i> -- required;
+ * <li> <i><font color="981515">hibernate.connection.password</font></i> -- required;
+ * <li>	<i>hibernate.show_sql</i> -- defaults to "true";
+ * <li> <i>hibernate.format_sql</i> -- defaults to "true";
+ * <li> <i>hibernate.connection.provider_class</i> -- if provided value org.hibernate.connection.C3P0ConnectionProvider is expected; other types of pulls are not yet supported;
+ * <li> <i>c3p0.min_size</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
+ * <li> <i>c3p0.max_size</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
+ * <li> <i>c3p0.timeout</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
+ * <li> <i>c3p0.max_statements</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
+ * <li> <i>c3p0.acquire_increment</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
+ * <li> <i>c3p0.idle_test_period</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
+ * </ul>
+ *
+ * @author TG Team
+ *
+ */
+public class HibernateConfigurationFactory {
+
+    private final Properties props;
+    private final MappingsGenerator mappingsGenerator;
+    private final Configuration cfg = new Configuration();
+
+    public HibernateConfigurationFactory(final Properties props, final Map<Class, Class> defaultHibernateTypes, final Class[] applicationEntityTypes) throws Exception {
+	this.props = props;
+	mappingsGenerator = new MappingsGenerator(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()));
+	if (mappingsGenerator != null) {
+	    cfg.addXML(mappingsGenerator.generateMappings(applicationEntityTypes));
+	}
+    }
+
+    public Configuration build() {
+	cfg.setProperty("hibernate.current_session_context_class", "thread");
+
+	setSafely("hibernate.show_sql", "false");
+	setSafely("hibernate.format_sql", "true");
+
+	setSafely("hibernate.connection.provider_class");
+	setSafely("c3p0.min_size");
+	setSafely("c3p0.max_size");
+	setSafely("c3p0.timeout");
+	setSafely("c3p0.max_statements");
+	setSafely("c3p0.acquire_increment");
+	setSafely("c3p0.idle_test_period");
+
+	setSafely("hibernate.connection.url");
+	setSafely("hibernate.connection.driver_class");
+	setSafely("hibernate.dialect");
+	setSafely("hibernate.connection.username", "");
+	setSafely("hibernate.connection.password", "");
+
+	return cfg;
+    }
+
+    public MappingsGenerator getMappingsGenerator() {
+	return mappingsGenerator;
+    }
+
+    private Configuration setSafely(final String propertyName, final String defaultValue) {
+	final String value = props.getProperty(propertyName);
+	if (value != null) {
+	    cfg.setProperty(propertyName, value);
+	} else if (defaultValue != null) {
+	    cfg.setProperty(propertyName, defaultValue);
+	}
+	return cfg;
+    }
+
+    private Configuration setSafely(final String propertyName) {
+	return setSafely(propertyName, null);
+    }
+}

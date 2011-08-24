@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.ioc;
 
+import java.util.Map;
+import java.util.Properties;
+
 import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.dao.MappingExtractor;
@@ -22,10 +25,17 @@ public class PropertyFactoryModule extends TransactionalModule {
     protected final DaoFactory daoFactory;
     protected final EntityFactory entityFactory;
 
+    public PropertyFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final Class[] applicationEntityTypes) throws Exception {
+	super(props, defaultHibernateTypes, applicationEntityTypes);
+	daoFactory = new DaoFactory() {};
+	entityFactory = new EntityFactory() {};
+	interceptor.setFactory(entityFactory);
+    }
+
     public PropertyFactoryModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator) {
 	super(sessionFactory, mappingExtractor, mappingsGenerator);
-	daoFactory = new DaoFactory(){};
-	entityFactory = new EntityFactory(){};
+	daoFactory = new DaoFactory() {};
+	entityFactory = new EntityFactory() {};
     }
 
     @Override

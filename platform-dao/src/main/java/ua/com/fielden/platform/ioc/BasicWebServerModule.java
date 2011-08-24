@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.ioc;
 
+import java.util.Map;
 import java.util.Properties;
-
-import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.attachment.IAttachmentController;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
@@ -16,8 +15,6 @@ import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.dao.MappingExtractor;
-import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.equery.interfaces.IFilter;
@@ -76,14 +73,13 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
 
     public BasicWebServerModule(
-	    final SessionFactory sessionFactory, //
+	    final Map<Class, Class> defaultHibernateTypes, //
+	    final Class[] applicationEntityTypes,//
 	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
 	    final Class<? extends IFilter> automaticDataFilterType, //
-	    final MappingExtractor mappingExtractor, //
-	    final MappingsGenerator mappingsGenerator,//
 	    final SecurityTokenProvider tokenProvider,//
-	    final Properties props) {
-	super(sessionFactory, mappingExtractor, mappingsGenerator, false);
+	    final Properties props) throws Exception {
+	super(props, defaultHibernateTypes, applicationEntityTypes, false);
 	this.props = props;
 	this.tokenProvider = tokenProvider;
 	this.serialisationClassProviderType = serialisationClassProviderType;
