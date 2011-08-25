@@ -3,7 +3,6 @@ package ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -14,6 +13,7 @@ import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalys
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeRepresentation.IAbstractAnalysisAddToAggregationTickRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTree;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -102,7 +102,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
     protected abstract static class AbstractAnalysisAddToDistributionTickManager extends TickManager implements IAbstractAnalysisAddToDistributionTickManager {
 	private static final long serialVersionUID = 4659406246345595522L;
 
-	private final Map<Class<?>, List<String>> rootsListsOfUsedProperties;
+	private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
@@ -138,7 +138,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 
 	/**
 	 * Determines the index of the property to be 'used' among checked properties.
-	 * 
+	 *
 	 * @param root
 	 * @param property
 	 * @return
@@ -164,8 +164,8 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
     protected abstract static class AbstractAnalysisAddToAggregationTickManager extends TickManager implements IAbstractAnalysisAddToAggregationTickManager {
 	private static final long serialVersionUID = -4025471910983945279L;
 
-	private final Map<Class<?>, List<Pair<String, Ordering>>> rootsListsOfOrderings;
-	private final Map<Class<?>, List<String>> rootsListsOfUsedProperties;
+	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
+	private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
@@ -207,7 +207,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 
 	/**
 	 * Determines the index of the property to be 'used' among checked properties.
-	 * 
+	 *
 	 * @param root
 	 * @param property
 	 * @return

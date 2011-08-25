@@ -2,7 +2,6 @@ package ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -16,6 +15,8 @@ import ua.com.fielden.platform.treemodel.rules.Function;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementRootsMap;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementSet;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -101,8 +102,8 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
     protected abstract static class AbstractAnalysisAddToAggregationTickRepresentation extends AbstractTickRepresentation implements IAbstractAnalysisAddToAggregationTickRepresentation {
 	private static final long serialVersionUID = -9171185828185404608L;
 
-	private final Map<Class<?>, List<Pair<String, Ordering>>> rootsListsOfOrderings;
-	private final Set<Pair<Class<?>, String>> propertiesOrderingDisablement;
+	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
+	private final EnhancementSet propertiesOrderingDisablement;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr" field.

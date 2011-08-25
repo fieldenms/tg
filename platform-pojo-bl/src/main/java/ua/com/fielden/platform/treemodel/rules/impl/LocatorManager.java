@@ -2,9 +2,6 @@ package ua.com.fielden.platform.treemodel.rules.impl;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,7 +9,6 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.IGlobalDomainTreeRepresentation;
@@ -30,9 +26,9 @@ import ua.com.fielden.platform.utils.Pair;
 public class LocatorManager extends AbstractDomainTree implements ILocatorManager {
     // this instance should be initialised using Reflection when GlobalDomainTreeManager creates/deserialises the instance of LocatorManager
     private final transient IGlobalDomainTreeRepresentation globalRepresentation;
-    private final Set<Class<?>> rootTypes;
-    private final Map<Pair<Class<?>, String>, ILocatorDomainTreeManagerAndEnhancer> persistentLocators;
-    private final transient Map<Pair<Class<?>, String>, ILocatorDomainTreeManagerAndEnhancer> currentLocators;
+    private final EnhancementLinkedRootsSet rootTypes;
+    private final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> persistentLocators;
+    private final transient EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> currentLocators;
 
     /**
      * A locator <i>manager</i> constructor (save, int, discard locators, etc.) for the first time instantiation.
@@ -51,15 +47,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
 	// this instance should be initialised using Reflection when GlobalDomainTreeManager creates/deserialises the instance of LocatorManager
 	this.globalRepresentation = null;
-	this.rootTypes = new LinkedHashSet<Class<?>>(rootTypes) {
-	    private static final long serialVersionUID = 1L;
-
-	    @Override
-	    public boolean contains(final Object o) {
-		final Class<?> root = (Class<?>) o;
-		return super.contains(DynamicEntityClassLoader.getOriginalType(root));
-	    };
-	};
+	this.rootTypes = createLinkedRootsSet();
 
 	this.persistentLocators = createPropertiesMap();
 	this.persistentLocators.putAll(persistentLocators);
@@ -145,8 +133,8 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
 	@Override
 	public LocatorManager read(final ByteBuffer buffer) {
-	    final Set<Class<?>> rootTypes = readValue(buffer, HashSet.class);
-	    final Map<Pair<Class<?>, String>, ILocatorDomainTreeManagerAndEnhancer> persistentLocators = readValue(buffer, HashMap.class);
+	    final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
+	    final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> persistentLocators = readValue(buffer, EnhancementPropertiesMap.class);
 	    return new LocatorManager(kryo(), rootTypes, persistentLocators);
 	}
 

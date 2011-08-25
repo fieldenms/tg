@@ -4,7 +4,6 @@ import static ua.com.fielden.platform.equery.equery.select;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -49,12 +48,12 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final IEntityCentreConfigController entityCentreConfigController;
     private final IEntityMasterConfigController entityMasterConfigController;
 
-    private final Map<Pair<Class<?>, String>, ICriteriaDomainTreeManagerAndEnhancer> persistentCentres;
-    private final transient Map<Pair<Class<?>, String>, ICriteriaDomainTreeManagerAndEnhancer> currentCentres;
-    private final transient Map<Pair<Class<?>, String>, Boolean> centresOwning;
+    private final EnhancementPropertiesMap<ICriteriaDomainTreeManagerAndEnhancer> persistentCentres;
+    private final transient EnhancementPropertiesMap<ICriteriaDomainTreeManagerAndEnhancer> currentCentres;
+    private final transient EnhancementPropertiesMap<Boolean> centresOwning;
 
-    private final Map<Class<?>, IMasterDomainTreeManager> persistentMasters;
-    private final transient Map<Class<?>, IMasterDomainTreeManager> currentMasters;
+    private final EnhancementRootsMap<IMasterDomainTreeManager> persistentMasters;
+    private final transient EnhancementRootsMap<IMasterDomainTreeManager> currentMasters;
 
     @Inject
     public GlobalDomainTreeManager(final ISerialiser serialiser, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfigController entityCentreConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {

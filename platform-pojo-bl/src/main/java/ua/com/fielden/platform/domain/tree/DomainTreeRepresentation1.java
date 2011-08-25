@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.domain.tree;
 
 import java.nio.ByteBuffer;
-import java.util.HashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTree;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementLinkedRootsSet;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementSet;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainTreeRepresentation1 extends AbstractDomainTreeRepresentation {
@@ -54,8 +55,8 @@ public class DomainTreeRepresentation1 extends AbstractDomainTreeRepresentation 
 
 	@Override
 	public DomainTreeRepresentation1 read(final ByteBuffer buffer) {
-	    final Set<Class<?>> rootTypes = readValue(buffer, HashSet.class);
-	    final Set<Pair<Class<?>, String>> excludedProperties = readValue(buffer, HashSet.class);
+	    final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
+	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
 	    final TickRepresentationForTest firstTick = readValue(buffer, TickRepresentationForTest.class);
 	    final TickRepresentationForTest secondTick = readValue(buffer, TickRepresentationForTest.class);
 	    return new DomainTreeRepresentation1(kryo(), rootTypes, excludedProperties, firstTick, secondTick);

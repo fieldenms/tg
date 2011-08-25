@@ -2,9 +2,7 @@ package ua.com.fielden.platform.treemodel.rules.criteria.impl;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -23,6 +21,10 @@ import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty.CalculatedPro
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTree;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementLinkedRootsSet;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementPropertiesMap;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementRootsMap;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementSet;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -73,8 +75,8 @@ public class CriteriaDomainTreeRepresentation extends AbstractDomainTreeRepresen
      */
     protected static class AddToCriteriaTick extends AbstractTickRepresentation implements IAddToCriteriaTickRepresentation {
 	private static final long serialVersionUID = -4402869381859112250L;
-	private final Map<Pair<Class<?>, String>, Object> propertiesDefaultValues1;
-	private final Map<Pair<Class<?>, String>, Object> propertiesDefaultValues2;
+	private final EnhancementPropertiesMap<Object> propertiesDefaultValues1;
+	private final EnhancementPropertiesMap<Object> propertiesDefaultValues2;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr" field.
@@ -184,9 +186,9 @@ public class CriteriaDomainTreeRepresentation extends AbstractDomainTreeRepresen
      */
     protected static class AddToResultSetTick extends AbstractTickRepresentation implements IAddToResultTickRepresentation {
 	private static final long serialVersionUID = -3615430853744511063L;
-	private final Map<Pair<Class<?>, String>, Integer> propertiesWidths;
-	private final Map<Class<?>, List<Pair<String, Ordering>>> rootsListsOfOrderings;
-	private final Set<Pair<Class<?>, String>> propertiesOrderingDisablement;
+	private final EnhancementPropertiesMap<Integer> propertiesWidths;
+	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
+	private final EnhancementSet propertiesOrderingDisablement;
 
 
 	/**
@@ -309,8 +311,8 @@ public class CriteriaDomainTreeRepresentation extends AbstractDomainTreeRepresen
 
 	@Override
 	public CriteriaDomainTreeRepresentation read(final ByteBuffer buffer) {
-	    final Set<Class<?>> rootTypes = readValue(buffer, HashSet.class);
-	    final Set<Pair<Class<?>, String>> excludedProperties = readValue(buffer, HashSet.class);
+	    final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
+	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
 	    final AddToCriteriaTick firstTick = readValue(buffer, AddToCriteriaTick.class);
 	    final AddToResultSetTick secondTick = readValue(buffer, AddToResultSetTick.class);
 	    return new CriteriaDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);

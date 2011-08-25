@@ -8,9 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -48,12 +46,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private static final long serialVersionUID = -7380151828208534611L;
     public static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
 
-    private final Set<Class<?>> rootTypes;
-    private final Set<Pair<Class<?>, String>> excludedProperties;
+    private final EnhancementLinkedRootsSet rootTypes;
+    private final EnhancementSet excludedProperties;
     private final ITickRepresentation firstTick;
     private final ITickRepresentation secondTick;
     /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
-    private final transient Map<Class<?>, List<String>> includedProperties;
+    private final transient EnhancementRootsMap<List<String>> includedProperties;
     private final transient List<IStructureChangedListener> listeners;
 
     /**
@@ -61,15 +59,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     protected AbstractDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final ITickRepresentation firstTick, final ITickRepresentation secondTick) {
 	super(serialiser);
-	this.rootTypes = new LinkedHashSet<Class<?>>(rootTypes) {
-	    private static final long serialVersionUID = 1L;
-
-	    @Override
-	    public boolean contains(final Object o) {
-		final Class<?> root = (Class<?>) o;
-		return super.contains(DynamicEntityClassLoader.getOriginalType(root));
-	    };
-	};
+	this.rootTypes = new EnhancementLinkedRootsSet();
+	this.rootTypes.addAll(rootTypes);
 	this.excludedProperties = createSet();
 	this.excludedProperties.addAll(excludedProperties);
 	this.firstTick = firstTick;
@@ -482,7 +473,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     protected static abstract class AbstractTickRepresentation implements ITickRepresentation {
 	private static final long serialVersionUID = 8833115857310712602L;
-	private final Set<Pair<Class<?>, String>> disabledProperties;
+	private final EnhancementSet disabledProperties;
 	private final Set<Pair<Class<?>, String>> checkedProperties;
 	private final transient IDomainTreeRepresentation dtr;
 

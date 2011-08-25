@@ -1,15 +1,10 @@
 package ua.com.fielden.platform.treemodel.rules.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
@@ -36,6 +31,10 @@ public abstract class AbstractDomainTree {
     /** A base types to be checked for its non-emptiness and non-emptiness of their children. */
     public static final List<Class<?>> DOMAIN_TREE_TYPES = new ArrayList<Class<?>>() {{
 	add(AbstractEntity.class); //
+	add(EnhancementSet.class); //
+	add(EnhancementLinkedRootsSet.class); //
+	add(EnhancementRootsMap.class); //
+	add(EnhancementPropertiesMap.class); //
 	add(ByteArray.class); //
 	add(Ordering.class); //
 	add(Function.class); //
@@ -106,32 +105,23 @@ public abstract class AbstractDomainTree {
     }
 
     /**
+     * Creates a set of linked (ordered) roots. This set will correctly handle "enhanced" root types.
+     * It can be used with enhanced types, but inner mechanism will "persist" not enhanced ones.
+     *
+     * @return
+     */
+    public static EnhancementLinkedRootsSet createLinkedRootsSet() {
+	return new EnhancementLinkedRootsSet();
+    }
+
+    /**
      * Creates a set of properties (pairs root+propertyName). This set will correctly handle "enhanced" root types.
      * It can be used with enhanced types, but inner mechanism will "persist" not enhanced ones.
      *
      * @return
      */
-    public static Set<Pair<Class<?>, String>> createSet() {
-	return new HashSet<Pair<Class<?>,String>>() {
-	    private static final long serialVersionUID = 7773953570321667258L;
-
-	    @Override
-	    public boolean contains(final Object key) {
-		final Pair<Class<?>, String> key1 = (Pair<Class<?>, String>) key;
-		return super.contains(new Pair<Class<?>, String>(DynamicEntityClassLoader.getOriginalType(key1.getKey()), key1.getValue()));
-	    }
-
-	    @Override
-	    public boolean add(final Pair<Class<?>, String> key) {
-		return super.add(new Pair<Class<?>, String>(DynamicEntityClassLoader.getOriginalType(key.getKey()), key.getValue()));
-	    }
-
-	    @Override
-	    public boolean remove(final Object key) {
-		final Pair<Class<?>, String> key1 = (Pair<Class<?>, String>) key;
-		return super.remove(new Pair<Class<?>, String>(DynamicEntityClassLoader.getOriginalType(key1.getKey()), key1.getValue()));
-	    }
-	};
+    public static EnhancementSet createSet() {
+	return new EnhancementSet();
     }
 
     /**
@@ -141,27 +131,8 @@ public abstract class AbstractDomainTree {
      * @param <T> -- a type of values in map
      * @return
      */
-    public static <T> Map<Pair<Class<?>, String>, T> createPropertiesMap() {
-	return new HashMap<Pair<Class<?>,String>, T>() {
-	    private static final long serialVersionUID = -1754488088205944423L;
-
-	    @Override
-	    public boolean containsKey(final Object key) {
-		final Pair<Class<?>, String> key1 = (Pair<Class<?>, String>) key;
-		return super.containsKey(new Pair<Class<?>, String>(DynamicEntityClassLoader.getOriginalType(key1.getKey()), key1.getValue()));
-	    };
-
-	    @Override
-	    public T put(final Pair<Class<?>,String> key, final T value) {
-		return super.put(new Pair<Class<?>, String>(DynamicEntityClassLoader.getOriginalType(key.getKey()), key.getValue()), value);
-	    };
-
-	    @Override
-	    public T get(final Object key) {
-		final Pair<Class<?>, String> key1 = (Pair<Class<?>, String>) key;
-		return super.get(new Pair<Class<?>, String>(DynamicEntityClassLoader.getOriginalType(key1.getKey()), key1.getValue()));
-	    };
-	};
+    public static <T> EnhancementPropertiesMap<T> createPropertiesMap() {
+	return new EnhancementPropertiesMap<T>();
     }
 
     /**
@@ -171,27 +142,8 @@ public abstract class AbstractDomainTree {
      * @param <T> -- a type of values in map
      * @return
      */
-    protected static <T> Map<Class<?>, T> createRootsMap() {
-	return new HashMap<Class<?>, T>() {
-	    private static final long serialVersionUID = -2157556231184035447L;
-
-	    @Override
-	    public boolean containsKey(final Object key) {
-		final Class<?> key1 = (Class<?>) key;
-		return super.containsKey(DynamicEntityClassLoader.getOriginalType(key1));
-	    };
-
-	    @Override
-	    public T put(final Class<?> key, final T value) {
-		return super.put(DynamicEntityClassLoader.getOriginalType(key), value);
-	    };
-
-	    @Override
-	    public T get(final Object key) {
-		final Class<?> key1 = (Class<?>) key;
-		return super.get(DynamicEntityClassLoader.getOriginalType(key1));
-	    };
-	};
+    protected static <T> EnhancementRootsMap<T> createRootsMap() {
+	return new EnhancementRootsMap<T>();
     }
 
     /**

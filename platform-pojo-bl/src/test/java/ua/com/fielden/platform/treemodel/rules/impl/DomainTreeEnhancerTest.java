@@ -511,6 +511,8 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 
 	fieldDoesNotExistInAnyPlaceExcept(type, prop);
 
+	field.getDeclaringClass();
+	field.getModifiers();
 	// TODO does the field work???
     }
 
@@ -554,8 +556,6 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     }
 
     private static void checkFirstLevelEnhancements(final IDomainTreeEnhancer dm) {
-	checkDiscardOperation(dm);
-
 	// modify domain
 	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "single", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "1 * 1 * [integerProp]", "Title Bad", "Desc"));
 	dm.getCalculatedProperty(EnhancingMasterEntity.class, "single").setTitle("Title").setExpression("1 * [integerProp]");
@@ -596,8 +596,6 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     }
 
     private static void checkSecondLevelEnhancements(final IDomainTreeEnhancer dm) {
-	checkFirstLevelEnhancements(dm);
-
 	// modify domain
 	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
 	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.double", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "2 * [integerProp]", "Title", "Desc"));
@@ -621,8 +619,6 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     }
 
     private static void checkThirdLevelEnhancements(final IDomainTreeEnhancer dm) {
-	checkSecondLevelEnhancements(dm);
-
 	// modify domain
 	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
 	dm.getCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble").setExpression("1 * 2 * [integerProp]").setResultType(BigInteger.class).setTitle("New Title").setDesc("New Desc");
@@ -668,40 +664,71 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     @Test
     public void test_that_Discard_operation_is_actually_working() {
 	checkDiscardOperation(dm);
-	checkDiscardOperation(EntityUtils.deepCopy(dm, getSerialiser()));
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
+
+	// check the snapshot of domain
+//	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "masterEntityProp.masterEntityProp.oldSingle", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "1 * [integerProp]", "Title", "Desc");
+	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityProp.slaveEntityProp.oldDouble", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "2 * [integerProp]", "Title", "Desc");
+	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "slaveEntityProp.oldTriple", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "3 * [integerProp]", "Title", "Desc");
+	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "oldQuadruple", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "4 * [integerProp]", "Title", "Desc");
+	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "single");
+	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "double");
+	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "triple");
+	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "quadruple");
+	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "quintuple");
+	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "sextuple");
+	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "septuple");
+	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "octuple");
+
+	// checkDiscardOperation(copy);
     }
 
     @Test
     public void test_first_level_enhancements() {
+	checkDiscardOperation(dm);
 	checkFirstLevelEnhancements(dm);
     }
 
     @Test
     public void test_first_level_enhancements_FOR_THE_COPY_OF_MANAGER() {
+	checkDiscardOperation(dm);
 	// this is very important test due to JVM's lazy class loading!
 	checkFirstLevelEnhancements(EntityUtils.deepCopy(dm, getSerialiser()));
     }
 
     @Test
     public void test_second_level_enhancements() {
+	checkDiscardOperation(dm);
+	checkFirstLevelEnhancements(dm);
 	checkSecondLevelEnhancements(dm);
     }
 
     @Test
     public void test_second_level_enhancements_FOR_THE_COPY_OF_MANAGER() {
+	checkDiscardOperation(dm);
+	checkFirstLevelEnhancements(dm);
 	// this is very important test due to JVM's lazy class loading!
 	checkSecondLevelEnhancements(EntityUtils.deepCopy(dm, getSerialiser()));
     }
 
     @Test
     public void test_third_level_enhancements() {
+	checkDiscardOperation(dm);
+	checkFirstLevelEnhancements(dm);
+	checkSecondLevelEnhancements(dm);
 	checkThirdLevelEnhancements(dm);
     }
 
     @Test
     public void test_third_level_enhancements_FOR_THE_COPY_OF_MANAGER() {
+	checkDiscardOperation(dm);
+
+	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
+
+	checkFirstLevelEnhancements(copy);
+	checkSecondLevelEnhancements(copy);
 	// this is very important test due to JVM's lazy class loading!
-	checkThirdLevelEnhancements(EntityUtils.deepCopy(dm, getSerialiser()));
+	checkThirdLevelEnhancements(copy);
     }
 
     @Test

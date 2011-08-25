@@ -266,6 +266,7 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 
 	    final String nextProp = PropertyTypeDeterminator.isDotNotation(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
 	    final Pair<Class<?>, List<byte[]>> lastTypeThatIsRootAndPropagatedArrays = propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp, classLoader);
+	    // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 	    additionalByteArrays.addAll(0, lastTypeThatIsRootAndPropagatedArrays.getValue());
 
 	    return new Pair<Class<?>, List<byte[]>>(lastTypeThatIsRootAndPropagatedArrays.getKey(), additionalByteArrays);

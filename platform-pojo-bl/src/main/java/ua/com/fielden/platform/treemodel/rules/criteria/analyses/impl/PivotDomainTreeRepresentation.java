@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl;
 
 import java.nio.ByteBuffer;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,6 +8,9 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementLinkedRootsSet;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementPropertiesMap;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementSet;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -50,7 +52,7 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
     public static class PivotAddToDistributionTickRepresentation extends AbstractAnalysisAddToDistributionTickRepresentation implements IPivotAddToDistributionTickRepresentation {
 	private static final long serialVersionUID = 4243970952493957297L;
 
-	private final Map<Pair<Class<?>, String>, Integer> propertiesWidths;
+	private final EnhancementPropertiesMap<Integer> propertiesWidths;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr"
@@ -74,7 +76,7 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
     public static class PivotAddToAggregationTickRepresentation extends AbstractAnalysisAddToAggregationTickRepresentation implements IPivotAddToAggregationTickRepresentation {
 	private static final long serialVersionUID = 4629386477984565938L;
 
-	private final Map<Pair<Class<?>, String>, Integer> propertiesWidths;
+	private final EnhancementPropertiesMap<Integer> propertiesWidths;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr"
@@ -141,8 +143,8 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
 
 	@Override
 	public PivotDomainTreeRepresentation read(final ByteBuffer buffer) {
-	    final Set<Class<?>> rootTypes = readValue(buffer, HashSet.class);
-	    final Set<Pair<Class<?>, String>> excludedProperties = readValue(buffer, HashSet.class);
+	    final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
+	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
 	    final PivotAddToDistributionTickRepresentation firstTick = readValue(buffer, PivotAddToDistributionTickRepresentation.class);
 	    final PivotAddToAggregationTickRepresentation secondTick = readValue(buffer, PivotAddToAggregationTickRepresentation.class);
 	    return new PivotDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);

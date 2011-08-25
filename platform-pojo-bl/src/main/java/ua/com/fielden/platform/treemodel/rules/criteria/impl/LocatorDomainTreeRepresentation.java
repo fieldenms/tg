@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.treemodel.rules.criteria.impl;
 
 import java.nio.ByteBuffer;
-import java.util.HashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.criteria.ILocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTree;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementLinkedRootsSet;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementSet;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -46,8 +47,8 @@ public class LocatorDomainTreeRepresentation extends CriteriaDomainTreeRepresent
 
 	@Override
 	public LocatorDomainTreeRepresentation read(final ByteBuffer buffer) {
-	    final Set<Class<?>> rootTypes = readValue(buffer, HashSet.class);
-	    final Set<Pair<Class<?>, String>> excludedProperties = readValue(buffer, HashSet.class);
+	    final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
+	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
 	    final AddToCriteriaTick firstTick = readValue(buffer, AddToCriteriaTick.class);
 	    final AddToResultSetTick secondTick = readValue(buffer, AddToResultSetTick.class);
 	    return new LocatorDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);

@@ -83,8 +83,8 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      */
     public static class TickManager implements ITickManager {
 	private static final long serialVersionUID = 3498255722542117344L;
-	private final Set<Pair<Class<?>, String>> manuallyCheckedProperties;
-	private final Map<Class<?>, List<String>> checkedProperties;
+	private final EnhancementSet manuallyCheckedProperties;
+	private final EnhancementRootsMap<List<String>> checkedProperties;
 	private final transient IDomainTreeRepresentation dtr;
 	private final transient ITickRepresentation tr;
 

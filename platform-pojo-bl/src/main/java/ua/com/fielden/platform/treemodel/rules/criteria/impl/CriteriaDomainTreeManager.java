@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +23,9 @@ import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalys
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTree;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementPropertiesMap;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementRootsMap;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementSet;
 import ua.com.fielden.platform.treemodel.rules.impl.LocatorManager;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -109,18 +111,18 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 	private static final long serialVersionUID = 2723287339828318955L;
 
 	private final transient ISerialiser serialiser;
-	private final Map<Pair<Class<?>, String>, Object> propertiesValues1;
-	private final Map<Pair<Class<?>, String>, Object> propertiesValues2;
+	private final EnhancementPropertiesMap<Object> propertiesValues1;
+	private final EnhancementPropertiesMap<Object> propertiesValues2;
 
-	private final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1;
-	private final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2;
+	private final EnhancementPropertiesMap<Boolean> propertiesExclusive1;
+	private final EnhancementPropertiesMap<Boolean> propertiesExclusive2;
 
-	private final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes;
-	private final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics;
-	private final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore;
+	private final EnhancementPropertiesMap<DateRangePrefixEnum> propertiesDatePrefixes;
+	private final EnhancementPropertiesMap<MnemonicEnum> propertiesDateMnemonics;
+	private final EnhancementPropertiesMap<Boolean> propertiesAndBefore;
 
-	private final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls;
-	private final Map<Pair<Class<?>, String>, Boolean> propertiesNots;
+	private final EnhancementPropertiesMap<Boolean> propertiesOrNulls;
+	private final EnhancementPropertiesMap<Boolean> propertiesNots;
 
 	private Integer columnsNumber;
 
@@ -391,17 +393,17 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 
 	    @Override
 	    public AddToCriteriaTickManager read(final ByteBuffer buffer) {
-		final Set<Pair<Class<?>, String>> manuallyCheckedProperties = readValue(buffer, HashSet.class);
-		final Map<Class<?>, List<String>> checkedProperties = readValue(buffer, HashMap.class);
-		final Map<Pair<Class<?>, String>, Object> propertiesValues1 = readValue(buffer, HashMap.class);
-		final Map<Pair<Class<?>, String>, Object> propertiesValues2 = readValue(buffer, HashMap.class);
-		final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1 = readValue(buffer, HashMap.class);
-		final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2 = readValue(buffer, HashMap.class);
-		final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes = readValue(buffer, HashMap.class);
-		final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics = readValue(buffer, HashMap.class);
-		final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore = readValue(buffer, HashMap.class);
-		final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls = readValue(buffer, HashMap.class);
-		final Map<Pair<Class<?>, String>, Boolean> propertiesNots = readValue(buffer, HashMap.class);
+		final EnhancementSet manuallyCheckedProperties = readValue(buffer, EnhancementSet.class);
+		final EnhancementRootsMap<List<String>> checkedProperties = readValue(buffer, EnhancementRootsMap.class);
+		final EnhancementPropertiesMap<Object> propertiesValues1 = readValue(buffer, EnhancementPropertiesMap.class);
+		final EnhancementPropertiesMap<Object> propertiesValues2 = readValue(buffer, EnhancementPropertiesMap.class);
+		final EnhancementPropertiesMap<Boolean> propertiesExclusive1 = readValue(buffer, EnhancementPropertiesMap.class);
+		final EnhancementPropertiesMap<Boolean> propertiesExclusive2 = readValue(buffer, EnhancementPropertiesMap.class);
+		final EnhancementPropertiesMap<DateRangePrefixEnum> propertiesDatePrefixes = readValue(buffer, EnhancementPropertiesMap.class);
+		final EnhancementPropertiesMap<MnemonicEnum> propertiesDateMnemonics = readValue(buffer, EnhancementPropertiesMap.class);
+		final EnhancementPropertiesMap<Boolean> propertiesAndBefore = readValue(buffer, EnhancementPropertiesMap.class);
+		final EnhancementPropertiesMap<Boolean> propertiesOrNulls = readValue(buffer, EnhancementPropertiesMap.class);
+		final EnhancementPropertiesMap<Boolean> propertiesNots = readValue(buffer, EnhancementPropertiesMap.class);
 		final Integer columnsNumber = readValue(buffer, Integer.class);
 		final LocatorManager locatorManager = readValue(buffer, LocatorManager.class);
 		return new AddToCriteriaTickManager(manuallyCheckedProperties, checkedProperties, kryo(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
@@ -523,8 +525,8 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
      */
     protected static class AddToResultTickManager extends TickManager implements IAddToResultTickManager {
 	private static final long serialVersionUID = -5840622913992787411L;
-	private final Map<Pair<Class<?>, String>, Integer> propertiesWidths;
-	private final Map<Class<?>, List<Pair<String, Ordering>>> rootsListsOfOrderings;
+	private final EnhancementPropertiesMap<Integer> propertiesWidths;
+	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr" fields.

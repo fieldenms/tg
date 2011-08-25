@@ -8,7 +8,7 @@ import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager;
-import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementSet;
 
 public class DomainTreeManager1 extends AbstractDomainTreeManager {
     private static final long serialVersionUID = 1860664025057907572L;
@@ -39,7 +39,7 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
 
     public static class TickManager1ForTest extends TickManager {
 	private static final long serialVersionUID = 2154025458968872414L;
-	private final Set<Pair<Class<?>, String>> touchedProperties;
+	private final EnhancementSet touchedProperties;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"

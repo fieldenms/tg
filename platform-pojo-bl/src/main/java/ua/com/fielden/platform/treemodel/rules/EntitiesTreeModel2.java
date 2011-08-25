@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.treemodel.rules;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JCheckBox;
 import javax.swing.event.TreeExpansionEvent;
@@ -17,6 +16,7 @@ import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeMan
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation.IStructureChangedListener;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTree;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -32,7 +32,7 @@ public class EntitiesTreeModel2 extends DefaultTreeModel {
 
     private final IDomainTreeManagerAndEnhancer manager;
     private final DefaultMutableTreeNode rootNode;
-    private final Map<Pair<Class<?>, String>, DefaultMutableTreeNode> nodesCache;
+    private final EnhancementPropertiesMap<DefaultMutableTreeNode> nodesCache;
 
     /**
      * Creates a new tree model for the 'entities tree' relying on {@link IDomainTreeManagerAndEnhancer}.
