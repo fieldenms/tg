@@ -53,6 +53,7 @@ import ua.com.fielden.platform.ui.config.impl.interaction.RemoteMasterConfigurat
 import ua.com.fielden.platform.update.IReferenceDependancyController;
 import ua.com.fielden.platform.update.ReferenceDependancyController;
 
+import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
@@ -143,6 +144,18 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	}
 	//////////////////////////////////////////////////////////////////////////////
 	bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Additionally, initialises the REST utility instance with {@link ISerialiser} and {@link IUserController}.
+     */
+    @Override
+    public void setInjector(final Injector injector) {
+        super.setInjector(injector);
+	restUtil.initSerialiser(injector.getInstance(ISerialiser.class));
+	restUtil.setUserController(injector.getInstance(IUserController.class));
     }
 
 }

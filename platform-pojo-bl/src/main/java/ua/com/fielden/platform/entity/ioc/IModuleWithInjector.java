@@ -9,5 +9,10 @@ import com.google.inject.Injector;
  *
  */
 public interface IModuleWithInjector {
+    /**
+     * Should be implemented in order to provided interested parties with an injector.
+     *
+     * @param injector
+     */
     void setInjector(final Injector injector);
 }

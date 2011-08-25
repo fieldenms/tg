@@ -46,6 +46,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.update.IClientApplicationRestarter;
 import ua.com.fielden.platform.update.ReferenceDependancyController;
 import ua.com.fielden.platform.update.Updater;
+import ua.com.fielden.platform.utils.ApplicationLaunchedChecker;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 import com.google.inject.Injector;
@@ -57,7 +58,7 @@ import com.jidesoft.plaf.LookAndFeelFactory;
  * @author TG Team
  *
  */
-public class WebClentStartupUtility {
+public class WebClientStartupUtility {
 
     /**
      * Constructs and displays login prompt. Successful login results in the invocation of the passed in {@link IClientLauncher} contract.
@@ -192,6 +193,11 @@ public class WebClentStartupUtility {
 		}
 	    }// run
 	});
+    }
+
+    public static boolean isApplicationAlreadyRunning(final IApplicationSettings settings) {
+	final ApplicationLaunchedChecker checker = new ApplicationLaunchedChecker(settings);
+	return checker.isAnotherRunning();
     }
 
     /**

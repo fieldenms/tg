@@ -546,4 +546,9 @@ public final class RestClientUtil implements IUserProvider {
 	return systemUri;
     }
 
+    public void updateLoginInformation(final String username, final String privateKey) {
+	setPrivateKey(privateKey);
+	setUsername(username);
+    }
+
 }

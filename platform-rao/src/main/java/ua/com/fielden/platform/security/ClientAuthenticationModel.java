@@ -67,7 +67,11 @@ public class ClientAuthenticationModel implements IAuthenticationModel {
 	try {
 	    final String secrete = new Cypher().encrypt(username, privateKey);
 	    final Request request = util.newRequest(Method.GET, util.getSystemUri() + authenticationUri + "?username=" + username + "&secrete=" + secrete);
-	    return util.process(request).getValue();
+	    final Result result = util.process(request).getValue();
+	    if (result.isSuccessful()) {
+		util.updateLoginInformation(username, privateKey);
+	    }
+	    return result;
 	} catch (final Exception e) {
 	    return new Result(null, e);
 	}
