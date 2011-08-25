@@ -19,7 +19,7 @@ public class QryYieldsBuilder extends AbstractTokensBuilder {
 	return false;
     }
 
-    // handle yield().entity(String joinAlias) properly
+    // TODO handle yield().entity(String joinAlias) properly
 
     @Override
     public Pair<TokenCategory, Object> getResult() {

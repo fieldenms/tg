@@ -1,8 +1,6 @@
-package ua.com.fielden.platform.entity.query.model.elements;
+package ua.com.fielden.platform.entity.query.model.transformation;
 
 import ua.com.fielden.platform.entity.query.model.structure.IQueryItem;
-import ua.com.fielden.platform.entity.query.model.structure.IQuerySource;
-import ua.com.fielden.platform.entity.query.model.structure.IQuerySourceItem;
 
 
 public class TableColumn implements IQuerySourceItem {
@@ -23,6 +21,18 @@ public class TableColumn implements IQuerySourceItem {
     public void removeReference(final IQueryItem referencingItem) {
 	// TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public String name() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public String sql() {
+	// TODO Auto-generated method stub
+	return null;
     }
 
 }

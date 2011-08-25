@@ -1,16 +1,19 @@
 package ua.com.fielden.platform.entity.query.model.transformation;
 
-import ua.com.fielden.platform.entity.query.model.elements.EntProp;
 
-public class SqlEntProp {
-    private final EntProp entProp;
 
-    public SqlEntProp(final EntProp entProp) {
-	super();
-	this.entProp = entProp;
+public class SqlEntProp implements ISqlSingleOperand {
+    //private final String name;
+    private final IQuerySourceItem source;
+
+    public SqlEntProp(final IQuerySourceItem source) {
+	this.source = source;
     }
 
-
-
+    @Override
+    public String sql() {
+	// TODO Auto-generated method stub
+	return null;
+    }
 
 }

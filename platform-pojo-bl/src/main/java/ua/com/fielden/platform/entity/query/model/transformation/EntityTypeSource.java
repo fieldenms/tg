@@ -1,8 +1,9 @@
-package ua.com.fielden.platform.entity.query.model.structure;
+package ua.com.fielden.platform.entity.query.model.transformation;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult;
 import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
 
 public class EntityTypeSource implements IQuerySource {
