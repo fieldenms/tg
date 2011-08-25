@@ -7,21 +7,26 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.ioc.AuthorisationModule;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.security.AuthorisationException;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 /**
  * A test case to ensure correct method interception as part of the authorisation process covering cases for super and sub types.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AuthorisationProcessTest {
-    AuthorisationModule authModule = new AuthorisationModule(Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory(), new AuthBindingModule()));
-    private final Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory(), authModule);
+
+    private final Injector injector = new ApplicationInjectorFactory()
+    .add(new CommonTestEntityModuleWithPropertyFactory())
+    .add(new AuthBindingModule())
+    .add(new AuthorisationModule())
+    .getInjector();
+
 
     @Test
     public void test_that_method_with_no_authorisation_cannot_be_invoked() {

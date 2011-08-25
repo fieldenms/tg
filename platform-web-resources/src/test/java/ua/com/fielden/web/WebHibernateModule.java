@@ -34,7 +34,7 @@ import ua.com.fielden.web.entities.InspectedEntityDao;
 public class WebHibernateModule extends CommonFactoryModule {
 
     public WebHibernateModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator) {
-	super(sessionFactory, mappingExtractor, mappingsGenerator, true);
+	super(sessionFactory, mappingExtractor, mappingsGenerator);
     }
 
     @Override

@@ -16,10 +16,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 /**
@@ -41,7 +41,7 @@ public class EntityWithByteArrayTest {
 	});
     }
 
-    private Injector injector = Guice.createInjector(module);
+    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private EntityWithByteArray entity;
 

@@ -14,19 +14,17 @@ import org.hibernate.type.Type;
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.domain.TgVehicle;
 import ua.com.fielden.platform.domain.TgWorkOrder;
-import ua.com.fielden.platform.entity.query.EntityFetcher;
-import ua.com.fielden.platform.entity.query.EntityResultTreeBuilder;
-import ua.com.fielden.platform.entity.query.EntityTree;
-import ua.com.fielden.platform.entity.query.PropColumn;
 import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.utils.Pair;
 
-import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 public class EntityFetcherTestCase extends TestCase {
-    private EntityResultTreeBuilder ef = new EntityResultTreeBuilder(new MappingsGenerator(new HashMap<Class, Class>(), Guice.createInjector(new HibernateUserTypesModule())));
+    final Injector injector = new ApplicationInjectorFactory().add(new HibernateUserTypesModule()).getInjector();
+    private EntityResultTreeBuilder ef = new EntityResultTreeBuilder(new MappingsGenerator(new HashMap<Class, Class>(), injector));
     private EntityFetcher entFetcher = new EntityFetcher() {};
 
     public void test_entity_tree_for_plain_entity() throws Exception {

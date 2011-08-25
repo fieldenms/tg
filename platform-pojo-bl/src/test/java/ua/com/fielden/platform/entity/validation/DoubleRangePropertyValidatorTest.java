@@ -9,10 +9,10 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithRangeProperties;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 /**
@@ -24,11 +24,8 @@ import com.google.inject.Injector;
 public class DoubleRangePropertyValidatorTest {
 
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
-    private Injector injector = Guice.createInjector(module);
+    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    {
-	factory.setInjector(injector);
-    }
 
     @Test
     public void test_double_range_validation_where_only_from_is_set() {

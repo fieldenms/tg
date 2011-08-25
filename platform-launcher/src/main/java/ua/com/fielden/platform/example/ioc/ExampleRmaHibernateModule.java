@@ -80,7 +80,7 @@ import com.google.inject.name.Names;
 public class ExampleRmaHibernateModule extends CommonFactoryModule {
 
     public ExampleRmaHibernateModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor) {
-	super(sessionFactory, mappingExtractor, null, true);
+	super(sessionFactory, mappingExtractor, null);
     }
 
     @Override

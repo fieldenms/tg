@@ -9,11 +9,11 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.ClientEntityConverter;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.thoughtworks.xstream.XStream;
 
@@ -23,7 +23,7 @@ public class XStreamSpike {
 	System.out.println("xstream");
 
 	// for serialisation timing
-	final Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory());
+	final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
 	final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
 	final XStream ser = new XStream();

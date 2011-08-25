@@ -14,6 +14,7 @@ import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.persistence.HibernateUtil;
@@ -90,7 +91,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 
 	    hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
 	    hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()), mappingsGenerator);
-	    injector = Guice.createInjector(hibernateModule);
+	    injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
 	    entityFactory = injector.getInstance(EntityFactory.class);
 	    interceptor.setFactory(entityFactory);
 

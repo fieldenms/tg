@@ -18,13 +18,13 @@ import ua.com.fielden.platform.basic.autocompleter.HibernateValueMatcher;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.example.entities.IWheelsetDao;
 import ua.com.fielden.platform.example.entities.Rotable;
 import ua.com.fielden.platform.example.entities.RotableClass;
 import ua.com.fielden.platform.example.entities.Wheelset;
 import ua.com.fielden.platform.example.entities.WheelsetQueryCriteria;
 import ua.com.fielden.platform.example.ioc.ExampleRmaHibernateModule;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
@@ -32,7 +32,6 @@ import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.EntityReviewModel;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.jidesoft.plaf.LookAndFeelFactory;
 
@@ -68,8 +67,8 @@ public class EntityLocatorVerSplitterExample extends AbstractUiApplication {
 	final ProxyInterceptor interceptor = new ProxyInterceptor();
 	final HibernateUtil hibernateUtil = new HibernateUtil(interceptor, new Configuration().configure("hibernate.cfg.xml"));
 	final ExampleRmaHibernateModule hibernateModule = new ExampleRmaHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()));
-	final Injector injector = Guice.createInjector(hibernateModule, new EntityModule());
-	final EntityFactory entityFactory = new EntityFactory(injector);
+	final Injector injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
+	final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
 	interceptor.setFactory(entityFactory);
 
 	System.out.println("Populating example database");

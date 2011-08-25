@@ -78,11 +78,10 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 
 
     public BasicWebClientModule(final RestClientUtil restUtil, final Class<? extends IMainMenuStructureBuilder> mainMenuStructureBuilderType, final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, final Properties props) {
-	super(restUtil, false);
+	super(restUtil);
 	this.serialisationClassProviderType = serialisationClassProviderType;
 	this.props = props;
 	this.mainMenuStructureBuilderType = mainMenuStructureBuilderType;
-	entityFactory.setModule(this);
     }
 
     @Override

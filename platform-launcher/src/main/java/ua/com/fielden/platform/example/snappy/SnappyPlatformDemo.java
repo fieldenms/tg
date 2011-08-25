@@ -13,8 +13,8 @@ import org.jfree.ui.RefineryUtilities;
 
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.example.ioc.ExampleRmaHibernateModule;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.snappy.TgSnappyApplicationModel;
@@ -23,7 +23,6 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.snappy.SnappyDbEnhancer;
 import ua.com.fielden.snappy.storing.ApplicationModel;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 public class SnappyPlatformDemo {
@@ -42,10 +41,9 @@ public class SnappyPlatformDemo {
 	final HibernateUtil hibernateUtil = new HibernateUtil(interceptor, config);
 	final ExampleRmaHibernateModule hibernateModule = new ExampleRmaHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil
 		.getConfiguration()));
-	final Injector injector = Guice.createInjector(hibernateModule, new EntityModule());
-	final EntityFactory entityFactory = new EntityFactory(injector);
-	interceptor.setFactory(entityFactory);
+	final Injector injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
 	final SessionFactory sessionFactory = hibernateUtil.getSessionFactory();
+	interceptor.setFactory(injector.getInstance(EntityFactory.class));
 
 	// 4. Initiate database:
 	try {

@@ -18,20 +18,12 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
  */
 public class CommonFactoryModule extends PropertyFactoryModule {
 
-    public CommonFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final Class[] applicationEntityTypes, final boolean initFactories) throws Exception {
+    public CommonFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final Class[] applicationEntityTypes) throws Exception {
 	super(props, defaultHibernateTypes, applicationEntityTypes);
-	if (initFactories) {
-	    daoFactory.setModule(this);
-	    entityFactory.setModule(this);
-	}
     }
 
-    public CommonFactoryModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator, final boolean initFactories) {
+    public CommonFactoryModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator) {
 	super(sessionFactory, mappingExtractor, mappingsGenerator);
-	if (initFactories) {
-	    daoFactory.setModule(this);
-	    entityFactory.setModule(this);
-	}
     }
 
     protected EntityFactory getEntityFactory() {

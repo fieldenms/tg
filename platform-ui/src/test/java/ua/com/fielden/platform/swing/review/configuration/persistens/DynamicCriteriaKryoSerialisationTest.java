@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.equery.AnalysisPropertyAggregationFunction;
 import ua.com.fielden.platform.equery.HqlDateFunctions;
 import ua.com.fielden.platform.equery.PropertyAggregationFunction;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reportquery.AggregationProperty;
 import ua.com.fielden.platform.reportquery.DistributionDateProperty;
 import ua.com.fielden.platform.reportquery.DistributionProperty;
@@ -37,8 +38,8 @@ import ua.com.fielden.platform.types.ICategory;
 import ua.com.fielden.platform.types.Ordering;
 import ua.com.fielden.platform.utils.Pair;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 
 public class DynamicCriteriaKryoSerialisationTest {
 
@@ -46,7 +47,8 @@ public class DynamicCriteriaKryoSerialisationTest {
 	com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
     }
 
-    private Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory());
+    private final Module module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private final TgKryo kryo = new TgKryo(factory, new DynamicCriteriaSerialisationClassProvider());
 

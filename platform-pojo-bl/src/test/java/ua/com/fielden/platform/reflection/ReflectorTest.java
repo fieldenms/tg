@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
@@ -26,7 +27,7 @@ import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
 
-import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 /**
  * Test case for {@link Reflector}.
@@ -35,8 +36,8 @@ import com.google.inject.Guice;
  *
  */
 public class ReflectorTest {
-
-    private final EntityFactory factory = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory()).getInstance(EntityFactory.class);
+    final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+    final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     @Test
     public void testThatObtainGetterWorks() throws Exception {

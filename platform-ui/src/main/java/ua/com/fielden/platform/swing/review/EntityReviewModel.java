@@ -48,11 +48,11 @@ import ua.com.fielden.platform.swing.sortabletable.PropertyTableModelRowSorter;
 import com.jidesoft.grid.TableModelWrapperUtils;
 
 /**
- * 
+ *
  * Model for the EntityReview panel, defines the logic of the buttons and other components.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<T>, C extends EntityQueryCriteria<T, DAO>> {
 
@@ -90,7 +90,7 @@ public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<
     /**
      * creates new instance of the EntityReviewModel using the specified criteria to retrieve data and table model where the data will be shown and also it creates the
      * {@link EntityInspectorModel} using the criteria and criteriaDetails
-     * 
+     *
      * @param criteria
      * @param builder
      * @param afterRunActions
@@ -109,7 +109,7 @@ public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<
 	this.sorter = new PropertyTableModelRowSorter<T>(tableModel);
 	this.loadDefaults = createLoadDefaults(criteria);
 	this.criteriaInspectorModel = createInspectorModel(criteria);
-	this.afterRunActions = new ArrayList<Runnable>(Arrays.asList(afterRunActions));
+	this.afterRunActions = afterRunActions != null ? new ArrayList<Runnable>(Arrays.asList(afterRunActions)) : new ArrayList<Runnable>();
     }
 
     public final IEntityMasterManager getEntityMasterFactory() {
@@ -118,7 +118,7 @@ public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<
 
     /**
      * Returns value that indicates whether data is loading or not.
-     * 
+     *
      * @return
      */
     public boolean isLoadingData() {
@@ -225,7 +225,7 @@ public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<
 
     /**
      * Creates action for the run button.
-     * 
+     *
      * @param layer
      * @param egiScrollPane
      * @param rowHeight
@@ -297,7 +297,7 @@ public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<
 
     /**
      * Updates the state of nearby dependent components and objects. This could be buttons, layers etc.
-     * 
+     *
      */
     protected void updateState() {
 	enableButtons(true);
@@ -320,7 +320,7 @@ public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<
 
     /**
      * Export data of the main analysis grid into file.
-     * 
+     *
      * @param file
      * @return
      */
@@ -341,7 +341,7 @@ public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<
 
     /**
      * Creates action for the export button.
-     * 
+     *
      * @param layer
      * @param egiScrollPane
      * @param rowHeight
@@ -453,7 +453,7 @@ public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<
 
     /**
      * Enables or disables buttons related with actions like run export and other. Override this to be able to enable or disable other buttons.
-     * 
+     *
      * @param enable
      *            - indicates whether enable or disable buttons
      */
@@ -483,7 +483,7 @@ public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<
 
     /**
      * initiates paginator with blocking layer
-     * 
+     *
      * @param layer
      * @param pageController
      *            TODO
@@ -509,7 +509,7 @@ public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<
 
     /**
      * returns the model for the {@link EntityInspector} instance created earlier
-     * 
+     *
      * @return
      */
     public CriteriaInspectorModel<T, DAO, C> getCriteriaInspectorModel() {

@@ -16,15 +16,15 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.swing.components.bind.test.CommonEntityModuleWithDomainValidatorsForTesting;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.swing.components.bind.test.EntityModuleWithDomainValidatorsForTesting;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 /**
  * Test for {@link HierarchicalPropertyChangeListener} functionality
- * 
+ *
  * @author Yura
  */
 public class HierarchicalPropertyChangeListenerTest {
@@ -53,7 +53,7 @@ public class HierarchicalPropertyChangeListenerTest {
     @Before
     public void setUp() {
 	// setting test fixtures
-	final Injector injector = Guice.createInjector(new CommonEntityModuleWithDomainValidatorsForTesting());
+	final Injector injector = new ApplicationInjectorFactory().add(new EntityModuleWithDomainValidatorsForTesting ()).getInjector();
 
 	entityFactory = injector.getInstance(EntityFactory.class);
 	topEntity = entityFactory.newEntity(TopEntity.class, "topEntity", "top desc");
@@ -239,7 +239,7 @@ public class HierarchicalPropertyChangeListenerTest {
 
     /**
      * Inner class for testing
-     * 
+     *
      * @author Yura
      */
     @KeyType(String.class)
@@ -271,7 +271,7 @@ public class HierarchicalPropertyChangeListenerTest {
 
     /**
      * Inner class for testing
-     * 
+     *
      * @author Yura
      */
     @KeyType(String.class)
@@ -303,7 +303,7 @@ public class HierarchicalPropertyChangeListenerTest {
 
     /**
      * Inner class for testing
-     * 
+     *
      * @author Yura
      */
     @KeyType(String.class)
@@ -335,7 +335,7 @@ public class HierarchicalPropertyChangeListenerTest {
 
     /**
      * Inner class for testing
-     * 
+     *
      * @author Yura
      */
     @KeyType(String.class)

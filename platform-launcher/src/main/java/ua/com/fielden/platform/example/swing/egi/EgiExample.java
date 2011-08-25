@@ -34,7 +34,7 @@ import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.swing.components.bind.test.CommonEntityModuleWithDomainValidatorsForTesting;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.swing.components.bind.test.EntityModuleWithDomainValidatorsForTesting;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.coloring.IColouringScheme;
@@ -44,13 +44,12 @@ import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.types.Money;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.jidesoft.plaf.LookAndFeelFactory;
 
 /**
  * Entity Grid Inspector example/test application
- * 
+ *
  * @author Yura
  */
 public class EgiExample extends AbstractUiApplication {
@@ -65,11 +64,11 @@ public class EgiExample extends AbstractUiApplication {
 	com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
 	LookAndFeelFactory.installJideExtension();
 
-	final EntityModuleWithDomainValidatorsForTesting module = new CommonEntityModuleWithDomainValidatorsForTesting();
+	final EntityModuleWithDomainValidatorsForTesting module = new EntityModuleWithDomainValidatorsForTesting();
 	module.getDomainValidationConfig().setValidator(DummyEntity2.class, "boolField", new DummyEntity2BoolFieldValidator());
 	module.getDomainValidationConfig().setValidator(DummyEntity2.class, "intField", new DummyEntity2IntFieldValidator());
 
-	final Injector injector = Guice.createInjector(module);
+	final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
 	final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
 
 	final List<DummyEntity2> dummyEntities2 = createDummyEntities2(entityFactory);
@@ -104,7 +103,7 @@ public class EgiExample extends AbstractUiApplication {
 	.addEditable("dateField", "Date field", null, "Date field")//
 	.addEditable("intField", "Int field", null, "Integer field")//
 	.addReadonly("getDummyEntitiesCount()", "Dummy Entities Count", null, "Dummy Entities count", dummyEntitiesCountClickAction)//
-	.addReadonly("dummyEntities.size()", "Dummy Entities Count()", null, "Dummy Entities count")//
+	//.addReadonly("dummyEntities.size()", "Dummy Entities Count()", null, "Dummy Entities count")// FIXME This causes failure...
 	.build(dummyEntities2);
     }
 

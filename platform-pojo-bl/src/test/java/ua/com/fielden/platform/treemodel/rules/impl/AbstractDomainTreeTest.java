@@ -21,6 +21,7 @@ import ua.com.fielden.platform.domain.tree.EvenSlaverEntity;
 import ua.com.fielden.platform.domain.tree.MasterEntity;
 import ua.com.fielden.platform.domain.tree.TgKryo1;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -34,7 +35,6 @@ import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager.Ti
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 /**
@@ -79,7 +79,7 @@ public abstract class AbstractDomainTreeTest {
 
     protected static EntityFactory createFactory() {
 	final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
-	final Injector injector = Guice.createInjector(module);
+	final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
 	return injector.getInstance(EntityFactory.class);
     }
 

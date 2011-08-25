@@ -15,10 +15,10 @@ import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.example.entities.FWorkOrder;
 import ua.com.fielden.platform.example.ioc.ExampleRmaHibernateModule;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.swing.review.DynamicCriteriaModelBuilder;
@@ -30,7 +30,6 @@ import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
 import ua.com.fielden.platform.ui.config.api.interaction.ILocatorConfigurationController;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.jidesoft.plaf.LookAndFeelFactory;
 
@@ -63,8 +62,8 @@ public class UnionEntityExample extends AbstractUiApplication {
 	final ProxyInterceptor interceptor = new ProxyInterceptor();
 	final HibernateUtil hibernateUtil = new HibernateUtil(interceptor, new Configuration().configure("hibernate.cfg.xml"));
 	final ExampleRmaHibernateModule hibernateModule = new ExampleRmaHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()));
-	final Injector injector = Guice.createInjector(hibernateModule, new EntityModule());
-	final EntityFactory entityFactory = new EntityFactory(injector);
+	final Injector injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
+	final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
 	interceptor.setFactory(entityFactory);
 
 	System.out.println("Populating example database");

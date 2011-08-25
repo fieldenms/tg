@@ -30,6 +30,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.entity.BaseEntity;
 import ua.com.fielden.platform.serialisation.entity.EntityWithPolymorphicProperty;
 import ua.com.fielden.platform.serialisation.entity.SubBaseEntity1;
@@ -39,8 +40,8 @@ import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 
 /**
  * Unit tests to ensure correct serialised/deserialised of {@link AbstractEntity} descendants.
@@ -50,7 +51,8 @@ import com.google.inject.Injector;
  */
 public class EntitySerialisationWithKryoTest {
     private boolean observed = false; // used
-    private Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory());
+    private final Module module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private final TgKryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class));
     private final TgKryo kryoReader = new TgKryo(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class));

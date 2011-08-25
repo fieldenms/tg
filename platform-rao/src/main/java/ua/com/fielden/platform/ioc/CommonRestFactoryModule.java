@@ -12,11 +12,8 @@ import ua.com.fielden.platform.rao.RestClientUtil;
  */
 public class CommonRestFactoryModule extends RestPropertyFactoryModule {
 
-    public CommonRestFactoryModule(final RestClientUtil restUtil, final boolean initEntityFactory) {
+    public CommonRestFactoryModule(final RestClientUtil restUtil) {
 	super(restUtil);
-	if (initEntityFactory) {
-	    entityFactory.setModule(this);
-	}
     }
 
     @Override

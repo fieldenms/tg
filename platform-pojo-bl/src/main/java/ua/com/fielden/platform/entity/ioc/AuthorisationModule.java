@@ -10,20 +10,16 @@ import com.google.inject.Injector;
 
 /**
  * This Guice module provided specifically to support TG authorisation schema in applications that require it.
- * 
+ *
  * @author TG Team
  */
-public class AuthorisationModule extends AbstractModule {
+public class AuthorisationModule extends AbstractModule implements IModuleWithInjector {
 
-    private final Injector injector;
-
-    public AuthorisationModule(final Injector injector) {
-	this.injector = injector;
-    }
+    private final AuthorisationInterceptor ai = new AuthorisationInterceptor();
 
     /**
      * Binds security method interceptor to methods annotated with {@link Authorise}.
-     * 
+     *
      * In general, entity classes would not require authorisation, which is mainly targeted at controllers implementing business logic. However, it is envisaged that there could be
      * situations where a property setter would need to be authorised. In such cases setters would have two method intercepters -- one for authorisation, another for validation and
      * observation. The order of intercepter binding is important -- first should be the authorisation, and only then observable/validation intercepter. This is required for
@@ -34,6 +30,13 @@ public class AuthorisationModule extends AbstractModule {
 	// authorisation interceptor
 	bindInterceptor(any(), // match any class
 	annotatedWith(Authorise.class), // having annotated methods
-	new AuthorisationInterceptor(injector)); // the intercepter
+	ai); // the intercepter
     }
+
+    @Override
+    public void setInjector(final Injector injector) {
+	ai.setInjector(injector);
+    }
+
+
 }

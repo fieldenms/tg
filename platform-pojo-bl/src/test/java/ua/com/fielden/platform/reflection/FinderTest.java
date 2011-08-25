@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder.IPropertyPathFilteringCondition;
 import ua.com.fielden.platform.reflection.test_entities.CollectionalEntity;
 import ua.com.fielden.platform.reflection.test_entities.ComplexEntity;
@@ -39,7 +40,6 @@ import ua.com.fielden.platform.reflection.test_entities.UnionEntityWithoutDesc;
 import ua.com.fielden.platform.swing.review.DefaultDynamicCriteriaPropertyFilter;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 /**
@@ -49,8 +49,8 @@ import com.google.inject.Injector;
  *
  */
 public class FinderTest {
-
-    private final EntityFactory factory = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory()).getInstance(EntityFactory.class);
+    private final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+    private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     private final IPropertyPathFilteringCondition filter = new IPropertyPathFilteringCondition() {
 	@Override
@@ -67,11 +67,9 @@ public class FinderTest {
 
     @Test
     public void test_that_can_find_meta_poperties() {
-	final EntityFactory entityFactory = new EntityFactory(Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory()));
-
-	final SecondLevelEntity entity = entityFactory.newByKey(SecondLevelEntity.class, "property", "propertyTwo", 1L);
-	final SecondLevelEntity entity2 = entityFactory.newByKey(SecondLevelEntity.class, "property2", "propertyTwo2", 2L);
-	final SecondLevelEntity entity3 = entityFactory.newByKey(SecondLevelEntity.class, "property3", "propertyTwo3", 3L);
+	final SecondLevelEntity entity = factory.newByKey(SecondLevelEntity.class, "property", "propertyTwo", 1L);
+	final SecondLevelEntity entity2 = factory.newByKey(SecondLevelEntity.class, "property2", "propertyTwo2", 2L);
+	final SecondLevelEntity entity3 = factory.newByKey(SecondLevelEntity.class, "property3", "propertyTwo3", 3L);
 
 	entity.setPropertyOfSelfType(entity2);
 	entity2.setPropertyOfSelfType(entity3);
@@ -135,8 +133,6 @@ public class FinderTest {
 
     @Test
     public void testThatFindMetaPropertyWorks() {
-	final Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory());
-	final EntityFactory factory = injector.getInstance(EntityFactory.class);
 	// /////////////////////// simple case -- first level property ////////////////////
 	final FirstLevelEntity firstLevelEntity = factory.newByKey(FirstLevelEntity.class, "key-1-1", "key-1-2");
 	MetaProperty metaProperty = Finder.findMetaProperty(firstLevelEntity, "property");
@@ -165,9 +161,6 @@ public class FinderTest {
 
     @Test
     public void testGetMetaProperties() {
-	final Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory());
-	final EntityFactory factory = injector.getInstance(EntityFactory.class);
-
 	// /////////////////////// simple case -- first level property ////////////////////
 	final SecondLevelEntity entity = factory.newByKey(SecondLevelEntity.class, "key-1-1", "key-1-2", 1L);
 	final SortedSet<MetaProperty> metaProperties = Finder.getMetaProperties(entity);
@@ -177,8 +170,6 @@ public class FinderTest {
 
     @Test
     public void testGetCollectionalMetaProperties() {
-	final Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory());
-	final EntityFactory factory = injector.getInstance(EntityFactory.class);
 	// simple case -- first level property
 	final SecondLevelEntity entity = factory.newByKey(SecondLevelEntity.class, "key-1-1", "key-1-2", 1L);
 	assertEquals("Incorrect number of collectional properties.", 0, Finder.getCollectionalMetaProperties(entity, String.class).size());

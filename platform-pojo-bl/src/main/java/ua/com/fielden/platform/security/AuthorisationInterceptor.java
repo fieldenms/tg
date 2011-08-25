@@ -7,7 +7,6 @@ import org.aopalliance.intercept.MethodInvocation;
 
 import ua.com.fielden.platform.error.Result;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 /**
@@ -17,26 +16,23 @@ import com.google.inject.Injector;
  * <p>
  * Authorisation model is configurable and can be passed into the interceptor during the construction phase. It is envisaged that in most cases it will be bound (and thus injected)
  * as part of a Guice configuration module.
- * 
+ *
  * @author TG Team
  */
 public class AuthorisationInterceptor implements MethodInterceptor {
 
-    private final com.google.inject.Injector injector;
+    private ThreadLocal<IAuthorisationModel> authModel;
 
-    private final ThreadLocal<IAuthorisationModel> authModel = new ThreadLocal<IAuthorisationModel>() {
-	public IAuthorisationModel initialValue() {
-	    return injector.getInstance(IAuthorisationModel.class);
-	}
-    };
+    public void setInjector(final Injector injector) {
+	authModel = new ThreadLocal<IAuthorisationModel>() {
+		public IAuthorisationModel initialValue() {
+		    return injector.getInstance(IAuthorisationModel.class);
+		}
+	    };
+    }
 
     public IAuthorisationModel getModel() {
 	return authModel.get();
-    }
-
-    @Inject
-    public AuthorisationInterceptor(final Injector injector) {
-	this.injector = injector;
     }
 
     @Override

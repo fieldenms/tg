@@ -3,10 +3,10 @@ package ua.com.fielden.platform.serialisation.impl;
 import java.nio.ByteBuffer;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 public class KryoSpikeForFinalProperties {
@@ -14,7 +14,7 @@ public class KryoSpikeForFinalProperties {
     public static void main(final String[] args) throws Exception {
 	System.out.println("kryo for final props");
 
-	final Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory());
+	final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
 	final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
 	final Kryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(DomainType1.class, TypeWithFinalProperty.class));

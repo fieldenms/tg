@@ -6,21 +6,22 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.equery.QueryModel;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 
 /**
  * Unit test for serialisation of the {@link QueryModel}.
- * 
- * @author 01es
- * @author Nazar
- * 
+ *
+ * @author TG Team
+ *
  */
 public class QueryModelSerialisationTest {
     private boolean observed = false; // used
-    private Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory());
+    private final Module module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private Entity entity;
 

@@ -13,19 +13,21 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
-import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 /**
  * A test case covering union rules and definition of {@link AbstractUnionEntity} descendants.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AbstractUnionEntityTest {
-    private final EntityFactory factory = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory()).getInstance(EntityFactory.class);
+    final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+    final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     @Test
     public void test_definition_validation_for_correct_union_entity() {

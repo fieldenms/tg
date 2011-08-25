@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.IMetaPropertyDefiner;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.api.AnnotationDescriptor;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
@@ -28,7 +29,6 @@ import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.asm.Type;
 
@@ -49,11 +49,8 @@ public class DynamicEntityTypeGeneration_Ver_II_Test {
     private static final String NEW_PROPERTY_2 = "newProperty_2";
     private boolean observed = false;
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
-    private Injector injector = Guice.createInjector(module);
+    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    {
-	factory.setInjector(injector);
-    }
     private DynamicEntityClassLoader cl;
 
     private final NewProperty pd1 = new NewProperty(NEW_PROPERTY_1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, new AnnotationDescriptor(Calculated.class, new HashMap<String, Object>() {{ put("expression", NEW_PROPERTY_EXPRESSION); put("origination", NEW_PROPERTY_ORIGINATION); }} ));

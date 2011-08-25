@@ -20,6 +20,7 @@ import ua.com.fielden.platform.example.entities.Rotable;
 import ua.com.fielden.platform.example.entities.RotableStatus;
 import ua.com.fielden.platform.example.entities.Wheelset;
 import ua.com.fielden.platform.example.entities.WheelsetClass;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.swing.components.bind.test.EntityModuleWithDomainValidatorsForTesting;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2.DragFromSupport;
@@ -29,8 +30,6 @@ import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import edu.umd.cs.piccolox.pswing.PSwingCanvas;
@@ -42,10 +41,7 @@ public class DnDSupport2Demo2 extends AbstractUiApplication {
     @Override
     protected void beforeUiExposure(final String[] args, final SplashController splashController) throws Exception {
 	final Module module = new EntityModuleWithDomainValidatorsForTesting(true);
-	final Injector injector = Guice.createInjector(module);
-	final EntityFactory entityFactory = new EntityFactory(injector);
-
-	rotables = setupRotables(entityFactory);
+	rotables = setupRotables(new ApplicationInjectorFactory().add(module).getInjector().getInstance(EntityFactory.class));
     }
 
     @Override

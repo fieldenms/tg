@@ -16,7 +16,6 @@ import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.example.entities.Vehicle;
 import ua.com.fielden.platform.example.ioc.ExampleRmaHibernateModule;
@@ -26,6 +25,7 @@ import ua.com.fielden.platform.expression.editor.IPropertyProvider;
 import ua.com.fielden.platform.expression.editor.PropertyProvider;
 import ua.com.fielden.platform.expression.entity.ExpressionEntity;
 import ua.com.fielden.platform.expression.entity.validator.ExpressionValidator;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.swing.dynamicreportstree.CriteriaTree;
@@ -36,7 +36,6 @@ import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.treemodel.CriteriaTreeModel;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.jidesoft.plaf.LookAndFeelFactory;
 
@@ -54,8 +53,8 @@ public class ExpressionEditorExample extends AbstractUiApplication {
 	final ProxyInterceptor interceptor = new ProxyInterceptor();
 	final HibernateUtil hibernateUtil = new HibernateUtil(interceptor, new Configuration().configure("hibernate4example.cfg.xml"));
 	final ExampleRmaHibernateModule hibernateModule = new ExampleRmaHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()));
-	final Injector injector = Guice.createInjector(hibernateModule, new EntityModule());
-	entityFactory = new EntityFactory(injector);
+	final Injector injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
+	entityFactory = injector.getInstance(EntityFactory.class);
 	interceptor.setFactory(entityFactory);
 	configValidation(injector.getInstance(DomainValidationConfig.class));
     }

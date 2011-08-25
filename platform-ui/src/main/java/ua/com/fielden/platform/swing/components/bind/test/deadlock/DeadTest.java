@@ -11,12 +11,11 @@ import org.jdesktop.swingx.plaf.LookAndFeelAddons;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
-import ua.com.fielden.platform.swing.components.bind.test.CommonEntityModuleWithDomainValidatorsForTesting;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.swing.components.bind.test.EntityModuleWithDomainValidatorsForTesting;
-import ua.com.fielden.platform.swing.components.bind.test.EntityValidatorFactory;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
-import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 public class DeadTest {
 
@@ -52,8 +51,7 @@ public class DeadTest {
 	}
 
 	// creating and initialising entity module
-	final EntityModuleWithDomainValidatorsForTesting entityModule = new CommonEntityModuleWithDomainValidatorsForTesting();
-	final EntityValidatorFactory validatorFactory = new EntityValidatorFactory();
+	final EntityModuleWithDomainValidatorsForTesting entityModule = new EntityModuleWithDomainValidatorsForTesting();
 
 	entityModule.getDomainValidationConfig()
 	.setValidator(DeadEntity.class, DeadEntity.PROPERTY_VEHICLE, new HappyValidator())
@@ -75,7 +73,8 @@ public class DeadTest {
 	//		});
 
 	// launching test
-	final DeadEntityView view = new DeadEntityView(new EntityFactory(Guice.createInjector(entityModule)));
+	final Injector injector = new ApplicationInjectorFactory().add(entityModule).getInjector();
+	final DeadEntityView view = new DeadEntityView(injector.getInstance(EntityFactory.class));
 	SimpleLauncher.show("Test", view.buildPanel());
 	//		SimpleLauncher.show("Test for synchronization", null, view.buildPanel());
 	//	SimpleLauncher.show("DatePickers bad performance test", null, view.buildDatePickers(view.getEntity()));

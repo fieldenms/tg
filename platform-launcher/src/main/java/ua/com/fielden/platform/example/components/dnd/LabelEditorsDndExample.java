@@ -16,10 +16,10 @@ import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.example.entities.Bogie;
 import ua.com.fielden.platform.example.entities.IBogieDao;
 import ua.com.fielden.platform.example.ioc.ExampleRmaHibernateModule;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
@@ -29,7 +29,6 @@ import ua.com.fielden.platform.swing.review.CriteriaDndPanel;
 import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.jidesoft.plaf.LookAndFeelFactory;
 
@@ -47,8 +46,9 @@ public class LabelEditorsDndExample extends AbstractUiApplication {
 	final ProxyInterceptor interceptor = new ProxyInterceptor();
 	final HibernateUtil hibernateUtil = new HibernateUtil(interceptor, new Configuration().configure("hibernate.cfg.xml"));
 	final ExampleRmaHibernateModule hibernateModule = new ExampleRmaHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()));
-	injector = Guice.createInjector(hibernateModule, new EntityModule());
-	final EntityFactory entityFactory = new EntityFactory(injector);
+
+	injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
+	final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
 	interceptor.setFactory(entityFactory);
 
 	System.out.println("Populating example database");

@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.property.DaoMetaPropertyFactory;
 
+import com.google.inject.Injector;
 import com.google.inject.Scopes;
 
 /**
@@ -27,8 +28,8 @@ public class PropertyFactoryModule extends TransactionalModule {
 
     public PropertyFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final Class[] applicationEntityTypes) throws Exception {
 	super(props, defaultHibernateTypes, applicationEntityTypes);
-	daoFactory = new DaoFactory() {};
 	entityFactory = new EntityFactory() {};
+	daoFactory = new DaoFactory() {};
 	interceptor.setFactory(entityFactory);
     }
 
@@ -47,5 +48,11 @@ public class PropertyFactoryModule extends TransactionalModule {
 	// bind property factory
 	bind(IMetaPropertyFactory.class).to(DaoMetaPropertyFactory.class).in(Scopes.SINGLETON);
 
+    }
+
+    @Override
+    public void setInjector(final Injector injector) {
+	daoFactory.setInjector(injector);
+	entityFactory.setInjector(injector);
     }
 }

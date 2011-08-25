@@ -26,12 +26,14 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.components.bind.test.deadlock.DeadEntity;
 
+import com.google.inject.Injector;
+
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityModule}, this module binds
  * {@link IMetaPropertyFactory}.
- * 
+ *
  * IMPORTANT: This module is applicable strictly for testing purposes! Left out in the main source (e.i. not test) due to the need to be visible in other projects.
- * 
+ *
  * @author TG Team
  */
 public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
@@ -53,7 +55,7 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
     /**
      * If passed true value, then for {@link EntityExists} annotation would be created validator that always returns successful {@link Result}. Otherwise, {@link RuntimeException}
      * would be thrown each time {@link EntityExists} annotation would be encountered.
-     * 
+     *
      * @param ignoreEntityExistsAnnotation
      */
     public EntityModuleWithDomainValidatorsForTesting(final boolean ignoreEntityExistsAnnotation) {
@@ -81,7 +83,7 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
 
 	bind(DomainValidationConfig.class).toInstance(domainValidationConfig);
 	bind(DomainMetaPropertyConfig.class).toInstance(domainMetaPropertyConfig);
-	
+
 
 	// TODO not yet complete
 	bind(IMetaPropertyFactory.class).toInstance(new IMetaPropertyFactory() {
@@ -138,7 +140,9 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
 			};
 		    }
 		default:
-		    throw new RuntimeException("Unsupported validation annotation has been encountered.");
+		    // should most likely ignore
+		    new IllegalArgumentException("Unsupported validation annotation " + value + " has been encountered.").printStackTrace();
+		    return null;
 		}
 	    }
 
@@ -161,15 +165,17 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
 			    System.out.println("\tdefine...done");
 			};
 		    };
-		} else return new IMetaPropertyDefiner() {
-		    @Override
-		    public void define(final MetaProperty property, final Object entityPropertyValue) {
-			final MetaProperty metaProperty = entity.getProperty(propertyName);
-			if (metaProperty != null) {
-			    metaProperty.setEditable(true);
-			}
-		    }
-		};
+		} else {
+		    return new IMetaPropertyDefiner() {
+		        @Override
+		        public void define(final MetaProperty property, final Object entityPropertyValue) {
+		    	final MetaProperty metaProperty = entity.getProperty(propertyName);
+		    	if (metaProperty != null) {
+		    	    metaProperty.setEditable(true);
+		    	}
+		        }
+		    };
+		}
 	    }
 	});
 
@@ -178,9 +184,14 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
     public DomainValidationConfig getDomainValidationConfig() {
 	return domainValidationConfig;
     }
-    
+
     public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
 	return domainMetaPropertyConfig;
+    }
+
+    @Override
+    public void setInjector(final Injector injector) {
+	entityFactory.setInjector(injector);
     }
 
 }

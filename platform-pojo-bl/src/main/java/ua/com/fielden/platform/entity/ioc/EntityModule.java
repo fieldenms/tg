@@ -9,10 +9,10 @@ import com.google.inject.AbstractModule;
 
 /**
  * This Guice module ensures that properties for all {@link AbstractEntity} descendants are provided with an intercepter handling validation and observation.
- * 
+ *
  * @author TG Team
  */
-public class EntityModule extends AbstractModule {
+public abstract class EntityModule extends AbstractModule implements IModuleWithInjector {
 
     /**
      * Binds intercepter for observable property mutators to ensure property change observation and validation. Only descendants of {@link AbstractEntity} are processed.

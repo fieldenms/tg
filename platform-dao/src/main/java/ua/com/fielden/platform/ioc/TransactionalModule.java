@@ -29,7 +29,7 @@ import ua.com.fielden.platform.persistence.ProxyInterceptor;
  * @author TG Team
  *
  */
-public class TransactionalModule extends EntityModule {
+public abstract class TransactionalModule extends EntityModule {
     protected final SessionFactory sessionFactory;
     private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();

@@ -76,7 +76,7 @@ import com.google.inject.TypeLiteral;
 public class DaoTestHibernateModule extends CommonFactoryModule {
 
     public DaoTestHibernateModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator) {
-	super(sessionFactory, mappingExtractor, mappingsGenerator, true);
+	super(sessionFactory, mappingExtractor, mappingsGenerator);
     }
 
     @Override

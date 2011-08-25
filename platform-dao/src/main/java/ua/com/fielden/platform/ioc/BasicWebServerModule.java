@@ -79,13 +79,11 @@ public class BasicWebServerModule extends CommonFactoryModule {
 	    final Class<? extends IFilter> automaticDataFilterType, //
 	    final SecurityTokenProvider tokenProvider,//
 	    final Properties props) throws Exception {
-	super(props, defaultHibernateTypes, applicationEntityTypes, false);
+	super(props, defaultHibernateTypes, applicationEntityTypes);
 	this.props = props;
 	this.tokenProvider = tokenProvider;
 	this.serialisationClassProviderType = serialisationClassProviderType;
 	this.automaticDataFilterType = automaticDataFilterType;
-	daoFactory.setModule(this);
-	entityFactory.setModule(this);
     }
 
     @Override

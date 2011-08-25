@@ -10,9 +10,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
-import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 
 /**
@@ -23,7 +24,8 @@ import com.google.inject.Guice;
  */
 public class UserInheritanceTest {
 
-    private final EntityFactory factory = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory()).getInstance(EntityFactory.class);
+    final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+    final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     private User baseUser;
     private User user;

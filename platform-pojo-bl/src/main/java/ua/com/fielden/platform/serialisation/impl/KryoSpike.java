@@ -9,10 +9,10 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 public class KryoSpike {
@@ -20,7 +20,7 @@ public class KryoSpike {
     public static void main(final String[] args) throws Exception {
 	System.out.println("kryo");
 
-	final Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory());
+	final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
 	final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
 	final TgKryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(DomainType1.class));

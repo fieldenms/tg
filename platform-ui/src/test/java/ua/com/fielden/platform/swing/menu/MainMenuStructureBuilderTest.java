@@ -6,11 +6,12 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 
 /**
  * Test correct construction of the main menu structure using {@link LocalMainMenuStructureBuilder}.
@@ -20,7 +21,8 @@ import com.google.inject.Injector;
  */
 public class MainMenuStructureBuilderTest {
 
-    private Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory());
+    private final Module module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
 
     @Test
     public void test_menu_construction() {

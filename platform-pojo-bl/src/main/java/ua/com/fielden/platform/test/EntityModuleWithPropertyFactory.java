@@ -10,6 +10,8 @@ import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.entity.validation.IValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
+import com.google.inject.Injector;
+
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityModule}, this module binds
  * {@link IMetaPropertyFactory}.
@@ -57,6 +59,11 @@ public class EntityModuleWithPropertyFactory extends EntityModule {
 
     public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
 	return domainMetaPropertyConfig;
+    }
+
+    @Override
+    public void setInjector(final Injector injector) {
+	entityFactory.setInjector(injector);
     }
 
 }

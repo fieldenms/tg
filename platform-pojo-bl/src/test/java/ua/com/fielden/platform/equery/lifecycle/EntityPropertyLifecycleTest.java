@@ -19,23 +19,22 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.lifecycle.EntityPropertyLifecycle;
-import ua.com.fielden.platform.equery.lifecycle.ValuedInterval;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 /**
  * Test for {@link EntityPropertyLifecycle} logic.
  *
- * @author Jhou
+ * @author TG Team
  *
  */
 public class EntityPropertyLifecycleTest {
-    private final Injector injector = Guice.createInjector(new CommonTestEntityModuleWithPropertyFactory());
+    private final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
+
 
     private EntityPropertyLifecycle<Entity> epl;
 
