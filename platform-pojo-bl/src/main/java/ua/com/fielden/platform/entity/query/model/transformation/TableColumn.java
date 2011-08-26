@@ -14,25 +14,21 @@ public class TableColumn implements IQuerySourceItem {
     @Override
     public void addReference(final IQueryItem referencingItem) {
 	// TODO Auto-generated method stub
-
     }
 
     @Override
     public void removeReference(final IQueryItem referencingItem) {
 	// TODO Auto-generated method stub
-
     }
 
     @Override
     public String name() {
-	// TODO Auto-generated method stub
-	return null;
+	return name;
     }
 
     @Override
     public String sql() {
-	// TODO Auto-generated method stub
-	return null;
+	return source.getSourceItemSql(name);
     }
 
 }

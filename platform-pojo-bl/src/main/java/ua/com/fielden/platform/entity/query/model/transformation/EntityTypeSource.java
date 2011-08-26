@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.query.model.transformation;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult;
 import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
 
 public class EntityTypeSource implements IQuerySource {
@@ -43,6 +42,18 @@ public class EntityTypeSource implements IQuerySource {
     public boolean hasReferences() {
 	// TODO Auto-generated method stub
 	return false;
+    }
+
+    @Override
+    public String alias() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public String getSourceItemSql(final String sourceItemName) {
+	// TODO Auto-generated method stub
+	return null;
     }
 
 }
