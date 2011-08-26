@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.zip.Deflater;
 import java.util.zip.InflaterInputStream;
 
@@ -187,18 +188,18 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer domainTreeEnhancerSerialiser;
     private final Serializer criteriaDomainTreeRepresentationSerialiser;
     private final Serializer locatorDomainTreeRepresentationSerialiser;
-//    private final Serializer analysisDomainTreeRepresentationSerialiser;
+    //    private final Serializer analysisDomainTreeRepresentationSerialiser;
     private final Serializer pivotDomainTreeRepresentationSerialiser;
     private final Serializer locatorDomainTreeManagerSerialiser;
     private final Serializer criteriaDomainTreeManagerSerialiser;
     private final Serializer masterDomainTreeManagerSerialiser;
     private final Serializer addToCriteriaTickManagerSerialiser;
-//    private final Serializer analysisDomainTreeManagerSerialiser;
+    //    private final Serializer analysisDomainTreeManagerSerialiser;
     private final Serializer pivotDomainTreeManagerSerialiser;
     private final Serializer locatorDomainTreeManagerAndEnhancerSerialiser;
     private final Serializer criteriaDomainTreeManagerAndEnhancerSerialiser;
-//    private final Serializer domainTreeManagerAndEnhancerSerialiser;
-//    private final Serializer analysisDomainTreeManagerAndEnhancerSerialiser;
+    //    private final Serializer domainTreeManagerAndEnhancerSerialiser;
+    //    private final Serializer analysisDomainTreeManagerAndEnhancerSerialiser;
     private final Serializer pivotDomainTreeManagerAndEnhancerSerialiser;
 
     @Inject
@@ -227,19 +228,19 @@ public class TgKryo extends Kryo implements ISerialiser {
 	locatorManagerSerialiser = new LocatorManagerSerialiser(this);
 	domainTreeEnhancerSerialiser = new DomainTreeEnhancerSerialiser(this);
 	criteriaDomainTreeRepresentationSerialiser = new CriteriaDomainTreeRepresentationSerialiser(this);
-//	analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(this);
+	//	analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(this);
 	pivotDomainTreeRepresentationSerialiser = new PivotDomainTreeRepresentationSerialiser(this);
 	locatorDomainTreeManagerSerialiser = new LocatorDomainTreeManagerSerialiser(this);
 	criteriaDomainTreeManagerSerialiser = new CriteriaDomainTreeManagerSerialiser(this);
 	masterDomainTreeManagerSerialiser = new MasterDomainTreeManagerSerialiser(this);
 	locatorDomainTreeRepresentationSerialiser = new LocatorDomainTreeRepresentationSerialiser(this);
 	addToCriteriaTickManagerSerialiser = new AddToCriteriaTickManagerSerialiser(this);
-//	analysisDomainTreeManagerSerialiser = new AnalysisDomainTreeManagerSerialiser(this);
+	//	analysisDomainTreeManagerSerialiser = new AnalysisDomainTreeManagerSerialiser(this);
 	pivotDomainTreeManagerSerialiser = new PivotDomainTreeManagerSerialiser(this);
 	locatorDomainTreeManagerAndEnhancerSerialiser = new LocatorDomainTreeManagerAndEnhancerSerialiser(this);
 	criteriaDomainTreeManagerAndEnhancerSerialiser = new CriteriaDomainTreeManagerAndEnhancerSerialiser(this);
-//	domainTreeManagerAndEnhancerSerialiser = new DomainTreeManagerAndEnhancerSerialiser(this);
-//	analysisDomainTreeManagerAndEnhancerSerialiser = new AnalysisDomainTreeManagerAndEnhancerSerialiser(this);
+	//	domainTreeManagerAndEnhancerSerialiser = new DomainTreeManagerAndEnhancerSerialiser(this);
+	//	analysisDomainTreeManagerAndEnhancerSerialiser = new AnalysisDomainTreeManagerAndEnhancerSerialiser(this);
 	pivotDomainTreeManagerAndEnhancerSerialiser = new PivotDomainTreeManagerAndEnhancerSerialiser(this);
 
 	// the following order of class registration is important
@@ -254,6 +255,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	register(List.class);
 	register(HashMap.class);
 	register(HashSet.class);
+	register(TreeSet.class);
 	register(Set.class);
 	register(Money.class);
 	register(Result.class);
@@ -442,8 +444,8 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return locatorDomainTreeRepresentationSerialiser;
 	} else if (CriteriaDomainTreeRepresentation.class.isAssignableFrom(type)) {
 	    return criteriaDomainTreeRepresentationSerialiser;
-//	} else if (AnalysisDomainTreeRepresentation.class.isAssignableFrom(type)) {
-//	    return analysisDomainTreeRepresentationSerialiser;
+	    //	} else if (AnalysisDomainTreeRepresentation.class.isAssignableFrom(type)) {
+	    //	    return analysisDomainTreeRepresentationSerialiser;
 	} else if (PivotDomainTreeRepresentation.class.isAssignableFrom(type)) {
 	    return pivotDomainTreeRepresentationSerialiser;
 	} else if (LocatorDomainTreeManager.class.isAssignableFrom(type)) { // higher in hierarchy above CriteriaDomainTreeManager!
@@ -462,8 +464,8 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return criteriaDomainTreeManagerAndEnhancerSerialiser;
 	} else if (PivotDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
 	    return pivotDomainTreeManagerAndEnhancerSerialiser;
-//	} else if (AnalysisDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
-//	    return analysisDomainTreeManagerAndEnhancerSerialiser;
+	    //	} else if (AnalysisDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
+	    //	    return analysisDomainTreeManagerAndEnhancerSerialiser;
 	}
 	return super.newSerializer(type);
     }
