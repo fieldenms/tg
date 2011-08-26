@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.DomainTreeManagerAndEnhancer1;
@@ -674,7 +673,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 	}, "calculatedIntegerProp1");
     }
 
-    @Test @Ignore
+    @Test
     public void test_which_calculated_property_categories_have_which_functions() {
 	final String m = "Available functions are incorrect.";
 

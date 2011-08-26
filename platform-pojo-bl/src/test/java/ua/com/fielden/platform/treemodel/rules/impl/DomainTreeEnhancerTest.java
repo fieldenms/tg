@@ -853,4 +853,8 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     @Override
     public void test_that_equality_and_copying_works() {
     }
+
+    @Override
+    public void test_that_domain_tree_enhancements_work_as_expected_for_original_and_copied_manager() {
+    }
 }

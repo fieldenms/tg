@@ -237,7 +237,9 @@ public class PivotDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	dtm().getSecondTick().use(MasterEntity.class, "bigDecimalAggExprProp", false);
 	assertFalse("The property shouldn't be used", dtm().getSecondTick().isUsed(MasterEntity.class, "bigDecimalAggExprProp"));
 	assertEquals("value is incorrect.", Arrays.asList(), dtm().getSecondTick().usedProperties(MasterEntity.class));
-
     }
 
+    @Override
+    public void test_that_CHECKed_properties_order_is_correct() throws Exception {
+    }
 }

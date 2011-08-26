@@ -11,10 +11,8 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.EntityWithNormalNature;
@@ -291,6 +289,7 @@ public abstract class AbstractDomainTreeTest {
 		// System.out.println("allDomainTreeFieldsAreInitialised : Field [" + field + "]; value [" + fieldValue + "];");
 		// all field values should be initialised! Including transient fields, domain tree types, maps, etc.
 		if (fieldValue == null) {
+		    fail("After deserialisation of the manager all the fields should be initialised (including transient). But field's [" + field + "] value is null for instance [" + instance + "].");
 		    return false;
 		} else {
 		    if (!Modifier.isStatic(field.getModifiers()) && originalInstance != null) {
@@ -315,12 +314,11 @@ public abstract class AbstractDomainTreeTest {
 	// A base types to be checked for its non-emptiness and non-emptiness of their children.
 	final List<Class<?>> types = new ArrayList<Class<?>>(AbstractDomainTree.DOMAIN_TREE_TYPES);
 	// A base types to be checked for its non-emptiness.
-	types.add(Set.class);
-	types.add(Map.class);
+	// TODO covered by EnhancementSetAndMaps? types.add(Set.class);
+	// TODO covered by EnhancementSetAndMaps? types.add(Map.class);
 	types.add(Enum.class); // CalculatedProperty implementation
 	types.add(String.class); // CalculatedProperty implementation
 	types.add(Class.class); // CalculatedProperty implementation
-	// TODO ?
 	return Finder.getFieldsOfSpecifiedTypes(type, types);
     }
 
@@ -359,7 +357,7 @@ public abstract class AbstractDomainTreeTest {
 	assertTrue("Should be identical.", dtr == secondTm.dtr());
     }
 
-    @Test @Ignore
+    @Test
     public void test_that_serialisation_works() throws Exception {
 	final IDomainTreeManagerAndEnhancer dtm = dtm();
 	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
@@ -380,7 +378,7 @@ public abstract class AbstractDomainTreeTest {
 	test_that_manager_instantiation_works_for_inner_cross_references(copy);
     }
 
-    @Test @Ignore
+    @Test
     public void test_that_equality_and_copying_works() {
 	final IDomainTreeManagerAndEnhancer dtm = dtm();
 	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
@@ -413,14 +411,14 @@ public abstract class AbstractDomainTreeTest {
 	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.attrCollExprProp2", CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION, "entityProp.collection.simpleEntityProp.integerProp", Integer.class, "expr", "title", "desc"));
 	managerAndEnhancer.getEnhancer().apply();
 
-	managerAndEnhancer.getRepresentation().excludeImmutably(MasterEntity.class, "entityProp.exprProp");
+	managerAndEnhancer.getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "entityProp.exprProp");
 	managerAndEnhancer.getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "entityProp.aggrExprProp");
 	managerAndEnhancer.getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, "entityProp.collection.collExprProp");
-	managerAndEnhancer.getRepresentation().excludeImmutably(MasterEntity.class, "entityProp.collection.simpleEntityProp.collExprProp");
+	managerAndEnhancer.getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, "entityProp.collection.simpleEntityProp.collExprProp");
 	return managerAndEnhancer;
     }
 
-    private void checkAccessabilityOfCalculatedProperties(final IDomainTreeManagerAndEnhancer dtm) {
+    private void checkAccessabilityOfCalculatedPropertiesAndTheirState(final IDomainTreeManagerAndEnhancer dtm) {
 	checkAccessabilityOfCalculatedProperty(dtm, "exprProp");
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.exprProp");
 
@@ -436,10 +434,10 @@ public abstract class AbstractDomainTreeTest {
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.attrCollExprProp1");
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.attrCollExprProp2");
 
-	assertTrue("The calculated property [entityProp.exprProp] should be excluded. The path towards calculated property should be properly resolved.", dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "entityProp.exprProp"));
+	assertTrue("The calculated property [entityProp.exprProp] should be excluded. The path towards calculated property should be properly resolved.", dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.exprProp"));
 	assertTrue("The calculated property [entityProp.aggrExprProp] should be disabled. The path towards calculated property should be properly resolved.", dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.aggrExprProp"));
 	assertTrue("The calculated property [entityProp.collection.collExprProp] should be disabled. The path towards calculated property should be properly resolved.", dtm.getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.collExprProp"));
-	assertTrue("The calculated property [entityProp.collection.simpleEntityProp.collExprProp] should be excluded. The path towards calculated property should be properly resolved.", dtm.getRepresentation().isExcludedImmutably(MasterEntity.class, "entityProp.collection.simpleEntityProp.collExprProp"));
+	assertTrue("The calculated property [entityProp.collection.simpleEntityProp.collExprProp] should be excluded. The path towards calculated property should be properly resolved.", dtm.getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.simpleEntityProp.collExprProp"));
     }
 
     private void checkAccessabilityOfCalculatedProperty(final IDomainTreeManagerAndEnhancer dtm, final String calcProperty) {
@@ -450,20 +448,21 @@ public abstract class AbstractDomainTreeTest {
 	    if (!isExcl) {
 		// to be sure -- invoke another accessor method
 		dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, calcProperty);
+		dtm.getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, calcProperty);
 	    }
 	} catch (final IllegalArgumentException e) {
 	    fail("The calculated property [" + calcProperty + "] should not be excluded. The path towards calculated property should be properly resolved.");
 	}
     }
 
-    @Test @Ignore
+    @Test
     public void test_that_domain_tree_enhancements_work_as_expected_for_original_and_copied_manager() {
 	// to perform such a test it is enough to ask if the added calc properties can be asked for "excludement / disablement" (and the state is appropriate), after manual "disabling / excluding".
 	// It will process the domain tree to the needed level of enhanced hierarchy.
 	final IDomainTreeManagerAndEnhancer dtm = dtm();
-	checkAccessabilityOfCalculatedProperties(dtm);
+	checkAccessabilityOfCalculatedPropertiesAndTheirState(dtm);
 
 	final IDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
-	checkAccessabilityOfCalculatedProperties(copy);
+	checkAccessabilityOfCalculatedPropertiesAndTheirState(copy);
     }
 }

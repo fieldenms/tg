@@ -47,8 +47,8 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class CriteriaDomainTreeManager extends AbstractDomainTreeManager implements ICriteriaDomainTreeManager {
     private static final long serialVersionUID = 7832625541851145438L;
 
-    private final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses;
-    private final transient Map<String, IAbstractAnalysisDomainTreeManager> currentAnalyses;
+    private final LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses;
+    private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> currentAnalyses;
     private Boolean runAutomatically;
 
     /**

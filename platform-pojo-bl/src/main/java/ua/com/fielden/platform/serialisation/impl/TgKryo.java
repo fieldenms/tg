@@ -373,11 +373,11 @@ public class TgKryo extends Kryo implements ISerialiser {
     public final RegisteredClass getRegisteredClass(final Class type) {
 	if (AbstractEntity.class.isAssignableFrom(type)) {
 	    return super.getRegisteredClass(PropertyTypeDeterminator.stripIfNeeded(type));
-	} else if (Set.class.isAssignableFrom(type)) {
+	} else if (Set.class.isAssignableFrom(type) && type.isInterface()) { //
 	    return super.getRegisteredClass(HashSet.class);
-	} else if (List.class.isAssignableFrom(type)) {
+	} else if (List.class.isAssignableFrom(type) && type.isInterface()) {
 	    return super.getRegisteredClass(ArrayList.class);
-	} else if (Map.class.isAssignableFrom(type) && !ListOrderedMap.class.isAssignableFrom(type)) {
+	} else if (Map.class.isAssignableFrom(type) && !ListOrderedMap.class.isAssignableFrom(type) && type.isInterface()) {
 	    return super.getRegisteredClass(HashMap.class);
 	} else if (Date.class.isAssignableFrom(type)) {
 	    return super.getRegisteredClass(Date.class);
@@ -475,10 +475,12 @@ public class TgKryo extends Kryo implements ISerialiser {
 
     @Override
     public <T> T newInstance(final Class<T> type) {
-	if (Set.class.isAssignableFrom(type)) {
+	if (Set.class.isAssignableFrom(type) && type.isInterface()) {
 	    return (T) new HashSet();
-	} else if (List.class.isAssignableFrom(type)) {
+	} else if (List.class.isAssignableFrom(type) && type.isInterface()) {
 	    return (T) new ArrayList();
+	} else if (Map.class.isAssignableFrom(type) && type.isInterface()) {
+	    return (T) new HashMap();
 	}
 	return super.newInstance(type);
     }

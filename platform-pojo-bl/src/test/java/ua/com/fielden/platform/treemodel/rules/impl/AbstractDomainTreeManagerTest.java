@@ -10,7 +10,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.DomainTreeManagerAndEnhancer1;
@@ -182,10 +181,8 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	}, "mutablyCheckedProp");
     }
 
-    @Test @Ignore
+    @Test
     public void test_that_CHECKed_properties_order_is_correct() throws Exception {
-	// TODO
-
 	// at first the manager will be initialised the first time and its "included" and then "checked" props will be initialised (heavy operation)
 	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
 	// next -- lightweight operation -- no loading will be performed
@@ -206,19 +203,14 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	// serialise and deserialise and then check the order of "checked properties"
 	final byte[] array = getSerialiser().serialise(dtm());
 	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
-	copy.getFirstTick().isChecked(MasterEntity.class, "entityProp.collection.collExprProp");
-
-	// TODO why???? it does not work?? calculated properties are there..
-	// TODO why???? it does not work?? calculated properties are there..
-	// assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp").toString(), copy.getFirstTick().checkedProperties(MasterEntity.class).toString());
+	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp").toString(), copy.getFirstTick().checkedProperties(MasterEntity.class).toString());
     }
-
 
     ///////////////////////////////////////////////////////////////////////
     ////////////////////// 3. Calculated properties ///////////////////////
     ///////////////////////////////////////////////////////////////////////
 
-    @Test @Ignore
+    @Test
     public void test_that_calculated_properties_work() throws Exception {
 	/////////////// ADDING & MANAGING ///////////////
 	// enhance domain with new calculated property
@@ -331,13 +323,9 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, calcProp2));
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp3"));
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp5"));
-	// TODO why???? it does not work?? calculated properties are there..
-	// TODO why???? it does not work?? calculated properties are there..
-	// TODO why???? it does not work?? calculated properties are there..
-	// TODO why???? it does not work?? calculated properties are there..
-	// assertTrue("The brand new calculated property should be excluded.", copy.getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
-	// assertTrue("The brand new calculated property should be disabled.", copy.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, calcProp2));
-	// assertTrue("The brand new calculated property should be immutable checked.", copy.getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
-	// assertTrue("The brand new calculated property should be checked.", copy.getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
+	assertTrue("The brand new calculated property should be excluded.", copy.getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
+	assertTrue("The brand new calculated property should be disabled.", copy.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, calcProp2));
+	assertTrue("The brand new calculated property should be immutable checked.", copy.getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
+	assertTrue("The brand new calculated property should be checked.", copy.getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
     }
 }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.treemodel.rules.impl;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -31,6 +32,7 @@ public abstract class AbstractDomainTree {
     /** A base types to be checked for its non-emptiness and non-emptiness of their children. */
     public static final List<Class<?>> DOMAIN_TREE_TYPES = new ArrayList<Class<?>>() {{
 	add(AbstractEntity.class); //
+	add(LinkedHashMap.class); //
 	add(EnhancementSet.class); //
 	add(EnhancementLinkedRootsSet.class); //
 	add(EnhancementRootsMap.class); //
@@ -46,7 +48,6 @@ public abstract class AbstractDomainTree {
 	add(IDomainTreeManager.class); //
 	add(ITickRepresentation.class); //
 	add(ITickManager.class); //
-	/* TODO ? */
     }};
     private final transient ISerialiser serialiser;
 
