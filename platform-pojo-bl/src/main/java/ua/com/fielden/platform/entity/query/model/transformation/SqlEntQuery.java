@@ -1,14 +1,15 @@
 package ua.com.fielden.platform.entity.query.model.transformation;
 
+import java.util.Iterator;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
 
 public class SqlEntQuery implements IQuerySource {
 
     private final SortedMap<String, IYieldedItem> yields = new TreeMap<String, IYieldedItem>();
     private final IQuerySource from;
+    private IQuerySource predecessor;
+    private SqlEntQuery master;
 
     public SqlEntQuery(final IQuerySource from) {
 	this.from = from;
@@ -20,32 +21,49 @@ public class SqlEntQuery implements IQuerySource {
     }
 
     @Override
-    public boolean hasReferences() {
-	// TODO Auto-generated method stub
-	return false;
-    }
-
-    @Override
-    public ResultPropertyInfo getPropInfo(final String dotNotatedPropName) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public String getSql() {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
     public String alias() {
-	// TODO Auto-generated method stub
-	return null;
+	int sourceIndex = 0;
+	IQuerySource currSource = this;
+	while (currSource != null) {
+	    sourceIndex = sourceIndex + 1;
+	    currSource = currSource.getPredecessor();
+	}
+	int masterIndex = 0;
+	SqlEntQuery currMaster = this.master;
+	while (currMaster != null) {
+	    masterIndex = masterIndex + 1;
+	    currMaster = currMaster.master;
+	}
+
+	return "Q" + sourceIndex + (masterIndex == 0 ? "" : ("L" + masterIndex));
     }
 
     @Override
-    public String getSourceItemSql(final String sourceItemName) {
-	// TODO Auto-generated method stub
-	return null;
+    public IQuerySource getPredecessor() {
+	return predecessor;
+    }
+
+    public String sql() {
+	return "(" + querySql() + ")";
+    }
+
+    public String querySql() {
+	final StringBuffer sb = new StringBuffer();
+	sb.append("SELECT ");
+	for (final Iterator<IYieldedItem> iterator = yields.values().iterator(); iterator.hasNext();) {
+	    final IYieldedItem yield = iterator.next();
+	    sb.append(yield.sql());
+	    if (iterator.hasNext()) {
+		sb.append(", ");
+	    }
+	}
+	sb.append(" FROM ");
+	sb.append(from.sql() + " AS " + from.alias());
+
+	return sb.toString();
+    }
+
+    public SortedMap<String, IYieldedItem> getYields() {
+        return yields;
     }
 }

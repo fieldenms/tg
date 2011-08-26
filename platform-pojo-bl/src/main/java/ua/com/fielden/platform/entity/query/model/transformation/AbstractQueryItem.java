@@ -1,7 +1,6 @@
-package ua.com.fielden.platform.entity.query.fluent;
+package ua.com.fielden.platform.entity.query.model.transformation;
 
 import ua.com.fielden.platform.entity.query.model.structure.IQueryItem;
-import ua.com.fielden.platform.entity.query.model.transformation.IQuerySourceItem;
 
 public class AbstractQueryItem implements IQueryItem {
 
@@ -9,7 +8,7 @@ public class AbstractQueryItem implements IQueryItem {
 
     public AbstractQueryItem(final IQuerySourceItem source) {
 	this.source = source;
-	source.addReference(this);
+	//source.addReference(this);
     }
 
     @Override

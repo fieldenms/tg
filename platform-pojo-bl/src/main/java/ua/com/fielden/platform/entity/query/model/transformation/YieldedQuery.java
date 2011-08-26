@@ -1,15 +1,15 @@
 package ua.com.fielden.platform.entity.query.model.transformation;
 
 
-public class YieldedProp implements IYieldedItem {
+public class YieldedQuery implements IYieldedItem {
 
-    private final IQuerySourceItem source;
+    private final SqlEntQuery yieldedQuery;
     private final String name;
     private final SqlEntQuery query;
 
 
-    public YieldedProp(final SqlEntQuery query, final IQuerySourceItem source, final String name) {
-	this.source = source;
+    public YieldedQuery(final SqlEntQuery query, final SqlEntQuery yieldedQuery, final String name) {
+	this.yieldedQuery = yieldedQuery;
 	this.name = name;
 	this.query = query;
     }
@@ -33,7 +33,6 @@ public class YieldedProp implements IYieldedItem {
 
     @Override
     public String sql() {
-	return query.alias() + "." + source.name();
-	//return source.sql() + " AS C" + getYieldPosition();
+	return "(" + yieldedQuery.sql() + ")" + " AS C" + getYieldPosition();
     }
 }

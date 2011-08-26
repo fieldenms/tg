@@ -1,34 +1,23 @@
 package ua.com.fielden.platform.entity.query.model.transformation;
 
-import ua.com.fielden.platform.entity.query.model.structure.IQueryItem;
-
-
 public class TableColumn implements IQuerySourceItem {
     private final String name;
-    private IQuerySource source;
+    private final String column;
+    private Table table;
 
-    public TableColumn(final String name) {
+    public TableColumn(final String name, final String column, final Table table) {
 	this.name = name;
-    }
-
-    @Override
-    public void addReference(final IQueryItem referencingItem) {
-	// TODO Auto-generated method stub
-    }
-
-    @Override
-    public void removeReference(final IQueryItem referencingItem) {
-	// TODO Auto-generated method stub
+	this.column = column;
+	this.table = table;
     }
 
     @Override
     public String name() {
-	return name;
+	return name; //purchPrice, model
     }
 
     @Override
     public String sql() {
-	return source.getSourceItemSql(name);
+	return table.alias() + "." + column; //T1.PURCH_PRICE, T1.ID_VEH_MODEL
     }
-
 }
