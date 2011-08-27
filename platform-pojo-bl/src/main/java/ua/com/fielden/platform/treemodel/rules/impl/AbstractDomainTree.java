@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -50,6 +52,12 @@ public abstract class AbstractDomainTree {
 	add(ITickManager.class); //
     }};
     private final transient ISerialiser serialiser;
+    private final static transient Logger logger = Logger.getLogger(AbstractDomainTree.class);
+    private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
+
+    protected static Logger logger() {
+        return logger;
+    }
 
     /**
      * Constructs base domain tree with a <code>serialiser</copy> instance.
@@ -67,6 +75,57 @@ public abstract class AbstractDomainTree {
      */
     protected ISerialiser getSerialiser() {
 	return serialiser;
+    }
+    
+    /**
+     * Returns <code>true</code> if the "property" represents just a marker for <i>not loaded children</i> of its parent property.
+     * 
+     * @param property
+     * @return
+     */
+    public static boolean isDummyMarker(final String property) {
+	return property.endsWith(DUMMY_SUFFIX);
+    }
+    
+    /**
+     * Returns <code>true</code> if the "property" represents a root of common properties branch.
+     * 
+     * @param property
+     * @return
+     */
+    public static boolean isCommonBranch(final String property) {
+	return property.endsWith(COMMON_SUFFIX);
+    }
+    
+    /**
+     * Creates a common branch "property" under the specified property.
+     * 
+     * @param property
+     * @return
+     */
+    protected static String createCommonBranch(final String property) {
+	return property + COMMON_SUFFIX;
+    }
+    
+    /**
+     * Creates a dummy marker "property" under the specified property, which sub-properties are not supposed to be loaded.
+     * 
+     * @param property
+     * @return
+     */
+    protected static String createDummyMarker(final String property) {
+	return property + DUMMY_SUFFIX;
+    }
+    
+    /**
+     * Converts a property in Entity Tree naming contract (with ".common-properties" suffixes) into a property that TG Reflection API understands.
+     * "Dummy" property will be converted to its parent property.
+     * 
+     * @param property
+     * @return
+     */
+    public static String reflectionProperty(final String property) {
+	return property.replaceAll(DUMMY_SUFFIX, "").replaceAll(COMMON_SUFFIX, "");
     }
 
     /**

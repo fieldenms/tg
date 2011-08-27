@@ -65,9 +65,13 @@ public interface IDomainTreeRepresentation extends IRootTyped {
     /**
      * Returns an immutable <b>ordered</b> list of included properties for concrete <code>root</code> type. <br><br>
      *
-     * The list fully reflects {@link #isExcludedImmutably(Class, String)} contract (+manually excluded properties) and adds an order
-     * of properties -- currently the order is ["key" or key members => "desc" (if exists) => other properties in order as declared in domain].
-     *
+     * The list fully reflects {@link #isExcludedImmutably(Class, String)} contract (+manually excluded properties) and defines an order
+     * of properties -- currently the order is ["key" or key members => "desc" (if exists) => other properties in order as declared in domain]. <br><br>
+     * 
+     * <b>Important:</b> the list also contains two types of "dummy" properties, to be closer to Entity Tree structure: <br>
+     * 1. [prop1.prop2...propN.dummy-property] -- a marker for not loaded children of circular-reference property, <b>will be deleted after children will be loaded</b>.<br>
+     * 2. [prop1.prop2...propN.common-properties.propN+1.propN+2...propM] -- a property under union-entity's common property, <b>should be treated as [prop1.prop2...propN.propN+1.propN+2...propM] according to union-entities naming contract</b><br>
+     * 
      * @param root -- a root type that contains included properties.
      * @return
      */
@@ -119,7 +123,11 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      *
      * Example : "Vehicle.replacing.dummy-property" has been loaded, but "Vehicle.replacing.replacedBy.status" should be selected.
      * This method should be used to load missing properties.
-     *
+     * 
+     * <b>Important:</b> the method should work with properties with "dummy" naming contract (like {@link #includedProperties(Class)} method), that includes: <br>
+     * 1. [prop1.prop2...propN.dummy-property] -- a marker for not loaded children of circular-reference property, <b>will be deleted after children will be loaded</b>.<br>
+     * 2. [prop1.prop2...propN.common-properties.propN+1.propN+2...propM] -- a property under union-entity's common property, <b>should be treated as [prop1.prop2...propN.propN+1.propN+2...propM] according to union-entities naming contract</b><br>
+     * 
      * @param root -- a root type that contains property.
      * @param property -- a dot-notation expression that defines a property to be "warmed up"
      *

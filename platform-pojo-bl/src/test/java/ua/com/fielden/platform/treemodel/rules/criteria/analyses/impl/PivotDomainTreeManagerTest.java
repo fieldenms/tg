@@ -242,4 +242,8 @@ public class PivotDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     @Override
     public void test_that_CHECKed_properties_order_is_correct() throws Exception {
     }
+    
+    @Override
+    public void test_that_CHECKed_properties_Move_Swap_operations_work() throws Exception {
+    }
 }

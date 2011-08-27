@@ -15,7 +15,6 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation.IStructureChangedListener;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTree;
-import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -167,12 +166,12 @@ public class EntitiesTreeModel2 extends DefaultTreeModel {
 	final String title, desc;
 	if (EntitiesTreeModel2.ROOT_PROPERTY.equals(property)) { // root node
 	    title = "Entities";
-	    desc = "Available entities";
-	} else if (property.endsWith(AbstractDomainTreeRepresentation.COMMON_SUFFIX)) { // common group
+	    desc = "<b>Available entities</b>";
+	} else if (AbstractDomainTree.isCommonBranch(property)) { // common group
 	    title = "Common";
 	    desc = TitlesDescsGetter.italic("<b>Common properties</b>");
 	} else { // entity node
-	    final Pair<String, String> tad = "".equals(property) ? TitlesDescsGetter.getEntityTitleAndDesc(root) : TitlesDescsGetter.getTitleAndDesc(property.replaceAll(AbstractDomainTreeRepresentation.COMMON_SUFFIX, ""), root);
+	    final Pair<String, String> tad = "".equals(property) ? TitlesDescsGetter.getEntityTitleAndDesc(root) : TitlesDescsGetter.getTitleAndDesc(AbstractDomainTree.reflectionProperty(property), root);
 	    title = tad.getKey();
 	    desc = TitlesDescsGetter.italic("<b>" + tad.getValue() + "</b>");
 	}
@@ -209,10 +208,10 @@ public class EntitiesTreeModel2 extends DefaultTreeModel {
 		final Pair<Class<?>, String> rootAndProp = (Pair<Class<?>, String>) ((DefaultMutableTreeNode) treeNode).getUserObject();
 		final Class<?> root = rootAndProp.getKey();
 		final String property = rootAndProp.getValue();
-		if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !property.endsWith(AbstractDomainTreeRepresentation.COMMON_SUFFIX) && manager.getRepresentation().getFirstTick().isDisabledImmutably(root, property.replaceAll(AbstractDomainTreeRepresentation.COMMON_SUFFIX, ""))) { // no tooltip for disabled property
+		if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getFirstTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
 		    return null;
 		}
-		if (EntityUtils.isUnionEntityType(PropertyTypeDeterminator.transform(root, property.replaceAll(AbstractDomainTreeRepresentation.COMMON_SUFFIX, "")).getKey())) { // parent is union entity
+		if (EntityUtils.isUnionEntityType(PropertyTypeDeterminator.transform(root, AbstractDomainTree.reflectionProperty(property)).getKey())) { // parent is union entity
 		    return "<html>If not selected, then entities with <i><b>" + extractTitleAndDesc(root, property).getKey() + "</b></i> will be ignored</html>";
 		}
 		return "<html>Add/Remove <b>" + extractTitleAndDesc(root, property).getKey() + "</b> to/from " + criteriaName + "</html>";
@@ -233,7 +232,7 @@ public class EntitiesTreeModel2 extends DefaultTreeModel {
 		final Pair<Class<?>, String> rootAndProp = (Pair<Class<?>, String>) ((DefaultMutableTreeNode) treeNode).getUserObject();
 		final Class<?> root = rootAndProp.getKey();
 		final String property = rootAndProp.getValue();
-		if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !property.endsWith(AbstractDomainTreeRepresentation.COMMON_SUFFIX) && manager.getRepresentation().getSecondTick().isDisabledImmutably(root, property.replaceAll(AbstractDomainTreeRepresentation.COMMON_SUFFIX, ""))) { // no tooltip for disabled property
+		if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getSecondTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
 		    return null;
 		}
 		return "<html>Add/Remove <b>" + extractTitleAndDesc(root, property).getKey() + "</b> to/from " + resultantName + "</html>";

@@ -149,12 +149,12 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		final List<String> checkedProps = new ArrayList<String>();
 		// the original order of "included properties" will be used for "checked properties" at first
 		for (final String includedProperty : includedProps) {
-		    if (!includedProperty.endsWith(AbstractDomainTreeRepresentation.DUMMY_SUFFIX) && isChecked(root, includedProperty)) {
+		    if (!isDummyMarker(includedProperty) && isChecked(root, includedProperty)) {
 			checkedProps.add(includedProperty);
 		    }
 		}
 		checkedProperties.put(root, checkedProps);
-		System.out.println("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + checkedProps.size() + " checked properties => [" + checkedProps + "].");
+		logger().info("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + checkedProps.size() + " checked properties => [" + checkedProps + "].");
 	    }
 	    return checkedProperties.get(root);
 	}

@@ -75,7 +75,7 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
 	    public void action(final String name) {
 	        dtm.getFirstTick().check(MasterEntity.class, name, true);
 	    }
-	}, "stringProp", "booleanProp", "dateProp", "integerProp", "moneyProp");
+	}, "stringProp", "booleanProp", "dateProp", "integerProp", "moneyProp", "mutablyCheckedProp");
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
 	        dtm.getSecondTick().check(MasterEntity.class, name, true);
@@ -668,5 +668,9 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
 
     @Override
     public void test_that_CHECKed_properties_order_is_correct() throws Exception {
+    }
+    
+    @Override
+    public void test_that_CHECKed_properties_Move_Swap_operations_work() throws Exception {
     }
 }
