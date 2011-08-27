@@ -8,7 +8,9 @@ import org.hibernate.SessionFactory;
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
+import ua.com.fielden.platform.entity.factory.DefaultConrollerProviderImpl;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.IDefaultConrollerProvider;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.property.DaoMetaPropertyFactory;
 
@@ -25,11 +27,13 @@ public class PropertyFactoryModule extends TransactionalModule {
 
     protected final DaoFactory daoFactory;
     protected final EntityFactory entityFactory;
+    protected final DefaultConrollerProviderImpl defaultControllerProvider;
 
     public PropertyFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final Class[] applicationEntityTypes) throws Exception {
 	super(props, defaultHibernateTypes, applicationEntityTypes);
 	entityFactory = new EntityFactory() {};
 	daoFactory = new DaoFactory() {};
+	defaultControllerProvider = new DefaultConrollerProviderImpl();
 	interceptor.setFactory(entityFactory);
     }
 
@@ -37,6 +41,7 @@ public class PropertyFactoryModule extends TransactionalModule {
 	super(sessionFactory, mappingExtractor, mappingsGenerator);
 	daoFactory = new DaoFactory() {};
 	entityFactory = new EntityFactory() {};
+	defaultControllerProvider = new DefaultConrollerProviderImpl();
     }
 
     @Override
@@ -45,6 +50,8 @@ public class PropertyFactoryModule extends TransactionalModule {
 	bind(EntityFactory.class).toInstance(entityFactory);
 	// bind DaoFactory, which is needed purely for MetaPropertyFactory
 	bind(DaoFactory.class).toInstance(daoFactory);
+	// bind provider for default entity controller
+	bind(IDefaultConrollerProvider.class).toInstance(defaultControllerProvider);
 	// bind property factory
 	bind(IMetaPropertyFactory.class).to(DaoMetaPropertyFactory.class).in(Scopes.SINGLETON);
 
@@ -54,5 +61,6 @@ public class PropertyFactoryModule extends TransactionalModule {
     public void setInjector(final Injector injector) {
 	daoFactory.setInjector(injector);
 	entityFactory.setInjector(injector);
+	defaultControllerProvider.setInjector(injector);
     }
 }
