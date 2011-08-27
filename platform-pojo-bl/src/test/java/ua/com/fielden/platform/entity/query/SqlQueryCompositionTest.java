@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.TgVehicle;
@@ -12,7 +11,7 @@ import static org.junit.Assert.assertEquals;
 
 
 public class SqlQueryCompositionTest {
-    @Ignore
+
     @Test
     public void test_qry_sql1() {
 	final Table eqdetTable = new Table("EQDET", TgVehicle.class);
@@ -30,7 +29,6 @@ public class SqlQueryCompositionTest {
 	assertEquals("Incorrect sql", "SELECT T1.DESC_ AS C1, T1._ID AS C2, T1.KEY_ AS C3, T1._VERSION AS C4 FROM EQDET AS T1", qry.querySql());
     }
 
-    @Ignore
     @Test
     public void test_qry_sql2() {
 	final Table eqdetTable = new Table("EQDET", TgVehicle.class);
@@ -51,7 +49,7 @@ public class SqlQueryCompositionTest {
 	qry2.getYields().put("mv2Key", new YieldedProp(qry2, qry.getYields().get("mvKey"), "mv2Key"));
 	qry2.getYields().put("mv2Desc", new YieldedProp(qry2, qry.getYields().get("mvDesc"), "mv2Desc"));
 
-	assertEquals("Incorrect sql", "SELECT Q1.DESC_ AS C1, Q1._ID AS C2, Q1.KEY_ AS C3, Q1._VERSION AS C4 FROM (SELECT T1.DESC_ AS C1, T1._ID AS C2, T1.KEY_ AS C3, T1._VERSION AS C4 FROM EQDET AS T1) AS Q1", qry2.querySql());
+	assertEquals("Incorrect sql", "SELECT Q1.C1 AS C1, Q1.C2 AS C2, Q1.C3 AS C3, Q1.C4 AS C4 FROM (SELECT T1.DESC_ AS C1, T1._ID AS C2, T1.KEY_ AS C3, T1._VERSION AS C4 FROM EQDET AS T1) AS Q1", qry2.querySql());
     }
 
 }

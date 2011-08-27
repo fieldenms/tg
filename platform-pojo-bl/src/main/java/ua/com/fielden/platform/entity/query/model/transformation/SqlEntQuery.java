@@ -15,13 +15,13 @@ public class SqlEntQuery implements IQuerySource {
 	this.from = from;
     }
 
-    @Override
-    public IQuerySourceItem getSourceItem(final String dotNotatedName) {
-	return yields.get(dotNotatedName);
-    }
+//    @Override
+//    public IQuerySourceItem getSourceItem(final String dotNotatedName) {
+//	return yields.get(dotNotatedName);
+//    }
 
     @Override
-    public String alias() {
+    public String sqlAlias() {
 	int sourceIndex = 0;
 	IQuerySource currSource = this;
 	while (currSource != null) {
@@ -43,7 +43,7 @@ public class SqlEntQuery implements IQuerySource {
 	return predecessor;
     }
 
-    public String sql() {
+    public String sqlBody() {
 	return "(" + querySql() + ")";
     }
 
@@ -52,13 +52,13 @@ public class SqlEntQuery implements IQuerySource {
 	sb.append("SELECT ");
 	for (final Iterator<IYieldedItem> iterator = yields.values().iterator(); iterator.hasNext();) {
 	    final IYieldedItem yield = iterator.next();
-	    sb.append(yield.sql());
+	    sb.append(yield.getYieldStmt());
 	    if (iterator.hasNext()) {
 		sb.append(", ");
 	    }
 	}
 	sb.append(" FROM ");
-	sb.append(from.sql() + " AS " + from.alias());
+	sb.append(from.sqlBody() + " AS " + from.sqlAlias());
 
 	return sb.toString();
     }

@@ -17,7 +17,17 @@ public class TableColumn implements IQuerySourceItem {
     }
 
     @Override
-    public String sql() {
-	return table.alias() + "." + column; //T1.PURCH_PRICE, T1.ID_VEH_MODEL
+    public String sqlBody() {
+	return table.sqlAlias() + "." + column; //T1.PURCH_PRICE, T1.ID_VEH_MODEL
     }
+
+    @Override
+    public String sqlAlias() {
+	return column;
+    }
+
+//    @Override
+//    public IQuerySource getSource() {
+//	return table;
+//    }
 }

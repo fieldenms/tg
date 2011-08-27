@@ -32,8 +32,24 @@ public class YieldedProp implements IYieldedItem {
 
 
     @Override
-    public String sql() {
-	return query.alias() + "." + source.name();
-	//return source.sql() + " AS C" + getYieldPosition();
+    public String sqlBody() {
+	//return query.alias() + "." + source.column() + " AS " + column();
+	return query.sqlAlias() + "."  + sqlAlias();
+	//return source.sql();
     }
+
+    @Override
+    public String sqlAlias() {
+	return "C" + getYieldPosition();
+    }
+
+    @Override
+    public String getYieldStmt() {
+	return source.sqlBody() + " AS " + sqlAlias();
+    }
+
+//    @Override
+//    public IQuerySource getSource() {
+//        return query;
+//    }
 }

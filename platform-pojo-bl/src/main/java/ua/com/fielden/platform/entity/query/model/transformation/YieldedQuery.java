@@ -32,7 +32,19 @@ public class YieldedQuery implements IYieldedItem {
 
 
     @Override
-    public String sql() {
-	return "(" + yieldedQuery.sql() + ")" + " AS C" + getYieldPosition();
+    public String sqlBody() {
+	return "(" + yieldedQuery.sqlBody() + ")" + " AS C" + getYieldPosition();
+    }
+
+    @Override
+    public String sqlAlias() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public String getYieldStmt() {
+	// TODO Auto-generated method stub
+	return null;
     }
 }

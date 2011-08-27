@@ -16,7 +16,7 @@ public class Table implements IQuerySource {
     }
 
     @Override
-    public String alias() {
+    public String sqlAlias() {
 	int index = 0;
 	IQuerySource currSource = this;
 	while (currSource != null) {
@@ -27,7 +27,7 @@ public class Table implements IQuerySource {
     }
 
     @Override
-    public String sql() {
+    public String sqlBody() {
 	return name;
     }
 
@@ -37,12 +37,6 @@ public class Table implements IQuerySource {
 
     protected void setPredecessor(final IQuerySource predecessor) {
         this.predecessor = predecessor;
-    }
-
-    @Override
-    public IQuerySourceItem getSourceItem(final String dotNotatedName) {
-	// TODO Auto-generated method stub
-	return null;
     }
 
     public List<TableColumn> getColumns() {
