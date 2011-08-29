@@ -48,7 +48,7 @@ public class CriteriaTree extends AbstractTree {
     }
 
     public CriteriaTreeModel getCriteriaTreeModel() {
-        return (CriteriaTreeModel)getEntitiesTreeModel();
+	return (CriteriaTreeModel)getEntitiesTreeModel();
     }
 
     @Override

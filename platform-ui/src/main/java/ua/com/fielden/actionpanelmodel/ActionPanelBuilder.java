@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.Action;
 import javax.swing.JToolBar;
 
 import ua.com.fielden.platform.swing.actions.ActionChanger;
-import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.ActionChangeButton;
 
 /**
@@ -48,7 +48,7 @@ public class ActionPanelBuilder {
      *            - specified action, is needed for creating button for tool bar
      * @return instance of {@link ActionPanelBuilder}
      */
-    public ActionPanelBuilder addButton(final Command<?> action) {
+    public ActionPanelBuilder addButton(final Action action) {
 	itemList.add(new DefaultButtonItem(action));
 	return this;
     }

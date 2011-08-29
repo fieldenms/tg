@@ -12,8 +12,9 @@ public interface IPropertyProvider {
      * Notifies that property was selected.
      * 
      * @param propertyName - selected property.
+     * @param isSelect - indicates the state of the property.
      */
-    void selectProperty(String propertyName);
+    void propertyStateChanged(String propertyName, boolean isSelect);
 
     /**
      * Adds specified {@link IPropertySelectionListener} that listens property selection event.

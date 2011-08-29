@@ -28,8 +28,8 @@ import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
 import ua.com.fielden.platform.swing.ei.editors.LabelAndTooltipExtractor;
 import ua.com.fielden.platform.swing.model.UModel;
+import ua.com.fielden.platform.swing.model.UmState;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
-import ua.com.fielden.platform.treemodel.rules.Function;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.jgoodies.binding.value.Trigger;
@@ -43,6 +43,7 @@ import com.jgoodies.binding.value.Trigger;
 public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEntity, Object> {
 
     private final ExpressionPropertyEditor expressionEditor;
+    private final IPropertyProvider propertySelectionModel;
 
     /**
      * Initiates expression editor with specific {@link ExpressionEntity} instance and appropriate {@link ILightweightPropertyBinder}.
@@ -52,10 +53,21 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
      */
     public ExpressionEditorModel(final ExpressionEntity entity, final ILightweightPropertyBinder<ExpressionEntity> propertyBinder) {
 	super(entity, null, propertyBinder, false);
-	expressionEditor = new ExpressionPropertyEditor(entity);
+	this.expressionEditor = new ExpressionPropertyEditor(entity);
+	this.propertySelectionModel = new PropertyProvider();
+	this.propertySelectionModel.addPropertySelectionListener(getPropertySelectionListener());
 	final Map<String, IPropertyEditor> editors = new HashMap<String, IPropertyEditor>(getEditors());
 	editors.put("expression", expressionEditor);
 	setEditors(editors);
+    }
+
+    /**
+     * Returns the associated property selection model.
+     * 
+     * @return
+     */
+    public final IPropertyProvider getPropertySelectionModel() {
+	return propertySelectionModel;
     }
 
     @Override
@@ -76,26 +88,64 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 
     @Override
     protected Action createNewAction() {
-	return new AbstractAction() {
+	final Command<Void> action = new Command<Void>("New") {
+	    private static final long serialVersionUID = 1L;
 
 	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		// TODO Auto-generated method stub
-
+	    protected boolean preAction() {
+		notifyActionStageChange(ActionStage.NEW_PRE_ACTION);
+		setState(UmState.UNDEFINED);
+		return super.preAction();
 	    }
+
+	    @Override
+	    protected Void action(final ActionEvent event) throws Exception {
+		notifyActionStageChange(ActionStage.NEW_ACTION);
+		return null;
+	    }
+
+	    @Override
+	    protected void postAction(final Void newEntity) {
+		setState(UmState.NEW);
+		notifyActionStageChange(ActionStage.NEW_POST_ACTION);
+	    }
+
 	};
+	action.setEnabled(true);
+	action.putValue(Action.SHORT_DESCRIPTION, "Create new");
+	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_N);
+	return action;
     }
 
     @Override
     protected Action createEditAction() {
-	return new AbstractAction() {
+	final Command<Void> action = new Command<Void>("Edit") {
+	    private static final long serialVersionUID = 1L;
 
 	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		// TODO Auto-generated method stub
-
+	    protected boolean preAction() {
+		notifyActionStageChange(ActionStage.EDIT_PRE_ACTION);
+		setState(UmState.UNDEFINED);
+		return super.preAction();
 	    }
+
+	    @Override
+	    protected Void action(final ActionEvent arg0) throws Exception {
+		notifyActionStageChange(ActionStage.EDIT_ACTION);
+		return null;
+	    }
+
+	    @Override
+	    protected void postAction(final Void entity) {
+		setState(UmState.EDIT);
+		notifyActionStageChange(ActionStage.EDIT_POST_ACTION);
+	    }
+
 	};
+	action.setEnabled(canEdit());
+	action.putValue(Action.SHORT_DESCRIPTION, "Edit");
+	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_E);
+	return action;
     }
 
     @Override
@@ -107,8 +157,8 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	    protected boolean preAction() {
 		expressionEditor.commitEditorValue();
 		notifyActionStageChange(ActionStage.SAVE_PRE_ACTION);
-		//setState(UmState.UNDEFINED);
-		//getCancelAction().setEnabled(false);
+		setState(UmState.UNDEFINED);
+		getCancelAction().setEnabled(false);
 
 		lockBlockingLayerIfProvided(true);
 		setMessageForBlockingLayerIfProvided("Applying...");
@@ -136,7 +186,7 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 			if (getView() != null) {
 			    getView().notify("", MessageType.NONE);
 			}
-			//setState(UmState.VIEW);
+			setState(UmState.VIEW);
 			notifyActionStageChange(ActionStage.SAVE_POST_ACTION_SUCCESSFUL);
 		    } else {
 			if (getView() != null) {
@@ -144,8 +194,8 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 			} else {
 			    new DialogWithDetails(null, "Apply", result.getEx()).setVisible(true);
 			}
-			//getCancelAction().setEnabled(true);
-			//super.postAction(result);
+			getCancelAction().setEnabled(true);
+			super.postAction(result);
 			notifyActionStageChange(ActionStage.SAVE_POST_ACTION_FAILED);
 		    }
 		} finally {
@@ -163,34 +213,31 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 
     @Override
     protected Action createCancelAction() {
-	final Command<ExpressionEntity> action = new Command<ExpressionEntity>("Discard") {
+	final Command<Void> action = new Command<Void>("Discard") {
 	    private static final long serialVersionUID = 1L;
 
 	    @Override
 	    protected boolean preAction() {
+		expressionEditor.setText("", false, 0);
 		notifyActionStageChange(ActionStage.CANCEL_PRE_ACTION);
-		//setState(UmState.UNDEFINED);
-		//getSaveAction().setEnabled(false);
+		setState(UmState.UNDEFINED);
+		getSaveAction().setEnabled(false);
 		return super.preAction();
 	    }
 
 	    @Override
-	    protected ExpressionEntity action(final ActionEvent arg0) throws Exception {
+	    protected Void action(final ActionEvent arg0) throws Exception {
 		notifyActionStageChange(ActionStage.CANCEL_ACTION);
-		// wait before the commit process finish
-		return getManagedEntity();
-
+		return null;
 	    }
 
 	    @Override
-	    protected void postAction(final ExpressionEntity entity) {
+	    protected void postAction(final Void entity) {
 		if (getView() != null) {
 		    getView().notify("", MessageType.NONE);
 		}
-		//setEntity(entity);
-		//setState(UmState.VIEW);
+		setState(UmState.VIEW);
 		notifyActionStageChange(ActionStage.CANCEL_POST_ACTION);
-		System.out.println(getEntity().getExpression());
 		super.postAction(entity);
 	    }
 	};
@@ -230,17 +277,17 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
      * @param function
      * @return
      */
-    protected Action getFunctionAction(final Function function){
-	final Action functionAction= new AbstractAction(function.getTitle()) {
+    protected Action getFunctionAction(final String title, final String desc, final String insertionText, final int relativeIndex){
+	final Action functionAction= new AbstractAction(title) {
 
 	    private static final long serialVersionUID = 8346239807039308077L;
 
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
-		expressionEditor.insertText(function.getEqueryName(), false);
+		expressionEditor.insertText(insertionText, false, relativeIndex);
 	    }
 	};
-	functionAction.putValue(Action.SHORT_DESCRIPTION, function.getDesc());
+	functionAction.putValue(Action.SHORT_DESCRIPTION, desc);
 	return functionAction;
     }
 
@@ -249,12 +296,14 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
      * 
      * @return
      */
-    protected IPropertySelectionListener getPropertySelectionListener(){
+    private IPropertySelectionListener getPropertySelectionListener(){
 	return new IPropertySelectionListener() {
 
 	    @Override
-	    public void propertySelected(final String property) {
-		expressionEditor.insertText(property, true);
+	    public void propertyStateChanged(final String property, final boolean isSelected) {
+		if(isSelected){
+		    expressionEditor.insertText(property, true, property.length());
+		}
 	    }
 	};
     }
@@ -281,6 +330,11 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	 * Indexes, those points on to the beginning and on to the end of the place where text should be inserted.
 	 */
 	private int startIndex, endIndex;
+
+	/**
+	 * relative index of the caret position.
+	 */
+	private int relativeCaretPosition;
 
 
 	public ExpressionPropertyEditor(final ExpressionEntity entity){
@@ -319,15 +373,33 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	}
 
 	/**
+	 * Set the specified text in to the editor.
+	 * 
+	 * @param text
+	 * @param select
+	 * @param relativeCaretPosition
+	 */
+	public void setText(final String text, final boolean select, final int relativeCaretPosition){
+	    final JTextField field = editor.getView();
+	    this.textToInsert = text;
+	    this.select = select;
+	    this.relativeCaretPosition=relativeCaretPosition;
+	    startIndex = 0;
+	    endIndex = field.getText().length();
+	    field.requestFocusInWindow();
+	}
+
+	/**
 	 * Inserts specified text at the caret position or replaces selected text.
 	 * 
 	 * @param textToInsert - specified text to insert.
 	 * @param select - indicates whether select inserted text or not.
 	 */
-	public void insertText(final String textToInsert, final boolean select){
+	public void insertText(final String textToInsert, final boolean select, final int relativeCaretPosition){
 	    final JTextField field = editor.getView();
 	    this.textToInsert = textToInsert;
 	    this.select = select;
+	    this.relativeCaretPosition = relativeCaretPosition;
 	    if(field.getSelectionStart() == field.getSelectionEnd()){
 		startIndex = endIndex = field.getCaretPosition();
 	    } else {
@@ -401,7 +473,7 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 		    if(textToInsert != null){
 			final String previousText = textField.getText();
 			textField.setText(previousText.substring(0, startIndex) + textToInsert + previousText.substring(endIndex));
-			textField.setCaretPosition(startIndex+textToInsert.length());
+			textField.setCaretPosition(startIndex+relativeCaretPosition);
 			if(select){
 			    textField.select(startIndex, startIndex + textToInsert.length());
 			}

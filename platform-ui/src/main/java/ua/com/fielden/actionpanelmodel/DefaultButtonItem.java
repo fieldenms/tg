@@ -1,8 +1,7 @@
 package ua.com.fielden.actionpanelmodel;
 
+import javax.swing.Action;
 import javax.swing.JToolBar;
-
-import ua.com.fielden.platform.swing.actions.Command;
 
 /**
  * Represents the tool bar button and implements {@link IActionItem}
@@ -12,14 +11,14 @@ import ua.com.fielden.platform.swing.actions.Command;
  */
 public class DefaultButtonItem implements IActionItem {
 
-    private final Command<?> action;
+    private final Action action;
 
     /**
      * creates new {@link DefaultButtonItem} for the specified action
      * 
      * @param action
      */
-    public DefaultButtonItem(final Command<?> action) {
+    public DefaultButtonItem(final Action action) {
 	this.action = action;
     }
 
@@ -36,7 +35,7 @@ public class DefaultButtonItem implements IActionItem {
      * 
      * @return
      */
-    public Command<?> getAction() {
+    public Action getAction() {
 	return action;
     }
 

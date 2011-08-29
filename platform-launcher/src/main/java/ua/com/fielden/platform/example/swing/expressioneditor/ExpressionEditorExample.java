@@ -2,12 +2,9 @@ package ua.com.fielden.platform.example.swing.expressioneditor;
 
 import java.awt.Dimension;
 
-import javax.swing.JPanel;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-
-import net.miginfocom.swing.MigLayout;
 
 import org.hibernate.cfg.Configuration;
 
@@ -19,19 +16,15 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.example.entities.Vehicle;
 import ua.com.fielden.platform.example.ioc.ExampleRmaHibernateModule;
-import ua.com.fielden.platform.expression.editor.ExpressionEditorModel;
-import ua.com.fielden.platform.expression.editor.ExpressionEditorView;
 import ua.com.fielden.platform.expression.editor.IPropertyProvider;
-import ua.com.fielden.platform.expression.editor.PropertyProvider;
 import ua.com.fielden.platform.expression.entity.ExpressionEntity;
 import ua.com.fielden.platform.expression.entity.validator.ExpressionValidator;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
-import ua.com.fielden.platform.swing.dynamicreportstree.CriteriaTree;
-import ua.com.fielden.platform.swing.dynamicreportstree.TreePanel;
-import ua.com.fielden.platform.swing.ei.LightweightPropertyBinder;
 import ua.com.fielden.platform.swing.review.DefaultDynamicCriteriaPropertyFilter;
+import ua.com.fielden.platform.swing.review.wizard.development.WizardModel;
+import ua.com.fielden.platform.swing.review.wizard.development.WizardView;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.treemodel.CriteriaTreeModel;
@@ -65,19 +58,9 @@ public class ExpressionEditorExample extends AbstractUiApplication {
 
     @Override
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
-	final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[fill, grow]", "[][fill, grow]"));
-	final ExpressionEntity expressionEntity = entityFactory.newEntity(ExpressionEntity.class, 0L);
-	expressionEntity.setEntityClass(Vehicle.class);
-	final IPropertyProvider propertyProvider = new PropertyProvider();
-	final ExpressionEditorView expressionView = new ExpressionEditorView(new ExpressionEditorModel(expressionEntity,new LightweightPropertyBinder<ExpressionEntity>(null, null)), propertyProvider);
-	final CriteriaTreeModel treeModel = createTreeModel(Vehicle.class);
-	final CriteriaTree tree = new CriteriaTree(treeModel);
-	tree.getSelectionModel().addTreeSelectionListener(createSelectionListener(propertyProvider, treeModel));
-	final TreePanel treePanel = new TreePanel(tree);
-	panel.add(expressionView,"wrap");
-	panel.add(treePanel);
-	panel.setPreferredSize(new Dimension(640,800));
-	SimpleLauncher.show("Expression editor example", panel);
+	final WizardView<Vehicle> wizard = new WizardView<Vehicle>(new WizardModel<Vehicle>(entityFactory, Vehicle.class));
+	wizard.setPreferredSize(new Dimension(640,800));
+	SimpleLauncher.show("Expression editor example", wizard);
     }
 
     private TreeSelectionListener createSelectionListener(final IPropertyProvider propertyProvider, final CriteriaTreeModel treeModel) {
@@ -85,7 +68,7 @@ public class ExpressionEditorExample extends AbstractUiApplication {
 
 	    @Override
 	    public void valueChanged(final TreeSelectionEvent e) {
-		propertyProvider.selectProperty(treeModel.getPropertyNameFor((DefaultMutableTreeNode)e.getPath().getLastPathComponent()));
+		propertyProvider.propertyStateChanged(treeModel.getPropertyNameFor((DefaultMutableTreeNode)e.getPath().getLastPathComponent()), true);
 	    }
 	};
     }

@@ -14,6 +14,7 @@ public interface IPropertySelectionListener extends EventListener {
      * Would be invoked if property selection event was triggered.
      * 
      * @param property
+     * @param isSelected
      */
-    void propertySelected(String property);
+    void propertyStateChanged(final String property, final boolean isSelected);
 }
