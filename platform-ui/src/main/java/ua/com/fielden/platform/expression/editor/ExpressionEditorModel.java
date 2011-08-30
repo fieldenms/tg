@@ -4,6 +4,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +20,7 @@ import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.expression.IExpressionErrorPosition;
 import ua.com.fielden.platform.expression.entity.ExpressionEntity;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
@@ -277,14 +280,14 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
      * @param function
      * @return
      */
-    protected Action getFunctionAction(final String title, final String desc, final String insertionText, final int relativeIndex){
+    protected Action getFunctionAction(final String title, final String desc, final String insertionText, final TextInsertionType insertionType, final boolean select, final int relativeIndex){
 	final Action functionAction= new AbstractAction(title) {
 
 	    private static final long serialVersionUID = 8346239807039308077L;
 
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
-		expressionEditor.insertText(insertionText, false, relativeIndex);
+		expressionEditor.insertText(insertionText, insertionType, select, relativeIndex);
 	    }
 	};
 	functionAction.putValue(Action.SHORT_DESCRIPTION, desc);
@@ -302,7 +305,7 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	    @Override
 	    public void propertyStateChanged(final String property, final boolean isSelected) {
 		if(isSelected){
-		    expressionEditor.insertText(property, true, property.length());
+		    expressionEditor.insertText(property, TextInsertionType.REPLACE, true, property.length());
 		}
 	    }
 	};
@@ -315,6 +318,8 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	private final Trigger commitTrigger;
 
 	private ExpressionEntity entity;
+
+	private FocusGainedOperation focusGainedOperation = FocusGainedOperation.NONE;
 
 	/**
 	 * Temporary holds text to insert in to the expression editor. After the text was inserted, the property value can be set to null.
@@ -336,9 +341,9 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	 */
 	private int relativeCaretPosition;
 
-
 	public ExpressionPropertyEditor(final ExpressionEntity entity){
 	    this.entity = entity;
+	    entity.getProperty(getPropertyName()).addValidationResultsChangeListener(createExpressionValidationListener());
 	    this.commitTrigger = new Trigger();
 	    final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract("expression", entity.getType());
 
@@ -353,6 +358,31 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	    final String actionName = "Enter action";
 	    field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), actionName);
 	    field.getActionMap().put(actionName, createCommiteAction());
+	}
+
+	private PropertyChangeListener createExpressionValidationListener() {
+	    return new PropertyChangeListener() {
+
+		@Override
+		public void propertyChange(final PropertyChangeEvent evt) {
+		    final Object  obj = evt.getNewValue();
+		    final Result res = obj instanceof Result ? (Result) obj : null;
+		    if(res != null && !res.isSuccessful() && res.getEx() instanceof IExpressionErrorPosition){
+			final Exception ex = res.getEx();
+			final JTextField field = editor.getView();
+			final IExpressionErrorPosition errorPosition = (IExpressionErrorPosition) ex;
+			if(field.hasFocus()){
+			    field.setCaretPosition(errorPosition.position().intValue());
+			}else{
+			    focusGainedOperation = FocusGainedOperation.CARRET_CONTROL;
+			    relativeCaretPosition = errorPosition.position().intValue();
+			    editor.getView().requestFocusInWindow();
+			}
+		    }
+
+		}
+	    };
+
 	}
 
 	/**
@@ -381,31 +411,52 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	 */
 	public void setText(final String text, final boolean select, final int relativeCaretPosition){
 	    final JTextField field = editor.getView();
-	    this.textToInsert = text;
-	    this.select = select;
-	    this.relativeCaretPosition=relativeCaretPosition;
-	    startIndex = 0;
-	    endIndex = field.getText().length();
-	    field.requestFocusInWindow();
+	    field.selectAll();
+	    insertText(text, TextInsertionType.REPLACE, false, relativeCaretPosition);
 	}
 
 	/**
 	 * Inserts specified text at the caret position or replaces selected text.
 	 * 
 	 * @param textToInsert - specified text to insert.
+	 * @param insertionType
 	 * @param select - indicates whether select inserted text or not.
 	 */
-	public void insertText(final String textToInsert, final boolean select, final int relativeCaretPosition){
+	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int relativeCaretPosition){
 	    final JTextField field = editor.getView();
-	    this.textToInsert = textToInsert;
-	    this.select = select;
-	    this.relativeCaretPosition = relativeCaretPosition;
 	    if(field.getSelectionStart() == field.getSelectionEnd()){
 		startIndex = endIndex = field.getCaretPosition();
+		this.textToInsert = textToInsert;
+		this.select = select;
+		this.relativeCaretPosition = select  ? textToInsert.length() : relativeCaretPosition;
+		if(TextInsertionType.APPLY == insertionType){
+		    this.select = false;
+		    this.relativeCaretPosition = relativeCaretPosition;
+		}
 	    } else {
-		startIndex = field.getSelectionStart();
-		endIndex = field.getSelectionEnd();
+		this.select = select;
+		switch(insertionType){
+		case APPLY:
+		    this.startIndex = field.getSelectionStart();
+		    this.endIndex = field.getSelectionEnd();
+		    this.textToInsert = textToInsert.substring(0, relativeCaretPosition) //
+		    /*              */+ field.getText().substring(startIndex, endIndex) + textToInsert.substring(relativeCaretPosition);
+		    this.relativeCaretPosition = this.textToInsert.length();
+		    break;
+		case APPEND:
+		    this.startIndex = this.endIndex = field.getCaretPosition();
+		    this.textToInsert = textToInsert;
+		    this.relativeCaretPosition = relativeCaretPosition;
+		    break;
+		case REPLACE:
+		    this.startIndex = field.getSelectionStart();
+		    this.endIndex = field.getSelectionEnd();
+		    this.relativeCaretPosition = relativeCaretPosition;
+		    this.textToInsert = textToInsert;
+		    break;
+		}
 	    }
+	    focusGainedOperation = FocusGainedOperation.TEXT_INSERTION;
 	    field.requestFocusInWindow();
 	}
 
@@ -460,6 +511,17 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	    commitTrigger.triggerCommit();
 	}
 
+	/**
+	 * Determines the operation that should be performed after the text field gained the focus. There are three type of operation:
+	 * text insertion, caret position controlling or there was no operation to perform.
+	 * 
+	 * @author TG Team
+	 *
+	 */
+	private static enum FocusGainedOperation{
+	    TEXT_INSERTION, CARRET_CONTROL, NONE;
+	}
+
 	private FocusListener createExpressionFocusListener(final JTextField textField) {
 	    return new FocusListener() {
 
@@ -470,18 +532,37 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 
 		@Override
 		public void focusGained(final FocusEvent e) {
-		    if(textToInsert != null){
+		    switch(focusGainedOperation){
+		    case TEXT_INSERTION:
 			final String previousText = textField.getText();
 			textField.setText(previousText.substring(0, startIndex) + textToInsert + previousText.substring(endIndex));
 			textField.setCaretPosition(startIndex+relativeCaretPosition);
 			if(select){
 			    textField.select(startIndex, startIndex + textToInsert.length());
+			}else{
+			    textField.select(textField.getCaretPosition(), textField.getCaretPosition());
 			}
-			textToInsert = null;
+			break;
+		    case CARRET_CONTROL:
+			textField.setCaretPosition(relativeCaretPosition);
+			break;
 		    }
+		    focusGainedOperation = FocusGainedOperation.NONE;
 		}
 	    };
 	}
 
+    }
+
+    /**
+     * Determines the way the text will be inserted in to the editor. There are three ways: Apply, Append and Replace.
+     * The first type - Apply is used for functions like: YEAR(), SUM(). The second type: Append is used for operators like: +, /.
+     * The Third type - Replace is used to replace selected text in the editor.
+     * 
+     * @author TG Team
+     *
+     */
+    public static enum TextInsertionType{
+	APPLY, APPEND, REPLACE;
     }
 }

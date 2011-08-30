@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.expression.editor.ExpressionEditorModel.TextInsertionType;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.swing.view.BaseNotifPanel;
@@ -56,24 +57,24 @@ public class ExpressionEditorView extends BaseNotifPanel<ExpressionEditorModel> 
 
 	//row 1
 	functionPanel.add(DummyBuilder.label("Date"));
-	functionPanel.add(new JButton(model.getFunctionAction("Year", "Year", "YEAR()" ,5)));
-	functionPanel.add(new JButton(model.getFunctionAction("Month", "Month", "MONTH()" ,6)));
-	functionPanel.add(new JButton(model.getFunctionAction("Day", "Day", "DAY()" ,4)), "wrap");
+	functionPanel.add(new JButton(model.getFunctionAction("Year", "Year", "YEAR()", TextInsertionType.APPLY, true, 5)));
+	functionPanel.add(new JButton(model.getFunctionAction("Month", "Month", "MONTH()", TextInsertionType.APPLY, true ,6)));
+	functionPanel.add(new JButton(model.getFunctionAction("Day", "Day", "DAY()", TextInsertionType.APPLY, true, 4)), "wrap");
 
 	//row 2
 	functionPanel.add(DummyBuilder.label("Mathematical"));
-	functionPanel.add(new JButton(model.getFunctionAction("+", "Addition", "+" ,1)));
-	functionPanel.add(new JButton(model.getFunctionAction("-", "Subtraction", "-" ,1)));
-	functionPanel.add(new JButton(model.getFunctionAction("*", "Multiplication", "*" ,1)));
-	functionPanel.add(new JButton(model.getFunctionAction("/", "Division", "/" ,1)), "wrap");
+	functionPanel.add(new JButton(model.getFunctionAction("+", "Addition", "+", TextInsertionType.APPEND, false, 1)));
+	functionPanel.add(new JButton(model.getFunctionAction("-", "Subtraction", "-", TextInsertionType.APPEND, false, 1)));
+	functionPanel.add(new JButton(model.getFunctionAction("*", "Multiplication", "*", TextInsertionType.APPEND, false, 1)));
+	functionPanel.add(new JButton(model.getFunctionAction("/", "Division", "/" ,TextInsertionType.APPEND, false, 1)), "wrap");
 
 	//row 3
 	functionPanel.add(DummyBuilder.label("Aggregation"));
-	functionPanel.add(new JButton(model.getFunctionAction("Count", "Count", "COUNT()" ,6)));
-	functionPanel.add(new JButton(model.getFunctionAction("Sum", "Summation", "SUM()" ,4)));
-	functionPanel.add(new JButton(model.getFunctionAction("Avg", "Average", "AVG()" ,4)));
-	functionPanel.add(new JButton(model.getFunctionAction("Min", "Minimum", "MIN()" ,4)));
-	functionPanel.add(new JButton(model.getFunctionAction("Max", "Maximum", "MAX()" ,4)), "wrap");
+	functionPanel.add(new JButton(model.getFunctionAction("Count", "Count", "COUNT()", TextInsertionType.APPLY, true, 6)));
+	functionPanel.add(new JButton(model.getFunctionAction("Sum", "Summation", "SUM()", TextInsertionType.APPLY, true, 4)));
+	functionPanel.add(new JButton(model.getFunctionAction("Avg", "Average", "AVG()", TextInsertionType.APPLY, true, 4)));
+	functionPanel.add(new JButton(model.getFunctionAction("Min", "Minimum", "MIN()", TextInsertionType.APPLY, true, 4)));
+	functionPanel.add(new JButton(model.getFunctionAction("Max", "Maximum", "MAX()", TextInsertionType.APPLY, true, 4)), "wrap");
 	return functionPanel;
     }
 
