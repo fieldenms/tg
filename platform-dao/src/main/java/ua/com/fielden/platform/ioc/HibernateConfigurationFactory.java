@@ -59,6 +59,7 @@ public class HibernateConfigurationFactory {
 	setSafely("c3p0.max_statements");
 	setSafely("c3p0.acquire_increment");
 	setSafely("c3p0.idle_test_period");
+	setSafely("hibernate.hbm2ddl.auto");
 
 	setSafely("hibernate.connection.url");
 	setSafely("hibernate.connection.driver_class");

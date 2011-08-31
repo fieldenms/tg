@@ -73,6 +73,10 @@ public abstract class TransactionalModule extends EntityModule {
 	if (mappingExtractor != null) {
 	    bind(MappingExtractor.class).toInstance(mappingExtractor);
 	}
+	// entity aggregates transformer
+	if (mappingsGenerator != null) {
+	    bind(MappingsGenerator.class).toInstance(mappingsGenerator);
+	}
 	// hibernate util
 	if (hibernateUtil != null) {
 	    bind(HibernateUtil.class).toInstance(hibernateUtil);
