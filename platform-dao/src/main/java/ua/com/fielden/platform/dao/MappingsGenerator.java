@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
+import ua.com.fielden.platform.persistence.DdlGenerator;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -35,8 +36,9 @@ import com.google.inject.Injector;
 public class MappingsGenerator {
     private static List<String> specialProps = Arrays.asList(new String[] { "id", "key", "desc", "version" });
 
-    private Map<Class, Class> hibTypesDefaults = new HashMap<Class, Class>();
+    private final Map<Class, Class> hibTypesDefaults = new HashMap<Class, Class>();
     private Injector hibTypesInjector;
+    private final DdlGenerator ddlGenerator = new DdlGenerator();
 
     public MappingsGenerator(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector) {
 	this.hibTypesDefaults.putAll(hibTypesDefaults);
@@ -68,18 +70,9 @@ public class MappingsGenerator {
 	return sb.toString();
     }
 
-    private String getTableClause(final Class entityType) {
-	final String providedTableName = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType).value();
-	if (!StringUtils.isEmpty(providedTableName)) {
-	    return providedTableName;
-	} else {
-	    return entityType.getSimpleName().toUpperCase() + "_";
-	}
-    }
-
     private String getCommonEntityId() {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("\t<id name=\"id\" column=\"_ID\" type=\"long\" access=\"property\">\n");
+	sb.append("\t<id name=\"id\" column=\"" + ddlGenerator.id + "\" type=\"long\" access=\"property\">\n");
 	sb.append("\t\t<generator class=\"hilo\">\n");
 	sb.append("\t\t\t<param name=\"table\">UNIQUE_ID</param>\n");
 	sb.append("\t\t\t<param name=\"column\">NEXT_VALUE</param>\n");
@@ -91,7 +84,7 @@ public class MappingsGenerator {
 
     private String getOneToOneEntityId() {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("\t<id name=\"id\" column=\"_ID\" type=\"long\" access=\"property\">\n");
+	sb.append("\t<id name=\"id\" column=\"" + ddlGenerator.id + "\" type=\"long\" access=\"property\">\n");
 	sb.append("\t\t<generator class=\"foreign\">\n");
 	sb.append("\t\t\t<param name=\"property\">key</param>\n");
 	sb.append("\t\t</generator>\n");
@@ -111,12 +104,14 @@ public class MappingsGenerator {
 
     private String getCommonEntityVersion() {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("\t<version name=\"version\" column=\"_VERSION\" type=\"long\" access=\"field\" insert=\"false\"/>\n");
+	sb.append("\t<version name=\"version\" type=\"long\" access=\"field\" insert=\"false\">\n");
+	sb.append("\t\t<column name=\"" + ddlGenerator.version + "\" default=\"0\" />\n");
+	sb.append("\t</version>\n");
 	return sb.toString();
     }
 
     private String getSimpleKey() {
-	return getSimpleKeyWithColumn("KEY_");
+	return getSimpleKeyWithColumn(ddlGenerator.key);
     }
 
     private String getSimpleKeyWithColumn(final String column) {
@@ -124,7 +119,7 @@ public class MappingsGenerator {
     }
 
     private String getSimpleDesc() {
-	return getPlainProperty("desc", "DESC_", "string");
+	return getPlainProperty("desc", ddlGenerator.desc, "string");
     }
 
     /**
@@ -215,23 +210,32 @@ public class MappingsGenerator {
 	return AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType));
     }
 
+    private String getKeyMappingString(final Class entityType) {
+	final String keyColumnOverride = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType).keyColumn();
+	if (!StringUtils.isEmpty(keyColumnOverride)) {
+	    return getSimpleKeyWithColumn(keyColumnOverride);
+	} else {
+	    if (String.class.equals(AnnotationReflector.getKeyType(entityType))) {
+		return  getSimpleKey();
+	    } else if (isOneToOne(entityType)) {
+		// Ignore if key type is DynamicEntityKey.class
+		return getOneToOneProperty("key", AnnotationReflector.getKeyType(entityType));
+	    } else {
+		return null; //throw new RuntimeException("Can not generate mapping for key for type :" + entityType.getName());
+	    }
+	}
+    }
+
     private String getClassMapping(final Class entityType) throws Exception {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + getTableClause(entityType) + "\">\n");
+	sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + ddlGenerator.getTableClause(entityType) + "\">\n");
 	sb.append(isOneToOne(entityType) ? getOneToOneEntityId() : getCommonEntityId());
 	sb.append(getCommonEntityVersion());
 
 	// Mapping key
-	final String keyColumnOverride = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType).keyColumn();
-	if (!StringUtils.isEmpty(keyColumnOverride)) {
-	    sb.append(getSimpleKeyWithColumn(keyColumnOverride));
-	} else {
-	    if (String.class.equals(AnnotationReflector.getKeyType(entityType))) {
-		sb.append(getSimpleKey());
-	    } else if (isOneToOne(entityType)) {
-		// Ignore if key type is DynamicEntityKey.class
-		sb.append(getOneToOneProperty("key", AnnotationReflector.getKeyType(entityType)));
-	    }
+	final String keyMapping = getKeyMappingString(entityType);
+	if (keyMapping != null) {
+	    sb.append(keyMapping);
 	}
 
 	if (AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType)/* && !isOneToOne(entityType)*/) {
@@ -259,6 +263,7 @@ public class MappingsGenerator {
 		}
 	    }
 	}
+
 	sb.append("</class>\n");
 	return sb.toString();
     }
