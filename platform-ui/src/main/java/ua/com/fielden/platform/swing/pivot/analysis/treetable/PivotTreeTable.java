@@ -7,6 +7,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.swing.ListSelectionModel;
@@ -24,6 +25,7 @@ import org.jdesktop.swingx.JXTable;
 import org.jdesktop.swingx.table.ColumnFactory;
 import org.jdesktop.swingx.table.TableColumnExt;
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
+import org.jdesktop.swingx.treetable.TreeTableNode;
 
 import ua.com.fielden.platform.reportquery.IAggregatedProperty;
 import ua.com.fielden.platform.reportquery.IDistributedProperty;
@@ -193,8 +195,16 @@ public class PivotTreeTable extends FilterableTreeTable {
 
     private void reloadWithoutCollapsing() {
 	final FilterableTreeTableModel filterableModel = (FilterableTreeTableModel) getTreeTableModel();
+	final TreeTableNode rootNode = filterableModel.getOriginModel().getRoot();
 	final TreePath selectedPath = getPathForRow(getSelectedRow());
-	filterableModel.reload();
+	if(rootNode!=null){
+	    final Enumeration<?> expandedPaths = getExpandedDescendants(new TreePath(rootNode));
+	    filterableModel.reload();
+	    while(expandedPaths != null && expandedPaths.hasMoreElements()){
+		final TreePath path = (TreePath)expandedPaths.nextElement();
+		expandPath(path);
+	    }
+	}
 	scrollPathToVisible(selectedPath);
 	getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
     }
@@ -206,7 +216,10 @@ public class PivotTreeTable extends FilterableTreeTable {
 
     private void refreshTreeTable() {
 	if (getModel() instanceof AbstractTableModel) {
+	    final TreePath selectedPath = getPathForRow(getSelectedRow());
 	    ((AbstractTableModel) getModel()).fireTableStructureChanged();
+	    //scrollPathToVisible(selectedPath);
+	    getSelectionModel().setSelectionInterval(0, getRowForPath(selectedPath));
 	}
     }
 

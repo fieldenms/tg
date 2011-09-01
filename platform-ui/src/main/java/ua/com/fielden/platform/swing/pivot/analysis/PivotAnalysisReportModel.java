@@ -123,9 +123,9 @@ public class PivotAnalysisReportModel<T extends AbstractEntity, DAO extends IEnt
 	pivotTablePanel = new FilterableTreeTablePanel<PivotTreeTable>(new PivotTreeTable(new FilterableTreeTableModel(treeTableModel)), createPivotFilter(), "find item");
 	final PivotTreeTable treeTable = pivotTablePanel.getTreeTable();
 	treeTable.addMouseListener(createDoubleClickListener(treeTable));
-	final List<IDistributedProperty> availableDistributionProperties = getSelectedDistributionProperties();
-	for (int index = 0; index < availableDistributionProperties.size(); index++) {
-	    treeTable.addGroupParameter(availableDistributionProperties.get(index), index);
+	final List<IDistributedProperty> selectedDistributionProperties = getSelectedDistributionProperties();
+	for (int index = 0; index < selectedDistributionProperties.size(); index++) {
+	    treeTable.addGroupParameter(selectedDistributionProperties.get(index), index);
 	}
 	final List<Pair<IAggregatedProperty, Integer>> availableAggregationProperties = pObj instanceof PivotAnalysisPersistentObject ? ((PivotAnalysisPersistentObject) pObj).getSelectedAggregationPropertiesWithWidth()
 		: new ArrayList<Pair<IAggregatedProperty, Integer>>();
@@ -156,7 +156,7 @@ public class PivotAnalysisReportModel<T extends AbstractEntity, DAO extends IEnt
 
 	    private List<Pair<IDistributedProperty, Object>> createChoosenProperty(final TreePath newPath) {
 		final List<Pair<IDistributedProperty, Object>> choosenItems = new ArrayList<Pair<IDistributedProperty, Object>>();
-		final List<IDistributedProperty> distributionProperties = getAvailableDistributionProperties();
+		final List<IDistributedProperty> distributionProperties = getSelectedDistributionProperties();
 		for (int index = 0; index < newPath.getPathCount(); index++) {
 		    final PivotTreeTableNode node = (PivotTreeTableNode) newPath.getPathComponent(index);
 		    final IDistributedProperty distributionProperty = distributionProperties.get(index);
@@ -536,7 +536,7 @@ public class PivotAnalysisReportModel<T extends AbstractEntity, DAO extends IEnt
 	dataCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
 
 	//exporting created tree.
-	traceTree(new TreePath(rootNode), sheet, dataCellStyle, getAvailableDistributionProperties().size(), 1);
+	traceTree(new TreePath(rootNode), sheet, dataCellStyle, getSelectedDistributionProperties().size(), 1);
 
 	final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
 
@@ -599,8 +599,8 @@ public class PivotAnalysisReportModel<T extends AbstractEntity, DAO extends IEnt
     }
 
     private String[] initPropertyTitles() {
-	final List<IDistributedProperty> distributionProperties = getAvailableDistributionProperties();
-	final List<IAggregatedProperty> aggregationProperties = getAvailableAggregationProperties();
+	final List<IDistributedProperty> distributionProperties = getSelectedDistributionProperties();
+	final List<IAggregatedProperty> aggregationProperties = getSelectedAggregationProperties();
 	final String propertyTitles[] = new String[1 + distributionProperties.size() + aggregationProperties.size()];
 	propertyTitles[0] = "Grand totals";
 	for (int index = 0; index < distributionProperties.size(); index++) {

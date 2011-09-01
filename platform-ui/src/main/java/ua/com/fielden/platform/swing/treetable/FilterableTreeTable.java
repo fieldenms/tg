@@ -56,9 +56,15 @@ public class FilterableTreeTable extends JXTreeTable {
 
 	filterableModel.addFilterListener(new IFilterListener() {
 
+	    private TreePath prevSelected;
+
 	    @Override
 	    public void postFilter(final IFilterableModel model) {
 		expandAll();
+		final int row = getRowForPath(prevSelected);
+		if(row >= 0){
+		    getSelectionModel().setSelectionInterval(0, row);
+		}
 	    }
 
 	    @Override
@@ -68,6 +74,7 @@ public class FilterableTreeTable extends JXTreeTable {
 
 	    @Override
 	    public void preFilter(final IFilterableModel model) {
+		prevSelected = getPathForRow(getSelectedRow());
 	    }
 	});
 
