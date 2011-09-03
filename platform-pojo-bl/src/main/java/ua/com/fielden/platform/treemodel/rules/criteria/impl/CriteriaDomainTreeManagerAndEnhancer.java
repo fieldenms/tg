@@ -8,7 +8,6 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeEnhancer;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager.ICriteriaDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeRepresentation;
@@ -16,6 +15,7 @@ import ua.com.fielden.platform.treemodel.rules.criteria.ILocatorDomainTreeManage
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
@@ -55,7 +55,7 @@ public class CriteriaDomainTreeManagerAndEnhancer extends AbstractDomainTreeMana
     }
 
     @Override
-    protected ICriteriaDomainTreeRepresentation createRepresentation(final IDomainTreeRepresentation base) {
+    protected DomainTreeRepresentationAndEnhancer createRepresentation(final AbstractDomainTreeRepresentation base) {
 	return new CriteriaDomainTreeRepresentationAndEnhancer(base);
     }
 
@@ -339,7 +339,7 @@ public class CriteriaDomainTreeManagerAndEnhancer extends AbstractDomainTreeMana
     protected class CriteriaDomainTreeRepresentationAndEnhancer extends DomainTreeRepresentationAndEnhancer implements ICriteriaDomainTreeRepresentation {
 	private static final long serialVersionUID = -5345869657944629725L;
 
-	protected CriteriaDomainTreeRepresentationAndEnhancer(final IDomainTreeRepresentation base) {
+	protected CriteriaDomainTreeRepresentationAndEnhancer(final AbstractDomainTreeRepresentation base) {
 	    super(base);
 	}
 

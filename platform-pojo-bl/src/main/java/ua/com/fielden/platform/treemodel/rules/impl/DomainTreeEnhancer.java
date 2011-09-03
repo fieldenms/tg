@@ -294,7 +294,7 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      * @param originalAndEnhancedRootTypes
      * @return
      */
-    private static Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> extractAll(final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
+    protected static Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> extractAll(final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
 	final Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> newCalculatedProperties = new HashMap<Pair<Class<?>, String>, Map<String, ICalculatedProperty>>();
 	for (final Entry<Class<?>, Class<?>> originalAndEnhanced : originalAndEnhancedRootTypes.entrySet()) {
 	    final List<ICalculatedProperty> calc = reload(originalAndEnhanced.getValue(), originalAndEnhanced.getKey(), "");
@@ -459,5 +459,13 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 	} else if (!rootTypes.equals(other.rootTypes))
 	    return false;
 	return true;
+    }
+
+    protected Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> calculatedProperties() {
+        return calculatedProperties;
+    }
+
+    protected Map<Class<?>, Class<?>> getOriginalAndEnhancedRootTypes() {
+        return originalAndEnhancedRootTypes;
     }
 }

@@ -82,7 +82,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	// this field unfortunately should be lazy loaded due to heavy-weight nature (deep, circular tree of properties)
 	includedProperties = createRootsMap();
     }
-    
+
     /**
      * Constructs recursively the list of properties using given list of fields.
      *
@@ -309,6 +309,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	private void fireProperty(final Class<?> root, final String property, final boolean added) {
+	    System.out.println("fire property [" + property + "] for type [" + root.getSimpleName() + "] added [" + added +"].");
 	    for (final IStructureChangedListener listener : listeners) {
 		if (added) {
 		    listener.propertyAdded(root, property);

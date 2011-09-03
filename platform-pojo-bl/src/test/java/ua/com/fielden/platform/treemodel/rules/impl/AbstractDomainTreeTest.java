@@ -50,7 +50,7 @@ public abstract class AbstractDomainTreeTest {
 	dtm = createManager(serialiser = createSerialiser(createFactory()), createRootTypes());
 	if (dtm != null) {
 	    manageTestingDTM(dtm);
-	    enhanceDomainWithCalculatedPropertiesOfDifferentTypes(dtm);
+	    // enhanceDomainWithCalculatedPropertiesOfDifferentTypes(dtm);
 	}
     }
 
@@ -457,6 +457,7 @@ public abstract class AbstractDomainTreeTest {
 
     @Test
     public void test_that_domain_tree_enhancements_work_as_expected_for_original_and_copied_manager() {
+	enhanceDomainWithCalculatedPropertiesOfDifferentTypes(dtm());
 	// to perform such a test it is enough to ask if the added calc properties can be asked for "excludement / disablement" (and the state is appropriate), after manual "disabling / excluding".
 	// It will process the domain tree to the needed level of enhanced hierarchy.
 	final IDomainTreeManagerAndEnhancer dtm = dtm();

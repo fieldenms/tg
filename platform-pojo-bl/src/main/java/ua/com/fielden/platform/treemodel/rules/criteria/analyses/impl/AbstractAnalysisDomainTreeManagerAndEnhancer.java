@@ -3,12 +3,12 @@ package ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl;
 import java.util.List;
 
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeEnhancer;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -52,7 +52,7 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
     protected abstract IAbstractAnalysisAddToAggregationTickManager createSecondTick(final ITickManager base);
 
     @Override
-    protected abstract IAbstractAnalysisDomainTreeRepresentation createRepresentation(final IDomainTreeRepresentation base);
+    protected abstract AbstractAnalysisDomainTreeRepresentationAndEnhancer createRepresentation(final AbstractDomainTreeRepresentation base);
 
     //    @Override
     //    protected IAbstractAnalysisAddToDistributionTickManager createFirstTick(final ITickManager base) {
@@ -164,7 +164,7 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
     protected abstract class AbstractAnalysisDomainTreeRepresentationAndEnhancer extends DomainTreeRepresentationAndEnhancer implements IAbstractAnalysisDomainTreeRepresentation {
 	private static final long serialVersionUID = -5345869657944629725L;
 
-	protected AbstractAnalysisDomainTreeRepresentationAndEnhancer(final IDomainTreeRepresentation base) {
+	protected AbstractAnalysisDomainTreeRepresentationAndEnhancer(final AbstractDomainTreeRepresentation base) {
 	    super(base);
 	}
 

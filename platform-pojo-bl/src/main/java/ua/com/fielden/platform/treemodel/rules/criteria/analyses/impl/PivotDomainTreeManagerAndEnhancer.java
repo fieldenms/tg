@@ -7,11 +7,11 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeEnhancer;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.DomainTreeEnhancer;
 
 public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTreeManagerAndEnhancer implements IPivotDomainTreeManagerAndEnhancer {
@@ -34,7 +34,7 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
     }
 
     @Override
-    protected IPivotDomainTreeRepresentation createRepresentation(final IDomainTreeRepresentation base) {
+    protected PivotDomainTreeRepresentationAndEnhancer createRepresentation(final AbstractDomainTreeRepresentation base) {
 	return new PivotDomainTreeRepresentationAndEnhancer(base);
     }
 
@@ -78,7 +78,7 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
     }
 
     public class PivotDomainTreeRepresentationAndEnhancer extends AbstractAnalysisDomainTreeRepresentationAndEnhancer implements IPivotDomainTreeRepresentation {
-	protected PivotDomainTreeRepresentationAndEnhancer(final IDomainTreeRepresentation base) {
+	protected PivotDomainTreeRepresentationAndEnhancer(final AbstractDomainTreeRepresentation base) {
 	    super(base);
 	}
 
