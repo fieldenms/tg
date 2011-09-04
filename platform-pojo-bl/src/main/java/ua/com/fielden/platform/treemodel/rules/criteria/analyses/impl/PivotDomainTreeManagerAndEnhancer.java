@@ -7,7 +7,6 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeEnhancer;
-import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManagerAndEnhancer;
@@ -19,7 +18,7 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
 	this(new PivotDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(rootTypes));
     }
 
-    protected PivotDomainTreeManagerAndEnhancer(final IAbstractAnalysisDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
+    protected PivotDomainTreeManagerAndEnhancer(final AbstractAnalysisDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
 	super(base, enhancer);
     }
 

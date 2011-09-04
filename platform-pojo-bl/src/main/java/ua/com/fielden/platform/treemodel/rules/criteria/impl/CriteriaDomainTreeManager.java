@@ -69,7 +69,7 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
      * @param firstTick
      * @param secondTick
      */
-    protected CriteriaDomainTreeManager(final ISerialiser serialiser, final ICriteriaDomainTreeRepresentation dtr, final IAddToCriteriaTickManager firstTick, final IAddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Boolean runAutomatically) {
+    protected CriteriaDomainTreeManager(final ISerialiser serialiser, final ICriteriaDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Boolean runAutomatically) {
 	super(serialiser, dtr, firstTick, secondTick);
 	this.persistentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
 	this.persistentAnalyses.putAll(persistentAnalyses);

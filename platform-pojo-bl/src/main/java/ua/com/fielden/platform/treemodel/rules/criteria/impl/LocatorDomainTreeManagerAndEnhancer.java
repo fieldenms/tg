@@ -23,7 +23,7 @@ public class LocatorDomainTreeManagerAndEnhancer extends CriteriaDomainTreeManag
 	this(new LocatorDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(rootTypes));
     }
 
-    protected LocatorDomainTreeManagerAndEnhancer(final ILocatorDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
+    protected LocatorDomainTreeManagerAndEnhancer(final LocatorDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
 	super(base, enhancer);
     }
 

@@ -21,7 +21,7 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
     /**
      * A <i>manager with enhancer</i> constructor.
      */
-    public AbstractAnalysisDomainTreeManagerAndEnhancer(final IAbstractAnalysisDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
+    public AbstractAnalysisDomainTreeManagerAndEnhancer(final AbstractAnalysisDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
 	super(base, enhancer);
     }
 

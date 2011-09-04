@@ -33,7 +33,7 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
      * @param firstTick
      * @param secondTick
      */
-    protected DomainTreeManager1(final ISerialiser serialiser, final IDomainTreeRepresentation dtr, final ITickManager firstTick, final ITickManager secondTick) {
+    protected DomainTreeManager1(final ISerialiser serialiser, final IDomainTreeRepresentation dtr, final TickManager firstTick, final TickManager secondTick) {
 	super(serialiser, dtr, firstTick, secondTick);
     }
 

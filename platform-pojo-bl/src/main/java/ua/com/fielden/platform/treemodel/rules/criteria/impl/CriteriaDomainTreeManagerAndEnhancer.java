@@ -40,7 +40,7 @@ public class CriteriaDomainTreeManagerAndEnhancer extends AbstractDomainTreeMana
     /**
      * A <i>manager with enhancer</i> constructor.
      */
-    protected CriteriaDomainTreeManagerAndEnhancer(final ICriteriaDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
+    protected CriteriaDomainTreeManagerAndEnhancer(final CriteriaDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
 	super(base, enhancer);
     }
 

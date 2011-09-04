@@ -14,6 +14,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation.IStructureChangedListener;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation.ITickRepresentation;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -32,8 +33,9 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     private static final long serialVersionUID = -6937754021447082364L;
 
     private final IDomainTreeRepresentation dtr;
-    private final ITickManager firstTick;
-    private final ITickManager secondTick;
+    private final TickManager firstTick;
+    private final TickManager secondTick;
+    private final transient IStructureChangedListener listener;
 
     /**
      * A <i>manager</i> constructor.
@@ -43,7 +45,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      * @param firstTick
      * @param secondTick
      */
-    protected AbstractDomainTreeManager(final ISerialiser serialiser, final IDomainTreeRepresentation dtr, final ITickManager firstTick, final ITickManager secondTick) {
+    protected AbstractDomainTreeManager(final ISerialiser serialiser, final IDomainTreeRepresentation dtr, final TickManager firstTick, final TickManager secondTick) {
         super(serialiser);
         this.dtr = dtr;
         this.firstTick = firstTick;
@@ -54,22 +56,52 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
             final Field dtrField = Finder.findFieldByName(TickManager.class, "dtr");
             boolean isAccessible = dtrField.isAccessible();
             dtrField.setAccessible(true);
-            dtrField.set(firstTick, dtr);
-            dtrField.set(secondTick, dtr);
+            dtrField.set(this.firstTick, dtr);
+            dtrField.set(this.secondTick, dtr);
             dtrField.setAccessible(isAccessible);
 
             final Field trField = Finder.findFieldByName(TickManager.class, "tr");
             isAccessible = trField.isAccessible();
             trField.setAccessible(true);
-            trField.set(firstTick, dtr.getFirstTick());
-            trField.set(secondTick, dtr.getSecondTick());
+            trField.set(this.firstTick, dtr.getFirstTick());
+            trField.set(this.secondTick, dtr.getSecondTick());
             trField.setAccessible(isAccessible);
         } catch (final Exception e) {
             e.printStackTrace();
             throw new IllegalStateException(e);
         }
-    }
+        
+	// the below listener is intended to update checked properties for this tick when the skeleton of included properties has been changed
+	listener = new IStructureChangedListener() {
+	    @Override
+	    public void propertyRemoved(final Class<?> root, final String property) {
+		if (!isDummyMarker(property)) {
+		    final String reflectionProperty = reflectionProperty(property); 
+		    AbstractDomainTreeManager.this.firstTick.checkedPropertiesMutable(root).remove(reflectionProperty);
+		    AbstractDomainTreeManager.this.secondTick.checkedPropertiesMutable(root).remove(reflectionProperty);
+		}
+	    }
 
+	    @Override
+	    public void propertyAdded(final Class<?> root, final String property) {
+		if (!isDummyMarker(property)) {
+		    final String reflectionProperty = reflectionProperty(property);
+		    if (AbstractDomainTreeManager.this.firstTick.isChecked(root, reflectionProperty)) {
+			AbstractDomainTreeManager.this.firstTick.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
+		    }
+		    if (AbstractDomainTreeManager.this.secondTick.isChecked(root, reflectionProperty)) {
+			AbstractDomainTreeManager.this.secondTick.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
+		    }
+		}
+	    }
+	};
+	this.dtr.addStructureChangedListener(listener);
+    }
+    
+    protected IStructureChangedListener listener() {
+        return listener;
+    }
+    
     /**
      * A tick manager with all sufficient logic. <br><br>
      *

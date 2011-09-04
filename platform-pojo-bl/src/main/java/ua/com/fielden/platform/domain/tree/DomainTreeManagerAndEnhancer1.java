@@ -7,7 +7,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeEnhancer;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.impl.DomainTreeEnhancer;
 
@@ -20,7 +20,7 @@ public class DomainTreeManagerAndEnhancer1 extends AbstractDomainTreeManagerAndE
 	this(new DomainTreeManager1(serialiser, rootTypes), new DomainTreeEnhancer(rootTypes));
     }
 
-    protected DomainTreeManagerAndEnhancer1(final IDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
+    protected DomainTreeManagerAndEnhancer1(final AbstractDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
 	super(base, enhancer);
     }
 

@@ -56,7 +56,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
      * @param firstTick
      * @param secondTick
      */
-    protected AbstractAnalysisDomainTreeManager(final ISerialiser serialiser, final IDomainTreeRepresentation dtr,final Boolean visible, final ITickManager firstTick, final ITickManager secondTick) {
+    protected AbstractAnalysisDomainTreeManager(final ISerialiser serialiser, final IDomainTreeRepresentation dtr, final Boolean visible, final TickManager firstTick, final TickManager secondTick) {
 	super(serialiser, dtr, firstTick, secondTick);
 	this.visible = visible;
     }

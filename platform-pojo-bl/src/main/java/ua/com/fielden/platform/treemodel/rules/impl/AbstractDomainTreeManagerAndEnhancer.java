@@ -14,6 +14,7 @@ import ua.com.fielden.platform.treemodel.rules.IDomainTreeEnhancer;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation.IStructureChangedListener;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -24,7 +25,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTreeManagerAndEnhancer {
     private static final long serialVersionUID = 7838262757425383240L;
-    private final IDomainTreeManager base;
+    private final AbstractDomainTreeManager base;
     private final IDomainTreeEnhancer enhancer;
     private transient final IDomainTreeEnhancer enhancerWithPropertiesPopulation;
 
@@ -200,7 +201,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
     /**
      * A <i>manager with enhancer</i> constructor.
      */
-    protected AbstractDomainTreeManagerAndEnhancer(final IDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
+    protected AbstractDomainTreeManagerAndEnhancer(final AbstractDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
 	this.base = base;
 	this.enhancer = enhancer;
 
@@ -208,6 +209,22 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	firstTick = createFirstTick(base.getFirstTick());
 	secondTick = createSecondTick(base.getSecondTick());
 	enhancerWithPropertiesPopulation = new DomainTreeEnhancerWithPropertiesPopulation((DomainTreeEnhancer) this.enhancer, dtr);
+	
+	final IStructureChangedListener oldListener = this.base.listener();
+	final IStructureChangedListener newListener = new IStructureChangedListener() {
+	    
+	    @Override
+	    public void propertyRemoved(final Class<?> root, final String property) {
+		oldListener.propertyRemoved(enhancerWithPropertiesPopulation.getManagedType(root), property);
+	    }
+	    
+	    @Override
+	    public void propertyAdded(final Class<?> root, final String property) {
+		oldListener.propertyAdded(enhancerWithPropertiesPopulation.getManagedType(root), property);
+	    }
+	};
+	this.dtr.base.removeStructureChangedListener(oldListener);
+//	this.dtr.base.addStructureChangedListener(newListener);
     }
 
     @Override

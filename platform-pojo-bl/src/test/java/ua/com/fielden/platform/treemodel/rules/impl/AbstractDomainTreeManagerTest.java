@@ -11,11 +11,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domain.tree.MasterEntity;
 import ua.com.fielden.platform.domain.tree.MasterEntityForIncludedPropertiesLogic;
+import ua.com.fielden.platform.domain.tree.MasterEntityWithUnionForIncludedPropertiesLogic;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty.CalculatedPropertyCategory;
@@ -29,6 +31,14 @@ import ua.com.fielden.platform.types.Money;
  *
  */
 public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
+    @Override
+    protected Set<Class<?>> createRootTypes() {
+	final Set<Class<?>> rootTypes = super.createRootTypes();
+	rootTypes.add(MasterEntityForIncludedPropertiesLogic.class);
+	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
+	return rootTypes;
+    }
+    
     @Override
     protected IDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
 	final IDomainTreeManagerAndEnhancer dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
@@ -248,6 +258,25 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	    fail("Non-existent or non-checked properties operation should fail.");
 	} catch (final IllegalArgumentException e) {
 	}
+    }
+    
+    @Test @Ignore
+    public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
+	assertEquals("Incorrect checked properties.", Collections.emptyList(), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop1_mutablyCheckedProp", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "1 * 2", "Property 1", "desc"));
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect checked properties.", Arrays.asList("entityProp.prop1_mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop2_mutablyCheckedProp", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "1 * 2", "Property 1", "desc"));
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect checked properties.", Arrays.asList("entityProp.prop1_mutablyCheckedProp", "entityProp.prop2_mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getFirstTick().swap(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop1_mutablyCheckedProp", "entityProp.prop2_mutablyCheckedProp");
+	assertEquals("Incorrect checked properties.", Arrays.asList("entityProp.prop2_mutablyCheckedProp", "entityProp.prop1_mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getEnhancer().removeCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop1_mutablyCheckedProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect checked properties.", Arrays.asList("entityProp.prop2_mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getEnhancer().removeCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop2_mutablyCheckedProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect checked properties.", Collections.emptyList(), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
     }
 
     ///////////////////////////////////////////////////////////////////////

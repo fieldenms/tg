@@ -43,7 +43,7 @@ public class LocatorDomainTreeManager extends CriteriaDomainTreeManager implemen
      * @param firstTick
      * @param secondTick
      */
-    protected LocatorDomainTreeManager(final ISerialiser serialiser, final ILocatorDomainTreeRepresentation dtr, final IAddToCriteriaTickManager firstTick, final IAddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Boolean runAutomatically) {
+    protected LocatorDomainTreeManager(final ISerialiser serialiser, final ILocatorDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Boolean runAutomatically) {
 	super(serialiser, dtr, firstTick, secondTick, persistentAnalyses, runAutomatically);
     }
 
