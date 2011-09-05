@@ -9,6 +9,7 @@ import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.DomainTreeEnhancer;
@@ -23,12 +24,12 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
     }
 
     @Override
-    protected IPivotAddToDistributionTickManager createFirstTick(final ITickManager base) {
+    protected PivotAddToDistributionTickManagerAndEnhancer createFirstTick(final TickManager base) {
 	return new PivotAddToDistributionTickManagerAndEnhancer(base);
     }
 
     @Override
-    protected IPivotAddToAggregationTickManager createSecondTick(final ITickManager base) {
+    protected PivotAddToAggregationTickManagerAndEnhancer createSecondTick(final TickManager base) {
 	return new PivotAddToAggregationTickManagerAndEnhancer(base);
     }
 
@@ -43,7 +44,7 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
     }
 
     public class PivotAddToDistributionTickManagerAndEnhancer extends AbstractAnalysisAddToDistributionTickManagerAndEnhancer implements IPivotAddToDistributionTickManager {
-	protected PivotAddToDistributionTickManagerAndEnhancer(final ITickManager base) {
+	protected PivotAddToDistributionTickManagerAndEnhancer(final TickManager base) {
 	    super(base);
 	}
 
@@ -60,7 +61,7 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
     }
 
     public class PivotAddToAggregationTickManagerAndEnhancer extends AbstractAnalysisAddToAggregationTickManagerAndEnhancer implements IPivotAddToAggregationTickManager {
-	protected PivotAddToAggregationTickManagerAndEnhancer(final ITickManager base) {
+	protected PivotAddToAggregationTickManagerAndEnhancer(final TickManager base) {
 	    super(base);
 	}
 

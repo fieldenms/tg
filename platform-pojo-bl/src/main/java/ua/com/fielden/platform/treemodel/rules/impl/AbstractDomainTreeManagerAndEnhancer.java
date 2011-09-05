@@ -15,6 +15,9 @@ import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation.IStructureChangedListener;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager.ITickManagerWithMutability;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager.IncludedAndCheckedPropertiesSynchronisationListener;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -30,8 +33,8 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
     private transient final IDomainTreeEnhancer enhancerWithPropertiesPopulation;
 
     private transient final DomainTreeRepresentationAndEnhancer dtr;
-    private transient final ITickManager firstTick;
-    private transient final ITickManager secondTick;
+    private transient final TickManagerAndEnhancer firstTick;
+    private transient final TickManagerAndEnhancer secondTick;
 
     protected IDomainTreeManager base() {
 	return base;
@@ -41,11 +44,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         return enhancer;
     }
 
-    protected ITickManager createFirstTick(final ITickManager base) {
+    protected TickManagerAndEnhancer createFirstTick(final TickManager base) {
 	return new TickManagerAndEnhancer(base);
     }
 
-    protected ITickManager createSecondTick(final ITickManager base) {
+    protected TickManagerAndEnhancer createSecondTick(final TickManager base) {
 	return new TickManagerAndEnhancer(base);
     }
 
@@ -127,7 +130,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    neew.removeAll(was);
 	    // add new calc properties to included properties list
 	    for (final Pair<Class<?>, String> rootAndProp : neew) {
-		final Class<?> root = rootAndProp.getKey();
+		final Class<?> root = /*baseEnhancer.getManagedType(*/ rootAndProp.getKey()/* ) */;
 		final String newProperty = rootAndProp.getValue();
 		final List<String> inclProps = dtr.includedProperties(root);
 		if (!dtr.isExcludedImmutably(root, newProperty)) {
@@ -206,25 +209,14 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	this.enhancer = enhancer;
 
 	dtr = createRepresentation((AbstractDomainTreeRepresentation) base.getRepresentation());
-	firstTick = createFirstTick(base.getFirstTick());
-	secondTick = createSecondTick(base.getSecondTick());
+	firstTick = createFirstTick((TickManager) base.getFirstTick());
+	secondTick = createSecondTick((TickManager) base.getSecondTick());
 	enhancerWithPropertiesPopulation = new DomainTreeEnhancerWithPropertiesPopulation((DomainTreeEnhancer) this.enhancer, dtr);
-	
+
 	final IStructureChangedListener oldListener = this.base.listener();
-	final IStructureChangedListener newListener = new IStructureChangedListener() {
-	    
-	    @Override
-	    public void propertyRemoved(final Class<?> root, final String property) {
-		oldListener.propertyRemoved(enhancerWithPropertiesPopulation.getManagedType(root), property);
-	    }
-	    
-	    @Override
-	    public void propertyAdded(final Class<?> root, final String property) {
-		oldListener.propertyAdded(enhancerWithPropertiesPopulation.getManagedType(root), property);
-	    }
-	};
+	final IStructureChangedListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.dtr, this.firstTick, this.secondTick);
 	this.dtr.base.removeStructureChangedListener(oldListener);
-//	this.dtr.base.addStructureChangedListener(newListener);
+	this.dtr.addStructureChangedListener(newListener);
     }
 
     @Override
@@ -248,16 +240,30 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
      * @author TG Team
      *
      */
-    protected class TickManagerAndEnhancer implements ITickManager {
+    protected class TickManagerAndEnhancer implements ITickManagerWithMutability {
 	private static final long serialVersionUID = 6961101639080080892L;
-	private final ITickManager base;
+	private final TickManager base;
 
-	protected ITickManager base() {
+	protected TickManager base() {
 	    return base;
 	}
 
-	protected TickManagerAndEnhancer(final ITickManager base) {
+	protected TickManagerAndEnhancer(final TickManager base) {
 	    this.base = base;
+	}
+
+	/**
+	 * Getter of mutable "checked properties" cache for internal purposes.
+	 * <p>
+	 * These properties are fully lazy. If some "root" has not been used -- it will not be loaded. This partly initialised stuff could be even persisted.
+	 * After deserialisation lazy mechanism can simply load missing stuff well.
+	 *
+	 * @param root
+	 * @return
+	 */
+	public List<String> checkedPropertiesMutable(final Class<?> root) {
+	    // inject an enhanced type into method implementation
+	    return base.checkedPropertiesMutable(enhancerWithPropertiesPopulation.getManagedType(root));
 	}
 
 	@Override
@@ -338,7 +344,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	 * @return
 	 */
 	protected List<String> includedPropertiesMutable(final Class<?> root) {
-	    return this.base.includedPropertiesMutable(root);
+	    return this.base.includedPropertiesMutable(enhancerWithPropertiesPopulation.getManagedType(root));
 	}
 
 	protected ITickRepresentation createFirstTick(final ITickRepresentation base) {

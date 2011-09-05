@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.DomainTreeManagerAndEnhancer1;
@@ -38,7 +37,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
 	return rootTypes;
     }
-    
+
     @Override
     protected IDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
 	final IDomainTreeManagerAndEnhancer dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
@@ -192,7 +191,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	    }
 	}, "mutablyCheckedProp");
     }
-    
+
     @Test
     public void test_that_CHECKed_properties_order_is_correct() throws Exception {
 	// at first the manager will be initialised the first time and its "included" and then "checked" props will be initialised (heavy operation)
@@ -228,7 +227,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
 	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp").toString(), copy.getFirstTick().checkedProperties(MasterEntity.class).toString());
     }
-    
+
     @Test
     public void test_that_CHECKed_properties_Move_Swap_operations_doesnot_work_for_non_checked_properties() {
 	// at first the manager will be initialised the first time and its "included" and then "checked" props will be initialised (heavy operation)
@@ -259,8 +258,8 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	} catch (final IllegalArgumentException e) {
 	}
     }
-    
-    @Test @Ignore
+
+    @Test
     public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
 	assertEquals("Incorrect checked properties.", Collections.emptyList(), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
 	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop1_mutablyCheckedProp", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "1 * 2", "Property 1", "desc"));

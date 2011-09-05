@@ -51,7 +51,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private final ITickRepresentation secondTick;
     /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
     private final transient EnhancementRootsMap<List<String>> includedProperties;
-    private final transient List<IStructureChangedListener> listeners;
+    private final transient List<IStructureChangedListener> listeners, disabledListeners;
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
@@ -79,6 +79,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	listeners = new ArrayList<IStructureChangedListener>();
+	disabledListeners = new ArrayList<IStructureChangedListener>();
 	// this field unfortunately should be lazy loaded due to heavy-weight nature (deep, circular tree of properties)
 	includedProperties = createRootsMap();
     }
@@ -139,7 +140,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param unionClass
      * @return
      */
-    private Pair<List<Field>, List<Field>> commonAndUnion(final Class<? extends AbstractUnionEntity> unionClass) {
+    private static Pair<List<Field>, List<Field>> commonAndUnion(final Class<? extends AbstractUnionEntity> unionClass) {
 	final List<Field> unionProperties = AbstractUnionEntity.unionProperties(unionClass);
 	final Class<? extends AbstractEntity> concreteUnionClass = (Class<? extends AbstractEntity>) (unionProperties.get(0).getType());
 	final List<String> commonNames = AbstractUnionEntity.commonProperties(unionClass);
@@ -153,7 +154,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param type
      * @return
      */
-    private List<Field> constructKeysAndProperties(final Class<?> type) {
+    private static List<Field> constructKeysAndProperties(final Class<?> type) {
 	final List<Field> properties = Finder.findProperties(type);
 	properties.remove(Finder.getFieldByName(type, AbstractEntity.KEY));
 	properties.remove(Finder.getFieldByName(type, AbstractEntity.DESC));
@@ -174,7 +175,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param names
      * @return
      */
-    private List<Field> constructKeysAndProperties(final Class<?> type, final List<String> names) {
+    private static List<Field> constructKeysAndProperties(final Class<?> type, final List<String> names) {
 	final List<Field> allProperties = constructKeysAndProperties(type);
 	final List<Field> properties = new ArrayList<Field>();
 	for (final Field f : allProperties) {
@@ -306,6 +307,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	public ListenedArrayList(final Class<?> root) {
 	    super();
 	    this.root = root;
+	    System.out.println("======================Constructed ListenedArrayList with root = " + this.root.getSimpleName());
 	}
 
 	private void fireProperty(final Class<?> root, final String property, final boolean added) {
@@ -376,9 +378,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param root
      * @return
      */
-    protected List<String> includedPropertiesMutable(final Class<?> root) {
+    protected List<String> includedPropertiesMutable(final Class<?> root1) {
+	final Class<?> root = DynamicEntityClassLoader.getOriginalType(root1);
 	if (includedProperties.get(root) == null) { // not yet loaded
 	    final Date st = new Date();
+	    enableListening(false);
 	    // initialise included properties using isExcluded contract and manually excluded properties
 	    final List<String> includedProps = new ListenedArrayList(root);
 	    if (!isExcludedImmutably(root, "")) { // the entity itself is included -- add it to "included properties" list
@@ -388,10 +392,26 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		}
 		includedProps.addAll(constructProperties(root, "", constructKeysAndProperties(root)));
 	    }
+	    enableListening(true);
 	    includedProperties.put(root, includedProps);
 	    logger().info("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + includedProps.size() + " included properties => [" + includedProps + "].");
 	}
         return includedProperties.get(root);
+    }
+
+    /**
+     * Enables or disables listening for each {@link ListenedArrayList} structures.
+     *
+     * @param enable
+     */
+    private void enableListening(final boolean enable) {
+	if (enable) {
+	    listeners.addAll(disabledListeners);
+	    disabledListeners.clear();
+	} else {
+	    disabledListeners.addAll(listeners);
+	    listeners.clear();
+	}
     }
 
     @Override

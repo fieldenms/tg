@@ -14,6 +14,9 @@ import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeRepre
 import ua.com.fielden.platform.treemodel.rules.criteria.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.treemodel.rules.criteria.impl.CriteriaDomainTreeManager.AddToCriteriaTickManager;
+import ua.com.fielden.platform.treemodel.rules.criteria.impl.CriteriaDomainTreeManager.AddToResultTickManager;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.DomainTreeEnhancer;
@@ -45,12 +48,12 @@ public class CriteriaDomainTreeManagerAndEnhancer extends AbstractDomainTreeMana
     }
 
     @Override
-    protected IAddToCriteriaTickManager createFirstTick(final ITickManager base) {
+    protected AddToCriteriaTickManagerAndEnhancer createFirstTick(final TickManager base) {
 	return new AddToCriteriaTickManagerAndEnhancer(base);
     }
 
     @Override
-    protected IAddToResultTickManager createSecondTick(final ITickManager base) {
+    protected AddToResultTickManagerAndEnhancer createSecondTick(final TickManager base) {
 	return new AddToResultTickManagerAndEnhancer(base);
     }
 
@@ -83,13 +86,13 @@ public class CriteriaDomainTreeManagerAndEnhancer extends AbstractDomainTreeMana
     public /* TODO reduce visibility */ class AddToCriteriaTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAddToCriteriaTickManager {
 	private static final long serialVersionUID = 5845028563069886027L;
 
-	private AddToCriteriaTickManagerAndEnhancer(final ITickManager base) {
+	private AddToCriteriaTickManagerAndEnhancer(final TickManager base) {
 	    super(base);
 	}
 
 	@Override
-	public /* TODO reduce visibility */ IAddToCriteriaTickManager base() {
-	    return (IAddToCriteriaTickManager) super.base();
+	public /* TODO reduce visibility */ AddToCriteriaTickManager base() {
+	    return (AddToCriteriaTickManager) super.base();
 	}
 
 	@Override
@@ -291,13 +294,13 @@ public class CriteriaDomainTreeManagerAndEnhancer extends AbstractDomainTreeMana
     protected class AddToResultTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAddToResultTickManager {
 	private static final long serialVersionUID = 192045576594016450L;
 
-	private AddToResultTickManagerAndEnhancer(final ITickManager base) {
+	private AddToResultTickManagerAndEnhancer(final TickManager base) {
 	    super(base);
 	}
 
 	@Override
-	protected IAddToResultTickManager base() {
-	    return (IAddToResultTickManager) super.base();
+	protected AddToResultTickManager base() {
+	    return (AddToResultTickManager) super.base();
 	}
 
 	@Override

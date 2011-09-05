@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager;
@@ -70,38 +71,55 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
             e.printStackTrace();
             throw new IllegalStateException(e);
         }
-        
-	// the below listener is intended to update checked properties for this tick when the skeleton of included properties has been changed
-	listener = new IStructureChangedListener() {
-	    @Override
-	    public void propertyRemoved(final Class<?> root, final String property) {
-		if (!isDummyMarker(property)) {
-		    final String reflectionProperty = reflectionProperty(property); 
-		    AbstractDomainTreeManager.this.firstTick.checkedPropertiesMutable(root).remove(reflectionProperty);
-		    AbstractDomainTreeManager.this.secondTick.checkedPropertiesMutable(root).remove(reflectionProperty);
-		}
-	    }
 
-	    @Override
-	    public void propertyAdded(final Class<?> root, final String property) {
-		if (!isDummyMarker(property)) {
-		    final String reflectionProperty = reflectionProperty(property);
-		    if (AbstractDomainTreeManager.this.firstTick.isChecked(root, reflectionProperty)) {
-			AbstractDomainTreeManager.this.firstTick.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
-		    }
-		    if (AbstractDomainTreeManager.this.secondTick.isChecked(root, reflectionProperty)) {
-			AbstractDomainTreeManager.this.secondTick.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
-		    }
-		}
-	    }
-	};
+	// the below listener is intended to update checked properties for both ticks when the skeleton of included properties has been changed
+	listener = new IncludedAndCheckedPropertiesSynchronisationListener(this.dtr, this.firstTick, this.secondTick);
 	this.dtr.addStructureChangedListener(listener);
     }
-    
+
+    protected static class IncludedAndCheckedPropertiesSynchronisationListener implements IStructureChangedListener {
+	private final IDomainTreeRepresentation dtr;
+	private final ITickManagerWithMutability firstTick, secondTick;
+
+	protected IncludedAndCheckedPropertiesSynchronisationListener(final IDomainTreeRepresentation dtr, final ITickManagerWithMutability firstTick, final ITickManagerWithMutability secondTick) {
+	    this.dtr = dtr;
+	    this.firstTick = firstTick;
+	    this.secondTick = secondTick;
+	}
+
+	@Override
+	public void propertyRemoved(final Class<?> root, final String property) {
+	    if (!isDummyMarker(property)) {
+		final String reflectionProperty = reflectionProperty(property);
+		// update checked properties
+		firstTick.checkedPropertiesMutable(root).remove(reflectionProperty);
+		secondTick.checkedPropertiesMutable(root).remove(reflectionProperty);
+	    }
+	}
+
+	@Override
+	public void propertyAdded(final Class<?> root, final String property) {
+	    if (!isDummyMarker(property)) {
+		final String reflectionProperty = reflectionProperty(property);
+		// update checked properties
+		if (firstTick.isChecked(root, reflectionProperty)) {
+		    firstTick.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
+		}
+		if (secondTick.isChecked(root, reflectionProperty)) {
+		    secondTick.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
+		}
+	    }
+	}
+    }
+
+    protected interface ITickManagerWithMutability extends ITickManager {
+	List<String> checkedPropertiesMutable(final Class<?> root);
+    }
+
     protected IStructureChangedListener listener() {
         return listener;
     }
-    
+
     /**
      * A tick manager with all sufficient logic. <br><br>
      *
@@ -113,7 +131,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      * @author TG Team
      *
      */
-    public static class TickManager implements ITickManager {
+    public static class TickManager implements ITickManagerWithMutability {
 	private static final long serialVersionUID = 3498255722542117344L;
 	private final EnhancementSet manuallyCheckedProperties;
 	private final EnhancementRootsMap<List<String>> checkedProperties;
@@ -173,7 +191,8 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	 * @param root
 	 * @return
 	 */
-	protected List<String> checkedPropertiesMutable(final Class<?> root) {
+	public List<String> checkedPropertiesMutable(final Class<?> root) {
+	    //	    final Class<?> root = DynamicEntityClassLoader.getOriginalType(root1);
 	    if (checkedProperties.get(root) == null) { // not yet loaded
 		final Date st = new Date();
 		// initialise checked properties using isChecked contract and "included properties" cache
@@ -181,8 +200,15 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		final List<String> checkedProps = new ArrayList<String>();
 		// the original order of "included properties" will be used for "checked properties" at first
 		for (final String includedProperty : includedProps) {
-		    if (!isDummyMarker(includedProperty) && isChecked(root, includedProperty)) {
-			checkedProps.add(includedProperty);
+		    if (!isDummyMarker(includedProperty) ) {
+			try {
+			    PropertyTypeDeterminator.determinePropertyType(root, includedProperty);
+			    if (isChecked(root, includedProperty)) {
+				checkedProps.add(includedProperty);
+			    }
+			} catch (final IllegalArgumentException e) {
+			    // included property does not exist!
+			}
 		    }
 		}
 		checkedProperties.put(root, checkedProps);

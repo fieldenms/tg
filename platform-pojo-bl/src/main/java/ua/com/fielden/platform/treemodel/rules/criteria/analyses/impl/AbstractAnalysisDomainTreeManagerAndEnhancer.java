@@ -7,6 +7,9 @@ import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.AbstractAnalysisDomainTreeManager.AbstractAnalysisAddToAggregationTickManager;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.AbstractAnalysisDomainTreeManager.AbstractAnalysisAddToDistributionTickManager;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.utils.Pair;
@@ -46,10 +49,10 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
     }
 
     @Override
-    protected abstract IAbstractAnalysisAddToDistributionTickManager createFirstTick(final ITickManager base);
+    protected abstract AbstractAnalysisAddToDistributionTickManagerAndEnhancer createFirstTick(final TickManager base);
 
     @Override
-    protected abstract IAbstractAnalysisAddToAggregationTickManager createSecondTick(final ITickManager base);
+    protected abstract AbstractAnalysisAddToAggregationTickManagerAndEnhancer createSecondTick(final TickManager base);
 
     @Override
     protected abstract AbstractAnalysisDomainTreeRepresentationAndEnhancer createRepresentation(final AbstractDomainTreeRepresentation base);
@@ -78,13 +81,13 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
     protected abstract class AbstractAnalysisAddToDistributionTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAbstractAnalysisAddToDistributionTickManager {
 	private static final long serialVersionUID = 5845028563069886027L;
 
-	protected AbstractAnalysisAddToDistributionTickManagerAndEnhancer(final ITickManager base) {
+	protected AbstractAnalysisAddToDistributionTickManagerAndEnhancer(final TickManager base) {
 	    super(base);
 	}
 
 	@Override
-	protected IAbstractAnalysisAddToDistributionTickManager base() {
-	    return (IAbstractAnalysisAddToDistributionTickManager) super.base();
+	protected AbstractAnalysisAddToDistributionTickManager base() {
+	    return (AbstractAnalysisAddToDistributionTickManager) super.base();
 	}
 
 	@Override
@@ -115,13 +118,13 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
     protected abstract class AbstractAnalysisAddToAggregationTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAbstractAnalysisAddToAggregationTickManager {
 	private static final long serialVersionUID = 5845028563069886027L;
 
-	protected AbstractAnalysisAddToAggregationTickManagerAndEnhancer(final ITickManager base) {
+	protected AbstractAnalysisAddToAggregationTickManagerAndEnhancer(final TickManager base) {
 	    super(base);
 	}
 
 	@Override
-	protected IAbstractAnalysisAddToAggregationTickManager base() {
-	    return (IAbstractAnalysisAddToAggregationTickManager) super.base();
+	protected AbstractAnalysisAddToAggregationTickManager base() {
+	    return (AbstractAnalysisAddToAggregationTickManager) super.base();
 	}
 
 	@Override
