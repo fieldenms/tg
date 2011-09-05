@@ -62,4 +62,9 @@ public class LifecycleReportQueryCriteriaExtender<T extends AbstractEntity, DAO 
 	this.to = to;
     }
 
+    @Override
+    public LifecycleModel<T> exportExtendedQueryData() {
+	throw new UnsupportedOperationException("The exporting is not supported yet for lifecycle analysis reports.");
+    }
+
 }

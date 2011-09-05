@@ -27,4 +27,6 @@ public abstract class EntityQueryCriteriaExtender<T extends AbstractEntity, DAO 
 
     public abstract R runExtendedQuery(final int pageSize);
 
+    public abstract R exportExtendedQueryData();
+
 }

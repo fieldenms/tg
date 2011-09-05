@@ -69,4 +69,9 @@ public class OptionAutocompleterQueryExtender<T extends AbstractEntity, DAO exte
 	this.searchByKey = searchByKey;
     }
 
+    @Override
+    public IPage<T> exportExtendedQueryData() {
+	throw new UnsupportedOperationException("The exporting in to the external file is unsupported yet.");
+    }
+
 }

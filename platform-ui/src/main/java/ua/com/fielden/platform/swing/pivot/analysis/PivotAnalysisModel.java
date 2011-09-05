@@ -74,7 +74,7 @@ public class PivotAnalysisModel<T extends AbstractEntity, DAO extends IEntityDao
     }
 
     public Result exportIntoFile(final File file) {
-	return getAnalysisReview().getAnalysisReportModel().exportDataIntoFile(file, getAnalysisData());
+	return getAnalysisReview().getAnalysisReportModel().exportDataIntoFile(file, analysisReportQuery.exportExtendedQueryData());
     }
 
 }

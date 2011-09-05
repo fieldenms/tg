@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.swing.review.analysis;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,34 +29,35 @@ import ua.com.fielden.platform.swing.review.EntityQueryCriteriaExtender;
 
 public class PivotAnalysisQueryExtender<T extends AbstractEntity, DAO extends IEntityDao<T>> extends EntityQueryCriteriaExtender<T, DAO, List<EntityAggregates>> {
 
+    private final Map<IDistributedProperty, String> tempAliases = new HashMap<IDistributedProperty, String>();
     private final Map<IDistributedProperty, String> aliases = new HashMap<IDistributedProperty, String>();
 
-    private List<IDistributedProperty> distributionProperties;
-    private List<IAggregatedProperty> aggregationProperties;
-
-    public List<IDistributedProperty> getDistributionProperties() {
-	return distributionProperties != null ? Collections.unmodifiableList(distributionProperties) : new ArrayList<IDistributedProperty>();
-    }
+    private final List<IDistributedProperty> distributionProperties = new ArrayList<IDistributedProperty>();
+    private final List<IDistributedProperty> tempDistributionProperties = new ArrayList<IDistributedProperty>();
+    private final List<IAggregatedProperty> aggregationProperties = new ArrayList<IAggregatedProperty>();
+    private final List<IAggregatedProperty> tempAggregationProperties = new ArrayList<IAggregatedProperty>();
 
     public void setDistributionProperties(final List<IDistributedProperty> distributionProperties) {
-	this.distributionProperties = distributionProperties;
-    }
-
-    public List<IAggregatedProperty> getAggregationProperties() {
-	return aggregationProperties != null ? Collections.unmodifiableList(aggregationProperties) : new ArrayList<IAggregatedProperty>();
+	this.distributionProperties.clear();
+	if(distributionProperties!=null){
+	    this.distributionProperties.addAll(distributionProperties);
+	}
     }
 
     public void setAggregationProperties(final List<IAggregatedProperty> aggregationProperties) {
-	this.aggregationProperties = aggregationProperties;
+	this.aggregationProperties.clear();
+	if(aggregationProperties!=null){
+	    this.aggregationProperties.addAll(aggregationProperties);
+	}
     }
 
     protected ICompletedAndOrdered createExtendedQuery() {
-	initAliases();
-	if (aliases.size() == 0 || getDistributionProperties() == null || getDistributionProperties().isEmpty()) {
+	preInit();
+	if (tempAliases.size() == 0 ||  tempDistributionProperties.isEmpty()) {
 	    return null;
 	} else {
 	    ICompleted queryBase = getBaseQueryModel();
-	    for (final IDistributedProperty distributionProperty : getDistributionProperties()) {
+	    for (final IDistributedProperty distributionProperty : tempDistributionProperties) {
 		distributionProperty.setTableAlias(getBaseCriteria().getAlias());
 		final String groupParsedParameter = distributionProperty.getParsedValue();
 		if (!StringUtils.isEmpty(groupParsedParameter)) {
@@ -70,7 +70,7 @@ public class PivotAnalysisQueryExtender<T extends AbstractEntity, DAO extends IE
 		return null;
 	    }
 	    ICompletedAndYielded queryFinalBase = queryBase;
-	    for (final Iterator<Map.Entry<IDistributedProperty, String>> iterator = aliases.entrySet().iterator(); iterator.hasNext();) {
+	    for (final Iterator<Map.Entry<IDistributedProperty, String>> iterator = tempAliases.entrySet().iterator(); iterator.hasNext();) {
 		final Map.Entry<IDistributedProperty, String> yieldEntry = iterator.next();
 		final IDistributedProperty aggregated = yieldEntry.getKey();
 		aggregated.setTableAlias(getBaseCriteria().getAlias());
@@ -82,31 +82,14 @@ public class PivotAnalysisQueryExtender<T extends AbstractEntity, DAO extends IE
 	    }
 	    return queryFinalBase;
 
-	    //	    String groupParameter = null;
-	    //	    Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(getBaseCriteria().getEntityClass(), getDistributionProperties().getActualProperty());
-	    //	    if (AbstractEntity.class.isAssignableFrom(propertyType)) {
-	    //		groupParameter = getDistributionProperties().getActualProperty();
-	    //		while (AbstractEntity.class.isAssignableFrom(propertyType)) {
-	    //		    groupParameter += ".key";
-	    //		    propertyType = PropertyTypeDeterminator.determinePropertyType(getBaseCriteria().getEntityClass(), groupParameter);
-	    //		}
-	    //	    } else {
-	    //		groupParameter = getAliasForDistributionProperty();
-	    //	    }
-	    //	    if (getSortingProperty() == null || getSortOrder() == SortOrder.UNSORTED || StringUtils.isEmpty(getSortingPropertyAlias())) {
-	    //		final String orderQueryPrefix = StringUtils.isEmpty(getBaseCriteria().getAlias()) ? "" : getBaseCriteria().getAlias() + ".";
-	    //		return queryFinalBase.orderBy(orderQueryPrefix + groupParameter);
-	    //	    } else {
-	    //		return queryFinalBase.orderBy(getSortingPropertyAlias() + " " + (getSortOrder() == SortOrder.ASCENDING ? "asc" : "desc"));
-	    //	    }
 	}
     }
 
     protected fetch<EntityAggregates> createExtendedFetchModel() {
 	fetch<EntityAggregates> fetchModel = new fetch<EntityAggregates>(EntityAggregates.class);
-	for (final IDistributedProperty distributionProperty : getDistributionProperties()) {
+	for (final IDistributedProperty distributionProperty : tempDistributionProperties) {
 	    final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(getBaseCriteria().getEntityClass()//
-	    , distributionProperty.getActualProperty());
+		    , distributionProperty.getActualProperty());
 	    if (AbstractEntity.class.isAssignableFrom(propertyType)) {
 		fetchModel = fetchModel.with(getAliasFor(distributionProperty), new fetch(propertyType));
 	    }
@@ -119,37 +102,44 @@ public class PivotAnalysisQueryExtender<T extends AbstractEntity, DAO extends IE
 	return getBaseCriteria().getEntityAggregatesDao().listAggregates(queryModel, fetchModel);
     }
 
-    private void initAliases() {
+    private void preInit() {
 	int aliasCounter = 0;
-	aliases.clear();
+	tempAliases.clear();
+	tempDistributionProperties.clear();
+	tempDistributionProperties.addAll(distributionProperties);
+	tempAggregationProperties.clear();
+	tempAggregationProperties.addAll(aggregationProperties);
 	final List<IAggregatedProperty> aggregationsToAdd = new ArrayList<IAggregatedProperty>();
 	final List<IDistributedProperty> distributionsToAdd = new ArrayList<IDistributedProperty>();
-	if (aggregationProperties != null) {
-	    for (final IAggregatedProperty aggregationProperty : aggregationProperties) {
-		if (aggregationProperty.getAggregationFunction() == AnalysisPropertyAggregationFunction.AVG) {
-		    final IAggregatedProperty aggregation = createAggregationPropertyFor(aggregationProperty, AnalysisPropertyAggregationFunction.COUNT);
-		    aggregationsToAdd.add(aggregation);
-		    aliases.put(aggregation, "pivot_report_alias_" + Integer.toString(aliasCounter++));
-		}
-		if (aggregationProperty.getAggregationFunction() != AnalysisPropertyAggregationFunction.DISTINCT_COUNT) {
-		    aliases.put(aggregationProperty, "pivot_report_alias_" + Integer.toString(aliasCounter++));
-		} else {
-		    distributionsToAdd.add(createDistributionPropertyFor(getBaseCriteria().getEntityClass(), aggregationProperty));
-		}
+	for (final IAggregatedProperty aggregationProperty : tempAggregationProperties) {
+	    if (aggregationProperty.getAggregationFunction() == AnalysisPropertyAggregationFunction.AVG) {
+		final IAggregatedProperty aggregation = createAggregationPropertyFor(aggregationProperty, AnalysisPropertyAggregationFunction.COUNT);
+		aggregationsToAdd.add(aggregation);
+		tempAliases.put(aggregation, "pivot_report_alias_" + Integer.toString(aliasCounter++));
 	    }
-	    aggregationProperties.addAll(aggregationsToAdd);
-	    if (distributionProperties == null) {
-		distributionProperties = new ArrayList<IDistributedProperty>();
-	    }
-	    distributionProperties.addAll(distributionsToAdd);
-
-	}
-	if (distributionProperties != null) {
-	    for (final IDistributedProperty distributionProperty : distributionProperties) {
-		aliases.put(distributionProperty, "pivot_report_alias_" + Integer.toString(aliasCounter++));
+	    if (aggregationProperty.getAggregationFunction() != AnalysisPropertyAggregationFunction.DISTINCT_COUNT) {
+		tempAliases.put(aggregationProperty, "pivot_report_alias_" + Integer.toString(aliasCounter++));
+	    } else {
+		distributionsToAdd.add(createDistributionPropertyFor(getBaseCriteria().getEntityClass(), aggregationProperty));
 	    }
 	}
+	tempAggregationProperties.addAll(aggregationsToAdd);
 
+	tempDistributionProperties.addAll(distributionsToAdd);
+
+	for (final IDistributedProperty distributionProperty : tempDistributionProperties) {
+	    tempAliases.put(distributionProperty, "pivot_report_alias_" + Integer.toString(aliasCounter++));
+	}
+
+    }
+
+    private void postInit(){
+	aliases.clear();
+	aliases.putAll(tempAliases);
+	distributionProperties.clear();
+	distributionProperties.addAll(tempDistributionProperties);
+	aggregationProperties.clear();
+	aggregationProperties.addAll(tempAggregationProperties);
     }
 
     public static IDistributedProperty createDistributionPropertyFor(final Class<?> clazz, final IAggregatedProperty aggregationProperty) {
@@ -171,6 +161,14 @@ public class PivotAnalysisQueryExtender<T extends AbstractEntity, DAO extends IE
     @Override
     public List<EntityAggregates> runExtendedQuery(final int pageSize) {
 	final IQueryOrderedModel<EntityAggregates> queryModel = createExtendedQuery().model(EntityAggregates.class);
-	return getQueryResult(queryModel, createExtendedFetchModel(), pageSize);
+	final List<EntityAggregates> result = getQueryResult(queryModel, createExtendedFetchModel(), pageSize);
+	postInit();
+	return result;
+    }
+
+    @Override
+    public List<EntityAggregates> exportExtendedQueryData() {
+	final IQueryOrderedModel<EntityAggregates> queryModel = createExtendedQuery().model(EntityAggregates.class);
+	return getQueryResult(queryModel, createExtendedFetchModel(), 0);
     }
 }

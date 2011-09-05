@@ -158,4 +158,9 @@ public class AnalysisReportQueryCriteriaExtender<T extends AbstractEntity, DAO e
 	return getQueryResult(queryModel, createExtendedFetchModel(), pageSize);
     }
 
+    @Override
+    public IPage<EntityAggregates> exportExtendedQueryData() {
+	throw new UnsupportedOperationException("The exporting is not supported yet for analysis reports.");
+    }
+
 }

@@ -55,11 +55,11 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity, DAO extends I
 	return criteriaBuilder;
     }
 
-    private void synchronizeAnalysis(final TreeMenuWithTabs<?> treeMenu,final DynamicCriteriaModelBuilder<T, DAO, R> criteriaBuilder) {
+    private void synchronizeAnalysis(final TreeMenuWithTabs<?> treeMenu, final DynamicCriteriaModelBuilder<T, DAO, R> criteriaBuilder) {
 	final Set<String> analysis = criteriaBuilder.getWizardModel().getAnalysis().keySet();
 	for (int childIndex = 0; childIndex < getChildCount(); childIndex++) {
-	    if(!analysis.contains(getChildAt(childIndex).toString())){
-		treeMenu.getModel().getOriginModel().removeNodeFromParent((MutableTreeNode)getChildAt(childIndex));
+	    if (!analysis.contains(getChildAt(childIndex).toString())) {
+		treeMenu.getModel().getOriginModel().removeNodeFromParent((MutableTreeNode) getChildAt(childIndex));
 	    }
 	}
 	addAnalysis(criteriaBuilder);
@@ -68,8 +68,25 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity, DAO extends I
 
     private void addAnalysis(final DynamicCriteriaModelBuilder<T, DAO, R> criteriaBuilder){
 	for (final String analysisName : criteriaBuilder.getWizardModel().getAnalysis().keySet()) {
-	    addItem(new TreeMenuItemWrapper<T, DAO, R>(analysisName, this.isGroupItem()));
+	    if(!containAnalysis(analysisName)){
+		addItem(new TreeMenuItemWrapper<T, DAO, R>(analysisName, this.isGroupItem()));
+	    }
 	}
+    }
+
+    /**
+     * Returns the value that indicates whether specified analysis name is between children of this tree node.
+     * 
+     * @param analysisName
+     * @return
+     */
+    private boolean containAnalysis(final String analysisName){
+	for (int childIndex = 0; childIndex < getChildCount(); childIndex++) {
+	    if (getChildAt(childIndex).toString().equals(analysisName)) {
+		return true;
+	    }
+	}
+	return false;
     }
 
 
