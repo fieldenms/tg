@@ -119,6 +119,11 @@ import ua.com.fielden.platform.treemodel.rules.master.impl.MasterDomainTreeManag
 import ua.com.fielden.platform.treemodel.rules.master.impl.MasterDomainTreeManager.MasterDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.types.ICategorizer;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.EntityMasterConfig;
+import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -313,6 +318,12 @@ public class TgKryo extends Kryo implements ISerialiser {
 	register(ExistsCondition.class);
 	// "domain tree" serialisers
 	registerDomainTreeTypes();
+	// register menu and configuration related
+	register(MainMenuItem.class);
+	register(MainMenuItemInvisibility.class);
+	register(EntityCentreConfig.class);
+	register(EntityMasterConfig.class);
+	register(EntityLocatorConfig.class);
 
 	// register classes provided by the provider
 	for (final Class<?> type : provider.classes()) {
