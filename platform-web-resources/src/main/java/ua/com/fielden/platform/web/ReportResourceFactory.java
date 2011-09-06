@@ -6,15 +6,15 @@ import org.restlet.data.Request;
 import org.restlet.data.Response;
 
 import ua.com.fielden.platform.file_reports.IReportDaoFactory;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.ReportResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
-import com.google.inject.Injector;
+import com.google.inject.Inject;
 
 /**
  * Factory for producing {@link ReportResource}s.
- * @author yura
+ *
+ * @author TG Team
  *
  */
 public class ReportResourceFactory extends Restlet {
@@ -23,9 +23,10 @@ public class ReportResourceFactory extends Restlet {
 
     private final IReportDaoFactory reportDaoFactory;
 
-    public ReportResourceFactory(final Injector injector) {
-	this.restServerUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
-	this.reportDaoFactory = injector.getInstance(IReportDaoFactory.class);
+    @Inject
+    public ReportResourceFactory(final IReportDaoFactory reportFactory, final RestServerUtil serverUtil) {
+	this.restServerUtil = serverUtil;
+	this.reportDaoFactory = reportFactory;
     }
 
     @Override

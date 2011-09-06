@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.application;
 
+import org.apache.log4j.Logger;
 import org.restlet.Application;
 import org.restlet.Context;
 import org.restlet.Restlet;
@@ -31,6 +32,8 @@ public abstract class BasicServerApplication extends Application {
     protected final RouterHelper helper;
     protected final Class<IEntityDao>[] controllerTypes;
 
+    private transient final Logger logger;
+
     public BasicServerApplication(final String securityRealm, final Context context, final Injector injector, final EntityFactory factory, final RestServerUtil serverRestUtil, final String attachmentLocation, final Class<IEntityDao>[] controllerTypes) {
 	super(context);
 	this.securityRealm = securityRealm;
@@ -39,6 +42,7 @@ public abstract class BasicServerApplication extends Application {
 	this.serverRestUtil = serverRestUtil;
 	this.attachmentLocation = attachmentLocation;
 	this.controllerTypes = controllerTypes;
+	logger = Logger.getLogger(this.getClass());
     }
 
 
@@ -50,7 +54,11 @@ public abstract class BasicServerApplication extends Application {
 	for (final Class<IEntityDao> daoType : controllerTypes) {
 	    helper.register(routerForResources, daoType);
 	}
-	helper.registerReportResource(routerForResources);
+	try {
+	    helper.registerReportResource(routerForResources, serverRestUtil);
+	} catch (final Exception e) {
+	    logger.warn("Could not register a report resource.", e);
+	}
 	// register user role association resource
 	routerForResources.attach("/users/{username}/useroles", new UserRoleAssociationResourceFactory(injector));
 	// register role token association resource

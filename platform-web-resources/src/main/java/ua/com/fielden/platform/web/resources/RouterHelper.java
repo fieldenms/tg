@@ -9,6 +9,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.file_reports.IReportDaoFactory;
 import ua.com.fielden.platform.web.AttachmentDownloadResourceFactory;
 import ua.com.fielden.platform.web.AttachmentInstanceResourceFactory;
 import ua.com.fielden.platform.web.AttachmentQueryResourceFactory;
@@ -103,8 +104,8 @@ public final class RouterHelper {
 	router.attach("/users/{username}/lifecycle/" + dao.getEntityType().getSimpleName(), lifecycleResource);
     }
 
-    public void registerReportResource(final Router router) {
-	router.attach("/users/{username}/report", new ReportResourceFactory(injector));
+    public void registerReportResource(final Router router,  final RestServerUtil rsu) {
+	router.attach("/users/{username}/report", new ReportResourceFactory(injector.getInstance(IReportDaoFactory.class), rsu));
     }
 
     public Injector getInjector() {
