@@ -15,6 +15,11 @@ public class SqlEntQuery implements IQuerySource {
 	this.from = from;
     }
 
+    public SqlEntQuery yield(final IYieldedItem yieldedItem) {
+	yields.put(yieldedItem.name(), yieldedItem);
+	return this;
+    }
+
 //    @Override
 //    public IQuerySourceItem getSourceItem(final String dotNotatedName) {
 //	return yields.get(dotNotatedName);
