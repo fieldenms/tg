@@ -50,19 +50,20 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
 	    touchedProperties = createSet();
 	}
 
-	private boolean isCheckedByDefaultMutably(final Class<?> root, final String property) {
+	@Override
+	protected boolean isCheckedMutably(final Class<?> root, final String property) {
 	    return property.endsWith("mutablyCheckedProp");
 	}
 
-	@Override
-	public boolean isChecked(final Class<?> root, final String property) {
-	    if (!touchedProperties.contains(key(root, property))) {
-		return isCheckedByDefaultMutably(root, property) || //
-			super.isChecked(root, property);
-	    } else {
-		return super.isChecked(root, property);
-	    }
-	};
+//	@Override
+//	public boolean isChecked(final Class<?> root, final String property) {
+//	    if (!touchedProperties.contains(key(root, property))) {
+//		return isCheckedMutably(root, property) || //
+//			super.isChecked(root, property);
+//	    } else {
+//		return super.isChecked(root, property);
+//	    }
+//	};
 
 	@Override
 	public void check(final Class<?> root, final String property, final boolean check) {

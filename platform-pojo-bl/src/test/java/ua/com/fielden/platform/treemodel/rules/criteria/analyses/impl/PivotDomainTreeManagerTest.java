@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.EntityWithCompositeKey;
@@ -186,8 +185,7 @@ public class PivotDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     @Test
-    @Ignore
-    public void test_that_usgae_management_works_correctly_for_first_tick(){
+    public void test_that_usage_management_works_correctly_for_first_tick(){
 	//At the beginning the list of used properties should be empty.
 	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getFirstTick().usedProperties(MasterEntity.class));
 
@@ -198,8 +196,8 @@ public class PivotDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	dtm().getFirstTick().use(MasterEntity.class, "dateExprProp", true);
 	assertTrue("The property should be used", dtm().getFirstTick().isUsed(MasterEntity.class, "dateExprProp"));
 	assertEquals("value is incorrect.", Arrays.asList("dateExprProp", "booleanProp"), dtm().getFirstTick().usedProperties(MasterEntity.class));
-	dtm().getFirstTick().use(MasterEntity.class, "simpleEntityPropProp", true);
-	assertTrue("The property should be used", dtm().getFirstTick().isUsed(MasterEntity.class, "simpleEntityPropProp"));
+	dtm().getFirstTick().use(MasterEntity.class, "simpleEntityProp", true);
+	assertTrue("The property should be used", dtm().getFirstTick().isUsed(MasterEntity.class, "simpleEntityProp"));
 	assertEquals("value is incorrect.", Arrays.asList("dateExprProp", "simpleEntityProp", "booleanProp"), dtm().getFirstTick().usedProperties(MasterEntity.class));
 	dtm().getFirstTick().use(MasterEntity.class, "dateExprProp", false);
 	assertFalse("The property shouldn't be used", dtm().getFirstTick().isUsed(MasterEntity.class, "dateExprProp"));
@@ -213,12 +211,11 @@ public class PivotDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     @Test
-    @Ignore
-    public void test_that_usgae_management_works_correctly_for_second_tick(){
-	//At the beginning the list of used properties should be empty.
+    public void test_that_usage_management_works_correctly_for_second_tick(){
+	// At the beginning the list of used properties should be empty.
 	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().usedProperties(MasterEntity.class));
 
-	//Add "use properties" and see whether list of "used properties" is correctly ordered.
+	// Add "use properties" and see whether list of "used properties" is correctly ordered.
 	dtm().getSecondTick().use(MasterEntity.class, "moneyAggExprProp", true);
 	assertTrue("The property should be used", dtm().getSecondTick().isUsed(MasterEntity.class, "moneyAggExprProp"));
 	assertEquals("value is incorrect.", Arrays.asList("moneyAggExprProp"), dtm().getSecondTick().usedProperties(MasterEntity.class));
@@ -249,5 +246,9 @@ public class PivotDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 
     @Override
     public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
+    }
+    
+    @Override
+    public void test_that_CHECKed_properties_order_is_correct_and_can_be_altered() throws Exception {
     }
 }

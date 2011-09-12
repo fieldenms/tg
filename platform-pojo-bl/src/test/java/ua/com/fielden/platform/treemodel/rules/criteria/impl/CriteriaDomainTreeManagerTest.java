@@ -59,10 +59,24 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
     protected ICriteriaDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
 	return new CriteriaDomainTreeManagerAndEnhancer(serialiser, rootTypes);
     }
+    
+//    @Override
+//    protected void checkSomeProps(final IDomainTreeManager dtm) {
+//	allLevelsWithoutCollections(new IAction() {
+//	    public void action(final String name) {
+//		dtm.getSecondTick().check(MasterEntity.class, name, true);
+//	    }
+//	}, "checkedUntouchedProp");
+//	allLevelsWithoutCollections(new IAction() {
+//	    public void action(final String name) {
+//		dtm.getSecondTick().check(MasterEntity.class, name, true);
+//	    }
+//	}, "mutatedWithFunctionsProp");
+//    }
 
     @Override
     protected void manageTestingDTM(final IDomainTreeManager dtm) {
-        super.manageTestingDTM(dtm);
+        superManageTestingDTM(dtm);
 
         // check some properties to test its values, exclusiveness, etc.
 	allLevels(new IAction() {
@@ -668,6 +682,10 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
 
     @Override
     public void test_that_CHECKed_properties_order_is_correct() throws Exception {
+    }
+    
+    @Override
+    public void test_that_CHECKed_properties_order_is_correct_and_can_be_altered() throws Exception {
     }
 
     @Override

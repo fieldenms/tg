@@ -214,7 +214,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	enhancerWithPropertiesPopulation = new DomainTreeEnhancerWithPropertiesPopulation((DomainTreeEnhancer) this.enhancer, dtr);
 
 	final IStructureChangedListener oldListener = this.base.listener();
-	final IStructureChangedListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.dtr, this.firstTick, this.secondTick);
+	final IStructureChangedListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick);
 	this.dtr.base.removeStructureChangedListener(oldListener);
 	this.dtr.addStructureChangedListener(newListener);
     }
@@ -240,7 +240,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
      * @author TG Team
      *
      */
-    protected class TickManagerAndEnhancer implements ITickManagerWithMutability {
+    protected class TickManagerAndEnhancer extends TickManager implements ITickManagerWithMutability {
 	private static final long serialVersionUID = 6961101639080080892L;
 	private final TickManager base;
 
@@ -252,18 +252,22 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    this.base = base;
 	}
 
-	/**
-	 * Getter of mutable "checked properties" cache for internal purposes.
-	 * <p>
-	 * These properties are fully lazy. If some "root" has not been used -- it will not be loaded. This partly initialised stuff could be even persisted.
-	 * After deserialisation lazy mechanism can simply load missing stuff well.
-	 *
-	 * @param root
-	 * @return
-	 */
+	@Override
 	public List<String> checkedPropertiesMutable(final Class<?> root) {
 	    // inject an enhanced type into method implementation
 	    return base.checkedPropertiesMutable(enhancerWithPropertiesPopulation.getManagedType(root));
+	}
+	
+	@Override
+	protected boolean isCheckedMutably(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    return base.isCheckedMutably(enhancerWithPropertiesPopulation.getManagedType(root), property);
+	}
+	
+	@Override
+	public boolean isCheckedNaturally(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    return base.isCheckedNaturally(enhancerWithPropertiesPopulation.getManagedType(root), property);
 	}
 
 	@Override

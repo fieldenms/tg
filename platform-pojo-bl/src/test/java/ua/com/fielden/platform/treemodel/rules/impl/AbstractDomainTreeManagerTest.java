@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.treemodel.rules.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -20,6 +21,7 @@ import ua.com.fielden.platform.domain.tree.MasterEntityWithUnionForIncludedPrope
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.types.Money;
 
@@ -37,10 +39,12 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
 	return rootTypes;
     }
-
-    @Override
-    protected IDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	final IDomainTreeManagerAndEnhancer dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
+    
+    protected void superManageTestingDTM(final IDomainTreeManager dtm) {
+        super.manageTestingDTM(dtm);
+    }
+    
+    protected void checkSomeProps(final IDomainTreeManager dtm) {
 	allLevels(new IAction() {
 	    public void action(final String name) {
 		dtm.getSecondTick().check(MasterEntity.class, name, true);
@@ -51,6 +55,27 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 		dtm.getSecondTick().check(MasterEntity.class, name, true);
 	    }
 	}, "mutatedWithFunctionsProp");
+    }
+    
+    @Override
+    protected void manageTestingDTM(final IDomainTreeManager dtm) {
+        super.manageTestingDTM(dtm);
+        
+//	allLevels(new IAction() {
+//	    public void action(final String name) {
+//		dtm.getSecondTick().check(MasterEntity.class, name, true);
+//	    }
+//	}, "checkedUntouchedProp");
+//	allLevels(new IAction() {
+//	    public void action(final String name) {
+//		dtm.getSecondTick().check(MasterEntity.class, name, true);
+//	    }
+//	}, "mutatedWithFunctionsProp");
+    }
+
+    @Override
+    protected IDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+	final IDomainTreeManagerAndEnhancer dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
 	return dtm;
     }
 
@@ -65,13 +90,22 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
     protected void isCheck_equals_to_state(final String name, final String message, final boolean state) {
 	assertEquals(message, state, dtm().getFirstTick().isChecked(MasterEntity.class, name));
     }
+    
+    protected void uncheckLegally(final String name, final String message) {
+	try {
+	    dtm().getFirstTick().check(MasterEntity.class, name, false);
+	    dtm().getFirstTick().check(MasterEntity.class, name, true);
+	} catch (final Exception e) {
+	    fail(message + " Cause = [" + e.getMessage() + "]");
+	}
+    }
 
     protected void checkLegally(final String name, final String message) {
 	try {
 	    dtm().getFirstTick().check(MasterEntity.class, name, true);
 	    dtm().getFirstTick().check(MasterEntity.class, name, false);
 	} catch (final Exception e) {
-	    fail(message);
+	    fail(message + " Cause = [" + e.getMessage() + "]");
 	}
     }
 
@@ -118,7 +152,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	final String message = "Not disabled and not excluded property should NOT cause any exception while changing its state.";
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
-		checkLegally(name, message);
+		uncheckLegally(name, message);
 	    }
 	}, "mutablyCheckedProp");
     }
@@ -138,17 +172,17 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_CHECK_state_for_disabled_properties_is_correct() { // (disabled == immutably checked or unchecked)
-	final String message = "Immutably checked property (disabled) should return 'true' CHECK state.";
 	allLevels(new IAction() {
 	    public void action(final String name) {
+		final String message = "Immutably checked (disabled) property [" + name + "] should return 'true' CHECK state.";
 		isCheck_equals_to_state(name, message, true);
 	    }
 	}, "checkedManuallyProp");
 
-	final String message1 = "Immutably unchecked property (disabled) should return 'false' CHECK state.";
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		isCheck_equals_to_state(name, message1, false);
+		final String message = "Immutably unchecked (disabled) property [" + name + "] should return 'false' CHECK state.";
+		isCheck_equals_to_state(name, message, false);
 	    }
 	}, "disabledManuallyProp");
     }
@@ -166,9 +200,9 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
     @Test
     public void test_that_CHECK_state_for_mutated_by_isChecked_method_properties_is_desired_and_after_manual_mutation_is_actually_mutated() {
 	// checked properties, defined in isChecked() contract
-	final String message = "Checked property, defined in isChecked() contract, should return 'true' CHECK state, and after manual mutation its state should be desired.";
 	allLevels(new IAction() {
 	    public void action(final String name) {
+		final String message = "Checked property [" + name + "], defined in isChecked() contract, should return 'true' CHECK state, and after manual mutation its state should be desired.";
 		isCheck_equals_to_state(name, message, true);
 		dtm().getFirstTick().check(MasterEntity.class, name, false);
 		isCheck_equals_to_state(name, message, false);
@@ -181,9 +215,9 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
     @Test
     public void test_that_CHECK_state_for_mutated_by_Check_method_properties_is_actually_mutated() {
 	// checked properties, mutated_by_Check_method
-	final String message = "Checked property, defined in isChecked() contract, should return 'true' CHECK state, and after manual mutation its state should be desired.";
 	allLevels(new IAction() {
 	    public void action(final String name) {
+		final String message = "Checked property [" + name + "], defined in isChecked() contract, should return 'true' CHECK state, and after manual mutation its state should be desired.";
 		dtm().getFirstTick().check(MasterEntity.class, name, false);
 		isCheck_equals_to_state(name, message, false);
 		dtm().getFirstTick().check(MasterEntity.class, name, true);
@@ -194,38 +228,62 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_CHECKed_properties_order_is_correct() throws Exception {
+	checkSomeProps(dtm());
+	
 	// at first the manager will be initialised the first time and its "included" and then "checked" props will be initialised (heavy operation)
-	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
+	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
+
 	// next -- lightweight operation -- no loading will be performed
-	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
+	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
 	// serialise and deserialise and then check the order of "checked properties"
 	final byte[] array = getSerialiser().serialise(dtm());
 	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
-	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), copy.getFirstTick().checkedProperties(MasterEntity.class));
+	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), copy.getFirstTick().checkedProperties(MasterEntity.class));
 	// simple lightweight example
 	assertEquals("The checked properties are incorrect.", Collections.emptyList(), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
     }
 
     @Test
-    public void test_that_CHECKed_properties_Move_Swap_operations_work() throws Exception {
+    public void test_that_CHECKed_properties_order_is_correct_and_can_be_altered() throws Exception {
+	checkSomeProps(dtm());
+
 	// at first the manager will be initialised the first time and its "included" and then "checked" props will be initialised (heavy operation)
-	// alter the order of properties
-	dtm().getFirstTick().swap(MasterEntity.class, "mutablyCheckedProp", "entityProp.mutablyCheckedProp");
-	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
-	dtm().getFirstTick().swap(MasterEntity.class, "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp");
-	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
-	dtm().getFirstTick().moveToTheEnd(MasterEntity.class, "mutablyCheckedProp");
-	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp", "mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
-	dtm().getFirstTick().move(MasterEntity.class, "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp");
-	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
-	dtm().getFirstTick().move(MasterEntity.class, "mutablyCheckedProp", "entityProp.mutablyCheckedProp");
-	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
-	dtm().getFirstTick().swap(MasterEntity.class, "mutablyCheckedProp", "entityProp.mutablyCheckedProp");
-	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
+	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
+
+	// alter checked properties by checking / un-checking some property
+	dtm().getFirstTick().check(MasterEntity.class, "integerProp", true);
+	dtm().getFirstTick().check(MasterEntity.class, "entityProp.mutablyCheckedProp", false);
+
+	// next -- lightweight operation -- no loading will be performed
+	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp", "integerProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
 	// serialise and deserialise and then check the order of "checked properties"
 	final byte[] array = getSerialiser().serialise(dtm());
 	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
-	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp").toString(), copy.getFirstTick().checkedProperties(MasterEntity.class).toString());
+	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp", "integerProp"), copy.getFirstTick().checkedProperties(MasterEntity.class));
+    }
+
+    @Test
+    public void test_that_CHECKed_properties_Move_Swap_operations_work() throws Exception {
+	checkSomeProps(dtm());
+
+	// at first the manager will be initialised the first time and its "included" and then "checked" props will be initialised (heavy operation)
+	// alter the order of properties
+	dtm().getFirstTick().swap(MasterEntity.class, "mutablyCheckedProp", "entityProp.mutablyCheckedProp");
+	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
+	dtm().getFirstTick().swap(MasterEntity.class, "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp");
+	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
+	dtm().getFirstTick().moveToTheEnd(MasterEntity.class, "mutablyCheckedProp");
+	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp", "mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
+	dtm().getFirstTick().move(MasterEntity.class, "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp");
+	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
+	dtm().getFirstTick().move(MasterEntity.class, "mutablyCheckedProp", "entityProp.mutablyCheckedProp");
+	assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "entityProp.mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
+	dtm().getFirstTick().swap(MasterEntity.class, "mutablyCheckedProp", "entityProp.mutablyCheckedProp");
+	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntity.class));
+	// serialise and deserialise and then check the order of "checked properties"
+	final byte[] array = getSerialiser().serialise(dtm());
+	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.resultOnlyProp.mutablyCheckedProp", "collection.mutablyCheckedProp", "collection.entityProp.mutablyCheckedProp", "collection.collection.mutablyCheckedProp", "collection.checkedManuallyProp", "collection.resultOnlyProp.mutablyCheckedProp", "checkedManuallyProp", "resultOnlyProp.mutablyCheckedProp", "resultOnlyProp.entityProp.mutablyCheckedProp", "resultOnlyProp.collection.mutablyCheckedProp", "resultOnlyProp.excludedManuallyProp.mutablyCheckedProp", "resultOnlyProp.resultOnlyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.entityProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.collection.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.excludedManuallyProp.mutablyCheckedProp", "entityWithCompositeKeyProp.keyPartPropFromSlave.resultOnlyProp.mutablyCheckedProp").toString(), copy.getFirstTick().checkedProperties(MasterEntity.class).toString());
     }
 
     @Test
@@ -385,7 +443,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	assertTrue("The brand new calculated property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, calcProp2));
 	assertTrue("The brand new calculated property should be immutable checked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
-	assertTrue("The brand new calculated property should be checked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
+	assertFalse("The brand new calculated property should NOT be checked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// serialise and deserialise and then check the order of "checked properties"
@@ -398,6 +456,6 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	assertTrue("The brand new calculated property should be excluded.", copy.getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertTrue("The brand new calculated property should be disabled.", copy.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, calcProp2));
 	assertTrue("The brand new calculated property should be immutable checked.", copy.getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
-	assertTrue("The brand new calculated property should be checked.", copy.getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
+	assertFalse("The brand new calculated property should NOT be checked.", copy.getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
     }
 }

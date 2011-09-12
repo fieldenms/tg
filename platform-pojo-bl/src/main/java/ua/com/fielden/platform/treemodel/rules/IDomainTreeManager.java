@@ -18,7 +18,7 @@ import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.ITickManager;
  * @author TG Team
  *
  */
-public interface IDomainTreeManager /* extends Serializable */ {
+public interface IDomainTreeManager {
     /**
      * Returns a domain representation that is able to change domain representation rules. See {@link IDomainTreeRepresentation} documentation for more details.
      *
@@ -73,7 +73,7 @@ public interface IDomainTreeManager /* extends Serializable */ {
      * @author TG Team
      *
      */
-    public interface ITickManager /* extends Serializable */ {
+    public interface ITickManager {
         /**
          * Defines a contract which ticks for which properties should be <b>mutably</b> checked in domain tree representation. <br><br>
          *
@@ -102,8 +102,12 @@ public interface IDomainTreeManager /* extends Serializable */ {
         void check(final Class<?> root, final String property, final boolean check);
 
         /**
-         * Returns an <b>ordered</b> list of checked properties for concrete <code>root</code> type.
+         * Returns an <b>ordered</b> list of checked properties for concrete <code>root</code> type. <br><br>
          *
+         * The order of the checked properties should be following (if it was not altered using {@link #swap(Class, String, String)}/{@link #move(Class, String, String)} methods):<br>
+         * 1. all checked properties as defined by a) {@link #isChecked(Class, String)} contract b) {@link IDomainTreeRepresentation#includedProperties(Class)} order<br>
+         * 2. all manually checked properties (in order that they were checked)
+         * 
          * @param root -- a root type that contains a checked properties.
          * @return
          */

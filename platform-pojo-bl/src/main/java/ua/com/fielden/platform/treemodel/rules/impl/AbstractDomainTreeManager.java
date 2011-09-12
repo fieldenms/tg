@@ -73,16 +73,47 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
         }
 
 	// the below listener is intended to update checked properties for both ticks when the skeleton of included properties has been changed
-	listener = new IncludedAndCheckedPropertiesSynchronisationListener(this.dtr, this.firstTick, this.secondTick);
+	listener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick);
 	this.dtr.addStructureChangedListener(listener);
     }
 
+    /**
+     * This interface is just a wrapper for {@link ITickManager} with accessor to mutable "checked properties".
+     *
+     * @author TG Team
+     *
+     */
+    protected interface ITickManagerWithMutability extends ITickManager {
+	/**
+	 * Getter of mutable "checked properties" cache for internal purposes.
+	 * <p>
+	 * These properties are fully lazy. If some "root" has not been used -- it will not be loaded. This partly initialised stuff could be even persisted.
+	 * After deserialisation lazy mechanism can simply load missing stuff well.
+	 *
+	 * @param root
+	 * @return
+	 */
+	List<String> checkedPropertiesMutable(final Class<?> root);
+	
+	boolean isCheckedNaturally(final Class<?> root, final String property);
+    }
+
+    /**
+     * The "structure changed" listener that takes care about synchronisation of "included properties" with "checked properties" for both ticks.
+     *
+     * @author TG Team
+     *
+     */
     protected static class IncludedAndCheckedPropertiesSynchronisationListener implements IStructureChangedListener {
-	private final IDomainTreeRepresentation dtr;
 	private final ITickManagerWithMutability firstTick, secondTick;
 
-	protected IncludedAndCheckedPropertiesSynchronisationListener(final IDomainTreeRepresentation dtr, final ITickManagerWithMutability firstTick, final ITickManagerWithMutability secondTick) {
-	    this.dtr = dtr;
+	/**
+	 * A constructor that requires two ticks for synchronisation.
+	 *
+	 * @param firstTick
+	 * @param secondTick
+	 */
+	protected IncludedAndCheckedPropertiesSynchronisationListener(final ITickManagerWithMutability firstTick, final ITickManagerWithMutability secondTick) {
 	    this.firstTick = firstTick;
 	    this.secondTick = secondTick;
 	}
@@ -102,18 +133,14 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    if (!isDummyMarker(property)) {
 		final String reflectionProperty = reflectionProperty(property);
 		// update checked properties
-		if (firstTick.isChecked(root, reflectionProperty)) {
+		if (firstTick.isCheckedNaturally(root, reflectionProperty) && !firstTick.checkedPropertiesMutable(root).contains(reflectionProperty)) {
 		    firstTick.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
 		}
-		if (secondTick.isChecked(root, reflectionProperty)) {
+		if (secondTick.isCheckedNaturally(root, reflectionProperty) && !secondTick.checkedPropertiesMutable(root).contains(reflectionProperty)) {
 		    secondTick.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
 		}
 	    }
 	}
-    }
-
-    protected interface ITickManagerWithMutability extends ITickManager {
-	List<String> checkedPropertiesMutable(final Class<?> root);
     }
 
     protected IStructureChangedListener listener() {
@@ -156,12 +183,34 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    this.dtr = null;
 	    this.tr = null;
 	}
+	
+	/**
+	 * This method is designed to be overridden in descendants to provide custom "mutable checking" logic.
+	 * 
+	 * @param root
+	 * @param property
+	 * @return
+	 */
+	protected boolean isCheckedMutably(final Class<?> root, final String property) {
+	    return false;
+	}
+	
+	@Override
+	public boolean isCheckedNaturally(final Class<?> root, final String property) {
+	    AbstractDomainTreeRepresentation.illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    return (isCheckedMutably(root, property)) || // checked properties by a "contract"
+	    	(tr.isCheckedImmutably(root, property)); // the checked by default properties should be checked (immutable checking)
+	}
 
 	@Override
 	public boolean isChecked(final Class<?> root, final String property) {
-	    AbstractDomainTreeRepresentation.illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return (manuallyCheckedProperties.contains(key(root, property))) || // manually checked properties
-		(tr.isCheckedImmutably(root, property)); // the checked by default properties should be checked (immutable checking)
+	    dtr.warmUp(root, PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : "");
+	    if (checkedProperties.get(root) == null) { // not yet loaded
+		return isCheckedNaturally(root, property);
+	    } else {
+		AbstractDomainTreeRepresentation.illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
+		return checkedPropertiesMutable(root).contains(property);
+	    }
 	}
 
 	@Override
@@ -170,10 +219,19 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    if (tr.isDisabledImmutably(root, property)) {
 		throw new IllegalArgumentException("Could not [un]check 'disabled' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    }
+	    dtr.warmUp(root, PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : "");
 	    if (check) {
-		manuallyCheckedProperties.add(key(root, property));
+		if (!checkedPropertiesMutable(root).contains(property)) {
+		    checkedPropertiesMutable(root).add(property);
+		} else {
+		    logger().warn("Could not check already checked property [" + property + "] in type [" + root.getSimpleName() + "].");
+		}
 	    } else {
-		manuallyCheckedProperties.remove(key(root, property));
+		if (checkedPropertiesMutable(root).contains(property)) {
+		    checkedPropertiesMutable(root).remove(property);
+		} else {
+		    logger().warn("Could not uncheck already unchecked property [" + property + "] in type [" + root.getSimpleName() + "].");
+		}		
 	    }
 	}
 
@@ -182,28 +240,36 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    return Collections.unmodifiableList(checkedPropertiesMutable(root));
 	}
 
-	/**
-	 * Getter of mutable "checked properties" cache for internal purposes.
-	 * <p>
-	 * These properties are fully lazy. If some "root" has not been used -- it will not be loaded. This partly initialised stuff could be even persisted.
-	 * After deserialisation lazy mechanism can simply load missing stuff well.
-	 *
-	 * @param root
-	 * @return
-	 */
-	public List<String> checkedPropertiesMutable(final Class<?> root) {
-	    //	    final Class<?> root = DynamicEntityClassLoader.getOriginalType(root1);
+	public synchronized List<String> checkedPropertiesMutable(final Class<?> root) {
 	    if (checkedProperties.get(root) == null) { // not yet loaded
 		final Date st = new Date();
 		// initialise checked properties using isChecked contract and "included properties" cache
 		final List<String> includedProps = dtr.includedProperties(root);
-		final List<String> checkedProps = new ArrayList<String>();
+		final List<String> checkedProps = new ArrayList<String>(); /* {
+		    @Override
+		    public void add(final int index, final String element) {
+			if (!contains(element)) {
+			    super.add(index, element);
+			}
+		    }
+		    
+		    @Override
+		    public boolean add(final String e) {
+			if (!contains(e)) {
+			    return super.add(e);
+			} else {
+			    return false;
+			}
+		    }
+		};*/
 		// the original order of "included properties" will be used for "checked properties" at first
 		for (final String includedProperty : includedProps) {
 		    if (!isDummyMarker(includedProperty) ) {
 			try {
-			    PropertyTypeDeterminator.determinePropertyType(root, includedProperty);
-			    if (isChecked(root, includedProperty)) {
+			    if (!"".equals(includedProperty)) {
+				PropertyTypeDeterminator.determinePropertyType(root, includedProperty);
+			    }
+			    if (isCheckedNaturally(root, includedProperty)) {
 				checkedProps.add(includedProperty);
 			    }
 			} catch (final IllegalArgumentException e) {
