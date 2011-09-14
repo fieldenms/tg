@@ -1,12 +1,10 @@
 package ua.com.fielden.platform.persistence;
 
-import java.util.Arrays;
-
 import org.hibernate.event.PostLoadEvent;
 import org.hibernate.event.def.DefaultPostLoadEventListener;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * This Hibernate listener executes meta-information updating while the instance
@@ -23,26 +21,7 @@ public class MetaPostLoadListener extends DefaultPostLoadEventListener {
     public void onPostLoad(final PostLoadEvent event) {
 	final AbstractEntity<?> instance = (AbstractEntity<?>) event.getEntity();
 	//	System.out.println("<<< >>> onPostLoad : entity == " + instance.getId() + "(" + instance.getType().getSimpleName() + ")");
-
-	final Object[] state = instance.getState();
-	final String[] propertyNames = instance.getPropertyNames();
-
-	// handle property "key" assignment
-	final int keyIndex = Arrays.asList(propertyNames).indexOf("key");
-	if (keyIndex >= 0 && state[keyIndex] != null) {
-	    instance.set("key", state[keyIndex]);
-	}
-
-	for (final MetaProperty meta : instance.getProperties().values()) {
-	    if (meta != null) {
-		final Object newOriginalValue = instance.get(meta.getName());
-		meta.setOriginalValue(newOriginalValue);
-		if (!meta.isCollectional()) {
-		    meta.define(newOriginalValue);
-		}
-	    }
-	}
-	instance.setDirty(false);
+	EntityUtils.handleMetaProperties(instance);
 	super.onPostLoad(event);
     }
 }

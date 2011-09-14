@@ -612,4 +612,33 @@ public class EntityUtils {
         }
         return result;
     }
+
+    /**
+     * Performs {@link AbstractEntity} instance's post-creation actions
+     * such as original values setting, definers invoking, dirtiness resetting etc.
+     *
+     * @param instance
+     * @return
+     */
+    public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance) {
+	if (instance.getProperties().containsKey("key")) {
+	    final Object keyValue = instance.get("key");
+	    if (keyValue != null) {
+		// handle property "key" assignment
+		instance.set("key", keyValue);
+	    }
+	}
+
+	for (final MetaProperty meta : instance.getProperties().values()) {
+	    if (meta != null) {
+		final Object newOriginalValue = instance.get(meta.getName());
+		meta.setOriginalValue(newOriginalValue);
+		if (!meta.isCollectional()) {
+		    meta.define(newOriginalValue);
+		}
+	    }
+	}
+	instance.setDirty(false);
+	return instance;
+    }
 }

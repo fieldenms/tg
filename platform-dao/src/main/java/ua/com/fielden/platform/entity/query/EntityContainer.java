@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.query;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,9 +9,8 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityContainer<R extends AbstractEntity> {
     	private final static String ID_PROPERTY_NAME = "id";
@@ -91,7 +89,7 @@ public class EntityContainer<R extends AbstractEntity> {
 	    }
 
 	    if (!userViewOnly) {
-		handleMetaProperties(entity);
+		EntityUtils.handleMetaProperties(entity);
 	    }
 
 	    entity.setInitialising(false);
@@ -117,28 +115,4 @@ public class EntityContainer<R extends AbstractEntity> {
 		}
 	    }
 	}
-
-	private AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance) {
-	    final Object[] state = instance.getState();
-	    final String[] propertyNames = instance.getPropertyNames();
-
-	    // handle property "key" assignment
-	    final int keyIndex = Arrays.asList(propertyNames).indexOf("key");
-	    if (keyIndex >= 0 && state[keyIndex] != null) {
-		instance.set("key", state[keyIndex]);
-	    }
-
-	    for (final MetaProperty meta : instance.getProperties().values()) {
-		if (meta != null) {
-		    final Object newOriginalValue = instance.get(meta.getName());
-		    meta.setOriginalValue(newOriginalValue);
-		    if (!meta.isCollectional()) {
-			meta.define(newOriginalValue);
-		    }
-		}
-	    }
-	    instance.setDirty(false);
-	    return instance;
-	}
-
 }

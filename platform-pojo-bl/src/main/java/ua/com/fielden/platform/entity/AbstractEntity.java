@@ -1016,33 +1016,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	return Result.successful(null);
     }
 
-    /**
-     * The array of AE's property names. (for "IsProperty" fields)
-     *
-     * @return
-     */
-    public String[] getPropertyNames() {
-	final Object[] obj = getProperties().keySet().toArray();
-	final String[] propNames = new String[obj.length];
-	for (int i = 0; i < obj.length; i++) {
-	    propNames[i] = (String) obj[i];
-	}
-	return propNames;
-    }
-
-    /**
-     * The array of AE's property states. (for "IsProperty" fields)
-     *
-     * @return
-     */
-    public Object[] getState() {
-	final Object[] state = new Object[getProperties().size()];
-	for (int i = 0; i < getProperties().size(); i++) {
-	    state[i] = get(getPropertyNames()[i]);
-	}
-	return state;
-    }
-
     protected void setVersion(final Long ver) {
 	version = ver;
     }

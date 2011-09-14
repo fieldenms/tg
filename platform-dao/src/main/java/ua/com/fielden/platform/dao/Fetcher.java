@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.equery.equery.select;
+
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -27,7 +29,6 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.equery.ColumnInfo;
 import ua.com.fielden.platform.equery.ColumnInfoForEntityProp;
@@ -52,8 +53,7 @@ import ua.com.fielden.platform.persistence.types.SimplyMoneyWithTaxAndExTaxAmoun
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;
-
-import static ua.com.fielden.platform.equery.equery.select;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * This class contains the Hibernate driven implementation of getting results from the provided IQueryOrderedModel.
@@ -691,7 +691,7 @@ class Fetcher<E extends AbstractEntity> {
 	    }
 
 	    if (!userViewOnly) {
-		handleMetaProperties(entity);
+		EntityUtils.handleMetaProperties(entity);
 	    }
 
 	    entity.setInitialising(false);
@@ -716,29 +716,6 @@ class Fetcher<E extends AbstractEntity> {
 		    throw new RuntimeException("Can't set value for property " + propName + " due to:" + e.getMessage());
 		}
 	    }
-	}
-
-	private AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance) {
-	    final Object[] state = instance.getState();
-	    final String[] propertyNames = instance.getPropertyNames();
-
-	    // handle property "key" assignment
-	    final int keyIndex = Arrays.asList(propertyNames).indexOf("key");
-	    if (keyIndex >= 0 && state[keyIndex] != null) {
-		instance.set("key", state[keyIndex]);
-	    }
-
-	    for (final MetaProperty meta : instance.getProperties().values()) {
-		if (meta != null) {
-		    final Object newOriginalValue = instance.get(meta.getName());
-		    meta.setOriginalValue(newOriginalValue);
-		    if (!meta.isCollectional()) {
-			meta.define(newOriginalValue);
-		    }
-		}
-	    }
-	    instance.setDirty(false);
-	    return instance;
 	}
     }
 

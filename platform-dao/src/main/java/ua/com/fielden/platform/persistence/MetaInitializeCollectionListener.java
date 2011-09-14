@@ -22,9 +22,6 @@ public class MetaInitializeCollectionListener extends DefaultInitializeCollectio
     public void onInitializeCollection(final InitializeCollectionEvent event) throws HibernateException {
 	final AbstractEntity<?> instance = (AbstractEntity<?>) event.getAffectedOwnerOrNull();
 	//	System.out.println("<<< >>> onInitializeCollection : entity == " + instance.getId() + "(" + instance.getType().getSimpleName() + ") ");
-
-	final Object[] state = instance.getState();
-	final String[] propertyNames = instance.getPropertyNames();
 	for (final MetaProperty meta : instance.getProperties().values()) {
 	    if (meta.isCollectional()) {
 		final Object collection = instance.get(meta.getName());
