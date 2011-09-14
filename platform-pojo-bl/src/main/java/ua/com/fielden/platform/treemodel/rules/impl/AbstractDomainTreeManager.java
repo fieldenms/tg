@@ -7,17 +7,16 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation.IStructureChangedListener;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation.ITickRepresentation;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Abstract domain tree manager for all TG trees. Includes support for checking and functions managing. <br><br>
@@ -94,7 +93,14 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	 * @return
 	 */
 	List<String> checkedPropertiesMutable(final Class<?> root);
-	
+
+	/**
+	 * TODO
+	 *
+	 * @param root
+	 * @param property
+	 * @return
+	 */
 	boolean isCheckedNaturally(final Class<?> root, final String property);
     }
 
@@ -160,7 +166,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      */
     public static class TickManager implements ITickManagerWithMutability {
 	private static final long serialVersionUID = 3498255722542117344L;
-	private final EnhancementSet manuallyCheckedProperties;
 	private final EnhancementRootsMap<List<String>> checkedProperties;
 	private final transient IDomainTreeRepresentation dtr;
 	private final transient ITickRepresentation tr;
@@ -169,24 +174,22 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	 * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr" fields.
 	 */
 	public TickManager() {
-	    this(createSet(), AbstractDomainTree.<List<String>>createRootsMap());
+	    this(AbstractDomainTree.<List<String>>createRootsMap());
 	}
 
 	/**
 	 * Used for serialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr" fields.
 	 */
-	protected TickManager(final Set<Pair<Class<?>, String>> manuallyCheckedProperties, final Map<Class<?>, List<String>> checkedProperties) {
-	    this.manuallyCheckedProperties = createSet();
-	    this.manuallyCheckedProperties.addAll(manuallyCheckedProperties);
+	protected TickManager(final Map<Class<?>, List<String>> checkedProperties) {
 	    this.checkedProperties = createRootsMap();
 	    this.checkedProperties.putAll(checkedProperties);
 	    this.dtr = null;
 	    this.tr = null;
 	}
-	
+
 	/**
 	 * This method is designed to be overridden in descendants to provide custom "mutable checking" logic.
-	 * 
+	 *
 	 * @param root
 	 * @param property
 	 * @return
@@ -194,7 +197,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	protected boolean isCheckedMutably(final Class<?> root, final String property) {
 	    return false;
 	}
-	
+
 	@Override
 	public boolean isCheckedNaturally(final Class<?> root, final String property) {
 	    AbstractDomainTreeRepresentation.illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
@@ -204,7 +207,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
 	@Override
 	public boolean isChecked(final Class<?> root, final String property) {
-	    dtr.warmUp(root, PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : "");
+	    loadParent(root, property);
 	    if (checkedProperties.get(root) == null) { // not yet loaded
 		return isCheckedNaturally(root, property);
 	    } else {
@@ -213,13 +216,23 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    }
 	}
 
+	/**
+	 * Loads parent property to ensure that working with this property is safe.
+	 *
+	 * @param root
+	 * @param property
+	 */
+	private void loadParent(final Class<?> root, final String property) {
+	    dtr.warmUp(root, PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : "");
+	}
+
 	@Override
 	public void check(final Class<?> root, final String property, final boolean check) {
 	    AbstractDomainTreeRepresentation.illegalExcludedProperties(dtr, root, property, "Could not [un]check already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    if (tr.isDisabledImmutably(root, property)) {
 		throw new IllegalArgumentException("Could not [un]check 'disabled' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    }
-	    dtr.warmUp(root, PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : "");
+	    loadParent(root, property);
 	    if (check) {
 		if (!checkedPropertiesMutable(root).contains(property)) {
 		    checkedPropertiesMutable(root).add(property);
@@ -231,7 +244,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		    checkedPropertiesMutable(root).remove(property);
 		} else {
 		    logger().warn("Could not uncheck already unchecked property [" + property + "] in type [" + root.getSimpleName() + "].");
-		}		
+		}
 	    }
 	}
 
@@ -240,40 +253,18 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    return Collections.unmodifiableList(checkedPropertiesMutable(root));
 	}
 
-	public synchronized List<String> checkedPropertiesMutable(final Class<?> root) {
+	public synchronized List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
+	    final Class<?> root = DynamicEntityClassLoader.getOriginalType(rootPossiblyEnhanced);
 	    if (checkedProperties.get(root) == null) { // not yet loaded
 		final Date st = new Date();
 		// initialise checked properties using isChecked contract and "included properties" cache
 		final List<String> includedProps = dtr.includedProperties(root);
-		final List<String> checkedProps = new ArrayList<String>(); /* {
-		    @Override
-		    public void add(final int index, final String element) {
-			if (!contains(element)) {
-			    super.add(index, element);
-			}
-		    }
-		    
-		    @Override
-		    public boolean add(final String e) {
-			if (!contains(e)) {
-			    return super.add(e);
-			} else {
-			    return false;
-			}
-		    }
-		};*/
+		final List<String> checkedProps = new ArrayList<String>();
 		// the original order of "included properties" will be used for "checked properties" at first
 		for (final String includedProperty : includedProps) {
 		    if (!isDummyMarker(includedProperty) ) {
-			try {
-			    if (!"".equals(includedProperty)) {
-				PropertyTypeDeterminator.determinePropertyType(root, includedProperty);
-			    }
-			    if (isCheckedNaturally(root, includedProperty)) {
-				checkedProps.add(includedProperty);
-			    }
-			} catch (final IllegalArgumentException e) {
-			    // included property does not exist!
+			if (isCheckedNaturally(rootPossiblyEnhanced, includedProperty)) {
+			    checkedProps.add(includedProperty);
 			}
 		    }
 		}
@@ -322,12 +313,15 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    return dtr;
 	}
 
+	protected Map<Class<?>, List<String>> checkedProperties() {
+	    return checkedProperties;
+	}
+
 	@Override
 	public int hashCode() {
 	    final int prime = 31;
 	    int result = 1;
 	    result = prime * result + ((checkedProperties == null) ? 0 : checkedProperties.hashCode());
-	    result = prime * result + ((manuallyCheckedProperties == null) ? 0 : manuallyCheckedProperties.hashCode());
 	    return result;
 	}
 
@@ -345,20 +339,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		    return false;
 	    } else if (!checkedProperties.equals(other.checkedProperties))
 		return false;
-	    if (manuallyCheckedProperties == null) {
-		if (other.manuallyCheckedProperties != null)
-		    return false;
-	    } else if (!manuallyCheckedProperties.equals(other.manuallyCheckedProperties))
-		return false;
 	    return true;
-	}
-
-	protected Set<Pair<Class<?>, String>> manuallyCheckedProperties() {
-	    return manuallyCheckedProperties;
-	}
-
-	protected Map<Class<?>, List<String>> checkedProperties() {
-	    return checkedProperties;
 	}
     }
 

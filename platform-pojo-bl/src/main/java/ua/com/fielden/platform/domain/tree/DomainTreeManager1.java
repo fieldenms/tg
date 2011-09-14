@@ -8,7 +8,6 @@ import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager;
-import ua.com.fielden.platform.treemodel.rules.impl.EnhancementSet;
 
 public class DomainTreeManager1 extends AbstractDomainTreeManager {
     private static final long serialVersionUID = 1860664025057907572L;
@@ -39,7 +38,6 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
 
     public static class TickManager1ForTest extends TickManager {
 	private static final long serialVersionUID = 2154025458968872414L;
-	private final EnhancementSet touchedProperties;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
@@ -47,53 +45,11 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
 	 */
 	public TickManager1ForTest() {
 	    super();
-	    touchedProperties = createSet();
 	}
 
 	@Override
 	protected boolean isCheckedMutably(final Class<?> root, final String property) {
 	    return property.endsWith("mutablyCheckedProp");
-	}
-
-//	@Override
-//	public boolean isChecked(final Class<?> root, final String property) {
-//	    if (!touchedProperties.contains(key(root, property))) {
-//		return isCheckedMutably(root, property) || //
-//			super.isChecked(root, property);
-//	    } else {
-//		return super.isChecked(root, property);
-//	    }
-//	};
-
-	@Override
-	public void check(final Class<?> root, final String property, final boolean check) {
-	    super.check(root, property, check);
-	    touchedProperties.add(key(root, property));
-	}
-
-	@Override
-	public int hashCode() {
-	    final int prime = 31;
-	    int result = super.hashCode();
-	    result = prime * result + ((touchedProperties == null) ? 0 : touchedProperties.hashCode());
-	    return result;
-	}
-
-	@Override
-	public boolean equals(final Object obj) {
-	    if (this == obj)
-		return true;
-	    if (!super.equals(obj))
-		return false;
-	    if (getClass() != obj.getClass())
-		return false;
-	    final TickManager1ForTest other = (TickManager1ForTest) obj;
-	    if (touchedProperties == null) {
-		if (other.touchedProperties != null)
-		    return false;
-	    } else if (!touchedProperties.equals(other.touchedProperties))
-		return false;
-	    return true;
 	}
     }
 

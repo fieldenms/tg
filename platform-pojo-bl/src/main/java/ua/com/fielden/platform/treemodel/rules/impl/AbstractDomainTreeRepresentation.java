@@ -292,6 +292,10 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     @Override
     public final void excludeImmutably(final Class<?> root, final String property) {
 	excludedProperties.add(key(root, property));
+
+	if (includedProperties.get(root) != null) { // not yet loaded
+	    includedPropertiesMutable(root).remove(property);
+	}
     }
 
     /**
@@ -307,11 +311,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	public ListenedArrayList(final Class<?> root) {
 	    super();
 	    this.root = root;
-	    System.out.println("======================Constructed ListenedArrayList with root = " + this.root.getSimpleName());
+	    // System.out.println("======================Constructed ListenedArrayList with root = " + this.root.getSimpleName());
 	}
 
 	private void fireProperty(final Class<?> root, final String property, final boolean added) {
-	    System.out.println("fire property [" + property + "] for type [" + root.getSimpleName() + "] added [" + added +"].");
+	    // System.out.println("fire property [" + property + "] for type [" + root.getSimpleName() + "] added [" + added +"].");
 	    for (final IStructureChangedListener listener : listeners) {
 		if (added) {
 		    listener.propertyAdded(root, property);
