@@ -305,7 +305,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private Pair<TokenCategory, Object> getResultForPlainExistenceTest() {
-	return new Pair<TokenCategory, Object>(TokenCategory.EXISTENCE_TEST, new ExistenceTestModel((Boolean) firstValue(), getQueryBuilder().getQry((QueryModel) secondValue())));
+	return new Pair<TokenCategory, Object>(TokenCategory.EXISTENCE_TEST, new ExistenceTestModel((Boolean) firstValue(), getQueryBuilder().generateEntQuery((QueryModel) secondValue())));
     }
 
     private Pair<TokenCategory, Object> getResultForPlainSetTest() {

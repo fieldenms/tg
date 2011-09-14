@@ -18,7 +18,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.builders.DbVersion;
-import ua.com.fielden.platform.entity.query.model.builders.QueryBuilder;
+import ua.com.fielden.platform.entity.query.model.builders.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.model.elements.ArithmeticalOperator;
 import ua.com.fielden.platform.entity.query.model.elements.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.model.elements.ComparisonTestModel;
@@ -56,7 +56,7 @@ import ua.com.fielden.platform.entity.query.model.transformation.QueryModelEnhan
 import static org.junit.Assert.assertEquals;
 
 public class QueryModelCompositionTest {
-    private final QueryBuilder qb = new QueryBuilder(DbVersion.H2);
+    private final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
 
     @Test
     public void test_query_model1() {
@@ -70,7 +70,7 @@ public class QueryModelCompositionTest {
 		.prop("wo.insuranceAmount").isNotNull()
 		.end()
 		.modelAsAggregate();
-	qb.getQry(a);//.getPropNames();
+	qb.generateEntQuery(a);//.getPropNames();
 
 	query.select(TgWorkOrder.class).where()
 		.upperCase()
@@ -199,7 +199,7 @@ public class QueryModelCompositionTest {
 	exp.add("eqClass.desc");
 	exp.add("weight");
 	exp.add("volume");
-	assertEquals("models are different", exp, qb.getQry(qry).getPropNames());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getPropNames());
     }
 
     @Test
@@ -214,14 +214,14 @@ public class QueryModelCompositionTest {
 	exp.add("weight");
 	exp.add("volume");
 	exp.add("make");
-	assertEquals("models are different", exp, qb.getQry(qry).getPropNames());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getPropNames());
     }
 
     @Test
     public void test_source_names_collector() {
 	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).modelAsAggregate();
 	final Set<String> exp = new HashSet<String>();
-	assertEquals("models are different", exp, qb.getQry(qry).getQrySourcesNames());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getQrySourcesNames());
     }
 
     @Test
@@ -231,7 +231,7 @@ public class QueryModelCompositionTest {
 	yield().beginExpr().prop("v.volume").add().prop("v.weight").endExpr().as("calc").modelAsAggregate();
 	final Set<String> exp = new HashSet<String>();
 	exp.add("v");
-	assertEquals("models are different", exp, qb.getQry(qry).getQrySourcesNames());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getQrySourcesNames());
     }
 
     @Test
@@ -243,7 +243,7 @@ public class QueryModelCompositionTest {
 	final Set<String> exp = new HashSet<String>();
 	exp.add("v");
 	exp.add("v.model");
-	assertEquals("models are different", exp, qb.getQry(qry).getQrySourcesNames());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getQrySourcesNames());
     }
 
     @Test
@@ -256,7 +256,7 @@ public class QueryModelCompositionTest {
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo"), JoinType.IJ, condition));
 
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getSources());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
     }
 
     @Test
@@ -269,7 +269,7 @@ public class QueryModelCompositionTest {
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, null), JoinType.IJ, condition));
 
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getSources());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
     }
 
     @Test
@@ -284,7 +284,7 @@ public class QueryModelCompositionTest {
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo2"), JoinType.LJ, condition2));
 
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getSources());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
     }
 
     @Test
@@ -299,7 +299,7 @@ public class QueryModelCompositionTest {
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo"), JoinType.IJ, condition1));
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo2"), JoinType.LJ, condition2));
 
-	final EntQuery act = qb.getQry(qry);
+	final EntQuery act = qb.generateEntQuery(qry);
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
 	assertEquals("models are different", exp, act.getSources());
 
@@ -314,8 +314,8 @@ public class QueryModelCompositionTest {
 	final EntityResultQueryModel<TgVehicle> subQry = query.select(TgVehicle.class).as("v").where().prop("v.model").isNotNull().model();
 	final EntityResultQueryModel<TgVehicle> qry = query.select(subQry).as("v").where().prop("v.model").isNotNull().model();
 
-	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsModel("v", qb.getQry(subQry)), new ArrayList<EntQueryCompoundSourceModel>());
-	assertEquals("models are different", exp, qb.getQry(qry).getSources());
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsModel("v", qb.generateEntQuery(subQry)), new ArrayList<EntQueryCompoundSourceModel>());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
     }
 
 
@@ -323,14 +323,14 @@ public class QueryModelCompositionTest {
     public void test_like() {
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().prop("model.desc").like().val("MERC%").model();
 	final ConditionsModel exp = new ConditionsModel(new LikeTestModel(new EntProp("model.desc"), new EntValue("MERC%"), false, false), new ArrayList<CompoundConditionModel>());
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
     public void test_notLike() {
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().prop("model.desc").notLike().val("MERC%").model();
 	final ConditionsModel exp = new ConditionsModel(new LikeTestModel(new EntProp("model.desc"), new EntValue("MERC%"), true, false), new ArrayList<CompoundConditionModel>());
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -341,7 +341,7 @@ public class QueryModelCompositionTest {
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ComparisonTestModel(new EntProp("model"), ComparisonOperator.EQ, new EntValue("MERC")), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -351,7 +351,7 @@ public class QueryModelCompositionTest {
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ComparisonTestModel(new EntProp("model"), ComparisonOperator.EQ, new EntValue("MERC")), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -362,7 +362,7 @@ public class QueryModelCompositionTest {
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ComparisonTestModel(new EntProp("model"), ComparisonOperator.EQ, new EntValue("MERC")), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -372,14 +372,14 @@ public class QueryModelCompositionTest {
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ComparisonTestModel(new EntProp("model"), ComparisonOperator.EQ, new EntValue("MERC")), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
     public void test_set_test_with_values() {
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().prop("model").in().values("MERC", "AUDI").model();
 	final ConditionsModel exp2 = new ConditionsModel(new SetTestModel(new EntProp("model"), false, new EntSet(Arrays.asList(new ISingleOperand[]{new EntValue("MERC"), new EntValue("AUDI")}))), new ArrayList<CompoundConditionModel>());
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -391,23 +391,23 @@ public class QueryModelCompositionTest {
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new SetTestModel(new EntProp("station"), false, new EntSet(Arrays.asList(new ISingleOperand[]{new EntValue("sta1"), new EntValue("sta2")}))), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
     public void test_set_test_with_query() {
 	final EntityResultQueryModel<TgVehicleModel> vehModels = query.select(TgVehicleModel.class).model();
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().prop("model").in().model(vehModels).model();
-	final ConditionsModel exp2 = new ConditionsModel(new SetTestModel(new EntProp("model"), false, new EntSetFromQryModel(qb.getQry(vehModels))), new ArrayList<CompoundConditionModel>());
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	final ConditionsModel exp2 = new ConditionsModel(new SetTestModel(new EntProp("model"), false, new EntSetFromQryModel(qb.generateEntQuery(vehModels))), new ArrayList<CompoundConditionModel>());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
     public void test_plain_quantified_test() {
 	final EntityResultQueryModel<TgVehicleModel> vehModels = query.select(TgVehicleModel.class).model();
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().prop("model").eq().any(vehModels).model();
-	final ConditionsModel exp2 = new ConditionsModel(new QuantifiedTestModel(new EntProp("model"), ComparisonOperator.EQ, Quantifier.ANY, qb.getQry(vehModels)), new ArrayList<CompoundConditionModel>());
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	final ConditionsModel exp2 = new ConditionsModel(new QuantifiedTestModel(new EntProp("model"), ComparisonOperator.EQ, Quantifier.ANY, qb.generateEntQuery(vehModels)), new ArrayList<CompoundConditionModel>());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -415,11 +415,11 @@ public class QueryModelCompositionTest {
 	final EntityResultQueryModel<TgVehicleModel> vehModels = query.select(TgVehicleModel.class).model();
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().anyOfProps("model", "eqClass").eq().any(vehModels).model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
-	others.add(new CompoundConditionModel(LogicalOperator.OR, new QuantifiedTestModel(new EntProp("eqClass"), ComparisonOperator.EQ, Quantifier.ANY, qb.getQry(vehModels))));
-	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new QuantifiedTestModel(new EntProp("model"), ComparisonOperator.EQ, Quantifier.ANY, qb.getQry(vehModels)), others);
+	others.add(new CompoundConditionModel(LogicalOperator.OR, new QuantifiedTestModel(new EntProp("eqClass"), ComparisonOperator.EQ, Quantifier.ANY, qb.generateEntQuery(vehModels))));
+	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new QuantifiedTestModel(new EntProp("model"), ComparisonOperator.EQ, Quantifier.ANY, qb.generateEntQuery(vehModels)), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -428,7 +428,7 @@ public class QueryModelCompositionTest {
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntProp("eqclass"), false)));
 	final ConditionsModel exp = new ConditionsModel(new NullTestModel(new EntProp("model"), true), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -437,7 +437,7 @@ public class QueryModelCompositionTest {
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new ComparisonTestModel(new EntProp("eqClass"), ComparisonOperator.LT, new EntProp("limit"))));
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(new EntProp("model"), ComparisonOperator.GT, new EntValue(100)), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -446,7 +446,7 @@ public class QueryModelCompositionTest {
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntParam("eqclass"), false)));
 	final ConditionsModel exp = new ConditionsModel(new NullTestModel(new EntProp("model"), true), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -456,7 +456,7 @@ public class QueryModelCompositionTest {
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntProp("eqclass"), false)));
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new NullTestModel(new EntProp("model"), true), others);
 	final ConditionsModel exp2 = new ConditionsModel(exp, new ArrayList<CompoundConditionModel>());
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -468,7 +468,7 @@ public class QueryModelCompositionTest {
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	others2.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntProp("currStation"), true)));
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -476,9 +476,9 @@ public class QueryModelCompositionTest {
 	final EntityResultQueryModel<TgVehicle> subQry = query.select(TgVehicle.class).model();
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().prop("model").isNotNull().and().exists(subQry).model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
-	others.add(new CompoundConditionModel(LogicalOperator.AND, new ExistenceTestModel(false, qb.getQry(subQry))));
+	others.add(new CompoundConditionModel(LogicalOperator.AND, new ExistenceTestModel(false, qb.generateEntQuery(subQry))));
 	final ConditionsModel exp = new ConditionsModel(new NullTestModel(new EntProp("model"), true), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -489,7 +489,7 @@ public class QueryModelCompositionTest {
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new NullTestModel(new EntProp("model"), true), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -500,7 +500,7 @@ public class QueryModelCompositionTest {
 	compSingleOperands.add(new CompoundSingleOperand(new EntProp("eqClass"), ArithmeticalOperator.ADD));
 	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
 	final ConditionsModel exp = new ConditionsModel(new NullTestModel(expression, false), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -512,7 +512,7 @@ public class QueryModelCompositionTest {
 	compSingleOperands.add(new CompoundSingleOperand(new EntProp("eqClass"), ArithmeticalOperator.ADD));
 	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
 	final ConditionsModel exp = new ConditionsModel(new NullTestModel(expression, false), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -531,7 +531,7 @@ public class QueryModelCompositionTest {
 	compSingleOperands.add(new CompoundSingleOperand(expression0, ArithmeticalOperator.ADD));
 	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
 	final ConditionsModel exp = new ConditionsModel(new NullTestModel(expression, false), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -540,7 +540,7 @@ public class QueryModelCompositionTest {
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new ComparisonTestModel(new EntProp("eqClass"), ComparisonOperator.LT, new EntProp("limit"))));
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(new DayOfModel(new EntProp("initDate")), ComparisonOperator.GT, new EntValue(15)), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -549,7 +549,7 @@ public class QueryModelCompositionTest {
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(LogicalOperator.AND, new ComparisonTestModel(new EntProp("eqClass"), ComparisonOperator.LT, new EntProp("limit"))));
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(new MonthOfModel(new EntProp("initDate")), ComparisonOperator.GT, new EntValue(3)), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -557,7 +557,7 @@ public class QueryModelCompositionTest {
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").model();
 	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getSources());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
     }
 
     @Test
@@ -565,7 +565,7 @@ public class QueryModelCompositionTest {
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).model();
 	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, null), others);
-	assertEquals("models are different", exp, qb.getQry(qry).getSources());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
     }
 
     @Test
@@ -574,7 +574,7 @@ public class QueryModelCompositionTest {
 	final List<YieldModel> yields = new ArrayList<YieldModel>();
 	yields.add(new YieldModel(new EntProp("eqClass"), "id"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, qb.getQry(qry).getYields());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getYields());
     }
 
     @Test
@@ -584,7 +584,7 @@ public class QueryModelCompositionTest {
 	yields.add(new YieldModel(new EntProp("eqClass"), "ec"));
 	yields.add(new YieldModel(new EntProp("model"), "m"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, qb.getQry(qry).getYields());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getYields());
     }
 
     @Test
@@ -597,13 +597,13 @@ public class QueryModelCompositionTest {
 	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
 	yields.add(new YieldModel(expression, "m"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, qb.getQry(qry).getYields());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getYields());
     }
 
     @Test
     public void test_simple_query_model_21() {
 	final EntityResultQueryModel<TgWorkOrder> qry = query.select(TgVehicle.class).groupBy().prop("eqClass").yield().prop("eqClass").modelAsEntity(TgWorkOrder.class);
-	final EntQuery act = qb.getQry(qry);
+	final EntQuery act = qb.generateEntQuery(qry);
 
 	final List<YieldModel> yields = new ArrayList<YieldModel>();
 	yields.add(new YieldModel(new EntProp("eqClass"), "id"));
@@ -622,11 +622,11 @@ public class QueryModelCompositionTest {
 	final EntityResultQueryModel<TgWorkOrder> subQry2 = query.select(TgWorkOrder.class).model();
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().existsAnyOf(subQry1, subQry2).model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
-	others.add(new CompoundConditionModel(LogicalOperator.OR, new ExistenceTestModel(false, qb.getQry(subQry2))));
-	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ExistenceTestModel(false, qb.getQry(subQry1)), others);
+	others.add(new CompoundConditionModel(LogicalOperator.OR, new ExistenceTestModel(false, qb.generateEntQuery(subQry2))));
+	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ExistenceTestModel(false, qb.generateEntQuery(subQry1)), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals("models are different", exp2, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
     }
 
     @Test
@@ -644,6 +644,6 @@ public class QueryModelCompositionTest {
 	final Expression expressionModel = new Expression(expressionModel3, Arrays.asList(new CompoundSingleOperand[]{new CompoundSingleOperand(new EntValue(12), ArithmeticalOperator.DIV)}));
 
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(expressionModel, ComparisonOperator.GT, new EntValue(1000)), new ArrayList<CompoundConditionModel>());
-	assertEquals("models are different", exp, qb.getQry(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
 }

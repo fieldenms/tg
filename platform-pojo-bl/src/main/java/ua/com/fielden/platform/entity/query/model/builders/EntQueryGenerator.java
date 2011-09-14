@@ -10,14 +10,14 @@ import ua.com.fielden.platform.entity.query.tokens.QueryTokens;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
-public class QueryBuilder {
+public class EntQueryGenerator {
     private final DbVersion dbVersion;
 
-    public QueryBuilder(final DbVersion dbVersion) {
+    public EntQueryGenerator(final DbVersion dbVersion) {
 	this.dbVersion = dbVersion;
     }
 
-    public EntQuery getQry(final QueryModel qryModel) {
+    public EntQuery generateEntQuery(final QueryModel qryModel) {
 	ConditionsBuilder where = null;
 	final QrySourcesBuilder from = new QrySourcesBuilder(null, dbVersion);
 	final QryYieldsBuilder select = new QryYieldsBuilder(null, dbVersion);

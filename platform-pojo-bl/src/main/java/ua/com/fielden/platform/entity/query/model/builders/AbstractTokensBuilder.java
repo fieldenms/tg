@@ -28,12 +28,12 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private ITokensBuilder child;
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
     private final DbVersion dbVersion;
-    private final QueryBuilder queryBuilder;
+    private final EntQueryGenerator queryBuilder;
 
     protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
 	this.parent = parent;
 	this.dbVersion = dbVersion;
-	this.queryBuilder = new QueryBuilder(dbVersion);
+	this.queryBuilder = new EntQueryGenerator(dbVersion);
     }
 
     private void add (final Functions function) {
@@ -170,7 +170,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case EQUERY_TOKENS:
 	case ALL_OPERATOR:
 	case ANY_OPERATOR:
-	    return queryBuilder.getQry((QueryModel) value);
+	    return queryBuilder.generateEntQuery((QueryModel) value);
 	default:
 	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
 	}
@@ -248,7 +248,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         return dbVersion;
     }
 
-    protected QueryBuilder getQueryBuilder() {
+    protected EntQueryGenerator getQueryBuilder() {
         return queryBuilder;
     }
 }
