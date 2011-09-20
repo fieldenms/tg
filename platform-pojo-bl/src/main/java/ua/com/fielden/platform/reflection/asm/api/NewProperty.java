@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.api;
 
+import java.lang.annotation.Annotation;
+
 
 /**
  * A convenient abstraction for representing data needed for dynamic construction of properties.
@@ -7,7 +9,7 @@ package ua.com.fielden.platform.reflection.asm.api;
  * @author TG Team
  *
  */
-public class NewProperty {
+public final class NewProperty {
     public final String name;
     public final Class<?> type;
     public final boolean changeSignature;
@@ -30,5 +32,30 @@ public class NewProperty {
 	this.title = title;
 	this.desc = desc;
 	this.annotations = annotations;
+    }
+
+    /**
+     * Tests whether an annotation descriptor is present for a specific annotation type.
+     *
+     * @param annotationType
+     * @return
+     */
+    public boolean containsAnnotationDescriptorFor(final Class<? extends Annotation> annotationType) {
+	return getAnnotationDescriptorByType(annotationType) != null;
+    }
+
+    /**
+     * Returns an annotation description for the specified annotation type. Returns <code>null</code> if such description is not in the list.
+     *
+     * @param annotationType
+     * @return
+     */
+    public AnnotationDescriptor getAnnotationDescriptorByType(final Class<? extends Annotation> annotationType) {
+	for (final AnnotationDescriptor ad : annotations) {
+	    if (ad.type == annotationType) {
+		return ad;
+	    }
+	}
+	return null;
     }
 }

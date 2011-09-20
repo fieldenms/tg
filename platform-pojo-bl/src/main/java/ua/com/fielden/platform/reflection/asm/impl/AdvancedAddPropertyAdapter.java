@@ -80,8 +80,6 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 	return mv != null && (access & ACC_ABSTRACT) == 0 ? new MethodRenamer(mv) : mv;
     }
 
-
-
     /**
      * This is where new fields and their mutators are added.
      */
@@ -92,18 +90,30 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 	    addPropertyGetter(np, cv);
 	    addPropertySetter(np, cv);
 	}
-        super.visitEnd();
+	super.visitEnd();
     }
 
     private void addPropertyField(final NewProperty pd, final ClassVisitor cv) {
-	final FieldVisitor fvProperty = cv.visitField(ACC_PRIVATE, pd.name, Type.getDescriptor(pd.type), null, null);
+	final String propertyType  = Type.getDescriptor(pd.type);
+
+	final AnnotationDescriptor adIsProperty = pd.getAnnotationDescriptorByType(IsProperty.class);
+	final String signature = adIsProperty != null && adIsProperty.params.get("value") != null ?  Type.getDescriptor((Class) adIsProperty.params.get("value")) : null;
+	final String signatureMode = signature == null ? null :
+	    propertyType.substring(0, propertyType.length()-1) + "<" + signature + ">;";
+
+
+	final FieldVisitor fvProperty = cv.visitField(ACC_PRIVATE, pd.name, propertyType, signatureMode, null);
 
 	// mark the field as generated
 	fvProperty.visitAnnotation(Type.getDescriptor(Generated.class), true).visitEnd();
 
 	// the generated field should correspond to a property
-	final AnnotationVisitor avIsProperty = fvProperty.visitAnnotation(Type.getDescriptor(IsProperty.class), true);
-	avIsProperty.visitEnd();
+	// thus it should have annotation IsProperty, but the annotation descriptor list may already contain it
+	// therefore add IsProperty only if it is not already present in the list
+	if (!pd.containsAnnotationDescriptorFor(IsProperty.class)) {
+	    final AnnotationVisitor avIsProperty = fvProperty.visitAnnotation(Type.getDescriptor(IsProperty.class), true);
+	    avIsProperty.visitEnd();
+	}
 
 	// property should have title and description
 	final AnnotationVisitor avTitle = fvProperty.visitAnnotation(Type.getDescriptor(Title.class), true);
@@ -120,6 +130,9 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 		final Class<?> methodType = PropertyTypeDeterminator.determinePropertyType(ad.type, param.getKey() + "()");
 		if (Enum.class.isAssignableFrom(methodType)) {
 		    av.visitEnum(param.getKey(), Type.getDescriptor(methodType), param.getValue().toString());
+		} else if (param.getValue() instanceof Class){ // if the parameter value is a class then need to use its description
+		    final Type value = Type.getType((Class) param.getValue());// getDescriptor((Class) param.getValue());
+		    av.visit(param.getKey(), value);
 		} else {
 		    av.visit(param.getKey(), param.getValue());
 		}

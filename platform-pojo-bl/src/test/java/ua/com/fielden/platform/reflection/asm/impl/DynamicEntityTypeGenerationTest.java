@@ -6,7 +6,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
@@ -15,6 +17,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.IMetaPropertyDefiner;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -25,6 +28,7 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.Annotation1;
 import ua.com.fielden.platform.reflection.asm.impl.entities.Annotation1.ENUM1;
 import ua.com.fielden.platform.reflection.asm.impl.entities.Annotation2;
+import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingEnhanced;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
@@ -40,7 +44,7 @@ import com.google.inject.asm.Type;
  *
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class DynamicEntityTypeGeneration_Ver_II_Test {
+public class DynamicEntityTypeGenerationTest {
     private static final String NEW_PROPERTY_DESC = "Description  for new money property";
     private static final String NEW_PROPERTY_TITLE = "New money property";
     private static final String NEW_PROPERTY_EXPRESSION = "2 * 3 - [integerProp]";
@@ -201,4 +205,22 @@ public class DynamicEntityTypeGeneration_Ver_II_Test {
 	assertEquals("Incorrect annotation parameter value.", 1, an2.intValue());
 	assertEquals("Incorrect annotation parameter value.", Money.class, an2.type());
     }
+
+    @Test
+    public void test_additiona_of_collectional_property() throws Exception {
+	// create
+	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
+		new AnnotationDescriptor(Calculated.class, new HashMap<String, Object>() {{ put("expression", NEW_PROPERTY_EXPRESSION); put("origination", NEW_PROPERTY_ORIGINATION); }}),
+		new AnnotationDescriptor(IsProperty.class, new HashMap<String, Object>() {{ put("value", String.class);}}));
+	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+
+	// test the modified field attributes such as type and IsProperty annotation
+	final Field collectionalPropertyField = Finder.findFieldByName(enhancedType, "collectionalProperty");
+	assertTrue("Incorrect collectional type.", Collection.class.isAssignableFrom(collectionalPropertyField.getType()));
+
+	final IsProperty annotation = collectionalPropertyField.getAnnotation(IsProperty.class);
+	assertNotNull("There should be IsProperty annotation", annotation);
+	assertEquals("Incorrect value in IsProperty annotation", String.class, annotation.value());
+    }
+
 }

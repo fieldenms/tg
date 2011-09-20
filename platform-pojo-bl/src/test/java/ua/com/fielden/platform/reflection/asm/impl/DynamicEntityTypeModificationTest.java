@@ -47,7 +47,7 @@ import com.google.inject.Injector;
  *
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class DynamicEntityTypeModification_Ver_II_Test {
+public class DynamicEntityTypeModificationTest {
     private static final String NEW_PROPERTY_DESC = "Description  for new money property";
     private static final String NEW_PROPERTY_TITLE = "New money property";
     private static final String NEW_PROPERTY_EXPRESSION = "2 * 3 - [integerProp]";

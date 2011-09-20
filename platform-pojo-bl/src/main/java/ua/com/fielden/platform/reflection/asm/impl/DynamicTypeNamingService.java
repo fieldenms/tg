@@ -2,6 +2,12 @@ package ua.com.fielden.platform.reflection.asm.impl;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * A service for naming new classes created dynamically as the result of new property introduction or modification of existing.
+ *
+ * @author TG Team
+ *
+ */
 public class DynamicTypeNamingService {
     public static final String APPENDIX = "$$TgEntity";
     private AtomicInteger nextNo = new AtomicInteger(0);

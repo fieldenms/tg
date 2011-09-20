@@ -1,13 +1,21 @@
 package ua.com.fielden.platform.reflection.asm.api;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.types.Money;
 
 /**
  * {@link AnnotationDescriptor} test case to ensure correct instantiation.
@@ -60,5 +68,14 @@ public class AnnotationDescriptorTest {
 	assertEquals("incorrect param value", params.get("doubleValue"), ad.params.get("doubleValue"));
 	assertNull("incorrect param value", ad.params.get("someOther1"));
 	assertNull("incorrect param value", ad.params.get("someOther2"));
+    }
+
+    @Test
+    public void test_annotation_description_presence() {
+	    final NewProperty pd = new NewProperty("prop_name", List.class, false, "title", "desc",
+		    new AnnotationDescriptor(Calculated.class, new HashMap<String, Object>() {{ put("expression", "some expression"); }}),
+		    new AnnotationDescriptor(IsProperty.class, new HashMap<String, Object>() {{ put("value", Money.class);}} ));
+	    assertTrue("Should have recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(IsProperty.class));
+	    assertFalse("Should have not recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(CritOnly.class));
     }
 }
