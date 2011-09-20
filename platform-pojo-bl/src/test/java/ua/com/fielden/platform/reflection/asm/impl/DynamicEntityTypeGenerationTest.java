@@ -2,10 +2,13 @@ package ua.com.fielden.platform.reflection.asm.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +26,7 @@ import ua.com.fielden.platform.entity.meta.IMetaPropertyDefiner;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.AnnotationDescriptor;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.Annotation1;
@@ -207,9 +211,9 @@ public class DynamicEntityTypeGenerationTest {
     }
 
     @Test
-    public void test_additiona_of_collectional_property() throws Exception {
+    public void test_addition_of_collectional_property() throws Exception {
 	// create
-	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
+	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description",
 		new AnnotationDescriptor(Calculated.class, new HashMap<String, Object>() {{ put("expression", NEW_PROPERTY_EXPRESSION); put("origination", NEW_PROPERTY_ORIGINATION); }}),
 		new AnnotationDescriptor(IsProperty.class, new HashMap<String, Object>() {{ put("value", String.class);}}));
 	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
@@ -221,6 +225,40 @@ public class DynamicEntityTypeGenerationTest {
 	final IsProperty annotation = collectionalPropertyField.getAnnotation(IsProperty.class);
 	assertNotNull("There should be IsProperty annotation", annotation);
 	assertEquals("Incorrect value in IsProperty annotation", String.class, annotation.value());
+    }
+
+    @Test
+    public void test_getter_signature_for_new_collectional_property() throws Exception {
+	// create
+	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description",
+		new AnnotationDescriptor(IsProperty.class, new HashMap<String, Object>() {{ put("value", String.class);}}));
+	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+
+	final Method getter = Reflector.obtainPropertyAccessor(enhancedType, "collectionalProperty");
+	assertEquals("Incorrect return type.", "java.util.List<java.lang.String>", getter.getGenericReturnType().toString());
+
+	final AbstractEntity<String> instance = factory.newByKey(enhancedType, "new");
+	assertNull("Collectional property should be null by default.", getter.invoke(instance));
+    }
+
+    @Test
+    public void test_setter_signature_for_new_collectional_property() throws Exception {
+	// create
+	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description",
+		new AnnotationDescriptor(IsProperty.class, new HashMap<String, Object>() {{ put("value", String.class);}}));
+	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+
+	final Method setter = Reflector.obtainPropertySetter(enhancedType, "collectionalProperty");
+	final java.lang.reflect.Type[] types = setter.getGenericParameterTypes();
+	assertEquals("Incorrect number of generic parameters", 1, types.length);
+	assertEquals("Incorrect parameter type", "java.util.List<java.lang.String>", types[0].toString());
+
+	final AbstractEntity<String> instance = factory.newByKey(enhancedType, "new");
+	final List<String> list = new ArrayList<String>();
+	setter.invoke(instance, list);
+	final Method getter = Reflector.obtainPropertyAccessor(enhancedType, "collectionalProperty");
+	assertNotNull("Collectional property should not be null once assigned.", getter.invoke(instance));
+	assertEquals("Incorrect value", list, getter.invoke(instance));
     }
 
 }

@@ -93,15 +93,25 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 	super.visitEnd();
     }
 
-    private void addPropertyField(final NewProperty pd, final ClassVisitor cv) {
-	final String propertyType  = Type.getDescriptor(pd.type);
-
+    /**
+     * Constructs a signature based on the new property annotation descriptor information.
+     * Its primary use if to correctly construct collectional properties based on the type parameter as specified in the IsProperty annotation descriptor.
+     *
+     * @param pd
+     * @param propertyType
+     * @return
+     */
+    private String constructSignature(final NewProperty pd, final String propertyType) {
 	final AnnotationDescriptor adIsProperty = pd.getAnnotationDescriptorByType(IsProperty.class);
 	final String signature = adIsProperty != null && adIsProperty.params.get("value") != null ?  Type.getDescriptor((Class) adIsProperty.params.get("value")) : null;
 	final String signatureMode = signature == null ? null :
 	    propertyType.substring(0, propertyType.length()-1) + "<" + signature + ">;";
+	return signatureMode;
+    }
 
-
+    private void addPropertyField(final NewProperty pd, final ClassVisitor cv) {
+	final String propertyType  = Type.getDescriptor(pd.type);
+	final String signatureMode = constructSignature(pd, propertyType);
 	final FieldVisitor fvProperty = cv.visitField(ACC_PRIVATE, pd.name, propertyType, signatureMode, null);
 
 	// mark the field as generated
@@ -131,7 +141,7 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 		if (Enum.class.isAssignableFrom(methodType)) {
 		    av.visitEnum(param.getKey(), Type.getDescriptor(methodType), param.getValue().toString());
 		} else if (param.getValue() instanceof Class){ // if the parameter value is a class then need to use its description
-		    final Type value = Type.getType((Class) param.getValue());// getDescriptor((Class) param.getValue());
+		    final Type value = Type.getType((Class) param.getValue());
 		    av.visit(param.getKey(), value);
 		} else {
 		    av.visit(param.getKey(), param.getValue());
@@ -144,26 +154,35 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 	fvProperty.visitEnd();
     }
 
+
     private void addPropertyGetter(final NewProperty pd, final ClassVisitor cv) {
+	final String propertyType  = Type.getDescriptor(pd.type);
+	final String signatureMode = constructSignature(pd, propertyType);
+	final String signature = signatureMode != null ? "()" + signatureMode : null;
+
 	final String getterName = "get" + pd.name.substring(0, 1).toUpperCase() + pd.name.substring(1);
-	final MethodVisitor mvGetProperty = cv.visitMethod(ACC_PUBLIC, getterName, "()" + Type.getDescriptor(pd.type), null, null);
+	final MethodVisitor mvGetProperty = cv.visitMethod(ACC_PUBLIC, getterName, "()" + propertyType, signature, null);
 	mvGetProperty.visitCode();
 	mvGetProperty.visitVarInsn(ALOAD, 0);
-	mvGetProperty.visitFieldInsn(GETFIELD, enhancedName, pd.name, Type.getDescriptor(pd.type));
+	mvGetProperty.visitFieldInsn(GETFIELD, enhancedName, pd.name, propertyType);
 	mvGetProperty.visitInsn(ARETURN);
 	mvGetProperty.visitMaxs(1, 1);
 	mvGetProperty.visitEnd();
     }
 
     private void addPropertySetter(final NewProperty pd, final ClassVisitor cv) {
+	final String propertyType  = Type.getDescriptor(pd.type);
+	final String signatureMode = constructSignature(pd, propertyType);
+	final String signature = signatureMode != null ? "(" + signatureMode + ")V" : null;
+
 	final String setterName = "set" + pd.name.substring(0, 1).toUpperCase() + pd.name.substring(1);
-	final MethodVisitor mvSetProperty = cv.visitMethod(ACC_PUBLIC, setterName, "(" + Type.getDescriptor(pd.type) + ")V", null, null);
+	final MethodVisitor mvSetProperty = cv.visitMethod(ACC_PUBLIC, setterName, "(" + propertyType + ")V", signature, null);
 	final AnnotationVisitor avObservable = mvSetProperty.visitAnnotation(Type.getDescriptor(Observable.class), true);
 	avObservable.visitEnd();
 	mvSetProperty.visitCode();
 	mvSetProperty.visitVarInsn(ALOAD, 0);
 	mvSetProperty.visitVarInsn(ALOAD, 1);
-	mvSetProperty.visitFieldInsn(PUTFIELD, enhancedName, pd.name, Type.getDescriptor(pd.type));
+	mvSetProperty.visitFieldInsn(PUTFIELD, enhancedName, pd.name, propertyType);
 	mvSetProperty.visitInsn(RETURN);
 	mvSetProperty.visitMaxs(2, 2);
 	mvSetProperty.visitEnd();
