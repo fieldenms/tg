@@ -143,20 +143,19 @@ public class MappingsGenerator {
 
     private String getPlainProperty(final String propName, final String propColumn, final Class hibType) throws Exception {
 	final StringBuffer sb = new StringBuffer();
-	final String columnName = !StringUtils.isEmpty(propColumn) ? propColumn : propName.toUpperCase() + "_";
 	if (hibType == null) {
-	    sb.append("\t<property name=\"" + propName + "\" column=\"" + columnName + "\"/>\n");
+	    sb.append("\t<property name=\"" + propName + "\" column=\"" + propColumn + "\"/>\n");
 	} else {
 	    if (!ICompositeUserTypeInstantiate.class.isAssignableFrom(hibType)) {
-		sb.append("\t<property name=\"" + propName + "\" column=\"" + columnName + "\" type=\"" + hibType.getName() + "\"/>\n");
+		sb.append("\t<property name=\"" + propName + "\" column=\"" + propColumn + "\" type=\"" + hibType.getName() + "\"/>\n");
 	    } else {
 		final List<String> columns = getCompositeUserTypeColumns(hibType);
 		if (columns.size() == 1) {
-		    sb.append("\t<property name=\"" + propName + "\" column=\"" + columnName + "\" type=\"" + hibType.getName() + "\"/>\n");
+		    sb.append("\t<property name=\"" + propName + "\" column=\"" + propColumn + "\" type=\"" + hibType.getName() + "\"/>\n");
 		} else {
 		    sb.append("\t<property name=\"" + propName + "\" type=\"" + hibType.getName() + "\">\n");
 		    for (final String column : columns) {
-			sb.append("\t\t<column name=\"" + columnName + (columnName.endsWith("_") ? "" : "_") + column + "\"/>\n");
+			sb.append("\t\t<column name=\"" + propColumn + (propColumn.endsWith("_") ? "" : "_") + column + "\"/>\n");
 		    }
 		    sb.append("\t</property>\n");
 		}
@@ -247,16 +246,19 @@ public class MappingsGenerator {
 	    if (!specialProps.contains(field.getName())) {
 		final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, entityType, field.getName());
 		if (mapTo != null) {
+		    final String columnName = !StringUtils.isEmpty(mapTo.value()) ? mapTo.value(): field.getName().toUpperCase() + "_";
+
+
 		    if (Collection.class.isAssignableFrom(field.getType())) {
-			sb.append(getSet(field.getName(), mapTo.value(), PropertyTypeDeterminator.determinePropertyType(entityType, field.getName())));
+			sb.append(getSet(field.getName(), columnName, PropertyTypeDeterminator.determinePropertyType(entityType, field.getName())));
 		    } else if (isPersisted(field.getType())) {
-			sb.append(getManyToOneProperty(field.getName(), mapTo.value(), field.getType()));
+			sb.append(getManyToOneProperty(field.getName(), columnName, field.getType()));
 		    } else if (!StringUtils.isEmpty(mapTo.typeName())) {
-			sb.append(getPlainProperty(field.getName(), mapTo.value(), mapTo.typeName()));
+			sb.append(getPlainProperty(field.getName(), columnName, mapTo.typeName()));
 		    } else if (hibTypesInjector != null && !mapTo.userType().equals(Class.class)) {
-			sb.append(getPlainProperty(field.getName(), mapTo.value(), hibTypesInjector.getInstance(mapTo.userType()).getClass()));
+			sb.append(getPlainProperty(field.getName(), columnName, hibTypesInjector.getInstance(mapTo.userType()).getClass()));
 		    } else {
-			sb.append(getPlainProperty(field.getName(), mapTo.value(), hibTypesDefaults.get(field.getType())));
+			sb.append(getPlainProperty(field.getName(), columnName, hibTypesDefaults.get(field.getType())));
 		    }
 		} else if (!Collection.class.isAssignableFrom(field.getType())) {
 		    System.out.println(" " + entityType.getSimpleName() + " :: " + field.getName() + " has no MapTo");
