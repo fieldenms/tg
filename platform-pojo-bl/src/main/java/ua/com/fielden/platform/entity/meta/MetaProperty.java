@@ -254,7 +254,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      *
      * @return
      */
-    public final Class getType() {
+    public final Class<?> getType() {
 	return type;
     }
 
