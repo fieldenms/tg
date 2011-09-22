@@ -230,6 +230,10 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 	    return locatorManager.locatorKeys();
 	}
 
+	protected Integer columnsNumber() {
+	    return columnsNumber;
+	}
+
 	@Override
 	public int getColumnsNumber() {
 	    return columnsNumber == null ? 2 : columnsNumber;
@@ -611,6 +615,10 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 		return false;
 	    return true;
 	}
+    }
+
+    protected Boolean isRunAutomatically1() {
+	return runAutomatically;
     }
 
     @Override

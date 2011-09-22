@@ -10,6 +10,7 @@ import ua.com.fielden.platform.treemodel.rules.IDomainTreeEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.ILocatorDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.DomainTreeEnhancer;
 
 /**
@@ -25,6 +26,11 @@ public class LocatorDomainTreeManagerAndEnhancer extends CriteriaDomainTreeManag
 
     protected LocatorDomainTreeManagerAndEnhancer(final LocatorDomainTreeManager base, final IDomainTreeEnhancer enhancer) {
 	super(base, enhancer);
+    }
+
+    @Override
+    protected DomainTreeRepresentationAndEnhancer createRepresentation(final AbstractDomainTreeRepresentation base) {
+	return new LocatorDomainTreeRepresentationAndEnhancer(base);
     }
 
     @Override
@@ -59,6 +65,20 @@ public class LocatorDomainTreeManagerAndEnhancer extends CriteriaDomainTreeManag
     public ILocatorDomainTreeManager setUseForAutocompletion(final boolean useForAutocompletion) {
 	// TODO Auto-generated method stub
 	return null;
+    }
+
+    /**
+     * Overridden to take into account calculated properties.
+     *
+     * @author TG Team
+     *
+     */
+    protected class LocatorDomainTreeRepresentationAndEnhancer extends CriteriaDomainTreeRepresentationAndEnhancer implements ILocatorDomainTreeRepresentation {
+	private static final long serialVersionUID = -5345869657944629725L;
+
+	protected LocatorDomainTreeRepresentationAndEnhancer(final AbstractDomainTreeRepresentation base) {
+	    super(base);
+	}
     }
 
     /**

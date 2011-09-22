@@ -19,6 +19,7 @@ import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation.ITickRepresentation;
+import ua.com.fielden.platform.treemodel.rules.criteria.ILocatorDomainTreeManager.SearchBy;
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
 import ua.com.fielden.platform.treemodel.rules.impl.DomainTreeEnhancer.ByteArray;
@@ -35,6 +36,7 @@ public abstract class AbstractDomainTree {
     /** A base types to be checked for its non-emptiness and non-emptiness of their children. */
     public static final List<Class<?>> DOMAIN_TREE_TYPES = new ArrayList<Class<?>>() {{
 	add(AbstractEntity.class); //
+	add(SearchBy.class);
 	add(ListenedArrayList.class);
 	add(LinkedHashMap.class); //
 	add(EnhancementSet.class); //

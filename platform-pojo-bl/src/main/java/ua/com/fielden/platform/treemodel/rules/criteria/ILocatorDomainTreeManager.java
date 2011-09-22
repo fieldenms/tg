@@ -19,7 +19,7 @@ public interface ILocatorDomainTreeManager extends ICriteriaDomainTreeManager {
      * @author TG Team
      *
      */
-    public interface ILocatorDomainTreeManagerAndEnhancer extends IDomainTreeManagerAndEnhancer, ILocatorDomainTreeManager {
+    public interface ILocatorDomainTreeManagerAndEnhancer extends ICriteriaDomainTreeManagerAndEnhancer, ILocatorDomainTreeManager {
     }
 
     /**
