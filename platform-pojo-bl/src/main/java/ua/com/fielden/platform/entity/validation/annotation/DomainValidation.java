@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
  * <b>IMPORTANT:</b><i>In case of a collectional property (refer {@link AbstractEntity} for more details) there can be up to three mutators requiring domain validation. However,
  * there can be only one domain validator associated with any particular property. Therefore, specific validator implementation should take into account the fact that values for
  * parameters <code>newValue</code> and <code>oldValue</code> passed into method
- * {@link IBeforeChangeEventHandler#validate(ua.com.fielden.platform.entity.meta.MetaProperty, Object, Object, Object, Mutator)} depend on what mutator it is invoked. </i>
+ * {@link IBeforeChangeEventHandler#handle(ua.com.fielden.platform.entity.meta.MetaProperty, Object, Object, Object, Mutator)} depend on what mutator it is invoked. </i>
  * <p>
  * The following rules should be taken into account when implementing validators for collectional properties:
  * <ul>

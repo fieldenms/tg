@@ -25,6 +25,8 @@ import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 
+import com.google.inject.Injector;
+
 /**
  * Base implementation for {@link IMetaPropertyFactory}.
  *
@@ -43,6 +45,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected final Map<Class<?>, Map<String, RangePropertyValidator>> geRangeValidators = Collections.synchronizedMap(new HashMap<Class<?>, Map<String, RangePropertyValidator>>());
     protected final Map<Class<?>, Map<String, RangePropertyValidator>> leRangeValidators = Collections.synchronizedMap(new HashMap<Class<?>, Map<String, RangePropertyValidator>>());
 
+    private Injector injector;
+
     protected final DomainValidationConfig domainConfig;
     protected final DomainMetaPropertyConfig domainMetaConfig;
 
@@ -57,6 +61,9 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	    final AbstractEntity<?> entity,//
 	    final String propertyName,//
 	    final Class<?> propertyType) throws Exception {
+	if (injector == null) {
+	    throw new IllegalStateException("Meta-property factory is not fully initialised -- injector is missing");
+	}
 	// identify the type of annotation
 	ValidationAnnotation value = null;
 	for (final ValidationAnnotation validationAnnotation : ValidationAnnotation.values()) {
@@ -100,8 +107,26 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	}
     }
 
+    /**
+     * Creates validators declared as BCE handlers.
+     *
+     * @param entity
+     * @param propertyName
+     * @param annotation
+     * @return
+     */
     private IBeforeChangeEventHandler[] createBeforeChange(final AbstractEntity<?> entity, final String propertyName, final BeforeChange annotation) {
-	// TODO Auto-generated method stub
+	// TODO Implement creation of BCE handlers
+	// 0. If the cache contains handlers for the entity and property then return them. Otherwise, step 1.
+	// 1. BeforeChange annotations has property <code>value</code>, which is an array of annotations Handler.
+	//    Need to iterate over all these handler-annotations for instantiation of event handlers.
+	// 2. For each event handler do
+	//    2.1 Instantiate a handler using injector for property <code>value</code>, which contains handler's class declaration
+	//    2.2 For each value in arrays <code>clazz</code>, <code>integer</code>, <code>str</code>, <code>dbl</code>, <code>date</code>, <code>date_time</code>, <code>money</code>
+	//	  initialise handler's parameters.
+	// 3. Cache all instantiated handlers against the entity and property.
+	// 4. Return an array of instantiated handlers.
+
 	return null;
     }
 
@@ -153,5 +178,10 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     @Override
     public IMetaPropertyDefiner create(final AbstractEntity<?> entity, final String propertyName) throws Exception {
 	return domainMetaConfig.getDefiner(entity.getType(), propertyName);
+    }
+
+    @Override
+    public void setInjector(final Injector injector) {
+        this.injector = injector;
     }
 }

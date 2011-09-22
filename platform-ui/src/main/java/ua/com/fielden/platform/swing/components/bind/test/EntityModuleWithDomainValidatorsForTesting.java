@@ -177,6 +177,10 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
 		    };
 		}
 	    }
+
+	    @Override
+	    public void setInjector(final Injector injector) {
+	    }
 	});
 
     }

@@ -64,6 +64,8 @@ public class EntityModuleWithPropertyFactory extends EntityModule {
     @Override
     public void setInjector(final Injector injector) {
 	entityFactory.setInjector(injector);
+	final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
+	mfp.setInjector(injector);
     }
 
 }

@@ -650,7 +650,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	    final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators = new EnumMap<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>>(ValidationAnnotation.class);
 	    // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
 	    // removeFrom[property name], addTo[property name] and set[property name]
-	    final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, type, isCollectional);
+	    final List<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, type, isCollectional);
 	    for (final Annotation annotation : propertyValidationAnotations) {
 		final ValidationAnnotation validationAnnotation = ValidationAnnotation.getValueByType(annotation);
 		// if property factory cannot instantiate a validator for the specified annotation then null is returned;
@@ -744,8 +744,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      * @throws NoSuchMethodException
      */
-    public Set<Annotation> extractValidationAnnotationForProperty(final Field field, final Class<?> type, final boolean isCollectional) {
-	final Set<Annotation> propertyValidationAnotations = new HashSet<Annotation>();
+    public List<Annotation> extractValidationAnnotationForProperty(final Field field, final Class<?> type, final boolean isCollectional) {
+	final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
 	// try to obtain setter
 	propertyValidationAnotations.addAll(extractSetterAnnotations(field, type));
 
@@ -791,8 +791,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private Set<Annotation> extractIncrementorAnnotations(final Field field, final Class<?> type) {
-	final Set<Annotation> propertyValidationAnotations = new HashSet<Annotation>();
+    private List<Annotation> extractIncrementorAnnotations(final Field field, final Class<?> type) {
+	final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
 	try {
 	    final Method incremetor = Reflector.getMethod(/* getType() */this, "addTo" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
 	    final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
@@ -814,9 +814,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private Set<Annotation> extractSetterAnnotations(final Field field, final Class<?> type) {
+    private List<Annotation> extractSetterAnnotations(final Field field, final Class<?> type) {
 	//logger.debug("Extracting validation annotations for property " + field.getName() + ".");
-	final Set<Annotation> propertyValidationAnotations = new HashSet<Annotation>();
+	final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
 	try {
 	    final Method setter = Reflector.getMethod(this, "set" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
 	    if (setter.getAnnotation(Observable.class) == null) {

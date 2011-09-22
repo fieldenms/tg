@@ -10,7 +10,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 /**
- * A factory for instantiation of Guice injector with correctly initialised of TG applications modules, with support contract {@link IModuleWithInjector}.
+ * A factory for instantiation of Guice injector with correctly initialised TG applications modules, which support contract {@link IModuleWithInjector}.
  *
  * @author TG Team
  *

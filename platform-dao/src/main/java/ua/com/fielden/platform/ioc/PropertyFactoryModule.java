@@ -62,5 +62,7 @@ public class PropertyFactoryModule extends TransactionalModule {
 	daoFactory.setInjector(injector);
 	entityFactory.setInjector(injector);
 	defaultControllerProvider.setInjector(injector);
+	final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
+	mfp.setInjector(injector);
     }
 }

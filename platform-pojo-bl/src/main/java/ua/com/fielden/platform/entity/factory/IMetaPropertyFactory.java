@@ -6,6 +6,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.IMetaPropertyDefiner;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 
+import com.google.inject.Injector;
+
 /**
  * This is a preliminary interface for a meta-property factory.
  *
@@ -44,4 +46,11 @@ public interface IMetaPropertyFactory {
     IMetaPropertyDefiner create(//
     final AbstractEntity<?> entity,//
     final String propertyName) throws Exception;
+
+    /**
+     * Sets injector, which can be used for instantiation of property before and after event handlers.
+     *
+     * @param injector
+     */
+    void setInjector(final Injector injector);
 }

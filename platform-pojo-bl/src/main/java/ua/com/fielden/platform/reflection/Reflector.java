@@ -6,7 +6,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -200,10 +199,10 @@ public final class Reflector {
      */
     public static Pair<Comparable, Comparable> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
         final List<Field> fields = Finder.findProperties(entity.getType());
-        Comparable min = null, max = null;
+        Comparable<?> min = null, max = null;
         for (final Field field : fields) { // for each property field
             if (field.getName().equals(propertyName)) { //
-        	final Set<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
+        	final List<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
         	for (final Annotation annotation : propertyValidationAnotations) {
         	    if (annotation instanceof GreaterOrEqual) {
         		min = ((GreaterOrEqual) annotation).value();
