@@ -33,12 +33,10 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeEnhancer;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeEnhancer.IncorrectPlaceException;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -50,11 +48,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     private IDomainTreeEnhancer dm;
-
-    @Override
-    protected IDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	return null; // not needed
-    }
 
     /**
      * Entity for "domain enhancer" testing (derived from {@link MasterEntity}).
@@ -844,17 +837,5 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityCollProp.evenSlaverEntityCollProp.sextuple", ICalculatedProperty.CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "6 * [integerProp]", "Title", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "masterEntityProp.masterEntityCollProp.slaveEntityProp.septuple", ICalculatedProperty.CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "7 * [integerProp]", "Title", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp.octuple", ICalculatedProperty.CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "8 * [integerProp]", "Title", "Desc");
-    }
-
-    @Override
-    public void test_that_serialisation_works() throws Exception {
-    }
-
-    @Override
-    public void test_that_equality_and_copying_works() {
-    }
-
-    @Override
-    public void test_that_domain_tree_enhancements_work_as_expected_for_original_and_copied_manager() {
     }
 }

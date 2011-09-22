@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -50,13 +51,13 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private final ITickRepresentation firstTick;
     private final ITickRepresentation secondTick;
     /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
-    private final transient EnhancementRootsMap<List<String>> includedProperties;
+    private final EnhancementRootsMap<ListenedArrayList> includedProperties;
     private final transient List<IStructureChangedListener> listeners, disabledListeners;
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected AbstractDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final ITickRepresentation firstTick, final ITickRepresentation secondTick) {
+    protected AbstractDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final ITickRepresentation firstTick, final ITickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
 	super(serialiser);
 	this.rootTypes = new EnhancementLinkedRootsSet();
 	this.rootTypes.addAll(rootTypes);
@@ -81,7 +82,28 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	listeners = new ArrayList<IStructureChangedListener>();
 	disabledListeners = new ArrayList<IStructureChangedListener>();
 	// this field unfortunately should be lazy loaded due to heavy-weight nature (deep, circular tree of properties)
-	includedProperties = createRootsMap();
+	this.includedProperties = createRootsMap();
+	this.includedProperties.putAll(includedProperties);
+
+	for (final Entry<Class<?>, ListenedArrayList> entry : this.includedProperties.entrySet()) {
+	    // initialise the references on this instance in "included properties" lists
+	    try {
+		final Field parentDtrField = Finder.findFieldByName(ListenedArrayList.class, "parentDtr");
+		boolean isAccessible = parentDtrField.isAccessible();
+		parentDtrField.setAccessible(true);
+		parentDtrField.set(entry.getValue(), this);
+		parentDtrField.setAccessible(isAccessible);
+
+		final Field rootField = Finder.findFieldByName(ListenedArrayList.class, "root");
+		isAccessible = rootField.isAccessible();
+		rootField.setAccessible(true);
+		rootField.set(entry.getValue(), entry.getKey());
+		rootField.setAccessible(isAccessible);
+	    } catch (final Exception e) {
+		e.printStackTrace();
+		throw new IllegalStateException(e);
+	    }
+	}
     }
 
     /**
@@ -304,23 +326,31 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @author TG Team
      *
      */
-    private class ListenedArrayList extends ArrayList<String> {
+    public static class ListenedArrayList extends ArrayList<String> {
 	private static final long serialVersionUID = -4295706377290507263L;
-	private final Class<?> root;
+	private final transient Class<?> root;
+	private final transient AbstractDomainTreeRepresentation parentDtr;
 
-	public ListenedArrayList(final Class<?> root) {
+	public ListenedArrayList() {
+	    this(null, null);
+	}
+
+	public ListenedArrayList(final Class<?> root, final AbstractDomainTreeRepresentation parentDtr) {
 	    super();
 	    this.root = root;
+	    this.parentDtr = parentDtr;
 	    // System.out.println("======================Constructed ListenedArrayList with root = " + this.root.getSimpleName());
 	}
 
 	private void fireProperty(final Class<?> root, final String property, final boolean added) {
 	    // System.out.println("fire property [" + property + "] for type [" + root.getSimpleName() + "] added [" + added +"].");
-	    for (final IStructureChangedListener listener : listeners) {
-		if (added) {
-		    listener.propertyAdded(root, property);
-		} else {
-		    listener.propertyRemoved(root, property);
+	    if (parentDtr != null) {
+		for (final IStructureChangedListener listener : parentDtr.listeners()) {
+		    if (added) {
+			listener.propertyAdded(root, property);
+		    } else {
+			listener.propertyRemoved(root, property);
+		    }
 		}
 	    }
 	}
@@ -388,7 +418,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    final Date st = new Date();
 	    enableListening(false);
 	    // initialise included properties using isExcluded contract and manually excluded properties
-	    final List<String> includedProps = new ListenedArrayList(root);
+	    final ListenedArrayList includedProps = new ListenedArrayList(root, this);
 	    if (!isExcludedImmutably(root, "")) { // the entity itself is included -- add it to "included properties" list
 		includedProps.add("");
 		if (!EntityUtils.isEntityType(root)) {
@@ -691,6 +721,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    writeValue(buffer, representation.excludedProperties);
 	    writeValue(buffer, representation.firstTick);
 	    writeValue(buffer, representation.secondTick);
+	    writeValue(buffer, representation.includedProperties);
 	}
     }
 
@@ -700,6 +731,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	int result = 1;
 	result = prime * result + ((excludedProperties == null) ? 0 : excludedProperties.hashCode());
 	result = prime * result + ((firstTick == null) ? 0 : firstTick.hashCode());
+	result = prime * result + ((includedProperties == null) ? 0 : includedProperties.hashCode());
 	result = prime * result + ((rootTypes == null) ? 0 : rootTypes.hashCode());
 	result = prime * result + ((secondTick == null) ? 0 : secondTick.hashCode());
 	return result;
@@ -724,6 +756,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		return false;
 	} else if (!firstTick.equals(other.firstTick))
 	    return false;
+	if (includedProperties == null) {
+	    if (other.includedProperties != null)
+		return false;
+	} else if (!includedProperties.equals(other.includedProperties))
+	    return false;
 	if (rootTypes == null) {
 	    if (other.rootTypes != null)
 		return false;
@@ -735,5 +772,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	} else if (!secondTick.equals(other.secondTick))
 	    return false;
 	return true;
+    }
+
+    protected List<IStructureChangedListener> listeners() {
+        return listeners;
     }
 }

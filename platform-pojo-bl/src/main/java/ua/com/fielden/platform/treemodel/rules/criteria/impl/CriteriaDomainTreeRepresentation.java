@@ -43,14 +43,14 @@ public class CriteriaDomainTreeRepresentation extends AbstractDomainTreeRepresen
      * A <i>representation</i> constructor for the first time instantiation. Initialises also children references on itself.
      */
     public CriteriaDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, rootTypes, AbstractDomainTree.createSet(), new AddToCriteriaTick(), new AddToResultSetTick());
+	this(serialiser, rootTypes, AbstractDomainTree.createSet(), new AddToCriteriaTick(), new AddToResultSetTick(), AbstractDomainTree.<ListenedArrayList>createRootsMap());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected CriteriaDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final IAddToCriteriaTickRepresentation firstTick, final IAddToResultTickRepresentation secondTick) {
-	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+    protected CriteriaDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final IAddToCriteriaTickRepresentation firstTick, final IAddToResultTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
+	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
     }
 
     @Override
@@ -94,9 +94,9 @@ public class CriteriaDomainTreeRepresentation extends AbstractDomainTreeRepresen
 	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(KeyType.class, propertyType);
 
 	    return (super.isDisabledImmutably(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
-	    (!isEntityItself && AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, root, property)) || // disable result-only properties and their children
-	    (!isEntityItself && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.AGGREGATED_EXPRESSION)) || // disable AGGREGATED_EXPRESSION properties for criteria tick
-	    (EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))); // disable properties of "entity with AE or composite key" type
+		    (!isEntityItself && AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, root, property)) || // disable result-only properties and their children
+		    (!isEntityItself && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.AGGREGATED_EXPRESSION)) || // disable AGGREGATED_EXPRESSION properties for criteria tick
+		    (EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))); // disable properties of "entity with AE or composite key" type
 	}
 
 	@Override
@@ -105,7 +105,7 @@ public class CriteriaDomainTreeRepresentation extends AbstractDomainTreeRepresen
 	    final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
 
 	    return (super.isCheckedImmutably(root, property)) || // check+disable manually checked properties
-	    (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())); // check+disable crit-only properties (the children should be excluded!)
+		    (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())); // check+disable crit-only properties (the children should be excluded!)
 	}
 
 	private Object typeAndSingleRelatedValue(final Class<?> root, final String property) {
@@ -190,7 +190,6 @@ public class CriteriaDomainTreeRepresentation extends AbstractDomainTreeRepresen
 	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
 	private final EnhancementSet propertiesOrderingDisablement;
 
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr" field.
 	 */
@@ -209,11 +208,11 @@ public class CriteriaDomainTreeRepresentation extends AbstractDomainTreeRepresen
 	    final KeyType keyTypeAnnotation = AnnotationReflector.getAnnotation(KeyType.class, propertyType);
 
 	    return (super.isDisabledImmutably(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
-	    (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())) || // disable crit-only properties (the children should be excluded!)
-	    (isCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and collections itself
-	    (Reflector.isSynthetic(propertyType)) || // disable synthetic entities itself (and also synthetic properties -- rare case)
-	    (!isEntityItself && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION)) || // disable ATTRIBUTED_COLLECTIONAL_EXPRESSION properties for result-set tick
-	    (EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))); // disable properties of "entity with AE or composite key" type
+		    (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())) || // disable crit-only properties (the children should be excluded!)
+		    (isCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and collections itself
+		    (Reflector.isSynthetic(propertyType)) || // disable synthetic entities itself (and also synthetic properties -- rare case)
+		    (!isEntityItself && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION)) || // disable ATTRIBUTED_COLLECTIONAL_EXPRESSION properties for result-set tick
+		    (EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))); // disable properties of "entity with AE or composite key" type
 	}
 
 	@Override
@@ -235,7 +234,7 @@ public class CriteriaDomainTreeRepresentation extends AbstractDomainTreeRepresen
 		return rootsListsOfOrderings.get(root);
 	    }
 	    final Class<?> keyType = PropertyTypeDeterminator.determinePropertyType(root, AbstractEntity.KEY);
-	    final List<Pair<String, Ordering>> pairs = new ArrayList<Pair<String,Ordering>>();
+	    final List<Pair<String, Ordering>> pairs = new ArrayList<Pair<String, Ordering>>();
 	    if (!EntityUtils.isEntityType(keyType) && !DynamicEntityKey.class.isAssignableFrom(keyType)) {
 		pairs.add(new Pair<String, Ordering>("", Ordering.ASCENDING));
 	    }
@@ -315,7 +314,8 @@ public class CriteriaDomainTreeRepresentation extends AbstractDomainTreeRepresen
 	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
 	    final AddToCriteriaTick firstTick = readValue(buffer, AddToCriteriaTick.class);
 	    final AddToResultSetTick secondTick = readValue(buffer, AddToResultSetTick.class);
-	    return new CriteriaDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+	    final EnhancementRootsMap<ListenedArrayList> includedProperties = readValue(buffer, EnhancementRootsMap.class);
+	    return new CriteriaDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
 	}
     }
 }

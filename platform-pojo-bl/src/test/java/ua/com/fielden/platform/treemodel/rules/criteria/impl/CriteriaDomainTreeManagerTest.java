@@ -13,15 +13,15 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Set;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.EntityWithCompositeKey;
 import ua.com.fielden.platform.domain.tree.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domain.tree.MasterEntity;
 import ua.com.fielden.platform.domain.tree.MasterSyntheticEntity;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager.ICriteriaDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
@@ -46,37 +46,32 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
 	return (ICriteriaDomainTreeManagerAndEnhancer) super.dtm();
     }
 
-    @Override
-    protected Set<Class<?>> createRootTypes() {
-	final Set<Class<?>> rootTypes = super.createRootTypes();
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// Test initialisation ///////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Creates root types.
+     *
+     * @return
+     */
+    protected static Set<Class<?>> createRootTypes_for_CriteriaDomainTreeManagerTest() {
+	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeManagerTest();
 	rootTypes.add(EntityWithCompositeKey.class);
 	rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
 	rootTypes.add(MasterSyntheticEntity.class);
 	return rootTypes;
     }
 
-    @Override
-    protected ICriteriaDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	return new CriteriaDomainTreeManagerAndEnhancer(serialiser, rootTypes);
-    }
-    
-//    @Override
-//    protected void checkSomeProps(final IDomainTreeManager dtm) {
-//	allLevelsWithoutCollections(new IAction() {
-//	    public void action(final String name) {
-//		dtm.getSecondTick().check(MasterEntity.class, name, true);
-//	    }
-//	}, "checkedUntouchedProp");
-//	allLevelsWithoutCollections(new IAction() {
-//	    public void action(final String name) {
-//		dtm.getSecondTick().check(MasterEntity.class, name, true);
-//	    }
-//	}, "mutatedWithFunctionsProp");
-//    }
+    /**
+     * Provides a testing configuration for the manager.
+     *
+     * @param dtm
+     */
+    protected static void manageTestingDTM_for_CriteriaDomainTreeManagerTest(final ICriteriaDomainTreeManager dtm) {
+	manageTestingDTM_for_AbstractDomainTreeTest(dtm);
 
-    @Override
-    protected void manageTestingDTM(final IDomainTreeManager dtm) {
-        superManageTestingDTM(dtm);
+	dtm.getFirstTick().checkedProperties(MasterEntity.class);
+	dtm.getSecondTick().checkedProperties(MasterEntity.class);
 
         // check some properties to test its values, exclusiveness, etc.
 	allLevels(new IAction() {
@@ -104,9 +99,20 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
         dtm.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
 
 	// initialise analysis to ensure that equals / serialisation / copying works
-        dtm().initAnalysisManagerByDefault("New Pivot analysis.", AnalysisType.PIVOT);
-        dtm().acceptAnalysisManager("New Pivot analysis.");
+        dtm.initAnalysisManagerByDefault("New Pivot analysis.", AnalysisType.PIVOT);
+        dtm.acceptAnalysisManager("New Pivot analysis.");
     }
+
+    @BeforeClass
+    public static void initDomainTreeTest() {
+	final ICriteriaDomainTreeManagerAndEnhancer dtm = new CriteriaDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CriteriaDomainTreeManagerTest());
+	manageTestingDTM_for_CriteriaDomainTreeManagerTest(dtm);
+	setDtmArray(serialiser().serialise(dtm));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// End of Test initialisation ////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void test_that_CHECK_state_for_mutated_by_isChecked_method_properties_is_desired_and_after_manual_mutation_is_actually_mutated() {
@@ -683,7 +689,7 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
     @Override
     public void test_that_CHECKed_properties_order_is_correct() throws Exception {
     }
-    
+
     @Override
     public void test_that_CHECKed_properties_order_is_correct_and_can_be_altered() throws Exception {
     }

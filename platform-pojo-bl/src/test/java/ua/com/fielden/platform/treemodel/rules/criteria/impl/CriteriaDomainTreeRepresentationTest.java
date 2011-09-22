@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.EntityWithCompositeKey;
@@ -18,8 +19,8 @@ import ua.com.fielden.platform.domain.tree.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domain.tree.EvenSlaverEntity;
 import ua.com.fielden.platform.domain.tree.MasterEntity;
 import ua.com.fielden.platform.domain.tree.MasterSyntheticEntity;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager.ICriteriaDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentationTest;
@@ -39,19 +40,44 @@ public class CriteriaDomainTreeRepresentationTest extends AbstractDomainTreeRepr
 	return (ICriteriaDomainTreeManagerAndEnhancer) super.dtm();
     }
 
-    @Override
-    protected Set<Class<?>> createRootTypes() {
-	final Set<Class<?>> rootTypes = super.createRootTypes();
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// Test initialisation ///////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Creates root types.
+     *
+     * @return
+     */
+    protected static Set<Class<?>> createRootTypes_for_CriteriaDomainTreeRepresentationTest() {
+	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeRepresentationTest();
 	rootTypes.add(EntityWithCompositeKey.class);
 	rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
 	rootTypes.add(MasterSyntheticEntity.class);
 	return rootTypes;
     }
 
-    @Override
-    protected ICriteriaDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	return new CriteriaDomainTreeManagerAndEnhancer(serialiser, rootTypes);
+    /**
+     * Provides a testing configuration for the manager.
+     *
+     * @param dtm
+     */
+    protected static void manageTestingDTM_for_CriteriaDomainTreeRepresentationTest(final ICriteriaDomainTreeManager dtm) {
+	manageTestingDTM_for_AbstractDomainTreeRepresentationTest(dtm);
+
+	dtm.getFirstTick().checkedProperties(MasterEntity.class);
+	dtm.getSecondTick().checkedProperties(MasterEntity.class);
     }
+
+    @BeforeClass
+    public static void initDomainTreeTest() {
+	final ICriteriaDomainTreeManagerAndEnhancer dtm = new CriteriaDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CriteriaDomainTreeRepresentationTest());
+	manageTestingDTM_for_CriteriaDomainTreeRepresentationTest(dtm);
+	setDtmArray(serialiser().serialise(dtm));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// End of Test initialisation ////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////
     ////////////////////// 1. Excluding logic //////////////////////

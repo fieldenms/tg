@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.DomainTreeManagerAndEnhancer1;
@@ -23,9 +24,9 @@ import ua.com.fielden.platform.domain.tree.MasterEntity;
 import ua.com.fielden.platform.domain.tree.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domain.tree.MasterEntityWithUnionForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domain.tree.SlaveEntity;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.treemodel.rules.Function;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 
 /**
@@ -35,23 +36,35 @@ import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeMan
  *
  */
 public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest {
-    @Override
-    protected Set<Class<?>> createRootTypes() {
-	final Set<Class<?>> rootTypes = super.createRootTypes();
+    /**
+     * Creates root types.
+     *
+     * @return
+     */
+    protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeRepresentationTest() {
+	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeTest();
 	rootTypes.add(MasterEntityForIncludedPropertiesLogic.class);
 	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
 	return rootTypes;
     }
 
     /**
-     * Creates testing representation.
-     * @param rootTypes
+     * Provides a testing configuration for the manager.
      *
-     * @return
+     * @param dtm
      */
-    @Override
-    protected IDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	return new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
+    protected static void manageTestingDTM_for_AbstractDomainTreeRepresentationTest(final IDomainTreeManager dtm) {
+	manageTestingDTM_for_AbstractDomainTreeTest(dtm);
+
+	dtm.getFirstTick().checkedProperties(MasterEntity.class);
+	dtm.getSecondTick().checkedProperties(MasterEntity.class);
+    }
+
+    @BeforeClass
+    public static void initDomainTreeTest() {
+	final IDomainTreeManagerAndEnhancer dtm = new DomainTreeManagerAndEnhancer1(serialiser(), createRootTypes_for_AbstractDomainTreeRepresentationTest());
+	manageTestingDTM_for_AbstractDomainTreeRepresentationTest(dtm);
+	setDtmArray(serialiser().serialise(dtm));
     }
 
     ////////////////////////////////////////////////////////////////
@@ -334,6 +347,16 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
 	dtm().getRepresentation().excludeImmutably(MasterEntityForIncludedPropertiesLogic.class, "entityPropCollection.integerProp");
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+    }
+
+    @Test
+    public void test_that_Included_Properties_are_correct_after_serialisation_deserialisation() throws Exception {
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+
+	// serialise and deserialise and then check the order of "checked properties"
+	final byte[] array = getSerialiser().serialise(dtm());
+	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), copy.getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
     }
 
     ////////////////////////////////////////////////////////////////

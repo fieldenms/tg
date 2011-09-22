@@ -8,8 +8,10 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTree;
 import ua.com.fielden.platform.treemodel.rules.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.treemodel.rules.impl.EnhancementPropertiesMap;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.treemodel.rules.impl.EnhancementSet;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -29,14 +31,14 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
      * @param rootTypes
      */
     public PivotDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, rootTypes, createSet(), new PivotAddToDistributionTickRepresentation(), new PivotAddToAggregationTickRepresentation());
+	this(serialiser, rootTypes, createSet(), new PivotAddToDistributionTickRepresentation(), new PivotAddToAggregationTickRepresentation(), AbstractDomainTree.<ListenedArrayList>createRootsMap());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected PivotDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final IPivotAddToDistributionTickRepresentation firstTick, final IPivotAddToAggregationTickRepresentation secondTick) {
-	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+    protected PivotDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final IPivotAddToDistributionTickRepresentation firstTick, final IPivotAddToAggregationTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
+	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
     }
 
     @Override
@@ -147,7 +149,8 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
 	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
 	    final PivotAddToDistributionTickRepresentation firstTick = readValue(buffer, PivotAddToDistributionTickRepresentation.class);
 	    final PivotAddToAggregationTickRepresentation secondTick = readValue(buffer, PivotAddToAggregationTickRepresentation.class);
-	    return new PivotDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+	    final EnhancementRootsMap<ListenedArrayList> includedProperties = readValue(buffer, EnhancementRootsMap.class);
+	    return new PivotDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
 	}
     }
 }

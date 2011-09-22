@@ -9,17 +9,16 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Set;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.EntityWithCompositeKey;
 import ua.com.fielden.platform.domain.tree.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domain.tree.MasterEntity;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty.CalculatedPropertyCategory;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.treemodel.rules.impl.CalculatedProperty;
 import ua.com.fielden.platform.types.Money;
@@ -34,48 +33,68 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class PivotDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     @Override
-    protected IDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	return new PivotDomainTreeManagerAndEnhancer(serialiser, rootTypes);
-    }
-
-    @Override
     protected IAbstractAnalysisDomainTreeManagerAndEnhancer dtm() {
 	return (IAbstractAnalysisDomainTreeManagerAndEnhancer)super.dtm();
     }
-
-    @Override
-    protected Set<Class<?>> createRootTypes() {
-	final Set<Class<?>> rootTypes = super.createRootTypes();
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// Test initialisation ///////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Creates root types.
+     *
+     * @return
+     */
+    protected static Set<Class<?>> createRootTypes_for_PivotDomainTreeManagerTest() {
+	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeManagerTest();
 	rootTypes.add(EntityWithCompositeKey.class);
 	rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
 	return rootTypes;
     }
 
-    @Override
-    protected void manageTestingDTM(final IDomainTreeManager dtm) {
-	super.manageTestingDTM(dtm);
-	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "intAggExprProp", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "expr", "title", "desc"));
-	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "bigDecimalAggExprProp", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "bigDecimalProp", BigDecimal.class, "expr", "title", "desc"));
-	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "moneyAggExprProp", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "moneyProp", Money.class, "expr", "title", "desc"));
-	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "dateExprProp", CalculatedPropertyCategory.EXPRESSION, "dateProp", Integer.class, "expr", "title", "desc"));
+    /**
+     * Provides a testing configuration for the manager.
+     *
+     * @param dtm
+     */
+    protected static void manageTestingDTM_for_PivotDomainTreeManagerTest(final IPivotDomainTreeManagerAndEnhancer dtm) {
+	manageTestingDTM_for_AbstractDomainTreeManagerTest(dtm);
+
+	dtm.getFirstTick().checkedProperties(MasterEntity.class);
+	dtm.getSecondTick().checkedProperties(MasterEntity.class);
+
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "intAggExprProp", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "expr", "title", "desc"));
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "bigDecimalAggExprProp", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "bigDecimalProp", BigDecimal.class, "expr", "title", "desc"));
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "moneyAggExprProp", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "moneyProp", Money.class, "expr", "title", "desc"));
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "dateExprProp", CalculatedPropertyCategory.EXPRESSION, "dateProp", Integer.class, "expr", "title", "desc"));
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
-		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "moneyProp", Money.class, "expr", "title", "desc"));
+		dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "moneyProp", Money.class, "expr", "title", "desc"));
 	    }
 	}, "uncheckedAggExprProp");
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
-		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "dateExprProp", CalculatedPropertyCategory.EXPRESSION, "dateProp", Integer.class, "expr", "title", "desc"));
+		dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "dateExprProp", CalculatedPropertyCategory.EXPRESSION, "dateProp", Integer.class, "expr", "title", "desc"));
 	    }
 	}, "uncheckedDateExprProp");
-	dtm().getEnhancer().apply();
-	dtm().getSecondTick().check(MasterEntity.class, "intAggExprProp", true);
-	dtm().getSecondTick().check(MasterEntity.class, "bigDecimalAggExprProp", true);
-	dtm().getSecondTick().check(MasterEntity.class, "moneyAggExprProp", true);
-	dtm().getFirstTick().check(MasterEntity.class, "dateExprProp", true);
-	dtm().getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
-	dtm().getFirstTick().check(MasterEntity.class, "booleanProp", true);
+	dtm.getEnhancer().apply();
+	dtm.getSecondTick().check(MasterEntity.class, "intAggExprProp", true);
+	dtm.getSecondTick().check(MasterEntity.class, "bigDecimalAggExprProp", true);
+	dtm.getSecondTick().check(MasterEntity.class, "moneyAggExprProp", true);
+	dtm.getFirstTick().check(MasterEntity.class, "dateExprProp", true);
+	dtm.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	dtm.getFirstTick().check(MasterEntity.class, "booleanProp", true);
     }
+
+    @BeforeClass
+    public static void initDomainTreeTest() {
+	final IPivotDomainTreeManagerAndEnhancer dtm = new PivotDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_PivotDomainTreeManagerTest());
+	manageTestingDTM_for_PivotDomainTreeManagerTest(dtm);
+	setDtmArray(serialiser().serialise(dtm));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// End of Test initialisation ////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void test_that_CHECK_state_for_mutated_by_isChecked_method_properties_is_desired_and_after_manual_mutation_is_actually_mutated() {
@@ -247,7 +266,7 @@ public class PivotDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     @Override
     public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
     }
-    
+
     @Override
     public void test_that_CHECKed_properties_order_is_correct_and_can_be_altered() throws Exception {
     }

@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.EntityWithNormalNature;
@@ -44,15 +45,9 @@ import com.google.inject.Injector;
  *
  */
 public abstract class AbstractDomainTreeTest {
-    private final ISerialiser serialiser;
-    private final IDomainTreeManagerAndEnhancer dtm;
-    {
-	dtm = createManager(serialiser = createSerialiser(createFactory()), createRootTypes());
-	if (dtm != null) {
-	    manageTestingDTM(dtm);
-	    // enhanceDomainWithCalculatedPropertiesOfDifferentTypes(dtm);
-	}
-    }
+    private final static ISerialiser serialiser = createSerialiser(createFactory());
+    private static byte[] dtmArray = null;
+    private IDomainTreeManagerAndEnhancer dtm = null;
 
     /**
      * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
@@ -64,11 +59,47 @@ public abstract class AbstractDomainTreeTest {
     }
 
     /**
+     * Returns a serialiser instance for all tests.
+     *
+     * @return
+     */
+    protected static ISerialiser serialiser() {
+	return serialiser;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// Test initialisation ///////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    @Before
+    public final void initEachTest() throws Exception {
+	dtm = dtmArray == null ? null : serialiser.deserialise(dtmArray, IDomainTreeManagerAndEnhancer.class);
+    }
+
+    /**
+     * Sets a concrete domain tree manager's byte array to be deserialised and used in all tests.
+     *
+     * @param dtmArray
+     */
+    protected static void setDtmArray(final byte[] dtmArray) {
+        AbstractDomainTreeTest.dtmArray = dtmArray;
+    }
+
+    private static EntityFactory createFactory() {
+	final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+	final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+	return injector.getInstance(EntityFactory.class);
+    }
+
+    private static ISerialiser createSerialiser(final EntityFactory factory) {
+	return new TgKryo1(factory, new ProvidedSerialisationClassProvider());
+    }
+
+    /**
      * Creates root types.
      *
      * @return
      */
-    protected Set<Class<?>> createRootTypes() {
+    protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeTest() {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
 	rootTypes.add(MasterEntity.class);
 	rootTypes.add(EvenSlaverEntity.class);
@@ -77,35 +108,12 @@ public abstract class AbstractDomainTreeTest {
 	return rootTypes;
     }
 
-    protected static EntityFactory createFactory() {
-	final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
-	final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
-	return injector.getInstance(EntityFactory.class);
-    }
-
-    protected static ISerialiser createSerialiser(final EntityFactory factory) {
-	return new TgKryo1(factory, new ProvidedSerialisationClassProvider());
-    }
-
     /**
-     * Creates testing manager.
-     * @param serialiser
-     * @param rootTypes
+     * Provides a testing configuration for the manager.
      *
-     * @return
+     * @param dtm
      */
-    protected abstract IDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes);
-
-    ////////////////////////////////////////////////////////////////
-    ////////////////////// Utilities ///////////////////////////////
-    ////////////////////////////////////////////////////////////////
-
-    /**
-     * Provides a testing configuration for the representation.
-     *
-     * @param dtr
-     */
-    protected void manageTestingDTM(final IDomainTreeManager dtm) {
+    protected static void manageTestingDTM_for_AbstractDomainTreeTest(final IDomainTreeManager dtm) {
 	dtm.getRepresentation().excludeImmutably(EvenSlaverEntity.class, "");
 	allLevels(new IAction() {
 	    public void action(final String name) {
@@ -138,6 +146,10 @@ public abstract class AbstractDomainTreeTest {
 	}, "immutablyCheckedUntouchedProp");
     }
 
+    ////////////////////////////////////////////////////////////////
+    ////////////////////// Utilities ///////////////////////////////
+    ////////////////////////////////////////////////////////////////
+
     protected void checkOrSetMethodValues(final Object value, final String property, final Object instance, final String methodName, final Class<?> ... setterArg) {
 	allLevels(new IAction() {
 	    public void action(final String name) {
@@ -154,7 +166,6 @@ public abstract class AbstractDomainTreeTest {
 	    }
 	}, property);
     }
-
 
     protected void checkOrSetMethodValuesForNonCollectional(final Object value, final String property, final Object instance, final String methodName, final Class<?> ... setterArg) {
 	allLevelsWithoutCollections(new IAction() {
@@ -359,40 +370,44 @@ public abstract class AbstractDomainTreeTest {
 
     @Test
     public void test_that_serialisation_works() throws Exception {
-	final IDomainTreeManagerAndEnhancer dtm = dtm();
-	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
-	test_that_manager_instantiation_works_for_inner_cross_references(dtm());
+	if (dtm() != null) {
+	    final IDomainTreeManagerAndEnhancer dtm = dtm();
+	    assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
+	    test_that_manager_instantiation_works_for_inner_cross_references(dtm());
 
-	// test that serialisation works
-	final byte[] array = getSerialiser().serialise(dtm);
-	assertNotNull("Serialised byte array should not be null.", array);
-	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
-	// final ICriteriaDomainTreeManager copy = getSerialiser().deserialise(array, ICriteriaDomainTreeManager.class);
-	// final CriteriaDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, CriteriaDomainTreeManagerAndEnhancer.class);
-	assertNotNull("Deserialised instance should not be null.", copy);
+	    // test that serialisation works
+	    final byte[] array = getSerialiser().serialise(dtm);
+	    assertNotNull("Serialised byte array should not be null.", array);
+	    final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
+	    // final ICriteriaDomainTreeManager copy = getSerialiser().deserialise(array, ICriteriaDomainTreeManager.class);
+	    // final CriteriaDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, CriteriaDomainTreeManagerAndEnhancer.class);
+	    assertNotNull("Deserialised instance should not be null.", copy);
 
-	// after deserialisation the instance should be fully defined (even for transient fields).
-	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
-	// So it should be checked:
-	assertTrue("After deserialisation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm));
-	test_that_manager_instantiation_works_for_inner_cross_references(copy);
+	    // after deserialisation the instance should be fully defined (even for transient fields).
+	    // for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
+	    // So it should be checked:
+	    assertTrue("After deserialisation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm));
+	    test_that_manager_instantiation_works_for_inner_cross_references(copy);
+	}
     }
 
     @Test
     public void test_that_equality_and_copying_works() {
-	final IDomainTreeManagerAndEnhancer dtm = dtm();
-	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
+	if (dtm() != null) {
+	    final IDomainTreeManagerAndEnhancer dtm = dtm();
+	    assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
 
-	final IDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
-	// after copying the instance should be fully defined (even for transient fields).
-	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
-	// So it should be checked:
-	assertTrue("After coping of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm));
-	test_that_manager_instantiation_works_for_inner_cross_references(copy);
-	assertTrue("The copy instance should be equal to the original instance.", EntityUtils.equalsEx(copy, dtm));
+	    final IDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
+	    // after copying the instance should be fully defined (even for transient fields).
+	    // for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
+	    // So it should be checked:
+	    assertTrue("After coping of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm));
+	    test_that_manager_instantiation_works_for_inner_cross_references(copy);
+	    assertTrue("The copy instance should be equal to the original instance.", EntityUtils.equalsEx(copy, dtm));
+	}
     }
 
-    protected final IDomainTreeManagerAndEnhancer enhanceDomainWithCalculatedPropertiesOfDifferentTypes(final IDomainTreeManagerAndEnhancer managerAndEnhancer) {
+    protected static final IDomainTreeManagerAndEnhancer enhanceDomainWithCalculatedPropertiesOfDifferentTypes(final IDomainTreeManagerAndEnhancer managerAndEnhancer) {
 	// enhance domain to 1) check whether the inherited representation logic will be ok 2) check calculated properties representation
 	// EXPRESSION
 	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "exprProp", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "expr", "title", "desc"));
@@ -457,13 +472,15 @@ public abstract class AbstractDomainTreeTest {
 
     @Test
     public void test_that_domain_tree_enhancements_work_as_expected_for_original_and_copied_manager() {
-	enhanceDomainWithCalculatedPropertiesOfDifferentTypes(dtm());
-	// to perform such a test it is enough to ask if the added calc properties can be asked for "excludement / disablement" (and the state is appropriate), after manual "disabling / excluding".
-	// It will process the domain tree to the needed level of enhanced hierarchy.
-	final IDomainTreeManagerAndEnhancer dtm = dtm();
-	checkAccessabilityOfCalculatedPropertiesAndTheirState(dtm);
+	if (dtm() != null) {
+	    enhanceDomainWithCalculatedPropertiesOfDifferentTypes(dtm());
+	    // to perform such a test it is enough to ask if the added calc properties can be asked for "excludement / disablement" (and the state is appropriate), after manual "disabling / excluding".
+	    // It will process the domain tree to the needed level of enhanced hierarchy.
+	    final IDomainTreeManagerAndEnhancer dtm = dtm();
+	    checkAccessabilityOfCalculatedPropertiesAndTheirState(dtm);
 
-	final IDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
-	checkAccessabilityOfCalculatedPropertiesAndTheirState(copy);
+	    final IDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
+	    checkAccessabilityOfCalculatedPropertiesAndTheirState(copy);
+	}
     }
 }

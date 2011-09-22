@@ -4,14 +4,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.Set;
-
 import org.junit.Test;
 
-import ua.com.fielden.platform.domain.tree.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domain.tree.MasterEntity;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeTest;
 import ua.com.fielden.platform.treemodel.rules.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -27,21 +22,13 @@ public class MasterDomainTreeManagerTest extends AbstractDomainTreeTest {
     private final IMasterDomainTreeManager mdtm;
 
     {
-	mdtm = createMasterManager(getSerialiser(), createRootTypes());
+	mdtm = new MasterDomainTreeManager(getSerialiser(), createRootTypes_for_AbstractDomainTreeTest());
     }
 
     private IMasterDomainTreeManager mdtm() {
 	return mdtm;
     }
 
-    @Override
-    protected IDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	return new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
-    }
-
-    protected IMasterDomainTreeManager createMasterManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	return new MasterDomainTreeManager(serialiser, rootTypes);
-    }
 
     @Test
     public void test_that_locator_actions_cause_exceptions_for_NON_ENTITY_types_of_properties() {

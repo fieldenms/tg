@@ -20,6 +20,7 @@ import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation.ITickRepresentation;
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
 import ua.com.fielden.platform.treemodel.rules.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.treemodel.rules.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.utils.Pair;
@@ -34,6 +35,7 @@ public abstract class AbstractDomainTree {
     /** A base types to be checked for its non-emptiness and non-emptiness of their children. */
     public static final List<Class<?>> DOMAIN_TREE_TYPES = new ArrayList<Class<?>>() {{
 	add(AbstractEntity.class); //
+	add(ListenedArrayList.class);
 	add(LinkedHashMap.class); //
 	add(EnhancementSet.class); //
 	add(EnhancementLinkedRootsSet.class); //
@@ -76,51 +78,51 @@ public abstract class AbstractDomainTree {
     protected ISerialiser getSerialiser() {
 	return serialiser;
     }
-    
+
     /**
      * Returns <code>true</code> if the "property" represents just a marker for <i>not loaded children</i> of its parent property.
-     * 
+     *
      * @param property
      * @return
      */
     public static boolean isDummyMarker(final String property) {
 	return property.endsWith(DUMMY_SUFFIX);
     }
-    
+
     /**
      * Returns <code>true</code> if the "property" represents a root of common properties branch.
-     * 
+     *
      * @param property
      * @return
      */
     public static boolean isCommonBranch(final String property) {
 	return property.endsWith(COMMON_SUFFIX);
     }
-    
+
     /**
      * Creates a common branch "property" under the specified property.
-     * 
+     *
      * @param property
      * @return
      */
     protected static String createCommonBranch(final String property) {
 	return property + COMMON_SUFFIX;
     }
-    
+
     /**
      * Creates a dummy marker "property" under the specified property, which sub-properties are not supposed to be loaded.
-     * 
+     *
      * @param property
      * @return
      */
     protected static String createDummyMarker(final String property) {
 	return property + DUMMY_SUFFIX;
     }
-    
+
     /**
      * Converts a property in Entity Tree naming contract (with ".common-properties" suffixes) into a property that TG Reflection API understands.
      * "Dummy" property will be converted to its parent property.
-     * 
+     *
      * @param property
      * @return
      */

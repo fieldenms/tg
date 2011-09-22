@@ -8,6 +8,7 @@ import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTree;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.impl.EnhancementLinkedRootsSet;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.treemodel.rules.impl.EnhancementSet;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -20,14 +21,14 @@ public class DomainTreeRepresentation1 extends AbstractDomainTreeRepresentation 
      * @param serialiser
      */
     public DomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, rootTypes, AbstractDomainTree.createSet(), new TickRepresentationForTest(), new TickRepresentationForTest());
+	this(serialiser, rootTypes, AbstractDomainTree.createSet(), new TickRepresentationForTest(), new TickRepresentationForTest(), AbstractDomainTree.<ListenedArrayList>createRootsMap());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected DomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final ITickRepresentation firstTick, final ITickRepresentation secondTick) {
-	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+    protected DomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final ITickRepresentation firstTick, final ITickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
+	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
     }
 
     public static class TickRepresentationForTest extends AbstractTickRepresentation {
@@ -59,7 +60,8 @@ public class DomainTreeRepresentation1 extends AbstractDomainTreeRepresentation 
 	    final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
 	    final TickRepresentationForTest firstTick = readValue(buffer, TickRepresentationForTest.class);
 	    final TickRepresentationForTest secondTick = readValue(buffer, TickRepresentationForTest.class);
-	    return new DomainTreeRepresentation1(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+	    final EnhancementRootsMap<ListenedArrayList> includedProperties = readValue(buffer, EnhancementRootsMap.class);
+	    return new DomainTreeRepresentation1(kryo(), rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
 	}
     }
 }

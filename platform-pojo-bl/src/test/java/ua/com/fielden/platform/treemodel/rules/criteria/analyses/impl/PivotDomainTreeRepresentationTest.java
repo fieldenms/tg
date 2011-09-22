@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.EntityWithCompositeKey;
@@ -21,10 +22,8 @@ import ua.com.fielden.platform.domain.tree.EvenSlaverEntity;
 import ua.com.fielden.platform.domain.tree.MasterEntity;
 import ua.com.fielden.platform.domain.tree.MasterSyntheticEntity;
 import ua.com.fielden.platform.domain.tree.SlaveEntity;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.treemodel.rules.Function;
 import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty.CalculatedPropertyCategory;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentationTest;
@@ -40,8 +39,20 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class PivotDomainTreeRepresentationTest extends AbstractDomainTreeRepresentationTest {
     @Override
-    protected Set<Class<?>> createRootTypes() {
-	final Set<Class<?>> rootTypes = super.createRootTypes();
+    protected IPivotDomainTreeManagerAndEnhancer dtm() {
+	return (IPivotDomainTreeManagerAndEnhancer)super.dtm();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// Test initialisation ///////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Creates root types.
+     *
+     * @return
+     */
+    protected static Set<Class<?>> createRootTypes_for_PivotDomainTreeRepresentationTest() {
+	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeRepresentationTest();
 	rootTypes.add(SlaveEntity.class);
 	rootTypes.add(EntityWithCompositeKey.class);
 	rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
@@ -49,15 +60,27 @@ public class PivotDomainTreeRepresentationTest extends AbstractDomainTreeReprese
 	return rootTypes;
     }
 
-    @Override
-    protected IDomainTreeManagerAndEnhancer createManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	return new PivotDomainTreeManagerAndEnhancer(serialiser, rootTypes);
+    /**
+     * Provides a testing configuration for the manager.
+     *
+     * @param dtm
+     */
+    protected static void manageTestingDTM_for_PivotDomainTreeRepresentationTest(final IPivotDomainTreeManagerAndEnhancer dtm) {
+	manageTestingDTM_for_AbstractDomainTreeRepresentationTest(dtm);
+
+	dtm.getFirstTick().checkedProperties(MasterEntity.class);
+	dtm.getSecondTick().checkedProperties(MasterEntity.class);
     }
 
-    @Override
-    protected IPivotDomainTreeManagerAndEnhancer dtm() {
-	return (IPivotDomainTreeManagerAndEnhancer)super.dtm();
+    @BeforeClass
+    public static void initDomainTreeTest() {
+	final IPivotDomainTreeManagerAndEnhancer dtm = new PivotDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_PivotDomainTreeRepresentationTest());
+	manageTestingDTM_for_PivotDomainTreeRepresentationTest(dtm);
+	setDtmArray(serialiser().serialise(dtm));
     }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// End of Test initialisation ////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////
     ////////////////////// 1. Excluding logic //////////////////////
