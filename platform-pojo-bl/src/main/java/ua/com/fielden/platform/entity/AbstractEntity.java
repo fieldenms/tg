@@ -47,7 +47,7 @@ import ua.com.fielden.platform.entity.meta.IMetaPropertyDefiner;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -57,7 +57,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
 
@@ -142,7 +141,7 @@ import com.google.inject.Inject;
  * A concrete {@link IMetaPropertyFactory} implementation can be set or injected using setter {@link #setMetaPropertyFactory(IMetaPropertyFactory)}.
  * <p>
  * At this stage meta-property instantiation also ensures association of the created instance with property validators, which are defined by annotations on the corresponding setter that are listed by enumeration {@link ValidationAnnotation}.
- * An instance of {@link IMetaPropertyFactory} is responsible for instantiation of validators, which implement {@link IValidator} interface.
+ * An instance of {@link IMetaPropertyFactory} is responsible for instantiation of validators, which implement {@link IBeforeChangeEventHandler} interface.
  * <p>
  * In order for validators to perform validation upon an attempt to set a property value, setters should be intercepted.
  * Intercepter {@link ValidationMutatorInterceptor} was implemented specifically to handle validation of values being passed into setters.
@@ -214,7 +213,7 @@ import com.google.inject.Inject;
  *
  * Date: 2008-10-29
  * Implemented support for domain validation logic. Simply annotate property setter with {@link DomainValidation} and
- * provide appropriate {@link IValidator} instance as part of {@link DomainValidationConfig} configuration.
+ * provide appropriate {@link IBeforeChangeEventHandler} instance as part of {@link DomainValidationConfig} configuration.
  *
  * Date: 2009-02-09
  * Introduced property <code>initialising</code> to indicate an entity state where its properties are being initialised and thus no properties require any validation.
@@ -600,7 +599,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
 		// if setter is annotated then try to instantiate specified validator
 		//logger.debug("Collecting validators for " + field.getName());
-		final Map<ValidationAnnotation, Pair<IValidator, Result>> validators = collectValidators(metaPropertyFactory, field, type, isCollectional);
+		final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators = collectValidators(metaPropertyFactory, field, type, isCollectional);
 		// create meta definer
 		//logger.debug("Initiating meta-property definer for " + field.getName());
 		final IMetaPropertyDefiner definer = metaPropertyFactory.create(this, field.getName());
@@ -644,20 +643,24 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return map of validators
      * @throws Exception
      */
-    private Map<ValidationAnnotation, Pair<IValidator, Result>> collectValidators(final IMetaPropertyFactory metaPropertyFactory, final Field field, final Class<?> type, final boolean isCollectional)
+    private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> collectValidators(final IMetaPropertyFactory metaPropertyFactory, final Field field, final Class<?> type, final boolean isCollectional)
     throws Exception {
 	//logger.debug("Start collecting validators for property " + field.getName() + "...");
 	try {
-	    final Map<ValidationAnnotation, Pair<IValidator, Result>> validators = new EnumMap<ValidationAnnotation, Pair<IValidator, Result>>(ValidationAnnotation.class);
+	    final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators = new EnumMap<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>>(ValidationAnnotation.class);
 	    // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
 	    // removeFrom[property name], addTo[property name] and set[property name]
 	    final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, type, isCollectional);
 	    for (final Annotation annotation : propertyValidationAnotations) {
 		final ValidationAnnotation validationAnnotation = ValidationAnnotation.getValueByType(annotation);
 		// if property factory cannot instantiate a validator for the specified annotation then null is returned;
-		final IValidator validator = metaPropertyFactory.create(annotation, this, field.getName(), type);
-		if (validator != null) { // there is no need to add null validators
-		    validators.put(validationAnnotation, new Pair<IValidator, Result>(validator, null));
+		final IBeforeChangeEventHandler[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), type);
+		if (annotationValidators.length > 0) {
+		    final Map<IBeforeChangeEventHandler, Result> handlersAndResults = new HashMap<IBeforeChangeEventHandler, Result>();
+		    for (final IBeforeChangeEventHandler handler : annotationValidators) {
+			handlersAndResults.put(handler, null);
+		    }
+		    validators.put(validationAnnotation, handlersAndResults);
 		}
 	    }
 	    // logger.debug("Finished collecting validators for property " + field.getName() + ".");

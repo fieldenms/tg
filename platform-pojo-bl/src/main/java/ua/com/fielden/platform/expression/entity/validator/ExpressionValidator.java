@@ -4,21 +4,21 @@ import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.expression.ExpressionTextToModelConverter;
 import ua.com.fielden.platform.expression.entity.ExpressionEntity;
 
 /**
- * {@link IValidator} for expression property of the {@link ExpressionEntity}.
+ * {@link IBeforeChangeEventHandler} for expression property of the {@link ExpressionEntity}.
  * 
  * @author TG Team
  *
  */
-public class ExpressionValidator implements IValidator {
+public class ExpressionValidator implements IBeforeChangeEventHandler {
 
     @Override
-    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	final ExpressionEntity expressionEntity = (ExpressionEntity)property.getEntity();
 	final ExpressionTextToModelConverter mc = new ExpressionTextToModelConverter(expressionEntity.getEntityClass(), newValue.toString());
 	property.getEntity();

@@ -17,13 +17,13 @@ import ua.com.fielden.platform.error.Result;
  * @author 01es
  * 
  */
-public class NotNullValidator implements IValidator {
+public class NotNullValidator implements IBeforeChangeEventHandler {
 
     public NotNullValidator() {
     }
 
     @Override
-    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	final Object entity = property.getEntity();
 	final NotNull notNull = findNotNullAnnotation(mutatorAnnotations);
 	final String errorMsg = !isEmpty(notNull.value()) ? notNull.value() : "<html>Null or empty value is not permitted for property <b>" + property.getName() + "</b></html>";

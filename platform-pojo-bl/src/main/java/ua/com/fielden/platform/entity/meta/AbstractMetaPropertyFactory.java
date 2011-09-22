@@ -6,12 +6,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.FinalValidator;
 import ua.com.fielden.platform.entity.validation.GreaterOrEqualValidator;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
 import ua.com.fielden.platform.entity.validation.MaxValueValidator;
 import ua.com.fielden.platform.entity.validation.NotEmptyValidator;
@@ -51,7 +52,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     }
 
     @Override
-    public IValidator create(//
+    public IBeforeChangeEventHandler[] create(//
 	    final Annotation annotation,//
 	    final AbstractEntity<?> entity,//
 	    final String propertyName,//
@@ -70,34 +71,41 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	// try to instantiate validator
 	switch (value) {
 	case NOT_NULL:
-	    return notNullValidator;
+	    return new IBeforeChangeEventHandler[]{ notNullValidator };
 	case NOT_EMPTY:
-	    return notEmptyValidator;
+	    return new IBeforeChangeEventHandler[]{ notEmptyValidator };
 	case ENTITY_EXISTS:
-	    return createEntityExists((EntityExists) annotation);
+	    return new IBeforeChangeEventHandler[]{ createEntityExists((EntityExists) annotation) };
 	case FINAL:
-	    return finalValidator;
+	    return new IBeforeChangeEventHandler[]{ finalValidator };
 	case GREATER_OR_EQUAL:
-	    return createGreaterOrEqualValidator(((GreaterOrEqual) annotation).value());
+	    return new IBeforeChangeEventHandler[]{ createGreaterOrEqualValidator(((GreaterOrEqual) annotation).value()) };
 	case LE_PROPETY:
-	    return createLePropertyValidator(entity, propertyName, ((LeProperty) annotation).value());
+	    return new IBeforeChangeEventHandler[]{ createLePropertyValidator(entity, propertyName, ((LeProperty) annotation).value()) };
 	case GE_PROPETY:
-	    return createGePropertyValidator(entity, ((GeProperty) annotation).value(), propertyName);
+	    return new IBeforeChangeEventHandler[]{ createGePropertyValidator(entity, ((GeProperty) annotation).value(), propertyName) };
 	case MAX:
 	    if (Number.class.isAssignableFrom(propertyType) || double.class == propertyType || int.class == propertyType) {
-		return createMaxValueValidator(((Max) annotation).value());
+		return new IBeforeChangeEventHandler[]{ createMaxValueValidator(((Max) annotation).value()) };
 	    } else if (String.class == propertyType) {
-		return createMaxLengthValidator(((Max) annotation).value());
+		return new IBeforeChangeEventHandler[]{ createMaxLengthValidator(((Max) annotation).value()) };
 	    }
 	    throw new RuntimeException("Property " + propertyName + " of type " + propertyType.getName() + " does not support Max validation.");
 	case DOMAIN:
-	    return domainConfig.getValidator(entity.getType(), propertyName);
+	    return new IBeforeChangeEventHandler[]{ domainConfig.getValidator(entity.getType(), propertyName) };
+	case BEFORE_CHANGE:
+	    return createBeforeChange(entity, propertyName, (BeforeChange) annotation);
 	default:
 	    throw new IllegalArgumentException("Unsupported validation annotation has been encountered.");
 	}
     }
 
-    private IValidator createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty) {
+    private IBeforeChangeEventHandler[] createBeforeChange(final AbstractEntity<?> entity, final String propertyName, final BeforeChange annotation) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    private IBeforeChangeEventHandler createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty) {
 	if (geRangeValidators.get(entity.getType()) == null) {
 	    geRangeValidators.put(entity.getType(), Collections.synchronizedMap(new HashMap<String, RangePropertyValidator>()));
 	}
@@ -108,7 +116,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	return propertyValidators.get(upperBoundaryProperty);
     }
 
-    private IValidator createLePropertyValidator(final AbstractEntity<?> entity, final String lowerBoundaryProperty, final String[] upperBoundaryProperties) {
+    private IBeforeChangeEventHandler createLePropertyValidator(final AbstractEntity<?> entity, final String lowerBoundaryProperty, final String[] upperBoundaryProperties) {
 	if (leRangeValidators.get(entity.getType()) == null) {
 	    leRangeValidators.put(entity.getType(), Collections.synchronizedMap(new HashMap<String, RangePropertyValidator>()));
 	}
@@ -119,28 +127,28 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	return propertyValidators.get(lowerBoundaryProperty);
     }
 
-    private IValidator createGreaterOrEqualValidator(final Integer key) {
+    private IBeforeChangeEventHandler createGreaterOrEqualValidator(final Integer key) {
 	if (!greaterOrEqualsValidators.containsKey(key)) {
 	    greaterOrEqualsValidators.put(key, new GreaterOrEqualValidator(key));
 	}
 	return greaterOrEqualsValidators.get(key);
     }
 
-    private IValidator createMaxLengthValidator(final Integer key) {
+    private IBeforeChangeEventHandler createMaxLengthValidator(final Integer key) {
 	if (!maxLengthValidators.containsKey(key)) {
 	    maxLengthValidators.put(key, new MaxLengthValidator(key));
 	}
 	return maxLengthValidators.get(key);
     }
 
-    private IValidator createMaxValueValidator(final Integer key) {
+    private IBeforeChangeEventHandler createMaxValueValidator(final Integer key) {
 	if (!maxValueValidators.containsKey(key)) {
 	    maxValueValidators.put(key, new MaxValueValidator(key));
 	}
 	return maxValueValidators.get(key);
     }
 
-    protected abstract IValidator createEntityExists(final EntityExists anotation);
+    protected abstract IBeforeChangeEventHandler createEntityExists(final EntityExists anotation);
 
     @Override
     public IMetaPropertyDefiner create(final AbstractEntity<?> entity, final String propertyName) throws Exception {

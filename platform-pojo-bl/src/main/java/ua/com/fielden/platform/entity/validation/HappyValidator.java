@@ -12,10 +12,10 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  * 
  */
-public class HappyValidator implements IValidator {
+public class HappyValidator implements IBeforeChangeEventHandler {
 
     @Override
-    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	return Result.successful(property.getEntity());
     }
 

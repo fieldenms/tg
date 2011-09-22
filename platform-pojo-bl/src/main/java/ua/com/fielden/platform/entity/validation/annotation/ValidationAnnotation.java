@@ -4,13 +4,14 @@ import java.lang.annotation.Annotation;
 
 import ua.com.fielden.platform.entity.annotation.Dynamic;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 
 /**
  * Defines all annotation types, which represent validation annotations.
  *
  * The order of enumeration values defines validation priority,
  *
- * @author 01es
+ * @author TG Team
  *
  */
 public enum ValidationAnnotation {
@@ -24,6 +25,7 @@ public enum ValidationAnnotation {
     LE_PROPETY(LeProperty.class), //
     MAX(Max.class), //
     DOMAIN(DomainValidation.class), //
+    BEFORE_CHANGE(BeforeChange.class), //
     DYNAMIC(Dynamic.class); // DYNAMIC validation logic is encapsulated inside the setters.
 
     private final Class<? extends Annotation> type;

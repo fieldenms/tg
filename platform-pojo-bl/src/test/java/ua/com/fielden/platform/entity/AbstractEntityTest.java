@@ -63,13 +63,13 @@ public class AbstractEntityTest {
 	module.getDomainValidationConfig().setValidator(Entity.class, "doubles", new HappyValidator());
 	module.getDomainValidationConfig().setValidator(Entity.class, "number", new HappyValidator() {
 	    @Override
-	    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 		if (newValue != null && newValue.equals(35)) {
 		    return new Result(property, new Exception("Domain : Value 35 is not permitted."));
 		} else if (newValue != null && newValue.equals(77)) {
 		    return new Warning("DOMAIN validation : The value of 77 is dangerous.");
 		}
-		return super.validate(property, newValue, oldValue, mutatorAnnotations);
+		return super.handle(property, newValue, oldValue, mutatorAnnotations);
 	    }
 	});
 	module.getDomainMetaPropertyConfig().setDefiner(Entity.class, "firstProperty", new IMetaPropertyDefiner() {
@@ -539,11 +539,11 @@ public class AbstractEntityTest {
     public void testNotEmptyValidation() {
 	final Entity entity = factory.newByKey(Entity.class, "test-entity");
 	entity.setStrProp("correct value");
-	assertTrue(entity.getProperty("strProp").getValidators().get(NOT_EMPTY).getValue().isSuccessful());
+	assertTrue(entity.getProperty("strProp").getValidators().get(NOT_EMPTY).values().iterator().next().isSuccessful());
 	entity.setStrProp(null);
-	assertTrue(entity.getProperty("strProp").getValidators().get(NOT_EMPTY).getValue().isSuccessful());
+	assertTrue(entity.getProperty("strProp").getValidators().get(NOT_EMPTY).values().iterator().next().isSuccessful());
 	entity.setStrProp("");
-	assertFalse(entity.getProperty("strProp").getValidators().get(NOT_EMPTY).getValue().isSuccessful());
+	assertFalse(entity.getProperty("strProp").getValidators().get(NOT_EMPTY).values().iterator().next().isSuccessful());
     }
 
     @Test

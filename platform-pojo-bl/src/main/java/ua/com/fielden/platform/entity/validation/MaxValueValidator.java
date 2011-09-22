@@ -14,7 +14,7 @@ import ua.com.fielden.platform.types.Money;
  * @author 01es
  * 
  */
-public class MaxValueValidator implements IValidator {
+public class MaxValueValidator implements IBeforeChangeEventHandler {
     private final BigDecimal limit;
 
     public MaxValueValidator(final Integer limit) {
@@ -22,7 +22,7 @@ public class MaxValueValidator implements IValidator {
     }
 
     @Override
-    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	final Object entity = property.getEntity();
 	if (newValue == null) { // no violation
 	    return new Result(entity, "Value is null.");

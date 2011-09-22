@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.equery.fetch;
 import ua.com.fielden.platform.equery.interfaces.IQueryModel;
 import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
@@ -338,9 +338,9 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 	// let's create a validator for property WagonSlot.bogie, which always fail the setter
 	// since it is only introduced here the only place it will actually be invoked is during the DAO save method invokation
 	final Result failResult = new Result(slot, new IllegalArgumentException("Bogie class is not compatible with slot."));
-	config.getDomainValidationConfig().setValidator(WagonSlot.class, "bogie", new IValidator() {
+	config.getDomainValidationConfig().setValidator(WagonSlot.class, "bogie", new IBeforeChangeEventHandler() {
 	    @Override
-	    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 		return failResult;
 	    }
 	});

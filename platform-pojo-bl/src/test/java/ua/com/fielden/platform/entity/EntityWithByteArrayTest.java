@@ -34,9 +34,9 @@ public class EntityWithByteArrayTest {
     {
 	module.getDomainValidationConfig().setValidator(EntityWithByteArray.class, "byteArray", new HappyValidator() {
 	    @Override
-	    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 
-		return super.validate(property, newValue, oldValue, mutatorAnnotations);
+		return super.handle(property, newValue, oldValue, mutatorAnnotations);
 	    }
 	});
     }

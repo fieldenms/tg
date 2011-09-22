@@ -4,7 +4,7 @@ import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.test.domain.entities.AdvicePosition;
 
@@ -14,10 +14,10 @@ import ua.com.fielden.platform.test.domain.entities.AdvicePosition;
  * @author 01es
  *
  */
-public class AdvicePositionRotableValidator implements IValidator {
+public class AdvicePositionRotableValidator implements IBeforeChangeEventHandler {
 
     @Override
-    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	final AdvicePosition pos = (AdvicePosition) property.getEntity();
 	if (!newValue.equals(oldValue)) {
 	    if (pos.getAdvice().rotables().contains(newValue)) {

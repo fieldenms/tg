@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.test_entities.EntityWithDependentProperties;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -37,41 +37,41 @@ public class MetaPropertyTest {
 
     @Before
     public void setUp() {
-	module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "one", new IValidator() {
+	module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "one", new IBeforeChangeEventHandler() {
 	    @Override
-	    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 		((EntityWithDependentProperties) property.getEntity()).oneCount++;
 		return Result.successful(newValue);
 	    }
 	});
 
-	module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "two", new IValidator() {
+	module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "two", new IBeforeChangeEventHandler() {
 	    @Override
-	    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 		((EntityWithDependentProperties) property.getEntity()).twoCount++;
 		return Result.successful(newValue);
 	    }
 	});
 
-	module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "three", new IValidator() {
+	module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "three", new IBeforeChangeEventHandler() {
 	    @Override
-	    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 		((EntityWithDependentProperties) property.getEntity()).threeCount++;
 		return Result.successful(newValue);
 	    }
 	});
 
-	module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "four", new IValidator() {
+	module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "four", new IBeforeChangeEventHandler() {
 	    @Override
-	    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 		((EntityWithDependentProperties) property.getEntity()).fourCount++;
 		return Result.successful(newValue);
 	    }
 	});
 
-	module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "five", new IValidator() {
+	module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "five", new IBeforeChangeEventHandler() {
 	    @Override
-	    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 		((EntityWithDependentProperties) property.getEntity()).fiveCount++;
 		return new Result(new Exception());
 	    }

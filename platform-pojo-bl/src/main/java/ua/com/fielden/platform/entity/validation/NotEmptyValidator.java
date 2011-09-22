@@ -19,10 +19,10 @@ import ua.com.fielden.platform.error.Result;
  * 
  * @author Yura
  */
-public class NotEmptyValidator implements IValidator {
+public class NotEmptyValidator implements IBeforeChangeEventHandler {
 
     @Override
-    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	final Object entity = property.getEntity();
 	if (newValue != null && "".equals(newValue.toString())) {
 	    final NotEmpty annotation = findNotEmptyAnnotation(mutatorAnnotations);

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.test.domain.entities.Advice;
@@ -21,7 +21,7 @@ import static ua.com.fielden.platform.equery.equery.select;
  * @author 01es
  *
  */
-public class AdviceCarrierValidator implements IValidator {
+public class AdviceCarrierValidator implements IBeforeChangeEventHandler {
     private final IAdviceDao dao;
 
     @Inject
@@ -30,7 +30,7 @@ public class AdviceCarrierValidator implements IValidator {
     }
 
     @Override
-    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	final Advice advice = (Advice) property.getEntity();
 	// validate if it is at all possible to set carrier
 	if (advice.isDispatched()) {

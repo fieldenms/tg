@@ -19,7 +19,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * @author TG Team
  *
  */
-public class RangePropertyValidator implements IValidator {
+public class RangePropertyValidator implements IBeforeChangeEventHandler {
     private final String[] opositeRangeProperties;
     private final boolean upperBoundaryRangePropery;
 
@@ -37,7 +37,7 @@ public class RangePropertyValidator implements IValidator {
     }
 
     @Override
-    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	Result result = new Result(null, "Valid");
 	final List<Result> successfulResult = new ArrayList<Result>();
 	for (final String opositeRangeProperty : opositeRangeProperties) {

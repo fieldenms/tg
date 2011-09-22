@@ -4,20 +4,20 @@ import java.lang.annotation.Annotation;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.IMetaPropertyDefiner;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 
 /**
  * This is a preliminary interface for a meta-property factory.
- * 
- * @author 01es
- * 
+ *
+ * @author TG Team
+ *
  */
 public interface IMetaPropertyFactory {
     /**
-     * Takes an annotation instance and tries to instantiate a validator based on that annotation.
+     * Takes an annotation instance and tries to instantiate validators based on that annotation.
      * <p>
-     * If the passed annotation is not recognised as the validation annotation then null is returned.
-     * 
+     * If the passed annotation is not recognised as the validation annotation then an empty array should returned or an exception thrown.
+     *
      * @param <K>
      * @param annotation
      * @param entity
@@ -27,7 +27,7 @@ public interface IMetaPropertyFactory {
      * @return
      * @throws Exception
      */
-    IValidator create(//
+    IBeforeChangeEventHandler[] create(//
     final Annotation annotation, //
     final AbstractEntity<?> entity,//
     final String propertyName,//
@@ -35,7 +35,7 @@ public interface IMetaPropertyFactory {
 
     /**
      * Instantiates meta-property definer based on entity type and property name.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return

@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.swing.components.bind.test.Entity.Strategy;
@@ -27,10 +27,10 @@ public class EntityValidatorFactory {
      * @author jhou
      *
      */
-    public class EntityDateValidator implements IValidator {
+    public class EntityDateValidator implements IBeforeChangeEventHandler {
 
 	@Override
-	public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	    final Date date = (Date) newValue;
 	    if (date != null && new Date().before(date)) {
 		return new Result(this, new Exception("date cannot be specified as #date in future# :) "));
@@ -46,10 +46,10 @@ public class EntityValidatorFactory {
      * @author jhou
      *
      */
-    public class EntityBigDecimalValidator implements IValidator {
+    public class EntityBigDecimalValidator implements IBeforeChangeEventHandler {
 
 	@Override
-	public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	    final BigDecimal bigDecimal = (BigDecimal) newValue;
 	    if (bigDecimal.doubleValue() > 1000000) {
 		return new Result(this, new Exception("double value have to be < 1000000"));
@@ -65,10 +65,10 @@ public class EntityValidatorFactory {
      * @author jhou
      *
      */
-    public class EntityMoneyValidator implements IValidator {
+    public class EntityMoneyValidator implements IBeforeChangeEventHandler {
 
 	@Override
-	public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	    final Money money = (Money) newValue;
 	    if (money.getAmount().doubleValue() > 1000000) {
 		return new Result(this, new Exception("money amount have to be < 1000000"));
@@ -84,10 +84,10 @@ public class EntityValidatorFactory {
      * @author jhou
      *
      */
-    public class EntityBoolValidator implements IValidator {
+    public class EntityBoolValidator implements IBeforeChangeEventHandler {
 
 	@Override
-	public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	    final Object entity = property.getEntity();
 	    if (newValue.equals(false)) {
 		return new Result(entity, new Exception("false value cannot be set"));
@@ -103,10 +103,10 @@ public class EntityValidatorFactory {
      * @author jhou
      *
      */
-    public class EntityDemoEntityValidator implements IValidator {
+    public class EntityDemoEntityValidator implements IBeforeChangeEventHandler {
 
 	@Override
-	public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	    final Entity ent = (Entity) property.getEntity();
 	    ;
 	    if (Strategy.REVERT.equals(ent.getStrategy())) {
@@ -123,10 +123,10 @@ public class EntityValidatorFactory {
      * @author jhou
      *
      */
-    public class EntityListValidator implements IValidator {
+    public class EntityListValidator implements IBeforeChangeEventHandler {
 
 	@Override
-	public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	    if (((ArrayList<?>) newValue).size() == 0) {
 		return new Result(this, new Exception("you cannot set the empty list"));
 	    }
@@ -141,11 +141,11 @@ public class EntityValidatorFactory {
      * @author jhou
      *
      */
-    public class EntityBicyclesValidator implements IValidator {
+    public class EntityBicyclesValidator implements IBeforeChangeEventHandler {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	    final Result incorrect = new Result(this, new Exception("Collection should not be empty:) "));
 	    final Result correct = new Result(property.getEntity(), "list property value is correct.");
 
@@ -176,10 +176,10 @@ public class EntityValidatorFactory {
      * @author jhou
      *
      */
-    public class EntityNumberValidator implements IValidator {
+    public class EntityNumberValidator implements IBeforeChangeEventHandler {
 
 	@Override
-	public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	    final Entity ent = (Entity) property.getEntity();
 	    final Integer number = (Integer) newValue;
 	    //	    if (ent.getBool() && number >= 300) {
@@ -199,10 +199,10 @@ public class EntityValidatorFactory {
      * @author jhou
      *
      */
-    public class EntityStrategyValidator implements IValidator {
+    public class EntityStrategyValidator implements IBeforeChangeEventHandler {
 
 	@Override
-	public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	    final Object entity = property.getEntity();
 	    if (newValue.equals(Strategy.REVERT_ON_INVALID)) {
 		return new Result(entity, new Exception("REVERT_ON_INVALID value cannot be set"));
@@ -218,10 +218,10 @@ public class EntityValidatorFactory {
      * @author jhou
      *
      */
-    public class EntityStringValidator implements IValidator {
+    public class EntityStringValidator implements IBeforeChangeEventHandler {
 
 	@Override
-	public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+	public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	    final String string = (String) newValue;
 
 	    if (string.length() > 20) {

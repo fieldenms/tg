@@ -4,7 +4,7 @@ import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
 
 /**
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  *
  */
-public class StringValidator implements IValidator {
+public class StringValidator implements IBeforeChangeEventHandler {
 
     private final String regex;
 
@@ -22,7 +22,7 @@ public class StringValidator implements IValidator {
     }
 
     @Override
-    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	if (newValue != null && !newValue.toString().matches(regex)) {
 		 return new Result(newValue, new IllegalArgumentException("Value '" + newValue + "' of " + property.getTitle() + " does not match the required pattern."));
 	}

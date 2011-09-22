@@ -14,7 +14,7 @@ import ua.com.fielden.platform.error.Result;
  * @author 01es
  * 
  */
-public class MaxLengthValidator implements IValidator {
+public class MaxLengthValidator implements IBeforeChangeEventHandler {
     private final Integer limit;
 
     public MaxLengthValidator(final Integer limit) {
@@ -22,7 +22,7 @@ public class MaxLengthValidator implements IValidator {
     }
 
     @Override
-    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	final Object entity = property.getEntity();
 	final String value = newValue + ""; // added empty string to convert newValue to string without invoking toString()
 	if (StringUtils.isEmpty(value)) { // no violation

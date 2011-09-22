@@ -11,7 +11,7 @@ import ua.com.fielden.platform.equery.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 
 /**
- * Provides a base class for convenient implementation of value matchers specific to transitonal logic such as work order status transitions.
+ * Provides a base class for convenient implementation of value matchers specific to transitional logic such as work order status transitions.
  *
  * @author TG Team
  *

@@ -535,16 +535,16 @@ public final class AutocompleterBufferedPropertyWrapper<T> implements IBindingEn
 				// (it ensures that ENTITY_EXISTS should be specified as validation annotation in the property setter)
 				// but the same can be simply performed with  fireImaginaryValidationResult(...) method!!!
 				if (subjectBean.getProperty(propertyName) != null) {
-				    subjectBean.getProperty(propertyName).setValidationResult(ValidationAnnotation.REQUIRED, null);
-				    subjectBean.getProperty(propertyName).setValidationResult(ValidationAnnotation.ENTITY_EXISTS, result);
+				    subjectBean.getProperty(propertyName).setRequiredValidationResult(null);
+				    subjectBean.getProperty(propertyName).setEntityExistsValidationResult(result);
 				}
 			    } else {
 				//subjectBean.getMetaProperty(propertyName).fireImaginaryValidationResult(result);
 				if (subjectBean.getProperty(propertyName) != null
 					&& subjectBean.getProperty(propertyName).getValidators().containsKey(ValidationAnnotation.ENTITY_EXISTS)) { // if String property annotated by EntityExists,
 				    // then should report "early" validation result error
-				    subjectBean.getProperty(propertyName).setValidationResult(ValidationAnnotation.REQUIRED, null);
-				    subjectBean.getProperty(propertyName).setValidationResult(ValidationAnnotation.ENTITY_EXISTS, result);
+				    subjectBean.getProperty(propertyName).setRequiredValidationResult(null);
+				    subjectBean.getProperty(propertyName).setEntityExistsValidationResult(result);
 				} else {
 				    // if String property is not annotated by EntityExists -> the buffered value (String) is legal and have to be set!
 				    subjectBean.set(propertyName, bufferedValue);

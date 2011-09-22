@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.FinalValidator;
 import ua.com.fielden.platform.entity.validation.GreaterOrEqualValidator;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
 import ua.com.fielden.platform.entity.validation.MaxValueValidator;
 import ua.com.fielden.platform.entity.validation.NotEmptyValidator;
@@ -88,7 +88,7 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
 	// TODO not yet complete
 	bind(IMetaPropertyFactory.class).toInstance(new IMetaPropertyFactory() {
 	    @Override
-	    public IValidator create( //
+	    public IBeforeChangeEventHandler[] create( //
 	    final Annotation annotation,//
 	    final AbstractEntity<?> entity,//
 	    final String propertyName,//
@@ -107,37 +107,37 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
 		// try to instantiate validator
 		switch (value) {
 		case NOT_NULL:
-		    return new NotNullValidator();
+		    return new IBeforeChangeEventHandler[]{new NotNullValidator()};
 		case NOT_EMPTY:
-		    return new NotEmptyValidator();
+		    return new IBeforeChangeEventHandler[]{new NotEmptyValidator()};
 		case GREATER_OR_EQUAL:
-		    return new GreaterOrEqualValidator(((GreaterOrEqual) annotation).value());
+		    return new IBeforeChangeEventHandler[]{new GreaterOrEqualValidator(((GreaterOrEqual) annotation).value())};
 		case MAX:
 		    if (Number.class.isAssignableFrom(propertyType) || double.class == propertyType || int.class == propertyType) {
-			return new MaxValueValidator(((Max) annotation).value());
+			return new IBeforeChangeEventHandler[]{new MaxValueValidator(((Max) annotation).value())};
 		    } else if (String.class == propertyType) {
-			return new MaxLengthValidator(((Max) annotation).value());
+			return new IBeforeChangeEventHandler[]{new MaxLengthValidator(((Max) annotation).value())};
 		    }
 		case FINAL:
-		    return new FinalValidator();
+		    return new IBeforeChangeEventHandler[]{new FinalValidator()};
 		case DOMAIN:
-		    final IValidator domainValidator = getDomainValidationConfig().getValidator(entity.getType(), propertyName);
-		    return domainValidator != null ? domainValidator : new HappyValidator();
+		    final IBeforeChangeEventHandler domainValidator = getDomainValidationConfig().getValidator(entity.getType(), propertyName);
+		    return new IBeforeChangeEventHandler[]{domainValidator != null ? domainValidator : new HappyValidator()};
 		case ENTITY_EXISTS:
 		    if (ignoreEntityExistsAnnotation) {
-			return new IValidator() {
+			return new IBeforeChangeEventHandler[]{new IBeforeChangeEventHandler() {
 			    @Override
-			    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+			    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 				return new Result(null, "EntityExists annotation is ignored by " + EntityModuleWithDomainValidatorsForTesting.class.toString());
 			    }
-			};
+			}};
 		    } else {
-			return new IValidator() {
+			return new IBeforeChangeEventHandler[]{new IBeforeChangeEventHandler() {
 			    @Override
-			    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+			    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 				return new Result(null, "EntityExists annotation passes correcly " + EntityModuleWithDomainValidatorsForTesting.class.toString());
 			    }
-			};
+			}};
 		    }
 		default:
 		    // should most likely ignore

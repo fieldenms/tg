@@ -16,7 +16,7 @@ import ua.com.fielden.platform.error.Result;
  * @author 01es
  *
  */
-public class EntityExistsValidator implements IValidator {
+public class EntityExistsValidator implements IBeforeChangeEventHandler {
 
     private final IEntityDao dao;
 
@@ -26,7 +26,7 @@ public class EntityExistsValidator implements IValidator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Result validate(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	final AbstractEntity<?> entity = property.getEntity();
 	try {
 	    if (newValue == null) {

@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -299,7 +300,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
 	    // setter proceeded successfully (no exception or result were thrown). -> update DYNAMIC validator by correct result if validator exists and if no warning was detected
 	    // :
 	    if (metaProperty.containsDynamicValidator() && !metaProperty.hasWarnings()) {
-		metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, new Result(entity, "Dynamic validation (inside the setter) passed correctly."));
+		metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, StubValidator.singleton, new Result(entity, "Dynamic validation (inside the setter) passed correctly."));
 	    }
 	    return new SetterResult(true, setterReturningValue);
 	} catch (final Throwable ex) {
@@ -308,7 +309,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
 		    metaProperty.putDynamicValidator();
 		}
 		// All validation proceeded successfully except the validation inside the setter (DYNAMIC validation).
-		metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, (Result) ex);
+		metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, StubValidator.singleton, (Result) ex);
 		final boolean isWarning = ((Result) ex).isWarning();
 		if (!isWarning) {
 		    final Object oldValue = newAndOldValues.getValue();

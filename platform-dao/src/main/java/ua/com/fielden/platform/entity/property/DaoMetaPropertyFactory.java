@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
-import ua.com.fielden.platform.entity.validation.IValidator;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 import com.google.inject.Inject;
@@ -30,7 +30,7 @@ public class DaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
     }
 
     @Override
-    protected synchronized IValidator createEntityExists(final EntityExists anotation) {
+    protected synchronized IBeforeChangeEventHandler createEntityExists(final EntityExists anotation) {
 	final Class<? extends AbstractEntity> key = anotation.value();
 	if (!entityExistsValidators.containsKey(key)) {
 	    final IEntityDao dao = factory.newDao(key);
