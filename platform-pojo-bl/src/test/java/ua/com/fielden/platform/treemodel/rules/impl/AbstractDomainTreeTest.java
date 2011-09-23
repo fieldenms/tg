@@ -296,6 +296,7 @@ public abstract class AbstractDomainTreeTest {
 	final List<Field> fields = getDomainTreeFields(instance.getClass());
 	try {
 	    for (final Field field : fields) {
+		// System.err.println("Instance = [" + instance + "], field = [" + field + "].");
 		final Object fieldValue = Finder.getFieldValue(field, instance);
 		// System.out.println("allDomainTreeFieldsAreInitialised : Field [" + field + "]; value [" + fieldValue + "];");
 		// all field values should be initialised! Including transient fields, domain tree types, maps, etc.
@@ -303,13 +304,13 @@ public abstract class AbstractDomainTreeTest {
 		    fail("After deserialisation of the manager all the fields should be initialised (including transient). But field's [" + field + "] value is null for instance [" + instance + "].");
 		    return false;
 		} else {
-		    if (!Modifier.isStatic(field.getModifiers()) && originalInstance != null) {
+		    final Class<?> fieldValueType = fieldValue.getClass();
+		    if (!Modifier.isStatic(field.getModifiers()) && originalInstance != null && !EntityUtils.isEnum(fieldValueType)) {
 			final Object originalFieldValue = Finder.getFieldValue(field, originalInstance);
 			assertFalse("The references of corresponding fields should be distinct. Field = [" + field + "]; value original = [" + originalFieldValue + "]; value new = [" + fieldValue + "].", fieldValue == originalFieldValue);
 		    }
-		    final Class<?> fieldValueType = fieldValue.getClass();
 		    // all non-transient domain-tree-typed fields should have children initialised!
-		    if (!Modifier.isTransient(field.getModifiers()) && Finder.isAssignableFrom(fieldValueType, AbstractDomainTree.DOMAIN_TREE_TYPES) && !allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(fieldValue, originalInstance != null ? Finder.getFieldValue(field, originalInstance) : null)) {
+		    if (!Modifier.isTransient(field.getModifiers()) && Finder.isAssignableFrom(fieldValueType, AbstractDomainTree.DOMAIN_TREE_TYPES) && !EntityUtils.isEnum(fieldValueType) && !allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(fieldValue, originalInstance != null ? Finder.getFieldValue(field, originalInstance) : null)) {
 			return false;
 		    }
 		}

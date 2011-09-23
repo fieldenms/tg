@@ -58,11 +58,11 @@ public class LocatorDomainTreeRepresentationTest extends CriteriaDomainTreeRepre
 
     @Override
     public void test_that_serialisation_works() throws Exception {
-        // TODO !!!
+        super.test_that_serialisation_works();
     }
 
     @Override
     public void test_that_equality_and_copying_works() {
-        // TODO !!!
+	super.test_that_equality_and_copying_works();
     }
 }

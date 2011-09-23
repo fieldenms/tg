@@ -62,20 +62,20 @@ public class GlobalDomainTreeRepresentationTest extends DbDrivenTestCase {
 	// for the first time the manager just produces a default instance of locator
 	final ILocatorDomainTreeManagerAndEnhancer mgrAndEnhancer = manager.getGlobalRepresentation().getLocatorManagerByDefault(SlaveEntity.class);
 	assertNotNull("Should not be null.", mgrAndEnhancer);
-	assertFalse("The state of locator is incorrect.", mgrAndEnhancer.isRunAutomatically());
+	assertTrue("The state of locator is incorrect.", mgrAndEnhancer.isRunAutomatically());
 
 	// ensures that new instance will be produced every time
 	assertTrue("Should be brand new instance every time.", manager.getGlobalRepresentation().getLocatorManagerByDefault(SlaveEntity.class) != mgrAndEnhancer);
 	assertTrue("Should be brand new instance every time.", manager.getGlobalRepresentation().getLocatorManagerByDefault(SlaveEntity.class).equals(mgrAndEnhancer));
 
 	// alter and save
-	mgrAndEnhancer.setRunAutomatically(true);
+	mgrAndEnhancer.setRunAutomatically(false);
 	manager.getGlobalRepresentation().setLocatorManagerByDefault(SlaveEntity.class, mgrAndEnhancer);
 
 	// after saving the manager just retrieves a default instance of locator
 	final ILocatorDomainTreeManagerAndEnhancer newMgrAndEnhancer = manager.getGlobalRepresentation().getLocatorManagerByDefault(SlaveEntity.class);
 	assertNotNull("Should not be null.", newMgrAndEnhancer);
-	assertTrue("The state of locator is incorrect.", newMgrAndEnhancer.isRunAutomatically());
+	assertFalse("The state of locator is incorrect.", newMgrAndEnhancer.isRunAutomatically());
     }
 
     @Override

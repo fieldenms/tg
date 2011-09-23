@@ -45,26 +45,24 @@ public class LocatorDomainTreeManagerAndEnhancer extends CriteriaDomainTreeManag
 
     @Override
     public SearchBy getSearchBy() {
-	// TODO Auto-generated method stub
-	return null;
+	return base().getSearchBy();
     }
 
     @Override
     public ILocatorDomainTreeManager setSearchBy(final SearchBy searchBy) {
-	// TODO Auto-generated method stub
-	return null;
+	base().setSearchBy(searchBy);
+	return this;
     }
 
     @Override
     public boolean isUseForAutocompletion() {
-	// TODO Auto-generated method stub
-	return false;
+	return base().isUseForAutocompletion();
     }
 
     @Override
     public ILocatorDomainTreeManager setUseForAutocompletion(final boolean useForAutocompletion) {
-	// TODO Auto-generated method stub
-	return null;
+	base().setUseForAutocompletion(useForAutocompletion);
+	return this;
     }
 
     /**

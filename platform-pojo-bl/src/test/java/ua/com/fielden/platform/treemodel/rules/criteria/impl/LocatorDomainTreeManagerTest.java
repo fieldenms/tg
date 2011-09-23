@@ -7,7 +7,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Set;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domain.tree.MasterEntity;
@@ -63,7 +62,7 @@ public class LocatorDomainTreeManagerTest extends CriteriaDomainTreeManagerTest 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    @Test @Ignore
+    @Test
     public void test_that_UseForAutocompletion_can_be_set_and_altered() {
 	// THE FIRST TIME -- returns DEFAULT VALUE //
 	// default value should be FALSE
@@ -74,7 +73,7 @@ public class LocatorDomainTreeManagerTest extends CriteriaDomainTreeManagerTest 
 	assertTrue("UseForAutocompletion should be true.", dtm().isUseForAutocompletion());
     }
 
-    @Test @Ignore
+    @Test
     public void test_that_SearchBy_can_be_set_and_altered() {
 	// THE FIRST TIME -- returns DEFAULT VALUE //
 	// default value should be SearchBy.KEY
@@ -82,7 +81,7 @@ public class LocatorDomainTreeManagerTest extends CriteriaDomainTreeManagerTest 
 
 	// Alter and check //
 	assertTrue("The manager reference should be the same.", dtm() == dtm().setSearchBy(SearchBy.DESC_AND_KEY));
-	assertEquals("SearchBy should be SearchBy.DESC_AND_KEY.", dtm().getSearchBy());
+	assertEquals("SearchBy should be SearchBy.DESC_AND_KEY.", SearchBy.DESC_AND_KEY, dtm().getSearchBy());
     }
 
     @Override
@@ -109,11 +108,11 @@ public class LocatorDomainTreeManagerTest extends CriteriaDomainTreeManagerTest 
 
     @Override
     public void test_that_serialisation_works() throws Exception {
-        // TODO !!!
+	super.test_that_serialisation_works();
     }
 
     @Override
     public void test_that_equality_and_copying_works() {
-        // TODO !!!
+	super.test_that_equality_and_copying_works();
     }
 }
