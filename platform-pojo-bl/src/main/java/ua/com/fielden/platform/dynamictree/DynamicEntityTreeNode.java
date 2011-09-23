@@ -8,9 +8,9 @@ import java.util.Set;
 
 /**
  * Data structure needed only for creating fetch models.
- * 
+ *
  * @author oleh
- * 
+ *
  */
 public class DynamicEntityTreeNode {
 
@@ -37,8 +37,8 @@ public class DynamicEntityTreeNode {
 
 	setParent(null);
     }
-
     public void addChild(final String key, final DynamicEntityTreeNode treeNode) {
+
 	children.put(key, treeNode);
 	treeNode.setParent(this);
     }

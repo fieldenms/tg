@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.treemodel.rules.criteria;
 
-
 /**
  * This interface defines how domain tree "tick" can be managed for base "add to result" functionality. <br><br>
  *

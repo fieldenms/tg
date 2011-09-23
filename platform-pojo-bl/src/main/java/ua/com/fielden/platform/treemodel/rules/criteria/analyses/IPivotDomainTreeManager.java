@@ -17,7 +17,7 @@ public interface IPivotDomainTreeManager extends IAbstractAnalysisDomainTreeMana
      * @author TG Team
      *
      */
-    public interface IPivotDomainTreeManagerAndEnhancer extends IDomainTreeManagerAndEnhancer, IPivotDomainTreeManager {
+    public interface IPivotDomainTreeManagerAndEnhancer extends IAbstractAnalysisDomainTreeManagerAndEnhancer, IPivotDomainTreeManager {
     }
 
     IPivotAddToDistributionTickManager getFirstTick();

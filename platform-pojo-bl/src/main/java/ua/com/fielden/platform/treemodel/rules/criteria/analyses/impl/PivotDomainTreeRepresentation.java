@@ -66,12 +66,37 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
 
 	@Override
 	public int getWidthByDefault(final Class<?> root, final String property) {
-	    return PivotDomainTreeRepresentation.getWidthByDefault(getDtr(), root, property, propertiesWidths);
+	    return PivotDomainTreeRepresentation.getWidthByDefault(getDtr(), root, property, propertiesWidths, 80);
 	}
 
 	@Override
 	public void setWidthByDefault(final Class<?> root, final String property, final int width) {
 	    PivotDomainTreeRepresentation.setWidthByDefault(getDtr(), root, property, width, propertiesWidths);
+	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = super.hashCode();
+	    result = prime * result + ((propertiesWidths == null) ? 0 : propertiesWidths.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj)
+		return true;
+	    if (!super.equals(obj))
+		return false;
+	    if (getClass() != obj.getClass())
+		return false;
+	    final PivotAddToDistributionTickRepresentation other = (PivotAddToDistributionTickRepresentation) obj;
+	    if (propertiesWidths == null) {
+		if (other.propertiesWidths != null)
+		    return false;
+	    } else if (!propertiesWidths.equals(other.propertiesWidths))
+		return false;
+	    return true;
 	}
     }
 
@@ -90,12 +115,37 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
 
 	@Override
 	public int getWidthByDefault(final Class<?> root, final String property) {
-	    return PivotDomainTreeRepresentation.getWidthByDefault(getDtr(), root, property, propertiesWidths);
+	    return PivotDomainTreeRepresentation.getWidthByDefault(getDtr(), root, property, propertiesWidths, 80);
 	}
 
 	@Override
 	public void setWidthByDefault(final Class<?> root, final String property, final int width) {
 	    PivotDomainTreeRepresentation.setWidthByDefault(getDtr(), root, property, width, propertiesWidths);
+	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = super.hashCode();
+	    result = prime * result + ((propertiesWidths == null) ? 0 : propertiesWidths.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj)
+		return true;
+	    if (!super.equals(obj))
+		return false;
+	    if (getClass() != obj.getClass())
+		return false;
+	    final PivotAddToAggregationTickRepresentation other = (PivotAddToAggregationTickRepresentation) obj;
+	    if (propertiesWidths == null) {
+		if (other.propertiesWidths != null)
+		    return false;
+	    } else if (!propertiesWidths.equals(other.propertiesWidths))
+		return false;
+	    return true;
 	}
     }
 
@@ -110,9 +160,9 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
      * @param propertiesWidths -- holds all specified properties' default width
      * @return
      */
-    private static int getWidthByDefault(final IDomainTreeRepresentation dtr,final Class<?> root, final String property,final Map<Pair<Class<?>, String>, Integer> propertiesWidths){
+    protected static int getWidthByDefault(final IDomainTreeRepresentation dtr, final Class<?> root, final String property, final Map<Pair<Class<?>, String>, Integer> propertiesWidths, final int defaultWidthForAll) {
 	illegalExcludedProperties(dtr, root, property, "Could not ask a 'width by default' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	return (propertiesWidths.containsKey(key(root, property))) ? propertiesWidths.get(key(root, property)) : 0;
+	return (propertiesWidths.containsKey(key(root, property))) ? propertiesWidths.get(key(root, property)) : defaultWidthForAll;
     }
 
     /**
@@ -127,7 +177,7 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
      * @param propertiesWidths -- holds all specified properties' default width
      *
      */
-    private static void setWidthByDefault(final IDomainTreeRepresentation dtr,final Class<?> root, final String property, final int width,final Map<Pair<Class<?>, String>, Integer> propertiesWidths){
+    protected static void setWidthByDefault(final IDomainTreeRepresentation dtr, final Class<?> root, final String property, final int width, final Map<Pair<Class<?>, String>, Integer> propertiesWidths) {
 	illegalExcludedProperties(dtr, root, property, "Could not ask a 'width by default' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	propertiesWidths.put(key(root, property), width);
     }

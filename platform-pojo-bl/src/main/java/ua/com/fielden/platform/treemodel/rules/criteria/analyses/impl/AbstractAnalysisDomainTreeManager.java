@@ -97,8 +97,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	return true;
     }
 
-
-
     protected abstract static class AbstractAnalysisAddToDistributionTickManager extends TickManager implements IAbstractAnalysisAddToDistributionTickManager {
 	private static final long serialVersionUID = 4659406246345595522L;
 

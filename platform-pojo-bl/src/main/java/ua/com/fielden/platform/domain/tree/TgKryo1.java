@@ -2,6 +2,9 @@ package ua.com.fielden.platform.domain.tree;
 
 import java.util.List;
 
+import ua.com.fielden.platform.domain.tree.AbstractAnalysisDomainTreeManager1.AbstractAnalysisDomainTreeManager1Serialiser;
+import ua.com.fielden.platform.domain.tree.AbstractAnalysisDomainTreeManagerAndEnhancer1.AbstractAnalysisDomainTreeManagerAndEnhancer1Serialiser;
+import ua.com.fielden.platform.domain.tree.AbstractAnalysisDomainTreeRepresentation1.AbstractAnalysisDomainTreeRepresentation1Serialiser;
 import ua.com.fielden.platform.domain.tree.DomainTreeManager1.DomainTreeManagerForTestSerialiser;
 import ua.com.fielden.platform.domain.tree.DomainTreeManagerAndEnhancer1.DomainTreeManagerAndEnhancerForTestSerialiser;
 import ua.com.fielden.platform.domain.tree.DomainTreeRepresentation1.DomainTreeRepresentationForTestSerialiser;
@@ -39,6 +42,12 @@ public class TgKryo1 extends TgKryo {
 	    return new DomainTreeManagerAndEnhancerForTestSerialiser(this);
 	} else if (DomainTreeRepresentation1.class.isAssignableFrom(type)) {
 	    return new DomainTreeRepresentationForTestSerialiser(this);
+	} else if (AbstractAnalysisDomainTreeManager1.class.isAssignableFrom(type)) {
+	    return new AbstractAnalysisDomainTreeManager1Serialiser(this);
+	} else if (AbstractAnalysisDomainTreeManagerAndEnhancer1.class.isAssignableFrom(type)) {
+	    return new AbstractAnalysisDomainTreeManagerAndEnhancer1Serialiser(this);
+	} else if (AbstractAnalysisDomainTreeRepresentation1.class.isAssignableFrom(type)) {
+	    return new AbstractAnalysisDomainTreeRepresentation1Serialiser(this);
 	} else {
 	    return super.newSerializer(type);
 	}

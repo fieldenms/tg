@@ -7,11 +7,14 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeRepresentation.PivotAddToAggregationTickRepresentation;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeRepresentation.PivotAddToDistributionTickRepresentation;
+import ua.com.fielden.platform.treemodel.rules.impl.EnhancementPropertiesMap;
 
 /**
- * TODO just a stub. Should be replaced on actual implementation.
+ * A domain tree manager for pivot analyses.
  *
- * @author jhou
+ * @author TG Team
  *
  */
 public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager implements IPivotDomainTreeManager {
@@ -57,46 +60,58 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
     public static class PivotAddToDistributionTickManager extends AbstractAnalysisAddToDistributionTickManager implements IPivotAddToDistributionTickManager {
 	private static final long serialVersionUID = 4659406246345595522L;
 
+	private final EnhancementPropertiesMap<Integer> propertiesWidths;
+
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.
 	 */
 	public PivotAddToDistributionTickManager() {
-	    super();
+	    propertiesWidths = createPropertiesMap();
 	}
 
 	@Override
 	public int getWidth(final Class<?> root, final String property) {
-	    // TODO Auto-generated method stub
-	    return 0;
+	    return PivotDomainTreeRepresentation.getWidthByDefault(tr().getDtr(), root, property, propertiesWidths, tr().getWidthByDefault(root, property));
 	}
 
 	@Override
 	public void setWidth(final Class<?> root, final String property, final int width) {
-	    // TODO Auto-generated method stub
+	    PivotDomainTreeRepresentation.setWidthByDefault(tr().getDtr(), root, property, width, propertiesWidths);
+	}
+
+	@Override
+	protected PivotAddToDistributionTickRepresentation tr() {
+	    return (PivotAddToDistributionTickRepresentation) super.tr();
 	}
     }
 
     public static class PivotAddToAggregationTickManager extends AbstractAnalysisAddToAggregationTickManager implements IPivotAddToAggregationTickManager {
 	private static final long serialVersionUID = -4025471910983945279L;
 
+	private final EnhancementPropertiesMap<Integer> propertiesWidths;
+
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.
 	 */
 	public PivotAddToAggregationTickManager() {
-	    super();
+	    propertiesWidths = createPropertiesMap();
 	}
 
 	@Override
 	public int getWidth(final Class<?> root, final String property) {
-	    // TODO Auto-generated method stub
-	    return 0;
+	    return PivotDomainTreeRepresentation.getWidthByDefault(tr().getDtr(), root, property, propertiesWidths, tr().getWidthByDefault(root, property));
 	}
 
 	@Override
 	public void setWidth(final Class<?> root, final String property, final int width) {
-	    // TODO Auto-generated method stub
+	    PivotDomainTreeRepresentation.setWidthByDefault(tr().getDtr(), root, property, width, propertiesWidths);
+	}
+
+	@Override
+	protected PivotAddToAggregationTickRepresentation tr() {
+	    return (PivotAddToAggregationTickRepresentation) super.tr();
 	}
     }
 

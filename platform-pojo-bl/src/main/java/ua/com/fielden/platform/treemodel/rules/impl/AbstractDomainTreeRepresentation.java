@@ -565,7 +565,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    checkedProperties.add(key(root, property));
 	}
 
-	protected IDomainTreeRepresentation getDtr() {
+	public IDomainTreeRepresentation getDtr() {
 	    return dtr;
 	}
 

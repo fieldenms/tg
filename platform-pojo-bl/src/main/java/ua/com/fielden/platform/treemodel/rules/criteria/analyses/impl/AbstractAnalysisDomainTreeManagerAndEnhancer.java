@@ -57,21 +57,6 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
     @Override
     protected abstract AbstractAnalysisDomainTreeRepresentationAndEnhancer createRepresentation(final AbstractDomainTreeRepresentation base);
 
-    //    @Override
-    //    protected IAbstractAnalysisAddToDistributionTickManager createFirstTick(final ITickManager base) {
-    //	return new AbstractAnalysisAddToDistributionTickManagerAndEnhancer(base);
-    //    }
-    //
-    //    @Override
-    //    protected IAbstractAnalysisAddToAggregationTickManager createSecondTick(final ITickManager base) {
-    //	return new AbstractAnalysisAddToAggregationTickManagerAndEnhancer(base);
-    //    }
-    //
-    //    @Override
-    //    protected IAbstractAnalysisDomainTreeRepresentation createRepresentation(final IDomainTreeRepresentation base) {
-    //	return new AbstractAnalysisDomainTreeRepresentationAndEnhancer(base);
-    //    }
-
     /**
      * Overridden to take into account calculated properties.
      *

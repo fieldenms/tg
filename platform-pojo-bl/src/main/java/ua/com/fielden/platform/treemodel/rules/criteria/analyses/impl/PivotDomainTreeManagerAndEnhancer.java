@@ -9,6 +9,8 @@ import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer
 import ua.com.fielden.platform.treemodel.rules.IDomainTreeEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeManager.PivotAddToAggregationTickManager;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeManager.PivotAddToDistributionTickManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeRepresentation;
@@ -49,14 +51,18 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
 	}
 
 	@Override
+	protected PivotAddToDistributionTickManager base() {
+	    return (PivotAddToDistributionTickManager) super.base();
+	}
+
+	@Override
 	public int getWidth(final Class<?> root, final String property) {
-	    // TODO Auto-generated method stub
-	    return 0;
+	    return base().getWidth(enhancer().getManagedType(root), property);
 	}
 
 	@Override
 	public void setWidth(final Class<?> root, final String property, final int width) {
-	    // TODO Auto-generated method stub
+	    base().setWidth(enhancer().getManagedType(root), property, width);
 	}
     }
 
@@ -66,14 +72,18 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
 	}
 
 	@Override
+	protected PivotAddToAggregationTickManager base() {
+	    return (PivotAddToAggregationTickManager) super.base();
+	}
+
+	@Override
 	public int getWidth(final Class<?> root, final String property) {
-	    // TODO Auto-generated method stub
-	    return 0;
+	    return base().getWidth(enhancer().getManagedType(root), property);
 	}
 
 	@Override
 	public void setWidth(final Class<?> root, final String property, final int width) {
-	    // TODO Auto-generated method stub
+	    base().setWidth(enhancer().getManagedType(root), property, width);
 	}
     }
 
