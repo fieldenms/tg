@@ -6,9 +6,9 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
-import ua.com.fielden.platform.swing.categorychart.AnalysisReportMode;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
+import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
 public abstract class AbstractAnalysisReportView<T extends AbstractEntity, DAO extends IEntityDao<T>, WV extends IAnalysisWizardModel, RV extends IAnalysisReportModel> extends BasePanel {
@@ -20,7 +20,7 @@ public abstract class AbstractAnalysisReportView<T extends AbstractEntity, DAO e
     private final WV analysisWizardModel;
     private final RV analysisReportModel;
 
-    private AnalysisReportMode mode;
+    private ReportMode mode;
     private boolean reviewVisible = true;
 
     public AbstractAnalysisReportView(final AbstractAnalysisReportModel<T, DAO> model, final BlockingIndefiniteProgressLayer tabPaneLayer, final IAnalysisReportPersistentObject pObj) {
@@ -32,7 +32,7 @@ public abstract class AbstractAnalysisReportView<T extends AbstractEntity, DAO e
 	}
     }
 
-    public final void setMode(final AnalysisReportMode mode, final boolean shouldRestore) throws IllegalStateException {
+    public final void setMode(final ReportMode mode, final boolean shouldRestore) throws IllegalStateException {
 	if (this.mode == mode) {
 	    throw new IllegalStateException("The " + getModel().getName() + " report is already in the " + mode.name() + " mode");
 	}
@@ -64,7 +64,7 @@ public abstract class AbstractAnalysisReportView<T extends AbstractEntity, DAO e
 	return analysisReportModel;
     }
 
-    public final AnalysisReportMode getMode() {
+    public final ReportMode getMode() {
 	return mode;
     }
 
@@ -118,7 +118,7 @@ public abstract class AbstractAnalysisReportView<T extends AbstractEntity, DAO e
      * @return
      */
     public final boolean canRun(){
-	return AnalysisReportMode.REPORT.equals(getMode());
+	return ReportMode.REPORT.equals(getMode());
     }
 
     /**
@@ -127,7 +127,7 @@ public abstract class AbstractAnalysisReportView<T extends AbstractEntity, DAO e
      * @return
      */
     public boolean canExport(){
-	return AnalysisReportMode.REPORT.equals(getMode());
+	return ReportMode.REPORT.equals(getMode());
     }
 
     protected abstract WV createWizardModel(BlockingIndefiniteProgressLayer tabPaneLayer, IAnalysisReportPersistentObject pObj);

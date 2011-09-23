@@ -11,9 +11,9 @@ import ua.com.fielden.platform.swing.analysis.AbstractAnalysisReportModel;
 import ua.com.fielden.platform.swing.analysis.AbstractAnalysisReportView;
 import ua.com.fielden.platform.swing.analysis.IAnalysisReportPersistentObject;
 import ua.com.fielden.platform.swing.analysis.IAnalysisWizardModel;
-import ua.com.fielden.platform.swing.categorychart.AnalysisReportMode;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.LifecycleAnalysisPersistentObject;
+import ua.com.fielden.platform.swing.review.report.ReportMode;
 
 /**
  * Chart review for entities which contain "monitoring" properties (which state changes could be monitored during lifecycle).
@@ -28,7 +28,7 @@ public class LifecycleChartReview<T extends AbstractEntity, DAO extends IEntityD
 
     public LifecycleChartReview(final AbstractAnalysisReportModel<T, DAO> model, final BlockingIndefiniteProgressLayer tabPaneLayer, final IAnalysisReportPersistentObject pObj) {
 	super(model, tabPaneLayer, pObj);
-	setMode(AnalysisReportMode.REPORT, false);
+	setMode(ReportMode.REPORT, false);
     }
 
     @Override

@@ -17,6 +17,7 @@ import ua.com.fielden.platform.swing.analysis.AbstractAnalysisReportView;
 import ua.com.fielden.platform.swing.analysis.IAnalysisReportPersistentObject;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.AnalysisPersistentObject;
+import ua.com.fielden.platform.swing.review.report.ReportMode;
 
 public class CategoryChartReview<T extends AbstractEntity, DAO extends IEntityDao<T>> extends AbstractAnalysisReportView<T, DAO, CategoryAnalysisWizardModel<T, DAO>, CategoryAnalysisReportModel<T, DAO>> {
 
@@ -26,10 +27,10 @@ public class CategoryChartReview<T extends AbstractEntity, DAO extends IEntityDa
 	super(model, tabPaneLayer, persistentObject);
 
 	try {
-	    setMode(AnalysisReportMode.REPORT, true);
+	    setMode(ReportMode.REPORT, true);
 	} catch (final IllegalStateException e) {
 	    //JOptionPane.showMessageDialog(this, e.getMessage(), "Information", JOptionPane.INFORMATION_MESSAGE);
-	    setMode(AnalysisReportMode.WIZARD, false);
+	    setMode(ReportMode.WIZARD, false);
 	}
     }
 
@@ -73,7 +74,7 @@ public class CategoryChartReview<T extends AbstractEntity, DAO extends IEntityDa
 
     @Override
     public AnalysisPersistentObject save() {
-	if (getMode() == AnalysisReportMode.WIZARD) {
+	if (getMode() == ReportMode.WIZARD) {
 	    getAnalysisReportModel().updateModel();
 	}
 	final IDistributedProperty selectedDistribution = getAnalysisReportModel().getSelectedDistributionProperty();

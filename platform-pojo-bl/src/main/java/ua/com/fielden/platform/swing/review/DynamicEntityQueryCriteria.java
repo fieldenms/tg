@@ -47,7 +47,7 @@ import ua.com.fielden.platform.utils.PropertyChangeSupportEx.CheckingStrategy;
  * order to add collection of properties, the one must use {@link #addProperties(Collection)} method. There are also defined appropriate methods for removing the properties from
  * the criteria ({@link #removeProperty(List)} and {@link #removeProperties(Collection)}).
  *
- * @author oleh
+ * @author TG Team
  *
  */
 @SuppressWarnings("unchecked")

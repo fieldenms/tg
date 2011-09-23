@@ -38,10 +38,10 @@ import ua.com.fielden.platform.reportquery.IAggregatedProperty;
 import ua.com.fielden.platform.reportquery.IDistributedProperty;
 import ua.com.fielden.platform.swing.analysis.AbstractAnalysisReportView;
 import ua.com.fielden.platform.swing.analysis.IAnalysisWizardModel;
-import ua.com.fielden.platform.swing.categorychart.AnalysisReportMode;
 import ua.com.fielden.platform.swing.dynamicreportstree.AnalysisTree;
 import ua.com.fielden.platform.swing.dynamicreportstree.EntitiesTreeColumn;
 import ua.com.fielden.platform.swing.dynamicreportstree.TreePanel;
+import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.treemodel.AnalysisTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
@@ -148,7 +148,7 @@ public abstract class GroupAnalysisWizardModel<T extends AbstractEntity, DAO ext
 		    configureTree.stopEditing();
 		}
 		try {
-		    reportView.setMode(AnalysisReportMode.REPORT, false);
+		    reportView.setMode(ReportMode.REPORT, false);
 		    updateReportView();
 		} catch (final IllegalStateException ex) {
 		    JOptionPane.showMessageDialog(reportView, "Please choose distribution and aggregation properties.", "Information", JOptionPane.INFORMATION_MESSAGE);
@@ -171,7 +171,7 @@ public abstract class GroupAnalysisWizardModel<T extends AbstractEntity, DAO ext
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
 		try {
-		    reportView.setMode(AnalysisReportMode.REPORT, true);
+		    reportView.setMode(ReportMode.REPORT, true);
 
 		} catch (final IllegalStateException ex) {
 		    JOptionPane.showMessageDialog(reportView, "It's imposible to restore previous view.", "Information", JOptionPane.INFORMATION_MESSAGE);

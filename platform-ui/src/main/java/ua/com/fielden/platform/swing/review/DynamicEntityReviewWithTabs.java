@@ -39,12 +39,12 @@ import ua.com.fielden.platform.swing.analysis.IAnalysisReportModel;
 import ua.com.fielden.platform.swing.analysis.IAnalysisReportPersistentObject;
 import ua.com.fielden.platform.swing.analysis.IAnalysisReportType;
 import ua.com.fielden.platform.swing.analysis.IAnalysisWizardModel;
-import ua.com.fielden.platform.swing.categorychart.AnalysisReportMode;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.file.ExtensionFileFilter;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.pagination.Paginator.IPageController;
+import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
 import com.jidesoft.swing.JideTabbedPane;
@@ -385,7 +385,7 @@ public class DynamicEntityReviewWithTabs<T extends AbstractEntity, DAO extends I
 		}
 		final AbstractAnalysisReportView<T, DAO, ? extends IAnalysisWizardModel, ? extends IAnalysisReportModel> tabComponent = viewTabPanelModel.get(selectedComponentName);
 		if (tabComponent != null) {
-		    tabComponent.setMode(AnalysisReportMode.WIZARD, false);
+		    tabComponent.setMode(ReportMode.WIZARD, false);
 		}
 	    }
 

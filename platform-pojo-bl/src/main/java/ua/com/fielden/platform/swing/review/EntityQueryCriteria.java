@@ -39,6 +39,8 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.MiscUtilities;
 
+import com.google.inject.Inject;
+
 /**
  * Base class for every criteria for retrieval of {@link AbstractEntity}s. Each TG property of this class represents some query criterion.
  *
@@ -56,6 +58,18 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity, DAO extends 
 
     private final DAO dao;
     private final IEntityAggregatesDao entityAggregatesDao;
+
+    /**
+     * Constructs {@link EntityQueryCriteria} instance with specified {@link IEntityAggregatesDao} and {@link IValueMatcherFactory}.
+     * Needed mostly for instantiating through injector.
+     * 
+     * @param entityAggregatesDao
+     * @param valueMatcherFactory
+     */
+    @Inject
+    protected EntityQueryCriteria(final IEntityAggregatesDao entityAggregatesDao, final IValueMatcherFactory valueMatcherFactory){
+	this(null, entityAggregatesDao, valueMatcherFactory);
+    }
 
     protected EntityQueryCriteria(final DAO dao, final IEntityAggregatesDao entityAggregatesDao, final IValueMatcherFactory valueMatcherFactory) {
 	setKey("not required");
