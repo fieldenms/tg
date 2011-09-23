@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -656,7 +657,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		// if property factory cannot instantiate a validator for the specified annotation then null is returned;
 		final IBeforeChangeEventHandler[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), type);
 		if (annotationValidators.length > 0) {
-		    final Map<IBeforeChangeEventHandler, Result> handlersAndResults = new HashMap<IBeforeChangeEventHandler, Result>();
+		    final Map<IBeforeChangeEventHandler, Result> handlersAndResults = new LinkedHashMap<IBeforeChangeEventHandler, Result>();
 		    for (final IBeforeChangeEventHandler handler : annotationValidators) {
 			handlersAndResults.put(handler, null);
 		    }

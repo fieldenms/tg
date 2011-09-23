@@ -19,8 +19,8 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.ANNOTATION_TYPE })
 public @interface Handler {
-    Class<? extends IBeforeChangeEventHandler>[] value();
-    ClassParam[] clazz() default {};
+    Class<? extends IBeforeChangeEventHandler> value();
+    ClassParam[] non_ordinary() default {};
     IntParam[] integer() default {};
     StrParam[] str() default {};
     DblParam[] dbl() default {};
