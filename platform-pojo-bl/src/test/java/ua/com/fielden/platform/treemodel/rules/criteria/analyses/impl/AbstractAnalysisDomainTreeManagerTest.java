@@ -204,10 +204,10 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 
     @Test
     public void test_that_usage_management_works_correctly_for_first_tick(){
-	//At the beginning the list of used properties should be empty.
+	// At the beginning the list of used properties should be empty.
 	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getFirstTick().usedProperties(MasterEntity.class));
 
-	//Add "use properties" and see whether list of "used properties" is correctly ordered.
+	// Add "use properties" and see whether list of "used properties" is correctly ordered.
 	dtm().getFirstTick().use(MasterEntity.class, "booleanProp", true);
 	assertTrue("The property should be used", dtm().getFirstTick().isUsed(MasterEntity.class, "booleanProp"));
 	assertEquals("value is incorrect.", Arrays.asList("booleanProp"), dtm().getFirstTick().usedProperties(MasterEntity.class));

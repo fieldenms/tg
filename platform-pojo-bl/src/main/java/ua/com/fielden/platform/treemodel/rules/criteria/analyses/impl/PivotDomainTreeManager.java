@@ -84,6 +84,31 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	protected PivotAddToDistributionTickRepresentation tr() {
 	    return (PivotAddToDistributionTickRepresentation) super.tr();
 	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = super.hashCode();
+	    result = prime * result + ((propertiesWidths == null) ? 0 : propertiesWidths.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj)
+		return true;
+	    if (!super.equals(obj))
+		return false;
+	    if (getClass() != obj.getClass())
+		return false;
+	    final PivotAddToDistributionTickManager other = (PivotAddToDistributionTickManager) obj;
+	    if (propertiesWidths == null) {
+		if (other.propertiesWidths != null)
+		    return false;
+	    } else if (!propertiesWidths.equals(other.propertiesWidths))
+		return false;
+	    return true;
+	}
     }
 
     public static class PivotAddToAggregationTickManager extends AbstractAnalysisAddToAggregationTickManager implements IPivotAddToAggregationTickManager {
@@ -112,6 +137,31 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	@Override
 	protected PivotAddToAggregationTickRepresentation tr() {
 	    return (PivotAddToAggregationTickRepresentation) super.tr();
+	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = super.hashCode();
+	    result = prime * result + ((propertiesWidths == null) ? 0 : propertiesWidths.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj)
+		return true;
+	    if (!super.equals(obj))
+		return false;
+	    if (getClass() != obj.getClass())
+		return false;
+	    final PivotAddToAggregationTickManager other = (PivotAddToAggregationTickManager) obj;
+	    if (propertiesWidths == null) {
+		if (other.propertiesWidths != null)
+		    return false;
+	    } else if (!propertiesWidths.equals(other.propertiesWidths))
+		return false;
+	    return true;
 	}
     }
 

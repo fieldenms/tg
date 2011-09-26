@@ -23,7 +23,7 @@ public interface IPivotDomainTreeRepresentation extends IAbstractAnalysisDomainT
      * @author TG Team
      *
      */
-    public interface IPivotAddToAggregationTickRepresentation extends IAbstractAnalysisAddToAggregationTickRepresentation, IWidthRepresentation {
+    public interface IPivotAddToDistributionTickRepresentation extends IAbstractAnalysisAddToDistributionTickRepresentation, IWidthRepresentation {
     }
 
     /**
@@ -35,6 +35,6 @@ public interface IPivotDomainTreeRepresentation extends IAbstractAnalysisDomainT
      * @author TG Team
      *
      */
-    public interface IPivotAddToDistributionTickRepresentation extends IAbstractAnalysisAddToDistributionTickRepresentation, IWidthRepresentation {
+    public interface IPivotAddToAggregationTickRepresentation extends IAbstractAnalysisAddToAggregationTickRepresentation, IWidthRepresentation {
     }
 }

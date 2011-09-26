@@ -17,10 +17,12 @@ public interface IAnalysisDomainTreeManager extends IAbstractAnalysisDomainTreeM
      * @author TG Team
      *
      */
-    public interface IAnalysisDomainTreeManagerAndEnhancer extends IDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager {
+    public interface IAnalysisDomainTreeManagerAndEnhancer extends IAbstractAnalysisDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager {
     }
 
     IAnalysisAddToDistributionTickManager getFirstTick();
+    IAnalysisAddToAggregationTickManager getSecondTick();
+    IAnalysisDomainTreeRepresentation getRepresentation();
 
     /**
      * Gets a number of visible distributed values (chart columns) for simple analysis report.
@@ -38,10 +40,7 @@ public interface IAnalysisDomainTreeManager extends IAbstractAnalysisDomainTreeM
     IAnalysisDomainTreeManager setVisibleDistributedValuesNumber(final int visibleDistributedValuesNumber);
 
     /**
-     * This interface defines how domain tree can be managed for <b>analyses</b> specific ("add to distribution").
-     * (Should return single used property)<br><br>
-     *
-     * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances. <br><br>
+     * This interface defines how domain tree can be managed for <b>analyses</b> specific ("add to distribution"). (Should return single used property). <br><br>
      *
      * @author TG Team
      * @see IUsageManager
@@ -55,5 +54,14 @@ public interface IAnalysisDomainTreeManager extends IAbstractAnalysisDomainTreeM
          * @return
          */
         List<String> usedProperties(final Class<?> root);
+    }
+
+    /**
+     * This interface defines how domain tree can be managed for <b>analyses</b> specific ("add to aggregation"). (no special enhancements).<br><br>
+     *
+     * @author TG Team
+     *
+     */
+    public interface IAnalysisAddToAggregationTickManager extends IAbstractAnalysisAddToAggregationTickManager {
     }
 }

@@ -112,50 +112,64 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	}
 
 	@Override
-	public boolean isUsed(final Class<?> root, final String property) {
+	public final boolean isUsed(final Class<?> root, final String property) {
 	    illegalUncheckedProperties(this, root, property, "It's illegal to ask whether the specified property [" + property + "] is 'used' if it is not 'checked' in type [" + root.getSimpleName() + "].");
-	    if (rootsListsOfUsedProperties.containsKey(root)) {
-		return rootsListsOfUsedProperties.get(root).contains(property);
-	    }
-	    return false;
+	    return rootsListsOfUsedProperties.containsKey(root) && rootsListsOfUsedProperties.get(root).contains(property);
 	}
 
 	@Override
 	public void use(final Class<?> root, final String property, final boolean check) {
-	    illegalUncheckedProperties(this, root, property, "It's illegal to ask whether the specified property [" + property + "] is 'used' if it is not 'checked' in type [" + root.getSimpleName() + "].");
-	    if (!rootsListsOfUsedProperties.containsKey(root)) {
-		rootsListsOfUsedProperties.put(root, new ArrayList<String>());
-	    }
-	    final List<String> listOfUsedProperties = rootsListsOfUsedProperties.get(root);
+	    final List<String> listOfUsedProperties = getAndInitUsedProperties(root, property);
 	    if (check && !listOfUsedProperties.contains(property)) {
-		listOfUsedProperties.add(determineIndexToInsert(root,property),property);
+		listOfUsedProperties.add(property);
 	    } else if (!check) {
 		listOfUsedProperties.remove(property);
 	    }
 	}
 
-	/**
-	 * Determines the index of the property to be 'used' among checked properties.
-	 *
-	 * @param root
-	 * @param property
-	 * @return
-	 */
-	private int determineIndexToInsert(final Class<?> root, final String property) {
-	    final List<String> checkedProperties = checkedProperties(root);
-	    final int indexOfChecked = checkedProperties.indexOf(property);
-	    int indexOfUsed = 0;
-	    for(int i = 0; i < indexOfChecked; i++){
-		if(isUsed(root, checkedProperties.get(i))){
-		    indexOfUsed++;
-		}
+	protected List<String> getAndInitUsedProperties(final Class<?> root, final String property) {
+	    illegalUncheckedProperties(this, root, property, "It's illegal to use/unuse the specified property [" + property + "] if it is not 'checked' in type [" + root.getSimpleName() + "].");
+	    if (!rootsListsOfUsedProperties.containsKey(root)) {
+		rootsListsOfUsedProperties.put(root, new ArrayList<String>());
 	    }
-	    return indexOfUsed;
+	    return rootsListsOfUsedProperties.get(root);
 	}
 
 	@Override
-	public List<String> usedProperties(final Class<?> root) {
-	    return rootsListsOfUsedProperties.containsKey(root) ? rootsListsOfUsedProperties.get(root) : new ArrayList<String>();
+	public final List<String> usedProperties(final Class<?> root) {
+	    final List<String> checkedProperties = checkedProperties(root);
+	    final List<String> usedProperties = new ArrayList<String>();
+	    for (final String property : checkedProperties) {
+		if (isUsed(root, property)) {
+		    usedProperties.add(property);
+		}
+	    }
+	    return usedProperties;
+	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = super.hashCode();
+	    result = prime * result + ((rootsListsOfUsedProperties == null) ? 0 : rootsListsOfUsedProperties.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj)
+		return true;
+	    if (!super.equals(obj))
+		return false;
+	    if (getClass() != obj.getClass())
+		return false;
+	    final AbstractAnalysisAddToDistributionTickManager other = (AbstractAnalysisAddToDistributionTickManager) obj;
+	    if (rootsListsOfUsedProperties == null) {
+		if (other.rootsListsOfUsedProperties != null)
+		    return false;
+	    } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties))
+		return false;
+	    return true;
 	}
     }
 
@@ -177,54 +191,43 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 
 	@Override
 	protected IAbstractAnalysisAddToAggregationTickRepresentation tr() {
-	    return (IAbstractAnalysisAddToAggregationTickRepresentation)super.tr();
+	    return (IAbstractAnalysisAddToAggregationTickRepresentation) super.tr();
 	}
 
 	@Override
-	public boolean isUsed(final Class<?> root, final String property) {
+	public final boolean isUsed(final Class<?> root, final String property) {
 	    illegalUncheckedProperties(this, root, property, "It's illegal to ask whether the specified property [" + property + "] is 'used' if it is not 'checked' in type [" + root.getSimpleName() + "].");
-	    if (rootsListsOfUsedProperties.containsKey(root)) {
-		return rootsListsOfUsedProperties.get(root).contains(property);
-	    }
-	    return false;
+	    return rootsListsOfUsedProperties.containsKey(root) && rootsListsOfUsedProperties.get(root).contains(property);
 	}
 
 	@Override
 	public void use(final Class<?> root, final String property, final boolean check) {
-	    illegalUncheckedProperties(this, root, property, "It's illegal to ask whether the specified property [" + property + "] is 'used' if it is not 'checked' in type [" + root.getSimpleName() + "].");
-	    if (!rootsListsOfUsedProperties.containsKey(root)) {
-		rootsListsOfUsedProperties.put(root, new ArrayList<String>());
-	    }
-	    final List<String> listOfUsedProperties = rootsListsOfUsedProperties.get(root);
+	    final List<String> listOfUsedProperties = getAndInitUsedProperties(root, property);
 	    if (check && !listOfUsedProperties.contains(property)) {
-		listOfUsedProperties.add(determineIndexToInsert(root, property), property);
+		listOfUsedProperties.add(property);
 	    } else if (!check) {
 		listOfUsedProperties.remove(property);
 	    }
 	}
 
-	/**
-	 * Determines the index of the property to be 'used' among checked properties.
-	 *
-	 * @param root
-	 * @param property
-	 * @return
-	 */
-	private int determineIndexToInsert(final Class<?> root, final String property) {
-	    final List<String> checkedProperties = checkedProperties(root);
-	    final int indexOfChecked = checkedProperties.indexOf(property);
-	    int indexOfUsed = 0;
-	    for(int i = 0; i < indexOfChecked; i++){
-		if(isUsed(root, checkedProperties.get(i))){
-		    indexOfUsed++;
-		}
+	protected List<String> getAndInitUsedProperties(final Class<?> root, final String property) {
+	    illegalUncheckedProperties(this, root, property, "It's illegal to use/unuse the specified property [" + property + "] if it is not 'checked' in type [" + root.getSimpleName() + "].");
+	    if (!rootsListsOfUsedProperties.containsKey(root)) {
+		rootsListsOfUsedProperties.put(root, new ArrayList<String>());
 	    }
-	    return indexOfUsed;
+	    return rootsListsOfUsedProperties.get(root);
 	}
 
 	@Override
-	public List<String> usedProperties(final Class<?> root) {
-	    return rootsListsOfUsedProperties.containsKey(root) ? rootsListsOfUsedProperties.get(root) : new ArrayList<String>();
+	public final List<String> usedProperties(final Class<?> root) {
+	    final List<String> checkedProperties = checkedProperties(root);
+	    final List<String> usedProperties = new ArrayList<String>();
+	    for (final String property : checkedProperties) {
+		if (isUsed(root, property)) {
+		    usedProperties.add(property);
+		}
+	    }
+	    return usedProperties;
 	}
 
 	@Override
@@ -255,6 +258,37 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 		}
 	    } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
 	    rootsListsOfOrderings.get(root).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
+	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = super.hashCode();
+	    result = prime * result + ((rootsListsOfOrderings == null) ? 0 : rootsListsOfOrderings.hashCode());
+	    result = prime * result + ((rootsListsOfUsedProperties == null) ? 0 : rootsListsOfUsedProperties.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj)
+		return true;
+	    if (!super.equals(obj))
+		return false;
+	    if (getClass() != obj.getClass())
+		return false;
+	    final AbstractAnalysisAddToAggregationTickManager other = (AbstractAnalysisAddToAggregationTickManager) obj;
+	    if (rootsListsOfOrderings == null) {
+		if (other.rootsListsOfOrderings != null)
+		    return false;
+	    } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings))
+		return false;
+	    if (rootsListsOfUsedProperties == null) {
+		if (other.rootsListsOfUsedProperties != null)
+		    return false;
+	    } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties))
+		return false;
+	    return true;
 	}
     }
 

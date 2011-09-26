@@ -255,29 +255,4 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
 	base().setVisible(visible);
 	return this;
     }
-
-    //    /**
-    //     * A specific Kryo serialiser for {@link AnalysisDomainTreeManagerAndEnhancer}.
-    //     *
-    //     * @author TG Team
-    //     *
-    //     */
-    //    public static class AnalysisDomainTreeManagerAndEnhancerSerialiser extends TgSimpleSerializer<AnalysisDomainTreeManagerAndEnhancer> {
-    //	public AnalysisDomainTreeManagerAndEnhancerSerialiser(final TgKryo kryo) {
-    //	    super(kryo);
-    //	}
-    //
-    //	@Override
-    //	public AnalysisDomainTreeManagerAndEnhancer read(final ByteBuffer buffer) {
-    //	    final AbstractAnalysisDomainTreeManager base = readValue(buffer, AbstractAnalysisDomainTreeManager.class);
-    //	    final DomainTreeEnhancer enhancer = readValue(buffer, DomainTreeEnhancer.class);
-    //	    return new AnalysisDomainTreeManagerAndEnhancer(base, enhancer);
-    //	}
-    //
-    //	@Override
-    //	public void write(final ByteBuffer buffer, final AnalysisDomainTreeManagerAndEnhancer manager) {
-    //	    writeValue(buffer, manager.base());
-    //	    writeValue(buffer, manager.enhancer());
-    //	}
-    //    }
 }

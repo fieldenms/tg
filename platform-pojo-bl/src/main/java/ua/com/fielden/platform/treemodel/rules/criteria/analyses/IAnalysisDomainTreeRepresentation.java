@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.treemodel.rules.criteria.analyses;
 
+
 /**
  * This interface defines how domain tree can be represented for simple <b>analyses</b> (single property distribution). <br><br>
  *
@@ -9,4 +10,24 @@ package ua.com.fielden.platform.treemodel.rules.criteria.analyses;
  *
  */
 public interface IAnalysisDomainTreeRepresentation extends IAbstractAnalysisDomainTreeRepresentation {
+    IAnalysisAddToDistributionTickRepresentation getFirstTick();
+    IAnalysisAddToAggregationTickRepresentation getSecondTick();
+
+    /**
+     * This interface defines how domain tree can be represented for <b>analyses</b> specific ("add to distribution").
+     *
+     * @author TG Team
+     *
+     */
+    public interface IAnalysisAddToDistributionTickRepresentation extends IAbstractAnalysisAddToDistributionTickRepresentation {
+    }
+
+    /**
+     * This interface defines how domain tree can be represented for <b>pivot analyses</b> specific ("add to distribution").
+     *
+     * @author TG Team
+     *
+     */
+    public interface IAnalysisAddToAggregationTickRepresentation extends IAbstractAnalysisAddToAggregationTickRepresentation {
+    }
 }

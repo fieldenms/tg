@@ -155,6 +155,37 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	    illegalExcludedProperties(getDtr(), root, "", "Could not set an 'ordering by default' for already 'excluded' type [" + root.getSimpleName() + "].");
 	    rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(orderedPropertiesByDefault));
 	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = super.hashCode();
+	    result = prime * result + ((propertiesOrderingDisablement == null) ? 0 : propertiesOrderingDisablement.hashCode());
+	    result = prime * result + ((rootsListsOfOrderings == null) ? 0 : rootsListsOfOrderings.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj)
+		return true;
+	    if (!super.equals(obj))
+		return false;
+	    if (getClass() != obj.getClass())
+		return false;
+	    final AbstractAnalysisAddToAggregationTickRepresentation other = (AbstractAnalysisAddToAggregationTickRepresentation) obj;
+	    if (propertiesOrderingDisablement == null) {
+		if (other.propertiesOrderingDisablement != null)
+		    return false;
+	    } else if (!propertiesOrderingDisablement.equals(other.propertiesOrderingDisablement))
+		return false;
+	    if (rootsListsOfOrderings == null) {
+		if (other.rootsListsOfOrderings != null)
+		    return false;
+	    } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings))
+		return false;
+	    return true;
+	}
     }
 
     @Override
@@ -175,25 +206,4 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	}
 	return availableFunctions;
     }
-
-    //    /**
-    //     * A specific Kryo serialiser for {@link AnalysisDomainTreeRepresentation}.
-    //     *
-    //     * @author TG Team
-    //     *
-    //     */
-    //    public static class AnalysisDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<AnalysisDomainTreeRepresentation> {
-    //	public AnalysisDomainTreeRepresentationSerialiser(final TgKryo kryo) {
-    //	    super(kryo);
-    //	}
-    //
-    //	@Override
-    //	public AnalysisDomainTreeRepresentation read(final ByteBuffer buffer) {
-    //	    final Set<Class<?>> rootTypes = readValue(buffer, HashSet.class);
-    //	    final Set<Pair<Class<?>, String>> excludedProperties = readValue(buffer, HashSet.class);
-    //	    final ITickRepresentation firstTick = readValue(buffer, ITickRepresentation.class);
-    //	    final ITickRepresentation secondTick = readValue(buffer, ITickRepresentation.class);
-    //	    return new AnalysisDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
-    //	}
-    //    }
 }
