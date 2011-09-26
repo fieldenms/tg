@@ -1,6 +1,4 @@
-package ua.com.fielden.platform.domain;
-
-import java.util.Date;
+package ua.com.fielden.platform.sample.domain;
 
 import org.junit.Ignore;
 
@@ -10,28 +8,34 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(String.class)
 @MapEntityTo
 @DescTitle("Description")
 @Ignore
-public class TgVehicle extends AbstractEntity<String> {
+public class TgVehicleModel extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @MapTo()
-    private Date initDate;
+    @IsProperty
+    @MapTo
+    @Title(value = "Test vehicle model", desc = "Test vehicle model")
+    private TgVehicleMake make;
 
-    @IsProperty @MapTo()
-    private TgVehicle replacedBy;
+    @Observable
+    public TgVehicleModel setMake(final TgVehicleMake make) {
+	this.make = make;
+	return this;
+    }
 
-    @IsProperty @MapTo(userType = ISimpleMoneyType.class)
-    private Money purchasePrice;
+    public TgVehicleMake getMake() {
+	return make;
+    }
 
     /**
      * Constructor for (@link EntityFactory}.
      */
-    protected TgVehicle() {
+    protected TgVehicleModel() {
     }
 }

@@ -1,5 +1,7 @@
 <!DOCTYPE dataset SYSTEM "src/test/resources/data-files/db.dtd">
 <dataset>
+	<UNIQUE_ID _ID="1" NEXT_VALUE="501"  _VERSION="0"/>
+
     <CRAFT _ID="0" _VERSION="0"	KEY_="PERSON" DESC_="DESC" IS_BASE="Y" USER_NAME="USER" USER_PASSWORD="PASSWD"/>
     <MAIN_MENU _ID="0" _VERSION="0"	KEY_="type"	DESC_="desc" ITEM_ORDER="1"/>
     <ENTITY_CENTRE_CONFIG/>

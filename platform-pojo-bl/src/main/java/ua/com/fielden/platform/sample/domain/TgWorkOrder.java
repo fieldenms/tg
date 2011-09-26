@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.domain;
+package ua.com.fielden.platform.sample.domain;
 
 import org.junit.Ignore;
 
@@ -13,15 +13,16 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 @MapEntityTo
 @DescTitle("Description")
 @Ignore
-public class TgVehicleModel extends AbstractEntity<String> {
+public class TgWorkOrder extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @MapTo()
-    private TgVehicleMake make;
+    @IsProperty
+    @MapTo()
+    private TgVehicle vehicle;
 
     /**
      * Constructor for (@link EntityFactory}.
      */
-    protected TgVehicleModel() {
+    protected TgWorkOrder() {
     }
 }

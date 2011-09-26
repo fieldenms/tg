@@ -2,11 +2,11 @@ package ua.com.fielden.platform.entity.query;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.domain.TgVehicle;
 import ua.com.fielden.platform.entity.query.model.transformation.SqlEntQuery;
 import ua.com.fielden.platform.entity.query.model.transformation.Table;
 import ua.com.fielden.platform.entity.query.model.transformation.TableColumn;
 import ua.com.fielden.platform.entity.query.model.transformation.YieldedProp;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
 import static org.junit.Assert.assertEquals;
 
 

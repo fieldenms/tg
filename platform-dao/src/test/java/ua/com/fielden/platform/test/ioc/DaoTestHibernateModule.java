@@ -19,7 +19,15 @@ import ua.com.fielden.platform.equery.interfaces.IFilter;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.keygen.IKeyNumberGenerator;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
+import ua.com.fielden.platform.migration.controller.IMigrationErrorDao;
+import ua.com.fielden.platform.migration.controller.IMigrationHistoryDao;
+import ua.com.fielden.platform.migration.controller.IMigrationRunDao;
+import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
+import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
+import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
+import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
@@ -44,6 +52,8 @@ import ua.com.fielden.platform.test.domain.entities.daos.IWorkshopDao;
 import ua.com.fielden.platform.test.domain.entities.daos.PersonDao;
 import ua.com.fielden.platform.test.domain.entities.daos.RotableClassDao;
 import ua.com.fielden.platform.test.domain.entities.daos.RotableDao;
+import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleMakeDao;
+import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleModelDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WagonClassDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WagonDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WagonSlotDao;
@@ -66,6 +76,7 @@ import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStruc
 
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
+
 
 /**
  * Guice injector module for Hibernate related injections for testing purposes.
@@ -110,6 +121,12 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
 	bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
 	bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
+
+	bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
+	bind(ITgVehicleMake.class).to(TgVehicleMakeDao.class);
+	bind(IMigrationErrorDao.class).to(MigrationErrorDao.class);
+	bind(IMigrationRunDao.class).to(MigrationRunDao.class);
+	bind(IMigrationHistoryDao.class).to(MigrationHistoryDao.class);
 
 	bind(IDaoFactory.class).toInstance(getDaoFactory());
 	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);

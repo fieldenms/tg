@@ -9,9 +9,6 @@ import java.util.Set;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import ua.com.fielden.platform.domain.TgVehicle;
-import ua.com.fielden.platform.domain.TgVehicleModel;
-import ua.com.fielden.platform.domain.TgWorkOrder;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.query;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -53,6 +50,9 @@ import ua.com.fielden.platform.entity.query.model.elements.SetTestModel;
 import ua.com.fielden.platform.entity.query.model.elements.YieldModel;
 import ua.com.fielden.platform.entity.query.model.elements.YieldsModel;
 import ua.com.fielden.platform.entity.query.model.transformation.QueryModelEnhancer;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import static org.junit.Assert.assertEquals;
 
 public class QueryModelCompositionTest {

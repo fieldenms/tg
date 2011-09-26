@@ -125,6 +125,12 @@
 			<artifactId>ant</artifactId>
 			<version>1.7.0</version>
 		</dependency>
+		<dependency>
+			<groupId>fielden</groupId>
+			<artifactId>platform-test-domain</artifactId>
+			<version>${version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<resources>

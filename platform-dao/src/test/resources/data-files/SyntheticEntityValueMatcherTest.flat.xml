@@ -1,4 +1,6 @@
 <dataset>
+	<UNIQUE_ID _ID="1" NEXT_VALUE="501"  _VERSION="0"/>
+	
 	<COMPLEX_KEY_ENTITY _ID="1" _VERSION="0" DESC_="ckentity desc 1" />
 	<COMPLEX_KEY_ENTITY _ID="2" _VERSION="0" DESC_="ckentity desc 2" />
 	<COMPLEX_KEY_ENTITY _ID="3" _VERSION="0" DESC_="ckentity desc 3" />

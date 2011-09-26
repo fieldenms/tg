@@ -12,15 +12,16 @@ import org.hibernate.Hibernate;
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
-import ua.com.fielden.platform.domain.TgVehicle;
-import ua.com.fielden.platform.domain.TgWorkOrder;
 import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
+
 
 public class EntityFetcherTestCase extends TestCase {
     final Injector injector = new ApplicationInjectorFactory().add(new HibernateUserTypesModule()).getInjector();

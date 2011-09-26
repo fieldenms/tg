@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.domain;
+package ua.com.fielden.platform.sample.domain;
 
 import org.junit.Ignore;
 

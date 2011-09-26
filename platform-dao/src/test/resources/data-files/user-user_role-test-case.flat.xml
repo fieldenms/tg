@@ -1,4 +1,6 @@
 <dataset>
+	<UNIQUE_ID _ID="1" NEXT_VALUE="501"  _VERSION="0"/>
+	
 	<USER_ROLE _ID="1" _VERSION="0" KEY_="role1" DESC_="role desc 1"/>
 	<USER_ROLE _ID="2" _VERSION="0" KEY_="role2" DESC_="role desc 2"/>
 	<USER_ROLE _ID="3" _VERSION="0" KEY_="role3" DESC_="role desc 3"/>

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import java.net.URL;
+import java.sql.DriverManager;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +18,10 @@ import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.keygen.KeyNumber;
+import ua.com.fielden.platform.migration.LegacyConnectionModule;
+import ua.com.fielden.platform.migration.MigrationError;
+import ua.com.fielden.platform.migration.MigrationHistory;
+import ua.com.fielden.platform.migration.MigrationRun;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
@@ -26,6 +31,8 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -49,6 +56,8 @@ import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
+
 
 /**
  * Provides platform specific implementation of {@link IDbDrivenTestCaseConfiguration}, which is mainly related to the use of {@link DaoTestHibernateModule}.
@@ -67,7 +76,8 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 	    EntityCentreConfig.class, EntityMasterConfig.class, EntityLocatorConfig.class, //
 	    MainMenuItem.class, MainMenuItemInvisibility.class, KeyNumber.class, User.class, UserRole.class, //
 	    UserAndRoleAssociation.class, SecurityRoleAssociation.class, EntityWithMoney.class, EntityWithTaxMoney.class, //
-	    EntityWithExTaxAndTaxMoney.class, EntityWithSimpleTaxMoney.class, EntityWithSimpleMoney.class, EntityWithDynamicCompositeKey.class };
+	    EntityWithExTaxAndTaxMoney.class, EntityWithSimpleTaxMoney.class, EntityWithSimpleMoney.class, EntityWithDynamicCompositeKey.class,
+	    TgVehicleMake.class, TgVehicleModel.class, MigrationError.class, MigrationHistory.class, MigrationRun.class};
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
 
@@ -91,7 +101,19 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 
 	    hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
 	    hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()), mappingsGenerator);
-	    injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
+	    injector = new ApplicationInjectorFactory().add(hibernateModule).add(new LegacyConnectionModule(new Provider() {
+		@Override
+		public Object get() {
+		    try {
+			final String connectionUrl = "jdbc:h2:mem:db;DB_CLOSE_DELAY=-1";
+			Class.forName("org.h2.Driver");
+			return DriverManager.getConnection(connectionUrl, "sa", "");
+		    } catch (final Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		    }
+		}
+	    })).getInjector();
 	    entityFactory = injector.getInstance(EntityFactory.class);
 	    interceptor.setFactory(entityFactory);
 
