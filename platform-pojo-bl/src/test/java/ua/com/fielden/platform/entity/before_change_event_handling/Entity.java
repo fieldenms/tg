@@ -27,11 +27,12 @@ import ua.com.fielden.platform.entity.validation.NotNullValidator;
 public class Entity extends AbstractEntity<String> {
     @IsProperty
     @MapTo
-    @Title(value = "Property", desc = "Description")
-    private String property;
+    @Title(value = "Property 1", desc = "Description")
+    private String property1 = "default value";
 
     @Observable
     @BeforeChange({
+	@Handler(value = NotNullValidator.class, str = {@StrParam(name = "validationMsg", value = "Property cannot be null.")}),
 	@Handler(value = BeforeChangeEventHandler.class,
 		 integer = {@IntParam(name = "intParam1", value = 1), @IntParam(name = "intParam2", value = 12)},
 		 str = {@StrParam(name = "strParam", value = "string value")},
@@ -40,15 +41,14 @@ public class Entity extends AbstractEntity<String> {
 		 date_time = {@DateTimeParam(name = "dateTimeParam", value = "2011-12-01 00:00:00")},
 		 money = {@MoneyParam(name = "moneyParam", value = "12.36")},
 		 non_ordinary={@ClassParam(name = "controllerParam", value = Controller.class)}),
-        @Handler(NotNullValidator.class)
+        @Handler(InvalidBeforeChangeEventHandler.class)
     })
-    public Entity setProperty(final String property) {
-	this.property = property;
+    public Entity setProperty1(final String property) {
+	this.property1 = property;
 	return this;
     }
 
-    public String getProperty() {
-	return property;
+    public String getProperty1() {
+	return property1;
     }
-
 }

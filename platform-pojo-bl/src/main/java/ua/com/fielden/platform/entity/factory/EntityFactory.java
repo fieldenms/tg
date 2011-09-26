@@ -139,7 +139,6 @@ public class EntityFactory {
      * @param entity
      * @throws RuntimeException
      */
-    @SuppressWarnings("unchecked")
     private void setReferenceToThis(final AbstractEntity entity) {
 	try {
 	    final Method method = Reflector.getMethod(entity.getType(), "setEntityFactory", EntityFactory.class);
@@ -169,8 +168,7 @@ public class EntityFactory {
      * @return
      * @throws Exception
      */
-    public synchronized <T extends AbstractEntity<K>, K extends Comparable> T newEntity(final Class<T> entityClass, final Long id, final K key, final String desc)
-    throws RuntimeException {
+    public synchronized <T extends AbstractEntity<K>, K extends Comparable> T newEntity(final Class<T> entityClass, final Long id, final K key, final String desc) {
 	try {
 	    final T entity = injector.getInstance(entityClass);
 	    setReferenceToThis(entity);
@@ -193,7 +191,7 @@ public class EntityFactory {
     /**
      * Convenient constructor for instantiation of the brand new entity with no id yet assigned and with no description.
      */
-    public <T extends AbstractEntity<K>, K extends Comparable> T newByKey(final Class<T> entityClass, final K key) throws RuntimeException {
+    public <T extends AbstractEntity<K>, K extends Comparable> T newByKey(final Class<T> entityClass, final K key) {
 	return newEntity(entityClass, null, key, null);
     }
 

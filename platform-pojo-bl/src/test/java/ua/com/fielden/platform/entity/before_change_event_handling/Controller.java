@@ -7,7 +7,17 @@ package ua.com.fielden.platform.entity.before_change_event_handling;
  *
  */
 public class Controller {
+    private boolean invoked = false;
+
     public void run() {
-	System.out.println("Controller has executed.");
+	setInvoked(true);
+    }
+
+    public boolean isInvoked() {
+        return invoked;
+    }
+
+    public void setInvoked(final boolean invoked) {
+        this.invoked = invoked;
     }
 }

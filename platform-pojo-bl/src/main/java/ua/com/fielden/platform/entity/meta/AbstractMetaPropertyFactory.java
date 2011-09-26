@@ -51,6 +51,11 @@ import com.google.inject.Injector;
  */
 public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactory {
 
+    public static final String UNSUPPORTED_VALIDATION_ANNOTATION = "Unsupported validation annotation has been encountered.";
+    public static final String UNRECOGNISED_VALIDATION_ANNOTATION = "Unrecognised validation annotation has been encountered.";
+    public static final String INJECTOR_IS_MISSING = "Meta-property factory is not fully initialised -- injector is missing";
+    public static final String BCE_HANDLER_WITH_ANOTHER_BCE_HANDLER_AS_PARAMETER = "BCE handler should not have a another BCE handler as its parameter.";
+
     protected final NotNullValidator notNullValidator = new NotNullValidator();
     protected final NotEmptyValidator notEmptyValidator = new NotEmptyValidator();
     protected final FinalValidator finalValidator = new FinalValidator();
@@ -80,7 +85,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     final String propertyName,//
     final Class<?> propertyType) throws Exception {
 	if (injector == null) {
-	    throw new IllegalStateException("Meta-property factory is not fully initialised -- injector is missing");
+	    throw new IllegalStateException(INJECTOR_IS_MISSING);
 	}
 	// identify the type of annotation
 	ValidationAnnotation value = null;
@@ -91,7 +96,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	}
 	// check whether it can be recognised as a valid annotation permitted for validation purpose
 	if (value == null) {
-	    throw new IllegalArgumentException("Unrecognised validation annotation has been encountered.");
+	    throw new IllegalArgumentException(UNRECOGNISED_VALIDATION_ANNOTATION);
 	}
 	// try to instantiate validator
 	switch (value) {
@@ -121,7 +126,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	case BEFORE_CHANGE:
 	    return createBeforeChange(entity, propertyName, (BeforeChange) annotation);
 	default:
-	    throw new IllegalArgumentException("Unsupported validation annotation has been encountered.");
+	    throw new IllegalArgumentException(UNSUPPORTED_VALIDATION_ANNOTATION);
 	}
     }
 
@@ -183,6 +188,10 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     private void initNonOrdinaryHandlerParameters(final AbstractEntity<?> entity, final Handler hd, final IBeforeChangeEventHandler handler) {
 	for (final ClassParam param : hd.non_ordinary()) {
 	    final Class<?> type = param.value();
+	    if (IBeforeChangeEventHandler.class.isAssignableFrom(type)) {
+		throw new IllegalArgumentException(BCE_HANDLER_WITH_ANOTHER_BCE_HANDLER_AS_PARAMETER);
+	    }
+
 	    final Object value = injector.getInstance(type);
 	    final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
 	    paramField.setAccessible(true);

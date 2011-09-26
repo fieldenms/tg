@@ -13,11 +13,16 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * Checks value for null and empty in case where new value is instance of String.
- * 
- * @author 01es
- * 
+ *
+ * @author TG Team
+ *
  */
 public class NotNullValidator implements IBeforeChangeEventHandler {
+
+    /**
+     * Validation message, which can be set as part of BCE handler declaration.
+     */
+    private String validationMsg;
 
     public NotNullValidator() {
     }
@@ -26,7 +31,8 @@ public class NotNullValidator implements IBeforeChangeEventHandler {
     public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 	final Object entity = property.getEntity();
 	final NotNull notNull = findNotNullAnnotation(mutatorAnnotations);
-	final String errorMsg = !isEmpty(notNull.value()) ? notNull.value() : "<html>Null or empty value is not permitted for property <b>" + property.getName() + "</b></html>";
+	final String msg = "<html>Null or empty value is not permitted for property <b>" + property.getName() + "</b></html>";
+	final String errorMsg = notNull != null ?(!isEmpty(notNull.value()) ? notNull.value() : msg) : (!isEmpty(validationMsg) ? validationMsg : msg);
 
 	return isNull(newValue, oldValue) //
 	? new Result(entity, new IllegalArgumentException(errorMsg)) //
@@ -35,7 +41,7 @@ public class NotNullValidator implements IBeforeChangeEventHandler {
 
     /**
      * Convenient method to determine if the newValue is "null" or is empty in terms of value.
-     * 
+     *
      * @param newValue
      * @param oldValue
      * @return
@@ -51,7 +57,7 @@ public class NotNullValidator implements IBeforeChangeEventHandler {
 
     /**
      * A convenient method to find NotNull annotation instance in the list of annotations be class.
-     * 
+     *
      * @param mutatorAnnotations
      * @return
      */
@@ -63,5 +69,4 @@ public class NotNullValidator implements IBeforeChangeEventHandler {
 	}
 	return null;
     }
-
 }
