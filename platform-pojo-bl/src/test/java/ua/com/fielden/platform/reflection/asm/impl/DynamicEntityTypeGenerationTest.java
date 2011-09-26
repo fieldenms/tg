@@ -22,7 +22,7 @@ import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.IMetaPropertyDefiner;
+import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
@@ -168,9 +168,9 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_observation_of_setter_for_new_property_in_instance_of_generated_entity_type() throws Exception {
 	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(pd1, pd1, pd1).endModification();
-	module.getDomainMetaPropertyConfig().setDefiner(newType, NEW_PROPERTY_1, new IMetaPropertyDefiner() {
+	module.getDomainMetaPropertyConfig().setDefiner(newType, NEW_PROPERTY_1, new IAfterChangeEventHandler() {
 	    @Override
-	    public void define(final MetaProperty property, final Object entityPropertyValue) {
+	    public void handle(final MetaProperty property, final Object entityPropertyValue) {
 		observed = true;
 	    }
 	});

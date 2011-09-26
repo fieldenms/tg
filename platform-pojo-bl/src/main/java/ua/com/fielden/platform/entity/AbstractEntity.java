@@ -40,11 +40,12 @@ import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
-import ua.com.fielden.platform.entity.meta.IMetaPropertyDefiner;
+import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
@@ -600,13 +601,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
 		// if setter is annotated then try to instantiate specified validator
 		//logger.debug("Collecting validators for " + field.getName());
-		final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators = collectValidators(metaPropertyFactory, field, type, isCollectional);
-		// create meta definer
-		//logger.debug("Initiating meta-property definer for " + field.getName());
-		final IMetaPropertyDefiner definer = metaPropertyFactory.create(this, field.getName());
+		final Set<Annotation> declatedValidationAnnotations = new HashSet<Annotation>();
+		final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators = collectValidators(metaPropertyFactory, field, type, isCollectional, declatedValidationAnnotations);
+		// create ACE handler
+		//logger.debug("Initiating meta-property ACE handler for " + field.getName());
+		final IAfterChangeEventHandler definer = metaPropertyFactory.create(this, field);
 		// create meta-property
 		//logger.debug("Creating meta-property for " + field.getName());
-		final MetaProperty metaProperty = new MetaProperty(this, field, type, isKey, isCollectional, propertyAnnotationType, field.isAnnotationPresent(Calculated.class), isUpperCase, validators, definer, extractDependentProperties(field, fields));
+		final MetaProperty metaProperty = new MetaProperty(this, field, type, isKey, isCollectional, propertyAnnotationType, field.isAnnotationPresent(Calculated.class), isUpperCase, declatedValidationAnnotations, validators, definer, extractDependentProperties(field, fields));
 		// define meta-property properties used most commonly for UI construction: required, editable, title and desc //
 		//logger.debug("Initialising meta-property for " + field.getName());
 		initProperty(keyMembers, field, metaProperty);
@@ -644,7 +646,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return map of validators
      * @throws Exception
      */
-    private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> collectValidators(final IMetaPropertyFactory metaPropertyFactory, final Field field, final Class<?> type, final boolean isCollectional)
+    private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> collectValidators(final IMetaPropertyFactory metaPropertyFactory, final Field field, final Class<?> type, final boolean isCollectional, final Set<Annotation> validationAnnotations)
     throws Exception {
 	//logger.debug("Start collecting validators for property " + field.getName() + "...");
 	try {
@@ -665,6 +667,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		}
 	    }
 	    // logger.debug("Finished collecting validators for property " + field.getName() + ".");
+	    validationAnnotations.addAll(propertyValidationAnotations);
+
 	    return validators;
 	} catch (final Exception ex) {
 	    logger.error("Exception during collection of validators for property " + field.getName() + ".", ex);
@@ -749,6 +753,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
 	// try to obtain setter
 	propertyValidationAnotations.addAll(extractSetterAnnotations(field, type));
+	propertyValidationAnotations.addAll(extractFieldBeforeChangeAnnotations(field));
 
 	// if field represents a collectional property then it may have other mutators
 	if (isCollectional) {
@@ -831,6 +836,22 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	} catch (final NoSuchMethodException e1) {
 	    // do nothing if setter does not exist
 	    logger.debug("There is no setter for property " + field.getName() + ".");
+	}
+	return propertyValidationAnotations;
+    }
+
+    /**
+     * Processed BCE and ACE declarations in order to instantiate event handlers.
+     *
+     * @param field
+     * @param type
+     * @return
+     */
+    private List<Annotation> extractFieldBeforeChangeAnnotations(final Field field) {
+	final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
+	final BeforeChange bce = field.getAnnotation(BeforeChange.class);
+	if (bce != null) {
+	    propertyValidationAnotations.add(bce);
 	}
 	return propertyValidationAnotations;
     }

@@ -7,7 +7,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -24,7 +26,6 @@ import ua.com.fielden.platform.entity.validation.NotNullValidator;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
@@ -48,6 +49,8 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
  * <p>
  * <b>Date: 2010-03-18</b><br>
  * Implemented support for restoring to original value with validation error cancellation.<br>
+ * <b>Date: 2011-09-26</b><br>
+ * Significant modification due to introduction of BCE and ACE event lifecycle.
  *
  *
  * @author TG Team
@@ -59,7 +62,8 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     private Class<?> type;
     private final Class<?> propertyAnnotationType;
     private final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators;
-    private final IMetaPropertyDefiner definer;
+    private final Set<Annotation> validationAnnotations = new HashSet<Annotation>();
+    private final IAfterChangeEventHandler aceHandler;
     private final boolean key;
     private final boolean collectional;
     /**
@@ -117,13 +121,15 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      */
     public MetaProperty(final AbstractEntity<?> entity, final Field field, final Class<?> type, //
     final boolean isKey, final boolean isCollectional, final Class<?> propertyAnnotationType, final boolean calculated, final boolean upperCase,//
-    final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators, final IMetaPropertyDefiner definer, final String[] dependentPropertyNames) {
+    final Set<Annotation> validationAnnotations,//
+    final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators, final IAfterChangeEventHandler aceHandler, final String[] dependentPropertyNames) {
 	this.entity = entity;
 	this.name = field.getName();
 	this.type = type;
 	this.key = isKey;
+	this.validationAnnotations.addAll(validationAnnotations);
 	this.validators = validators;
-	this.definer = definer;
+	this.aceHandler = aceHandler;
 	this.collectional = isCollectional;
 	this.propertyAnnotationType = propertyAnnotationType;
 	this.calculated = calculated;
@@ -179,16 +185,11 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * @return revalidation result
      */
     public synchronized final Result revalidate(final boolean ignoreRequiredness) {
-	try {
-	    // revalidation is required only is there is an assigned value
-	    if (assigned) {
-		final Method mutator = Reflector.obtainPropertySetter(getEntity().getType(), getName());
-		return validate(getLastAttemptValue(), null, AnnotationReflector.getValidationAnnotations(mutator), ignoreRequiredness);
-	    }
-	    return Result.successful(this);
-	} catch (final NoSuchMethodException e) {
-	    throw new IllegalStateException("Cannot obtain setter for property " + getEntity().getClass().getName() + "." + getName(), e);
+	// revalidation is required only is there is an assigned value
+	if (assigned) {
+	    return validate(getLastAttemptValue(), null, validationAnnotations, ignoreRequiredness);
 	}
+	return Result.successful(this);
     }
 
     /**
@@ -310,15 +311,16 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Sets validation result specifically for {@link ValidationAnnotation.REQUIRED};
+     *
      * @param validationResult
      */
     public synchronized final void setRequiredValidationResult(final Result validationResult) {
 	setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.REQUIRED);
     }
 
-
     /**
      * Sets validation result specifically for {@link ValidationAnnotation.ENTITY_EXISTS};
+     *
      * @param validationResult
      */
     public synchronized final void setEntityExistsValidationResult(final Result validationResult) {
@@ -327,6 +329,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     /**
      * Sets validation result specifically for {@link ValidationAnnotation.REQUIRED};
+     *
      * @param validationResult
      */
     public synchronized final void setDomainValidationResult(final Result validationResult) {
@@ -389,7 +392,8 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      * or the last result of the first failed validator. Most validation annotations are associated with a single validator. But some, such as
      * {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
      *
-     * @param va -- validation annotation.
+     * @param va
+     *            -- validation annotation.
      * @return
      */
     public synchronized final Result getValidationResult(final ValidationAnnotation va) {
@@ -409,7 +413,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     public synchronized final boolean hasWarnings() {
 	final Result failure = getFirstWarning();
-	return failure  != null;
+	return failure != null;
     }
 
     /**
@@ -430,8 +434,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     }
 
     /**
-     * This method invokes {@link #isValid()} and if its result is <code>true</code> (i.e. valid) then
-     * additional check kicks in to ensure requiredness validation.
+     * This method invokes {@link #isValid()} and if its result is <code>true</code> (i.e. valid) then additional check kicks in to ensure requiredness validation.
      *
      * @return
      */
@@ -706,14 +709,14 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     }
 
     /**
-     * Invokes {@link IMetaPropertyDefiner#define(Object)} if it has been provided.
+     * Invokes {@link IAfterChangeEventHandler#handle(MetaProperty, Object)} if it has been provided.
      *
      * @param entityPropertyValue
      * @return
      */
     public final MetaProperty define(final Object entityPropertyValue) {
-	if (definer != null) {
-	    definer.define(this, entityPropertyValue);
+	if (aceHandler != null) {
+	    aceHandler.handle(this, entityPropertyValue);
 	}
 	return this;
     }
@@ -1032,5 +1035,23 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 
     public void setAssigned(final boolean hasAssignedValue) {
 	this.assigned = hasAssignedValue;
+    }
+
+    /**
+     * Returns a list of validation annotations associated with this property.
+     *
+     * @return
+     */
+    public Set<Annotation> getValidationAnnotations() {
+	return Collections.unmodifiableSet(validationAnnotations);
+    }
+
+    /**
+     * Returns property ACE handler.
+     *
+     * @return
+     */
+    public IAfterChangeEventHandler getAceHandler() {
+        return aceHandler;
     }
 }

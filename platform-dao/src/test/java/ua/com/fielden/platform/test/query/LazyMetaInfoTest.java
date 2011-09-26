@@ -3,7 +3,7 @@ package ua.com.fielden.platform.test.query;
 import org.hibernate.Hibernate;
 
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
-import ua.com.fielden.platform.entity.meta.IMetaPropertyDefiner;
+import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.domain.entities.Bogie;
@@ -36,23 +36,23 @@ public class LazyMetaInfoTest extends DbDrivenTestCase {
 	super.setUp();
 	resetStates();
 
-	domainConfig.setDefiner(Bogie.class, "slots", new IMetaPropertyDefiner() {
+	domainConfig.setDefiner(Bogie.class, "slots", new IAfterChangeEventHandler() {
 	    @Override
-	    public void define(final MetaProperty property, final Object entityPropertyValue) {
+	    public void handle(final MetaProperty property, final Object entityPropertyValue) {
 		setSlotsDefinerInvoked(true);
 
 	    }
 	});
 
-	domainConfig.setDefiner(Bogie.class, "rotableClass", new IMetaPropertyDefiner() {
+	domainConfig.setDefiner(Bogie.class, "rotableClass", new IAfterChangeEventHandler() {
 	    @Override
-	    public void define(final MetaProperty property, final Object entityPropertyValue) {
+	    public void handle(final MetaProperty property, final Object entityPropertyValue) {
 		rotClassDefinerInvoked = true;
 	    }
 	});
-	domainConfig.setDefiner(Bogie.class, "location", new IMetaPropertyDefiner() {
+	domainConfig.setDefiner(Bogie.class, "location", new IAfterChangeEventHandler() {
 	    @Override
-	    public void define(final MetaProperty property, final Object entityPropertyValue) {
+	    public void handle(final MetaProperty property, final Object entityPropertyValue) {
 		entityPropertyValue.toString(); // This action will initialise proxy!!!
 		locationDefinerInvoked = true;
 	    }

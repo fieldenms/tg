@@ -8,27 +8,34 @@ import java.util.Date;
 
 import org.joda.time.DateTime;
 
-import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
+import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.types.Money;
 
 /**
- * Describes BCE handler. Requires handler type to be specified.
+ * An annotation to be used for annotating property's getter in order to process the fact that the property value has changed.
  * <p>
- * May provide named parameters if required.
+ * Parameter <code>value</code> accepts a class handling the event. Unlike BCE, there can be only one ACE event handler.
+ * <p>
+ * Similarly to {@link Handler}, named parameters can be provided if required.
  * All provided parameters are set for the handler instance using field with the name matching the parameter name.
  * Thus, each handler class must have fields for each specified parameter.
+ * <p>
+ * <b>IMPORTANT:</b><i>At this stage this annotation should be used strictly for setters (i.e. collectional property decrementros and incrementros are not supported.)</i>
+ *
  *
  * @author TG Team
+ *
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.ANNOTATION_TYPE })
-public @interface Handler {
+@Target({ ElementType.FIELD })
+public @interface AfterChange {
     /**
-     * Class indicating an BCE handler.
+     * Class indicating an ACE handler.
      *
      * @return
      */
-    Class<? extends IBeforeChangeEventHandler> value();
+    Class<? extends IAfterChangeEventHandler> value();
+
     /**
      * Should be used for specifying non-ordinary parameters of the handler. All listed classes should be suitable for instantiation with an injector.
      *

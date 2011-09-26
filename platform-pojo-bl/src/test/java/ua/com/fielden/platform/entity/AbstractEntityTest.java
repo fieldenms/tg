@@ -24,7 +24,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
-import ua.com.fielden.platform.entity.meta.IMetaPropertyDefiner;
+import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -72,9 +72,9 @@ public class AbstractEntityTest {
 		return super.handle(property, newValue, oldValue, mutatorAnnotations);
 	    }
 	});
-	module.getDomainMetaPropertyConfig().setDefiner(Entity.class, "firstProperty", new IMetaPropertyDefiner() {
+	module.getDomainMetaPropertyConfig().setDefiner(Entity.class, "firstProperty", new IAfterChangeEventHandler() {
 	    @Override
-	    public void define(final MetaProperty property, final Object entityPropertyValue) {
+	    public void handle(final MetaProperty property, final Object entityPropertyValue) {
 		property.setRequired(!property.isRequired());
 	    }
 	});
@@ -361,7 +361,7 @@ public class AbstractEntityTest {
 	assertEquals("Incorrect size for doubles", 3, entity.getDoubles().size());
 	assertNull("Incorrect original value", metaProperty.getOriginalValue());
 	assertEquals("Incorrect previous value", 2, metaProperty.getPrevValue());
-	assertNull("There should be no domain validation result.", metaProperty.getValidationResult(ValidationAnnotation.DOMAIN));
+	assertNotNull("There should be a domain validation result.", metaProperty.getValidationResult(ValidationAnnotation.DOMAIN));
 	assertNotNull("There should be not-null validation result at this stage.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL));
 	assertTrue("Not-null validation result should be successful.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL).isSuccessful());
 
@@ -395,13 +395,13 @@ public class AbstractEntityTest {
 	});
 	entity.removeFromDoubles(-2.0);
 
-	assertEquals("Property should have been observed.", true, observed);
+	assertTrue("Property should have been observed.", observed);
 	assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
 	assertNull("Incorrect original value", metaProperty.getOriginalValue());
 	assertEquals("Incorrect previous value", 2, metaProperty.getPrevValue());
 	assertNotNull("There should be domain validation result at this stage.", metaProperty.getValidationResult(ValidationAnnotation.DOMAIN));
 	assertTrue("Domain validation result should be successful.", metaProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
-	assertNull("There should be no not-null validation result.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL));
+	assertNotNull("There should be not-null validation result.", metaProperty.getValidationResult(ValidationAnnotation.NOT_NULL));
 	assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
     }
 

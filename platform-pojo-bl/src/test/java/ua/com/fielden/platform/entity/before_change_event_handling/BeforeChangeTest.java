@@ -107,7 +107,7 @@ public class BeforeChangeTest {
     @Test
     public void test_instantiation_of_entity_with_invalid_BCE_handler_declaration() {
 	try {
-	    factory.newByKey(EntityWithInvalidHandler.class, "key");
+	    factory.newByKey(EntityWithInvalidBceHandler.class, "key");
 	    fail("Instantiation should have failed due to invalid BCE handler declaration.");
 	} catch (final Exception e) {
 	}

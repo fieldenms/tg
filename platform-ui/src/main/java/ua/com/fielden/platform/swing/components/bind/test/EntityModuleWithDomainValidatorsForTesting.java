@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.components.bind.test;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -8,7 +9,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
-import ua.com.fielden.platform.entity.meta.IMetaPropertyDefiner;
+import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.FinalValidator;
@@ -150,10 +151,10 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
 	     * Returns definer, which always sets property <code>editable</code> to true.
 	     */
 	    @Override
-	    public IMetaPropertyDefiner create(final AbstractEntity<?> entity, final String propertyName) throws Exception {
-		if ("vehicle".equals(propertyName)){
-		    return new IMetaPropertyDefiner() {
-			public void define(final MetaProperty property, final Object entityPropertyValue) {
+	    public IAfterChangeEventHandler create(final AbstractEntity<?> entity, final Field propertyField) throws Exception {
+		if ("vehicle".equals(propertyField.getName())){
+		    return new IAfterChangeEventHandler() {
+			public void handle(final MetaProperty property, final Object entityPropertyValue) {
 			    System.out.println("\tdefine...");
 			    try {
 				Thread.sleep(10000);
@@ -166,10 +167,10 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
 			};
 		    };
 		} else {
-		    return new IMetaPropertyDefiner() {
+		    return new IAfterChangeEventHandler() {
 		        @Override
-		        public void define(final MetaProperty property, final Object entityPropertyValue) {
-		    	final MetaProperty metaProperty = entity.getProperty(propertyName);
+		        public void handle(final MetaProperty property, final Object entityPropertyValue) {
+		    	final MetaProperty metaProperty = entity.getProperty(propertyField.getName());
 		    	if (metaProperty != null) {
 		    	    metaProperty.setEditable(true);
 		    	}

@@ -17,7 +17,7 @@ public class AdviceDispatchedToWorkshopMetaDefiner extends AbstractMetaPropertyD
      * should not be modified.
      */
     @Override
-    public void define(final MetaProperty property, final Object entityPropertyValue) {
+    public void handle(final MetaProperty property, final Object entityPropertyValue) {
 	final Advice advice = (Advice) property.getEntity();
 	final Boolean isDispatched = entityPropertyValue != null;
 	System.out.println("DEFINE RULE IS BEING EXECUTED ON PROPETY " + property.getName() + " FOR " + advice);

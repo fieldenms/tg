@@ -11,6 +11,7 @@ import java.util.Map;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
@@ -54,7 +55,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     public static final String UNSUPPORTED_VALIDATION_ANNOTATION = "Unsupported validation annotation has been encountered.";
     public static final String UNRECOGNISED_VALIDATION_ANNOTATION = "Unrecognised validation annotation has been encountered.";
     public static final String INJECTOR_IS_MISSING = "Meta-property factory is not fully initialised -- injector is missing";
-    public static final String BCE_HANDLER_WITH_ANOTHER_BCE_HANDLER_AS_PARAMETER = "BCE handler should not have a another BCE handler as its parameter.";
+    public static final String HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER = "BCE/ACE handlers should not have a another BCE/ACE handler as its parameter.";
 
     protected final NotNullValidator notNullValidator = new NotNullValidator();
     protected final NotEmptyValidator notEmptyValidator = new NotEmptyValidator();
@@ -67,6 +68,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected final Map<Class<?>, Map<String, RangePropertyValidator>> leRangeValidators = Collections.synchronizedMap(new HashMap<Class<?>, Map<String, RangePropertyValidator>>());
     // type, property, array of handlers
     protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler[]>> beforeChangeEventHandlers = Collections.synchronizedMap(new HashMap<Class<?>, Map<String, IBeforeChangeEventHandler[]>>());
+    protected final Map<Class<?>, Map<String, IAfterChangeEventHandler>> afterChangeEventHandlers = Collections.synchronizedMap(new HashMap<Class<?>, Map<String, IAfterChangeEventHandler>>());
 
     private Injector injector;
 
@@ -156,13 +158,13 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	for (int index = 0; index < handlerDeclarations.length; index++) {
 	    final Handler hd = handlerDeclarations[index];
 	    final IBeforeChangeEventHandler handler = injector.getInstance(hd.value());
-	    initNonOrdinaryHandlerParameters(entity, hd, handler);
-	    initIntegerHandlerParameters(entity, hd, handler);
-	    initDoubleHandlerParameters(entity, hd, handler);
-	    initStringHandlerParameters(entity, hd, handler);
-	    initDateHandlerParameters(entity, hd, handler);
-	    initDateTimeHandlerParameters(entity, hd, handler);
-	    initMoneyHandlerParameters(entity, hd, handler);
+	    initNonOrdinaryHandlerParameters(entity, hd.non_ordinary(), handler);
+	    initIntegerHandlerParameters(entity, hd.integer(), handler);
+	    initDoubleHandlerParameters(entity, hd.dbl(), handler);
+	    initStringHandlerParameters(entity, hd.str(), handler);
+	    initDateHandlerParameters(entity, hd.date(), handler);
+	    initDateTimeHandlerParameters(entity, hd.date_time(), handler);
+	    initMoneyHandlerParameters(entity, hd.money(), handler);
 
 	    handlers[index] = handler;
 	}
@@ -185,11 +187,14 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param hd
      * @param handler
      */
-    private void initNonOrdinaryHandlerParameters(final AbstractEntity<?> entity, final Handler hd, final IBeforeChangeEventHandler handler) {
-	for (final ClassParam param : hd.non_ordinary()) {
+    private void initNonOrdinaryHandlerParameters(final AbstractEntity<?> entity, final ClassParam[] params, final Object handler) {
+	for (final ClassParam param : params) {
 	    final Class<?> type = param.value();
 	    if (IBeforeChangeEventHandler.class.isAssignableFrom(type)) {
-		throw new IllegalArgumentException(BCE_HANDLER_WITH_ANOTHER_BCE_HANDLER_AS_PARAMETER);
+		throw new IllegalArgumentException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
+	    }
+	    if (IAfterChangeEventHandler.class.isAssignableFrom(type)) {
+		throw new IllegalArgumentException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
 	    }
 
 	    final Object value = injector.getInstance(type);
@@ -210,8 +215,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param hd
      * @param handler
      */
-    private void initIntegerHandlerParameters(final AbstractEntity<?> entity, final Handler hd, final IBeforeChangeEventHandler handler) {
-	for (final IntParam param : hd.integer()) {
+    private void initIntegerHandlerParameters(final AbstractEntity<?> entity, final IntParam[] params, final Object handler) {
+	for (final IntParam param : params) {
 	    final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
 	    paramField.setAccessible(true);
 	    try {
@@ -229,8 +234,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param hd
      * @param handler
      */
-    private void initDoubleHandlerParameters(final AbstractEntity<?> entity, final Handler hd, final IBeforeChangeEventHandler handler) {
-	for (final DblParam param : hd.dbl()) {
+    private void initDoubleHandlerParameters(final AbstractEntity<?> entity, final DblParam[] params, final Object handler) {
+	for (final DblParam param : params) {
 	    final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
 	    paramField.setAccessible(true);
 	    try {
@@ -248,8 +253,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param hd
      * @param handler
      */
-    private void initStringHandlerParameters(final AbstractEntity<?> entity, final Handler hd, final IBeforeChangeEventHandler handler) {
-	for (final StrParam param : hd.str()) {
+    private void initStringHandlerParameters(final AbstractEntity<?> entity, final StrParam[] params, final Object handler) {
+	for (final StrParam param : params) {
 	    final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
 	    paramField.setAccessible(true);
 	    try {
@@ -267,8 +272,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param hd
      * @param handler
      */
-    private void initDateHandlerParameters(final AbstractEntity<?> entity, final Handler hd, final IBeforeChangeEventHandler handler) {
-	for (final DateParam param : hd.date()) {
+    private void initDateHandlerParameters(final AbstractEntity<?> entity, final DateParam[] params, final Object handler) {
+	for (final DateParam param : params) {
 	    final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
 	    paramField.setAccessible(true);
 	    try {
@@ -286,8 +291,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param hd
      * @param handler
      */
-    private void initDateTimeHandlerParameters(final AbstractEntity<?> entity, final Handler hd, final IBeforeChangeEventHandler handler) {
-	for (final DateTimeParam param : hd.date_time()) {
+    private void initDateTimeHandlerParameters(final AbstractEntity<?> entity, final DateTimeParam[] params, final Object handler) {
+	for (final DateTimeParam param : params) {
 	    final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
 	    paramField.setAccessible(true);
 	    try {
@@ -305,8 +310,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param hd
      * @param handler
      */
-    private void initMoneyHandlerParameters(final AbstractEntity<?> entity, final Handler hd, final IBeforeChangeEventHandler handler) {
-	for (final MoneyParam param : hd.money()) {
+    private void initMoneyHandlerParameters(final AbstractEntity<?> entity, final MoneyParam[] params, final Object handler) {
+	for (final MoneyParam param : params) {
 	    final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
 	    paramField.setAccessible(true);
 	    try {
@@ -316,7 +321,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	    }
 	}
     }
-
 
     private IBeforeChangeEventHandler createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty) {
 	if (geRangeValidators.get(entity.getType()) == null) {
@@ -364,8 +368,43 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected abstract IBeforeChangeEventHandler createEntityExists(final EntityExists anotation);
 
     @Override
-    public IMetaPropertyDefiner create(final AbstractEntity<?> entity, final String propertyName) throws Exception {
-	return domainMetaConfig.getDefiner(entity.getType(), propertyName);
+    public IAfterChangeEventHandler create(final AbstractEntity<?> entity, final Field propertyField) throws Exception {
+	// let's first check the old way of registering property definers
+	final String propertyName = propertyField.getName();
+	final IAfterChangeEventHandler handler = domainMetaConfig.getDefiner(entity.getType(), propertyName);
+	if (handler != null) {
+	    return handler;
+	}
+	// if not provided then need to follow the new way of instantiating and caching ACE handlers
+	final Class<?> type = entity.getType();
+	Map<String, IAfterChangeEventHandler> typeHandlers = afterChangeEventHandlers.get(type);
+	if (typeHandlers == null) {
+	    typeHandlers = new HashMap<String, IAfterChangeEventHandler>();
+	    afterChangeEventHandlers.put(entity.getType(), typeHandlers);
+	}
+	IAfterChangeEventHandler propHandler = typeHandlers.get(propertyName);
+	if (propHandler == null) {
+
+	    final AfterChange ach = propertyField.getAnnotation(AfterChange.class);
+	    if (ach == null) {
+		return null;
+	    }
+	    // instantiate ACE handler
+	    propHandler = injector.getInstance(ach.value());
+	    // initialise ACE handler parameters
+	    initNonOrdinaryHandlerParameters(entity, ach.non_ordinary(), propHandler);
+	    initIntegerHandlerParameters(entity, ach.integer(), propHandler);
+	    initDoubleHandlerParameters(entity, ach.dbl(), propHandler);
+	    initStringHandlerParameters(entity, ach.str(), propHandler);
+	    initDateHandlerParameters(entity, ach.date(), propHandler);
+	    initDateTimeHandlerParameters(entity, ach.date_time(), propHandler);
+	    initMoneyHandlerParameters(entity, ach.money(), propHandler);
+
+	    // associate handler with property name
+	    typeHandlers.put(propertyName, propHandler);
+	}
+
+	return propHandler;
     }
 
     @Override

@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.CheckingStrategy;
@@ -106,7 +105,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
 		logger.debug("Check if property \"" + fullPropertyName + "\" has validators...");
 		if (property.hasValidators()) {
 		    logger.debug("Execute validation for property \"" + fullPropertyName + "\".");
-		    final Result result = property.validate(newValue, oldValue, AnnotationReflector.getValidationAnnotations(method), false);
+		    final Result result = property.validate(newValue, oldValue, property.getValidationAnnotations(), false);
 		    if (!result.isSuccessful()) {
 			logger.debug("Property \"" + fullPropertyName + "\" validation failed: " + property.getFirstFailure());
 			// IMPORTANT : it fires ONLY the PropertyChangeOrIncorrectAttemptListeners!!!
@@ -407,7 +406,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
 	    return new Pair<Object, Object>(newValue, null);
 	}
 	// decrementor
-	return new Pair<Object, Object>(null, newValue);
+	return new Pair<Object, Object>(newValue, null);
     }
 
 }

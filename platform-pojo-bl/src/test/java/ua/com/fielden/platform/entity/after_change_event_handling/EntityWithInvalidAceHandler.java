@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.before_change_event_handling;
+package ua.com.fielden.platform.entity.after_change_event_handling;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -6,10 +6,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
-import ua.com.fielden.platform.entity.validation.NotNullValidator;
+import ua.com.fielden.platform.entity.before_change_event_handling.BeforeChangeEventHandler;
 
 /**
  * Entity for the purpose of BCE handling tests.
@@ -19,19 +18,18 @@ import ua.com.fielden.platform.entity.validation.NotNullValidator;
  *
  */
 @KeyType(String.class)
-public class EntityWithInvalidHandler extends AbstractEntity<String> {
+public class EntityWithInvalidAceHandler extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Property 1", desc = "Description")
+    @AfterChange(
+	value = InvalidAfterChangeEventHandler.class,
+	non_ordinary={@ClassParam(name = "invalidParam", value = BeforeChangeEventHandler.class)}
+    )
     private String property1;
 
     @Observable
-    @BeforeChange({
-	@Handler(value = InvalidBeforeChangeEventHandler.class,
-		 non_ordinary={@ClassParam(name = "invalidParam", value = BeforeChangeEventHandler.class)}),
-        @Handler(NotNullValidator.class)
-    })
-    public EntityWithInvalidHandler setProperty1(final String property) {
+    public EntityWithInvalidAceHandler setProperty1(final String property) {
 	this.property1 = property;
 	return this;
     }
