@@ -87,6 +87,7 @@
 		<module>platform-rao</module>
 		<module>platform-ui</module>
 		<module>platform-web-client-utils</module>
+		<module>platform-test-domain</module>
 	</modules>
 
 	<properties>
