@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
  * Entity for testing purposes.
@@ -23,10 +24,12 @@ public class ThirdLevelEntity extends AbstractEntity<String> {
     private static final long serialVersionUID = 5896211024838356909L;
 
     @IsProperty
+    @Title(value = "date property", desc = "date property description")
     private Date dateProp;
 
     @IsProperty
-    private ThirdLevelEntity simpleEntityProp;
+    @Title(value = "entity property", desc = "entity property description")
+    private LastLevelEntity simpleEntityProp;
 
     public Date getDateProp() {
 	return dateProp;
@@ -37,12 +40,12 @@ public class ThirdLevelEntity extends AbstractEntity<String> {
 	this.dateProp = dateProp;
     }
 
-    public ThirdLevelEntity getSimpleEntityProp() {
+    public LastLevelEntity getSimpleEntityProp() {
 	return simpleEntityProp;
     }
 
     @Observable
-    public void setSimpleEntityProp(final ThirdLevelEntity simpleEntityProp) {
+    public void setSimpleEntityProp(final LastLevelEntity simpleEntityProp) {
 	this.simpleEntityProp = simpleEntityProp;
     }
 

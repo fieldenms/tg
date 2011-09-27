@@ -9,7 +9,8 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.EnhancedEntityQueryCriteria;
-import ua.com.fielden.platform.criteria.enhanced.PropertyPair;
+import ua.com.fielden.platform.criteria.enhanced.FirstParam;
+import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -115,7 +116,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> propertyType, final String propertyName, final CritOnly critOnlyAnnotation) {
 	final boolean isEntity = EntityUtils.isEntityType(propertyType);
 	final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
-	final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : propertyType;
+	final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (isBoolean(propertyType) ? Boolean.class : propertyType);
 	final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(root, propertyName);
 
 	final List<AnnotationDescriptor> annotations = new ArrayList<AnnotationDescriptor>(){{
@@ -144,9 +145,9 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(root, propertyName);
 
 	final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		generateCriteriaPropertyAnnotation(root, propertyName), generatePropertyPairAnnotation(1, secondPropertyName));
+		generateCriteriaPropertyAnnotation(root, propertyName), generateFirstParamAnnotation(secondPropertyName));
 	final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		generateCriteriaPropertyAnnotation(root, propertyName), generatePropertyPairAnnotation(2, firstPropertyName));
+		generateCriteriaPropertyAnnotation(root, propertyName), generateSecondParamAnnotation(firstPropertyName));
 
 	return new ArrayList<NewProperty>() {{ add(firstProperty); add(secondProperty); }};
     }
@@ -163,14 +164,23 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     /**
-     * Generates {@link AnnotationDescriptor} instance for {@link PropertyPair} annotation with specified order and propertyPair.
+     * Generates {@link AnnotationDescriptor} instance for {@link FirstParam} annotation with specified second property name.
      * 
-     * @param order - the order of the property for which this annotation descriptor will be created.
-     * @param propertyPair - the property name that is the pair for property annotated with this {@link PropertyPair} annotation.
+     * @param secondProperty - the property name that is the pair for property annotated with this {@link FirstParam} annotation.
      * @return
      */
-    private static AnnotationDescriptor generatePropertyPairAnnotation(final int order, final String propertyPair){
-	return new AnnotationDescriptor(PropertyPair.class, new HashMap<String, Object>() {{ put("order", order); put("propertyPair", propertyPair); }});
+    private static AnnotationDescriptor generateFirstParamAnnotation(final String secondProperty){
+	return new AnnotationDescriptor(FirstParam.class, new HashMap<String, Object>() {{ put("secondParam", secondProperty); }});
+    }
+
+    /**
+     * Generates {@link AnnotationDescriptor} instance for {@link SecondParam} annotation with specified first property name.
+     * 
+     * @param firstProperty - the property name that is the pair for property annotated with this {@link SecondParam} annotation.
+     * @return
+     */
+    private static AnnotationDescriptor generateSecondParamAnnotation(final String firstParam){
+	return new AnnotationDescriptor(SecondParam.class, new HashMap<String, Object>() {{ put("firstParam", firstParam); }});
     }
 
     /**

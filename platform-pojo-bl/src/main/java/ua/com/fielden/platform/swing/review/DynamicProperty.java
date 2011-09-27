@@ -160,19 +160,19 @@ public class DynamicProperty<T extends AbstractEntity> {
     }
 
     public Boolean getAll() {
-        return all;
+	return all;
     }
 
     public void setAll(final Boolean all) {
-        this.all = all;
+	this.all = all;
     }
 
     public Boolean getOrNull() {
-        return orNull;
+	return orNull;
     }
 
     public void setOrNull(final Boolean orNull) {
-        this.orNull = orNull;
+	this.orNull = orNull;
     }
 
     /**
@@ -241,7 +241,7 @@ public class DynamicProperty<T extends AbstractEntity> {
 		((AbstractEntity) criteriaValue).set(getActualPropertyName(), value);
 	    } else if (isCritOnly()) {
 		throw new IllegalStateException("String " + getActualPropertyName() + " preoprty from " + criteria.getEntityClass()
-			+ " can not be annotated with CritOnly(Type.SINGLE) annotation");
+			+ " can not be annotated with CritOnly(Type.RANGE) annotation");
 	    } else {
 		criteriaValue = value;
 	    }
@@ -370,10 +370,10 @@ public class DynamicProperty<T extends AbstractEntity> {
     }
 
     public Boolean getAndBefore() {
-        return andBefore;
+	return andBefore;
     }
 
     public void setAndBefore(final Boolean andBefore) {
-        this.andBefore = andBefore;
+	this.andBefore = andBefore;
     }
 }
