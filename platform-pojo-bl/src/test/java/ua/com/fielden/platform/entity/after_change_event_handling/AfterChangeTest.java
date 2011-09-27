@@ -55,6 +55,7 @@ public class AfterChangeTest {
 	assertEquals("Incorrect parameter value.", StringConverter.toDate("2011-12-01 00:00:00"), handler.getDateParam());
 	assertEquals("Incorrect parameter value.", StringConverter.toDateTime("2011-12-01 00:00:00"), handler.getDateTimeParam());
 	assertEquals("Incorrect parameter value.", StringConverter.toMoney("12.36"), handler.getMoneyParam());
+	assertEquals("Incorrect parameter value.", String.class, handler.getClassParam());
     }
 
     @Test

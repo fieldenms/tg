@@ -44,6 +44,13 @@ public @interface AfterChange {
     ClassParam[] non_ordinary() default {};
 
     /**
+     * Should be used for specifying parameters of the handler, which are classes and should be assigned as types -- not instances.
+     *
+     * @return
+     */
+    ClassParam[] clazz() default {};
+
+    /**
      * Should be used for specifying integer parameters of the handler.
      *
      * @return

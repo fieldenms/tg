@@ -26,6 +26,7 @@ public class BeforeChangeEventHandler implements IBeforeChangeEventHandler {
     private Date dateParam;
     private DateTime dateTimeParam;
     private Controller controllerParam;
+    private Class<?> classParam;
 
     private boolean invoked = false;
 
@@ -109,6 +110,14 @@ public class BeforeChangeEventHandler implements IBeforeChangeEventHandler {
 
     public void setInvoked(final boolean invoked) {
         this.invoked = invoked;
+    }
+
+    public Class<?> getClassParam() {
+        return classParam;
+    }
+
+    public void setClassParam(final Class<?> classParam) {
+        this.classParam = classParam;
     }
 
 }

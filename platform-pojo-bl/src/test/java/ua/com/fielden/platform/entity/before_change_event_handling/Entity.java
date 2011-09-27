@@ -40,7 +40,8 @@ public class Entity extends AbstractEntity<String> {
 		 date = {@DateParam(name = "dateParam", value = "2011-12-01 00:00:00")},
 		 date_time = {@DateTimeParam(name = "dateTimeParam", value = "2011-12-01 00:00:00")},
 		 money = {@MoneyParam(name = "moneyParam", value = "12.36")},
-		 non_ordinary={@ClassParam(name = "controllerParam", value = Controller.class)}),
+		 non_ordinary={@ClassParam(name = "controllerParam", value = Controller.class)},
+		 clazz = {@ClassParam(name = "classParam", value = String.class)}),
         @Handler(InvalidBeforeChangeEventHandler.class)
     })
     @AfterChange(value = AfterChangeEventHandler.class,
@@ -50,7 +51,8 @@ public class Entity extends AbstractEntity<String> {
 		 date = {@DateParam(name = "dateParam", value = "2011-12-01 00:00:00")},
 		 date_time = {@DateTimeParam(name = "dateTimeParam", value = "2011-12-01 00:00:00")},
 		 money = {@MoneyParam(name = "moneyParam", value = "12.36")},
-		 non_ordinary={@ClassParam(name = "controllerParam", value = Controller.class)})
+		 non_ordinary={@ClassParam(name = "controllerParam", value = Controller.class)},
+		 clazz = {@ClassParam(name = "classParam", value = String.class)})
     private String property1 = "default value";
 
     @IsProperty

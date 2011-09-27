@@ -159,6 +159,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	    final Handler hd = handlerDeclarations[index];
 	    final IBeforeChangeEventHandler handler = injector.getInstance(hd.value());
 	    initNonOrdinaryHandlerParameters(entity, hd.non_ordinary(), handler);
+	    initClassHandlerParameters(entity, hd.clazz(), handler);
 	    initIntegerHandlerParameters(entity, hd.integer(), handler);
 	    initDoubleHandlerParameters(entity, hd.dbl(), handler);
 	    initStringHandlerParameters(entity, hd.str(), handler);
@@ -202,6 +203,33 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	    paramField.setAccessible(true);
 	    try {
 		paramField.set(handler, value);
+	    } catch (final Exception ex) {
+		throw new IllegalStateException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+	    }
+	}
+    }
+
+    /**
+     * Initialises handler parameters of type Class as provided in {@link Handler#clazz()}.
+     *
+     * @param entity
+     * @param hd
+     * @param handler
+     */
+    private void initClassHandlerParameters(final AbstractEntity<?> entity, final ClassParam[] params, final Object handler) {
+	for (final ClassParam param : params) {
+	    final Class<?> type = param.value();
+	    if (IBeforeChangeEventHandler.class.isAssignableFrom(type)) {
+		throw new IllegalArgumentException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
+	    }
+	    if (IAfterChangeEventHandler.class.isAssignableFrom(type)) {
+		throw new IllegalArgumentException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
+	    }
+
+	    final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
+	    paramField.setAccessible(true);
+	    try {
+		paramField.set(handler, type);
 	    } catch (final Exception ex) {
 		throw new IllegalStateException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
 	    }
@@ -393,6 +421,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 	    propHandler = injector.getInstance(ach.value());
 	    // initialise ACE handler parameters
 	    initNonOrdinaryHandlerParameters(entity, ach.non_ordinary(), propHandler);
+	    initClassHandlerParameters(entity, ach.clazz(), propHandler);
 	    initIntegerHandlerParameters(entity, ach.integer(), propHandler);
 	    initDoubleHandlerParameters(entity, ach.dbl(), propHandler);
 	    initStringHandlerParameters(entity, ach.str(), propHandler);
