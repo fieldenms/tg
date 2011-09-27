@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.ioc;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -15,6 +16,7 @@ import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.equery.interfaces.IFilter;
@@ -74,7 +76,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
     public BasicWebServerModule(
 	    final Map<Class, Class> defaultHibernateTypes, //
-	    final Class[] applicationEntityTypes,//
+	    final List<Class<? extends AbstractEntity>> applicationEntityTypes,//
 	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
 	    final Class<? extends IFilter> automaticDataFilterType, //
 	    final SecurityTokenProvider tokenProvider,//

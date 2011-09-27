@@ -1,5 +1,6 @@
 package ua.com.fielden.web;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.hibernate.type.YesNoType;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
@@ -63,9 +65,15 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
 	try {
 
 	    final Configuration cfg = new Configuration();
+		final List<Class<? extends AbstractEntity>> domainTypes = new ArrayList<Class<? extends AbstractEntity>>();
+		domainTypes.add(User.class);
+		domainTypes.add(UserRole.class);
+		domainTypes.add(UserAndRoleAssociation.class);
+		domainTypes.add(SecurityRoleAssociation.class);
+		domainTypes.add(InspectedEntity.class);
+		domainTypes.add(Attachment.class);
 	    final MappingsGenerator mappingsGenerator = new MappingsGenerator(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()));
-	    cfg.addXML(mappingsGenerator.generateMappings(new Class[] { User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class,
-		    InspectedEntity.class, Attachment.class }));
+	    cfg.addXML(mappingsGenerator.generateMappings(domainTypes));
 
 	    cfg.setProperty("hibernate.current_session_context_class", "thread");
 	    cfg.setProperty("hibernate.show_sql", "false");

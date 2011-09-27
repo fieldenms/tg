@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.ioc;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cfg.Configuration;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.entity.AbstractEntity;
 
 import com.google.inject.Guice;
 
@@ -38,7 +40,7 @@ public class HibernateConfigurationFactory {
     private final MappingsGenerator mappingsGenerator;
     private final Configuration cfg = new Configuration();
 
-    public HibernateConfigurationFactory(final Properties props, final Map<Class, Class> defaultHibernateTypes, final Class[] applicationEntityTypes) throws Exception {
+    public HibernateConfigurationFactory(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity>> applicationEntityTypes) throws Exception {
 	this.props = props;
 	mappingsGenerator = new MappingsGenerator(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()));
 	if (mappingsGenerator != null) {

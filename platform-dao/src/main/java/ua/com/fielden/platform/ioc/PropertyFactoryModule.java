@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.ioc;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -8,6 +9,7 @@ import org.hibernate.SessionFactory;
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.DefaultConrollerProviderImpl;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IDefaultConrollerProvider;
@@ -29,7 +31,7 @@ public class PropertyFactoryModule extends TransactionalModule {
     protected final EntityFactory entityFactory;
     protected final DefaultConrollerProviderImpl defaultControllerProvider;
 
-    public PropertyFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final Class[] applicationEntityTypes) throws Exception {
+    public PropertyFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity>> applicationEntityTypes) throws Exception {
 	super(props, defaultHibernateTypes, applicationEntityTypes);
 	entityFactory = new EntityFactory() {};
 	daoFactory = new DaoFactory() {};

@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.test;
 
-import static java.lang.String.format;
-
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -25,6 +23,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IDefaultConrollerProvider;
 import ua.com.fielden.platform.persistence.DdlGenerator;
+import static java.lang.String.format;
 
 
 /**
@@ -89,7 +88,7 @@ public abstract class AbstractDomainDrivenTestCase {
      *
      * @return
      */
-    protected abstract Class<? extends AbstractEntity>[] domainEntityTypes();
+    protected abstract List<Class<? extends AbstractEntity>> domainEntityTypes();
 
     @AfterClass
     public final static void removeDbSchema() {
@@ -123,7 +122,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
 	    // create truncate statements
 	    final DdlGenerator ddlGen = new DdlGenerator();
-	    for (final Class<?> entityType : domainEntityTypes()) {
+	    for (final Class<? extends AbstractEntity> entityType : domainEntityTypes()) {
 		final String tableName = ddlGen.getTableClause(entityType);
 		truncateScript.add(format("TRUNCATE TABLE %s;", tableName));
 	    }

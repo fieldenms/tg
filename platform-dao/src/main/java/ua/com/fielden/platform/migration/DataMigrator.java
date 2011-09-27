@@ -270,7 +270,7 @@ public class DataMigrator {
 
     private List<String> dataPostPopulateSql() {
 	final List<String> sql = new ArrayList<String>();
-	sql.add("UPDATE NUMBERS SET WONOINC = COALESCE((SELECT MAX(KEY_) FROM WODET), 0) WHERE NUMBKEY = 'WO';");
+	//sql.add("UPDATE NUMBERS SET WONOINC = COALESCE((SELECT MAX(KEY_) FROM WODET), 0) WHERE NUMBKEY = 'WO';");
 	return sql;
     }
 

@@ -47,7 +47,7 @@ public class MappingsGenerator {
 
     public MappingsGenerator() {}
 
-    public String generateMappings(final Class[] entityTypes) {
+    public String generateMappings(final List<Class<? extends AbstractEntity>> entityTypes) {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 	sb.append("<!DOCTYPE hibernate-mapping PUBLIC\n");
@@ -55,7 +55,7 @@ public class MappingsGenerator {
 	sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
 	sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-	for (final Class entityType : entityTypes) {
+	for (final Class<? extends AbstractEntity> entityType : entityTypes) {
 	    try {
 		sb.append(getClassMapping(entityType));
 	    } catch (final Exception e) {

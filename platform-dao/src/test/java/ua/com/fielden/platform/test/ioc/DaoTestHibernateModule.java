@@ -26,11 +26,13 @@ import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.controller.ITgMeterReading;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
+import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.provider.UserController;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.test.domain.entities.daos.AdviceDao;
@@ -52,6 +54,7 @@ import ua.com.fielden.platform.test.domain.entities.daos.IWorkshopDao;
 import ua.com.fielden.platform.test.domain.entities.daos.PersonDao;
 import ua.com.fielden.platform.test.domain.entities.daos.RotableClassDao;
 import ua.com.fielden.platform.test.domain.entities.daos.RotableDao;
+import ua.com.fielden.platform.test.domain.entities.daos.TgMeterReadingDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleMakeDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleModelDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WagonClassDao;
@@ -116,6 +119,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 	bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
 
 	bind(IUserDao.class).to(UserController.class);
+	bind(IUserController.class).to(UserController.class);
 	bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
 	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);
 	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
@@ -124,6 +128,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 
 	bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
 	bind(ITgVehicleMake.class).to(TgVehicleMakeDao.class);
+	bind(ITgMeterReading.class).to(TgMeterReadingDao.class);
 	bind(IMigrationErrorDao.class).to(MigrationErrorDao.class);
 	bind(IMigrationRunDao.class).to(MigrationRunDao.class);
 	bind(IMigrationHistoryDao.class).to(MigrationHistoryDao.class);

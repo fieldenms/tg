@@ -2,6 +2,7 @@ package ua.com.fielden.platform.test;
 
 import java.net.URL;
 import java.sql.DriverManager;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -12,16 +13,14 @@ import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
-import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.migration.LegacyConnectionModule;
-import ua.com.fielden.platform.migration.MigrationError;
-import ua.com.fielden.platform.migration.MigrationHistory;
-import ua.com.fielden.platform.migration.MigrationRun;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
@@ -33,10 +32,6 @@ import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.domain.entities.Advice;
 import ua.com.fielden.platform.test.domain.entities.AdvicePosition;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
@@ -48,11 +43,6 @@ import ua.com.fielden.platform.test.entities.validators.AdviceCarrierValidator;
 import ua.com.fielden.platform.test.entities.validators.AdvicePositionRotableValidator;
 import ua.com.fielden.platform.test.entities.validators.AdviceRoadValidator;
 import ua.com.fielden.platform.test.ioc.DaoTestHibernateModule;
-import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
-import ua.com.fielden.platform.ui.config.EntityMasterConfig;
-import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -72,12 +62,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 
     private final DaoTestHibernateModule hibernateModule;
 
-    private final Class<?>[] testDomain = { CompositeEntity.class, CompositeEntityKey.class, ComplexKeyEntity.class, //
-	    EntityCentreConfig.class, EntityMasterConfig.class, EntityLocatorConfig.class, //
-	    MainMenuItem.class, MainMenuItemInvisibility.class, KeyNumber.class, User.class, UserRole.class, //
-	    UserAndRoleAssociation.class, SecurityRoleAssociation.class, EntityWithMoney.class, EntityWithTaxMoney.class, //
-	    EntityWithExTaxAndTaxMoney.class, EntityWithSimpleTaxMoney.class, EntityWithSimpleMoney.class, EntityWithDynamicCompositeKey.class,
-	    TgVehicleMake.class, TgVehicleModel.class, MigrationError.class, MigrationHistory.class, MigrationRun.class};
+    private static final List<Class<? extends AbstractEntity>> testDomain = new ArrayList<Class<? extends AbstractEntity>>();
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
 
@@ -85,6 +70,18 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 	hibTypeDefaults.put(boolean.class, YesNoType.class);
 	hibTypeDefaults.put(Boolean.class, YesNoType.class);
 	hibTypeDefaults.put(Date.class, DateTimeType.class);
+	testDomain.addAll(PlatformDomainTypes.types);
+	testDomain.add(CompositeEntity.class);
+	testDomain.add(CompositeEntityKey.class);
+	testDomain.add(ComplexKeyEntity.class);
+	testDomain.add(EntityWithMoney.class);
+	testDomain.add(EntityWithTaxMoney.class);
+	testDomain.add(EntityWithExTaxAndTaxMoney.class);
+	testDomain.add(EntityWithSimpleTaxMoney.class);
+	testDomain.add(EntityWithSimpleMoney.class);
+	testDomain.add(EntityWithDynamicCompositeKey.class);
+	testDomain.add(TgVehicleMake.class);
+	testDomain.add(TgVehicleModel.class);
     }
 
 
