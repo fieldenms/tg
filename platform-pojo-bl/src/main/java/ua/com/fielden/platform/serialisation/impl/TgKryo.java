@@ -96,6 +96,12 @@ import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.AnalysisDo
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.AnalysisDomainTreeManagerAndEnhancer.AnalysisDomainTreeManagerAndEnhancerSerialiser;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.AnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisDomainTreeRepresentationSerialiser;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.LifecycleDomainTreeManager;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.LifecycleDomainTreeManager.LifecycleDomainTreeManagerSerialiser;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.LifecycleDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.LifecycleDomainTreeManagerAndEnhancer.LifecycleDomainTreeManagerAndEnhancerSerialiser;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.LifecycleDomainTreeRepresentation;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.LifecycleDomainTreeRepresentation.LifecycleDomainTreeRepresentationSerialiser;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeManager.PivotDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeManagerAndEnhancer;
@@ -203,6 +209,7 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer locatorDomainTreeRepresentationSerialiser;
     private final Serializer pivotDomainTreeRepresentationSerialiser;
     private final Serializer analysisDomainTreeRepresentationSerialiser;
+    private final Serializer lifecycleDomainTreeRepresentationSerialiser;
     private final Serializer locatorDomainTreeManagerSerialiser;
     private final Serializer criteriaDomainTreeManagerSerialiser;
     private final Serializer masterDomainTreeManagerSerialiser;
@@ -210,11 +217,12 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer addToCriteriaTickManagerForLocatorSerialiser;
     private final Serializer pivotDomainTreeManagerSerialiser;
     private final Serializer analysisDomainTreeManagerSerialiser;
+    private final Serializer lifecycleDomainTreeManagerSerialiser;
     private final Serializer locatorDomainTreeManagerAndEnhancerSerialiser;
     private final Serializer criteriaDomainTreeManagerAndEnhancerSerialiser;
-    //    private final Serializer domainTreeManagerAndEnhancerSerialiser;
     private final Serializer pivotDomainTreeManagerAndEnhancerSerialiser;
     private final Serializer analysisDomainTreeManagerAndEnhancerSerialiser;
+    private final Serializer lifecycleDomainTreeManagerAndEnhancerSerialiser;
 
     @Inject
     public TgKryo(final EntityFactory factory, final ISerialisationClassProvider provider) {
@@ -244,6 +252,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	criteriaDomainTreeRepresentationSerialiser = new CriteriaDomainTreeRepresentationSerialiser(this);
 	pivotDomainTreeRepresentationSerialiser = new PivotDomainTreeRepresentationSerialiser(this);
 	analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(this);
+	lifecycleDomainTreeRepresentationSerialiser = new LifecycleDomainTreeRepresentationSerialiser(this);
 	locatorDomainTreeManagerSerialiser = new LocatorDomainTreeManagerSerialiser(this);
 	criteriaDomainTreeManagerSerialiser = new CriteriaDomainTreeManagerSerialiser(this);
 	masterDomainTreeManagerSerialiser = new MasterDomainTreeManagerSerialiser(this);
@@ -252,11 +261,12 @@ public class TgKryo extends Kryo implements ISerialiser {
 	addToCriteriaTickManagerSerialiser = new AddToCriteriaTickManagerSerialiser(this);
 	pivotDomainTreeManagerSerialiser = new PivotDomainTreeManagerSerialiser(this);
 	analysisDomainTreeManagerSerialiser = new AnalysisDomainTreeManagerSerialiser(this);
+	lifecycleDomainTreeManagerSerialiser = new LifecycleDomainTreeManagerSerialiser(this);
 	locatorDomainTreeManagerAndEnhancerSerialiser = new LocatorDomainTreeManagerAndEnhancerSerialiser(this);
 	criteriaDomainTreeManagerAndEnhancerSerialiser = new CriteriaDomainTreeManagerAndEnhancerSerialiser(this);
-	//	domainTreeManagerAndEnhancerSerialiser = new DomainTreeManagerAndEnhancerSerialiser(this);
 	pivotDomainTreeManagerAndEnhancerSerialiser = new PivotDomainTreeManagerAndEnhancerSerialiser(this);
 	analysisDomainTreeManagerAndEnhancerSerialiser = new AnalysisDomainTreeManagerAndEnhancerSerialiser(this);
+	lifecycleDomainTreeManagerAndEnhancerSerialiser = new LifecycleDomainTreeManagerAndEnhancerSerialiser(this);
 
 	// the following order of class registration is important
 	register(String[].class);
@@ -469,6 +479,8 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return pivotDomainTreeRepresentationSerialiser;
 	} else if (AnalysisDomainTreeRepresentation.class.isAssignableFrom(type)) {
 	    return analysisDomainTreeRepresentationSerialiser;
+	} else if (LifecycleDomainTreeRepresentation.class.isAssignableFrom(type)) {
+	    return lifecycleDomainTreeRepresentationSerialiser;
 	} else if (LocatorDomainTreeManager.class.isAssignableFrom(type)) { // higher in hierarchy above CriteriaDomainTreeManager!
 	    return locatorDomainTreeManagerSerialiser;
 	} else if (CriteriaDomainTreeManager.class.isAssignableFrom(type)) {
@@ -483,6 +495,8 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return pivotDomainTreeManagerSerialiser;
 	} else if (AnalysisDomainTreeManager.class.isAssignableFrom(type)) {
 	    return analysisDomainTreeManagerSerialiser;
+	} else if (LifecycleDomainTreeManager.class.isAssignableFrom(type)) {
+	    return lifecycleDomainTreeManagerSerialiser;
 	} else if (LocatorDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) { // higher in hierarchy above CriteriaDomainTreeManagerAndEnhancer!
 	    return locatorDomainTreeManagerAndEnhancerSerialiser;
 	} else if (CriteriaDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
@@ -491,6 +505,8 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return pivotDomainTreeManagerAndEnhancerSerialiser;
 	} else if (AnalysisDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
 	    return analysisDomainTreeManagerAndEnhancerSerialiser;
+	} else if (LifecycleDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
+	    return lifecycleDomainTreeManagerAndEnhancerSerialiser;
 	}
 	return super.newSerializer(type);
     }

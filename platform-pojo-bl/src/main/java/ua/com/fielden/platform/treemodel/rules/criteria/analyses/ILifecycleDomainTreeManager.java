@@ -6,7 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * This interface defines how domain tree can be managed for <b>pivot analyses</b> (multiple property distribution). <br><br>
+ * This interface defines how domain tree can be managed for <b>lifecycle analyses</b>. <br><br>
  *
  * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances. <br><br>
  *
@@ -14,8 +14,18 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public interface ILifecycleDomainTreeManager extends IAbstractAnalysisDomainTreeManager {
+    /**
+     * A <i>domain tree manager<i> with <i>enhancer</i> inside.
+     *
+     * @author TG Team
+     *
+     */
+    public interface ILifecycleDomainTreeManagerAndEnhancer extends IAbstractAnalysisDomainTreeManagerAndEnhancer, ILifecycleDomainTreeManager {
+    }
+
     ILifecycleAddToDistributionTickManager getFirstTick();
     ILifecycleAddToCategoriesTickManager getSecondTick();
+    ILifecycleDomainTreeRepresentation getRepresentation();
 
     /**
      * This interface defines how domain tree can be managed for <b>lyfecycle analyses</b> specific ("add to distribution").
@@ -59,7 +69,7 @@ public interface ILifecycleDomainTreeManager extends IAbstractAnalysisDomainTree
      * @param rootAndProperty -- a value to set
      * @return -- an lifecycle analysis manager
      */
-    ILifecycleDomainTreeManager setVisibleDistributedValuesNumber(final Pair<Class<?>, String> rootAndProperty);
+    ILifecycleDomainTreeManager setLifecycleProperty(final Pair<Class<?>, String> rootAndProperty);
 
     /**
      * Gets a "from" date (left period boundary).

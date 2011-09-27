@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.types.Money;
@@ -118,6 +119,7 @@ public class MasterEntity extends AbstractEntity<String> {
 
     ////////// A property of entity type //////////
     @IsProperty
+    @Monitoring(MasterEntitySimpleEntityPropCategorizer.class)
     private EntityWithStringKeyType simpleEntityProp;
 
     ////////// Invisible property //////////
