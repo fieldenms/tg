@@ -10,7 +10,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.treemodel.rules.criteria.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.ILocatorDomainTreeRepresentation;
-import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTree;
 import ua.com.fielden.platform.treemodel.rules.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.treemodel.rules.impl.EnhancementRootsMap;
@@ -43,7 +43,7 @@ public class LocatorDomainTreeManager extends CriteriaDomainTreeManager implemen
      * @param rootTypes
      */
     public LocatorDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, new LocatorDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManagerForLocator(serialiser, rootTypes), new AddToResultTickManager(), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), null, null, SearchBy.KEY);
+	this(serialiser, new LocatorDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManagerForLocator(serialiser, rootTypes), new AddToResultTickManager(), new HashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>(), null, null, SearchBy.KEY);
     }
 
     /**
@@ -54,7 +54,7 @@ public class LocatorDomainTreeManager extends CriteriaDomainTreeManager implemen
      * @param firstTick
      * @param secondTick
      */
-    protected LocatorDomainTreeManager(final ISerialiser serialiser, final ILocatorDomainTreeRepresentation dtr, final AddToCriteriaTickManagerForLocator firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Boolean runAutomatically, final Boolean useForAutocompletion, final SearchBy searchBy) {
+    protected LocatorDomainTreeManager(final ISerialiser serialiser, final ILocatorDomainTreeRepresentation dtr, final AddToCriteriaTickManagerForLocator firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses, final Boolean runAutomatically, final Boolean useForAutocompletion, final SearchBy searchBy) {
 	super(serialiser, dtr, firstTick, secondTick, persistentAnalyses, runAutomatically);
 
 	this.useForAutocompletion = useForAutocompletion;
@@ -174,7 +174,7 @@ public class LocatorDomainTreeManager extends CriteriaDomainTreeManager implemen
 	    final LocatorDomainTreeRepresentation dtr = readValue(buffer, LocatorDomainTreeRepresentation.class);
 	    final AddToCriteriaTickManagerForLocator firstTick = readValue(buffer, AddToCriteriaTickManagerForLocator.class);
 	    final AddToResultTickManager secondTick = readValue(buffer, AddToResultTickManager.class);
-	    final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses = readValue(buffer, HashMap.class);
+	    final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses = readValue(buffer, HashMap.class);
 	    final Boolean runAutomatically = readValue(buffer, Boolean.class);
 	    final Boolean useForAutocompletion = readValue(buffer, Boolean.class);
 	    final SearchBy searchBy = readValue(buffer, SearchBy.class);

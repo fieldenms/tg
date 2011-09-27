@@ -8,7 +8,7 @@ import ua.com.fielden.platform.treemodel.rules.IDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.ILocatorManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager.IAddToResultTickManager;
-import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -161,7 +161,7 @@ public interface ICriteriaDomainTreeManager extends IDomainTreeManager {
      * @param name -- a name that defines an analysis.
      * @return
      */
-    IAbstractAnalysisDomainTreeManager getAnalysisManager(final String name);
+    IAbstractAnalysisDomainTreeManagerAndEnhancer getAnalysisManager(final String name);
 
     /**
      * Returns an <b>ordered</b> list of existent analysis names (which are the keys, that can be used in {@link #getAnalysisManager(String)} method).

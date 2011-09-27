@@ -25,7 +25,7 @@ import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManag
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager.ICriteriaDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IPivotDomainTreeManager;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.impl.CriteriaDomainTreeManager.AddToCriteriaTickManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.types.Money;
@@ -590,7 +590,12 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
 
     @Test
     public void test_initialisation_discarding_and_saving_Analyses() {
-	final String name = "A brand new analysis";
+	test_initialisation_discarding_and_saving_of_Analyses(AnalysisType.PIVOT, "A brand new PIVOT analysis");
+	test_initialisation_discarding_and_saving_of_Analyses(AnalysisType.SIMPLE, "A brand new SIMPLE analysis");
+	test_initialisation_discarding_and_saving_of_Analyses(AnalysisType.LIFECYCLE, "A brand new LIFECYCLE analysis");
+    }
+
+    protected void test_initialisation_discarding_and_saving_of_Analyses(final AnalysisType analysisType, final String name) {
 	assertNull("Should be null before creation.", dtm().getAnalysisManager(name));
 
 	try {
@@ -600,7 +605,7 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
 	}
 
 	// initialise a brand new instance of analysis (e.g. pivot)
-	dtm().initAnalysisManagerByDefault(name, AnalysisType.PIVOT);
+	dtm().initAnalysisManagerByDefault(name, analysisType);
 	try {
 	    dtm().initAnalysisManagerByDefault(name, AnalysisType.SIMPLE);
 	    fail("The creation of analysis with same name should fail.");
@@ -609,8 +614,8 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
 	assertTrue("The instance should be 'changed' after initialisation.", dtm().isChangedAnalysisManager(name));
 
 	// obtain a current instance of analysis and alter it
-	IPivotDomainTreeManager pivotMgr = (IPivotDomainTreeManager) dtm().getAnalysisManager(name);
-	pivotMgr.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	IAbstractAnalysisDomainTreeManager analysisMgr = dtm().getAnalysisManager(name);
+	analysisMgr.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
 	assertTrue("The instance should remain 'changed' after some operations.", dtm().isChangedAnalysisManager(name));
 
 	// discard just created analysis
@@ -619,11 +624,11 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
 	assertFalse("The instance should be 'unchanged' after discard operation.", dtm().isChangedAnalysisManager(name));
 
 	// initialise a brand new instance of analysis again (e.g. pivot)
-	dtm().initAnalysisManagerByDefault(name, AnalysisType.PIVOT);
+	dtm().initAnalysisManagerByDefault(name, analysisType);
 	assertTrue("The instance should be 'changed' after initialisation.", dtm().isChangedAnalysisManager(name));
 	// obtain a current instance of analysis and alter it
-	pivotMgr = (IPivotDomainTreeManager) dtm().getAnalysisManager(name);
-	pivotMgr.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	analysisMgr = dtm().getAnalysisManager(name);
+	analysisMgr.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
 	assertTrue("The instance should remain 'changed' after some operations.", dtm().isChangedAnalysisManager(name));
 
 	// accept just created analysis

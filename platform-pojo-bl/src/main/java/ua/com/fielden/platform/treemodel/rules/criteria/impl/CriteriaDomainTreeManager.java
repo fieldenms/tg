@@ -20,7 +20,10 @@ import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeRepre
 import ua.com.fielden.platform.treemodel.rules.criteria.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeManager;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.AnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.LifecycleDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.impl.PivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTree;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.treemodel.rules.impl.EnhancementPropertiesMap;
@@ -46,8 +49,8 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class CriteriaDomainTreeManager extends AbstractDomainTreeManager implements ICriteriaDomainTreeManager {
     private static final long serialVersionUID = 7832625541851145438L;
 
-    private final LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses;
-    private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> currentAnalyses;
+    private final LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses;
+    private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> currentAnalyses;
     private Boolean runAutomatically;
 
     /**
@@ -57,7 +60,7 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
      * @param rootTypes
      */
     public CriteriaDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, new CriteriaDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManager(serialiser, rootTypes), new AddToResultTickManager(), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), null);
+	this(serialiser, new CriteriaDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManager(serialiser, rootTypes), new AddToResultTickManager(), new HashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>(), null);
     }
 
     /**
@@ -68,14 +71,14 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
      * @param firstTick
      * @param secondTick
      */
-    protected CriteriaDomainTreeManager(final ISerialiser serialiser, final ICriteriaDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses, final Boolean runAutomatically) {
+    protected CriteriaDomainTreeManager(final ISerialiser serialiser, final ICriteriaDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses, final Boolean runAutomatically) {
 	super(serialiser, dtr, firstTick, secondTick);
-	this.persistentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
+	this.persistentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
 	this.persistentAnalyses.putAll(persistentAnalyses);
 	this.runAutomatically = runAutomatically;
 
-	currentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
-	for (final Entry<String, IAbstractAnalysisDomainTreeManager> entry : this.persistentAnalyses.entrySet()) {
+	currentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
+	for (final Entry<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> entry : this.persistentAnalyses.entrySet()) {
 	    currentAnalyses.put(entry.getKey(), EntityUtils.deepCopy(entry.getValue(), getSerialiser())); // should be initialised with copies of persistent analyses
 	}
     }
@@ -639,17 +642,17 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 	}
 	// create a new instance and put to "current" map
 	if (AnalysisType.PIVOT.equals(analysisType)) {
-	    // TODO implement actual pivot analysis creation (not stub)
-	    final PivotDomainTreeManager pivotDomainTreeManager = new PivotDomainTreeManager(getSerialiser(), getRepresentation().rootTypes());
-	    currentAnalyses.put(name, pivotDomainTreeManager);
-	} else {
-	    // TODO implement other types creation
+	    currentAnalyses.put(name, new PivotDomainTreeManagerAndEnhancer(getSerialiser(), getRepresentation().rootTypes()));
+	} if (AnalysisType.SIMPLE.equals(analysisType)) {
+	    currentAnalyses.put(name, new AnalysisDomainTreeManagerAndEnhancer(getSerialiser(), getRepresentation().rootTypes()));
+	} if (AnalysisType.LIFECYCLE.equals(analysisType)) {
+	    currentAnalyses.put(name, new LifecycleDomainTreeManagerAndEnhancer(getSerialiser(), getRepresentation().rootTypes()));
 	}
     }
 
     @Override
     public void discardAnalysisManager(final String name) {
-	final IAbstractAnalysisDomainTreeManager dtm = EntityUtils.deepCopy(persistentAnalyses.get(name), getSerialiser());
+	final IAbstractAnalysisDomainTreeManagerAndEnhancer dtm = EntityUtils.deepCopy(persistentAnalyses.get(name), getSerialiser());
 	if (dtm != null) {
 	    currentAnalyses.put(name, dtm);
 	} else {
@@ -659,7 +662,7 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 
     @Override
     public void acceptAnalysisManager(final String name) {
-	final IAbstractAnalysisDomainTreeManager dtm = EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser());
+	final IAbstractAnalysisDomainTreeManagerAndEnhancer dtm = EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser());
 	if (dtm != null) {
 	    persistentAnalyses.put(name, dtm);
 	} else {
@@ -683,7 +686,7 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
     }
 
     @Override
-    public IAbstractAnalysisDomainTreeManager getAnalysisManager(final String name) {
+    public IAbstractAnalysisDomainTreeManagerAndEnhancer getAnalysisManager(final String name) {
 	return currentAnalyses.get(name);
     }
 
@@ -708,7 +711,7 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 	    final CriteriaDomainTreeRepresentation dtr = readValue(buffer, CriteriaDomainTreeRepresentation.class);
 	    final AddToCriteriaTickManager firstTick = readValue(buffer, AddToCriteriaTickManager.class);
 	    final AddToResultTickManager secondTick = readValue(buffer, AddToResultTickManager.class);
-	    final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses = readValue(buffer, LinkedHashMap.class);
+	    final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses = readValue(buffer, LinkedHashMap.class);
 	    final Boolean runAutomatically = readValue(buffer, Boolean.class);
 	    return new CriteriaDomainTreeManager(kryo(), dtr, firstTick, secondTick, persistentAnalyses, runAutomatically);
 	}
@@ -752,7 +755,7 @@ public class CriteriaDomainTreeManager extends AbstractDomainTreeManager impleme
 	return true;
     }
 
-    protected Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses() {
+    protected Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses() {
         return persistentAnalyses;
     }
 

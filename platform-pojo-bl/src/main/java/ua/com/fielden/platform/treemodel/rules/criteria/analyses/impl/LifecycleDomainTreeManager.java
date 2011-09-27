@@ -195,4 +195,47 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
 	this.total = total;
 	return this;
     }
+
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = super.hashCode();
+	result = prime * result + ((from == null) ? 0 : from.hashCode());
+	result = prime * result + ((lifecycleProperty == null) ? 0 : lifecycleProperty.hashCode());
+	result = prime * result + ((to == null) ? 0 : to.hashCode());
+	result = prime * result + ((total == null) ? 0 : total.hashCode());
+	return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	if (this == obj)
+	    return true;
+	if (!super.equals(obj))
+	    return false;
+	if (getClass() != obj.getClass())
+	    return false;
+	final LifecycleDomainTreeManager other = (LifecycleDomainTreeManager) obj;
+	if (from == null) {
+	    if (other.from != null)
+		return false;
+	} else if (!from.equals(other.from))
+	    return false;
+	if (lifecycleProperty == null) {
+	    if (other.lifecycleProperty != null)
+		return false;
+	} else if (!lifecycleProperty.equals(other.lifecycleProperty))
+	    return false;
+	if (to == null) {
+	    if (other.to != null)
+		return false;
+	} else if (!to.equals(other.to))
+	    return false;
+	if (total == null) {
+	    if (other.total != null)
+		return false;
+	} else if (!total.equals(other.total))
+	    return false;
+	return true;
+    }
 }

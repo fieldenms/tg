@@ -13,7 +13,7 @@ import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManag
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeRepresentation;
 import ua.com.fielden.platform.treemodel.rules.criteria.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.treemodel.rules.criteria.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.treemodel.rules.criteria.impl.CriteriaDomainTreeManager.AddToCriteriaTickManager;
 import ua.com.fielden.platform.treemodel.rules.criteria.impl.CriteriaDomainTreeManager.AddToResultTickManager;
 import ua.com.fielden.platform.treemodel.rules.impl.AbstractDomainTreeManager.TickManager;
@@ -504,7 +504,7 @@ public class CriteriaDomainTreeManagerAndEnhancer extends AbstractDomainTreeMana
     }
 
     @Override
-    public IAbstractAnalysisDomainTreeManager getAnalysisManager(final String name) {
+    public IAbstractAnalysisDomainTreeManagerAndEnhancer getAnalysisManager(final String name) {
 	return base().getAnalysisManager(name);
     }
 
