@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -15,6 +17,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
+import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.before_change_event_handling.BeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
@@ -40,7 +47,7 @@ public class ReflectorTest {
     final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     @Test
-    public void testThatObtainGetterWorks() throws Exception {
+    public void test_that_obtain_getter_works() throws Exception {
 	Method method = Reflector.obtainPropertyAccessor(SecondLevelEntity.class, "propertyOfSelfType");
 	assertNotNull("Failed to located a getter method.", method);
 	assertEquals("Incorrect getter.", "getPropertyOfSelfType", method.getName());
@@ -178,6 +185,39 @@ public class ReflectorTest {
 	}
     }
 
+    @Test
+    public void test_validation_limits_extraction(){
+	final C c = factory.newEntity(C.class, 1L, "KEY");
+	assertEquals("Should be equal.", new Pair<Comparable, Comparable>(1, 12), Reflector.extractValidationLimits(c, "month"));
+	assertEquals("Should be equal.", new Pair<Comparable, Comparable>(1950, Integer.MAX_VALUE), Reflector.extractValidationLimits(c, "year"));
+    }
+
+    @Test
+    public void test_annotataion_params() {
+	final List<String> params = Reflector.annotataionParams(Handler.class);
+	assertEquals("Unexpected number of annotation parameters.", 9, params.size());
+	assertTrue(params.contains("value"));
+	assertTrue(params.contains("non_ordinary"));
+	assertTrue(params.contains("clazz"));
+	assertTrue(params.contains("integer"));
+	assertTrue(params.contains("str"));
+	assertTrue(params.contains("dbl"));
+	assertTrue(params.contains("date"));
+	assertTrue(params.contains("date_time"));
+	assertTrue(params.contains("money"));
+    }
+
+    @Test
+    public void test_that_annotation_param_value_can_be_obtained() {
+	final Handler handler = new HandlerAnnotation(BeforeChangeEventHandler.class).date(new DateParam[]{ParamAnnotation.dateParam("dateParam", "2011-12-01 00:00:00")}).newInstance();
+	final Pair<Class<?>, Object> pair = Reflector.getAnnotationParamValue(handler, "date");
+	final DateParam[] dateParams = (DateParam[])pair.getValue();
+	assertEquals("Incorrect number of parameter values.", 1, dateParams.length);
+	final DateParam param = dateParams[0];
+	assertEquals("Incorrect parameter value.", "dateParam", param.name());
+	assertEquals("Incorrect parameter value.", "2011-12-01 00:00:00", param.value());
+    }
+
     @KeyType(String.class)
     private static class C extends AbstractEntity<String> {
 	public C() {
@@ -209,13 +249,5 @@ public class ReflectorTest {
 	    this.year = year;
 	}
     }
-
-    @Test
-    public void test_validation_limits_extraction(){
-	final C c = factory.newEntity(C.class, 1L, "KEY");
-	assertEquals("Should be equal.", new Pair<Comparable, Comparable>(1, 12), Reflector.extractValidationLimits(c, "month"));
-	assertEquals("Should be equal.", new Pair<Comparable, Comparable>(1950, Integer.MAX_VALUE), Reflector.extractValidationLimits(c, "year"));
-    }
-
 
 }

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.treemodel.rules.impl;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -17,9 +18,9 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.asm.api.AnnotationDescriptor;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -79,15 +80,19 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 
 	@Override
 	public boolean equals(final Object obj) {
-	    if (this == obj)
+	    if (this == obj) {
 		return true;
-	    if (obj == null)
+	    }
+	    if (obj == null) {
 		return false;
-	    if (getClass() != obj.getClass())
+	    }
+	    if (getClass() != obj.getClass()) {
 		return false;
+	    }
 	    final ByteArray other = (ByteArray) obj;
-	    if (!Arrays.equals(array, other.array))
+	    if (!Arrays.equals(array, other.array)) {
 		return false;
+	    }
 	    return true;
 	}
     }
@@ -200,12 +205,8 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 		int i = 0;
 		for (final Entry<String, ICalculatedProperty> nameWithProp : props.entrySet()) {
 		    final ICalculatedProperty prop = nameWithProp.getValue();
-		    final Map<String, Object> exprAndOrigination = new HashMap<String, Object>();
-		    exprAndOrigination.put("expression", prop.getExpression());
-		    exprAndOrigination.put("origination", prop.getOriginationPropertyName());
-		    exprAndOrigination.put("category", prop.getCategory());
-		    final AnnotationDescriptor calcAnnotationDescriptor = new AnnotationDescriptor(Calculated.class, exprAndOrigination);
-		    newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.getResultType(), false, prop.getTitle(), prop.getDesc(), calcAnnotationDescriptor);
+		    final Annotation calcAnnotation = new CalculatedAnnotation().expression(prop.getExpression()).origination(prop.getOriginationPropertyName()).category(prop.getCategory()).newInstance();
+		    newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.getResultType(), false, prop.getTitle(), prop.getDesc(), calcAnnotation);
 		}
 		// determine a "real" parent type:
 		final Class<?> realParentToBeEnhanced = StringUtils.isEmpty(path) ? realRoot : PropertyTypeDeterminator.determinePropertyType(realRoot, path);
@@ -436,28 +437,37 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (getClass() != obj.getClass())
+	}
+	if (getClass() != obj.getClass()) {
 	    return false;
+	}
 	final DomainTreeEnhancer other = (DomainTreeEnhancer) obj;
 	if (calculatedProperties == null) {
-	    if (other.calculatedProperties != null)
+	    if (other.calculatedProperties != null) {
 		return false;
-	} else if (!calculatedProperties.equals(other.calculatedProperties))
+	    }
+	} else if (!calculatedProperties.equals(other.calculatedProperties)) {
 	    return false;
+	}
 	if (originalAndEnhancedRootTypesArrays == null) {
-	    if (other.originalAndEnhancedRootTypesArrays != null)
+	    if (other.originalAndEnhancedRootTypesArrays != null) {
 		return false;
-	} else if (!originalAndEnhancedRootTypesArrays.equals(other.originalAndEnhancedRootTypesArrays))
+	    }
+	} else if (!originalAndEnhancedRootTypesArrays.equals(other.originalAndEnhancedRootTypesArrays)) {
 	    return false;
+	}
 	if (rootTypes == null) {
-	    if (other.rootTypes != null)
+	    if (other.rootTypes != null) {
 		return false;
-	} else if (!rootTypes.equals(other.rootTypes))
+	    }
+	} else if (!rootTypes.equals(other.rootTypes)) {
 	    return false;
+	}
 	return true;
     }
 

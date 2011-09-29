@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.reflection.asm.api;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -15,47 +18,61 @@ public final class NewProperty {
     public final boolean changeSignature;
     public final String title;
     public final String desc;
-    public final AnnotationDescriptor[] annotations;
+    public final List<Annotation> annotations = new ArrayList<Annotation>();
 
     public static NewProperty changeType(final String name, final Class<?> type) {
-	return new NewProperty (name, type, false, null, null, new AnnotationDescriptor[0]);
+	return new NewProperty (name, type, false, null, null, new Annotation[0]);
     }
 
     public static NewProperty changeTypeSignature(final String name, final Class<?> type) {
-	return new NewProperty (name, type, true, null, null, new AnnotationDescriptor[0]);
+	return new NewProperty (name, type, true, null, null, new Annotation[0]);
     }
 
-    public NewProperty(final String name, final Class<?> type, final boolean changeSignature, final String title, final String desc, final AnnotationDescriptor... annotations) {
+    public NewProperty(final String name, final Class<?> type, final boolean changeSignature, final String title, final String desc, final Annotation... annotations) {
 	this.name = name;
 	this.type = type;
 	this.changeSignature = changeSignature;
 	this.title = title;
 	this.desc = desc;
-	this.annotations = annotations;
+	this.annotations.addAll(Arrays.asList(annotations));
     }
 
     /**
-     * Tests whether an annotation descriptor is present for a specific annotation type.
+     * Tests whether an annotation is present for a specific annotation type.
      *
      * @param annotationType
      * @return
      */
     public boolean containsAnnotationDescriptorFor(final Class<? extends Annotation> annotationType) {
-	return getAnnotationDescriptorByType(annotationType) != null;
+	return getAnnotationByType(annotationType) != null;
     }
 
     /**
-     * Returns an annotation description for the specified annotation type. Returns <code>null</code> if such description is not in the list.
+     * Returns an annotation for the specified annotation type. Returns <code>null</code> if such annotation is not in the list.
      *
      * @param annotationType
      * @return
      */
-    public AnnotationDescriptor getAnnotationDescriptorByType(final Class<? extends Annotation> annotationType) {
-	for (final AnnotationDescriptor ad : annotations) {
-	    if (ad.type == annotationType) {
+    public Annotation getAnnotationByType(final Class<? extends Annotation> annotationType) {
+	for (final Annotation ad : annotations) {
+	    final Class<? extends Annotation> thisType = ad.annotationType();
+	    if (thisType == annotationType) {
 		return ad;
 	    }
 	}
 	return null;
+    }
+
+    /**
+     * Add the specified annotation to the list of property annotations.
+     *
+     * @param annotation
+     * @return
+     */
+    public NewProperty addAnnotation(final Annotation annotation) {
+	if (!containsAnnotationDescriptorFor(annotation.annotationType())) {
+	    annotations.add(annotation);
+	}
+	return this;
     }
 }

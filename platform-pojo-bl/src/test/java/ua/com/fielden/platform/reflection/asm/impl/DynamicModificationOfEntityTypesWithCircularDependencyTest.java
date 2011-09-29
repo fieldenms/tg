@@ -4,14 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.asm.api.AnnotationDescriptor;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.CircularChild;
 import ua.com.fielden.platform.reflection.asm.impl.entities.CircularParent;
@@ -31,7 +30,9 @@ public class DynamicModificationOfEntityTypesWithCircularDependencyTest {
     private static final String NEW_PROPERTY = "newProperty";
     private DynamicEntityClassLoader cl;
 
-    private final NewProperty pd = new NewProperty(NEW_PROPERTY, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, new AnnotationDescriptor(Calculated.class, new HashMap<String, Object>() {{ put("expression", NEW_PROPERTY_EXPRESSION); put("origination", NEW_PROPERTY_ORIGINATION); }} ));
+    private final Calculated calculated = new CalculatedAnnotation().expression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
+
+    private final NewProperty pd = new NewProperty(NEW_PROPERTY, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
     @Before
     public void setUp() {
 	cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());

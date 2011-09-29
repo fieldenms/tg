@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -8,9 +10,9 @@ import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.asm.api.AnnotationDescriptor;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
+import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.asm.AnnotationVisitor;
 import com.google.inject.asm.ClassAdapter;
@@ -94,69 +96,115 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
     }
 
     /**
-     * Constructs a signature based on the new property annotation descriptor information.
-     * Its primary use if to correctly construct collectional properties based on the type parameter as specified in the IsProperty annotation descriptor.
+     * Constructs a signature based on the new property annotation descriptor information. Its primary use if to correctly construct collectional properties based on the type
+     * parameter as specified in the IsProperty annotation descriptor.
      *
      * @param pd
      * @param propertyType
      * @return
      */
     private String constructSignature(final NewProperty pd, final String propertyType) {
-	final AnnotationDescriptor adIsProperty = pd.getAnnotationDescriptorByType(IsProperty.class);
-	final String signature = adIsProperty != null && adIsProperty.params.get("value") != null ?  Type.getDescriptor((Class) adIsProperty.params.get("value")) : null;
-	final String signatureMode = signature == null ? null :
-	    propertyType.substring(0, propertyType.length()-1) + "<" + signature + ">;";
+	final IsProperty adIsProperty = (IsProperty) pd.getAnnotationByType(IsProperty.class);
+	final String signature = adIsProperty != null && adIsProperty.value() != null ? Type.getDescriptor(adIsProperty.value()) : null;
+	final String signatureMode = signature == null ? null : propertyType.substring(0, propertyType.length() - 1) + "<" + signature + ">;";
 	return signatureMode;
     }
 
     private void addPropertyField(final NewProperty pd, final ClassVisitor cv) {
-	final String propertyType  = Type.getDescriptor(pd.type);
+	final String propertyType = Type.getDescriptor(pd.type);
 	final String signatureMode = constructSignature(pd, propertyType);
 	final FieldVisitor fvProperty = cv.visitField(ACC_PRIVATE, pd.name, propertyType, signatureMode, null);
 
-	// mark the field as generated
-	fvProperty.visitAnnotation(Type.getDescriptor(Generated.class), true).visitEnd();
-
-	// the generated field should correspond to a property
-	// thus it should have annotation IsProperty, but the annotation descriptor list may already contain it
-	// therefore add IsProperty only if it is not already present in the list
-	if (!pd.containsAnnotationDescriptorFor(IsProperty.class)) {
-	    final AnnotationVisitor avIsProperty = fvProperty.visitAnnotation(Type.getDescriptor(IsProperty.class), true);
-	    avIsProperty.visitEnd();
-	}
-
-	// property should have title and description
-	final AnnotationVisitor avTitle = fvProperty.visitAnnotation(Type.getDescriptor(Title.class), true);
-	avTitle.visit("value", pd.title);
-	avTitle.visit("desc", pd.desc);
-	avTitle.visitEnd();
+	addRequiredAnnotations(pd);
 
 	// add other annotations to the field being generated
-	for (final AnnotationDescriptor ad : pd.annotations) {
-	    final AnnotationVisitor av = fvProperty.visitAnnotation(Type.getDescriptor(ad.type), true);
-	    for (final Map.Entry<String, Object> param : ad.params.entrySet()) {
-		// determine the type of annotation method to correctly handle Enum types.
-		// TODO Perhaps nested annotations / arrays should be handled too.
-		final Class<?> methodType = PropertyTypeDeterminator.determinePropertyType(ad.type, param.getKey() + "()");
-		if (Enum.class.isAssignableFrom(methodType)) {
-		    av.visitEnum(param.getKey(), Type.getDescriptor(methodType), param.getValue().toString());
-		} else if (param.getValue() instanceof Class){ // if the parameter value is a class then need to use its description
-		    final Type value = Type.getType((Class) param.getValue());
-		    av.visit(param.getKey(), value);
-		} else {
-		    av.visit(param.getKey(), param.getValue());
-		}
-	    }
-	    av.visitEnd();
+	for (final Annotation annotation : pd.annotations) {
+	    processAnnotationParam(fvProperty.visitAnnotation(Type.getDescriptor(annotation.annotationType()), true), annotation);
 	}
 
 	// finalise field generation
 	fvProperty.visitEnd();
     }
 
+    private void addRequiredAnnotations(final NewProperty pd) {
+	// mark the field as generated
+	pd.addAnnotation(new Generated(){
+	    @Override
+	    public Class<Generated> annotationType() {
+		return Generated.class;
+	    }});
+
+	// the generated field should correspond to a property
+	// thus it should have annotation IsProperty, but the annotation descriptor list may already contain it
+	// therefore add IsProperty just in case -- it will not be added if already present
+	pd.addAnnotation(new IsProperty() {
+	    @Override
+	    public Class<IsProperty> annotationType() {
+		return IsProperty.class;
+	    }
+
+	    @Override
+	    public Class<?> value() {
+		return Void.class;
+	    }
+	});
+	// the same goes about the Title annotation as property should have title and description
+	pd.addAnnotation(new Title() {
+	    @Override
+	    public Class<Title> annotationType() {
+		return Title.class;
+	    }
+
+	    @Override
+	    public String value() {
+		return pd.title;
+	    }
+
+	    @Override
+	    public String desc() {
+		return pd.desc;
+	    }
+
+	});
+    }
+
+    private void processAnnotationParam(final AnnotationVisitor av, final Annotation annotation) {
+	final List<String> params = Reflector.annotataionParams(annotation.getClass());
+
+	for (final String name : params) {
+	    final Pair<Class<?>, Object> pair = Reflector.getAnnotationParamValue(annotation, name);
+	    final Class<?> type = pair.getKey();
+	    final Object value = pair.getValue();
+	    processValueForAnnotation(av, name, type, value);
+	}
+	av.visitEnd();
+    }
+
+    private void processValueForAnnotation(final AnnotationVisitor av, final String name, final Class<?> originalType, final Object value) {
+	final Class<?> type = (Annotation.class.isAssignableFrom(originalType) && originalType.getName().contains("$")) ? originalType.getInterfaces()[0] : originalType;
+
+	if (Enum.class.isAssignableFrom(type)) {
+	    av.visitEnum(name, Type.getDescriptor(type), value.toString());
+	} else if (value instanceof Class) { // if the parameter value is a class then need to use its description
+	    av.visit(name, Type.getType((Class) value));
+	} else if (value instanceof Annotation) {
+	    final AnnotationVisitor avAnnotation = av.visitAnnotation(name, Type.getDescriptor(type));
+	    processAnnotationParam(avAnnotation, (Annotation) value);
+	} else if (type.isArray()) {
+	    final Class<?> arrayType = type.getComponentType();
+	    final Object[] array = (Object[]) value;
+	    final AnnotationVisitor avArray = av.visitArray(name);
+	    for (final Object arVal : array) {
+		processValueForAnnotation(avArray, null, arrayType, arVal);
+	    }
+	    avArray.visitEnd();
+	} else if (value != null){
+	    av.visit(name, value);
+	}
+    }
 
     private void addPropertyGetter(final NewProperty pd, final ClassVisitor cv) {
-	final String propertyType  = Type.getDescriptor(pd.type);
+	final String propertyType = Type.getDescriptor(pd.type);
 	final String signatureMode = constructSignature(pd, propertyType);
 	final String signature = signatureMode != null ? "()" + signatureMode : null;
 
@@ -171,7 +219,7 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
     }
 
     private void addPropertySetter(final NewProperty pd, final ClassVisitor cv) {
-	final String propertyType  = Type.getDescriptor(pd.type);
+	final String propertyType = Type.getDescriptor(pd.type);
 	final String signatureMode = constructSignature(pd, propertyType);
 	final String signature = signatureMode != null ? "(" + signatureMode + ")V" : null;
 
@@ -280,5 +328,13 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 	    }
 	}
 
+    }
+
+    public static void main(final String[] args) {
+	final Object intar = new Integer[] { 1, 3 };
+	final Object[] ar = (Object[]) intar;
+	for (final Object obj : ar) {
+	    System.out.println(obj);
+	}
     }
 }

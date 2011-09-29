@@ -10,9 +10,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,13 +19,21 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.before_change_event_handling.BeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.reflection.asm.api.AnnotationDescriptor;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.Annotation1;
 import ua.com.fielden.platform.reflection.asm.impl.entities.Annotation1.ENUM1;
@@ -38,7 +44,6 @@ import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
 import com.google.inject.Injector;
-import com.google.inject.asm.Type;
 
 
 /**
@@ -61,8 +66,13 @@ public class DynamicEntityTypeGenerationTest {
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private DynamicEntityClassLoader cl;
 
-    private final NewProperty pd1 = new NewProperty(NEW_PROPERTY_1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, new AnnotationDescriptor(Calculated.class, new HashMap<String, Object>() {{ put("expression", NEW_PROPERTY_EXPRESSION); put("origination", NEW_PROPERTY_ORIGINATION); }} ));
-    private final NewProperty pd2 = new NewProperty(NEW_PROPERTY_2, Money.class, false,  NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, new AnnotationDescriptor(Calculated.class, new HashMap<String, Object>() {{ put("expression", NEW_PROPERTY_EXPRESSION); put("origination", NEW_PROPERTY_ORIGINATION); }} ));
+    private final Calculated calculated = new CalculatedAnnotation().expression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
+
+    private final NewProperty pd1 = new NewProperty(NEW_PROPERTY_1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
+    private final NewProperty pd2 = new NewProperty(NEW_PROPERTY_2, Money.class, false,  NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
+
+
+
     @Before
     public void setUp() {
 	observed = false;
@@ -100,7 +110,7 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void test_to_ensure_that_conflicting_new_properties_are_not_added() throws Exception {
-	final NewProperty npConflicting = new NewProperty("firstProperty", Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, new AnnotationDescriptor(Calculated.class, new HashMap<String, Object>() {{ put("expression", NEW_PROPERTY_EXPRESSION); put("origination", NEW_PROPERTY_ORIGINATION); }} ));
+	final NewProperty npConflicting = new NewProperty("firstProperty", Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
 	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(npConflicting).endModification();
 	assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size(), Finder.getPropertyDescriptors(newType).size());
     }
@@ -182,16 +192,44 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void test_correct_generation_of_property_with_multiple_annotations() throws Exception {
-	Map<String, Object> params = new HashMap<String, Object>();
-	params.put("value", "string");
-	params.put("doubleValue", 0.1);
-	params.put("enumValue", ENUM1.E2);
-	final AnnotationDescriptor ad1 = new AnnotationDescriptor(Annotation1.class, params);
+	final Annotation1 ad1 = new Annotation1() {
+	    @Override
+	    public Class<Annotation1> annotationType() {
+		return Annotation1.class;
+	    }
+	    @Override
+	    public String value() {
+		return "string";
+	    }
+	    @Override
+	    public double doubleValue() {
+		return 0.1;
+	    }
+	    @Override
+	    public ENUM1 enumValue() {
+		return ENUM1.E2;
+	    }
+	};
+	final Annotation2 ad2 = new Annotation2() {
+	    @Override
+	    public Class<Annotation2> annotationType() {
+		return Annotation2.class;
+	    }
+	    @Override
+	    public String value() {
+		return "value";
+	    }
+	    @Override
+	    public int intValue() {
+		return 1;
+	    }
+	    @Override
+	    public Class<?> type() {
+		return Money.class;
+	    }
 
-	params = new HashMap<String, Object>();
-	params.put("intValue", 1);
-	params.put("type", Type.getType(Money.class));
-	final AnnotationDescriptor ad2 = new AnnotationDescriptor(Annotation2.class, params);
+	};
+
 
 	final NewProperty pd = new NewProperty(NEW_PROPERTY_1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, ad1, ad2);
 	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(pd).endModification();
@@ -213,9 +251,10 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_addition_of_collectional_property() throws Exception {
 	// create
-	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description",
-		new AnnotationDescriptor(Calculated.class, new HashMap<String, Object>() {{ put("expression", NEW_PROPERTY_EXPRESSION); put("origination", NEW_PROPERTY_ORIGINATION); }}),
-		new AnnotationDescriptor(IsProperty.class, new HashMap<String, Object>() {{ put("value", String.class);}}));
+	final Calculated calculated = new CalculatedAnnotation().expression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
+	final IsProperty isProperty = new IsPropertyAnnotation(String.class).newInstance();
+
+	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description",	calculated, isProperty);
 	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
 
 	// test the modified field attributes such as type and IsProperty annotation
@@ -230,8 +269,9 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_getter_signature_for_new_collectional_property() throws Exception {
 	// create
-	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description",
-		new AnnotationDescriptor(IsProperty.class, new HashMap<String, Object>() {{ put("value", String.class);}}));
+	final IsProperty isProperty = new IsPropertyAnnotation(String.class).newInstance();
+
+	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description",	isProperty);
 	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
 
 	final Method getter = Reflector.obtainPropertyAccessor(enhancedType, "collectionalProperty");
@@ -244,8 +284,9 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_setter_signature_for_new_collectional_property() throws Exception {
 	// create
-	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description",
-		new AnnotationDescriptor(IsProperty.class, new HashMap<String, Object>() {{ put("value", String.class);}}));
+	final IsProperty isProperty = new IsPropertyAnnotation(String.class).newInstance();
+
+	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description", isProperty);
 	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
 
 	final Method setter = Reflector.obtainPropertySetter(enhancedType, "collectionalProperty");
@@ -260,5 +301,39 @@ public class DynamicEntityTypeGenerationTest {
 	assertNotNull("Collectional property should not be null once assigned.", getter.invoke(instance));
 	assertEquals("Incorrect value", list, getter.invoke(instance));
     }
+
+    @Test
+    public void test_generation_of_property_with_BCE_declaration() throws Exception {
+	final Handler[] handlers = new Handler[] {new HandlerAnnotation(BeforeChangeEventHandler.class).date(new DateParam[]{ParamAnnotation.dateParam("dateParam", "2011-12-01 00:00:00")}).newInstance()};
+	final BeforeChange bch = new BeforeChangeAnnotation(handlers).newInstance();
+	final String PROP_NAME = "prop_name";
+	final NewProperty pd = new NewProperty(PROP_NAME, String.class, false, "title", "desc", bch);
+
+	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+
+	final Field field = Finder.findFieldByName(enhancedType, PROP_NAME);
+	final BeforeChange bceAnnotation = field.getAnnotation(BeforeChange.class);
+	assertNotNull("BeforeChange annotation should be present.", bceAnnotation);
+
+	final Handler[] handlerAnnotations = bceAnnotation.value();
+	assertEquals("Incorrect number of handlers.", 1, handlerAnnotations.length);
+
+	final Handler handlerAnnotation = handlerAnnotations[0];
+	assertEquals("Incorrect parameter.", BeforeChangeEventHandler.class, handlerAnnotation.value());
+	assertEquals("Incorrect parameter.", 0, handlerAnnotation.clazz().length);
+	assertEquals("Incorrect parameter.", 1, handlerAnnotation.date().length);
+	assertEquals("Incorrect parameter.", 0, handlerAnnotation.date_time().length);
+	assertEquals("Incorrect parameter.", 0, handlerAnnotation.dbl().length);
+	assertEquals("Incorrect parameter.", 0, handlerAnnotation.integer().length);
+	assertEquals("Incorrect parameter.", 0, handlerAnnotation.money().length);
+	assertEquals("Incorrect parameter.", 0, handlerAnnotation.non_ordinary().length);
+	assertEquals("Incorrect parameter.", 0, handlerAnnotation.str().length);
+
+
+	final DateParam dateParam = handlerAnnotation.date()[0];
+	assertEquals("Incorrect parameter.", "dateParam", dateParam.name());
+	assertEquals("Incorrect parameter.", "2011-12-01 00:00:00", dateParam.value());
+    }
+
 
 }

@@ -1,32 +1,31 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.EnhancedEntityQueryCriteria;
-import ua.com.fielden.platform.criteria.enhanced.FirstParam;
-import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.factory.CriteriaPropertyAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.asm.api.AnnotationDescriptor;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -35,7 +34,7 @@ import com.google.inject.Inject;
 
 /**
  * The implementation of the {@link ICriteriaGenerator} that generates {@link EntityQueryCriteria} with criteria properties.
- * 
+ *
  * @author TG Team
  *
  */
@@ -82,7 +81,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     /**
      * Generates criteria properties for specified list of properties and their root type.
-     * 
+     *
      * @param root
      * @param propertyName
      * @return
@@ -106,7 +105,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     /**
      * Generates criteria property with appropriate annotations.
-     * 
+     *
      * @param root
      * @param propertyType
      * @param propertyName
@@ -119,20 +118,20 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (isBoolean(propertyType) ? Boolean.class : propertyType);
 	final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(root, propertyName);
 
-	final List<AnnotationDescriptor> annotations = new ArrayList<AnnotationDescriptor>(){{
+	final List<Annotation> annotations = new ArrayList<Annotation>(){{
 	    if(isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)){
-		add(new AnnotationDescriptor(IsProperty.class, new HashMap<String, Object>() {{ put("value", String.class); }}));
-		add(new AnnotationDescriptor(EntityType.class, new HashMap<String, Object>() {{ put("value", propertyType); }}));
+		add(new IsPropertyAnnotation(String.class).newInstance());
+		add(new EntityTypeAnnotation((Class<? extends AbstractEntity>) propertyType).newInstance());
 	    }
-	    add(generateCriteriaPropertyAnnotation(root, propertyName));
+	    add(new CriteriaPropertyAnnotation(root, propertyName).newInstance());
 	}};
 
-	return new NewProperty(CriteriaReflector.generateCriteriaPropertyName(root, propertyName, ""), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new AnnotationDescriptor[0]));
+	return new NewProperty(CriteriaReflector.generateCriteriaPropertyName(root, propertyName, ""), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
     }
 
     /**
      * Generates two criteria properties for range properties (i. e. number, money, date or boolean properties).
-     * 
+     *
      * @param root
      * @param propertyType
      * @param propertyName
@@ -145,47 +144,16 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(root, propertyName);
 
 	final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		generateCriteriaPropertyAnnotation(root, propertyName), generateFirstParamAnnotation(secondPropertyName));
+		new CriteriaPropertyAnnotation(root, propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance());
 	final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		generateCriteriaPropertyAnnotation(root, propertyName), generateSecondParamAnnotation(firstPropertyName));
+		new CriteriaPropertyAnnotation(root, propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance());
 
 	return new ArrayList<NewProperty>() {{ add(firstProperty); add(secondProperty); }};
     }
 
     /**
-     * Generates {@link AnnotationDescriptor} for {@link CriteriaProperty} annotation with specified root type and property name.
-     * 
-     * @param rootType
-     * @param propertyName
-     * @return
-     */
-    private static AnnotationDescriptor generateCriteriaPropertyAnnotation(final Class<?> rootType, final String propertyName){
-	return new AnnotationDescriptor(CriteriaProperty.class, new HashMap<String, Object>() {{ put("rootType", rootType); put("propertyName", propertyName); }});
-    }
-
-    /**
-     * Generates {@link AnnotationDescriptor} instance for {@link FirstParam} annotation with specified second property name.
-     * 
-     * @param secondProperty - the property name that is the pair for property annotated with this {@link FirstParam} annotation.
-     * @return
-     */
-    private static AnnotationDescriptor generateFirstParamAnnotation(final String secondProperty){
-	return new AnnotationDescriptor(FirstParam.class, new HashMap<String, Object>() {{ put("secondParam", secondProperty); }});
-    }
-
-    /**
-     * Generates {@link AnnotationDescriptor} instance for {@link SecondParam} annotation with specified first property name.
-     * 
-     * @param firstProperty - the property name that is the pair for property annotated with this {@link SecondParam} annotation.
-     * @return
-     */
-    private static AnnotationDescriptor generateSecondParamAnnotation(final String firstParam){
-	return new AnnotationDescriptor(SecondParam.class, new HashMap<String, Object>() {{ put("firstParam", firstParam); }});
-    }
-
-    /**
      * Returns value that indicates whether specified type is of boolean type.
-     * 
+     *
      * @param type - the type that must be checked whether it is boolean or not.
      * @return
      */

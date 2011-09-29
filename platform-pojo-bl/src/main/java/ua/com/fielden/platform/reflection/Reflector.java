@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -229,6 +230,38 @@ public final class Reflector {
      */
     public static boolean isSynthetic(final Class<?> clazz) {
 	return IQueryModelProvider.class.isAssignableFrom(clazz);
+    }
+
+    /**
+     * Returns a list of parameters declared for the specified annotation type. An empty list is returned in case where there are no parameter declarations.
+     *
+     * @param annotationType
+     * @return
+     */
+    public static List<String> annotataionParams(final Class<? extends Annotation> annotationType) {
+	final List<String> names = new ArrayList<String>();
+	for (final Method param : annotationType.getDeclaredMethods()) {
+	    names.add(param.getName());
+	}
+	return names;
+    }
+
+    /**
+     * Obtains and returns a pair of parameter type and its value for the specified annotation parameter.
+     *
+     * @param annotation
+     * @param paramName
+     * @return parameter value
+     */
+    public static Pair<Class<?>, Object> getAnnotationParamValue(final Annotation annotation, final String paramName) {
+	try {
+	    final Method method = annotation.getClass().getDeclaredMethod(paramName);
+	    method.setAccessible(true);
+	    final Pair<Class<?>, Object> result = new Pair<Class<?>, Object>(method.getReturnType(), method.invoke(annotation));
+	    return result;
+	} catch (final Exception e) {
+	    throw new IllegalStateException(e);
+	}
     }
 
 }
