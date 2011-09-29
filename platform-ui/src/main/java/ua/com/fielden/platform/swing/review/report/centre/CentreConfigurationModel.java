@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 
 /**
  * Model for entity centre. This model allows one to configure and view report.

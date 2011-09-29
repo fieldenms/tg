@@ -7,6 +7,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import ua.com.fielden.platform.domaintree.ITooltipProvider;
 import ua.com.fielden.platform.equery.AnalysisPropertyAggregationFunction;
 import ua.com.fielden.platform.swing.menu.filter.AbstractFilterableTreeModel;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTree;
@@ -15,7 +16,6 @@ import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTreeCellRen
 import ua.com.fielden.platform.treemodel.AnalysisTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
-import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 public class AnalysisTreeCellRenderer extends MultipleCheckboxTreeCellRendererWithParameter {
     private static final long serialVersionUID = -1815282873942753876L;

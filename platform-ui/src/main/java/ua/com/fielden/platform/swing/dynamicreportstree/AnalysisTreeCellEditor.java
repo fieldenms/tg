@@ -23,6 +23,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import ua.com.fielden.platform.basic.autocompleter.EnumValueMatcher;
+import ua.com.fielden.platform.domaintree.ITooltipProvider;
 import ua.com.fielden.platform.equery.AnalysisPropertyAggregationFunction;
 import ua.com.fielden.platform.equery.HqlDateFunctions;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.AutocompleterTextFieldLayer;
@@ -32,7 +33,6 @@ import ua.com.fielden.platform.swing.treewitheditors.EntitiesTree;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTreeParameterCellEditor;
 import ua.com.fielden.platform.treemodel.AnalysisTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
-import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 public class AnalysisTreeCellEditor extends MultipleCheckboxTreeParameterCellEditor {
     private static final long serialVersionUID = 4239011036384304748L;

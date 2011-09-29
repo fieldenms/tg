@@ -7,13 +7,13 @@ import java.util.List;
 
 import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.branding.SplashController;
+import ua.com.fielden.platform.domaintree.EntitiesTreeModel2;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.example.entities.Vehicle;
 import ua.com.fielden.platform.swing.treewitheditors.EntitiesTree2;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
-import ua.com.fielden.platform.treemodel.rules.EntitiesTreeModel2;
-import ua.com.fielden.platform.treemodel.rules.criteria.impl.CriteriaDomainTreeManagerAndEnhancer;
 
 import com.jidesoft.plaf.LookAndFeelFactory;
 
@@ -45,7 +45,7 @@ public class EntitiesTree2Example extends AbstractUiApplication{
     private EntitiesTreeModel2 createTreeModel(final Class<? extends AbstractEntity> clazz) {
 	final List<Class<?>> classes = new ArrayList<Class<?>>();
 	classes.add(clazz);
-	final EntitiesTreeModel2 model = new EntitiesTreeModel2(new CriteriaDomainTreeManagerAndEnhancer(null, new HashSet<Class<?>>(classes)));
+	final EntitiesTreeModel2 model = new EntitiesTreeModel2(new CentreDomainTreeManagerAndEnhancer(null, new HashSet<Class<?>>(classes)));
 	return model;
     }
 }

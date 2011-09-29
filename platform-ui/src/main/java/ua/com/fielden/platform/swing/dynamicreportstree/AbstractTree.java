@@ -14,13 +14,13 @@ import javax.swing.KeyStroke;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import ua.com.fielden.platform.domaintree.ITooltipProvider;
 import ua.com.fielden.platform.swing.review.DynamicCriteriaPropertyAnalyser;
 import ua.com.fielden.platform.swing.treewitheditors.CheckBoxTreeComponent;
 import ua.com.fielden.platform.swing.treewitheditors.EntitiesTree;
 import ua.com.fielden.platform.swing.treewitheditors.FilterMultipleCheckboxTreeCellRenderer;
 import ua.com.fielden.platform.swing.treewitheditors.ITreeCheckingModelComponent;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel;
-import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 /**
  * Abstract tree to be sub-classed for Analysis, Locator and Criteria.

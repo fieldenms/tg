@@ -10,6 +10,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import ua.com.fielden.platform.domaintree.ITooltipProvider;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -19,7 +20,6 @@ import ua.com.fielden.platform.swing.treewitheditors.FilterMultipleCheckboxTreeC
 import ua.com.fielden.platform.swing.treewitheditors.ITreeCheckingModelComponent;
 import ua.com.fielden.platform.treemodel.AnalysisTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
-import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class AnalysisTree extends AbstractTree {

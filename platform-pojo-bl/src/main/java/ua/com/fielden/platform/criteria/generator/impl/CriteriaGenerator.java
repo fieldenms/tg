@@ -11,6 +11,7 @@ import ua.com.fielden.platform.criteria.enhanced.EnhancedEntityQueryCriteria;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -26,7 +27,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
-import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -55,7 +55,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     @Override
-    public <T extends AbstractEntity> EntityQueryCriteria<T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final ICriteriaDomainTreeManager cdtm) {
+    public <T extends AbstractEntity> EntityQueryCriteria<T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final ICentreDomainTreeManager cdtm) {
 	final List<NewProperty> newProperties = new ArrayList<NewProperty>();
 	for(final String propertyName : cdtm.getFirstTick().checkedProperties(root)){
 	    newProperties.addAll(generateCriteriaProperties(root, propertyName));

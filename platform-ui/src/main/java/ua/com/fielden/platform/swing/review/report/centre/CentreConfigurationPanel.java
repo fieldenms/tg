@@ -2,9 +2,9 @@ package ua.com.fielden.platform.swing.review.report.centre;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.view.BasePanel;
-import ua.com.fielden.platform.treemodel.rules.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 
 public class CentreConfigurationPanel<DTME extends IDomainTreeManagerAndEnhancer, T extends AbstractEntity, DAO extends IEntityDao<T>> extends BasePanel {
 

@@ -19,6 +19,7 @@ import javax.swing.tree.TreeCellEditor;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import ua.com.fielden.platform.domaintree.ITooltipProvider;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
 import ua.com.fielden.platform.swing.treewitheditors.CheckBoxTreeComponent;
@@ -27,7 +28,6 @@ import ua.com.fielden.platform.swing.treewitheditors.FilterMultipleCheckboxTreeC
 import ua.com.fielden.platform.swing.treewitheditors.ITreeCheckingModelComponent;
 import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTree;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
-import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 public class AbstractTreeCellEditor extends AbstractCellEditor implements TreeCellEditor {
 

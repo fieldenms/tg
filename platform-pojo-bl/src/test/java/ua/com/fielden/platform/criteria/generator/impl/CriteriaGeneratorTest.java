@@ -21,13 +21,13 @@ import ua.com.fielden.platform.criteria.enhanced.FirstParam;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-import ua.com.fielden.platform.treemodel.rules.criteria.impl.CriteriaDomainTreeManager;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -38,7 +38,7 @@ public class CriteriaGeneratorTest {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
     @SuppressWarnings("serial")
-    private final CriteriaDomainTreeManager cdtm = new CriteriaDomainTreeManager(null, new HashSet<Class<?>>(){{ add(TopLevelEntity.class); }});
+    private final CentreDomainTreeManager cdtm = new CentreDomainTreeManager(null, new HashSet<Class<?>>(){{ add(TopLevelEntity.class); }});
     {
 	cdtm.getFirstTick().check(TopLevelEntity.class, "integerProp", true);
 	cdtm.getFirstTick().check(TopLevelEntity.class, "moneyProp", true);

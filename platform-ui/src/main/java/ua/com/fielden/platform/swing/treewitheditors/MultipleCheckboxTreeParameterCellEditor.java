@@ -22,12 +22,12 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.domaintree.ITooltipProvider;
 import ua.com.fielden.platform.swing.dynamicreportstree.EntitiesTreeColumn;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
-import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 /**
  * Class that provides basic functionality for editing {@link TreeNode} meta parameters.

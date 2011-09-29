@@ -3,7 +3,7 @@ package ua.com.fielden.platform.swing.treewitheditors;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 
-import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
+import ua.com.fielden.platform.domaintree.ITooltipProvider;
 
 /**
  * The {@link TreeCellRenderer} for the {@link MultipleCheckboxTree}

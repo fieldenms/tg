@@ -9,14 +9,14 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import ua.com.fielden.platform.domaintree.EntitiesTreeModel2;
+import ua.com.fielden.platform.domaintree.ITooltipProvider;
 import ua.com.fielden.platform.snappy.SnappyEntitiesTree;
 import ua.com.fielden.platform.swing.dynamicreportstree.EntitiesTreeColumn;
 import ua.com.fielden.platform.swing.menu.filter.FilterableTreeModel;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
-import ua.com.fielden.platform.treemodel.rules.EntitiesTreeModel2;
-import ua.com.fielden.platform.treemodel.rules.ITooltipProvider;
 
 /**
  * The NEW IMPLEMENTATI ON of tree with entities and sub-properties and 2 check-boxes for each node. Contains features like filtering, toolTips and node's enablement.

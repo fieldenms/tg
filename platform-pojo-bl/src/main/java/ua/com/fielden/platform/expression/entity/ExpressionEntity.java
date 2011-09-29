@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.expression.entity;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -13,7 +14,6 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
-import ua.com.fielden.platform.treemodel.rules.ICalculatedProperty;
 import ua.com.fielden.platform.utils.ClassComparator;
 
 /**

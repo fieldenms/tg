@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.criteria.generator;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
-import ua.com.fielden.platform.treemodel.rules.criteria.ICriteriaDomainTreeManager;
 
 /**
  * A contract for criteria generator.
@@ -21,5 +21,5 @@ public interface ICriteriaGenerator {
      * @param cdtm
      * @return
      */
-    public <T extends AbstractEntity> EntityQueryCriteria<T, IEntityDao<T>> generateQueryCriteria(Class<T> root, ICriteriaDomainTreeManager cdtm);
+    public <T extends AbstractEntity> EntityQueryCriteria<T, IEntityDao<T>> generateQueryCriteria(Class<T> root, ICentreDomainTreeManager cdtm);
 }
