@@ -19,8 +19,14 @@ public class DefaultConrollerProviderImpl implements IDefaultConrollerProvider {
     @Override
     public <T extends IEntityDao<E>, E extends AbstractEntity> T findController(final Class<E> type) {
 	if (type.isAnnotationPresent(DefaultController.class)) {
-	    final Class<T> controllerType = (Class<T>) type.getAnnotation(DefaultController.class).value();
-	    return injector.getInstance(controllerType);
+	    try {
+		final Class<T> controllerType = (Class<T>) type.getAnnotation(DefaultController.class).value();
+		return injector.getInstance(controllerType);
+	    } catch (final Exception e) {
+		// if controller could not be instantiated for whatever reason it can be considered non-existent
+		// thus, returning null
+		return null;
+	    }
 	}
 	return null;
     }

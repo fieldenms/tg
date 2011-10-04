@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
+import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -8,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.types.markers.ISecurityTokenType;
 import ua.com.fielden.platform.utils.ClassComparator;
@@ -20,6 +22,7 @@ import ua.com.fielden.platform.utils.ClassComparator;
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("SECURITY_ROLE_ASSOCIATION")
+@DefaultController(ISecurityRoleAssociationDao.class)
 public class SecurityRoleAssociation extends AbstractEntity<DynamicEntityKey> {
 
     private static final long serialVersionUID = -4411308363510017782L;

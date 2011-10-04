@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
+import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -8,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 
 /**
  * Entity that represents the association between {@link User} and {@link UserRole} entities.
@@ -17,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("USER_ROLE_ASSOCIATION")
+@DefaultController(IUserAndRoleAssociationDao.class)
 public class UserAndRoleAssociation extends AbstractEntity<DynamicEntityKey> {
 
     private static final long serialVersionUID = 1L;
