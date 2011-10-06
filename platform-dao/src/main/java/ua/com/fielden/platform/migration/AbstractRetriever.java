@@ -243,19 +243,13 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 	private Object getPropValue(final AbstractRetriever ret, final ResultSet rs, final DynamicEntityDao dynamicDao, final EntityFactory factory) throws Exception {
 	    if (propValueIndex != null) {
 
-		Object adoptedValue = null;
 		final Object rawValue = rs.getObject(propValueIndex);
 		try {
-		    adoptedValue = ret.getAdoptedPropValue(propName, propType, rawValue);
+		    return ret.getAdoptedPropValue(propName, propType, rawValue);
 		} catch (final Exception ex) {
 		    throw new Result(ret.error(factory, propName, propType.getName(), rawValue), ex);
 		}
 
-		if (rawValue != null && adoptedValue == null) {
-		    throw new Result(ret.error(factory, propName, propType.getName(), rawValue), new IllegalStateException("Not exists"));
-		} else {
-		    return adoptedValue;
-		}
 	    } else {
 		final List<Object> compositeMembersValues = new ArrayList<Object>();
 		for (final Container container : compositeMembers) {
@@ -359,12 +353,74 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 	    return findValue(propName, propValue);
 	} else if (AbstractEntity.class.isAssignableFrom(propType)) {
 	    dynamicDao.setEntityType((Class<? extends AbstractEntity>) propType);
-	    return dynamicDao.findByKey(propValue);
+	    final Object foundEntity = dynamicDao.findByKey(propValue);
+	    if (foundEntity != null) {
+		return foundEntity;
+	    } else {
+		throw new IllegalStateException("Not exists");
+	    }
 	} else if (Money.class.isAssignableFrom(propType)) {
 	    return rawValue != null ? new Money(new BigDecimal(rawValue.toString()), Currency.getInstance(Locale.getDefault())) : null;
 	} else {
 	    return propValue;
 	}
+    }
+
+    private boolean convertToBoolean(final Object value) {
+	if (value == null || (value instanceof String && StringUtils.isEmpty(((String) value).trim()))) {
+	    return false;
+	} else if (value instanceof String) {
+	    final String strValue = ((String) value).trim();
+	    if ("a".equalsIgnoreCase(strValue) || "y".equalsIgnoreCase(strValue) || "yes".equalsIgnoreCase(strValue) || "1".equalsIgnoreCase(strValue)
+		    || "true".equalsIgnoreCase(strValue) || "t".equalsIgnoreCase(strValue)) {
+		return true;
+	    }
+
+	    if ("b".equalsIgnoreCase(strValue) || "n".equalsIgnoreCase(strValue) || "no".equalsIgnoreCase(strValue) || "0".equalsIgnoreCase(strValue)
+		    || "false".equalsIgnoreCase(strValue) || "f".equalsIgnoreCase(strValue)) {
+		return false;
+	    }
+
+	    throw new IllegalArgumentException("Incorrect value " + strValue + ", which could not be converted to boolean.");
+	} else {
+	    throw new IllegalArgumentException("Can't convert [" + value + "] to boolean.");
+	}
+    }
+
+    private Number converToNumber(final Number value, final Class<?> propType) {
+	if (propType == BigDecimal.class) {
+	    if (value instanceof BigDecimal) {
+		return value;
+	    } else {
+		return new BigDecimal(value.toString());
+	    }
+	}
+
+	if (propType == Double.class) {
+	    if (value instanceof Double) {
+		return value;
+	    } else {
+		return value.doubleValue();
+	    }
+	}
+
+	if (propType == Integer.class) {
+	    if (value instanceof Integer) {
+		return value;
+	    } else {
+		return value.intValue();
+	    }
+	}
+
+	if (propType == Long.class) {
+	    if (value instanceof Long) {
+		return value;
+	    } else {
+		return value.longValue();
+	    }
+	}
+
+	throw new IllegalArgumentException("Can't convert [" + value + "] to number.");
     }
 
     /**
@@ -376,31 +432,16 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
      */
     protected Object convertValue(final String propName, final Class<?> propType, final Object value) {
 
-//	if (propType.equals(Gender.class)) {
-//	    if ("F".equalsIgnoreCase(value + "")) {
-//		return Gender.F;
-//	    }
-//
-//	    return Gender.M;
-//	}
+	//	if (propType.equals(Gender.class)) {
+	//	    if ("F".equalsIgnoreCase(value + "")) {
+	//		return Gender.F;
+	//	    }
+	//
+	//	    return Gender.M;
+	//	}
 
 	if ((propType == boolean.class || propType == Boolean.class)) {
-	    if (value == null || (value instanceof String && StringUtils.isEmpty(((String) value).trim()))) {
-		return false;
-	    } else if (value instanceof String) {
-		final String strValue = ((String) value).trim();
-		if ("a".equalsIgnoreCase(strValue) || "y".equalsIgnoreCase(strValue) || "yes".equalsIgnoreCase(strValue) || "1".equalsIgnoreCase(strValue) || "true".equalsIgnoreCase(strValue)
-			|| "t".equalsIgnoreCase(strValue)) {
-		    return true;
-		}
-
-		if ("b".equalsIgnoreCase(strValue) || "n".equalsIgnoreCase(strValue) || "no".equalsIgnoreCase(strValue) || "0".equalsIgnoreCase(strValue) || "false".equalsIgnoreCase(strValue)
-			|| "f".equalsIgnoreCase(strValue)) {
-		    return false;
-		}
-
-		throw new IllegalArgumentException("Incorrect value " + strValue + ", which could not be converted to boolean.");
-	    }
+	    return convertToBoolean(value);
 	}
 
 	if (value == null) {
@@ -414,40 +455,8 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 		return ((String) value).replace("\n", "; ");
 	    }
 
-	    if (Number.class.isAssignableFrom(value.getClass())) {
-		final Number valueAsNumber = (Number) value;
-
-		if (propType == BigDecimal.class) {
-		    if (value instanceof BigDecimal) {
-			return value;
-		    } else {
-			return new BigDecimal(value.toString());
-		    }
-		}
-
-		if (propType == Double.class) {
-		    if (value instanceof Double) {
-			return value;
-		    } else {
-			return valueAsNumber.doubleValue();
-		    }
-		}
-
-		if (propType == Integer.class) {
-		    if (value instanceof Integer) {
-			return value;
-		    } else {
-			return valueAsNumber.intValue();
-		    }
-		}
-
-		if (propType == Long.class) {
-		    if (value instanceof Long) {
-			return value;
-		    } else {
-			return valueAsNumber.longValue();
-		    }
-		}
+	    if (Number.class.isAssignableFrom(value.getClass()) && Number.class.isAssignableFrom(propType)) {
+		return converToNumber((Number) value, propType);
 	    }
 
 	    return value;
