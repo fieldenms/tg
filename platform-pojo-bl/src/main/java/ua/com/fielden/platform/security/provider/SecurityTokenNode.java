@@ -5,19 +5,22 @@ import static ua.com.fielden.platform.security.SecurityTokenInfo.isTopLevel;
 import static ua.com.fielden.platform.security.SecurityTokenInfo.longDesc;
 import static ua.com.fielden.platform.security.SecurityTokenInfo.shortDesc;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.security.ISecurityToken;
 
 /**
  * A node in a tree-like structure for representing security tokens in a hierarchical order. Natural ordering happens according to token's short description.
- * 
- * @author 01es
- * 
+ *
+ * @author TG Team
+ *
  */
-public class SecurityTokenNode implements Comparable<SecurityTokenNode> {
+public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNode<Class<? extends ISecurityToken>> {
     /**
      * Security token type represented by this node.
      */
@@ -41,7 +44,7 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode> {
 
     /**
      * A principle constructor.
-     * 
+     *
      * @param token
      * @param superTokenNode
      */
@@ -65,7 +68,7 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode> {
 
     /**
      * A convenient constructor for top level tokens.
-     * 
+     *
      * @param token
      */
     public SecurityTokenNode(final Class<? extends ISecurityToken> token) {
@@ -74,7 +77,7 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode> {
 
     /**
      * Provides a way to add direct sub token nodes to this node.
-     * 
+     *
      * @param subTokenNode
      * @return
      */
@@ -127,6 +130,16 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode> {
     @Override
     public int compareTo(final SecurityTokenNode anotherToken) {
 	return getShortDesc().compareTo(anotherToken.getShortDesc());
+    }
+
+    @Override
+    public List<SecurityTokenNode> children() {
+	return new ArrayList<SecurityTokenNode>(subTokenNodes);
+    }
+
+    @Override
+    public Class<? extends ISecurityToken> state() {
+	return token;
     }
 
 }

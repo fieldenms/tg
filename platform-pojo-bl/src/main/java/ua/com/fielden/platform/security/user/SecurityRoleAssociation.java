@@ -30,7 +30,6 @@ public class SecurityRoleAssociation extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     @CompositeKeyMember(1)
     @MapTo(value = "TOKEN", userType = ISecurityTokenType.class)
-
     private Class<? extends ISecurityToken> securityToken;
 
     @IsProperty
