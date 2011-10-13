@@ -91,7 +91,7 @@ public class PivotAnalysisQueryExtender<T extends AbstractEntity, DAO extends IE
 	    final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(getBaseCriteria().getEntityClass()//
 		    , distributionProperty.getActualProperty());
 	    if (AbstractEntity.class.isAssignableFrom(propertyType)) {
-		fetchModel = fetchModel.with(getAliasFor(distributionProperty), new fetch(propertyType));
+		fetchModel = fetchModel.with(tempAliases.get(distributionProperty), new fetch(propertyType));
 	    }
 
 	}
