@@ -308,11 +308,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	}
 
 	compositeKey = Finder.getKeyMembers(getType()).size() > 1;
-	/*
-	 * if (hasCompositeKey() && DynamicEntityKey.class.equals(keyType)) { setKey((K) new DynamicEntityKey((AbstractEntity<DynamicEntityKey>)this)); }
-	 */
 
 	logger = Logger.getLogger(this.getType());
+
+	if (hasCompositeKey() && DynamicEntityKey.class.equals(keyType)) {
+	    setKey((K) new DynamicEntityKey((AbstractEntity<DynamicEntityKey>) this));
+	}
     }
 
     /**
@@ -594,7 +595,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		// perform some early runtime validation whether property was defined correctly
 		if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
 		    final String error = "Property " + field.getName() + " in " + getType()
-		    + " is collectional, but has missing collectional type, which should be specified as part of annotation IsProperty.";
+			    + " is collectional, but has missing collectional type, which should be specified as part of annotation IsProperty.";
 		    logger.error(error);
 		    throw new IllegalStateException(error);
 		}
@@ -647,7 +648,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @throws Exception
      */
     private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> collectValidators(final IMetaPropertyFactory metaPropertyFactory, final Field field, final Class<?> type, final boolean isCollectional, final Set<Annotation> validationAnnotations)
-    throws Exception {
+	    throws Exception {
 	//logger.debug("Start collecting validators for property " + field.getName() + "...");
 	try {
 	    final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators = new EnumMap<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>>(ValidationAnnotation.class);

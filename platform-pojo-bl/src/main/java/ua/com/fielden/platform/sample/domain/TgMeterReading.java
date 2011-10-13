@@ -45,13 +45,6 @@ public class TgMeterReading extends AbstractEntity<DynamicEntityKey> {
     @MapTo("ID_FUEL_USAGE")
     private TgFuelUsage fuelUsage;
 
-    /**
-     * Constructor for the entity factory from TG.
-     */
-    protected TgMeterReading() {
-	setKey(new DynamicEntityKey(this));
-    }
-
     /////////////////////////////////////////////
     //////////////// GETTERS ////////////////////
     /////////////////////////////////////////////

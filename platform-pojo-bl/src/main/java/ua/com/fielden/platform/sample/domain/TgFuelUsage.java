@@ -32,13 +32,6 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     private Date readingDate;
 
 
-    /**
-     * Constructor for the entity factory from TG.
-     */
-    protected TgFuelUsage() {
-	setKey(new DynamicEntityKey(this));
-    }
-
     /////////////////////////////////////////////
     //////////////// GETTERS ////////////////////
     /////////////////////////////////////////////

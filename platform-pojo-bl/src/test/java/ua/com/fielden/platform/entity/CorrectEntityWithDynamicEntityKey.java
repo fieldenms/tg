@@ -19,10 +19,6 @@ public class CorrectEntityWithDynamicEntityKey extends AbstractEntity<DynamicEnt
     @CompositeKeyMember(2)
     protected Long property2;
 
-    public CorrectEntityWithDynamicEntityKey() {
-	setKey(new DynamicEntityKey(this));
-    }
-
     public Long getProperty1() {
 	return property1;
     }
