@@ -14,7 +14,7 @@ import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
 import com.google.inject.Injector;
 
-public class Test {
+public class BindingInteractiveTest {
 
     static {
 	// this patch need for correct usage JXDatePicker in "Nimbus" L&F. When support for "Nimbus" will be provided by default -> it should be removed

@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.swing.view;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.LayoutManager;
 import java.util.Map;
 
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
@@ -17,6 +17,7 @@ import ua.com.fielden.platform.swing.menu.MenuNotificationPanel;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.model.UModel;
+import ua.com.fielden.platform.swing.utils.DummyBuilder;
 
 /**
  * A guarded panel with notification area (see {@link MenuNotificationPanel}), which by default appears at the top.
@@ -235,8 +236,8 @@ public abstract class BaseNotifPanel<MODEL extends UModel> extends BasePanelWith
     }
 
     /** Adds a named separator */
-    protected void addSeparator(final JPanel panel, final String string) {
-	panel.add(new JLabel(string), "gapbottom 5, gaptop 20px, span, split 2, aligny center");
+    protected void addSeparator(final JPanel panel, final String label) {
+	panel.add(DummyBuilder.label(label, new Color(0x175c9a)), "gapbottom 5, gaptop 20px, span, split 2, aligny center");
 	panel.add(new JSeparator(), "gapleft rel, gapbottom 5, gaptop 20px, growx");
     }
 

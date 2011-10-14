@@ -3,6 +3,7 @@ package ua.com.fielden.platform.swing.utils;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -59,9 +60,9 @@ import com.jidesoft.swing.StyledLabelBuilder;
 
 /**
  * UI builder, which is introduced to simplify UI prototyping. However, at some stage it could become a convenient day-to-day tool for UI creation.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class DummyBuilder {
 
@@ -75,7 +76,6 @@ public class DummyBuilder {
     /**
      * Creates single-value autocompleter
      */
-    @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity> AutocompleterTextFieldLayer<T> svac(final String caption, final Class<T> entityClass, final IValueMatcher<T> valueMatcher) {
 	final TwoPropertyListCellRenderer<T> cellRenderer = new TwoPropertyListCellRenderer<T>("key", "desc");
 	final AutocompleterTextFieldLayer<T> ac = new AutocompleterTextFieldLayer<T>(new UpperCaseTextField(), valueMatcher, entityClass, "key", cellRenderer, caption, null);
@@ -85,19 +85,21 @@ public class DummyBuilder {
 
     /**
      * Creates StyledLabel (JIDE) for criteria property ("name: ").
-     * 
+     *
      * Important : there are some problems when using setText(stringOfLessLength). Use StyledLabel.clearStyleRanges() to remove internal layout exceptions (BasicStyledLabelUI).
-     * 
+     *
      * @param caption
      * @return
      */
     public static JLabel label(final String caption) {
-	final StyledLabel styledLabel = new StyledLabelBuilder().add(caption + ":", "f:darkgray").createLabel();
-	return styledLabel;
+	return label(caption, new Color(0x646464));  // 0x858585
     }
 
-    public static JLabel caption(final String caption) {
-	return new StyledLabelBuilder().add(caption, "f:gray").createLabel();
+    public static JLabel label(final String caption, final Color color) {
+	final StyledLabel styledLabel = StyledLabelBuilder.createStyledLabel(caption);//  add().createLabel();
+	styledLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+	styledLabel.setForeground(color);
+	return styledLabel;
     }
 
     public static IntegerTextField itf(final Long value, final Options... options) {
@@ -121,7 +123,7 @@ public class DummyBuilder {
 
     /**
      * Creates and returns {@link JTabbedPane} with no buttons on tabs.
-     * 
+     *
      * @return
      */
     public static JideTabbedPane createBoldTabbedPane() {
@@ -197,7 +199,7 @@ public class DummyBuilder {
      * <code>childrenLoader</code> instance <br>
      * <br>
      * Note : returned {@link ListSelectionListener} is not added to {@link HierarchicalTable} in this method, it should be added after it is returned
-     * 
+     *
      * @param table
      *            - table which row should be expanded
      * @param chidlrenLoader
@@ -263,7 +265,7 @@ public class DummyBuilder {
 
     /**
      * Interface which separates children initialization logic of some entity, from the rest logic of that entity
-     * 
+     *
      * @author Yura
      * @param <T>
      *            - type of entities, which children should be loaded
@@ -271,7 +273,7 @@ public class DummyBuilder {
     public interface ChildrenLoader<T> {
 	/**
 	 * In this method initialization of children of <code>entity</code> should be performed
-	 * 
+	 *
 	 * @param entity
 	 */
 	public void loadChildren(T entity);
@@ -356,7 +358,7 @@ public class DummyBuilder {
 
     /**
      * Invokes {@link Runnable#run()} on passed instance, when specified {@link Component} gains focus
-     * 
+     *
      * @param component
      * @param runnable
      */
@@ -372,7 +374,7 @@ public class DummyBuilder {
 
     /**
      * Just for visual testing of {@link #createInputLimiter(int)} method functionality
-     * 
+     *
      * @param args
      */
     public static void main(final String[] args) {

@@ -16,9 +16,9 @@ import ua.com.fielden.platform.swing.verticallabel.DefaultTableHeaderCellRendere
 
 /**
  * Cell renderer for the table column headers. This renderer supports multiple sorting of the data in the grid
- * 
+ *
  * @author oleh
- * 
+ *
  */
 public class SorterTableHeaderCellRenderer extends DefaultTableHeaderCellRenderer {
 
@@ -66,9 +66,9 @@ public class SorterTableHeaderCellRenderer extends DefaultTableHeaderCellRendere
 
     /**
      * Icon that represents ordering arrow on the table header
-     * 
+     *
      * @author oleh
-     * 
+     *
      */
     private class OrderingIcon implements Icon {
 
@@ -100,7 +100,7 @@ public class SorterTableHeaderCellRenderer extends DefaultTableHeaderCellRendere
 
 	/**
 	 * Returns the {@link SortOrder} of the {@link OrderingArrow}
-	 * 
+	 *
 	 * @return
 	 */
 	public SortOrder getSortOrder() {
@@ -109,7 +109,7 @@ public class SorterTableHeaderCellRenderer extends DefaultTableHeaderCellRendere
 
 	/**
 	 * Returns the order of the {@link OrderingArrow}
-	 * 
+	 *
 	 * @return
 	 */
 	public int getOrder() {
@@ -118,7 +118,7 @@ public class SorterTableHeaderCellRenderer extends DefaultTableHeaderCellRendere
 
 	/**
 	 * Set the {@link SortOrder} for the {@link OrderingArrow}
-	 * 
+	 *
 	 * @param sortOrder
 	 */
 	public void setSortOrder(final SortOrder sortOrder) {
@@ -127,7 +127,7 @@ public class SorterTableHeaderCellRenderer extends DefaultTableHeaderCellRendere
 
 	/**
 	 * Set the order value for the {@link OrderingArrow} associated with this {@link OrderingIcon}
-	 * 
+	 *
 	 * @param order
 	 */
 	public void setOrder(final int order) {
@@ -136,7 +136,7 @@ public class SorterTableHeaderCellRenderer extends DefaultTableHeaderCellRendere
 
 	/**
 	 * Set the indicator that determines whether {@link OrderingArrow} is highlighted or not
-	 * 
+	 *
 	 * @param mouseOver
 	 */
 	public void setMouseOver(final boolean mouseOver) {

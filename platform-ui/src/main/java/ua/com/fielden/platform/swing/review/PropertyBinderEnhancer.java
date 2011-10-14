@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.review;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +40,8 @@ public class PropertyBinderEnhancer {
 		final IPropertyEditor pe = editors.get(propertyName);
 
 		final JLabel label = pe.getLabel();
+		label.setFont(new Font("SansSerif", Font.BOLD, 12));
+		label.setForeground(new Color(0x646464)); // 0x858585
 		label.setText(tad.getKey() + ":");
 		// Important : there are some problems when using setText(stringOfLessLength). Use StyledLabel.clearStyleRanges() to remove internal layout exceptions
 		// (BasicStyledLabelUI).
