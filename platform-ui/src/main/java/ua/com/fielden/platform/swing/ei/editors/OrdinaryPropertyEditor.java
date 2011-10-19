@@ -48,9 +48,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Editor for an entity property of ordinary types (i.e. not entity and non-collectional).
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class OrdinaryPropertyEditor implements IPropertyEditor {
     private final Logger logger = Logger.getLogger(getClass());
@@ -137,6 +137,8 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 		final BoundedValidationLayer<JTextArea> component = ComponentFactory.createStringTextArea(entity, bindingPropertyName, true, true, desc);
 		// let's now handle TAB and shift TAB key press to enforce focus traversal instead of \t character insertion
 		final JTextArea area = component.getView();
+		area.setLineWrap(true);
+		area.setWrapStyleWord(true);
 		final InputMap im = area.getInputMap();
 		final KeyStroke tab = KeyStroke.getKeyStroke("TAB");
 		area.getActionMap().put(im.get(tab), new TabAction(true));
