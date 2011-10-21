@@ -41,10 +41,18 @@ public class DynamicEntityKeyTest {
     }
 
     @Test
-    public void test_instantiation_of_entity_with_dynamic_key_with_values_using_factory() {
+    public void test_instantiation_of_entity_with_dynamic_key_with_values_setting_after_instantiation() {
 	final CorrectEntityWithDynamicEntityKey instance = factory.newEntity(CorrectEntityWithDynamicEntityKey.class);
 	instance.setProperty1(1L);
 	instance.setProperty2(2L);
+	final DynamicEntityKey key = instance.getKey();
+	assertEquals("Incorrect key member value.", 1L, key.getKeyValues()[0]);
+	assertEquals("Incorrect key member value.", 2L, key.getKeyValues()[1]);
+    }
+
+    @Test
+    public void test_instantiation_of_entity_with_dynamic_key_with_values_using_factory() {
+	final CorrectEntityWithDynamicEntityKey instance = factory.newByKey(CorrectEntityWithDynamicEntityKey.class, 1L, 2L);
 	final DynamicEntityKey key = instance.getKey();
 	assertEquals("Incorrect key member value.", 1L, key.getKeyValues()[0]);
 	assertEquals("Incorrect key member value.", 2L, key.getKeyValues()[1]);
