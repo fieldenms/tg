@@ -62,7 +62,7 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
 
     private final String DEFAULT_INFO = "<html>"
 	    + "<h2>Information</h2>"
-	    + "This is a general information, which is displayed in cases where individual menu items do no provide their own information panels, providing you with a quick familiarisation with an application user interface."
+	    + "This is a general information, which is displayed in cases where individual menu items do not provide their own information panels, providing user with a quick familiarisation with an application user interface."
 	    + "<br/><br/>"//
 	    + "Simple selection of a menu item does not open its content (the view), but instead displays its information panel. "
 	    + "Some menu items may not be provided with an information panel. " + "In this case a general window information panel like this one is displayed." + "<br/><br/>"
