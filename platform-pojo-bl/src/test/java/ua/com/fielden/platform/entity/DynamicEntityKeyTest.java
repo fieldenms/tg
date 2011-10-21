@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -11,6 +12,12 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+
+import com.google.inject.Injector;
 
 /**
  * Unit test to ensure correct composition of composite entity keys with DynamicEntityKey.
@@ -19,6 +26,30 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
  *
  */
 public class DynamicEntityKeyTest {
+
+    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+    private final EntityFactory factory = injector.getInstance(EntityFactory.class);
+
+    @Test
+    public void test_instantiation_of_entity_with_dynamic_key_with_factory_using_default_constructor() {
+	final CorrectEntityWithDynamicEntityKey instance = factory.newEntity(CorrectEntityWithDynamicEntityKey.class);
+	assertNotNull("Dynamic entity key should have been created.", instance.getKey());
+	final DynamicEntityKey key = instance.getKey();
+	assertNull("Incorrect key member value.", key.getKeyValues()[0]);
+	assertNull("Incorrect key member value.", key.getKeyValues()[1]);
+    }
+
+    @Test
+    public void test_instantiation_of_entity_with_dynamic_key_with_values_using_factory() {
+	final CorrectEntityWithDynamicEntityKey instance = factory.newEntity(CorrectEntityWithDynamicEntityKey.class);
+	instance.setProperty1(1L);
+	instance.setProperty2(2L);
+	final DynamicEntityKey key = instance.getKey();
+	assertEquals("Incorrect key member value.", 1L, key.getKeyValues()[0]);
+	assertEquals("Incorrect key member value.", 2L, key.getKeyValues()[1]);
+    }
+
     @Test
     public void test_that_composite_key_is_determined_correctly() {
 	final CorrectEntityWithDynamicEntityKey instance = new CorrectEntityWithDynamicEntityKey();
