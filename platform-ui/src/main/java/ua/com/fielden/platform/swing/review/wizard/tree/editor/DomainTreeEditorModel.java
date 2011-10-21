@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.wizard.development;
+package ua.com.fielden.platform.swing.review.wizard.tree.editor;
 
 import javax.swing.event.EventListenerList;
 
@@ -23,17 +23,17 @@ import ua.com.fielden.platform.treemodel.CriteriaTreeModel;
  * @author TG Team
  *
  */
-public class WizardModel<T extends AbstractEntity> {
+public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     private final ExpressionEditorModel expressionModel;
 
     private final EventListenerList listenerList;
     private final CalculatedPropertySelectModel propertySelectionModel;
 
-    public WizardModel(final EntityFactory factory,final Class<T> rootType){
+    public DomainTreeEditorModel(final EntityFactory factory,final Class<T> rootType){
 	final ExpressionEntity entity = factory.newEntity(ExpressionEntity.class, 0L);
 	entity.setEntityClass(rootType);
-	entity.setName(generateNextPropertyName());
+	//entity.setName(generateNextPropertyName());
 	this.expressionModel = new ExpressionEditorModelForWizard(entity, new LightweightPropertyBinder<ExpressionEntity>(null, null, "key", "name"));
 	this.listenerList = new EventListenerList();
 	this.propertySelectionModel = new CalculatedPropertySelectModel();
@@ -77,7 +77,7 @@ public class WizardModel<T extends AbstractEntity> {
     }
 
     /**
-     * Returns the selection model associated with this {@link WizardModel}
+     * Returns the selection model associated with this {@link DomainTreeEditorModel}
      * 
      * @return
      */
@@ -106,15 +106,15 @@ public class WizardModel<T extends AbstractEntity> {
 	return expressionModel.getEntity().getEntityClass();
     }
 
-    protected IPropertySelectionListener getCalculatedPropertySelectListener() {
-	return new IPropertySelectionListener() {
-
-	    @Override
-	    public void propertyStateChanged(final String property, final boolean isSelected) {
-
-	    }
-	};
-    }
+    //    protected IPropertySelectionListener getCalculatedPropertySelectListener() {
+    //	return new IPropertySelectionListener() {
+    //
+    //	    @Override
+    //	    public void propertyStateChanged(final String property, final boolean isSelected) {
+    //
+    //	    }
+    //	};
+    //    }
 
     /**
      * Adds {@link IPropertyEditListener} to the list of listeners to be notified when the edit calculated property action will take place.
@@ -177,7 +177,7 @@ public class WizardModel<T extends AbstractEntity> {
 		getEntity().setInitialising(false);
 		break;
 	    case EDIT_ACTION:
-		//TODO must implement edit postAction.
+		//TODO must implement edit action.
 		break;
 	    case NEW_POST_ACTION:
 	    case EDIT_POST_ACTION:

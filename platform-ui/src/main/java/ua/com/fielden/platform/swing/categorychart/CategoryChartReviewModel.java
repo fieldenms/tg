@@ -62,7 +62,6 @@ import ua.com.fielden.platform.swing.review.AnalysisPersistentObject;
 import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.EntityReviewModel;
 import ua.com.fielden.platform.swing.review.analysis.AnalysisReportQueryCriteriaExtender;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -181,63 +180,7 @@ public class CategoryChartReviewModel<T extends AbstractEntity, DAO extends IEnt
      * @return
      */
     protected List<EntityAggregates> getLoadedData() {
-	return aggregationModel.aggregation;
-    }
-
-    /**
-     * The implementation of the {@link ICategoryChartEntryModel} interface. This implementation uses the list of {@link EntityAggregates} to populate the data set of the category
-     * chart.
-     * 
-     * @author oleh
-     * 
-     */
-    private static class AggregationQueryDataModel<T extends AbstractEntity, DAO extends IEntityDao<T>> implements ICategoryChartEntryModel {
-
-	private List<EntityAggregates> aggregation = new ArrayList<EntityAggregates>();
-
-	private final AnalysisReportQueryCriteriaExtender<T, DAO> analysisReportCriteria;
-
-	public AggregationQueryDataModel(final AnalysisReportQueryCriteriaExtender<T, DAO> analysisReportCriteria) {
-	    this.analysisReportCriteria = analysisReportCriteria;
-	}
-
-	@Override
-	public Comparable<?> getCategory(final int index) {
-	    if (analysisReportCriteria.getDistributionProperty() == null) {
-		return "category";
-	    }
-	    final Comparable<?> entity = (Comparable<?>) aggregation.get(index).getValueByKey(analysisReportCriteria.getAliasForDistributionProperty());
-	    return new EntityWrapper(entity);
-	}
-
-	@Override
-	public int getCategoryCount() {
-	    return aggregation.size();
-	}
-
-	@Override
-	public Comparable<?> getSeries(final int index) {
-	    final IAggregatedProperty aggregationProperty = analysisReportCriteria.getAggregationProperties().get(index);
-	    return aggregationProperty.toString();
-	}
-
-	@Override
-	public int getSeriesCount() {
-	    return analysisReportCriteria.getAggregationProperties().size();
-	}
-
-	@Override
-	public Number getValue(final int row, final int column) {
-	    final Object value = aggregation.get(column).getValueByKey(analysisReportCriteria.getAliasForAggregationProperty(row));
-	    if (value instanceof Money) {
-		return ((Money) value).getAmount();
-	    } else if (value instanceof Number) {
-		return (Number) value;
-	    }
-	    //TODO Throw exception otherwise. Consider.
-	    return 0;
-	}
-
+	return aggregationModel.getModel();
     }
 
     private static class CommonCategoryRenderer extends AbstractCategoryItemRenderer {
@@ -285,7 +228,7 @@ public class CategoryChartReviewModel<T extends AbstractEntity, DAO extends IEnt
 	public CategoryChartFactory(final AnalysisReportQueryCriteriaExtender<T, DAO> criteria, final AggregationQueryDataModel<T, DAO> chartEntryModel, final boolean all, final int... indexes) {
 	    this.chartEntryModel = chartEntryModel;
 	    this.criteria = criteria;
-	    setModel(chartEntryModel.aggregation, all, indexes);
+	    setModel(chartEntryModel.getModel(), all, indexes);
 	}
 
 	@Override
@@ -536,7 +479,7 @@ public class CategoryChartReviewModel<T extends AbstractEntity, DAO extends IEnt
 
 	@Override
 	public void setModel(final List<EntityAggregates> model, final boolean all, final int... indexes) {
-	    chartEntryModel.aggregation = model;
+	    chartEntryModel.setModel(model);
 	    seriesIndexes.clear();
 	    if (all) {
 		for (int seriesIndex = 0; seriesIndex < chartEntryModel.getSeriesCount(); seriesIndex++) {
@@ -580,7 +523,7 @@ public class CategoryChartReviewModel<T extends AbstractEntity, DAO extends IEnt
 
 	@Override
 	public List<EntityAggregates> getModel() {
-	    return chartEntryModel.aggregation;
+	    return chartEntryModel.getModel();
 	}
     }
 

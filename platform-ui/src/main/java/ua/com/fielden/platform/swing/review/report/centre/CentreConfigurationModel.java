@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
+import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
 /**
  * Model for entity centre. This model allows one to configure and view report.
@@ -14,43 +17,69 @@ import ua.com.fielden.platform.swing.review.report.ReportMode;
  * @param <T>
  * @param <DAO>
  */
-public class CentreConfigurationModel<DTME extends IDomainTreeManagerAndEnhancer, T extends AbstractEntity, DAO extends IEntityDao<T>> {
+public class CentreConfigurationModel<T extends AbstractEntity> extends AbstractConfigurationModel{
 
     /**
-     * The associated {@link IDomainTreeManagerAndEnhancer} instance.
+     * The associated {@link GlobalDomainTreeManager} instance.
      */
-    private final DTME dtme;
+    private final GlobalDomainTreeManager gdtm;
 
     /**
-     * Determines the current report's mode. There are two possible report modes: WIZARD, REPORT.
+     * The entity type for which this {@link CentreConfigurationModel} was created.
      */
-    private ReportMode mode;
+    private final Class<T> entityType;
 
     /**
-     * Initiates this CentreConfigurationModel with instance of {@link IDomainTreeManagerAndEnhancer}.
+     * {@link EntityFactory}, needed for {@link DomainTreeEditorModel} creation.
+     */
+    private final EntityFactory entityFactory;
+
+
+
+    //    private IWizard previousWizard;
+    //
+    //    private IConfigurable previousReview;
+
+    /**
+     * Initiates this {@link CentreConfigurationModel} with instance of {@link IGlobalDomainTreeManager}, entity type and {@link EntityFactory}.
      * 
-     * @param dtme
+     * @param entityType - the entity type for which this {@link CentreConfigurationModel} will be created.
+     * @param gdtm - Associated {@link GlobalDomainTreeManager} instance.
+     * @param entityFactory - {@link EntityFactory} needed for wizard model creation.
      */
-    public CentreConfigurationModel(final DTME dtme){
-	this.dtme = dtme;
+    public CentreConfigurationModel(final Class<T> entityType, final GlobalDomainTreeManager gdtm, final EntityFactory entityFactory){
+	this.entityType = entityType;
+	this.gdtm = gdtm;
+	this.entityFactory = entityFactory;
     }
 
-    /**
-     * Returns the {@link IDomainTreeManagerAndEnhancer} instance associated with this centre configuration model.
-     * 
-     * @return
-     */
-    public DTME dtme(){
-	return dtme;
+
+
+    @Override
+    protected Result canSetMode(final ReportMode mode) {
+	// TODO Implement logic that determines whether report view can be set or not.
+	return Result.successful(this);
     }
 
-    /**
-     * Returns value that indicates the current centre's mode: WIZARD or REPORT.
-     * 
-     * @return
-     */
-    public ReportMode getMode() {
-	return mode;
-    }
+    //    /**
+    //     * Returns the {@link IGlobalDomainTreeManager} instance associated with this centre configuration model.
+    //     *
+    //     * @return
+    //     */
+    //    public GlobalDomainTreeManager gdtm(){
+    //	return gdtm;
+    //    }
+    //
+    //    /**
+    //     * Returns value that indicates the current centre's mode: WIZARD or REPORT.
+    //     *
+    //     * @return
+    //     */
+    //    public ReportMode getMode() {
+    //	return mode;
+    //    }
 
+    //    public void open(){
+    //
+    //    }
 }

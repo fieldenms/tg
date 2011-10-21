@@ -16,8 +16,8 @@ import ua.com.fielden.platform.expression.entity.validator.ExpressionValidator;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
-import ua.com.fielden.platform.swing.review.wizard.development.WizardModel;
-import ua.com.fielden.platform.swing.review.wizard.development.WizardView;
+import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
+import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorView;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
@@ -50,7 +50,7 @@ public class ExpressionEditorExample extends AbstractUiApplication {
 
     @Override
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
-	final WizardView<Vehicle> wizard = new WizardView<Vehicle>(new WizardModel<Vehicle>(entityFactory, Vehicle.class));
+	final DomainTreeEditorView<Vehicle> wizard = new DomainTreeEditorView<Vehicle>(new DomainTreeEditorModel<Vehicle>(entityFactory, Vehicle.class));
 	wizard.setPreferredSize(new Dimension(640,800));
 	SimpleLauncher.show("Expression editor example", wizard);
     }

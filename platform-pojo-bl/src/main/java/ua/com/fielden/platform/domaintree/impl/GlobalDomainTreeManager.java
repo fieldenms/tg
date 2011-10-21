@@ -12,7 +12,6 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer.AddToCriteriaTickManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.domaintree.master.impl.MasterDomainTreeManager;
@@ -121,7 +120,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	} else if (count < 1) { // there is no entity-centre
 	    if (name == null) { // principle entity-centre
 		// Principle entity-centre should be initialised and then saved. This can be done naturally by base user.
-		// But if base user haven't did it yet, it will be done by non-base user automatically.
+		// But if base user haven't done that yet, it will be done by non-base user automatically.
 		final boolean owning = currentUser().isBase();
 		init(root, name, new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {{ add(root); }}), owning);
 		// save a new instance of EntityCentreConfig
@@ -155,10 +154,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     private IQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsers(final String rootName, final String title) {
 	final IQueryModel<EntityCentreConfig> model =
-	/*    */select(EntityCentreConfig.class).where().//
-	/*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
-	/*    */prop("title").eq().val(title).and().//
-	/*    */prop("menuItem.key").eq().val(rootName).model();
+	    /*    */select(EntityCentreConfig.class).where().//
+	    /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
+	    /*    */prop("title").eq().val(title).and().//
+	    /*    */prop("menuItem.key").eq().val(rootName).model();
 	return model;
     }
 
@@ -171,10 +170,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     private IQueryModel<EntityCentreConfig> modelForCurrentUser(final String rootName, final String title) {
 	final IQueryModel<EntityCentreConfig> model1 =
-	/*    */select(EntityCentreConfig.class).where().//
-	/*    */prop("owner").eq().val(currentUser()).and().// look for entity-centres for only current user
-	/*    */prop("title").eq().val(title).and().//
-	/*    */prop("menuItem.key").eq().val(rootName).model();
+	    /*    */select(EntityCentreConfig.class).where().//
+	    /*    */prop("owner").eq().val(currentUser()).and().// look for entity-centres for only current user
+	    /*    */prop("title").eq().val(title).and().//
+	    /*    */prop("menuItem.key").eq().val(rootName).model();
 	return model1;
     }
 
@@ -186,9 +185,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     private IQueryModel<EntityMasterConfig> masterModelForCurrentUser(final String rootName) {
 	final IQueryModel<EntityMasterConfig> model =
-	/*    */select(EntityMasterConfig.class).where().//
-	/*    */prop("owner").eq().val(currentUser()).and().// look for entity-masters for only current user
-	/*    */prop("masterType").eq().val(rootName).model();
+	    /*    */select(EntityMasterConfig.class).where().//
+	    /*    */prop("owner").eq().val(currentUser()).and().// look for entity-masters for only current user
+	    /*    */prop("masterType").eq().val(rootName).model();
 	return model;
     }
 
@@ -200,9 +199,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     private IQueryModel<EntityMasterConfig> masterModelForBaseUser(final String rootName) {
 	final IQueryModel<EntityMasterConfig> model =
-	/*    */select(EntityMasterConfig.class).where().//
-	/*    */prop("owner").eq().val(baseOfTheCurrentUser()).and().// look for entity-masters for only base of the current user
-	/*    */prop("masterType").eq().val(rootName).model();
+	    /*    */select(EntityMasterConfig.class).where().//
+	    /*    */prop("owner").eq().val(baseOfTheCurrentUser()).and().// look for entity-masters for only base of the current user
+	    /*    */prop("masterType").eq().val(rootName).model();
 	return model;
     }
 
@@ -267,7 +266,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    final Field dtrField = Finder.findFieldByName(LocatorManager.class, "globalRepresentation");
 	    final boolean isAccessible = dtrField.isAccessible();
 	    dtrField.setAccessible(true);
-	    dtrField.set(((AddToCriteriaTickManager)((AddToCriteriaTickManagerAndEnhancer)mgr.getFirstTick()).base()).locatorManager(), this.getGlobalRepresentation());
+	    dtrField.set((((AddToCriteriaTickManagerAndEnhancer)mgr.getFirstTick()).base()).locatorManager(), this.getGlobalRepresentation());
 	    dtrField.setAccessible(isAccessible);
 	} catch (final Exception e) {
 	    e.printStackTrace();
@@ -568,11 +567,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	}
     }
 
-//    @Override
-//    public boolean isChangedEntityMasterManager(final Class<?> root) {
-//	masterNotInitiliasedError(persistentMasters.get(root), root);
-//	return !EntityUtils.equalsEx(currentMasters.get(root), persistentMasters.get(root));
-//    }
+    //    @Override
+    //    public boolean isChangedEntityMasterManager(final Class<?> root) {
+    //	masterNotInitiliasedError(persistentMasters.get(root), root);
+    //	return !EntityUtils.equalsEx(currentMasters.get(root), persistentMasters.get(root));
+    //    }
 
     @Override
     public void initEntityMasterManagerByDefault(final Class<?> root) {

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.wizard.development;
+package ua.com.fielden.platform.swing.review.wizard.tree.editor;
 
 import ua.com.fielden.platform.expression.editor.AbstractPropertyProvider;
 

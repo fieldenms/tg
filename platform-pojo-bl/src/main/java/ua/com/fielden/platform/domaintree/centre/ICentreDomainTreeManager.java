@@ -6,8 +6,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
@@ -170,22 +168,22 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
      */
     List<String> analysisKeys();
 
-//    /**
-//     * Moves property <code>what</code> to the place <b>before</b> property <code>beforeWhat</code> in an ordered list of checked properties for concrete <code>root</code> type.
-//     *
-//     * @param root -- a root type that contains a checked properties.
-//     * @param what -- a property to move
-//     * @param beforeWhat -- a property before which property "what" will be inserted
-//     */
-//    void moveAnalysis(final String what, final String beforeWhat);
-//
-//    /**
-//     * Moves property <code>what</code> to the place after all properties in an ordered list of checked properties for concrete <code>root</code> type.
-//     *
-//     * @param root -- a root type that contains a checked properties.
-//     * @param what -- a property to move
-//     */
-//    void moveAnalysisToTheEnd(final String what);
+    //    /**
+    //     * Moves property <code>what</code> to the place <b>before</b> property <code>beforeWhat</code> in an ordered list of checked properties for concrete <code>root</code> type.
+    //     *
+    //     * @param root -- a root type that contains a checked properties.
+    //     * @param what -- a property to move
+    //     * @param beforeWhat -- a property before which property "what" will be inserted
+    //     */
+    //    void moveAnalysis(final String what, final String beforeWhat);
+    //
+    //    /**
+    //     * Moves property <code>what</code> to the place after all properties in an ordered list of checked properties for concrete <code>root</code> type.
+    //     *
+    //     * @param root -- a root type that contains a checked properties.
+    //     * @param what -- a property to move
+    //     */
+    //    void moveAnalysisToTheEnd(final String what);
 
     /**
      * This interface defines <b>entity centre</b> domain tree can be managed for <b>criteria</b> (property represents as a criteria editor). <br><br>
@@ -219,10 +217,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	IAddToCriteriaTickManager setColumnsNumber(final int columnsNumber);
 
 	/**
-         * Gets a <i>main</i> value of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         *
+	 * Gets a <i>main</i> value of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @return
@@ -230,10 +228,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	Object getValue(final Class<?> root, final String property);
 
 	/**
-         * Sets a <i>main</i> value of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         *
+	 * Sets a <i>main</i> value of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @param value -- a value to set
@@ -242,10 +240,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	IAddToCriteriaTickManager setValue(final Class<?> root, final String property, final Object value);
 
 	/**
-         * Gets a <i>secondary</i> value of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         *
+	 * Gets a <i>secondary</i> value of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @return
@@ -253,10 +251,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	Object getValue2(final Class<?> root, final String property);
 
 	/**
-         * Sets a <i>secondary</i> value of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         *
+	 * Sets a <i>secondary</i> value of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @param value2 -- a value to set
@@ -265,11 +263,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	IAddToCriteriaTickManager setValue2(final Class<?> root, final String property, final Object value2);
 
 	/**
-         * Gets an <b>exclusive</b> flag for <i>main</i> value of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
-         *
+	 * Gets an <b>exclusive</b> flag for <i>main</i> value of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @return
@@ -277,11 +275,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	Boolean getExclusive(final Class<?> root, final String property);
 
 	/**
-         * Sets an <b>exclusive</b> flag for <i>main</i> value of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
-         *
+	 * Sets an <b>exclusive</b> flag for <i>main</i> value of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @param exclusive
@@ -290,11 +288,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	IAddToCriteriaTickManager setExclusive(final Class<?> root, final String property, final Boolean exclusive);
 
 	/**
-         * Gets an <b>exclusive</b> flag for <i>secondary</i> value of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
-         *
+	 * Gets an <b>exclusive</b> flag for <i>secondary</i> value of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @return
@@ -302,11 +300,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	Boolean getExclusive2(final Class<?> root, final String property);
 
 	/**
-         * Sets an <b>exclusive</b> flag for <i>secondary</i> value of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
-         *
+	 * Sets an <b>exclusive</b> flag for <i>secondary</i> value of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @param exclusive2
@@ -315,11 +313,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	IAddToCriteriaTickManager setExclusive2(final Class<?> root, final String property, final Boolean exclusive2);
 
 	/**
-         * Gets a date prefix of a criteria <i>date</i> property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * Throws {@link IllegalArgumentException} when the property is not of date type.
-         *
+	 * Gets a date prefix of a criteria <i>date</i> property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not of date type.
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @return
@@ -327,11 +325,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	DateRangePrefixEnum getDatePrefix(final Class<?> root, final String property);
 
 	/**
-         * Sets a date prefix of a criteria <i>date</i> property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * Throws {@link IllegalArgumentException} when the property is not of date type.
-         *
+	 * Sets a date prefix of a criteria <i>date</i> property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not of date type.
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @param datePrefix
@@ -340,11 +338,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	IAddToCriteriaTickManager setDatePrefix(final Class<?> root, final String property, final DateRangePrefixEnum datePrefix);
 
 	/**
-         * Gets a date mnemonic of a criteria <i>date</i> property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * Throws {@link IllegalArgumentException} when the property is not of date type.
-         *
+	 * Gets a date mnemonic of a criteria <i>date</i> property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not of date type.
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @return
@@ -352,11 +350,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	MnemonicEnum getDateMnemonic(final Class<?> root, final String property);
 
 	/**
-         * Sets a date mnemonic of a criteria <i>date</i> property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * Throws {@link IllegalArgumentException} when the property is not of date type.
-         *
+	 * Sets a date mnemonic of a criteria <i>date</i> property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not of date type.
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @param dateMnemonic
@@ -365,11 +363,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	IAddToCriteriaTickManager setDateMnemonic(final Class<?> root, final String property, final MnemonicEnum dateMnemonic);
 
 	/**
-         * Gets an "and before" flag of a criteria <i>date</i> property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * Throws {@link IllegalArgumentException} when the property is not of date type.
-         *
+	 * Gets an "and before" flag of a criteria <i>date</i> property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not of date type.
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @return
@@ -377,11 +375,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	Boolean getAndBefore(final Class<?> root, final String property);
 
 	/**
-         * Sets an "and before" flag of a criteria <i>date</i> property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * Throws {@link IllegalArgumentException} when the property is not of date type.
-         *
+	 * Sets an "and before" flag of a criteria <i>date</i> property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not of date type.
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @param andBefore
@@ -390,10 +388,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	IAddToCriteriaTickManager setAndBefore(final Class<?> root, final String property, final Boolean andBefore);
 
 	/**
-         * Gets an "or null" flag (missing value) of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         *
+	 * Gets an "or null" flag (missing value) of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @return
@@ -401,10 +399,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	Boolean getOrNull(final Class<?> root, final String property);
 
 	/**
-         * Sets an "or null" flag (missing value) of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         *
+	 * Sets an "or null" flag (missing value) of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @param orNull
@@ -413,10 +411,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	IAddToCriteriaTickManager setOrNull(final Class<?> root, final String property, final Boolean orNull);
 
 	/**
-         * Gets a "not" flag (negation) of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         *
+	 * Gets a "not" flag (negation) of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @return
@@ -424,10 +422,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	Boolean getNot(final Class<?> root, final String property);
 
 	/**
-         * Sets an "not" flag (negation) of a criteria property. <br><br>
-         *
-         * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         *
+	 * Sets an "not" flag (negation) of a criteria property. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
 	 * @param not
@@ -438,15 +436,15 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	// Boolean getAll(final Class<?> root, final String property);
 	// ICriteriaTickManager setAll(final Class<?> root, final String property, final Boolean all);
 
-        /**
-         * Returns an <b>ordered</b> list of checked properties for concrete <code>root</code> type.
-         *
-         * <b>IMPORTANT</b> : a list of properties also contains "empty places", which can be swapped, moved exactly as simple property.
-         *
-         * @param root -- a root type that contains a checked properties.
-         * @return
-         */
-        List<String> checkedProperties(final Class<?> root);
+	/**
+	 * Returns an <b>ordered</b> list of checked properties for concrete <code>root</code> type.
+	 *
+	 * <b>IMPORTANT</b> : a list of properties also contains "empty places", which can be swapped, moved exactly as simple property.
+	 *
+	 * @param root -- a root type that contains a checked properties.
+	 * @return
+	 */
+	List<String> checkedProperties(final Class<?> root);
     }
 
     /**

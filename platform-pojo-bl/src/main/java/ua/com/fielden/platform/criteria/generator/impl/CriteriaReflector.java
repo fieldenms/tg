@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -50,7 +51,7 @@ public class CriteriaReflector {
      * @return
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static List<Field> getCriteriaProperties(final Class<? extends AbstractEntity> criteriaClass) {
+    public static List<Field> getCriteriaProperties(final Class<? extends EntityQueryCriteria> criteriaClass) {
 	return Finder.findProperties(criteriaClass, IsProperty.class, CriteriaProperty.class);
     }
 }

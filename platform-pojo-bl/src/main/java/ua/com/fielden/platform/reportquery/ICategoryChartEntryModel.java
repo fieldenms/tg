@@ -51,4 +51,9 @@ public interface ICategoryChartEntryModel {
      */
     Number getValue(final int row, final int column);
 
+    //TODO write documentation
+    void addChartModelChangedListener(final ChartModelChangedListener l);
+
+    //TODO write documentation
+    void removeChartModelChangedListener(final ChartModelChangedListener l);
 }

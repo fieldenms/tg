@@ -10,10 +10,26 @@ public enum ReportMode {
     /**
      * Represents wizard mode for report.
      */
-    WIZARD,
+    WIZARD("Configuration"),
 
     /**
      * Represents report view mode.
      */
-    REPORT;
+    REPORT("Review");
+
+    private final String modeDescription;
+
+    /**
+     * Initiates {@link ReportMode} with it's description.
+     * 
+     * @param modeDescription
+     */
+    private ReportMode(final String modeDescription){
+	this.modeDescription = modeDescription;
+    }
+
+    @Override
+    public String toString() {
+	return modeDescription;
+    }
 }

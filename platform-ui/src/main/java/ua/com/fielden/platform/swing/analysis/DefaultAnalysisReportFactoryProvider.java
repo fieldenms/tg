@@ -16,6 +16,8 @@ public class DefaultAnalysisReportFactoryProvider<T extends AbstractEntity, DAO 
 		return new LifecycleReportFactory<T, DAO>();
 	    case PIVOT:
 		return new PivotReportFactory<T, DAO>();
+	    case NDEC :
+		return new NDecReportFactory<T, DAO>();
 	    }
 	}
 	return null;

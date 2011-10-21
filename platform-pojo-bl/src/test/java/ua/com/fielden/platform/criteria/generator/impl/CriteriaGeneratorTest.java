@@ -37,6 +37,7 @@ public class CriteriaGeneratorTest {
     private final CriteriaGeneratorTestModule module = new CriteriaGeneratorTestModule();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
+
     @SuppressWarnings("serial")
     private final CentreDomainTreeManager cdtm = new CentreDomainTreeManager(null, new HashSet<Class<?>>(){{ add(TopLevelEntity.class); }});
     {
@@ -273,7 +274,7 @@ public class CriteriaGeneratorTest {
 		} catch (final NoSuchMethodException e) {
 		    fail("The " + valueEntry.getKey() + " method for " + annotation.annotationType().getSimpleName() + " annotation doesn't exist.");
 		} catch (final Exception e) {
-		    fail("fail to invoke " + valueEntry.getKey() + " method for " + annotation.annotationType().getSimpleName() + " annotation");
+		    fail("Fail to invoke " + valueEntry.getKey() + " method for " + annotation.annotationType().getSimpleName() + " annotation");
 		}
 	    }
 

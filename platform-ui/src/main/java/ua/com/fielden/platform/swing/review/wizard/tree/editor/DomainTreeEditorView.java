@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.wizard.development;
+package ua.com.fielden.platform.swing.review.wizard.tree.editor;
 
 
 import java.awt.event.MouseAdapter;
@@ -25,15 +25,17 @@ import ua.com.fielden.platform.swing.model.UmState;
 import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.treemodel.CriteriaTreeModel;
 
-public class WizardView<T extends AbstractEntity> extends BasePanel {
+public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 
     private static final long serialVersionUID = 268187881676011630L;
 
-    private final WizardModel<T> wizardModel;
+    private final DomainTreeEditorModel<T> domainTreeEditorModel;
 
-    public WizardView(final WizardModel<T> wizardModel){
+    //    private final JLabel treeCaption;
+
+    public DomainTreeEditorView(final DomainTreeEditorModel<T> wizardModel){
 	super(new MigLayout("fill, insets 0", "[fill, grow]", "[][fill, grow][]"));
-	this.wizardModel = wizardModel;
+	this.domainTreeEditorModel = wizardModel;
 
 
 	//Configuring the property management action panel.
@@ -108,8 +110,8 @@ public class WizardView<T extends AbstractEntity> extends BasePanel {
      * 
      * @return
      */
-    public WizardModel<T> getModel(){
-	return wizardModel;
+    public DomainTreeEditorModel<T> getModel(){
+	return domainTreeEditorModel;
     }
 
     @Override

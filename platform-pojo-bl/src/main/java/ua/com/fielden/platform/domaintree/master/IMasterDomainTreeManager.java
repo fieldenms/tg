@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.domaintree.master;
 
 import ua.com.fielden.platform.domaintree.ILocatorManager;
-import ua.com.fielden.platform.domaintree.IRootTyped;
 
 
 /**
@@ -16,5 +15,5 @@ import ua.com.fielden.platform.domaintree.IRootTyped;
  *
  * @author TG Team
  */
-public interface IMasterDomainTreeManager extends ILocatorManager, IRootTyped {
+public interface IMasterDomainTreeManager extends ILocatorManager{
 }

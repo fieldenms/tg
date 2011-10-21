@@ -254,6 +254,8 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
     protected Action createRefreshAction() {
 	return new AbstractAction() {
 
+	    private static final long serialVersionUID = 2827446269276890662L;
+
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
 		// TODO Auto-generated method stub
@@ -265,6 +267,8 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
     @Override
     protected Action createDeleteAction() {
 	return new AbstractAction() {
+
+	    private static final long serialVersionUID = 401520928333053877L;
 
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
