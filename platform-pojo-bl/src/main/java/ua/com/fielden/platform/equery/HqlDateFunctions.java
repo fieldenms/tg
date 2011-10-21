@@ -10,11 +10,7 @@ public enum HqlDateFunctions {
 
 	@Override
 	public String getActualExpression(final String actualProperty) {
-	    return "cast(EXTRACT(" + YEAR.name() + " FROM " + "[" + actualProperty + "]) * 10000 + " + //
-	    "EXTRACT(" + MONTH.name() + " FROM " + "[" + actualProperty + "]) * 100 + " + "EXTRACT(" + name() + " FROM " + "[" + actualProperty + "]) as int)";
-
-	    //	    return YEAR.name() + "([" + actualProperty + "]) * 10000 + " + //
-	    //	    MONTH.name() + "([" + actualProperty + "]) * 100 + " + name() + "([" + actualProperty + "])";
+	    return Rdbms.rdbms.getDayExpression(actualProperty);
 	}
     },
     MONTH {
@@ -25,9 +21,7 @@ public enum HqlDateFunctions {
 
 	@Override
 	public String getActualExpression(final String actualProperty) {
-	    return "cast(EXTRACT(" + YEAR.name() + " FROM " + "[" + actualProperty + "]) * 100 + " + //
-	    "EXTRACT(" + name() + " FROM " + "[" + actualProperty + "]) as int)";
-	    //	    return YEAR.name() + "([" + actualProperty + "]) * 100 + " + name() + "([" + actualProperty + "])";
+	    return Rdbms.rdbms.getMonthExpression(actualProperty);
 	}
     },
     YEAR {
@@ -38,8 +32,7 @@ public enum HqlDateFunctions {
 
 	@Override
 	public String getActualExpression(final String actualProperty) {
-	    return "cast(EXTRACT(" + name() + " FROM " + "[" + actualProperty + "]) as int)";
-	    //	    return name() + "([" + actualProperty + "])";
+	    return Rdbms.rdbms.getYearExpression(actualProperty);
 	}
     };
 
