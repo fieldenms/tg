@@ -35,7 +35,7 @@ public class DecModel {
 
     private final List<CalculatedNumber> calcNumbers;
 
-    private final List<Pair<ILineCalculator, Color>> lineCalculators;
+    private final List<Line> lineCalculators;
 
     public DecModel(final ICategoryChartEntryModel chartModel, final int series, final Color color, final String chartName, final String domainAxisName, final String valueAxisName){
 	this.chartModel = chartModel;
@@ -46,15 +46,15 @@ public class DecModel {
 	this.valueAxisName = valueAxisName;
 
 	this.calcNumbers = new ArrayList<CalculatedNumber>();
-	this.lineCalculators = new ArrayList<Pair<ILineCalculator, Color>>();
+	this.lineCalculators = new ArrayList<Line>();
     }
 
     protected ICategoryChartEntryModel getChartModel() {
 	return chartModel;
     }
 
-    public DecModel addLine(final ILineCalculator lineCalculator, final Color color){
-	lineCalculators.add(new Pair<ILineCalculator, Color>(lineCalculator, color));
+    public DecModel addLine(final ILineCalculator lineCalculator, final Color color, final boolean labelVisible, final boolean shapesVisible){
+	lineCalculators.add(new Line(lineCalculator, color, shapesVisible, labelVisible));
 	return this;
     }
 
@@ -89,7 +89,7 @@ public class DecModel {
 	for(int lineIndex = 0; lineIndex < lineCalculators.size(); lineIndex++){
 	    for (int columnCounter = 0; columnCounter < chartModel.getCategoryCount(); columnCounter++) {
 		final Comparable<?> category = chartModel.getCategory(columnCounter);
-		final ILineCalculator lineCalc = lineCalculators.get(lineIndex).getKey();
+		final ILineCalculator lineCalc = lineCalculators.get(lineIndex).lineCalculator;
 		lineDataset.addValue(lineCalc.calculateLineValue(chartModel, columnCounter), chartModel.getSeries(lineCalc.getRelatedSeriesIndex()), category);
 	    }
 	}
@@ -126,7 +126,11 @@ public class DecModel {
     private CategoryItemRenderer createLineRenderer(){
 	final LineAndShapeRenderer lineRenderer = new LineAndShapeRenderer();
 	for(int lineIndex = 0; lineIndex < lineCalculators.size(); lineIndex++){
-	    lineRenderer.setSeriesPaint(lineIndex, lineCalculators.get(lineIndex).getValue());
+	    lineRenderer.setSeriesPaint(lineIndex, lineCalculators.get(lineIndex).color);
+	    if(!lineCalculators.get(lineIndex).labelVisible){
+		lineRenderer.setSeriesItemLabelsVisible(lineIndex, false);
+	    }
+	    lineRenderer.setSeriesShapesVisible(lineIndex, lineCalculators.get(lineIndex).shapesVisible);
 	}
 	lineRenderer.setBaseShapesVisible(true);
 	lineRenderer.setDrawOutlines(true);
@@ -171,5 +175,24 @@ public class DecModel {
 
     public String getChartName() {
 	return chartName;
+    }
+
+    private static class Line{
+
+	public final boolean labelVisible;
+
+	public final boolean shapesVisible;
+
+	public final Color color;
+
+	public final ILineCalculator lineCalculator;
+
+	public Line(final ILineCalculator lineCalculator, final Color color, final boolean shapesVisible, final boolean labelVisible){
+	    this.lineCalculator = lineCalculator;
+	    this.color = color;
+	    this.labelVisible = labelVisible;
+	    this.shapesVisible = shapesVisible;
+	}
+
     }
 }

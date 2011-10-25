@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.analysis.ndec.dec;
 
+import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -10,6 +11,7 @@ import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.reportquery.ChartModelChangedEvent;
 import ua.com.fielden.platform.reportquery.ChartModelChangedListener;
 import ua.com.fielden.platform.swing.analysis.ndec.DecChartPanel;
+import ua.com.fielden.platform.swing.utils.DummyBuilder;
 
 public class DecView{
 
@@ -28,11 +30,13 @@ public class DecView{
 	    for(int calcNumberIndex = 0; calcNumberIndex < model.getCalcValuesNumber()-1; calcNumberIndex++){
 		rowConstraints += "[t]";
 	    }
-	    calculatedNumberPanel = new JPanel(new MigLayout("fill, insets 5", "[fill, grow]", rowConstraints + (model.getCalcValuesNumber() == 1 ? "[t]":"[t, grow]")));
+	    calculatedNumberPanel = new JPanel(new MigLayout("fill, insets 5", "[l][r]", rowConstraints + (model.getCalcValuesNumber() == 1 ? "[t]":"[t, grow]")));
 	    for(final CalculatedNumber number : model.getCalcNumbers()){
-		final JLabel label = new JLabel(number.toString());
+		calculatedNumberPanel.add(DummyBuilder.label(number.getCaption()+": ", new Color(23, 92, 154)));
+		final JLabel label = new JLabel(number.getConvertedNumber());
 		number.addPropertyChangeListener(createNumberChangeListener(label));
 		calculatedNumberPanel.add(label, "wrap");
+
 	    }
 	}else{
 	    calculatedNumberPanel = null;
@@ -64,7 +68,7 @@ public class DecView{
 
 	    @Override
 	    public void propertyChange(final PropertyChangeEvent evt) {
-		label.setText(evt.getSource().toString());
+		label.setText(((CalculatedNumber)evt.getSource()).getConvertedNumber());
 	    }
 	};
     }

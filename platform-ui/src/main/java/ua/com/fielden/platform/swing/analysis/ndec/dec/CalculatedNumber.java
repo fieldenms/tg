@@ -72,9 +72,17 @@ public abstract class CalculatedNumber {
 	return number;
     }
 
+    public String getCaption() {
+	return caption;
+    }
+
+    public String getConvertedNumber(){
+	return numberConverter.convertToString(number);
+    }
+
     @Override
     public String toString() {
-	return "<html><font color = #175c9a><b>" + caption + ":</b></font> " + numberConverter.convertToString(number)+"</html>";
+	return caption + ": " + numberConverter.convertToString(number);
     }
 
     public void addPropertyChangeListener(final PropertyChangeListener l) {

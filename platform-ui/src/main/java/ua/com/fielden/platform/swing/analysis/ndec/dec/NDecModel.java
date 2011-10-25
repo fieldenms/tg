@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.swing.analysis.ndec.dec;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 public class NDecModel {
@@ -12,12 +12,17 @@ public class NDecModel {
 	decs = new ArrayList<DecModel>();
     }
 
-    public List<DecModel> getDecs() {
-	return Collections.unmodifiableList(decs);
+    public DecModel getDec(final int index) {
+	return decs.get(index);
     }
 
-    public NDecModel addDec(final DecModel dec){
-	decs.add(dec);
+    public int getDecCount(){
+	return decs.size();
+    }
+
+    public NDecModel setDecs(final DecModel... dec){
+	decs.clear();
+	decs.addAll(Arrays.asList(dec));
 	return this;
     }
 }

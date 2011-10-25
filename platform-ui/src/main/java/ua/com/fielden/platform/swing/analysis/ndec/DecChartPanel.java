@@ -14,7 +14,7 @@ public class DecChartPanel extends ChartPanel {
     private static final long serialVersionUID = 7950397611951314191L;
 
     public DecChartPanel(final JFreeChart chart) {
-	super(chart, 400, 300, 0, 0, Integer.MAX_VALUE, Integer.MAX_VALUE,true, true, true, true, true, true, true);
+	super(chart, 400, 225, 0, 0, Integer.MAX_VALUE, Integer.MAX_VALUE,true, true, true, true, true, true, true);
 
 
 	addChartMouseListener(new ChartMouseListener() {
