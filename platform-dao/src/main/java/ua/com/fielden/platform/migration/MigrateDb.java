@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.migration;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,21 +29,14 @@ public class MigrateDb {
     private static void checkAndCreate(final List<String> ddl, final HibernateUtil hiberUtil) throws Exception {
 	final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
 	final Connection conn = hiberUtil.getSessionFactory().getCurrentSession().connection();
-	final ResultSet rsTables = conn.getMetaData().getTables(null, null, "UNIQUE_ID", new String[] { "TABLE" });
-	if (rsTables.next()) {
-	    rsTables.close();
-	} else {
-	    rsTables.close();
-	    for (final String sql : ddl) {
-		final Statement st = conn.createStatement();
-		st.execute(sql);
-		st.close();
-	    }
+	for (final String sql : ddl) {
+	    final Statement st = conn.createStatement();
+	    st.execute(sql);
+	    st.close();
 	}
 
 	tr.commit();
     }
-
 
     private List<Class> limitedWithFromStmt(final String fromRetriever, final Class[] retrieversClassesSequence) {
 	//final Options options = new Options();
@@ -123,7 +115,7 @@ public class MigrateDb {
     }
 
     private static enum CmdParams {
-	    LIMIT_TO("-limitTo"), RESET_PASSWORDS("-resetPasswords"), THREADS("-threads");
+	    LIMIT_TO("-limitTo"), RESET_PASSWORDS("-resetPasswords"), THREADS("-threads"), CREATE_DB_SCHEMA("-createSchema");
 
 	    private final String value;
 
@@ -154,6 +146,8 @@ public class MigrateDb {
 		}
 	    } else if (CmdParams.RESET_PASSWORDS.value.equals(args[i])) {
 		result.put(CmdParams.RESET_PASSWORDS, null);
+	    } else if (CmdParams.CREATE_DB_SCHEMA.value.equals(args[i])) {
+		result.put(CmdParams.CREATE_DB_SCHEMA, null);
 	    } else if (CmdParams.THREADS.value.equals(args[i])) {
 		i = i + 1;
 		if (i < args.length && !args[i].startsWith("-")) {
@@ -223,7 +217,11 @@ public class MigrateDb {
 
 	final HibernateUtil hibernateUtil = injector.getInstance(HibernateUtil.class);
 	final EntityFactory factory = injector.getInstance(EntityFactory.class);
-	checkAndCreate(ddl, hibernateUtil);
+
+	if (cmdParams.containsKey(CmdParams.CREATE_DB_SCHEMA)) {
+		System.out.println("Creating database schema...");
+		checkAndCreate(ddl, hibernateUtil);
+	}
 	new DataMigrator(injector, hibernateUtil, factory, "main", decodeThreadsParameter(cmdParams.get(CmdParams.THREADS)), limitToRetrievers).populateData();
 
 	// reset passwords
