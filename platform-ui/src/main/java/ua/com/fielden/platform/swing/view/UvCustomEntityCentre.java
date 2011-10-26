@@ -16,9 +16,9 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
  * A common view for entity centres providing some basic common functionality such as handling of closing based on the model's list of open masters.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class UvCustomEntityCentre<T extends AbstractEntity, DAO extends IEntityDao<T>, CRIT extends EntityQueryCriteria<T, DAO>, F extends BaseFrame, M extends UmCustomEntityCentre<T, DAO, CRIT, F>> extends EntityReview<T, DAO, CRIT> implements IUmViewOwner {
     private static final long serialVersionUID = 1L;
@@ -70,7 +70,7 @@ public abstract class UvCustomEntityCentre<T extends AbstractEntity, DAO extends
     protected void addAndSpan(final JPanel panel, final Map<String, IPropertyEditor> editors, final String propertyName) {
 	final IPropertyEditor editor = editors.get(propertyName);
 	panel.add(editor.getLabel());
-	panel.add(editor.getEditor(), "growx");
+	panel.add(editor.getEditor(), "span, wrap");
     }
 
     protected void addAndWrap(final JPanel panel, final Map<String, IPropertyEditor> editors, final String propertyName) {
