@@ -12,8 +12,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import net.miginfocom.swing.MigLayout;
+
+import org.jfree.chart.ChartMouseEvent;
+import org.jfree.chart.entity.PlotEntity;
+
 import ua.com.fielden.platform.swing.analysis.ndec.DecChartPanel;
 import ua.com.fielden.platform.swing.analysis.ndec.IAnalysisDoubleClickListener;
+import ua.com.fielden.platform.swing.categorychart.AnalysisDoubleClickEvent;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
 public class NDecView extends BasePanel{
@@ -22,12 +27,15 @@ public class NDecView extends BasePanel{
 
     private static final int DEFAULT_MIN_HEIGHT = 100;
     private static final int DEFAULT_MIN_WIDTH = 200;
-    //private final NDecModel model;
+
+    private final NDecModel model;
 
     private final JComponent[][] components;
 
     private int minHeight = DEFAULT_MIN_HEIGHT;
     private int minWidth = DEFAULT_MIN_WIDTH;
+
+    private boolean zoom =false;
 
     public NDecView(final NDecModel model, final int minHeight){
 	this(model);
@@ -36,15 +44,16 @@ public class NDecView extends BasePanel{
 
     public NDecView(final NDecModel model){
 	super(new MigLayout("fill, insets 0"));
-	//this.model = model;
+	this.model = model;
 	components = new JComponent[model.getDecCount()*2][];
-	final JPanel decPanel = new JPanel(new MigLayout("fill, insets 0","[l][c]","[fill, grow]"));
+	final JPanel decPanel = new JPanel(new MigLayout("fill ,insets 0","[l][c]","[t]"));
 	for(int decIndex = 0; decIndex < model.getDecCount(); decIndex++){
 	    final DecView decView = new DecView(model.getDec(decIndex));
 	    final JLabel chartTitle = getChartTitle(model.getDec(decIndex));
 	    final JLabel stubLabel = stubLablel();
 	    final JPanel calculatedNumberPanel = decView.getCalculatedNumberPanel();
 	    final DecChartPanel chartPanel = decView.getChartPanel();
+	    chartPanel.addAnalysisDoubleClickListener(createZoomListener(decPanel, decIndex));
 
 	    components[2 * decIndex] = new JComponent[2];
 	    components[2 * decIndex + 1] = new JComponent[2];
@@ -56,11 +65,40 @@ public class NDecView extends BasePanel{
 	    decPanel.add(stubLabel);
 	    decPanel.add(chartTitle, "wrap");
 	    decPanel.add(decView.getCalculatedNumberPanel());
-	    decPanel.add(decView.getChartPanel(), "wrap, growx, push");
+	    decPanel.add(decView.getChartPanel(), (decIndex < model.getDecCount() - 1) ? "wrap, grow, push":"grow, push");
 	}
 	final JScrollPane scrollPane = new JScrollPane(decPanel);
 	//scrollPane.addComponentListener(createComponentResizedAdapter(scrollPane));
 	add(scrollPane, "grow");
+    }
+
+    private IAnalysisDoubleClickListener createZoomListener(final JPanel decPanel, final int decViewIndex) {
+	return new IAnalysisDoubleClickListener() {
+
+	    @Override
+	    public void doubleClick(final AnalysisDoubleClickEvent event) {
+		final ChartMouseEvent chartEvent = (ChartMouseEvent) event.getSourceMouseEvent();
+		if(chartEvent.getEntity() instanceof PlotEntity){
+		    toggleZoom();
+		}
+	    }
+
+	    private void toggleZoom() {
+		decPanel.removeAll();
+		final int startIndex = zoom ? 0 : decViewIndex;
+		final int endIndex = zoom ? model.getDecCount()-1 : decViewIndex;
+		for(int decIndex = startIndex; decIndex <= endIndex; decIndex++){
+		    decPanel.add(components[2 * decIndex][0]);
+		    decPanel.add(components[2 * decIndex][1], "wrap");
+		    decPanel.add(components[2 * decIndex + 1][0]);
+		    decPanel.add(components[2 * decIndex + 1][1], (decIndex < endIndex) ? "wrap, grow, push":"grow, push");
+		}
+		zoom = !zoom;
+		decPanel.invalidate();
+		decPanel.revalidate();
+		decPanel.repaint();
+	    }
+	};
     }
 
     private ComponentListener createComponentResizedAdapter(final JScrollPane scrollPane){
