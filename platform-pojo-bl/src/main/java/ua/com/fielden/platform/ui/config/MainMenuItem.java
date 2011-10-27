@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -36,7 +37,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 @DescTitle("Description")
 @DefaultController(IMainMenuItemController.class)
 @MapEntityTo("MAIN_MENU")
-public class MainMenuItem extends AbstractEntity<String> {
+public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<MainMenuItem> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
@@ -166,5 +167,15 @@ public class MainMenuItem extends AbstractEntity<String> {
 
     public void setConfig(final EntityCentreConfig config) {
 	this.config = config;
+    }
+
+    @Override
+    public List<? extends ITreeNode<MainMenuItem>> children() {
+	return Collections.unmodifiableList(children);
+    }
+
+    @Override
+    public MainMenuItem state() {
+	return this;
     }
 }

@@ -47,7 +47,7 @@ public class NDecView extends BasePanel{
 	super(new MigLayout("fill, insets 0"));
 	this.model = model;
 	components = new JComponent[model.getDecCount()*2][];
-	final JPanel decPanel = new JPanel(new MigLayout("fill, debug, insets 0","[l][c]","[t]"));
+	final JPanel decPanel = new JPanel(new MigLayout("fill, insets 0","[l][c]","[t]"));
 	for(int decIndex = 0; decIndex < model.getDecCount(); decIndex++){
 	    final DecView decView = new DecView(model.getDec(decIndex));
 	    final JLabel chartTitle = getChartTitle(model.getDec(decIndex));
