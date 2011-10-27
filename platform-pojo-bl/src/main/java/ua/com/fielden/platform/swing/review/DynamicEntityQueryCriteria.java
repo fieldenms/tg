@@ -422,7 +422,7 @@ public class DynamicEntityQueryCriteria<T extends AbstractEntity, DAO extends IE
      *
      * @return
      */
-    private IParameterGetter createParameterGetter() {
+    public final IParameterGetter createParameterGetter() {
 	return new IParameterGetter() {
 	    @Override
 	    public IParameter getParameter(final String propertyName) {
