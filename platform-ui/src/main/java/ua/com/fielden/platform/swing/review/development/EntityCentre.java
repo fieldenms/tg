@@ -8,11 +8,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.events.ReviewEvent;
-import ua.com.fielden.platform.swing.review.report.interfaces.IConfigurable;
+import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
 import ua.com.fielden.platform.swing.review.report.interfaces.ReviewEventListener;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
-public class EntityCentre<T extends AbstractEntity> extends BasePanel implements IConfigurable {
+public class EntityCentre<T extends AbstractEntity> extends BasePanel implements IReview {
 
     private static final long serialVersionUID = -8984113615241551583L;
 
@@ -158,12 +158,12 @@ public class EntityCentre<T extends AbstractEntity> extends BasePanel implements
     }
 
     @Override
-    public void addConfigureEventListener(final ReviewEventListener l) {
+    public void addReviewEventListener(final ReviewEventListener l) {
 	listenerList.add(ReviewEventListener.class, l);
     }
 
     @Override
-    public void removeConfigureEventListener(final ReviewEventListener l) {
+    public void removeReviewEventListener(final ReviewEventListener l) {
 	listenerList.remove(ReviewEventListener.class, l);
     }
 

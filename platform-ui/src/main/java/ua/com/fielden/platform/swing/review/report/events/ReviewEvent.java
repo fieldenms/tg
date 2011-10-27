@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.review.report.events;
 
 import java.util.EventObject;
 
-import ua.com.fielden.platform.swing.review.report.interfaces.IConfigurable.ReviewAction;
+import ua.com.fielden.platform.swing.review.report.interfaces.IReview.ReviewAction;
 
 /**
  * {@link EventObject} that represents review's configure event.

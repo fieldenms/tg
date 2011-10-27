@@ -6,7 +6,7 @@ package ua.com.fielden.platform.swing.review.report.interfaces;
  * @author TG Team
  *
  */
-public interface IConfigurable {
+public interface IReview {
 
     /**
      * Represents phases of review actions: configure, save, save as, remove.
@@ -26,12 +26,12 @@ public interface IConfigurable {
      * 
      * @param l
      */
-    void addConfigureEventListener(ReviewEventListener l);
+    void addReviewEventListener(ReviewEventListener l);
 
     /**
      * Removes {@link ReviewEventListener} instance.
      * 
      * @param l
      */
-    void removeConfigureEventListener(ReviewEventListener l);
+    void removeReviewEventListener(ReviewEventListener l);
 }

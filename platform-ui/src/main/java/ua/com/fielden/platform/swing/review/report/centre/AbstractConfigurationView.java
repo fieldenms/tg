@@ -11,7 +11,7 @@ import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractConfigurationModel.CanNotSetModeException;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractConfigurationModel.UndefinedFormatException;
-import ua.com.fielden.platform.swing.review.report.interfaces.IConfigurable;
+import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
@@ -23,7 +23,7 @@ import ua.com.fielden.platform.swing.view.BasePanel;
  * @param <VT>
  * @param <WT>
  */
-public abstract class AbstractConfigurationView<VT extends BasePanel & IConfigurable, WT extends BasePanel & IWizard> extends BasePanel {
+public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, WT extends BasePanel & IWizard> extends BasePanel {
 
     private static final long serialVersionUID = -7004303277307731144L;
 

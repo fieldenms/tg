@@ -10,6 +10,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -25,8 +26,8 @@ public class NDecView extends BasePanel{
 
     private static final long serialVersionUID = -4573644376854599911L;
 
-    private static final int DEFAULT_MIN_HEIGHT = 100;
-    private static final int DEFAULT_MIN_WIDTH = 200;
+    private static final int DEFAULT_MIN_HEIGHT = 225;
+    private static final int DEFAULT_MIN_WIDTH = 400;
 
     private final NDecModel model;
 
@@ -46,7 +47,7 @@ public class NDecView extends BasePanel{
 	super(new MigLayout("fill, insets 0"));
 	this.model = model;
 	components = new JComponent[model.getDecCount()*2][];
-	final JPanel decPanel = new JPanel(new MigLayout("fill ,insets 0","[l][c]","[t]"));
+	final JPanel decPanel = new JPanel(new MigLayout("fill, debug, insets 0","[l][c]","[t]"));
 	for(int decIndex = 0; decIndex < model.getDecCount(); decIndex++){
 	    final DecView decView = new DecView(model.getDec(decIndex));
 	    final JLabel chartTitle = getChartTitle(model.getDec(decIndex));
@@ -115,9 +116,9 @@ public class NDecView extends BasePanel{
 	int width = scrollPane.getWidth();
 
 	for(int componentIndex = 0; componentIndex < (components.length / 2); componentIndex++){
-	    height -= components[componentIndex * 2][0].getHeight();
+	    height -= components[componentIndex * 2][1].getHeight();
 	}
-	width -= components.length >=1  ? components[1][0].getWidth() : 0;
+	width -= getMaximumCalculatedPanelWidth();
 
 	height = height / (components.length / 2);
 	if(height < minHeight){
@@ -127,13 +128,23 @@ public class NDecView extends BasePanel{
 	    width = minWidth;
 	}
 	for(int componentIndex = 0; componentIndex < (components.length / 2); componentIndex++){
-	    final int titleHeight = components[componentIndex * 2][0].getPreferredSize().height;
-	    final int titleWidth = components[componentIndex * 2 + 1][0].getWidth();
+	    final int titleHeight = components[componentIndex * 2][1].getPreferredSize().height;
+	    final int titleWidth = getMaximumCalculatedPanelWidth();
 	    components[componentIndex * 2][0].setPreferredSize(new Dimension(titleWidth, titleHeight));
-	    components[componentIndex * 2][1].setPreferredSize(new Dimension(width, titleHeight));
+	    //components[componentIndex * 2][1].setPreferredSize(new Dimension(width, titleHeight));
 	    components[componentIndex * 2 + 1][0].setPreferredSize(new Dimension(titleWidth, height));
 	    components[componentIndex * 2 + 1][1].setPreferredSize(new Dimension(width, height));
 	}
+	scrollPane.invalidate();
+	scrollPane.revalidate();
+    }
+
+    private int getMaximumCalculatedPanelWidth(){
+	int maxWidth = 0;
+	for(int decIndex = 0; decIndex < model.getDecCount(); decIndex++){
+	    maxWidth = maxWidth < components[decIndex * 2 + 1][0].getWidth() ? components[decIndex * 2 + 1][0].getWidth() : maxWidth;
+	}
+	return maxWidth;
     }
 
     public void setMinChartHeight(final int minHeight){
@@ -152,7 +163,7 @@ public class NDecView extends BasePanel{
     private JLabel getChartTitle(final DecModel decModel){
 	final JLabel label = new JLabel(decModel.getChartName());
 	label.setFont(new Font("SansSerif", Font.BOLD, 18));
-	label.setHorizontalTextPosition(JLabel.CENTER);
+	label.setHorizontalTextPosition(SwingConstants.CENTER);
 	return label;
     }
 

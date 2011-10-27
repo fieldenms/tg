@@ -89,10 +89,10 @@ public abstract class AbstractWizardModel<T extends AbstractEntity, DAO extends 
      * @param columnsCount
      */
     public AbstractWizardModel(//
-    final DynamicEntityQueryCriteria<T, DAO> dynamicCriteria,//
-    final Class<R> resultantEntityClass,//
-    final DynamicCriteriaPersistentObjectUi persistentObject,//
-    final DynamicCriteriaModelBuilder<T, DAO, R> modelBuilder) {
+	    final DynamicEntityQueryCriteria<T, DAO> dynamicCriteria,//
+	    final Class<R> resultantEntityClass,//
+	    final DynamicCriteriaPersistentObjectUi persistentObject,//
+	    final DynamicCriteriaModelBuilder<T, DAO, R> modelBuilder) {
 	this.resultantEntityClass = resultantEntityClass;
 	this.dynamicCriteria = dynamicCriteria;
 	this.persistentObject = persistentObject;
@@ -105,12 +105,13 @@ public abstract class AbstractWizardModel<T extends AbstractEntity, DAO extends 
 	    removeAllUnusedCriteriaPrpoerties();
 	    orderedMappingsPObj = persistentObject.getPropertyColumnMappings();
 	    analysis.putAll(persistentObject.getAnalysis());
-	    locatorPersistentObject = persistentObject.getLocatorPersistentObject();
-	    locatorPersistentObject.setBaseConfigurationManager(modelBuilder.getKey(), modelBuilder.getConfigurationController());
+	    locatorPersistentObject = new LocatorPersistentObject(persistentObject.getLocatorPersistentObject());
 	    autoRun = persistentObject.isAutoRun();
 	} else {
+	    locatorPersistentObject = new LocatorPersistentObject();
 	    orderedMappingsPObj = new PropertyColumnMappingsPersistentObject(new ArrayList<AbstractPropertyColumnMapping>(), null, null);
 	}
+	locatorPersistentObject.setBaseConfigurationManager(modelBuilder.getKey(), modelBuilder.getConfigurationController());
 
 	if (provideSuggestions) {
 	    spinnerModel.addChangeListener(createUserChangeListener());
