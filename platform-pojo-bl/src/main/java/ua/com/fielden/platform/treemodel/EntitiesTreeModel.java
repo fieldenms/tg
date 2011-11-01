@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -63,7 +64,7 @@ public class EntitiesTreeModel extends DefaultTreeModel {
 	    final DefaultMutableTreeNode klassNode = new DefaultMutableTreeNode(new TitledObject(klass, entityTitleAndDesc.getKey(), TitlesDescsGetter.italic("<b>"
 		    + entityTitleAndDesc.getValue() + "</b>"), klass));
 	    ((DefaultMutableTreeNode) getRoot()).add(klassNode);
-	    addHotNodeProperties(klassNode, klass, propertyFilter, true);
+	    addHotNodeProperties(klassNode, klass, propertyFilter, true, null);
 	}
     }
 
@@ -248,7 +249,7 @@ public class EntitiesTreeModel extends DefaultTreeModel {
      * @param propertyFilter
      * @param initialization
      */
-    public void addHotNodeForSpecificProperties(final DefaultMutableTreeNode klassNode, final Class<?> clazz, final List<Field> fieldsAndKeys, final IPropertyFilter propertyFilter, final boolean initialization) {
+    public void addHotNodeForSpecificProperties(final DefaultMutableTreeNode klassNode, final Class<?> clazz, final List<Field> fieldsAndKeys, final IPropertyFilter propertyFilter, final boolean initialization, final String linkProperty) {
 	for (final Field field : fieldsAndKeys) {
 	    // Find title and description for the property.
 	    final Pair<String, String> tad = TitlesDescsGetter.getTitleAndDesc(field.getName(), clazz);
@@ -263,12 +264,14 @@ public class EntitiesTreeModel extends DefaultTreeModel {
 	    // propertyType should not be null, but it is null in case when property has parameterized type. (see RotableLocation class "key" property in platform examples)
 	    //
 	    final boolean shouldBuildChildren = propertyFilter.shouldBuildChildrenFor(clazz, field);
-	    if (propertyType != null && notDescOrAnnotatedDesc) {
+	    final boolean isLinkPropertyForCollection = field.getName().equals(linkProperty);
+	    if (propertyType != null && notDescOrAnnotatedDesc && !isLinkPropertyForCollection) {
 		if (Collection.class.isAssignableFrom(propertyType) && shouldBuildChildren) { // property is collectional :
-		    addHotNodeWithChildren(field.getName(), PropertyTypeDeterminator.determineCollectionElementClass(field), true, klassNode, titleAndDesc, propertyFilter, false, initialization);
+		    final String linkPropertyNew = AnnotationReflector.getPropertyAnnotation(IsProperty.class, clazz, field.getName()).linkProperty();
+		    addHotNodeWithChildren(field.getName(), PropertyTypeDeterminator.determineCollectionElementClass(field), true, klassNode, titleAndDesc, propertyFilter, false, initialization, linkPropertyNew);
 		} else if (AbstractEntity.class.isAssignableFrom(propertyType) && shouldBuildChildren) { // property is of AbstractEntity descendant type:
-		    final boolean isKeyPart = Finder.getKeyMembers(clazz).contains(field); // indicates if field is the part of the "clazz"'s key.
-		    addHotNodeWithChildren(field.getName(), propertyType, false, klassNode, titleAndDesc, propertyFilter, isKeyPart, initialization);
+		    final boolean isKey = Finder.getKeyMembers(clazz).contains(field) && AbstractEntity.KEY.equals(field.getName()); // indicates if field is the the "clazz"'s key.
+		    addHotNodeWithChildren(field.getName(), propertyType, false, klassNode, titleAndDesc, propertyFilter, isKey, initialization, null);
 		} else { // simple type
 		    klassNode.add(new DefaultMutableTreeNode(new TitledObject(field.getName(), titleAndDesc.getKey(), titleAndDesc.getValue(), propertyType)));
 		}
@@ -283,7 +286,7 @@ public class EntitiesTreeModel extends DefaultTreeModel {
      * @param clazz
      * @param fieldsAndKeys
      */
-    public void addHotNodeProperties(final DefaultMutableTreeNode klassNode, final Class<?> clazz, final IPropertyFilter propertyFilter, final boolean initialization) {
+    public void addHotNodeProperties(final DefaultMutableTreeNode klassNode, final Class<?> clazz, final IPropertyFilter propertyFilter, final boolean initialization, final String linkProperty) {
 	if (AbstractEntity.class.isAssignableFrom(clazz) && !AbstractUnionEntity.class.isAssignableFrom(clazz)) { // non "union" entity
 	    final List<Field> children = new ArrayList<Field>();
 	    final Class<?> parentClass = klassNode.getParent() == null ? null : ((TitledObject) ((DefaultMutableTreeNode) klassNode.getParent()).getUserObject()).getType();
@@ -295,7 +298,7 @@ public class EntitiesTreeModel extends DefaultTreeModel {
 	    } else {
 		children.addAll(constructAllKeysAndProperties(clazz, propertyFilter));
 	    }
-	    addHotNodeForSpecificProperties(klassNode, clazz, children, propertyFilter, initialization);
+	    addHotNodeForSpecificProperties(klassNode, clazz, children, propertyFilter, initialization, linkProperty);
 	} else if (AbstractUnionEntity.class.isAssignableFrom(clazz)) { // "union" entity
 	    // "union" entity (parent is AbstractUnionEntity type):
 	    final Class<? extends AbstractUnionEntity> unionClass = (Class<? extends AbstractUnionEntity>) clazz;
@@ -303,9 +306,9 @@ public class EntitiesTreeModel extends DefaultTreeModel {
 	    final List<Field> commonProperties = constructKeysAndProperties(concreteUnionClass, AbstractUnionEntity.commonProperties(unionClass), propertyFilter);
 	    // the new node should be created for "common" properties (and they should be added).
 	    final DefaultMutableTreeNode nodeForCommonProperties = addHotNode("common", null, false, klassNode, new Pair<String, String>("Common", TitlesDescsGetter.italic("<b>Common properties</b>")));
-	    addHotNodeForSpecificProperties(nodeForCommonProperties, concreteUnionClass, commonProperties, propertyFilter, initialization);
+	    addHotNodeForSpecificProperties(nodeForCommonProperties, concreteUnionClass, commonProperties, propertyFilter, initialization, linkProperty);
 	    // and also "union" properties should be added root node:
-	    addHotNodeForSpecificProperties(klassNode, clazz, AbstractUnionEntity.unionProperties(unionClass, propertyFilter), propertyFilter, initialization);
+	    addHotNodeForSpecificProperties(klassNode, clazz, AbstractUnionEntity.unionProperties(unionClass, propertyFilter), propertyFilter, initialization, linkProperty);
 	}
     }
 
@@ -321,17 +324,21 @@ public class EntitiesTreeModel extends DefaultTreeModel {
      * @param titleAndDesc
      * @param propertyFilter
      */
-    private void addHotNodeWithChildren(final String propertyName, final Class<?> klass, final boolean isCollectional, final DefaultMutableTreeNode klassNode, final Pair<String, String> titleAndDesc, final IPropertyFilter propertyFilter, final boolean isKeyPart, final boolean initialization) {
+    private void addHotNodeWithChildren(final String propertyName, final Class<?> klass, final boolean isCollectional, final DefaultMutableTreeNode klassNode, final Pair<String, String> titleAndDesc, final IPropertyFilter propertyFilter, final boolean isKey, final boolean initialization, final String linkProperty) {
 	if (AbstractEntity.class.isAssignableFrom(klass)) { // supports only elements of AbstractEntity descendants
-	    if (!propertyTypeWasInHierarchyBefore(klass, klassNode)) { // add hot node and its children
-		addHotNodeProperties(addHotNode(propertyName, klass, isCollectional, klassNode, titleAndDesc), klass, propertyFilter, initialization);
-	    } else if (!isKeyPart) { // add the only hot node in case if it is not "key part".
-		final DefaultMutableTreeNode hotPropertyNode = addHotNode(propertyName, klass, isCollectional, klassNode, titleAndDesc);
-		if (initialization) {
-		    hotPropertyNode.add(new DefaultMutableTreeNode(DUMMY_TITLED_OBJECT));
-		} else { // dynamic node expanding :
-		    hotPropertyNode.removeFromParent();
-		    addHotNodeWithChildren(propertyName, klass, isCollectional, klassNode, titleAndDesc, propertyFilter, isKeyPart, true);
+	    System.out.println(linkProperty + " = linkProperty, " + propertyName + " = propertyName");
+	    final boolean isLinkPropertyForCollection = propertyName.equals(linkProperty);
+	    if (!isLinkPropertyForCollection) { // exclude "link properties" for collections
+		if (!propertyTypeWasInHierarchyBefore(klass, klassNode)) { // add hot node and its children
+		    addHotNodeProperties(addHotNode(propertyName, klass, isCollectional, klassNode, titleAndDesc), klass, propertyFilter, initialization, linkProperty);
+		} else if (!isKey) { // add the only hot node in case if it is not "key".
+		    final DefaultMutableTreeNode hotPropertyNode = addHotNode(propertyName, klass, isCollectional, klassNode, titleAndDesc);
+		    if (initialization) {
+			hotPropertyNode.add(new DefaultMutableTreeNode(DUMMY_TITLED_OBJECT));
+		    } else { // dynamic node expanding :
+			hotPropertyNode.removeFromParent();
+			addHotNodeWithChildren(propertyName, klass, isCollectional, klassNode, titleAndDesc, propertyFilter, isKey, true, linkProperty);
+		    }
 		}
 	    }
 	}
@@ -363,7 +370,7 @@ public class EntitiesTreeModel extends DefaultTreeModel {
     public boolean loadProperties(final DefaultMutableTreeNode node) {
 	if (node != null && node.getChildCount() == 1 && EntitiesTreeModel.DUMMY_TITLED_OBJECT.equals(((DefaultMutableTreeNode) node.getFirstChild()).getUserObject())) {
 	    node.removeAllChildren();
-	    addHotNodeProperties(node, ((TitledObject) node.getUserObject()).getType(), propertyFilter, false);
+	    addHotNodeProperties(node, ((TitledObject) node.getUserObject()).getType(), propertyFilter, false, null);
 	    return true;
 	}
 	return false;

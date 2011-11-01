@@ -52,4 +52,36 @@ public @interface IsProperty {
      * @return
      */
     Class<?> value() default Void.class;
+
+    /**
+     * This setting makes sense only in case of collection property, which elements are entities. It should be used (and not missed!) to specify a property by which this
+     * collection is linked to some "parent" type. A parent can be direct or not, see examples below :
+     *
+     * <pre>
+     * WorkOrder
+     *   serviced : Vehicle
+     *     orderDetails : VehicleOrderDetails
+     *       key : Vehicle <i>(the same as <b>WorkOrder->serviced</b> and will be deleted)</i>
+     *       <i><b>IsProperty(value = WorkOrder.class, linkProperty = "backedUp")</b></i>
+     *       <i><b>backedUpWorkorders : WorkOrder []</b></i>
+     *         serviced : Vehicle
+     *         <i><b>backedUp : Vehicle</b> (the same as <b>WorkOrder->serviced</b> and will be deleted)</i>
+     *         movedUp  : Vehicle
+     *   backedUp : Vehicle
+     *     ...
+     *   serviced : Vehicle
+     *     ...
+     * =================================================================================================
+     * VehicleOrderDetails
+     *   key : Vehicle
+     *   <i><b>IsProperty(value = WorkOrder.class, linkProperty = "backedUp")</b></i>
+     *   <i><b>backedUpWorkorders : WorkOrder []</b></i>
+     *     serviced : Vehicle
+     *     <i><b>backedUp : Vehicle</b> (the same as <b>VehicleOrderDetails->key</b> and will be deleted)</i>
+     *     movedUp  : Vehicle
+     * </pre>
+     *
+     * @return
+     */
+   String linkProperty() default "----dummy-property----";
 }

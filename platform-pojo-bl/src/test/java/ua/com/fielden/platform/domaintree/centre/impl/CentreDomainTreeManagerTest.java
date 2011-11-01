@@ -42,7 +42,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  * @author TG Team
  *
  */
-public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
+public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     @Override
     protected ICentreDomainTreeManagerAndEnhancer dtm() {
 	return (ICentreDomainTreeManagerAndEnhancer) super.dtm();
@@ -56,7 +56,7 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
      *
      * @return
      */
-    protected static Set<Class<?>> createRootTypes_for_CriteriaDomainTreeManagerTest() {
+    protected static Set<Class<?>> createRootTypes_for_CentreDomainTreeManagerTest() {
 	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeManagerTest();
 	rootTypes.add(EntityWithCompositeKey.class);
 	rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
@@ -69,7 +69,7 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
      *
      * @param dtm
      */
-    protected static void manageTestingDTM_for_CriteriaDomainTreeManagerTest(final ICentreDomainTreeManager dtm) {
+    protected static void manageTestingDTM_for_CentreDomainTreeManagerTest(final ICentreDomainTreeManager dtm) {
 	manageTestingDTM_for_AbstractDomainTreeTest(dtm);
 
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);
@@ -107,8 +107,8 @@ public class CriteriaDomainTreeManagerTest extends AbstractDomainTreeManagerTest
 
     @BeforeClass
     public static void initDomainTreeTest() {
-	final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CriteriaDomainTreeManagerTest());
-	manageTestingDTM_for_CriteriaDomainTreeManagerTest(dtm);
+	final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CentreDomainTreeManagerTest());
+	manageTestingDTM_for_CentreDomainTreeManagerTest(dtm);
 	setDtmArray(serialiser().serialise(dtm));
     }
 

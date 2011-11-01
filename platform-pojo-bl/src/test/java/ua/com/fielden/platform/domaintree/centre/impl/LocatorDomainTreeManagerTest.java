@@ -23,7 +23,7 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
  * @author TG Team
  *
  */
-public class LocatorDomainTreeManagerTest extends CriteriaDomainTreeManagerTest {
+public class LocatorDomainTreeManagerTest extends CentreDomainTreeManagerTest {
     @Override
     protected ILocatorDomainTreeManagerAndEnhancer dtm() {
 	return (ILocatorDomainTreeManagerAndEnhancer) super.dtm();
@@ -38,7 +38,7 @@ public class LocatorDomainTreeManagerTest extends CriteriaDomainTreeManagerTest 
      * @return
      */
     protected static Set<Class<?>> createRootTypes_for_LocatorDomainTreeManagerTest() {
-	final Set<Class<?>> rootTypes = createRootTypes_for_CriteriaDomainTreeManagerTest();
+	final Set<Class<?>> rootTypes = createRootTypes_for_CentreDomainTreeManagerTest();
 	return rootTypes;
     }
 
@@ -48,7 +48,7 @@ public class LocatorDomainTreeManagerTest extends CriteriaDomainTreeManagerTest 
      * @param dtm
      */
     protected static void manageTestingDTM_for_LocatorDomainTreeManagerTest(final ILocatorDomainTreeManager dtm) {
-	manageTestingDTM_for_CriteriaDomainTreeManagerTest(dtm);
+	manageTestingDTM_for_CentreDomainTreeManagerTest(dtm);
 
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);
 	dtm.getSecondTick().checkedProperties(MasterEntity.class);

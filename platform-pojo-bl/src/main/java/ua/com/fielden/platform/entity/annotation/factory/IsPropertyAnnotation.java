@@ -10,15 +10,20 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
  *
  */
 public class IsPropertyAnnotation {
-
-
     private Class<?> value = Void.class;
+    private final String linkProperty;
+
+    public IsPropertyAnnotation(final Class<?> value, final String linkProperty) {
+	this.value = value;
+	this.linkProperty = linkProperty;
+    }
 
     public IsPropertyAnnotation(final Class<?> value) {
-	this.value = value;
+	this(value, "----dummy-property----");
     }
 
     public IsPropertyAnnotation() {
+	this(Void.class, "----dummy-property----");
     }
 
     public IsPropertyAnnotation value(final Class<?> value) {
@@ -38,6 +43,11 @@ public class IsPropertyAnnotation {
 	    public Class<?> value() {
 		return value;
 	    }
+
+	    @Override
+	    public String linkProperty() {
+	        return new String(linkProperty);
+	    }
 	};
     }
 
@@ -52,6 +62,11 @@ public class IsPropertyAnnotation {
 	    @Override
 	    public Class<?> value() {
 		return original.value();
+	    }
+
+	    @Override
+	    public String linkProperty() {
+	        return new String(original.linkProperty());
 	    }
 	};
     }

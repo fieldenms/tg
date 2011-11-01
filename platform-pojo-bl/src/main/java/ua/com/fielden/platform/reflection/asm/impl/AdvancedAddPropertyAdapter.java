@@ -147,6 +147,11 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
 	    public Class<?> value() {
 		return Void.class;
 	    }
+
+	    @Override
+	    public String linkProperty() {
+	        return "----dummy-property----";
+	    }
 	});
 	// the same goes about the Title annotation as property should have title and description
 	pd.addAnnotation(new Title() {

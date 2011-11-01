@@ -35,7 +35,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public class CriteriaDomainTreeRepresentationTest extends AbstractDomainTreeRepresentationTest {
+public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepresentationTest {
     @Override
     protected ICentreDomainTreeManagerAndEnhancer dtm() {
 	return (ICentreDomainTreeManagerAndEnhancer) super.dtm();
@@ -49,7 +49,7 @@ public class CriteriaDomainTreeRepresentationTest extends AbstractDomainTreeRepr
      *
      * @return
      */
-    protected static Set<Class<?>> createRootTypes_for_CriteriaDomainTreeRepresentationTest() {
+    protected static Set<Class<?>> createRootTypes_for_CentreDomainTreeRepresentationTest() {
 	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeRepresentationTest();
 	rootTypes.add(EntityWithCompositeKey.class);
 	rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
@@ -62,7 +62,7 @@ public class CriteriaDomainTreeRepresentationTest extends AbstractDomainTreeRepr
      *
      * @param dtm
      */
-    protected static void manageTestingDTM_for_CriteriaDomainTreeRepresentationTest(final ICentreDomainTreeManager dtm) {
+    protected static void manageTestingDTM_for_CentreDomainTreeRepresentationTest(final ICentreDomainTreeManager dtm) {
 	manageTestingDTM_for_AbstractDomainTreeRepresentationTest(dtm);
 
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);
@@ -71,8 +71,8 @@ public class CriteriaDomainTreeRepresentationTest extends AbstractDomainTreeRepr
 
     @BeforeClass
     public static void initDomainTreeTest() {
-	final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CriteriaDomainTreeRepresentationTest());
-	manageTestingDTM_for_CriteriaDomainTreeRepresentationTest(dtm);
+	final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CentreDomainTreeRepresentationTest());
+	manageTestingDTM_for_CentreDomainTreeRepresentationTest(dtm);
 	setDtmArray(serialiser().serialise(dtm));
     }
 
