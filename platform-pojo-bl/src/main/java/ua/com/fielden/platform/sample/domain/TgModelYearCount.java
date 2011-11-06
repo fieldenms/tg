@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.sample.domain;
 
-import java.util.Date;
+import java.math.BigInteger;
 
 import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -12,44 +14,34 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
-@KeyType(String.class)
+@KeyType(TgVehicleModel.class)
 @MapEntityTo
 @DescTitle("Description")
 @Ignore
-public class TgVehicle extends AbstractEntity<String> {
+public class TgModelYearCount extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
-
-    @IsProperty @MapTo()
-    private Date initDate;
-
-    @IsProperty @MapTo()
-    private TgVehicle replacedBy;
 
     @IsProperty
     @MapTo
     @Title(value = "Model", desc = "Model")
+    @CompositeKeyMember(1)
     private TgVehicleModel model;
 
     @IsProperty
     @MapTo
-    @Title(value = "Price", desc = "Price")
-    private Money price;
+    @Title(value = "Commision year", desc = "Commision year")
+    @CompositeKeyMember(2)
+    private Long year;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Count", desc = "Count per vehicle")
+    private BigInteger count;
+
 
     @Observable
-    public TgVehicle setPrice(final Money price) {
-	this.price = price;
-	return this;
-    }
-
-    public Money getPrice() {
-	return price;
-    }
-
-    @Observable
-    public TgVehicle setModel(final TgVehicleModel model) {
+    public TgModelYearCount setModel(final TgVehicleModel model) {
 	this.model = model;
 	return this;
     }
@@ -58,14 +50,29 @@ public class TgVehicle extends AbstractEntity<String> {
 	return model;
     }
 
+    @Observable
+    public TgModelYearCount setYear(final Long year) {
+	this.year = year;
+	return this;
+    }
 
+    public Long getYear() {
+	return year;
+    }
 
-    @IsProperty @MapTo(userType = ISimpleMoneyType.class)
-    private Money purchasePrice;
+    @Observable
+    public TgModelYearCount setCount(final BigInteger count) {
+	this.count = count;
+	return this;
+    }
+
+    public BigInteger getCount() {
+	return count;
+    }
 
     /**
      * Constructor for (@link EntityFactory}.
      */
-    protected TgVehicle() {
+    protected TgModelYearCount() {
     }
 }

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -34,16 +36,49 @@ public class EntQuery implements ISingleOperand {
 	return groups;
     }
 
-    @Override
-    public Set<String> getPropNames() {
+    public List<String> resolveProps() {
+	final List<String> result = new ArrayList<String>();
+	final Set<String> props = getImmediatePropNames();
+	System.out.println("Props: " + props);
+
+	for (final String prop : props) {
+	    int resolvedCount = sources.getMain().hasProperty(prop) ? 1 : 0;
+
+	    for (final EntQueryCompoundSourceModel source : sources.getCompounds()) {
+		resolvedCount = resolvedCount + (source.getSource().hasProperty(prop) ? 1 : 0);
+	    }
+
+	    if (resolvedCount > 1) {
+		throw new IllegalStateException("Ambiguous property: " + prop);
+	    }
+
+	    if (resolvedCount == 0) {
+		result.add(prop);
+	    }
+	}
+
+	return result;
+    }
+
+    public Set<String> getImmediatePropNames() {
 	final Set<String> result = new HashSet<String>();
 
 	result.addAll(getPropNamesFromYields());
 	result.addAll(getPropNamesFromGroups());
 	result.addAll(conditions.getPropNames());
 	result.addAll(getPropNamesFromSources());
-
 	return result;
+    }
+
+    public Set<String> getPropNames() {
+//	final Set<String> result = new HashSet<String>();
+//
+//	result.addAll(getPropNamesFromYields());
+//	result.addAll(getPropNamesFromGroups());
+//	result.addAll(conditions.getPropNames());
+//	result.addAll(getPropNamesFromSources());
+
+	return new HashSet<String>(); //result;
     }
 
     public Set<String> getQrySourcesNames() {
@@ -76,7 +111,7 @@ public class EntQuery implements ISingleOperand {
     private Set<String> getPropNamesFromSources() {
 	final Set<String> result = new HashSet<String>();
 	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
-	    result.addAll(compSource.getPropNames());
+	    result.addAll(compSource.getJoinConditions().getPropNames());
 	}
 	return result;
     }

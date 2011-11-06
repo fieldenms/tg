@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.Finder;
 
 public class EntQuerySourceAsEntity implements IEntQuerySource {
     private final Class<? extends AbstractEntity> entityType;
-    private final String alias;
+    private final String alias; // can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end
 
     public EntQuerySourceAsEntity(final Class<? extends AbstractEntity> entityType, final String alias) {
 	this.entityType = entityType;
@@ -51,5 +52,19 @@ public class EntQuerySourceAsEntity implements IEntQuerySource {
 	    return false;
 	}
 	return true;
+    }
+
+    @Override
+    public boolean hasProperty(final String dotNotatedPropName) {
+	if (dotNotatedPropName.equalsIgnoreCase(alias)) {
+	    return true; // id property is meant here
+	}
+
+	try {
+	    Finder.findFieldByName(entityType, (alias == null ? dotNotatedPropName : (!dotNotatedPropName.startsWith(alias + ".") ? dotNotatedPropName : dotNotatedPropName.substring(alias.length() + 1))));
+	    return true;
+	} catch (final Exception e) {
+	    return false;
+	}
     }
 }

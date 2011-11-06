@@ -199,7 +199,7 @@ public class QueryModelCompositionTest {
 	exp.add("eqClass.desc");
 	exp.add("weight");
 	exp.add("volume");
-	assertEquals("models are different", exp, qb.generateEntQuery(qry).getPropNames());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getImmediatePropNames());
     }
 
     @Test
@@ -213,8 +213,8 @@ public class QueryModelCompositionTest {
 	exp.add("eqClass.desc");
 	exp.add("weight");
 	exp.add("volume");
-	exp.add("make");
-	assertEquals("models are different", exp, qb.generateEntQuery(qry).getPropNames());
+	//exp.add("make");
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getImmediatePropNames());
     }
 
     @Test

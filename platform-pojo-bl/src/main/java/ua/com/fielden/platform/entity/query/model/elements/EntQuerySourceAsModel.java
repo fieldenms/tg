@@ -55,4 +55,10 @@ public class EntQuerySourceAsModel implements IEntQuerySource {
 	}
 	return true;
     }
+
+    @Override
+    public boolean hasProperty(final String dotNotatedPropName) {
+	// TODO Auto-generated method stub
+	return false;
+    }
 }
