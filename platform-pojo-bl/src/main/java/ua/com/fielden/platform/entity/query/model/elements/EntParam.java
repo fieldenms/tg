@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 
@@ -14,7 +15,12 @@ public class EntParam implements ISingleOperand {
 
     @Override
     public Set<String> getPropNames() {
-	return new HashSet<String>();
+	return Collections.emptySet();
+    }
+
+    @Override
+    public List<EntQuery> getSubqueries() {
+	return Collections.emptyList();
     }
 
     @Override

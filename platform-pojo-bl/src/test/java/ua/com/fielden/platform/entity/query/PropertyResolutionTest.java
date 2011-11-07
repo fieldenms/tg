@@ -74,5 +74,10 @@ public class PropertyResolutionTest {
 	assertEquals("Incorrect list of unresolved props", Arrays.asList(new String[] {}), qb.generateEntQuery(qry).resolveProps());
     }
 
+    @Test
+    public void test_prop10() {
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v.ehicle").where().anyOfProps("v.ehicle.model.make.key", "v.eqClass").eq().val("MERC").model();
+	assertEquals("Incorrect list of unresolved props", Arrays.asList(new String[] { "v.eqClass" }), qb.generateEntQuery(qry).resolveProps());
+    }
 
 }

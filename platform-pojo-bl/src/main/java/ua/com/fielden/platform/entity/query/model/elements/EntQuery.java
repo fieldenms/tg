@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,22 +20,6 @@ public class EntQuery implements ISingleOperand {
 	this.conditions = conditions;
 	this.yields = yields;
 	this.groups = groups;
-    }
-
-    public EntQuerySourcesModel getSources() {
-	return sources;
-    }
-
-    public ConditionsModel getConditions() {
-	return conditions;
-    }
-
-    public YieldsModel getYields() {
-	return yields;
-    }
-
-    public GroupsModel getGroups() {
-	return groups;
     }
 
     public List<String> resolveProps() {
@@ -60,9 +46,12 @@ public class EntQuery implements ISingleOperand {
 	return result;
     }
 
+    /**
+     * By immediate prop names here are meant props used within this query and not within it's (nested) subqueries.
+     * @return
+     */
     public Set<String> getImmediatePropNames() {
 	final Set<String> result = new HashSet<String>();
-
 	result.addAll(getPropNamesFromYields());
 	result.addAll(getPropNamesFromGroups());
 	result.addAll(conditions.getPropNames());
@@ -70,27 +59,34 @@ public class EntQuery implements ISingleOperand {
 	return result;
     }
 
-    public Set<String> getPropNames() {
-//	final Set<String> result = new HashSet<String>();
-//
-//	result.addAll(getPropNamesFromYields());
-//	result.addAll(getPropNamesFromGroups());
-//	result.addAll(conditions.getPropNames());
-//	result.addAll(getPropNamesFromSources());
-
-	return new HashSet<String>(); //result;
-    }
-
-    public Set<String> getQrySourcesNames() {
-	final Set<String> result = new HashSet<String>();
-	if (sources.getMain().getAlias() != null) {
-	    result.add(sources.getMain().getAlias());
-	}
-	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
-	    result.add(compSource.getSource().getAlias());
-	}
+    public List<EntQuery> getImmediateSubqueries() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	result.addAll(getSubqueriesFromYields());
+	result.addAll(getSubqueriesFromGroups());
+	result.addAll(conditions.getSubqueries());
+	result.addAll(getSubqueriesFromSources());
 	return result;
     }
+
+    public Set<String> getPropNames() {
+	return Collections.emptySet();
+    }
+
+    public List<EntQuery> getSubqueries() {
+	return Arrays.asList(new EntQuery[]{this});
+    }
+
+
+//    public Set<String> getQrySourcesNames() {
+//	final Set<String> result = new HashSet<String>();
+//	if (sources.getMain().getAlias() != null) {
+//	    result.add(sources.getMain().getAlias());
+//	}
+//	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
+//	    result.add(compSource.getSource().getAlias());
+//	}
+//	return result;
+//    }
 
     private Set<String> getPropNamesFromYields() {
 	final Set<String> result = new HashSet<String>();
@@ -112,6 +108,30 @@ public class EntQuery implements ISingleOperand {
 	final Set<String> result = new HashSet<String>();
 	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
 	    result.addAll(compSource.getJoinConditions().getPropNames());
+	}
+	return result;
+    }
+
+    private List<EntQuery> getSubqueriesFromYields() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	for (final YieldModel yield : yields.getYields()) {
+	    result.addAll(yield.getOperand().getSubqueries());
+	}
+	return result;
+    }
+
+    private List<EntQuery> getSubqueriesFromGroups() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	for (final GroupModel group : groups.getGroups()) {
+	    result.addAll(group.getOperand().getSubqueries());
+	}
+	return result;
+    }
+
+    private List<EntQuery> getSubqueriesFromSources() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
+	    result.addAll(compSource.getJoinConditions().getSubqueries());
 	}
 	return result;
     }
@@ -168,5 +188,21 @@ public class EntQuery implements ISingleOperand {
 	    return false;
 	}
 	return true;
+    }
+
+    public EntQuerySourcesModel getSources() {
+	return sources;
+    }
+
+    public ConditionsModel getConditions() {
+	return conditions;
+    }
+
+    public YieldsModel getYields() {
+	return yields;
+    }
+
+    public GroupsModel getGroups() {
+	return groups;
     }
 }

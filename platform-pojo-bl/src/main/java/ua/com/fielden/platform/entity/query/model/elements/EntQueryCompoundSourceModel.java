@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.List;
 import java.util.Set;
 
 
@@ -30,6 +31,11 @@ public class EntQueryCompoundSourceModel implements IPropertyCollector {
     @Override
     public Set<String> getPropNames() {
 	return joinConditions.getPropNames();
+    }
+
+    @Override
+    public List<EntQuery> getSubqueries() {
+	return joinConditions.getSubqueries();
     }
 
     @Override

@@ -217,34 +217,34 @@ public class QueryModelCompositionTest {
 	assertEquals("models are different", exp, qb.generateEntQuery(qry).getImmediatePropNames());
     }
 
-    @Test
-    public void test_source_names_collector() {
-	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).modelAsAggregate();
-	final Set<String> exp = new HashSet<String>();
-	assertEquals("models are different", exp, qb.generateEntQuery(qry).getQrySourcesNames());
-    }
-
-    @Test
-    public void test_source_names_collector_with_joins() {
-	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).as("v").where().prop("v.model.desc").like().val("MERC%").
-	groupBy().prop("v.eqClass.desc").
-	yield().beginExpr().prop("v.volume").add().prop("v.weight").endExpr().as("calc").modelAsAggregate();
-	final Set<String> exp = new HashSet<String>();
-	exp.add("v");
-	assertEquals("models are different", exp, qb.generateEntQuery(qry).getQrySourcesNames());
-    }
-
-    @Test
-    public void test_source_names_collector2() {
-	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).as("v").leftJoin(TgVehicleModel.class).as("v.model").on().prop("v.model").eq().prop("v.model.id").
-	where().prop("v.model.desc").like().val("MERC%").
-	groupBy().prop("v.eqClass.desc").
-	yield().beginExpr().prop("v.volume").add().prop("v.weight").endExpr().as("calc").modelAsAggregate();
-	final Set<String> exp = new HashSet<String>();
-	exp.add("v");
-	exp.add("v.model");
-	assertEquals("models are different", exp, qb.generateEntQuery(qry).getQrySourcesNames());
-    }
+//    @Test
+//    public void test_source_names_collector() {
+//	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).modelAsAggregate();
+//	final Set<String> exp = new HashSet<String>();
+//	assertEquals("models are different", exp, qb.generateEntQuery(qry).getQrySourcesNames());
+//    }
+//
+//    @Test
+//    public void test_source_names_collector_with_joins() {
+//	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).as("v").where().prop("v.model.desc").like().val("MERC%").
+//	groupBy().prop("v.eqClass.desc").
+//	yield().beginExpr().prop("v.volume").add().prop("v.weight").endExpr().as("calc").modelAsAggregate();
+//	final Set<String> exp = new HashSet<String>();
+//	exp.add("v");
+//	assertEquals("models are different", exp, qb.generateEntQuery(qry).getQrySourcesNames());
+//    }
+//
+//    @Test
+//    public void test_source_names_collector2() {
+//	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).as("v").leftJoin(TgVehicleModel.class).as("v.model").on().prop("v.model").eq().prop("v.model.id").
+//	where().prop("v.model.desc").like().val("MERC%").
+//	groupBy().prop("v.eqClass.desc").
+//	yield().beginExpr().prop("v.volume").add().prop("v.weight").endExpr().as("calc").modelAsAggregate();
+//	final Set<String> exp = new HashSet<String>();
+//	exp.add("v");
+//	exp.add("v.model");
+//	assertEquals("models are different", exp, qb.generateEntQuery(qry).getQrySourcesNames());
+//    }
 
     @Test
     public void test_query_sources1() {

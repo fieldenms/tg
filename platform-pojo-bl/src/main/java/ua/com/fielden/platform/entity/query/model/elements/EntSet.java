@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,6 +19,15 @@ public class EntSet implements ISetOperand{
 	final Set<String> result = new HashSet<String>();
 	for (final ISingleOperand operand : operands) {
 	    result.addAll(operand.getPropNames());
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntQuery> getSubqueries() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	for (final ISingleOperand operand : operands) {
+	    result.addAll(operand.getSubqueries());
 	}
 	return result;
     }

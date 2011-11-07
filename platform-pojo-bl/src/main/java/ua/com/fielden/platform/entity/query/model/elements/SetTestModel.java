@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -15,6 +17,13 @@ public class SetTestModel implements ICondition {
 	this.rightOperand = rightOperand;
 	this.negated = negated;
     }
+
+    @Override
+    public List<EntQuery> getSubqueries() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	result.addAll(leftOperand.getSubqueries());
+	result.addAll(rightOperand.getSubqueries());
+	return result;    }
 
     @Override
     public Set<String> getPropNames() {

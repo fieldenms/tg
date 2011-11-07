@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -13,11 +13,15 @@ abstract class SingleOperandFunctionModel implements ISingleOperand {
 	this.operand = operand;
     }
 
+
+    @Override
+    public List<EntQuery> getSubqueries() {
+	return operand.getSubqueries();
+    }
+
     @Override
     public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	result.addAll(operand.getPropNames());
-	return result;
+	return operand.getPropNames();
     }
 
     @Override

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -16,9 +16,12 @@ public class NullTestModel implements ICondition {
 
     @Override
     public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	result.addAll(operand.getPropNames());
-	return result;
+	return operand.getPropNames();
+    }
+
+    @Override
+    public List<EntQuery> getSubqueries() {
+	return operand.getSubqueries();
     }
 
     @Override

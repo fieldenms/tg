@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 
@@ -14,6 +16,11 @@ public class EntSetFromQryModel implements ISetOperand {
     @Override
     public Set<String> getPropNames() {
 	return model.getPropNames();
+    }
+
+    @Override
+    public List<EntQuery> getSubqueries() {
+	return Arrays.asList(new EntQuery[]{model});
     }
 
     @Override

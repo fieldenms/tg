@@ -2,9 +2,6 @@ package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.List;
 
-
-
-
 public class GroupedConditionsModel extends ConditionsModel implements ICondition {
     private final boolean negated;
 

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,6 +23,16 @@ public class Expression implements ISingleOperand {
 	result.addAll(first.getPropNames());
 	for (final CompoundSingleOperand compSingleOperand : items) {
 	    result.addAll(compSingleOperand.getOperand().getPropNames());
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntQuery> getSubqueries() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	result.addAll(first.getSubqueries());
+	for (final CompoundSingleOperand compSingleOperand : items) {
+	    result.addAll(compSingleOperand.getOperand().getSubqueries());
 	}
 	return result;
     }

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class EntProp implements ISingleOperand {
@@ -16,6 +18,11 @@ public class EntProp implements ISingleOperand {
 	final Set<String> result = new HashSet<String>();
 	result.add(name);
 	return result;
+    }
+
+    @Override
+    public List<EntQuery> getSubqueries() {
+	return Collections.emptyList();
     }
 
     @Override

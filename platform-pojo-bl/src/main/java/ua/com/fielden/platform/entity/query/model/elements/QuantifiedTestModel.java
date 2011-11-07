@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class QuantifiedTestModel implements ICondition {
@@ -19,10 +21,16 @@ public class QuantifiedTestModel implements ICondition {
     @Override
     public Set<String> getPropNames() {
 	final Set<String> result = new HashSet<String>();
-
 	result.addAll(leftOperand.getPropNames());
 	result.addAll(rightOperand.getPropNames());
+	return result;
+    }
 
+    @Override
+    public List<EntQuery> getSubqueries() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	result.addAll(leftOperand.getSubqueries());
+	result.addAll(rightOperand.getSubqueries());
 	return result;
     }
 
