@@ -30,6 +30,7 @@ public class DefaultTreeMenuItemFactory implements ITreeMenuItemFactory {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public TreeMenuItem create(final Class menuItemClass, final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ICenterConfigurationController centerController, final ITreeMenuItemVisibilityProvider visibilityProvider) {
 	// try creating an item based on a constructor for non-group items

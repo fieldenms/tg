@@ -1,6 +1,8 @@
-package ua.com.fielden.platform.swing.review.report.centre;
+package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationPanel;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
@@ -11,23 +13,23 @@ import ua.com.fielden.platform.swing.view.BasePanel;
  * @param <T>
  */
 //TODO parametrise AbstractConfigurationPanel.
-public class CentreConfigurationPanel<T extends AbstractEntity> extends AbstractConfigurationView {
+public class CentreConfigurationView<T extends AbstractEntity> extends AbstractConfigurationPanel {
 
     private static final long serialVersionUID = -5187097528373828177L;
 
     /**
-     * Initiates this {@link CentreConfigurationPanel} with appropriate {@link CentreConfigurationModel} instance.
+     * Initiates this {@link CentreConfigurationView} with appropriate {@link CentreConfigurationModel} instance.
      * 
      * @param model
      */
-    public CentreConfigurationPanel(final CentreConfigurationModel<T> model) {
-	super(model);
+    public CentreConfigurationView(final CentreConfigurationModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
+	super(model, progressLayer);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("unchecked")
     @Override
     public CentreConfigurationModel<T> getModel() {
-	return (CentreConfigurationModel)super.getModel();
+	return (CentreConfigurationModel<T>)super.getModel();
     }
 
     @Override

@@ -42,7 +42,7 @@ import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
 import ua.com.fielden.platform.swing.file.ExtensionFileFilter;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.pagination.Paginator;
-import ua.com.fielden.platform.swing.pagination.Paginator.IPageController;
+import ua.com.fielden.platform.swing.pagination.Paginator.IPageModel;
 import ua.com.fielden.platform.swing.sortabletable.SorterHandler;
 import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.swing.view.BasePanel;
@@ -169,12 +169,12 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
     }
 
     /**
-     * Override this in order to provide specific {@link IPageController}.
+     * Override this in order to provide specific {@link IPageModel}.
      * 
      * @return
      */
-    protected IPageController createPageController() {
-	return new IPageController() {
+    protected IPageModel createPageController() {
+	return new IPageModel() {
 
 	    @Override
 	    public void loadPage(final IPage<?> page) {

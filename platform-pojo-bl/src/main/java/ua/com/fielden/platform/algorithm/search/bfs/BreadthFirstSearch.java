@@ -32,7 +32,7 @@ public final class BreadthFirstSearch<T, N extends ITreeNode<T>> implements ISea
 	    }
 
 	    explored.add(node);
-	    final Iterable<N> children = (Iterable<N>) node.children();
+	    final Iterable<N> children = (Iterable<N>) node.daughters();
 	    for (final N child : children) {
 		if (!explored.contains(child) && !frontier.contains(child)) {
 		    frontier.push(child);

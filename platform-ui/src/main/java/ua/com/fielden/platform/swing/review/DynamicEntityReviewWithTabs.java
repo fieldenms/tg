@@ -43,7 +43,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.file.ExtensionFileFilter;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
-import ua.com.fielden.platform.swing.pagination.Paginator.IPageController;
+import ua.com.fielden.platform.swing.pagination.Paginator.IPageModel;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
@@ -582,8 +582,8 @@ public class DynamicEntityReviewWithTabs<T extends AbstractEntity, DAO extends I
     }
 
     @Override
-    protected IPageController createPageController() {
-	return new IPageController() {
+    protected IPageModel createPageController() {
+	return new IPageModel() {
 
 	    @Override
 	    public void loadPage(final IPage<?> page) {

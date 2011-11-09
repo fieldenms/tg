@@ -29,7 +29,7 @@ public class TreeNode implements ITreeNode<String> {
     }
 
     @Override
-    public List<TreeNode> children() {
+    public List<TreeNode> daughters() {
 	return children;
     }
 
@@ -44,12 +44,12 @@ public class TreeNode implements ITreeNode<String> {
 
     @Override
     public int hashCode() {
-        return state.hashCode() * 29;
+	return state.hashCode() * 29;
     }
 
     @Override
     public boolean equals(final Object obj) {
-        return state.equals(obj);
+	return state.equals(obj);
     }
 
     public int visits() {
@@ -62,7 +62,7 @@ public class TreeNode implements ITreeNode<String> {
 
     @Override
     public String toString() {
-        return "State: " + state + "; " + "# of visits " + visits + "; # of children " + children.size();
+	return "State: " + state + "; " + "# of visits " + visits + "; # of children " + children.size();
     }
 
 }

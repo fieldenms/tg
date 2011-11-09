@@ -29,7 +29,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
 import ua.com.fielden.platform.swing.pagination.Paginator;
-import ua.com.fielden.platform.swing.pagination.Paginator.IPageController;
+import ua.com.fielden.platform.swing.pagination.Paginator.IPageModel;
 import ua.com.fielden.platform.swing.sortabletable.PropertyTableModelRowSorter;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
@@ -73,7 +73,7 @@ public class RuleResultsTab extends JPanel {
 
 	egi.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
-	paginator = new Paginator(new IPageController() {
+	paginator = new Paginator(new IPageModel() {
 
 	    @Override
 	    public void loadPage(final IPage<?> page) {
@@ -225,7 +225,7 @@ public class RuleResultsTab extends JPanel {
 	    sorterHandler.install(egi, new PropertyTableModelRowSorter(egi.getActualModel()));
 	}
 
-	paginator = new Paginator(new IPageController() {
+	paginator = new Paginator(new IPageModel() {
 
 	    @Override
 	    public void loadPage(final IPage<?> page) {

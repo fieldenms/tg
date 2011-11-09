@@ -11,7 +11,7 @@ import java.util.List;
  */
 public interface ITreeNode<T> {
 
-    List<? extends ITreeNode<T>> children();
+    List<? extends ITreeNode<T>> daughters();
     T state();
 
 }

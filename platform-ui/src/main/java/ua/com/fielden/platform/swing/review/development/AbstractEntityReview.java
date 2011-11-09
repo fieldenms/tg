@@ -4,30 +4,32 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.events.ReviewEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
-import ua.com.fielden.platform.swing.review.report.interfaces.ReviewEventListener;
+import ua.com.fielden.platform.swing.review.report.interfaces.IReviewEventListener;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
-public class EntityCentre<T extends AbstractEntity> extends BasePanel implements IReview {
+public abstract class AbstractEntityReview<T extends AbstractEntity, DTM extends IDomainTreeManager> extends BasePanel implements IReview {
 
     private static final long serialVersionUID = -8984113615241551583L;
 
-    private final EntityCentreModel<T> model;
+    private final AbstractEntityReviewModel<T, DTM> model;
 
     private final BlockingIndefiniteProgressLayer progressLayer;
 
-    private final Action configureAction, saveAction, saveAsAction, removeAction;
+    private final Action configureAction, saveAction, saveAsAction, saveAsDefaultAction, removeAction;
 
-    public EntityCentre(final EntityCentreModel<T> model, final BlockingIndefiniteProgressLayer progressLayer){
+    public AbstractEntityReview(final AbstractEntityReviewModel<T, DTM> model, final BlockingIndefiniteProgressLayer progressLayer){
 	this.model = model;
 	this.progressLayer = progressLayer;
 	this.configureAction = createConfigureAction();
 	this.saveAction = createSaveAction();
 	this.saveAsAction = createSaveAsAction();
+	this.saveAsDefaultAction = createSaveAsDefaultAction();
 	this.removeAction = createRemoveAction();
 
 	initView();
@@ -35,6 +37,10 @@ public class EntityCentre<T extends AbstractEntity> extends BasePanel implements
 
     protected Action createRemoveAction() {
 	return createReviewAction("Remove", ReviewAction.PRE_REMOVE, ReviewAction.REMOVE, ReviewAction.POST_REMOVE);
+    }
+
+    protected Action createSaveAsDefaultAction() {
+	return createReviewAction("Save as default", ReviewAction.PRE_SAVE_AS_DEFAULT, ReviewAction.SAVE_AS_DEFAULT, ReviewAction.POST_SAVE_AS_DEFAULT);
     }
 
     protected Action createSaveAsAction() {
@@ -49,46 +55,7 @@ public class EntityCentre<T extends AbstractEntity> extends BasePanel implements
 	return createReviewAction("Configure", ReviewAction.PRE_CONFIGURE, ReviewAction.CONFIGURE, ReviewAction.POST_CONFIGURE);
     }
 
-    protected void initView(){
-
-	//Creating the main components of the entity centre.
-	//	final JComponent toolBar = createToolBar();
-	//	final JComponent criteriaPanel = createCriteriaPanel();
-	//	final JComponent actionPanel = createActionPanel();
-	//	final JComponent review = createReview();
-	//
-	//	//Setting the entity centre components' layout.
-	//	final String rowConstraints = (toolBar == null ? "" : "[fill]") + (criteriaPanel == null ? "" : "[fill]")
-	//	/*                  */+(actionPanel == null ? "" : "[fill]") + (review == null ? "" : "[:400:, fill, grow]");
-	//
-	//
-	//	setLayout(new MigLayout("fill, insets 5", "[:400: ,fill, grow]", isEmpty(rowConstraints) ? "[fill, grow]" : rowConstraints));
-	//
-	//	add(toolBar, "wrap");
-	//	add(criteriaPanel, "wrap");
-	//	add(actionPanel, "wrap");
-	//	add(review);
-
-	//	String rowConstraints = "";
-	//	final List<JComponent> components = new ArrayList<JComponent>();
-	//
-	//	if (actionPanel != null && actionPanel.getComponentCount() > 0) {
-	//	    rowConstraints += "[fill]";
-	//	    components.add(actionPanel);
-	//	}
-	//	if (criteriaPanel != null) {
-	//	    rowConstraints += "[fill]";
-	//	    components.add(criteriaPanel);
-	//	}
-	//	components.add(buttonPanel);
-	//	components.add(getProgressLayer());
-	//	rowConstraints += "[fill][:400:, fill, grow]";
-	//	setLayout(new MigLayout("fill, insets 5", "[:400:, fill, grow]", rowConstraints));
-	//	for (int componentIndex = 0; componentIndex < components.size() - 1; componentIndex++) {
-	//	    add(components.get(componentIndex), "wrap");
-	//	}
-	//	add(components.get(components.size() - 1));
-    }
+    protected abstract void initView();
 
     /**
      * Creates on of the review action: configure, save, save as or remove.
@@ -110,18 +77,18 @@ public class EntityCentre<T extends AbstractEntity> extends BasePanel implements
 		if(!result){
 		    return false;
 		}
-		return notifyReviewAction(new ReviewEvent(EntityCentre.this, preAction));
+		return notifyReviewAction(new ReviewEvent(AbstractEntityReview.this, preAction));
 	    }
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
-		notifyReviewAction(new ReviewEvent(EntityCentre.this, action));
+		notifyReviewAction(new ReviewEvent(AbstractEntityReview.this, action));
 		return null;
 	    }
 
 	    @Override
 	    protected void postAction(final Void value) {
-		notifyReviewAction(new ReviewEvent(EntityCentre.this, postAction));
+		notifyReviewAction(new ReviewEvent(AbstractEntityReview.this, postAction));
 		super.postAction(value);
 	    }
 
@@ -130,12 +97,12 @@ public class EntityCentre<T extends AbstractEntity> extends BasePanel implements
 
     protected boolean notifyReviewAction(final ReviewEvent ev) {
 	// Guaranteed to return a non-null array
-	final ReviewEventListener[] listeners = getListeners(ReviewEventListener.class);
+	final IReviewEventListener[] listeners = getListeners(IReviewEventListener.class);
 	// Process the listeners last to first, notifying
 	// those that are interested in this event
 	boolean result = true;
 
-	for (final ReviewEventListener listener : listeners) {
+	for (final IReviewEventListener listener : listeners) {
 	    result &= listener.configureActionPerformed(ev);
 	}
 	return result;
@@ -149,6 +116,10 @@ public class EntityCentre<T extends AbstractEntity> extends BasePanel implements
 	return saveAction;
     }
 
+    public final Action getSaveAsDefaultAction() {
+	return saveAsDefaultAction;
+    }
+
     public final Action getSaveAsAction(){
 	return saveAsAction;
     }
@@ -158,13 +129,13 @@ public class EntityCentre<T extends AbstractEntity> extends BasePanel implements
     }
 
     @Override
-    public void addReviewEventListener(final ReviewEventListener l) {
-	listenerList.add(ReviewEventListener.class, l);
+    public void addReviewEventListener(final IReviewEventListener l) {
+	listenerList.add(IReviewEventListener.class, l);
     }
 
     @Override
-    public void removeReviewEventListener(final ReviewEventListener l) {
-	listenerList.remove(ReviewEventListener.class, l);
+    public void removeReviewEventListener(final IReviewEventListener l) {
+	listenerList.remove(IReviewEventListener.class, l);
     }
 
     @Override
@@ -172,7 +143,7 @@ public class EntityCentre<T extends AbstractEntity> extends BasePanel implements
 	return "Entity centre";
     }
 
-    public EntityCentreModel<T> getModel() {
+    public AbstractEntityReviewModel<T, DTM> getModel() {
 	return model;
     }
 

@@ -21,13 +21,14 @@ import ua.com.fielden.platform.criteria.enhanced.FirstParam;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -245,7 +246,8 @@ public class CriteriaGeneratorTest {
 
     @Test
     public void test_that_criteria_generation_works_correctly(){
-	final EntityQueryCriteria<TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateQueryCriteria(TopLevelEntity.class, cdtm);
+	final EntityQueryCriteria<ICentreDomainTreeManager, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(TopLevelEntity.class, cdtm);
+	assertNotNull("The centre domain tree manager can not be null", criteriaEntity.getDomainTreeManger());
 	final List<Field> criteriaProperties = CriteriaReflector.getCriteriaProperties(criteriaEntity.getClass());
 	assertEquals("The number of criteria properties is incorrect", propertyNames.size(), criteriaProperties.size());
 	for(int propertyIndex = 0; propertyIndex < propertyNames.size(); propertyIndex++){

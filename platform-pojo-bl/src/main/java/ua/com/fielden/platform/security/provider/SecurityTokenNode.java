@@ -133,7 +133,7 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
     }
 
     @Override
-    public List<SecurityTokenNode> children() {
+    public List<SecurityTokenNode> daughters() {
 	return new ArrayList<SecurityTokenNode>(subTokenNodes);
     }
 

@@ -60,7 +60,7 @@ public class Paginator<T extends AbstractEntity> {
      * @author oleh
      *
      */
-    public static interface IPageController {
+    public static interface IPageModel {
 
 	/**
 	 * Loads specified page of data in to data set or model to represent it on it's own way (grid or graphics e.t.c.).
@@ -72,25 +72,25 @@ public class Paginator<T extends AbstractEntity> {
 
     private final BlockingLayerCommand<List<T>> prev, next, first, last;
 
-    private final IPageController pageController;
+    private final IPageModel pageModel;
 
     private IPage<T> currentPage;
 
     private final IPageChangeFeedback feedback;
     private final IEnableAction enableAction;
 
-    public Paginator(final IPageController pageController, final BlockingIndefiniteProgressLayer blockingLayer) {
-	this(pageController, null, blockingLayer, null);
+    public Paginator(final IPageModel pageModel, final BlockingIndefiniteProgressLayer blockingLayer) {
+	this(pageModel, null, blockingLayer, null);
     }
 
-    public Paginator(final IPageController pageController, final BlockingIndefiniteProgressLayer blockingLayer, final IEnableAction enableAction) {
-	this(pageController, null, blockingLayer, enableAction);
+    public Paginator(final IPageModel pageModel, final BlockingIndefiniteProgressLayer blockingLayer, final IEnableAction enableAction) {
+	this(pageModel, null, blockingLayer, enableAction);
     }
 
-    public Paginator(final IPageController pageController, final IPageChangeFeedback feedback, final BlockingIndefiniteProgressLayer blockingLayer, final IEnableAction enableAction) {
+    public Paginator(final IPageModel pageModel, final IPageChangeFeedback feedback, final BlockingIndefiniteProgressLayer blockingLayer, final IEnableAction enableAction) {
 	this.enableAction = enableAction;
 	this.feedback = feedback;
-	this.pageController = pageController;
+	this.pageModel = pageModel;
 	first = createActionFirst(blockingLayer);
 	prev = createActionPrev(blockingLayer);
 	next = createActionNext(blockingLayer);
@@ -215,7 +215,7 @@ public class Paginator<T extends AbstractEntity> {
     }
 
     /**
-     * Set the current page for this {@link Paginator} without loading it in to the {@link IPageController}.
+     * Set the current page for this {@link Paginator} without loading it in to the {@link IPageModel}.
      *
      * @param currentPage
      */
@@ -257,8 +257,8 @@ public class Paginator<T extends AbstractEntity> {
 	}
     }
 
-    private IPageController getPageController() {
-	return pageController;
+    private IPageModel getPageController() {
+	return pageModel;
     }
 
     public Command<List<T>> getFirst() {

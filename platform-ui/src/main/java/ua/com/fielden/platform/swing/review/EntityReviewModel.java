@@ -42,7 +42,7 @@ import ua.com.fielden.platform.swing.file.ExtensionFileFilter;
 import ua.com.fielden.platform.swing.pagination.Paginator;
 import ua.com.fielden.platform.swing.pagination.Paginator.IEnableAction;
 import ua.com.fielden.platform.swing.pagination.Paginator.IPageChangeFeedback;
-import ua.com.fielden.platform.swing.pagination.Paginator.IPageController;
+import ua.com.fielden.platform.swing.pagination.Paginator.IPageModel;
 import ua.com.fielden.platform.swing.sortabletable.PropertyTableModelRowSorter;
 
 import com.jidesoft.grid.TableModelWrapperUtils;
@@ -485,11 +485,11 @@ public class EntityReviewModel<T extends AbstractEntity, DAO extends IEntityDao<
      * initiates paginator with blocking layer
      *
      * @param layer
-     * @param pageController
+     * @param pageModel
      *            TODO
      */
-    void initPaginator(final BlockingIndefiniteProgressLayer layer, final IPageController pageController, final IPageChangeFeedback feedback) {
-	this.paginator = new Paginator<AbstractEntity>(pageController, feedback, layer, new IEnableAction() {
+    void initPaginator(final BlockingIndefiniteProgressLayer layer, final IPageModel pageModel, final IPageChangeFeedback feedback) {
+	this.paginator = new Paginator<AbstractEntity>(pageModel, feedback, layer, new IEnableAction() {
 
 	    @Override
 	    public void enableAction(final boolean enable) {

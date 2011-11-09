@@ -170,7 +170,7 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
     }
 
     @Override
-    public List<? extends ITreeNode<MainMenuItem>> children() {
+    public List<? extends ITreeNode<MainMenuItem>> daughters() {
 	return Collections.unmodifiableList(children);
     }
 

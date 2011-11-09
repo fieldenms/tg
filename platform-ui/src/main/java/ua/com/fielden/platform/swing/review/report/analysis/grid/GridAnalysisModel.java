@@ -1,0 +1,45 @@
+package ua.com.fielden.platform.swing.review.report.analysis.grid;
+
+import java.util.ArrayList;
+
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
+import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
+import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.events.DataLoadedEvent;
+
+public class GridAnalysisModel<T extends AbstractEntity> extends AbstractEntityReviewModel<T, ICentreDomainTreeManager> {
+
+    private final PropertyTableModel<T> gridModel;
+
+    public GridAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria) {
+	super(criteria);
+	this.gridModel = createTableModel();
+    }
+
+    private PropertyTableModel<T> createTableModel() {
+	final Class<T> entityClass = getCriteria().getEntityClass();
+	final PropertyTableModelBuilder<T> tableModelBuilder = new PropertyTableModelBuilder<T> (entityClass);
+	final IAddToResultTickManager resultTickManager = getCriteria().getDomainTreeManger().getSecondTick();
+	for(final String propertyName : resultTickManager.checkedProperties(entityClass)){
+	    tableModelBuilder.addReadonly(propertyName, resultTickManager.getWidth(entityClass, propertyName));
+	}
+	return tableModelBuilder.build(new ArrayList<T>());
+    }
+
+    public final PropertyTableModel<T> getGridModel(){
+	return gridModel;
+    }
+
+    @Override
+    public void loadData() {
+	// TODO Auto-generated method stub
+	// TODO Must implement data loading and view updating
+	fireDataLoadedEvent(new DataLoadedEvent(gridModel, null));
+    }
+
+}

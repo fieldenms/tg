@@ -12,7 +12,7 @@ import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.events.WizardEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
-import ua.com.fielden.platform.swing.review.report.interfaces.WizardEventListener;
+import ua.com.fielden.platform.swing.review.report.interfaces.IWizardEventListener;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorView;
 import ua.com.fielden.platform.swing.view.BasePanel;
@@ -102,12 +102,12 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     protected boolean notifyWizardAction(final WizardEvent ev) {
 	// Guaranteed to return a non-null array
-	final WizardEventListener[] listeners = getListeners(WizardEventListener.class);
+	final IWizardEventListener[] listeners = getListeners(IWizardEventListener.class);
 	// Process the listeners last to first, notifying
 	// those that are interested in this event
 	boolean result = true;
 
-	for (final WizardEventListener listener : listeners) {
+	for (final IWizardEventListener listener : listeners) {
 	    result &= listener.wizardActionPerformed(ev);
 	}
 	return result;
@@ -131,13 +131,13 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
     }
 
     @Override
-    public void addWizardEventListener(final WizardEventListener l) {
-	listenerList.add(WizardEventListener.class, l);
+    public void addWizardEventListener(final IWizardEventListener l) {
+	listenerList.add(IWizardEventListener.class, l);
     }
 
     @Override
-    public void removeWizardEventListener(final WizardEventListener l) {
-	listenerList.remove(WizardEventListener.class, l);
+    public void removeWizardEventListener(final IWizardEventListener l) {
+	listenerList.remove(IWizardEventListener.class, l);
     }
 
     //    private SpinnerModel createSpinnerModel() {

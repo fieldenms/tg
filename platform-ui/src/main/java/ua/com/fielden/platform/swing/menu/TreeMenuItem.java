@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.swing.menu;
 
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JPanel;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 
 /**
@@ -16,7 +20,7 @@ import ua.com.fielden.platform.swing.view.BaseNotifPanel;
  * 
  * @author TG Team
  */
-public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNode {
+public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNode implements ITreeNode<ITreeNode>{
     private static final long serialVersionUID = 1L;
 
     private final V view;
@@ -135,5 +139,24 @@ public class TreeMenuItem<V extends BaseNotifPanel> extends DefaultMutableTreeNo
     public void setVisible(final boolean visible) {
 	this.visible = visible;
     }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public ITreeNode<ITreeNode> state() {
+	return (ITreeNode)getParent();
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public List<? extends ITreeNode<ITreeNode>> daughters() {
+	final List<ITreeNode<ITreeNode>> daughters = new ArrayList<ITreeNode<ITreeNode>>();
+	final Enumeration children = children();
+	while(children.hasMoreElements()){
+	    daughters.add((ITreeNode<ITreeNode>) children.nextElement());
+	}
+	return daughters;
+    }
+
+
 
 }

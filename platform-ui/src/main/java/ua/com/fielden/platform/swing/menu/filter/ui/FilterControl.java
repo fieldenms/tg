@@ -43,9 +43,9 @@ public class FilterControl extends JXLayer<JTextField> {
      *            -- a short informative message, which is displayed on top of the textComponent if it is empty and not focused.
      */
     public FilterControl(//
-    final JTextField textComponent,//
-    final IFilterableModel model,//
-    final String caption) { //
+	    final JTextField textComponent,//
+	    final IFilterableModel model,//
+	    final String caption) { //
 	super(textComponent);
 	this.model = model;
 	model.addFilterBreakListener(new IFilterBreakListener() {
