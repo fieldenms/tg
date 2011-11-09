@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
-import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationPanel;
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.swing.view.BasePanel;
  * @param <T>
  */
 //TODO parametrise AbstractConfigurationPanel.
-public class CentreConfigurationView<T extends AbstractEntity> extends AbstractConfigurationPanel {
+public class CentreConfigurationView<T extends AbstractEntity> extends AbstractConfigurationView {
 
     private static final long serialVersionUID = -5187097528373828177L;
 
