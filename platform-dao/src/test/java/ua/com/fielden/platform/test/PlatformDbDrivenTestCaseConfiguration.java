@@ -31,6 +31,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
+import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.test.domain.entities.Advice;
@@ -55,6 +56,8 @@ import com.google.inject.Provider;
  *
  * @author TG Team
  *
+ * @deprecated Use {@link PlatformDomainDrivenTestCaseConfiguration} instead.
+ *
  */
 public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseConfiguration {
     protected final EntityFactory entityFactory;
@@ -63,7 +66,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 
     private final DaoTestHibernateModule hibernateModule;
 
-    private static final List<Class<? extends AbstractEntity>> testDomain = new ArrayList<Class<? extends AbstractEntity>>();
+    public static final List<Class<? extends AbstractEntity>> testDomain = new ArrayList<Class<? extends AbstractEntity>>();
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
 
@@ -82,6 +85,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 	testDomain.add(EntityWithSimpleTaxMoney.class);
 	testDomain.add(EntityWithSimpleMoney.class);
 	testDomain.add(EntityWithDynamicCompositeKey.class);
+	testDomain.add(TgTimesheet.class);
 	testDomain.add(TgVehicleMake.class);
 	testDomain.add(TgVehicleModel.class);
     }

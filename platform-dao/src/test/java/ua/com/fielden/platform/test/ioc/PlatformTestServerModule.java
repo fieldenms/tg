@@ -1,24 +1,14 @@
 package ua.com.fielden.platform.test.ioc;
 
-import org.hibernate.SessionFactory;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-import ua.com.fielden.platform.dao.EntityAggregatesDao;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
-import ua.com.fielden.platform.dao.IDaoFactory;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
-import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
-import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.dao.MappingExtractor;
-import ua.com.fielden.platform.dao.MappingsGenerator;
-import ua.com.fielden.platform.dao.filtering.DataFilter;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
-import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.interfaces.IFilter;
-import ua.com.fielden.platform.ioc.CommonFactoryModule;
-import ua.com.fielden.platform.keygen.IKeyNumberGenerator;
-import ua.com.fielden.platform.keygen.KeyNumberDao;
+import ua.com.fielden.platform.ioc.BasicWebServerModule;
 import ua.com.fielden.platform.migration.controller.IMigrationErrorDao;
 import ua.com.fielden.platform.migration.controller.IMigrationHistoryDao;
 import ua.com.fielden.platform.migration.controller.IMigrationRunDao;
@@ -30,12 +20,8 @@ import ua.com.fielden.platform.sample.domain.controller.ITgMeterReading;
 import ua.com.fielden.platform.sample.domain.controller.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
-import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
-import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
-import ua.com.fielden.platform.security.dao.UserRoleDao;
-import ua.com.fielden.platform.security.provider.IUserController;
-import ua.com.fielden.platform.security.provider.UserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
+import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.test.domain.entities.daos.AdviceDao;
 import ua.com.fielden.platform.test.domain.entities.daos.BogieClassDao;
 import ua.com.fielden.platform.test.domain.entities.daos.BogieDao;
@@ -68,40 +54,41 @@ import ua.com.fielden.platform.test.domain.entities.daos.WorkshopDao;
 import ua.com.fielden.platform.test.entities.daos.IWorkorderableDao;
 import ua.com.fielden.platform.test.entities.daos.TgTimesheetDao;
 import ua.com.fielden.platform.test.entities.daos.WorkorderableDao;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
-import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigControllerDao;
-import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigControllerDao;
-import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigControllerDao;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
-import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
 
-import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 
 
 /**
- * Guice injector module for Hibernate related injections for testing purposes.
+ * Serve IoC module for platform related testing.
  *
  * @author TG Team
  *
  */
-public class DaoTestHibernateModule extends CommonFactoryModule {
+public class PlatformTestServerModule extends BasicWebServerModule {
 
-    public DaoTestHibernateModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator) {
-	super(sessionFactory, mappingExtractor, mappingsGenerator);
+    public PlatformTestServerModule(
+	    final Map<Class, Class> defaultHibernateTypes, //
+	    final List<Class<? extends AbstractEntity>> applicationEntityTypes,//
+	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
+	    final Class<? extends IFilter> automaticDataFilterType, //
+	    final SecurityTokenProvider tokenProvider,//
+	    final Properties props) throws Exception {
+	super(defaultHibernateTypes, applicationEntityTypes, serialisationClassProviderType, automaticDataFilterType, tokenProvider, props);
+    }
+
+    public PlatformTestServerModule(
+	    final Map<Class, Class> defaultHibernateTypes, //
+	    final List<Class<? extends AbstractEntity>> applicationEntityTypes,//
+	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
+	    final Class<? extends IFilter> automaticDataFilterType, //
+	    final Properties props) throws Exception {
+	super(defaultHibernateTypes, applicationEntityTypes, serialisationClassProviderType, automaticDataFilterType, null, props);
     }
 
     @Override
     protected void configure() {
 	super.configure();
 	// bind DAO
-	bind(IFilter.class).to(DataFilter.class);
-	bind(IEntityAggregatesDao.class).to(EntityAggregatesDao.class);
-	bind(IKeyNumberGenerator.class).to(KeyNumberDao.class);
 	bind(IPersonDao.class).to(PersonDao.class);
 	bind(IBogieDao.class).to(BogieDao.class);
 	bind(IWheelsetDao.class).to(WheelsetDao.class);
@@ -116,17 +103,6 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 	bind(IWorkorderableDao.class).to(WorkorderableDao.class);
 	bind(IAdviceDao.class).to(AdviceDao.class);
 	bind(IRotableClassDao.class).to(RotableClassDao.class);
-	bind(IUserRoleDao.class).to(UserRoleDao.class);
-	bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
-	bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
-
-	bind(IUserDao.class).to(UserController.class);
-	bind(IUserController.class).to(UserController.class);
-	bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
-	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);
-	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
-	bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
-	bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
 
 	bind(ITgTimesheet.class).to(TgTimesheetDao.class);
 	bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
@@ -135,9 +111,6 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 	bind(IMigrationErrorDao.class).to(MigrationErrorDao.class);
 	bind(IMigrationRunDao.class).to(MigrationRunDao.class);
 	bind(IMigrationHistoryDao.class).to(MigrationHistoryDao.class);
-
-	bind(IDaoFactory.class).toInstance(getDaoFactory());
-	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
 
 	bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
 	}).to(EntityWithMoneyDao.class);
