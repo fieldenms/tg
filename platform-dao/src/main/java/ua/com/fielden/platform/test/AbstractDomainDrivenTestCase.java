@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.test;
 
+import static java.lang.String.format;
+
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -23,7 +25,6 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IDefaultConrollerProvider;
 import ua.com.fielden.platform.persistence.DdlGenerator;
-import static java.lang.String.format;
 
 
 /**
@@ -55,7 +56,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
 	    // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
 	    //      This should be modified once correct db schema generation is implemented
-	    IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", "jdbc:h2:src/test/resources/db/testdb;INIT=SET REFERENTIAL_INTEGRITY FALSE");
+	    IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", "jdbc:h2:src/test/resources/db/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE");
 	    IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
 	    IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
 	    IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.username", "sa");
