@@ -2,14 +2,15 @@ package ua.com.fielden.platform.swing.analysis.ndec.dec;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 import javax.swing.event.EventListenerList;
 
 import ua.com.fielden.platform.reportquery.ChartModelChangedEvent;
 import ua.com.fielden.platform.reportquery.ChartModelChangedListener;
 import ua.com.fielden.platform.reportquery.ICategoryChartEntryModel;
-import ua.com.fielden.platform.utils.ConverterFactory;
-import ua.com.fielden.platform.utils.ConverterFactory.Converter;
 
 public abstract class CalculatedNumber {
 
@@ -17,14 +18,16 @@ public abstract class CalculatedNumber {
 
     private final EventListenerList listenerList;
 
-    private final Converter numberConverter;
+    private final NumberFormat numberFormat;
 
     private Number number;
 
     public CalculatedNumber(final String caption, final ICategoryChartEntryModel chartModel, final CalculatedNumber... calculatedNumbers){
 	this.caption = caption;
 	this.number = 0;
-	this.numberConverter = ConverterFactory.createNumberConverter();
+
+	this.numberFormat = new DecimalFormat("#,###.##");
+	numberFormat.setRoundingMode(RoundingMode.HALF_UP);
 	this.listenerList = new EventListenerList();
 
 	if(chartModel != null){
@@ -77,12 +80,12 @@ public abstract class CalculatedNumber {
     }
 
     public String getConvertedNumber(){
-	return numberConverter.convertToString(number);
+	return numberFormat.format(number);
     }
 
     @Override
     public String toString() {
-	return caption + ": " + numberConverter.convertToString(number);
+	return caption + ": " + numberFormat.format(number);
     }
 
     public void addPropertyChangeListener(final PropertyChangeListener l) {
