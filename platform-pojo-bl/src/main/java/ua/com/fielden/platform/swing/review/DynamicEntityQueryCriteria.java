@@ -22,8 +22,6 @@ import ua.com.fielden.platform.dynamictree.DynamicEntityTree;
 import ua.com.fielden.platform.dynamictree.DynamicEntityTreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.equery.IParameter;
@@ -336,29 +334,39 @@ public class DynamicEntityQueryCriteria<T extends AbstractEntity, DAO extends IE
     protected List<QueryProperty> createQueryProperties() {
 	final List<QueryProperty> queryProperties = new ArrayList<QueryProperty>();
 	for (final String actualProperty : criteriaProperties) {
-	    final Pair<String, String> names = getPropertyNames(actualProperty);
-	    final DynamicProperty<T> mainProperty = getEditableProperty(names.getKey());
-	    final DynamicProperty<T> additionalProperty = getEditableProperty(names.getValue());
-
-	    final QueryProperty queryProperty = new QueryProperty(getEntityClass(), actualProperty, getAlias());
-
-	    queryProperty.setValue(mainProperty.getValue());
-	    queryProperty.setExclusive(mainProperty.getExclusive());
-	    if (additionalProperty != null) {
-		queryProperty.setValue2(additionalProperty.getValue());
-		queryProperty.setExclusive2(additionalProperty.getExclusive());
-	    }
-
-	    queryProperty.setDatePrefix(mainProperty.getDatePrefix());
-	    queryProperty.setDateMnemonic(mainProperty.getDateMnemonic());
-	    queryProperty.setAndBefore(mainProperty.getAndBefore());
-	    queryProperty.setOrNull(mainProperty.getOrNull());
-	    queryProperty.setNot(mainProperty.getNot());
-	    queryProperty.setAll(mainProperty.getAll());
-
-	    queryProperties.add(queryProperty);
+	    queryProperties.add(createQueryProperty(actualProperty));
 	}
 	return queryProperties;
+    }
+
+    /**
+     * Converts existing properties model (which has separate properties for from/to, is/isNot and so on)
+     * into new properties model (which has single abstraction for one criterion).
+     *
+     * @param properties
+     * @return
+     */
+    private QueryProperty createQueryProperty(final String actualProperty) {
+	final Pair<String, String> names = getPropertyNames(actualProperty);
+	final DynamicProperty<T> mainProperty = getEditableProperty(names.getKey());
+	final DynamicProperty<T> additionalProperty = getEditableProperty(names.getValue());
+
+	final QueryProperty queryProperty = new QueryProperty(getEntityClass(), actualProperty, getAlias());
+
+	queryProperty.setValue(mainProperty.getValue());
+	queryProperty.setExclusive(mainProperty.getExclusive());
+	if (additionalProperty != null) {
+	    queryProperty.setValue2(additionalProperty.getValue());
+	    queryProperty.setExclusive2(additionalProperty.getExclusive());
+	}
+
+	queryProperty.setDatePrefix(mainProperty.getDatePrefix());
+	queryProperty.setDateMnemonic(mainProperty.getDateMnemonic());
+	queryProperty.setAndBefore(mainProperty.getAndBefore());
+	queryProperty.setOrNull(mainProperty.getOrNull());
+	queryProperty.setNot(mainProperty.getNot());
+	queryProperty.setAll(mainProperty.getAll());
+	return queryProperty;
     }
 
     /**
@@ -430,12 +438,11 @@ public class DynamicEntityQueryCriteria<T extends AbstractEntity, DAO extends IE
 		if (!properties.containsKey(rangePropertyNames.getKey())) {
 		    return null;
 		}
+		final QueryProperty queryProperty = createQueryProperty(propertyName);
 		return new IParameter() {
 		    @Override
 		    public boolean isRange() {
-			final DynamicPropertyAnalyser propertyAnalyser = new DynamicPropertyAnalyser(getEntityClass(), propertyName, getCriteriaFilter());
-			final CritOnly critOnly = propertyAnalyser.getPropertyFieldAnnotation(CritOnly.class);
-			return critOnly == null ? (rangePropertyNames.getValue() != null) : !Type.SINGLE.equals(critOnly.value());
+			return queryProperty.isCritOnly() ? !queryProperty.isSingle() : EntityUtils.isRangeType(queryProperty.getType());
 		    }
 
 		    @Override
@@ -443,7 +450,7 @@ public class DynamicEntityQueryCriteria<T extends AbstractEntity, DAO extends IE
 			if (isRange()) {
 			    throw new UnsupportedOperationException("Single value that corresponds to " + propertyName + " property could not be determined from range property.");
 			}
-			return get(rangePropertyNames.getKey()); // FROM criteria is used for "range" properties with single selection (annotated with @SelectBy)
+			return queryProperty.getValue();
 		    }
 
 		    @Override
@@ -451,9 +458,38 @@ public class DynamicEntityQueryCriteria<T extends AbstractEntity, DAO extends IE
 			if (!isRange()) {
 			    throw new UnsupportedOperationException("Range value that corresponds to " + propertyName + " property could not be determined from single property.");
 			}
-			return new Pair<Object, Object>(get(rangePropertyNames.getKey()), get(rangePropertyNames.getValue()));
+			if (EntityUtils.isDate(queryProperty.getType()) && queryProperty.getDatePrefix() != null && queryProperty.getDateMnemonic() != null) {
+			    // left boundary should be inclusive and right -- exclusive!
+			    final Pair<Date, Date> fromAndTo = DynamicQueryBuilder.getDateValuesFrom(queryProperty.getDatePrefix(), queryProperty.getDateMnemonic(), queryProperty.getAndBefore());
+			    return new Pair<Object, Object>(fromAndTo.getKey(), fromAndTo.getValue());
+			}
+			return new Pair<Object, Object>(queryProperty.getValue(), queryProperty.getValue2());
 		    }
 		};
+//		return new IParameter() {
+//		    @Override
+//		    public boolean isRange() {
+//			final DynamicPropertyAnalyser propertyAnalyser = new DynamicPropertyAnalyser(getEntityClass(), propertyName, getCriteriaFilter());
+//			final CritOnly critOnly = propertyAnalyser.getPropertyFieldAnnotation(CritOnly.class);
+//			return critOnly == null ? (rangePropertyNames.getValue() != null) : !Type.SINGLE.equals(critOnly.value());
+//		    }
+//
+//		    @Override
+//		    public Object getValue() throws UnsupportedOperationException {
+//			if (isRange()) {
+//			    throw new UnsupportedOperationException("Single value that corresponds to " + propertyName + " property could not be determined from range property.");
+//			}
+//			return get(rangePropertyNames.getKey()); // FROM criteria is used for "range" properties with single selection (annotated with @SelectBy)
+//		    }
+//
+//		    @Override
+//		    public Pair<Object, Object> getRange() throws UnsupportedOperationException {
+//			if (!isRange()) {
+//			    throw new UnsupportedOperationException("Range value that corresponds to " + propertyName + " property could not be determined from single property.");
+//			}
+//			return new Pair<Object, Object>(get(rangePropertyNames.getKey()), get(rangePropertyNames.getValue()));
+//		    }
+//		};
 	    }
 	};
     }

@@ -542,6 +542,25 @@ public class DynamicQueryBuilder {
     }
 
     /**
+     * Creates a date period [from; to] from a period defined by (datePrefix; dateMnemonic).
+     *
+     * IMPORTANT : please consider that left boundary should be inclusive and right -- exclusive! E.g. CURR YEAR converts to (01.01.2011 00:00; 01.01.2012 00:00) and need
+     * to be used as <i>prop(propertyName).<b>ge()</b>.val(from).and().prop(propertyName).<b>lt()</b>.val(to)</i> in terms of Entity Query.
+     *
+     * @param datePrefix
+     * @param dateMnemonic
+     * @return
+     */
+    public static Pair<Date, Date> getDateValuesFrom(final DateRangePrefixEnum datePrefix, final MnemonicEnum dateMnemonic, final Boolean andBefore) {
+	final DateUtilities du = new DateUtilities();
+	final Date currentDate = new Date();
+	final Date from = (Boolean.TRUE.equals(andBefore)) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, datePrefix, dateMnemonic), //
+	/*         */to = (Boolean.FALSE.equals(andBefore)) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, datePrefix, dateMnemonic);
+	// left boundary should be inclusive and right -- exclusive!
+	return new Pair<Date, Date>(from, to);
+    }
+
+    /**
      * Builds atomic condition for some property like "is True", ">= and <", "like" etc. based on property type and assigned parameters.
      *
      * @param key
@@ -555,12 +574,9 @@ public class DynamicQueryBuilder {
 
 	if (EntityUtils.isRangeType(property.getType())) {
 	    if (EntityUtils.isDate(property.getType()) && property.getDatePrefix() != null && property.getDateMnemonic() != null) {
-		final DateUtilities du = new DateUtilities();
-		final Date currentDate = new Date();
-		final Date from = (Boolean.TRUE.equals(property.getAndBefore())) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic()), //
-		/*         */to = (Boolean.FALSE.equals(property.getAndBefore())) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic());
 		// left boundary should be inclusive and right -- exclusive!
-		return conditionGroup.prop(propertyName).ge().val(from).and().prop(propertyName).lt().val(to).end();
+		final Pair<Date, Date> fromAndTo = getDateValuesFrom(property.getDatePrefix(), property.getDateMnemonic(), property.getAndBefore());
+		return conditionGroup.prop(propertyName).ge().val(fromAndTo.getKey()).and().prop(propertyName).lt().val(fromAndTo.getValue()).end();
 	    } else {
 		final IOthers.ISearchConditionAtGroup3 scag = conditionGroup.prop(propertyName);
 		final IOthers.ISearchConditionAtGroup3 scag2 = (Boolean.TRUE.equals(property.getExclusive())) ? //

@@ -30,6 +30,7 @@ import org.jdesktop.jxlayer.JXLayer;
 import org.jdesktop.jxlayer.plaf.AbstractLayerUI;
 
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.EntityDescriptor;
@@ -225,15 +226,17 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	nullMenuItem.setMnemonic(KeyEvent.VK_H);
 	nullMenuItem.setSelected(Boolean.TRUE.equals(orNull));
 	nullMenuItem.addItemListener(this);
-	final boolean isNotBool = !(this.propertyEditor instanceof RangePropertyEditor && ((RangePropertyEditor) this.propertyEditor).isBool());
-	if (isNotBool) { // all criteria could be altered by emptiness except boolean criteria
+	final CritOnly critOnly = AnnotationReflector.getPropertyAnnotation(CritOnly.class, deqc.getEntityClass(), conventionalPropertyName);
+	final boolean isCritOnly = critOnly != null;
+	final boolean isNotBoolOrCritOnlyDate = !(this.propertyEditor instanceof RangePropertyEditor && ( ((RangePropertyEditor) this.propertyEditor).isBool() || ((RangePropertyEditor) this.propertyEditor).isDate() && isCritOnly));
+	if (isNotBoolOrCritOnlyDate) { // all criteria could be altered by emptiness except boolean criteria
 	    popup.add(nullMenuItem);
 	}
 	notMenuItem = new JCheckBoxMenuItem(NOT);
 	notMenuItem.setMnemonic(KeyEvent.VK_N);
 	notMenuItem.setSelected(Boolean.TRUE.equals(not));
 	notMenuItem.addItemListener(this);
-	if (isNotBool) { // all criteria could be negated except single/boolean criteria
+	if (isNotBoolOrCritOnlyDate) { // all criteria could be negated except single (TODO should it be?) /boolean criteria
 	    popup.add(notMenuItem);
 	}
 	allMenuItem = new JCheckBoxMenuItem(ALL);
@@ -262,11 +265,9 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	if (isDate) {
 	    fillDateStateItems();
 	}
-
 	final MouseListener popupShower = new PopupListener();
-	final CritOnly critOnly = AnnotationReflector.getPropertyAnnotation(CritOnly.class, deqc.getEntityClass(), conventionalPropertyName);
-	final boolean isCritOnly = critOnly != null;
-	if (!isCritOnly) { // no criteria modifications are permitted for critOnly properties (for both Range and Single)
+	final boolean isCritOnlyAndSingle = isCritOnly && Type.SINGLE.equals(critOnly.value());
+	if (!isCritOnlyAndSingle) { // no criteria modifications are permitted for Single critOnly properties
 	    if (this.propertyEditor instanceof RangePropertyEditor) {
 		final RangePropertyEditor rpe = (RangePropertyEditor) this.propertyEditor;
 		rpe.getEditor().addMouseListener(popupShower);
