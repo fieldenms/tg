@@ -14,6 +14,7 @@ import org.hibernate.type.TypeFactory;
 import org.hibernate.usertype.CompositeUserType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -110,12 +111,12 @@ public class MappingsGenerator {
 	return sb.toString();
     }
 
-    private String getSimpleKey() {
-	return getSimpleKeyWithColumn(ddlGenerator.key);
+    private String getSimpleKey(final Class entityType) {
+	return getSimpleKeyWithColumn(ddlGenerator.key, entityType);
     }
 
-    private String getSimpleKeyWithColumn(final String column) {
-	return getPlainProperty("key", column, "string");
+    private String getSimpleKeyWithColumn(final String column, final Class entityType) {
+	return getPlainProperty("key", column, TypeFactory.basic(AnnotationReflector.getKeyType(entityType).getName()).getName());
     }
 
     private String getSimpleDesc() {
@@ -210,17 +211,19 @@ public class MappingsGenerator {
     }
 
     private String getKeyMappingString(final Class entityType) {
-	final String keyColumnOverride = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType).keyColumn();
-	if (!StringUtils.isEmpty(keyColumnOverride)) {
-	    return getSimpleKeyWithColumn(keyColumnOverride);
+
+	if (DynamicEntityKey.class.equals(AnnotationReflector.getKeyType(entityType))) {
+	    return null;
 	} else {
-	    if (String.class.equals(AnnotationReflector.getKeyType(entityType))) {
-		return  getSimpleKey();
-	    } else if (isOneToOne(entityType)) {
-		// Ignore if key type is DynamicEntityKey.class
+	    if (isOneToOne(entityType)) {
 		return getOneToOneProperty("key", AnnotationReflector.getKeyType(entityType));
 	    } else {
-		return null; //throw new RuntimeException("Can not generate mapping for key for type :" + entityType.getName());
+		final String keyColumnOverride = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType).keyColumn();
+		if (!StringUtils.isEmpty(keyColumnOverride)) {
+		    return getSimpleKeyWithColumn(keyColumnOverride, entityType);
+		} else {
+		    return getSimpleKey(entityType);
+		}
 	    }
 	}
     }
