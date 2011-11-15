@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.equery.equery.select;
+
 import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -27,8 +29,6 @@ import ua.com.fielden.platform.test.domain.entities.daos.IBogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWagonDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WagonSlotDao;
 import ua.com.fielden.platform.types.Money;
-
-import static ua.com.fielden.platform.equery.equery.select;
 
 /**
  * This test case ensures correct implementation of the common DAO functionality in conjunction with Session injection by means of method intercepter.
@@ -338,7 +338,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 	// let's create a validator for property WagonSlot.bogie, which always fail the setter
 	// since it is only introduced here the only place it will actually be invoked is during the DAO save method invokation
 	final Result failResult = new Result(slot, new IllegalArgumentException("Bogie class is not compatible with slot."));
-	config.getDomainValidationConfig().setValidator(WagonSlot.class, "bogie", new IBeforeChangeEventHandler() {
+	config.getDomainValidationConfig().setValidator(WagonSlot.class, "bogie", new IBeforeChangeEventHandler<Object>() {
 	    @Override
 	    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 		return failResult;

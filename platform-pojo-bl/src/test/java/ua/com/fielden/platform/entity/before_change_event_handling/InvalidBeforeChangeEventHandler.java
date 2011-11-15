@@ -16,7 +16,7 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  *
  */
-public class InvalidBeforeChangeEventHandler implements IBeforeChangeEventHandler {
+public class InvalidBeforeChangeEventHandler implements IBeforeChangeEventHandler<Object> {
 
     private BeforeChangeEventHandler invalidParam;
 

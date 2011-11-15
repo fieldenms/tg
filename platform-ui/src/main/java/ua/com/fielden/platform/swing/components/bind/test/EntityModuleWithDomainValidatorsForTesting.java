@@ -126,14 +126,14 @@ public class EntityModuleWithDomainValidatorsForTesting extends EntityModule {
 		    return new IBeforeChangeEventHandler[]{domainValidator != null ? domainValidator : new HappyValidator()};
 		case ENTITY_EXISTS:
 		    if (ignoreEntityExistsAnnotation) {
-			return new IBeforeChangeEventHandler[]{new IBeforeChangeEventHandler() {
+			return new IBeforeChangeEventHandler[]{new IBeforeChangeEventHandler<Object>() {
 			    @Override
 			    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 				return new Result(null, "EntityExists annotation is ignored by " + EntityModuleWithDomainValidatorsForTesting.class.toString());
 			    }
 			}};
 		    } else {
-			return new IBeforeChangeEventHandler[]{new IBeforeChangeEventHandler() {
+			return new IBeforeChangeEventHandler[]{new IBeforeChangeEventHandler<Object>() {
 			    @Override
 			    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
 				return new Result(null, "EntityExists annotation passes correcly " + EntityModuleWithDomainValidatorsForTesting.class.toString());

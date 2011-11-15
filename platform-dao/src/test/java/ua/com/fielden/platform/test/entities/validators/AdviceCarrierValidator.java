@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.test.entities.validators;
 
+import static ua.com.fielden.platform.equery.equery.select;
+
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
@@ -9,11 +11,10 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.test.domain.entities.Advice;
+import ua.com.fielden.platform.test.domain.entities.Wagon;
 import ua.com.fielden.platform.test.domain.entities.daos.IAdviceDao;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.equery.equery.select;
 
 /**
  * Domain validator for property <code>carrier</code> ({@link Advice#setCarrier(ua.com.fielden.pnl.equipment.Wagon)}).
@@ -21,7 +22,7 @@ import static ua.com.fielden.platform.equery.equery.select;
  * @author 01es
  *
  */
-public class AdviceCarrierValidator implements IBeforeChangeEventHandler {
+public class AdviceCarrierValidator implements IBeforeChangeEventHandler<Wagon> {
     private final IAdviceDao dao;
 
     @Inject
@@ -30,7 +31,7 @@ public class AdviceCarrierValidator implements IBeforeChangeEventHandler {
     }
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Wagon newValue, final Wagon oldValue, final Set<Annotation> mutatorAnnotations) {
 	final Advice advice = (Advice) property.getEntity();
 	// validate if it is at all possible to set carrier
 	if (advice.isDispatched()) {

@@ -19,7 +19,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * @author TG Team
  *
  */
-public class RangePropertyValidator implements IBeforeChangeEventHandler {
+public class RangePropertyValidator implements IBeforeChangeEventHandler<Object> {
     private final String[] opositeRangeProperties;
     private final boolean upperBoundaryRangePropery;
 

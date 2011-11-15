@@ -17,7 +17,7 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  *
  */
-public class NotNullValidator implements IBeforeChangeEventHandler {
+public class NotNullValidator implements IBeforeChangeEventHandler<Object> {
 
     /**
      * Validation message, which can be set as part of BCE handler declaration.

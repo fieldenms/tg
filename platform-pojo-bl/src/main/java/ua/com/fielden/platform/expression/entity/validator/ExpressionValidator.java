@@ -11,16 +11,16 @@ import ua.com.fielden.platform.expression.entity.ExpressionEntity;
 
 /**
  * {@link IBeforeChangeEventHandler} for expression property of the {@link ExpressionEntity}.
- * 
+ *
  * @author TG Team
  *
  */
-public class ExpressionValidator implements IBeforeChangeEventHandler {
+public class ExpressionValidator implements IBeforeChangeEventHandler<String> {
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-	final ExpressionEntity expressionEntity = (ExpressionEntity)property.getEntity();
-	final ExpressionTextToModelConverter mc = new ExpressionTextToModelConverter(expressionEntity.getEntityClass(), newValue.toString());
+    public Result handle(final MetaProperty property, final String newValue, final String oldValue, final Set<Annotation> mutatorAnnotations) {
+	final ExpressionEntity expressionEntity = (ExpressionEntity) property.getEntity();
+	final ExpressionTextToModelConverter mc = new ExpressionTextToModelConverter(expressionEntity.getEntityClass(), newValue);
 	property.getEntity();
 	try{
 	    mc.convert();

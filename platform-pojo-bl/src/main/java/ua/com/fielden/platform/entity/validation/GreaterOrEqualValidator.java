@@ -14,7 +14,7 @@ import ua.com.fielden.platform.types.Money;
  * @author 01es
  *
  */
-public class GreaterOrEqualValidator implements IBeforeChangeEventHandler {
+public class GreaterOrEqualValidator implements IBeforeChangeEventHandler<Object> {
     private final BigDecimal limit;
 
     public GreaterOrEqualValidator(final Integer limit) {

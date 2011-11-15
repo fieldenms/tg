@@ -13,7 +13,7 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  *
  */
-public class StringValidator implements IBeforeChangeEventHandler {
+public class StringValidator implements IBeforeChangeEventHandler<String> {
 
     private final String regex;
 
@@ -22,8 +22,8 @@ public class StringValidator implements IBeforeChangeEventHandler {
     }
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-	if (newValue != null && !newValue.toString().matches(regex)) {
+    public Result handle(final MetaProperty property, final String newValue, final String oldValue, final Set<Annotation> mutatorAnnotations) {
+	if (newValue != null && !newValue.matches(regex)) {
 		 return new Result(newValue, new IllegalArgumentException("Value '" + newValue + "' of " + property.getTitle() + " does not match the required pattern."));
 	}
 

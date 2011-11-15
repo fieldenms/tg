@@ -10,11 +10,11 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * This validator implements a check for the length of a string property.
- * 
+ *
  * @author 01es
- * 
+ *
  */
-public class MaxLengthValidator implements IBeforeChangeEventHandler {
+public class MaxLengthValidator implements IBeforeChangeEventHandler<String> {
     private final Integer limit;
 
     public MaxLengthValidator(final Integer limit) {
@@ -22,9 +22,9 @@ public class MaxLengthValidator implements IBeforeChangeEventHandler {
     }
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final String newValue, final String oldValue, final Set<Annotation> mutatorAnnotations) {
 	final Object entity = property.getEntity();
-	final String value = newValue + ""; // added empty string to convert newValue to string without invoking toString()
+	final String value = newValue;
 	if (StringUtils.isEmpty(value)) { // no violation
 	    return new Result(entity, "Value is empty.");
 	}

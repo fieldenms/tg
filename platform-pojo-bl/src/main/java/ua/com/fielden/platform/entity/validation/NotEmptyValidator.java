@@ -16,10 +16,10 @@ import ua.com.fielden.platform.error.Result;
 /**
  * Validator for setters marked with {@link NotEmpty} annotation. Checks whether new value's {@link #toString()} representation is not empty (empty means comparing with "" string,
  * null is treated as correct value).
- * 
+ *
  * @author Yura
  */
-public class NotEmptyValidator implements IBeforeChangeEventHandler {
+public class NotEmptyValidator implements IBeforeChangeEventHandler<Object> {
 
     @Override
     public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
@@ -35,7 +35,7 @@ public class NotEmptyValidator implements IBeforeChangeEventHandler {
 
     /**
      * A convenient method to find NotEmpty annotation instance in the list of annotations be class.
-     * 
+     *
      * @param mutatorAnnotations
      * @return
      */

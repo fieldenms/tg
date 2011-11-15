@@ -17,7 +17,7 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  *
  */
-public interface IBeforeChangeEventHandler {
+public interface IBeforeChangeEventHandler<T> {
     /**
      * Processed Before Change Event (BCE) for a <code>property</code>.
      * <p>
@@ -39,5 +39,5 @@ public interface IBeforeChangeEventHandler {
      *
      * @return
      */
-    Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations);
+    Result handle(final MetaProperty property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations);
 }

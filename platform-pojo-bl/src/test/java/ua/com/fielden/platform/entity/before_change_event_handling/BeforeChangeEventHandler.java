@@ -16,7 +16,7 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  *
  */
-public class BeforeChangeEventHandler implements IBeforeChangeEventHandler {
+public class BeforeChangeEventHandler implements IBeforeChangeEventHandler<Object> {
 
     private String strParam;
     private int intParam1;

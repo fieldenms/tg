@@ -10,11 +10,11 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * This validator implements a check for a numerical value to be not greater than the specified limit.
- * 
+ *
  * @author 01es
- * 
+ *
  */
-public class MaxValueValidator implements IBeforeChangeEventHandler {
+public class MaxValueValidator implements IBeforeChangeEventHandler<Object> {
     private final BigDecimal limit;
 
     public MaxValueValidator(final Integer limit) {

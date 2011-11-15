@@ -13,7 +13,7 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  *
  */
-public class StubValidator implements IBeforeChangeEventHandler {
+public class StubValidator implements IBeforeChangeEventHandler<Object> {
 
     public static final StubValidator singleton = new StubValidator();
 

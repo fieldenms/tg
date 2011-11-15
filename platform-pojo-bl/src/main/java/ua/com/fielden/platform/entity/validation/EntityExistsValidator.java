@@ -16,7 +16,7 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  *
  */
-public class EntityExistsValidator implements IBeforeChangeEventHandler {
+public class EntityExistsValidator implements IBeforeChangeEventHandler<Object> {
 
     private IEntityDao controller;
 
