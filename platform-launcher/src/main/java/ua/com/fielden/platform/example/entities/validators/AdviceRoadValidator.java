@@ -14,15 +14,15 @@ import ua.com.fielden.platform.example.entities.Advice;
  * @author 01es
  *
  */
-public class AdviceRoadValidator implements IBeforeChangeEventHandler {
+public class AdviceRoadValidator implements IBeforeChangeEventHandler<Boolean> {
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Boolean newValue, final Boolean oldValue, final Set<Annotation> mutatorAnnotations) {
 	final Advice advice = (Advice) property.getEntity();
 	if (advice.isDispatched() && (newValue != oldValue)) {
 	    return new Result(advice, new IllegalStateException("Road property cannot be changed once advice is dispatched."));
 	}
-	if ((Boolean) newValue) {
+	if (newValue) {
 	    advice.setCarrier(null);
 	}
 	return new Result(advice, "Road property value is correct.");

@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.example.entities.AdvicePosition;
+import ua.com.fielden.platform.example.entities.Rotable;
 
 /**
  * Domain validator for property <code>rotable</code> of {@link AdvicePosition}.
@@ -14,10 +15,10 @@ import ua.com.fielden.platform.example.entities.AdvicePosition;
  * @author 01es
  *
  */
-public class AdvicePositionRotableValidator implements IBeforeChangeEventHandler {
+public class AdvicePositionRotableValidator implements IBeforeChangeEventHandler<Rotable> {
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Rotable newValue, final Rotable oldValue, final Set<Annotation> mutatorAnnotations) {
 	final AdvicePosition pos = (AdvicePosition) property.getEntity();
 	if (!newValue.equals(oldValue)) {
 	    if (pos.getAdvice().rotables().contains(newValue)) {

@@ -15,11 +15,11 @@ import ua.com.fielden.platform.error.Warning;
  * @author yura
  *
  */
-public class DummyEntity2IntFieldValidator implements IBeforeChangeEventHandler {
+public class DummyEntity2IntFieldValidator implements IBeforeChangeEventHandler<Integer> {
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-	final Integer newInt = (Integer) newValue;
+    public Result handle(final MetaProperty property, final Integer newValue, final Integer oldValue, final Set<Annotation> mutatorAnnotations) {
+	final Integer newInt = newValue;
 	if(newInt == null || newInt > 16) {
 	    return successful(property.getEntity());
 	} else if(newInt >= 10) {

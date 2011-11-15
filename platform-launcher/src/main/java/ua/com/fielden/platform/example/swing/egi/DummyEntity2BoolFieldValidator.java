@@ -15,12 +15,12 @@ import ua.com.fielden.platform.error.Result;
  *
  * @author Yura
  */
-public class DummyEntity2BoolFieldValidator implements IBeforeChangeEventHandler {
+public class DummyEntity2BoolFieldValidator implements IBeforeChangeEventHandler<Boolean> {
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Boolean newValue, final Boolean oldValue, final Set<Annotation> mutatorAnnotations) {
 	final Object entity = property.getEntity();
-	if((Boolean) newValue) {
+	if(newValue) {
 	    return Result.successful(entity);
 	} else {
 	    return new Result(entity, new IllegalArgumentException("boolField should be true"));
