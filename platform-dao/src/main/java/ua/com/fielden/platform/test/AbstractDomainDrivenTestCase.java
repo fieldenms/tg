@@ -191,6 +191,6 @@ public abstract class AbstractDomainDrivenTestCase {
     }
 
     public final <T extends AbstractEntity<DynamicEntityKey>> T new_(final Class<T> entityClass, final Object... keys) {
-	return factory.newByKey(entityClass, keys);
+	return keys.length == 0 ? factory.newEntity(entityClass) : factory.newByKey(entityClass, keys);
     }
 }
