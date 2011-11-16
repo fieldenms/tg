@@ -11,12 +11,12 @@ package ua.com.fielden.platform.entity.meta;
  * @author TG Team
  *
  */
-public interface IAfterChangeEventHandler {
+public interface IAfterChangeEventHandler<T> {
     /**
      * Should implement ACE handling logic.
      *
      * @param property -- meta property associated with a property, which is the source of ACE
      * @param entityPropertyValue -- the current value of the property
      */
-    void handle(final MetaProperty property, final Object entityPropertyValue);
+    void handle(final MetaProperty property, final T entityPropertyValue);
 }

@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
  * @author TG Team
  *
  */
-public class InvalidAfterChangeEventHandler implements IAfterChangeEventHandler {
+public class InvalidAfterChangeEventHandler implements IAfterChangeEventHandler<Object> {
 
     private AfterChangeEventHandler invalidParam;
 
