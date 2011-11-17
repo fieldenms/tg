@@ -2,6 +2,7 @@ package ua.com.fielden.platform.swing.model;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.fetch;
+import ua.com.fielden.platform.equery.fetchAll;
 import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
 
 /**
@@ -23,7 +24,7 @@ public abstract class UmMaster<T extends AbstractEntity, C> extends UModel<T, T,
 
     protected UmMaster(final T entity, final C controller, final ILightweightPropertyBinder<T> propertyBinder, final fetch<T> fm, final boolean lazy) {
 	super(entity, controller, propertyBinder, lazy);
-	this.fm = fm;
+	this.fm = fm != null ? fm : new fetchAll<T>(entity.getType());
 	if (shouldEnforceEntityLoadingDuringInstantiation()) {
 	    setEntity(findById(entity.getId(), true));
 	}
@@ -31,7 +32,7 @@ public abstract class UmMaster<T extends AbstractEntity, C> extends UModel<T, T,
 
     /**
      * A method used inside the constructor to determine whether entity retrieval should be enforced during model instantiation. By default it return true, which is correct in most
-     * cases. If the default is not suitable the derived model should override it return false.
+     * cases. If the default is not suitable the derived model should override it to return false.
      *
      * @return
      */
