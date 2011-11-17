@@ -19,6 +19,7 @@ import java.util.List;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JTable;
+import javax.swing.JToolTip;
 import javax.swing.KeyStroke;
 import javax.swing.event.ChangeEvent;
 import javax.swing.table.TableColumn;
@@ -28,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.components.MultiLineToolTip;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping.CustomCellRenderer;
 import ua.com.fielden.platform.swing.egi.coloring.EgiColoringScheme;
 import ua.com.fielden.platform.swing.egi.events.CellMouseEvent;
@@ -47,7 +49,7 @@ import com.jidesoft.grid.TableModelWrapperUtils;
 
 /**
  * Table representing list of entities of particular type T
- * 
+ *
  * @author TG Team
  */
 public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalTable {
@@ -72,7 +74,7 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 
     /**
      * Directly invokes {@link EntityGridInspector#EntityGridInspector(PropertyTableModel, boolean)} with last parameter set to true
-     * 
+     *
      * @param tableModel
      */
     public EntityGridInspector(final PropertyTableModel<T> tableModel) {
@@ -88,7 +90,7 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
      * constructor.<br>
      * Note : sets passed {@link PropertyTableModel} instance as component factory for this {@link HierarchicalTable}. So, in order to provide hierarchical behavior, corresponding
      * methods in {@link PropertyTableModel} should be overridden
-     * 
+     *
      * @param tableModel
      */
     public EntityGridInspector(final PropertyTableModel<T> tableModel, final boolean sortable) {
@@ -117,7 +119,7 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
     /**
      * This method rebuilds table by new PropertyTableModel. Note that "listSelectionListener", "cellMouseListener" and "cellMouseMotionListener" have to be already added before
      * using this method (in constructor call).
-     * 
+     *
      * @param tableModel
      */
     public void setPropertyTableModel(final PropertyTableModel<T> tableModel) {
@@ -126,13 +128,20 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 	afterModelSet(this.actualTableModel);
     }
 
+    @Override
+    public JToolTip createToolTip() {
+	final MultiLineToolTip multiLined = new MultiLineToolTip();
+	multiLined.setColumns(20);
+        return multiLined;
+    }
+
     /*
      *
      * Method for handling mouse and mouse motion events on table cells
      */
     /**
      * Adds mouse listener which creates CellMouseEvents from mouse click ones and forwards them to cell mouse event listeners.
-     * 
+     *
      * Also adds mouse listener which creates CellMouseEvents from mouse motion ones and forwards them to cell event listeners.
      */
     private void addCellMouseListeners() {
@@ -198,7 +207,7 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 
     /**
      * Method which creates {@CellMouseEvent} out of {@MouseEvent} and sends it to handler represented by {@MethodInvoker} class.
-     * 
+     *
      * @param eventHandler
      * @param e
      * @param entity
@@ -221,9 +230,9 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 
     /**
      * Interface for invoking one-parameter method on objects.
-     * 
+     *
      * @author Yura
-     * 
+     *
      * @param <T>
      * @param <P>
      */
@@ -233,7 +242,7 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 
     /**
      * Returns null if mouse event is not over particular property of entity. Otherwise returns entity and property name.
-     * 
+     *
      * @param e
      * @return
      */
@@ -354,7 +363,7 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
      * sets several other properties of less importance.<br>
      * <br>
      * Note: this method should be called before {@link #addCellMouseListeners()}
-     * 
+     *
      * @param tableModel
      */
     private void afterModelSet(final PropertyTableModel<T> tableModel) {
@@ -451,7 +460,7 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 
     /**
      * Creates three copies of passed keyEvent (key pressed, released and typed) and dispatches them to passed component in respective order
-     * 
+     *
      * @param component
      * @param keyEvent
      */
@@ -471,7 +480,7 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 
     /**
      * Creates three copies of passed mouseEvent (mouse pressed, released and clicked) and dispatches them to passed component in respective order
-     * 
+     *
      * @param component
      * @param mouseEvent
      */
