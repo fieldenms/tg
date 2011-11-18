@@ -75,6 +75,23 @@ public enum Dialogs {
 	return result[0];
     }
 
+    public static int showYesNoDialog(final Component parentComponent, final String message, final String title) {
+	final int[] result = new int[] { -1 };
+	try {
+	    SwingUtilitiesEx.invokeAndWaitIfPossible(new Runnable() {
+		@Override
+		public void run() {
+		    result[0] = JOptionPane.showConfirmDialog(parentComponent, message, title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+		}
+	    });
+	} catch (final Exception ex) {
+	    throw new IllegalStateException(ex);
+	}
+
+	return result[0];
+    }
+
 //    public static void main(final String[] args) throws Exception {
 //        System.out.println(System.getProperty("os.name")
 //            + " " + System.getProperty("os.version")
