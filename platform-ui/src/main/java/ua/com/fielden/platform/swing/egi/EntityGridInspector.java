@@ -2,7 +2,11 @@ package ua.com.fielden.platform.swing.egi;
 
 import static java.util.Collections.unmodifiableList;
 
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
 import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -11,6 +15,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.EventObject;
@@ -18,6 +23,7 @@ import java.util.List;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.JToolTip;
 import javax.swing.KeyStroke;
@@ -29,7 +35,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.components.MultiLineToolTip;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.swing.components.CustomTooltip;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping.CustomCellRenderer;
 import ua.com.fielden.platform.swing.egi.coloring.EgiColoringScheme;
 import ua.com.fielden.platform.swing.egi.events.CellMouseEvent;
@@ -130,9 +137,37 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 
     @Override
     public JToolTip createToolTip() {
-	final MultiLineToolTip multiLined = new MultiLineToolTip();
-	multiLined.setColumns(20);
-        return multiLined;
+	final int maximumWidth = 200;
+
+	final JLabel tipComponent = new JLabel();
+	tipComponent.setBackground(new Color(242, 242, 189));
+
+	final CustomTooltip customTooltip = new CustomTooltip(this, tipComponent, false) {
+	    private static final long serialVersionUID = -951889975845513426L;
+
+	    @Override
+	    public void updateTipText(final String tipText) {
+		final String wrappedByHtml = TitlesDescsGetter.addHtmlTag(TitlesDescsGetter.removeHtmlTag(tipText));
+		tipComponent.setText(wrappedByHtml);
+
+		final Graphics2D g2 = (Graphics2D) EntityGridInspector.this.getGraphics();
+		final FontMetrics fm = g2.getFontMetrics();
+		final Rectangle2D textBounds = fm.getStringBounds(TitlesDescsGetter.removeHtml(wrappedByHtml), g2);
+		final int allWidth = (int) textBounds.getWidth();
+		final int oneRowHeight = (int) textBounds.getHeight();
+
+		final int rowCount = allWidth / maximumWidth + 1;
+		if (rowCount == 1) {
+		    // System.out.println("allWidth == " + allWidth +  "; rowCount == " + rowCount + "; allWidth % maximumWidth == " + allWidth % maximumWidth + "; oneRowHeight == " + oneRowHeight);
+		    tipComponent.setPreferredSize(new Dimension(allWidth % maximumWidth, oneRowHeight));
+		} else { // > 1
+		    // System.out.println("allWidth == " + allWidth +  "; rowCount == " + rowCount + "; maximumWidth == " + maximumWidth + "; oneRowHeight * rowCount == " + oneRowHeight * rowCount);
+		    tipComponent.setPreferredSize(new Dimension(maximumWidth, oneRowHeight * rowCount));
+		}
+		// tipComponent.setPreferredSize(new Dimension(allWidth, oneRowHeight));
+	    }
+	};
+        return customTooltip;
     }
 
     /*

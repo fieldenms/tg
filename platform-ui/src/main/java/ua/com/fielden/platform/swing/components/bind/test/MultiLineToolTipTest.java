@@ -11,7 +11,7 @@ import org.jdesktop.swingx.plaf.DatePickerAddon;
 import org.jdesktop.swingx.plaf.DefaultsList;
 import org.jdesktop.swingx.plaf.LookAndFeelAddons;
 
-import ua.com.fielden.platform.swing.components.MultiLineToolTip;
+import ua.com.fielden.platform.swing.components.CustomTooltip;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
 public class MultiLineToolTipTest {
@@ -45,15 +45,19 @@ public class MultiLineToolTipTest {
 	}
 
 	ToolTipManager.sharedInstance().setDismissDelay(1000 * 300);
-	// ToolTipManager.sharedInstance().
-	// ToolTipManager.sharedInstance().setReshowDelay(3000);
-
 	final JLabel label = new JLabel("huifhueifef.") {
 	    @Override
 	    public JToolTip createToolTip() {
-		final MultiLineToolTip multiLined = new MultiLineToolTip();
-		multiLined.setColumns(20);
-	        return multiLined;
+		final JLabel tipComponent = new JLabel();
+		final CustomTooltip customTooltip = new CustomTooltip(this, tipComponent, true) {
+		    private static final long serialVersionUID = -951889975845513426L;
+
+		    @Override
+		    public void updateTipText(final String tipText) {
+			tipComponent.setText(tipText);
+		    }
+		};
+		return customTooltip;
 	    }
 	};
 	label.setToolTipText("<html>TOOOOL - TIP - T" /*+ "OOOOL - TIP - <b>TOOOOL - TIP - TOOOOL</b> - TIP - TOOOOL - TIP - TOOOOL - TIP - TOOOOL - TIP</html>"*/);
