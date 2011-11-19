@@ -8,9 +8,9 @@ import com.esotericsoftware.kryo.serialize.SimpleSerializer;
 
 /**
  * A base class for all custom serialisers.
- * 
+ *
  * @author TG Team
- * 
+ *
  * @param <T>
  */
 public abstract class TgSimpleSerializer<T> extends SimpleSerializer<T> {
@@ -29,6 +29,24 @@ public abstract class TgSimpleSerializer<T> extends SimpleSerializer<T> {
 	} else {
 	    buffer.put(NOT_NULL);
 	    kryo.writeObject(buffer, value);
+	}
+    }
+
+    protected void writeValueAndType(final ByteBuffer buffer, final Object value) {
+	if (value == null) {
+	    buffer.put(NULL);
+	} else {
+	    buffer.put(NOT_NULL);
+	    kryo.writeClassAndObject(buffer, value);
+	}
+    }
+
+    protected <E> E readValueAndType(final ByteBuffer buffer, final Class<E> valueType) {
+	final byte attr = buffer.get();
+	if (attr == NULL) {
+	    return null;
+	} else {
+	    return (E) kryo.readClassAndObject(buffer);
 	}
     }
 
