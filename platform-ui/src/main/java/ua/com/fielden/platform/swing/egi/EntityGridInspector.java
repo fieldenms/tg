@@ -162,7 +162,7 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 		    tipComponent.setPreferredSize(new Dimension(allWidth % maximumWidth, oneRowHeight));
 		} else { // > 1
 		    // System.out.println("allWidth == " + allWidth +  "; rowCount == " + rowCount + "; maximumWidth == " + maximumWidth + "; oneRowHeight * rowCount == " + oneRowHeight * rowCount);
-		    tipComponent.setPreferredSize(new Dimension(maximumWidth, oneRowHeight * rowCount));
+		    tipComponent.setPreferredSize(new Dimension(maximumWidth, oneRowHeight * (rowCount + 2))); // quick fix -- provided additional two rows for multilined tooltips
 		}
 		// tipComponent.setPreferredSize(new Dimension(allWidth, oneRowHeight));
 	    }
