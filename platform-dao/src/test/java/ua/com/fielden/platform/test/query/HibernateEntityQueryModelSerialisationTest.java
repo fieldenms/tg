@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.test.query;
 
+import static ua.com.fielden.platform.equery.equery.select;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -8,7 +10,6 @@ import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.QueryModel;
 import ua.com.fielden.platform.equery.fetch;
 import ua.com.fielden.platform.equery.fetchAll;
 import ua.com.fielden.platform.equery.interfaces.IOthers.IWhere;
@@ -35,8 +36,6 @@ import ua.com.fielden.platform.test.domain.entities.daos.IWorkshopDao;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.esotericsoftware.kryo.SerializationException;
-
-import static ua.com.fielden.platform.equery.equery.select;
 
 public class HibernateEntityQueryModelSerialisationTest extends DbDrivenTestCase {
     private final IAdviceDao adviceDao = injector.getInstance(IAdviceDao.class);
@@ -508,7 +507,7 @@ public class HibernateEntityQueryModelSerialisationTest extends DbDrivenTestCase
      */
     private <T extends AbstractEntity> IQueryModel<T> serialiseAndRestore(final IQueryOrderedModel<T> originalQuery) {
 	try {
-	    return kryoReader.deserialise(kryoWriter.serialise(originalQuery), QueryModel.class);
+	    return (IQueryModel) kryoReader.deserialise(kryoWriter.serialise(originalQuery), originalQuery.getClass());
 	} catch (final Exception e) {
 	    throw new RuntimeException(e);
 	}
