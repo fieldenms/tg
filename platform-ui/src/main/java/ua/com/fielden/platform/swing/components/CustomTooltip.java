@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.components;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -11,7 +9,6 @@ import java.awt.Window;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JToolTip;
 import javax.swing.Popup;
@@ -20,6 +17,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
+
+import net.miginfocom.swing.MigLayout;
 
 /**
  * Tooltip component that allows arbitrary Swing components to be
@@ -69,10 +68,20 @@ public abstract class CustomTooltip extends JToolTip {
      */
     public CustomTooltip(final JComponent src, final JComponent content, final boolean inter)
     {
-        this.setLayout(new BorderLayout());
-        this.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.gray), BorderFactory.createEmptyBorder(4, 4, 4, 4)));
-        this.setComponent(src);
-        this.add(content);
+
+	System.err.println("This = " + this);
+	this.removeAll();
+
+	//, ::200
+	this.setLayout(new MigLayout("debug, fill, insets 4", "[grow, fill, ::200]", "[grow]")); // new SpringLayout()); // new BoxLayout(this, BoxLayout.X_AXIS)); // BorderLayout
+        //this.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.gray), BorderFactory.createEmptyBorder(4, 4, 4, 4)));
+        // this.setComponent(src);
+	this.setComponent(src);
+        //this.add(content, "grow");
+	setContent(content);
+
+//	final int maximumWidth = 200;
+//        this.setMaximumSize(new Dimension(maximumWidth, 2000));
 
         setPersistent(inter);
     }

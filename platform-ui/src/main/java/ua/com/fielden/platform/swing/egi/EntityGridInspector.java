@@ -2,11 +2,7 @@ package ua.com.fielden.platform.swing.egi;
 
 import static java.util.Collections.unmodifiableList;
 
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
 import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -15,7 +11,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.EventObject;
@@ -23,7 +18,6 @@ import java.util.List;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.JToolTip;
 import javax.swing.KeyStroke;
@@ -36,7 +30,6 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.swing.components.CustomTooltip;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping.CustomCellRenderer;
 import ua.com.fielden.platform.swing.egi.coloring.EgiColoringScheme;
 import ua.com.fielden.platform.swing.egi.events.CellMouseEvent;
@@ -135,40 +128,94 @@ public class EntityGridInspector<T extends AbstractEntity> extends HierarchicalT
 	afterModelSet(this.actualTableModel);
     }
 
+    /**
+     * Provides a line-break symbols recursively for a text to make it with <code>maxColumns</code> columns.
+     *
+     * @param text
+     * @param maxColumns
+     * @return
+     */
+    private static String brdText(final String text, final int maxColumns) {
+	if (text.length() <= maxColumns) {
+	    return text;
+	} else {
+	    int firstWhiteSpaceWithinMaxWidth = maxColumns;
+	    do {
+		firstWhiteSpaceWithinMaxWidth--;
+	    } while (firstWhiteSpaceWithinMaxWidth >= 0 && text.toCharArray()[firstWhiteSpaceWithinMaxWidth] != ' ');
+	    if (firstWhiteSpaceWithinMaxWidth < 0) {
+		return text.substring(0, maxColumns) + "<br>" + brdText(text.substring(maxColumns), maxColumns);
+	    } else {
+		return text.substring(0, firstWhiteSpaceWithinMaxWidth) + "<br>" + brdText(text.substring(firstWhiteSpaceWithinMaxWidth + 1), maxColumns);
+	    }
+	}
+    }
+
     @Override
     public JToolTip createToolTip() {
-	final int maximumWidth = 200;
-
-	final JLabel tipComponent = new JLabel();
-	tipComponent.setBackground(new Color(242, 242, 189));
-
-	final CustomTooltip customTooltip = new CustomTooltip(this, tipComponent, false) {
-	    private static final long serialVersionUID = -951889975845513426L;
-
+	final JToolTip customTooltip = new JToolTip() {
 	    @Override
-	    public void updateTipText(final String tipText) {
-		final String wrappedByHtml = TitlesDescsGetter.addHtmlTag(TitlesDescsGetter.removeHtmlTag(tipText));
-		tipComponent.setText(wrappedByHtml);
-
-		final Graphics2D g2 = (Graphics2D) EntityGridInspector.this.getGraphics();
-		final FontMetrics fm = g2.getFontMetrics();
-		final Rectangle2D textBounds = fm.getStringBounds(TitlesDescsGetter.removeHtml(wrappedByHtml), g2);
-		final int allWidth = (int) textBounds.getWidth();
-		final int oneRowHeight = (int) textBounds.getHeight();
-
-		final int rowCount = allWidth / maximumWidth + 1;
-		if (rowCount == 1) {
-		    // System.out.println("allWidth == " + allWidth +  "; rowCount == " + rowCount + "; allWidth % maximumWidth == " + allWidth % maximumWidth + "; oneRowHeight == " + oneRowHeight);
-		    tipComponent.setPreferredSize(new Dimension(allWidth % maximumWidth, oneRowHeight));
-		} else { // > 1
-		    // System.out.println("allWidth == " + allWidth +  "; rowCount == " + rowCount + "; maximumWidth == " + maximumWidth + "; oneRowHeight * rowCount == " + oneRowHeight * rowCount);
-		    tipComponent.setPreferredSize(new Dimension(maximumWidth, oneRowHeight * (rowCount + 2))); // quick fix -- provided additional two rows for multilined tooltips
-		}
-		// tipComponent.setPreferredSize(new Dimension(allWidth, oneRowHeight));
+	    public void setTipText(final String tipText) {
+//		final String text = TitlesDescsGetter.removeHtmlTag(tipText);
+//		final int maxColumns = 20;
+//		final int index = text.length() - 1;
+//		final StringBuilder sb = new StringBuilder();
+//		do {
+//
+//		} while (index >= maxColumns || text.toCharArray()[index] != ' ');
+		final String wrappedByHtml = TitlesDescsGetter.addHtmlTag(brdText(TitlesDescsGetter.removeHtmlTag(tipText), 50));
+	        super.setTipText(wrappedByHtml);
 	    }
+//
+//	    @Override
+//	    public void updateUI() {
+//	        super.updateUI();
+//		setLayout(new MigLayout("debug, fill, insets 10", "[grow, fill, ::200]", "[grow]"));
+//		invalidate();
+//		revalidate();
+//		repaint();
+//	    }
 	};
-        return customTooltip;
+	// customTooltip.setLayout(new MigLayout("debug, fill, insets 10", "[grow, fill, ::200]", "[grow]"));
+	return customTooltip;
     }
+
+//    @Override
+//    public JToolTip createToolTip() {
+//	final int maximumWidth = 200;
+//
+//	final JLabel tipComponent = new JLabel();
+//	tipComponent.setBackground(new Color(242, 242, 189));
+//
+//	final CustomTooltip customTooltip = new CustomTooltip(this, tipComponent, false) {
+//	    private static final long serialVersionUID = -951889975845513426L;
+//
+//	    @Override
+//	    public void updateTipText(final String tipText) {
+//		final String wrappedByHtml = TitlesDescsGetter.addHtmlTag(TitlesDescsGetter.removeHtmlTag(tipText));
+//		tipComponent.setText(wrappedByHtml);
+//
+//		//tipComponent.setMaximumSize(new Dimension(maximumWidth, 2000));
+//
+////		final Graphics2D g2 = (Graphics2D) EntityGridInspector.this.getGraphics();
+////		final FontMetrics fm = g2.getFontMetrics();
+////		final Rectangle2D textBounds = fm.getStringBounds(TitlesDescsGetter.removeHtml(wrappedByHtml), g2);
+////		final int allWidth = (int) textBounds.getWidth();
+////		final int oneRowHeight = (int) textBounds.getHeight();
+////
+////		final int rowCount = allWidth / maximumWidth + 1;
+////		if (rowCount == 1) {
+////		    // System.out.println("allWidth == " + allWidth +  "; rowCount == " + rowCount + "; allWidth % maximumWidth == " + allWidth % maximumWidth + "; oneRowHeight == " + oneRowHeight);
+////		    tipComponent.setPreferredSize(new Dimension(allWidth % maximumWidth, oneRowHeight));
+////		} else { // > 1
+////		    // System.out.println("allWidth == " + allWidth +  "; rowCount == " + rowCount + "; maximumWidth == " + maximumWidth + "; oneRowHeight * rowCount == " + oneRowHeight * rowCount);
+////		    tipComponent.setPreferredSize(new Dimension(maximumWidth, oneRowHeight * (rowCount + 2))); // quick fix -- provided additional two rows for multilined tooltips
+////		}
+//		// tipComponent.setPreferredSize(new Dimension(allWidth, oneRowHeight));
+//	    }
+//	};
+//        return customTooltip;
+//    }
 
     /*
      *

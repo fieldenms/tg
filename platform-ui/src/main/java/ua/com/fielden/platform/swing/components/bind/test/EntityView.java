@@ -88,7 +88,7 @@ public class EntityView {
 
 	bicycles.add(factory.newEntity(Bicycle.class, "EB 2007", "Eastern Bicycles").setFrameName(null).setYear(null).setPrice(new Money("3000.00")).setDate(new DateTime("2005-10-01").toDate()).setFriendly(null).setInStock(true)); // "SC VP10"
 	bicycles.add(factory.newEntity(Bicycle.class, "SBH 2008", "Specialized Big Hit Specialized Big Hit Specialized Big Hit Specialized/Big/Hit Specialized/Big/Hit Specialized Big Hit ").setFrameName("SBH").setYear(2008).setPrice(null).setFriendly(bicycles.get(0)).setInStock(true));
-	bicycles.add(factory.newEntity(Bicycle.class, "XXT 2004", "Xtension Xplorer'2004").setFrameName("XXT").setYear(2004).setPrice(null).setDate(new DateTime("2004-12-31").toDate()).setFriendly(bicycles.get(1)).setInStock(false));
+	bicycles.add(factory.newEntity(Bicycle.class, "XXT 2004", "Xtension Xplorer'2004 dghasdgh dwd 673gewurg 723e wqe wqrhd iuwdfuwegfuig wefg uewfd iuewufuwegfuigewuifgew weufh uweurguiwer uiewruigwe uriui ewrug uiewgh reuwir uiwegfuih iudsfi").setFrameName("XXT").setYear(2004).setPrice(null).setDate(new DateTime("2004-12-31").toDate()).setFriendly(bicycles.get(1)).setInStock(false));
 	bicycles.add(factory.newEntity(Bicycle.class, "DBX 2006", "Da Bomb Accelerator").setFrameName("DBX").setYear(2006).setPrice(null).setDate(new DateTime("2004-12-12").toDate()).setFriendly(bicycles.get(1)).setInStock(true));
 	bicycles.get(0).setFriendly(bicycles.get(3));
 
