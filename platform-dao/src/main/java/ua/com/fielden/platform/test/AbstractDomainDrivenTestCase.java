@@ -169,12 +169,12 @@ public abstract class AbstractDomainDrivenTestCase {
 	return config.getInstance(type);
     }
 
-    public final <T extends AbstractEntity> T save(final T instance) {
+    protected <T extends AbstractEntity> T save(final T instance) {
 	final IEntityDao<T> pp = provider.findController(instance.getType());
 	return pp.save(instance);
     }
 
-    public final <T extends IEntityDao<E>, E extends AbstractEntity> T ao(final Class<E> type) {
+    protected <T extends IEntityDao<E>, E extends AbstractEntity> T ao(final Class<E> type) {
 	return (T) provider.findController(type);
     }
 
@@ -182,15 +182,15 @@ public abstract class AbstractDomainDrivenTestCase {
 	return formatter.parseDateTime(dateTime).toDate();
     }
 
-    public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
+    protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
 	return factory.newEntity(entityClass, key, desc);
     }
 
-    public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
+    protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
 	return factory.newByKey(entityClass, key);
     }
 
-    public final <T extends AbstractEntity<DynamicEntityKey>> T new_(final Class<T> entityClass, final Object... keys) {
+    protected <T extends AbstractEntity<DynamicEntityKey>> T new_(final Class<T> entityClass, final Object... keys) {
 	return keys.length == 0 ? factory.newEntity(entityClass) : factory.newByKey(entityClass, keys);
     }
 }
