@@ -87,11 +87,11 @@ public class OptionAutocompleterUi extends AutocompleterUi {
     private final LocatorManager locatorManger;
 
     public OptionAutocompleterUi(final EntityFactory entityFactory,//
-    final OptionAutocompleterTextFieldLayer<?> layer, //
-    final String caption,//
-    final IValueMatcherFactory vmf,//
-    final IDaoFactory daoFactory,//
-    final IEntityMasterManager entityMasterFactory, final LocatorManager locatorManger) {
+	    final OptionAutocompleterTextFieldLayer<?> layer, //
+	    final String caption,//
+	    final IValueMatcherFactory vmf,//
+	    final IDaoFactory daoFactory,//
+	    final IEntityMasterManager entityMasterFactory, final LocatorManager locatorManger) {
 	super(layer, caption);
 
 	this.entityFactory = entityFactory;
@@ -199,6 +199,8 @@ public class OptionAutocompleterUi extends AutocompleterUi {
 		    }
 		}
 		autocompleterDialog.dispose();
+		SwingUtilities.windowForComponent(getLayer().getAutocompleter().getTextComponent()).setVisible(true);
+		getLayer().getAutocompleter().getTextComponent().requestFocusInWindow();
 	    }
 
 	};
