@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
@@ -180,6 +181,10 @@ public abstract class AbstractDomainDrivenTestCase {
 
     public final Date date(final String dateTime) {
 	return formatter.parseDateTime(dateTime).toDate();
+    }
+
+    public final DateTime dateTime(final String dateTime) {
+	return formatter.parseDateTime(dateTime);
     }
 
     protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
