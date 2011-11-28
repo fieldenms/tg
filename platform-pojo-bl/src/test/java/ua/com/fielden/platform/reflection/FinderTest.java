@@ -637,4 +637,14 @@ public class FinderTest {
 //        assertEquals("Incorrect value of unionEntity.getLevelEntity().property", "value", Finder.findFieldValueByNameRec(unionHolder, "unionEntity.getLevelEntity().property"));
 //    }
 
+    @Test
+    public void test_that_isPropertyPresent_works() {
+	assertTrue("Should be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType"));
+	assertTrue("Should be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.anotherProperty"));
+	assertTrue("Should be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.dummyReferenceProperty"));
+	assertTrue("Should be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.property"));
+	assertTrue("Should be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.critOnlyAEProperty"));
+	assertFalse("Should not be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.serialVersionUID"));
+	assertFalse("Should not be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.blablabla"));
+    }
 }

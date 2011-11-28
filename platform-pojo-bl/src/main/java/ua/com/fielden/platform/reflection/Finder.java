@@ -723,6 +723,24 @@ public class Finder {
     }
 
     /**
+     * Returns <code>true</code> if property (defined by <code>dotNotationExp</code>) is present in type <code>forType</code>.
+     * Field should have {@link IsProperty} annotation assigned to be recognised as "property".
+     *
+     * @param forType
+     * @param dotNotationExp
+     * @return
+     */
+    public static <T extends Annotation> boolean isPropertyPresent(final Class<?> forType, final String dotNotationExp) {
+	try {
+	    return AnnotationReflector.getPropertyAnnotation(IsProperty.class, forType, dotNotationExp) != null;
+	} catch (final IllegalArgumentException iae) {
+	    return false;
+	} catch (final MethodFoundException mfe) {
+	    return false;
+	}
+    }
+
+    /**
      * Extracts field names.
      *
      * @param fields
