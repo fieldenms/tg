@@ -326,7 +326,7 @@ public class EntitiesTreeModel extends DefaultTreeModel {
      */
     private void addHotNodeWithChildren(final String propertyName, final Class<?> klass, final boolean isCollectional, final DefaultMutableTreeNode klassNode, final Pair<String, String> titleAndDesc, final IPropertyFilter propertyFilter, final boolean isKey, final boolean initialization, final String linkProperty) {
 	if (AbstractEntity.class.isAssignableFrom(klass)) { // supports only elements of AbstractEntity descendants
-	    System.out.println(linkProperty + " = linkProperty, " + propertyName + " = propertyName");
+	    logger.debug(linkProperty + " = linkProperty, " + propertyName + " = propertyName");
 	    final boolean isLinkPropertyForCollection = propertyName.equals(linkProperty);
 	    if (!isLinkPropertyForCollection) { // exclude "link properties" for collections
 		if (!propertyTypeWasInHierarchyBefore(klass, klassNode)) { // add hot node and its children
