@@ -99,5 +99,4 @@ public class DatePickerLogic extends AbstractMonthViewIntelliHints implements Fo
     }
 
     //////////////////////////////////////// End of [Similar to AutocompleterLogic logic] ///////////////////////////////////////////////
-
 }

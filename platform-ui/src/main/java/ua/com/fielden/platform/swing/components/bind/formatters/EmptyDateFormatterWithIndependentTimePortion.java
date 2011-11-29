@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
+import javax.swing.JFormattedTextField;
 import javax.swing.text.BadLocationException;
 
 import org.jdesktop.swingx.calendar.DateUtils;
@@ -16,9 +17,9 @@ import ua.com.fielden.platform.swing.components.bind.BoundedJXDatePicker;
 /**
  * This is EmptyDateFormatter descendant overridden in order to support "time portion" independence from entire date. "Independence" means that when we manipulate time portion
  * using arrow keys (in formatted text field) - "date portion" will not change.
- * 
+ *
  * @author Jhou
- * 
+ *
  */
 public class EmptyDateFormatterWithIndependentTimePortion extends EmptyDateFormatter1 {
     private static final long serialVersionUID = -6162486184519891524L;
@@ -27,9 +28,24 @@ public class EmptyDateFormatterWithIndependentTimePortion extends EmptyDateForma
 	super(editDateFormat, emptyValue);
     }
 
+    /** Overidden in order to take a cursor into appropriate position. In this case it will be moved to time portion beginning if it exists. */
+    @Override
+    public void install(final JFormattedTextField ftf) {
+        // final int prevLen = ftf.getDocument().getLength();
+        // final int savedCaretPos = ftf.getCaretPosition();
+        super.install(ftf);
+        // if (ftf.getDocument().getLength() == prevLen) {
+        //     ftf.setCaretPosition(savedCaretPos);
+        // }
+        final int timePortionPosition = 11; // 11 is a length of the longest "DD/MM/YYYY " portion in default date pattern, after which we should see time portion.
+	if (ftf.getDocument().getLength() > timePortionPosition) {
+            ftf.setCaretPosition(timePortionPosition);
+        }
+    }
+
     /**
      * Returns true if <code>field</code> represents "time" constants, not "date".
-     * 
+     *
      * @param field
      */
     private static boolean isTimeField(final Field field) {
@@ -75,7 +91,7 @@ public class EmptyDateFormatterWithIndependentTimePortion extends EmptyDateForma
 
     /**
      * Changes calendar's time without affecting date portion.
-     * 
+     *
      * @param calendar
      *            - calendar to adjust
      * @param field
