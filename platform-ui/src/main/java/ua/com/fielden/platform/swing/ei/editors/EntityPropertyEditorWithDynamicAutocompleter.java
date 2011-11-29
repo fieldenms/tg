@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.AutocompleterTextFieldLayer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.OptionAutocompleterTextFieldLayer;
 import ua.com.fielden.platform.swing.locator.ILocatorConfigurationRetriever;
 import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.DynamicProperty;
@@ -38,7 +39,6 @@ public class EntityPropertyEditorWithDynamicAutocompleter extends AbstractEntity
 	editor = createEditor(entity, propertyName, property.getType(), "", property.getDesc(), entity.getEntityFactory(), entityMasterFactory, vmf, daoFactory, locatorController, locatorRetriever);
     }
 
-    @SuppressWarnings("unchecked")
     private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditor(final AbstractEntity<?> bindingEntity, final String bindingPropertyName, final Class<?> elementType, final String caption, final String tooltip, final EntityFactory entityFactory, final IEntityMasterManager entityMasterFactory, final IValueMatcherFactory vmf, final IDaoFactory daoFactory, final ILocatorConfigurationController locatorController, final ILocatorConfigurationRetriever locatorRetriever) {
 	if (!AbstractEntity.class.isAssignableFrom(elementType)) {
 	    throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + elementType + ".");
@@ -49,6 +49,13 @@ public class EntityPropertyEditorWithDynamicAutocompleter extends AbstractEntity
     @Override
     public BoundedValidationLayer<AutocompleterTextFieldLayer> getEditor() {
 	return editor;
+    }
+
+    @Override
+    public void bind(final AbstractEntity<?> entity) {
+        super.bind(entity);
+        final OptionAutocompleterTextFieldLayer<?> view = (OptionAutocompleterTextFieldLayer<?>) getEditor().getView();
+        view.setEntity(entity);
     }
 
 }

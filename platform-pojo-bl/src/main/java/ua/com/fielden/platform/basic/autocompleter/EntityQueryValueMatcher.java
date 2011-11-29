@@ -54,7 +54,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity> implements IValue
      */
     public EntityQueryValueMatcher(final IEntityDao<T> dao, final ICompoundCondition condition, final String propertyName) {
 	this.dao = dao;
-	this.propertyParamName = "paramNameFor" + propertyName;
+	this.propertyParamName = "paramNameFor" + propertyName.replaceAll("\\.", "_");
 	this.propertyName = propertyName;
 	this.defaultModel = condition.and().prop(propertyName).like().param(propertyParamName).model();
     }

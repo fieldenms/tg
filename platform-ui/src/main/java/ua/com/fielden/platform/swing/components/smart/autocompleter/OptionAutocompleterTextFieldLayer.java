@@ -5,6 +5,7 @@ import javax.swing.JTextField;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.DynamicEntityQueryCriteriaValueMatcher;
 import ua.com.fielden.platform.dao.IDaoFactory;
+import ua.com.fielden.platform.entity.IBindingEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.TwoPropertyListCellRenderer;
@@ -14,12 +15,14 @@ public class OptionAutocompleterTextFieldLayer<T> extends AutocompleterTextField
 
     /**
      * Instantiates case sensitive autocompleter with wild card support. Please note that case sensitivity should be take into account by the valueMatcher.
-     * 
+     *
      * @param entityFactory
      *            TODO
-     * 
+     *
      */
     public OptionAutocompleterTextFieldLayer(//
+    final IBindingEntity entity,//
+    final String propertyName,//
     final JTextField textComponent,//
     final EntityFactory entityFactory,//
     final IValueMatcher<T> valueMatcher,//
@@ -30,12 +33,12 @@ public class OptionAutocompleterTextFieldLayer<T> extends AutocompleterTextField
     final String valueSeparator,//
     final IValueMatcherFactory vmf,//
     final IDaoFactory daoFactory, final LocatorManager locatorManager) {//
-	this(textComponent, entityFactory, valueMatcher, entityMasterFactory, expression, cellRenderer, caption, valueSeparator, vmf, daoFactory, locatorManager, Settings.WILD_CARD_SUPPORT, Settings.CASE_SENSISTIVE);
+	this(entity, propertyName, textComponent, entityFactory, valueMatcher, entityMasterFactory, expression, cellRenderer, caption, valueSeparator, vmf, daoFactory, locatorManager, Settings.WILD_CARD_SUPPORT, Settings.CASE_SENSISTIVE);
     }
 
     /**
      * The most comprehensive constructor, which accepts the widest range of autocompleter parameters.
-     * 
+     *
      * @param textComponent
      *            -- used as a holder for selected values
      * @param entityFactory
@@ -54,6 +57,8 @@ public class OptionAutocompleterTextFieldLayer<T> extends AutocompleterTextField
      *            -- lookup instances type information
      */
     public OptionAutocompleterTextFieldLayer(//
+    final IBindingEntity entity,//
+    final String propertyName,//
     final JTextField textComponent,//
     final EntityFactory entityFactory,//
     final IValueMatcher<T> valueMatcher,//
@@ -65,16 +70,16 @@ public class OptionAutocompleterTextFieldLayer<T> extends AutocompleterTextField
     final IValueMatcherFactory vmf,//
     final IDaoFactory daoFactory,//
     final LocatorManager locatorManager, final Settings... settings) { //
-	super(textComponent, createExtendedValueMatcher(valueMatcher), (Class<T>) locatorManager.getResultantEntityClass(), expression, cellRenderer, caption, valueSeparator, settings);
+	super(textComponent, createExtendedValueMatcher(entity, propertyName, valueMatcher), (Class<T>) locatorManager.getResultantEntityClass(), expression, cellRenderer, caption, valueSeparator, settings);
 	new OptionAutocompleterUi(entityFactory, this, caption, vmf, daoFactory, entityMasterFactory, locatorManager);
     }
 
-    private static DynamicEntityQueryCriteriaValueMatcher createExtendedValueMatcher(final IValueMatcher valueMatcher) {
-	return new DynamicEntityQueryCriteriaValueMatcher(valueMatcher);
+    private static DynamicEntityQueryCriteriaValueMatcher createExtendedValueMatcher(final IBindingEntity entity, final String propertyName, final IValueMatcher valueMatcher) {
+	return new DynamicEntityQueryCriteriaValueMatcher(entity, propertyName, valueMatcher);
     }
 
     @Override
-    protected DynamicEntityQueryCriteriaValueMatcher getValueMatcher() {
+    public final DynamicEntityQueryCriteriaValueMatcher getValueMatcher() {
 	return (DynamicEntityQueryCriteriaValueMatcher) super.getValueMatcher();
     }
 
@@ -84,5 +89,9 @@ public class OptionAutocompleterTextFieldLayer<T> extends AutocompleterTextField
 
     public void highlightSecondHintValue(final boolean highlight) {
 	((TwoPropertyListCellRenderer<T>) getAutocompleter().getHintsCellRenderer()).setHighlightSecondValue(highlight);
+    }
+
+    public final void setEntity(final IBindingEntity entity) {
+	getValueMatcher().getValueMatcherQueryExtender().setEntity(entity);
     }
 }

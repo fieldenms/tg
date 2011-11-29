@@ -76,12 +76,11 @@ public class DynamicLocatorPropertyBinder<T extends AbstractEntity, DAO extends 
 
     /**
      * Creates autocompleter's {@link IPropertyEditor} for the specified property name
-     * 
+     *
      * @param entity
      * @param property
      * @return
      */
-    @SuppressWarnings("unchecked")
     protected IPropertyEditor createAutocompleter(final DynamicEntityQueryCriteria entity, final String property) {
 	final DynamicProperty editableProperty = entity.getEditableProperty(property);
 	if (editableProperty.isEntityProperty() && editableProperty.isSingle()) {
@@ -92,7 +91,7 @@ public class DynamicLocatorPropertyBinder<T extends AbstractEntity, DAO extends 
 
     /**
      * Creates {@link IPropertyEditor} for ordinary propertyTypes
-     * 
+     *
      * @param entity
      * @param property
      * @return

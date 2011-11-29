@@ -18,7 +18,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Abstract property editor for entities. Do not contains editor, because it could be created in several ways (i.e. with string binding or without etc.)
- * 
+ *
  * @author TG Team
  */
 public abstract class AbstractEntityPropertyEditor implements IPropertyEditor {

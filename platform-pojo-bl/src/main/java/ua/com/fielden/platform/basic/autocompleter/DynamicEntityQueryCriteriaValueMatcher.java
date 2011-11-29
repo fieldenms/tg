@@ -5,6 +5,7 @@ import java.util.List;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.IBindingEntity;
 import ua.com.fielden.platform.equery.fetch;
 import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
 
@@ -16,9 +17,9 @@ public class DynamicEntityQueryCriteriaValueMatcher<T extends AbstractEntity, DA
 
     private boolean useQueryCriteira = false;
 
-    public DynamicEntityQueryCriteriaValueMatcher(final IValueMatcher<T> valueMatcher) {
+    public DynamicEntityQueryCriteriaValueMatcher(final IBindingEntity entity, final String propertyName, final IValueMatcher<T> valueMatcher) {
 	this.valueMatcher = valueMatcher;
-	this.valueMatcherQueryExtender = new OptionAutocompleterQueryExtender<T, DAO>();
+	this.valueMatcherQueryExtender = new OptionAutocompleterQueryExtender<T, DAO>(entity, propertyName);
     }
 
     @Override
@@ -114,5 +115,9 @@ public class DynamicEntityQueryCriteriaValueMatcher<T extends AbstractEntity, DA
      */
     public void setBeforeFindMatchesAction(final Runnable beforeFindMatchesAction) {
         this.beforeFindMatchesAction = beforeFindMatchesAction;
+    }
+
+    public OptionAutocompleterQueryExtender<T, DAO> getValueMatcherQueryExtender() {
+        return valueMatcherQueryExtender;
     }
 }
