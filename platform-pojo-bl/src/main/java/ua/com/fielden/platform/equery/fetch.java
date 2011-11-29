@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
@@ -29,7 +30,9 @@ public class fetch<T extends AbstractEntity> {
     protected void withAll() {
 	final List<Field> fields = Finder.findPropertiesThatAreEntities(entityType);
 	for (final Field field : fields) {
-	    fetchModels.put(field.getName(), new fetch(field.getType()));
+	    if (!field.isAnnotationPresent(Calculated.class)) {
+		fetchModels.put(field.getName(), new fetch(field.getType()));
+	    }
 	}
     }
 
