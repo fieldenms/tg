@@ -50,9 +50,9 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
- * 
+ *
  * Panel that contain the table model to view entities and button panel to navigate between pages.
- * 
+ *
  * @author TG Team
  */
 public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntityDao<T>, C extends EntityQueryCriteria<T, DAO>> extends BasePanel implements IUmViewOwner {
@@ -77,7 +77,7 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
     /**
      * Creates new instance of the review panel, also creates button panel for navigation, run and default button. If showRecords is true then the data will be load when the
      * {@link EntityReview} is shown for the first time otherwise the table will be empty
-     * 
+     *
      * @param model
      * @param showRecords
      */
@@ -152,7 +152,7 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
 
     /**
      * Creates mapping between property name and aggregation function name, needed for {@link EgiPanel#setEditorsTooltips(Map)} method.
-     * 
+     *
      * @param mappings
      * @param criteria
      * @return
@@ -170,7 +170,7 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
 
     /**
      * Override this in order to provide specific {@link IPageModel}.
-     * 
+     *
      * @return
      */
     protected IPageModel createPageController() {
@@ -250,7 +250,7 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
      * Creates criteriaPanel for the specified {@link EntityReviewModel} instance. If there are no criteria, then null is returned
      * <p>
      * Override if the default layout is not appropriate.
-     * 
+     *
      * @param model
      * @return
      */
@@ -298,7 +298,7 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
 
     /**
      * Creates non-focusable {@link JButton} for passed action
-     * 
+     *
      * @param action
      * @return
      */
@@ -310,7 +310,7 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
 
     /**
      * Returns {@link EntityGridInspector} containing instances on page
-     * 
+     *
      * @return
      */
     public EntityGridInspector<T> getEntityGridInspector() {
@@ -319,7 +319,7 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
 
     /**
      * Returns related {@link EntityReviewModel}
-     * 
+     *
      * @return
      */
     public EntityReviewModel<T, DAO, C> getEntityReviewModel() {
@@ -336,7 +336,7 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
 
     /**
      * returns the run button of the navigation button panel
-     * 
+     *
      * @return
      */
     public JButton getRunButton() {
@@ -345,7 +345,7 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
 
     /**
      * returns the default button of the navigation button panel that loads the default values for the criteria panel editors
-     * 
+     *
      * @return
      */
     public JButton getDefaultButton() {
@@ -354,7 +354,7 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
 
     /**
      * returns the panel where the "next", "previous","first",and "last" button must be situated
-     * 
+     *
      */
     public JPanel getButtonPanel() {
 	return buttonPanel;
@@ -362,15 +362,17 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
 
     /**
      * returns the panel where the controls for editing criteria properties are situated
-     * 
+     *
      */
     public JPanel getCriteriaPanel() {
 	return criteriaPanel;
     }
 
     /**
-     * counts the number of rows in the table those must be shown on the page
-     * 
+     * Determines the number of rows in the table those must be shown on the page using the size of the content panel as the basis.
+     * If the calculated size is zero then value of 25 is returned.
+     * This is done to handle cases where calculation happens prior to panel resizing takes place.
+     *
      * @return
      */
     public int getPageSize() {
@@ -385,12 +387,13 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
 	    pageSize = 0;
 	}
 
-	return (int) Math.floor(pageSize);
+	final int pageCapacity = (int) Math.floor(pageSize);
+	return pageCapacity > 0 ? pageCapacity : 25;
     }
 
     /**
      * Returns the sort keys for the actual column order
-     * 
+     *
      * @return
      */
     public List<SortKey> getCurrentSortKeyState() {
@@ -415,7 +418,7 @@ public abstract class EntityReview<T extends AbstractEntity, DAO extends IEntity
 
     /**
      * returns the action panel (tool bar) that was created and customized with addButton method or removeButton
-     * 
+     *
      * @return
      */
     public JToolBar getActionPanel() {
