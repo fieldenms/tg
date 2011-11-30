@@ -18,7 +18,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.IDefaultConrollerProvider;
+import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
 import ua.com.fielden.platform.persistence.DdlGenerator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 
@@ -37,7 +37,7 @@ public abstract class DomainDrivenDataPopulation {
 
     public final IDomainDrivenTestCaseConfiguration config;
 
-    private final IDefaultConrollerProvider provider;
+    private final IDefaultControllerProvider provider;
     private final EntityFactory factory;
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -46,7 +46,7 @@ public abstract class DomainDrivenDataPopulation {
     protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config) {
 	try {
 	    this.config = config;
-	    provider = config.getInstance(IDefaultConrollerProvider.class);
+	    provider = config.getInstance(IDefaultControllerProvider.class);
 	    factory = config.getEntityFactory();
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);

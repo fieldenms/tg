@@ -2,7 +2,7 @@ package ua.com.fielden.platform.ioc;
 
 import ua.com.fielden.platform.entity.factory.DefaultConrollerProviderImpl;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.IDefaultConrollerProvider;
+import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
@@ -48,7 +48,7 @@ public class RestPropertyFactoryModule extends EntityModule {
 	// bind DomainMetaPropertyConfig
 	bind(DomainMetaPropertyConfig.class).toInstance(domainMetaPropertyConfig);
 	// bind provider for default entity controller
-	bind(IDefaultConrollerProvider.class).toInstance(defaultControllerProvider);
+	bind(IDefaultControllerProvider.class).toInstance(defaultControllerProvider);
 	// bind property factory
 	bind(IMetaPropertyFactory.class).to(RaoMetaPropertyFactory.class).in(Scopes.SINGLETON);
 

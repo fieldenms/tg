@@ -7,13 +7,16 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel.CanNotSetModeException;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel.UndefinedFormatException;
+import ua.com.fielden.platform.swing.review.report.events.WizardEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
+import ua.com.fielden.platform.swing.review.report.interfaces.IWizardEventListener;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
@@ -32,12 +35,18 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
     private final BlockingIndefiniteProgressLayer progressLayer;
 
     /**
+     * Holds the previous wizard and view of the report.
+     */
+    private WT previousWizard = null;
+    private VT previousView = null;
+
+    /**
      * Initiates this {@link AbstractConfigurationView} with associated {@link AbstractConfigurationModel}.
      * 
      * @param model
      */
     public AbstractConfigurationView(final AbstractConfigurationModel model, final BlockingIndefiniteProgressLayer progressLayer){
-	super(new MigLayout("fill, insets 0", "[fill, grow]"));
+	super(new MigLayout("fill, insets 0", "[fill, grow]","[fill, grow]"));
 	this.model = model;
 	this.progressLayer = progressLayer;
 	model.addPropertyChangeListener(createModeChangeListener());
@@ -97,7 +106,9 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 		    final ReportMode mode = (ReportMode)evt.getNewValue();
 		    switch(mode){
 		    case WIZARD:
-			setView(createWizardView());
+			previousWizard = createWizardView();
+			previousWizard.addWizardEventListener(createWizardListener());
+			setView(previousWizard);
 			break;
 		    case REPORT:
 			setView(createConfigurableView());
@@ -105,6 +116,33 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 		    }
 		}
 
+	    }
+	};
+    }
+
+    private IWizardEventListener createWizardListener() {
+	return new IWizardEventListener() {
+
+	    @Override
+	    public boolean wizardActionPerformed(final WizardEvent e) {
+		switch (e.getWizardAction()) {
+		case PRE_BUILD:
+		    final Result setModeRes = getModel().canSetMode(ReportMode.REPORT);
+		    if(setModeRes.isSuccessful()){
+			return true;
+		    } else {
+			JOptionPane.showMessageDialog(AbstractConfigurationView.this, setModeRes.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
+			return false;
+		    }
+		case POST_BUILD:
+		    try {
+			getModel().setMode(ReportMode.REPORT);
+		    } catch (final Exception e1) {
+			e1.printStackTrace();
+		    }
+		    break;
+		}
+		return true;
 	    }
 	};
     }

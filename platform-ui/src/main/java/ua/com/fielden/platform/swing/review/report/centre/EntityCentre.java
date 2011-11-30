@@ -29,7 +29,7 @@ public class EntityCentre<T extends AbstractEntity> extends AbstractEntityReview
 
 	//Setting the entity centre components' layout.
 	final String rowConstraints = (toolBar == null ? "" : "[fill]") + (criteriaPanel == null ? "" : "[fill]")
-		/*                     */+(actionPanel == null ? "" : "[fill]") + (review == null ? "" : "[:400:, fill, grow]");
+		/*                */+ (actionPanel == null ? "" : "[fill]") + (review == null ? "" : "[:400:, fill, grow]");
 
 	setLayout(new MigLayout("fill, insets 5", "[:400: ,fill, grow]", isEmpty(rowConstraints) ? "[fill, grow]" : rowConstraints));
 
@@ -57,6 +57,11 @@ public class EntityCentre<T extends AbstractEntity> extends AbstractEntityReview
     protected JComponent createToolBar() {
 	// TODO Auto-generated method stub
 	return null;
+    }
+
+    @Override
+    public EntityCentreModel<T> getModel() {
+	return (EntityCentreModel<T>)super.getModel();
     }
 
 }

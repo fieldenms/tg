@@ -2,13 +2,10 @@ package ua.com.fielden.platform.domaintree;
 
 import java.util.List;
 
-import javax.swing.JCheckBox;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
-import javax.swing.tree.TreeNode;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IStructureChangedListener;
@@ -16,7 +13,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -30,8 +26,8 @@ public class EntitiesTreeModel2 extends DefaultTreeModel {
     public static final String ROOT_PROPERTY = "entities-root";
 
     private final IDomainTreeManagerAndEnhancer manager;
-    private final DefaultMutableTreeNode rootNode;
-    private final EnhancementPropertiesMap<DefaultMutableTreeNode> nodesCache;
+    private final EntitiesTreeNode rootNode;
+    private final EnhancementPropertiesMap<EntitiesTreeNode> nodesCache;
 
     /**
      * Creates a new tree model for the 'entities tree' relying on {@link IDomainTreeManagerAndEnhancer}.
@@ -41,7 +37,7 @@ public class EntitiesTreeModel2 extends DefaultTreeModel {
     public EntitiesTreeModel2(final IDomainTreeManagerAndEnhancer manager) {
 	super(null);
 	this.manager = manager;
-	this.rootNode = new DefaultMutableTreeNode(createUserObject(EntitiesTreeModel2.class, ROOT_PROPERTY));
+	this.rootNode = new EntitiesTreeNode(createUserObject(EntitiesTreeModel2.class, ROOT_PROPERTY));
 	setRoot(rootNode);
 
 	nodesCache = AbstractDomainTree.createPropertiesMap();
@@ -70,54 +66,6 @@ public class EntitiesTreeModel2 extends DefaultTreeModel {
 	this.manager.getRepresentation().addStructureChangedListener(listener);
     }
 
-    private Pair<Class<?>, String> createUserObject(final Class<?> root, final String property) {
-	return new Pair<Class<?>, String>(root, property) {
-	    private static final long serialVersionUID = -7106027050288695731L;
-
-	    @Override
-	    public String toString() {
-	        return extractTitleAndDesc(root, property).getKey();
-	    }
-	};
-    }
-
-    /**
-     * Creates a new node for the property and adds it to the appropriate place on the hierarchy.
-     * <p>
-     * The parent is determined from property dot-notation name and the property will be added to the end of parent's children list (so the order of adding is important).
-     *
-     * @param root
-     * @param property
-     */
-    protected void addNode(final Class<?> root, final String property) {
-	if (property == null) {
-	    throw new IllegalArgumentException();
-	}
-	final DefaultMutableTreeNode parentNode = "".equals(property) ? rootNode : (PropertyTypeDeterminator.isDotNotation(property) ? node(root, PropertyTypeDeterminator.penultAndLast(property).getKey()) : node(root, ""));
-
-	final DefaultMutableTreeNode node = new DefaultMutableTreeNode(createUserObject(root, property));
-	nodesCache.put(AbstractDomainTree.key(root, property), node);
-	parentNode.add(node);
-
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	/////////////// to implement next section - multiple checkbox tree model should be separated /////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	// TODO remove two ticks for "common-property" and second tick for uncommon union properties
-//	if (manager.getFirstTick().isChecked(root, property)) {
-//	    // TODO check a first tick in appropriate node
-//	}
-//	if (manager.getSecondTick().isChecked(root, property)) {
-//	    // TODO check a second tick in appropriate node
-//	}
-//	if (manager.getRepresentation().getFirstTick().isDisabledImmutably(root, property)) {
-//	    // TODO disable a first tick in appropriate node
-//	}
-//	if (manager.getRepresentation().getSecondTick().isDisabledImmutably(root, property)) {
-//	    // TODO disable a second tick in appropriate node
-//	}
-    }
-
     /**
      * Finds a node corresponding to a property.
      *
@@ -125,7 +73,7 @@ public class EntitiesTreeModel2 extends DefaultTreeModel {
      * @param property
      * @return
      */
-    private DefaultMutableTreeNode node(final Class<?> root, final String property) {
+    private EntitiesTreeNode node(final Class<?> root, final String property) {
 	return nodesCache.get(AbstractDomainTree.key(root, property));
     }
 
@@ -142,8 +90,8 @@ public class EntitiesTreeModel2 extends DefaultTreeModel {
 		//     TODO 1 ? providePathsEnablement();
 		//     TODO 2 ? checkSubtreeFromPath(EntitiesTreeColumn.CRITERIA_COLUMN, event.getPath(), true);
 		// }
-		final DefaultMutableTreeNode node = (DefaultMutableTreeNode) event.getPath().getLastPathComponent();
-		final Pair<Class<?>, String> rootAndProp = (Pair<Class<?>, String>) node.getUserObject();
+		final EntitiesTreeNode node = (EntitiesTreeNode) event.getPath().getLastPathComponent();
+		final Pair<Class<?>, String> rootAndProp = node.getUserObject();
 		if (!rootNode.equals(node)) {
 		    manager.getRepresentation().warmUp(rootAndProp.getKey(), rootAndProp.getValue());
 		}
@@ -162,7 +110,7 @@ public class EntitiesTreeModel2 extends DefaultTreeModel {
      * @param isDesc
      * @return
      */
-    protected static Pair<String, String> extractTitleAndDesc(final Class<?> root, final String property) {
+    public static Pair<String, String> extractTitleAndDesc(final Class<?> root, final String property) {
 	final String title, desc;
 	if (EntitiesTreeModel2.ROOT_PROPERTY.equals(property)) { // root node
 	    title = "Entities";
@@ -179,65 +127,59 @@ public class EntitiesTreeModel2 extends DefaultTreeModel {
     }
 
     /**
-     * Creates and returns {@link ITooltipProvider} for the renderer's label.
-     *
+     * Returns the {@link IDomainTreeManagerAndEnhancer} instance associated with this {@link EntitiesTreeModel2}.
+     * 
      * @return
      */
-    public ITooltipProvider createLabelToolTipProvider() {
-	return new ITooltipProvider() {
-	    @Override
-	    public String getToolTip(final TreeNode treeNode) {
-		final Pair<Class<?>, String> rootAndProp = (Pair<Class<?>, String>) ((DefaultMutableTreeNode) treeNode).getUserObject();
-		final Class<?> root = rootAndProp.getKey();
-		final String property = rootAndProp.getValue();
-		return extractTitleAndDesc(root, property).getValue();
-	    }
-	};
+    public IDomainTreeManagerAndEnhancer getManager() {
+	return manager;
     }
 
     /**
-     * Creates and returns {@link ITooltipProvider} for the first {@link JCheckBox} component, that is responsible for adding property to the criteria or rule.
+     * Creates a new node for the property and adds it to the appropriate place on the hierarchy.
+     * <p>
+     * The parent is determined from property dot-notation name and the property will be added to the end of parent's children list (so the order of adding is important).
      *
-     * @param criteriaName
-     * @return
+     * @param root
+     * @param property
      */
-    public ITooltipProvider createCriteriaCheckBoxToolTipProvider(final String criteriaName) {
-	return new ITooltipProvider() {
-	    @Override
-	    public String getToolTip(final TreeNode treeNode) {
-		final Pair<Class<?>, String> rootAndProp = (Pair<Class<?>, String>) ((DefaultMutableTreeNode) treeNode).getUserObject();
-		final Class<?> root = rootAndProp.getKey();
-		final String property = rootAndProp.getValue();
-		if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getFirstTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
-		    return null;
-		}
-		if (EntityUtils.isUnionEntityType(PropertyTypeDeterminator.transform(root, AbstractDomainTree.reflectionProperty(property)).getKey())) { // parent is union entity
-		    return "<html>If not selected, then entities with <i><b>" + extractTitleAndDesc(root, property).getKey() + "</b></i> will be ignored</html>";
-		}
-		return "<html>Add/Remove <b>" + extractTitleAndDesc(root, property).getKey() + "</b> to/from " + criteriaName + "</html>";
-	    }
-	};
+    protected void addNode(final Class<?> root, final String property) {
+	if (property == null) {
+	    throw new IllegalArgumentException();
+	}
+	final EntitiesTreeNode parentNode = "".equals(property) ? rootNode : (PropertyTypeDeterminator.isDotNotation(property) ? node(root, PropertyTypeDeterminator.penultAndLast(property).getKey()) : node(root, ""));
+
+	final EntitiesTreeNode node = new EntitiesTreeNode(createUserObject(root, property));
+	nodesCache.put(AbstractDomainTree.key(root, property), node);
+	parentNode.add(node);
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////// to implement next section - multiple checkbox tree model should be separated /////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	// TODO remove two ticks for "common-property" and second tick for uncommon union properties
+	//	if (manager.getFirstTick().isChecked(root, property)) {
+	//	    // TODO check a first tick in appropriate node
+	//	}
+	//	if (manager.getSecondTick().isChecked(root, property)) {
+	//	    // TODO check a second tick in appropriate node
+	//	}
+	//	if (manager.getRepresentation().getFirstTick().isDisabledImmutably(root, property)) {
+	//	    // TODO disable a first tick in appropriate node
+	//	}
+	//	if (manager.getRepresentation().getSecondTick().isDisabledImmutably(root, property)) {
+	//	    // TODO disable a second tick in appropriate node
+	//	}
     }
 
-    /**
-     * Creates and returns {@link ITooltipProvider} for the second {@link JCheckBox} component, that is responsible for adding property to the resultant set of properties.
-     *
-     * @param resultantName
-     * @return
-     */
-    public ITooltipProvider createResultantCheckBoxToolTipProvider(final String resultantName) {
-	return new ITooltipProvider() {
-	    @Override
-	    public String getToolTip(final TreeNode treeNode) {
-		final Pair<Class<?>, String> rootAndProp = (Pair<Class<?>, String>) ((DefaultMutableTreeNode) treeNode).getUserObject();
-		final Class<?> root = rootAndProp.getKey();
-		final String property = rootAndProp.getValue();
-		if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getSecondTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
-		    return null;
-		}
-		return "<html>Add/Remove <b>" + extractTitleAndDesc(root, property).getKey() + "</b> to/from " + resultantName + "</html>";
-	    }
+    private Pair<Class<?>, String> createUserObject(final Class<?> root, final String property) {
+	return new Pair<Class<?>, String>(root, property) {
+	    private static final long serialVersionUID = -7106027050288695731L;
 
+	    @Override
+	    public String toString() {
+		return extractTitleAndDesc(root, property).getKey();
+	    }
 	};
     }
 }

@@ -50,7 +50,7 @@ public class ExpressionEditorExample extends AbstractUiApplication {
 
     @Override
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
-	final DomainTreeEditorView<Vehicle> wizard = new DomainTreeEditorView<Vehicle>(new DomainTreeEditorModel<Vehicle>(entityFactory, Vehicle.class));
+	final DomainTreeEditorView<Vehicle> wizard = new DomainTreeEditorView<Vehicle>(new DomainTreeEditorModel<Vehicle>(entityFactory, null, Vehicle.class));
 	wizard.setPreferredSize(new Dimension(640,800));
 	SimpleLauncher.show("Expression editor example", wizard);
     }

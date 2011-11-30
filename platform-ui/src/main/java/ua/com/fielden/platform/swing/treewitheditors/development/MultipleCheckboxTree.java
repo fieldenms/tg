@@ -1,30 +1,27 @@
-package ua.com.fielden.platform.swing.treewitheditors;
+package ua.com.fielden.platform.swing.treewitheditors.development;
 
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.DefaultTreeCheckingModel;
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingEvent;
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingListener;
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingModel;
 
-import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
-import javax.swing.JTree;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JComponent;
+import javax.swing.KeyStroke;
 import javax.swing.ToolTipManager;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-/**
- * {@link JTree} with the set of controls (check boxes, radio buttons, buttons, ordering arrows etc.) on the tree item
- * 
- * @author oleh
- * 
- */
+import ua.com.fielden.platform.swing.treewitheditors.Tree;
+
 public class MultipleCheckboxTree extends Tree {
 
     private static final long serialVersionUID = -239641941602548337L;
@@ -32,11 +29,6 @@ public class MultipleCheckboxTree extends Tree {
     private List<TreeCheckingModel> checkingModels;
 
     private int numOfCheckingModel;
-
-    /**
-     * Whether checking a node causes it to be selected, too.
-     */
-    private boolean selectsByChecking;
 
     /**
      * Creates {@link MultipleCheckboxTree} with default {@link TreeModel} and with specified number of Check boxes
@@ -90,11 +82,21 @@ public class MultipleCheckboxTree extends Tree {
 	    checkingModels.add(null);
 	    setCheckingModel(checkingModel, modelCounter);
 	}
-	setCellRenderer(new MultipleCheckboxTreeCellRenderer(this, null, null));
-	setSelectsByChecking(true);
+
+
+	setEditable(true);
+	setCellRenderer(new MultipleCheckboxTreeCellRenderer(this));
+	final MultipleCheckboxTreeCellRenderer renderer = new MultipleCheckboxTreeCellRenderer(this);
+	setCellEditor(new MultipleCheckboxTreeCellEditor(this, renderer));
+
 	getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
 	setShowsRootHandles(true);
 	putClientProperty("JTree.lineStyle", "Angled");// for Metal L&F
+
+	final KeyStroke enter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
+	final String EDITING_MODE = "Start or stop editing selected path";
+	getActionMap().put(EDITING_MODE, createEditingModeAction());
+	getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(enter, EDITING_MODE);
     }
 
     /**
@@ -151,24 +153,6 @@ public class MultipleCheckboxTree extends Tree {
      */
     public TreeCheckingModel getCheckingModel(final int index) {
 	return checkingModels.get(index);
-    }
-
-    /**
-     * Specifies whether checking a node causes it to be selected, too, or else the selection is not affected. The default behaviour is the former.
-     * 
-     * @param selectsByChecking
-     */
-    public void setSelectsByChecking(final boolean selectsByChecking) {
-	this.selectsByChecking = selectsByChecking;
-    }
-
-    /**
-     * Returns whether checking a node causes it to be selected, too.
-     * 
-     * @return
-     */
-    public boolean isSelectsByChecking() {
-	return selectsByChecking;
     }
 
     /**
@@ -257,33 +241,6 @@ public class MultipleCheckboxTree extends Tree {
 	return getCheckingModel(index).isPathChecked(path);
     }
 
-    @Override
-    protected void processMouseEvent(final MouseEvent e) {
-	if (e.getID() == MouseEvent.MOUSE_PRESSED) {
-	    if (!e.isConsumed()) {
-		// we use mousePressed instead of mouseClicked for performance
-		final int x = e.getX();
-		final int y = e.getY();
-		final int row = getRowForLocation(x, y);
-		if (row != -1) {
-		    // click inside some node
-		    final Rectangle rect = getRowBounds(row);
-		    if (rect != null && getCellRenderer() instanceof IMultipleCheckboxTreeCellRenderer) {
-			// click on a valid node
-			final int index = ((IMultipleCheckboxTreeCellRenderer) getCellRenderer()).getHotspotIndex(x - rect.x, y - rect.y);
-			if (index >= 0) {
-			    ((IMultipleCheckboxTreeCellRenderer) getCellRenderer()).performMouseAction(getPathForRow(row), index);
-			    if (!isSelectsByChecking()) {
-				return;
-			    }
-			}
-		    }
-		}
-	    }
-	}
-	super.processMouseEvent(e);
-    }
-
     /**
      * Remove a path from the {@link TreeCheckingModel} specified with index
      * 
@@ -354,102 +311,18 @@ public class MultipleCheckboxTree extends Tree {
 
     }
 
+    private Action createEditingModeAction() {
+	return new AbstractAction() {
+	    private static final long serialVersionUID = -5565139442029535686L;
 
-
-    ////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////Operations on tree (enablement, checking)////////////////
-    ////////////////////////////////////////////////////////////////////////////////////
-
-
-
-    // ///////////////////////// paths enablement : ///////////////////////////////
-    /**
-     * Set the paths those satisfies the filter to enable. {@code index} identifies the index of the {@link TreeCheckingModel} in the tree.
-     * 
-     * @param index
-     * @param enable
-     * @param filter
-     */
-    protected void enablePaths(final int index, final boolean enable, final ITreeItemFilter filter) {
-	final TreeCheckingModel checkingModel = getCheckingModel(index); // column.getColumnIndex()
-	if (filter != null) {
-	    traceTreeWithFilter(checkingModel, new TreePath(getModel().getRoot()), enable, filter, new ITreePathStateChanger() {
-
-		@Override
-		public void setPathState(final TreeCheckingModel treeCheckingModel, final TreePath path, final boolean state) {
-		    treeCheckingModel.setPathEnabled(path, state);
-		}
-
-	    });
-	}
-    }
-
-    /**
-     * Set the paths those satisfies the filter to be checked. {@code index} identifies the index of the {@link TreeCheckingModel} in the tree.
-     * 
-     * @param index
-     * @param enable
-     * @param filter
-     */
-    protected void checkPaths(final int index, final boolean enable, final ITreeItemFilter filter) {
-	checkSubtreePath(index, new TreePath(getModel().getRoot()), enable, filter);
-    }
-
-    protected void checkSubtreePath(final int index, final TreePath treePath, final boolean enable, final ITreeItemFilter filter) {
-	final TreeCheckingModel checkingModel = getCheckingModel(index); // column.getColumnIndex()
-	if (filter != null) {
-	    traceTreeWithFilter(checkingModel, treePath, enable, filter, new ITreePathStateChanger() {
-
-		@Override
-		public void setPathState(final TreeCheckingModel treeCheckingModel, final TreePath path, final boolean state) {
-		    if (state) {
-			treeCheckingModel.addCheckingPath(path);
-		    } else {
-			treeCheckingModel.removeCheckingPath(path);
-		    }
-		}
-
-	    });
-	}
-    }
-
-    private void traceTreeWithFilter(final TreeCheckingModel checkingModel, final TreePath treePath, final boolean enable, final ITreeItemFilter filter, final ITreePathStateChanger pathStateChanger) {
-	final DefaultMutableTreeNode node = (DefaultMutableTreeNode) treePath.getLastPathComponent();
-	if (filter.isSatisfies(node)) {
-	    pathStateChanger.setPathState(checkingModel, treePath, enable);
-	}
-	if (filter.isChildrenSatisfies(node)) {
-	    enableChildrenPaths(checkingModel, treePath, enable, pathStateChanger);
-	} else {
-	    if (node.getChildCount() >= 0) {
-		for (final Enumeration<?> childrenEnum = node.children(); childrenEnum.hasMoreElements();) {
-		    final TreeNode n = (TreeNode) childrenEnum.nextElement();
-		    final TreePath path = treePath.pathByAddingChild(n);
-		    traceTreeWithFilter(checkingModel, path, enable, filter, pathStateChanger);
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		if (isEditing()) {
+		    stopEditing();
+		} else {
+		    startEditingAtPath(getSelectionPath());
 		}
 	    }
-	}
+	};
     }
-
-    private void enableChildrenPaths(final TreeCheckingModel checkingModel, final TreePath path, final boolean enable, final ITreePathStateChanger pathStateChanger) {
-	// checkingModel.setPathEnabled(path, enable);
-	pathStateChanger.setPathState(checkingModel, path, enable);
-	checkingModel.setPathEnabled(path, enable);
-	final DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-	for (int i = 0; i < node.getChildCount(); i++) {
-	    enableChildrenPaths(checkingModel, new TreePath(((DefaultMutableTreeNode) node.getChildAt(i)).getPath()), enable, pathStateChanger);
-	}
-    }
-
-    public static interface ITreeItemFilter {
-	boolean isSatisfies(final DefaultMutableTreeNode treeNode);
-
-	boolean isChildrenSatisfies(final DefaultMutableTreeNode treeNode);
-    }
-
-    public static interface ITreePathStateChanger {
-	void setPathState(TreeCheckingModel treeCheckingModel, TreePath path, boolean state);
-
-    }
-
 }

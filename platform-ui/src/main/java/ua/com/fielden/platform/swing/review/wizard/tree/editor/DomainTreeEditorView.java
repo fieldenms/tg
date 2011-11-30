@@ -17,13 +17,14 @@ import net.miginfocom.swing.MigLayout;
 
 import org.jdesktop.swingx.JXCollapsiblePane;
 
+import ua.com.fielden.platform.domaintree.EntitiesTreeModel2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorView;
-import ua.com.fielden.platform.swing.dynamicreportstree.CriteriaTree;
-import ua.com.fielden.platform.swing.dynamicreportstree.TreePanel;
 import ua.com.fielden.platform.swing.model.UmState;
+import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTree;
+import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreePanel;
 import ua.com.fielden.platform.swing.view.BasePanel;
-import ua.com.fielden.platform.treemodel.CriteriaTreeModel;
+import ua.com.fielden.platform.utils.Pair;
 
 public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 
@@ -45,11 +46,11 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 	add(toolBar, "wrap");
 
 	//Configuring the entities tree.
-	final CriteriaTreeModel treeModel = wizardModel.createTreeModel();
-	final CriteriaTree tree = new CriteriaTree(treeModel);
+	final EntitiesTreeModel2 treeModel = wizardModel.createTreeModel();
+	final EntitiesTree tree = new EntitiesTree(treeModel, "selection criteria", "result set");
 	tree.addMouseListener(createPropertyChosenListener(tree, treeModel));
 	tree.getSelectionModel().addTreeSelectionListener(createCalculatedPropertySelectionListener(tree, treeModel));
-	final TreePanel treePanel = new TreePanel(tree);
+	final EntitiesTreePanel treePanel = new EntitiesTreePanel(tree);
 	add(treePanel, "wrap");
 
 	//Configuring the expression editor.
@@ -61,7 +62,22 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 	add(editorPanel);
     }
 
-    private IPropertyEditListener createPropertyEditListener(final JXCollapsiblePane editorPanel, final CriteriaTree tree) {
+    /**
+     * Returns the associated wizard model.
+     *
+     * @return
+     */
+    public DomainTreeEditorModel<T> getModel(){
+	return domainTreeEditorModel;
+    }
+
+    @Override
+    public String getInfo() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    private IPropertyEditListener createPropertyEditListener(final JXCollapsiblePane editorPanel, final EntitiesTree tree) {
 	return new IPropertyEditListener() {
 
 	    @Override
@@ -78,20 +94,18 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 	};
     }
 
-    private TreeSelectionListener createCalculatedPropertySelectionListener(final JTree tree, final CriteriaTreeModel treeModel) {
+    private TreeSelectionListener createCalculatedPropertySelectionListener(final JTree tree, final EntitiesTreeModel2 treeModel) {
 	return new TreeSelectionListener() {
 
 	    @Override
 	    public void valueChanged(final TreeSelectionEvent e) {
-		final TreePath path = e.getPath();
-		final String propertyName = treeModel.getPropertyNameFor((DefaultMutableTreeNode)path.getLastPathComponent());
-		final boolean isSeleted = tree.getSelectionModel().isPathSelected(path);
-		getModel().getPropertySelectionModel().propertyStateChanged(propertyName, isSeleted);
+		final boolean isSeleted = tree.getSelectionModel().isPathSelected(e.getPath());
+		getModel().getPropertySelectionModel().propertyStateChanged(getPropertyName(e.getPath()), isSeleted);
 	    }
 	};
     }
 
-    private MouseListener createPropertyChosenListener(final JTree tree, final CriteriaTreeModel treeModel) {
+    private MouseListener createPropertyChosenListener(final JTree tree, final EntitiesTreeModel2 treeModel) {
 	return new MouseAdapter() {
 	    @Override
 	    public void mousePressed(final MouseEvent e) {
@@ -99,25 +113,17 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 		final int y = e.getY();
 		final TreePath path = tree.getPathForLocation(x, y);
 		if (path != null && getModel().getExpressionModel().getState() != UmState.VIEW) {
-		    getModel().getExpressionModel().getPropertySelectionModel().propertyStateChanged(treeModel.getPropertyNameFor((DefaultMutableTreeNode)path.getLastPathComponent()),true);
+		    getModel().getExpressionModel().getPropertySelectionModel().propertyStateChanged(getPropertyName(path),true);
 		}
 	    }
 	};
     }
 
-    /**
-     * Returns the associated wizard model.
-     * 
-     * @return
-     */
-    public DomainTreeEditorModel<T> getModel(){
-	return domainTreeEditorModel;
-    }
-
-    @Override
-    public String getInfo() {
-	// TODO Auto-generated method stub
-	return null;
+    @SuppressWarnings("unchecked")
+    private String getPropertyName(final TreePath path){
+	final DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+	final Pair<Class<?>, String> rootAndProp = (Pair<Class<?>, String>) node.getUserObject();
+	return rootAndProp.getValue();
     }
 
 }

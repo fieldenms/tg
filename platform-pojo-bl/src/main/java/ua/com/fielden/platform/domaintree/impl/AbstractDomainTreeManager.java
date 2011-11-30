@@ -30,7 +30,6 @@ import ua.com.fielden.platform.serialisation.impl.TgKryo;
  *
  */
 public abstract class AbstractDomainTreeManager extends AbstractDomainTree implements IDomainTreeManager {
-    private static final long serialVersionUID = -6937754021447082364L;
 
     private final IDomainTreeRepresentation dtr;
     private final TickManager firstTick;
@@ -46,30 +45,30 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      * @param secondTick
      */
     protected AbstractDomainTreeManager(final ISerialiser serialiser, final IDomainTreeRepresentation dtr, final TickManager firstTick, final TickManager secondTick) {
-        super(serialiser);
-        this.dtr = dtr;
-        this.firstTick = firstTick;
-        this.secondTick = secondTick;
+	super(serialiser);
+	this.dtr = dtr;
+	this.firstTick = firstTick;
+	this.secondTick = secondTick;
 
-        // initialise the references on "dtr" instance in "firstTick" and "secondTick" fields
-        try {
-            final Field dtrField = Finder.findFieldByName(TickManager.class, "dtr");
-            boolean isAccessible = dtrField.isAccessible();
-            dtrField.setAccessible(true);
-            dtrField.set(this.firstTick, dtr);
-            dtrField.set(this.secondTick, dtr);
-            dtrField.setAccessible(isAccessible);
+	// initialise the references on "dtr" instance in "firstTick" and "secondTick" fields
+	try {
+	    final Field dtrField = Finder.findFieldByName(TickManager.class, "dtr");
+	    boolean isAccessible = dtrField.isAccessible();
+	    dtrField.setAccessible(true);
+	    dtrField.set(this.firstTick, dtr);
+	    dtrField.set(this.secondTick, dtr);
+	    dtrField.setAccessible(isAccessible);
 
-            final Field trField = Finder.findFieldByName(TickManager.class, "tr");
-            isAccessible = trField.isAccessible();
-            trField.setAccessible(true);
-            trField.set(this.firstTick, dtr.getFirstTick());
-            trField.set(this.secondTick, dtr.getSecondTick());
-            trField.setAccessible(isAccessible);
-        } catch (final Exception e) {
-            e.printStackTrace();
-            throw new IllegalStateException(e);
-        }
+	    final Field trField = Finder.findFieldByName(TickManager.class, "tr");
+	    isAccessible = trField.isAccessible();
+	    trField.setAccessible(true);
+	    trField.set(this.firstTick, dtr.getFirstTick());
+	    trField.set(this.secondTick, dtr.getSecondTick());
+	    trField.setAccessible(isAccessible);
+	} catch (final Exception e) {
+	    e.printStackTrace();
+	    throw new IllegalStateException(e);
+	}
 
 	// the below listener is intended to update checked properties for both ticks when the skeleton of included properties has been changed
 	listener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick);
@@ -150,7 +149,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     }
 
     protected IStructureChangedListener listener() {
-        return listener;
+	return listener;
     }
 
     /**
@@ -165,7 +164,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      *
      */
     public static class TickManager implements ITickManagerWithMutability {
-	private static final long serialVersionUID = 3498255722542117344L;
 	private final EnhancementRootsMap<List<String>> checkedProperties;
 	private final transient IDomainTreeRepresentation dtr;
 	private final transient ITickRepresentation tr;
@@ -202,7 +200,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	public boolean isCheckedNaturally(final Class<?> root, final String property) {
 	    AbstractDomainTreeRepresentation.illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return (isCheckedMutably(root, property)) || // checked properties by a "contract"
-	    	(tr.isCheckedImmutably(root, property)); // the checked by default properties should be checked (immutable checking)
+		    (tr.isCheckedImmutably(root, property)); // the checked by default properties should be checked (immutable checking)
 	}
 
 	@Override
@@ -350,12 +348,12 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
     @Override
     public ITickManager getSecondTick() {
-        return secondTick;
+	return secondTick;
     }
 
     @Override
     public IDomainTreeRepresentation getRepresentation() {
-        return dtr;
+	return dtr;
     }
 
     /**

@@ -9,14 +9,12 @@ import java.util.List;
 import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JTree;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.treetable.ViewportChangeEvent;
-import ua.com.fielden.platform.treemodel.EntitiesTreeModel;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
@@ -217,7 +215,7 @@ public class Tree extends JTree {
 	if (pathsToExpand.size() >= numOfPaths) {
 	    return true;
 	} else {
-	    if (isDummyNode(startPath.getLastPathComponent())) {
+	    if (!canExpand(startPath.getLastPathComponent())) {
 		return traceNextAvailablePath(startPath, pathsToExpand, numOfPaths - 1);
 	    }
 	    pathsToExpand.add(startPath);
@@ -244,14 +242,13 @@ public class Tree extends JTree {
     }
 
     /**
-     * Returns value that indicates whether specified node is dummy node or not.
+     * Returns value that indicates whether specified node can be expanded or not.
      *
      * @param lastPathComponent
      * @return
      */
-    private boolean isDummyNode(final Object lastPathComponent) {
-	final DefaultMutableTreeNode node = (DefaultMutableTreeNode) lastPathComponent;
-	return node.getChildCount() == 1 && node.getFirstChild() != null && EntitiesTreeModel.DUMMY_TITLED_OBJECT.equals(((DefaultMutableTreeNode) node.getFirstChild()).getUserObject());
+    protected boolean canExpand(final Object lastPathComponent) {
+	return true;
     }
 
     /**

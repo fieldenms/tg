@@ -2,6 +2,8 @@ package ua.com.fielden.platform.example.ioc;
 
 import org.hibernate.SessionFactory;
 
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.EntityAggregatesDao;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
@@ -135,5 +137,7 @@ public class ExampleRmaHibernateModule extends CommonFactoryModule {
 	bind(ICenterConfigurationController.class).to(LocalCenterConfigurationController.class);
 	bind(ILocatorConfigurationController.class).to(LocalLocatorConfigurationController.class);
 	bind(IMasterConfigurationController.class).to(LocalMasterConfigurationController.class);
+
+	bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
     }
 }

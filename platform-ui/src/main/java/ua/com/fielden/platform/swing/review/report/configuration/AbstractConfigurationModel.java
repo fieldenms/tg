@@ -45,7 +45,7 @@ public abstract class AbstractConfigurationModel {
      * 
      * @param mode
      */
-    final void setMode(final ReportMode mode) throws Exception{
+    final void setMode(final ReportMode mode) throws Exception {
 	if(mode == null || mode.equals(this.mode)){
 	    return;
 	}

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -23,7 +25,7 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
     /**
      * The associated {@link GlobalDomainTreeManager} instance.
      */
-    private final GlobalDomainTreeManager gdtm;
+    private final IGlobalDomainTreeManager gdtm;
 
     /**
      * The entity type for which this {@link CentreConfigurationModel} was created.
@@ -31,9 +33,19 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
     private final Class<T> entityType;
 
     /**
+     * The name of the entity centre if the name is equal null then this centre is principle otherwise it is not principle
+     */
+    private final String name;
+
+    /**
      * {@link EntityFactory}, needed for {@link DomainTreeEditorModel} creation.
      */
     private final EntityFactory entityFactory;
+
+    /**
+     * {@link ICriteriaGenerator} instance needed for criteria generation.
+     */
+    private final ICriteriaGenerator criteriaGenerator;
 
 
 
@@ -48,18 +60,57 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
      * @param gdtm - Associated {@link GlobalDomainTreeManager} instance.
      * @param entityFactory - {@link EntityFactory} needed for wizard model creation.
      */
-    public CentreConfigurationModel(final Class<T> entityType, final GlobalDomainTreeManager gdtm, final EntityFactory entityFactory){
+    public CentreConfigurationModel(final Class<T> entityType, final String name, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final ICriteriaGenerator criteriaGenerator){
 	this.entityType = entityType;
+	this.name = name;
 	this.gdtm = gdtm;
 	this.entityFactory = entityFactory;
+	this.criteriaGenerator = criteriaGenerator;
     }
 
 
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
-	// TODO Implement logic that determines whether report view can be set or not.
+	if(ReportMode.REPORT.equals(mode)){
+	    final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(getEntityType(), getName());
+	    if(cdtm == null){
+		return new Result(this, new CanNotSetModeException("This report is opened for the first time!"));
+	    }
+	    if(cdtm.getSecondTick().checkedProperties(getEntityType()).isEmpty()){
+		return new Result(this, new Exception("Please chose prpoerties to see in the table."));
+	    }
+	}
 	return Result.successful(this);
+    }
+
+
+
+    //    public EntityCentreModel<T> createEntityCentreModel() {
+    //	return null;
+    //	return new EntityCentreModel<T>(criteriaGenerator.generateCentreQueryCriteria(entityType, cdtm));
+    //    }
+
+    private EntityFactory getEntityFactory() {
+	return entityFactory;
+    }
+
+    private Class<T> getEntityType() {
+	return entityType;
+    }
+
+    private String getName(){
+	return name;
+    }
+
+
+
+    public DomainTreeEditorModel<T> createDomainTreeEditorModel() {
+	final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(getEntityType(), getName());
+	if(cdtm == null){
+	    gdtm.initEntityCentreManager(getEntityType(), getName());
+	}
+	return new DomainTreeEditorModel<T>(getEntityFactory(), gdtm.getEntityCentreManager(getEntityType(), getName()), getEntityType());
     }
 
     //    /**

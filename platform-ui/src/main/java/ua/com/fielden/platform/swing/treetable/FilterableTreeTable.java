@@ -83,7 +83,7 @@ public class FilterableTreeTable extends JXTreeTable {
 	setDefaultRenderer(Boolean.class, new TableCellRenderer() {
 
 	    private final TableCellRenderer stringCellRenderer = new DefaultTableCellRenderer(),//
-	    booleanCellRenderer = getDefaultRenderer(Boolean.class);
+		    booleanCellRenderer = getDefaultRenderer(Boolean.class);
 
 	    @Override
 	    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected, final boolean hasFocus, final int row, final int column) {
@@ -324,15 +324,15 @@ public class FilterableTreeTable extends JXTreeTable {
      * @return
      */
     private TreePath getNextAvailablePath(final TreePath startPath) {
-	TreePath path=startPath;
-	while(path.getParentPath()!=null){
-	    final TreePath parentPath=path.getParentPath();
-	    final Object lastComponent= path.getLastPathComponent();
+	TreePath path = startPath;
+	while (path.getParentPath() != null) {
+	    final TreePath parentPath = path.getParentPath();
+	    final Object lastComponent = path.getLastPathComponent();
 	    final int childIndex = getTreeTableModel().getIndexOfChild(parentPath.getLastPathComponent(), lastComponent);
-	    final Object child=getTreeTableModel().getChild(parentPath.getLastPathComponent(), childIndex+1);
-	    if(child==null){
-		path=parentPath;
-	    }else{
+	    final Object child = getTreeTableModel().getChild(parentPath.getLastPathComponent(), childIndex + 1);
+	    if (child == null) {
+		path = parentPath;
+	    } else {
 		return parentPath.pathByAddingChild(child);
 	    }
 	}

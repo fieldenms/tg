@@ -7,5 +7,5 @@ package ua.com.fielden.platform.swing.analysis;
  * 
  */
 public enum AnalysisReportType implements IAnalysisReportType {
-    ANALYSIS, LIFECYCLE, PIVOT, NDEC;
+    MAIN, ANALYSIS, LIFECYCLE, PIVOT, NDEC;
 }

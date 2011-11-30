@@ -218,7 +218,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 		    return "<html>If not selected, then entities with <i><b>" + extractToolTipText(treeNode, false) + "</b></i> will be ignored</html>";
 		}
 		return criteriaColumnFilter.isSatisfies((DefaultMutableTreeNode) treeNode) ? null : "<html>Add/Remove <b>" + extractToolTipText(treeNode, false) + "</b> to/from "
-			+ criteriaName + "</html>"; // no tooltip for disabled node
+		+ criteriaName + "</html>"; // no tooltip for disabled node
 	    }
 	};
     }
@@ -290,7 +290,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 	final TitledObject parentTitle = TitledObject.extractTitleFromTreeNode(parentNode);
 	final TitledObject grandFatherTtile = TitledObject.extractTitleFromTreeNode(getParentNodeFor(parentNode));
 	return "common".equals(parentTitle.getObject()) && parentTitle.getType() == null && grandFatherTtile.getType() != null
-	&& AbstractUnionEntity.class.isAssignableFrom(grandFatherTtile.getType());
+		&& AbstractUnionEntity.class.isAssignableFrom(grandFatherTtile.getType());
     }
 
     /**
@@ -378,5 +378,11 @@ public class EntitiesTree extends MultipleCheckboxTree{
 	    }
 	    return false;
 	}
+    }
+
+    @Override
+    protected boolean canExpand(final Object lastPathComponent) {
+	final DefaultMutableTreeNode node = (DefaultMutableTreeNode) lastPathComponent;
+	return !(node.getChildCount() == 1 && node.getFirstChild() != null && EntitiesTreeModel.DUMMY_TITLED_OBJECT.equals(((DefaultMutableTreeNode) node.getFirstChild()).getUserObject()));
     }
 }

@@ -5,6 +5,8 @@ import javax.swing.event.EventListenerList;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
+import ua.com.fielden.platform.domaintree.EntitiesTreeModel2;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -14,8 +16,6 @@ import ua.com.fielden.platform.expression.entity.ExpressionEntity;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.ei.LightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
-import ua.com.fielden.platform.swing.review.DefaultDynamicCriteriaPropertyFilter;
-import ua.com.fielden.platform.treemodel.CriteriaTreeModel;
 
 /**
  * Wizard that allows one to create/edit calculated properties and configure entity review.
@@ -30,10 +30,13 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
     private final EventListenerList listenerList;
     private final CalculatedPropertySelectModel propertySelectionModel;
 
-    public DomainTreeEditorModel(final EntityFactory factory,final Class<T> rootType){
+    private final IDomainTreeManagerAndEnhancer dtme;
+
+    public DomainTreeEditorModel(final EntityFactory factory, final IDomainTreeManagerAndEnhancer dtme, final Class<T> rootType){
 	final ExpressionEntity entity = factory.newEntity(ExpressionEntity.class, 0L);
 	entity.setEntityClass(rootType);
 	//entity.setName(generateNextPropertyName());
+	this.dtme = dtme;
 	this.expressionModel = new ExpressionEditorModelForWizard(entity, new LightweightPropertyBinder<ExpressionEntity>(null, null, "key", "name"));
 	this.listenerList = new EventListenerList();
 	this.propertySelectionModel = new CalculatedPropertySelectModel();
@@ -98,8 +101,9 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	return new ActionPanelBuilder().addButton(expressionModel.getNewAction()).addButton(expressionModel.getEditAction());
     }
 
-    public CriteriaTreeModel createTreeModel() {
-	return new CriteriaTreeModel(getEntityClass(), new DefaultDynamicCriteriaPropertyFilter(), null);
+    public EntitiesTreeModel2 createTreeModel() {
+	return new EntitiesTreeModel2(dtme);
+	//return new CriteriaTreeModel(getEntityClass(), new DefaultDynamicCriteriaPropertyFilter(), null);
     }
 
     public Class<? extends AbstractEntity> getEntityClass() {

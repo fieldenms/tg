@@ -24,7 +24,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.IDefaultConrollerProvider;
+import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
 import ua.com.fielden.platform.persistence.DdlGenerator;
 
 
@@ -42,7 +42,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
     public final static IDomainDrivenTestCaseConfiguration config = createConfig();
 
-    private final IDefaultConrollerProvider provider = config.getInstance(IDefaultConrollerProvider.class);
+    private final IDefaultControllerProvider provider = config.getInstance(IDefaultControllerProvider.class);
     private final EntityFactory factory = config.getEntityFactory();
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 

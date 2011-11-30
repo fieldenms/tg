@@ -84,7 +84,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 	final DomainTreeEditorView<T> domainTreeEditorView = new DomainTreeEditorView<T>(getTreeEditorModel());
 
 	//Creates action panel with build and cancel actions.
-	final JPanel actionPanel = new JPanel(new MigLayout("fill, insets 0", "push[fill, :100:][fill, :100:]", "[c]"));
+	final JPanel actionPanel = new JPanel(new MigLayout("fill, insets 10", "push[fill, :100:][fill, :100:]", "[c]"));
 	actionPanel.add(new JButton(getBuildAction()));
 	actionPanel.add(new JButton(getCancelAction()));
 

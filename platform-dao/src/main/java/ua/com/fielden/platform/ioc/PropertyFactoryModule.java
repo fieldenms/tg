@@ -12,7 +12,7 @@ import ua.com.fielden.platform.dao.factory.DaoFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.DefaultConrollerProviderImpl;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.IDefaultConrollerProvider;
+import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.property.DaoMetaPropertyFactory;
 
@@ -53,7 +53,7 @@ public class PropertyFactoryModule extends TransactionalModule {
 	// bind DaoFactory, which is needed purely for MetaPropertyFactory
 	bind(DaoFactory.class).toInstance(daoFactory);
 	// bind provider for default entity controller
-	bind(IDefaultConrollerProvider.class).toInstance(defaultControllerProvider);
+	bind(IDefaultControllerProvider.class).toInstance(defaultControllerProvider);
 	// bind property factory
 	bind(IMetaPropertyFactory.class).to(DaoMetaPropertyFactory.class).in(Scopes.SINGLETON);
 

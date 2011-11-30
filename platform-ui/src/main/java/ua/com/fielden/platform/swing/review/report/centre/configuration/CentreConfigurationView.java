@@ -2,8 +2,10 @@ package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.review.report.centre.EntityCentre;
+import ua.com.fielden.platform.swing.review.report.centre.wizard.EntityCentreWizard;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
-import ua.com.fielden.platform.swing.view.BasePanel;
+import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardView;
 
 /**
  * The holder for centrre's wizard and view panels.
@@ -13,7 +15,7 @@ import ua.com.fielden.platform.swing.view.BasePanel;
  * @param <T>
  */
 //TODO parametrise AbstractConfigurationPanel.
-public class CentreConfigurationView<T extends AbstractEntity> extends AbstractConfigurationView {
+public class CentreConfigurationView<T extends AbstractEntity> extends AbstractConfigurationView<EntityCentre<T>, AbstractWizardView<T>> {
 
     private static final long serialVersionUID = -5187097528373828177L;
 
@@ -38,15 +40,13 @@ public class CentreConfigurationView<T extends AbstractEntity> extends AbstractC
     }
 
     @Override
-    protected BasePanel createConfigurableView() {
-	// TODO Auto-generated method stub
+    protected EntityCentre<T> createConfigurableView() {
+	//return new EntityCentre<T>(getModel().createEntityCentreModel(), progressLayer);
 	return null;
     }
 
     @Override
-    protected BasePanel createWizardView() {
-	// TODO Auto-generated method stub
-	return null;
+    protected AbstractWizardView<T> createWizardView() {
+	return new EntityCentreWizard<T>(getModel().createDomainTreeEditorModel(), getProgressLayer());
     }
-
 }

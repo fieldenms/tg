@@ -7,12 +7,12 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import com.google.inject.Injector;
 
 /**
- * Default implementation for {@link IDefaultConrollerProvider}, which utilises injector for creating controller instances.
+ * Default implementation for {@link IDefaultControllerProvider}, which utilises injector for creating controller instances.
  *
  * @author TG Team
  *
  */
-public class DefaultConrollerProviderImpl implements IDefaultConrollerProvider {
+public class DefaultConrollerProviderImpl implements IDefaultControllerProvider {
 
     private Injector injector;
 

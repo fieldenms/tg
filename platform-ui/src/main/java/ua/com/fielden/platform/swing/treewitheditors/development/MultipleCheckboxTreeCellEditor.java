@@ -1,0 +1,143 @@
+package ua.com.fielden.platform.swing.treewitheditors.development;
+
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.util.EventObject;
+
+import javax.swing.AbstractCellEditor;
+import javax.swing.JTree;
+import javax.swing.tree.TreeCellEditor;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+
+import ua.com.fielden.platform.domaintree.ITooltipProvider;
+import ua.com.fielden.platform.swing.treewitheditors.EntitiesTree;
+import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTreeCellRendererWithParameter;
+
+/**
+ * Class that provides basic functionality for editing {@link TreeNode} meta parameters.
+ * 
+ * @author TG Team
+ * 
+ */
+public class MultipleCheckboxTreeCellEditor extends AbstractCellEditor implements TreeCellEditor {
+
+    private static final long serialVersionUID = -6872693277320582798L;
+
+    private final MultipleCheckboxTree tree;
+    private final MultipleCheckboxTreeCellRenderer renderer;
+
+    /**
+     * Creates {@link MultipleCheckboxTreeCellEditor} and initiates it with {@link EntitiesTree}, {@link MultipleCheckboxTreeCellRendererWithParameter} and
+     * {@link ITooltipProvider} for editor.
+     * 
+     * @param tree
+     * @param renderer
+     * @param editorToolTipProvider
+     */
+    public MultipleCheckboxTreeCellEditor(final MultipleCheckboxTree tree, final MultipleCheckboxTreeCellRenderer renderer) {
+	this.tree = tree;
+	this.renderer = renderer;
+    }
+
+    @Override
+    public Object getCellEditorValue() {
+	final TreePath editedPath = tree.getEditingPath();
+	return editedPath.getLastPathComponent().toString();
+    }
+
+    @Override
+    public Component getTreeCellEditorComponent(final JTree tree, final Object value, final boolean isSelected, final boolean expanded, final boolean leaf, final int row) {
+	return renderer.getTreeCellRendererComponent(tree, value, true, expanded, leaf, row, true);
+    }
+
+    @Override
+    public boolean isCellEditable(final EventObject event) {
+
+	if (event == null) {
+	    for (int modelCounter = 0; modelCounter < tree.getCheckingModelCount(); modelCounter++) {
+		if (tree.getCheckingModel(modelCounter).isPathEnabled(tree.getSelectionPath())) {
+		    return true;
+		}
+	    }
+	}
+
+	if(event instanceof MouseEvent){
+	    final MouseEvent e = (MouseEvent) event;
+	    if (!e.isControlDown() && !e.isConsumed()) {
+		final int x = e.getX();
+		final int y = e.getY();
+		final int row = tree.getRowForLocation(x, y);
+		final Rectangle rect = tree.getRowBounds(row);
+		if (rect != null) {
+
+		    final TreePath path = tree.getPathForRow(row);
+
+		    final boolean isCriteriaEnable = tree.getCheckingModel(0).isPathEnabled(path);
+		    final boolean isResultantEnable = tree.getCheckingModel(1).isPathEnabled(path);
+
+		    final TreeNode value = (TreeNode)path.getLastPathComponent();
+		    final boolean selected = tree.isPathSelected(path);
+		    final boolean expanded = tree.isExpanded(path);
+		    final boolean leaf = value.isLeaf();
+
+		    final Component editingComponent =  renderer.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, true);
+		    final Dimension editorSize = editingComponent.getPreferredSize();
+		    editingComponent.setBounds(0, 0, editorSize.width, editorSize.height);
+		    editingComponent.doLayout();
+
+		    final int index = getCheckboxIndex(x - rect.x, y - rect.y);
+
+		    if (index == 0 && isCriteriaEnable) {
+			return true;
+		    }else if(index == 1 && isResultantEnable){
+			return true;
+		    }else{
+			return canEditPath(path);
+		    }
+
+		}
+	    }
+	}
+	return false;
+    }
+
+    /**
+     * Returns tree associated with this {@link MultipleCheckboxTreeCellEditor}.
+     * 
+     * @return
+     */
+
+    public MultipleCheckboxTree getTree() {
+	return tree;
+    }
+
+    /**
+     * Override this to provide specific logic that determines whether specified path can be edited or not.
+     * 
+     * @param path
+     * @return
+     */
+    protected boolean canEditPath(final TreePath path){
+	return false;
+    }
+
+    /**
+     * Returns the index of {@link ITreeCheckingModelComponent} that contains the point with specified x and y coordinates.
+     * 
+     * @param x
+     * @param y
+     * @return
+     */
+    private int getCheckboxIndex(final int x, final int y){
+	for (int componentCounter = 0; componentCounter < tree.getCheckingModelCount(); componentCounter++) {
+	    if (renderer.checkingComponents.get(componentCounter).getComponent().getBounds().contains(x, y)) {
+		return componentCounter;
+	    }
+	}
+	return -1;
+    }
+
+}

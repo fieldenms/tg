@@ -44,7 +44,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentation {
-    private static final long serialVersionUID = -7380151828208534611L;
 
     private final EnhancementLinkedRootsSet rootTypes;
     private final EnhancementSet excludedProperties;
@@ -526,7 +525,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      *
      */
     protected static abstract class AbstractTickRepresentation implements ITickRepresentation {
-	private static final long serialVersionUID = 8833115857310712602L;
 	private final EnhancementSet disabledProperties;
 	private final Set<Pair<Class<?>, String>> checkedProperties;
 	private final transient IDomainTreeRepresentation dtr;
