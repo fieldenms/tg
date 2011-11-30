@@ -291,6 +291,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     private transient IMetaPropertyFactory metaPropertyFactory;
 
     /**
+     * Preferred property should be used by custom logic to set what property is from certain perspective is preferred.
+     * The original requirement for this was due to custom logic driven determination as to what property should be focused by default on an entity master.
+     * So, depending where in the business process an entity was instantiated would determine what of its properties should be facused by default.
+     */
+    private transient String preferredProperty;
+
+    /**
      * This is a default constructor, which is required for reflective construction.
      */
     @SuppressWarnings("unchecked")
@@ -1107,5 +1114,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     protected <COPY extends AbstractEntity> COPY createCopyInstance(final Class<COPY> type) {
 	return getEntityFactory().newEntity(type, getId());
+    }
+
+    public String getPreferredProperty() {
+        return preferredProperty;
+    }
+
+    public void setPreferredProperty(final String preferredProperty) {
+        this.preferredProperty = preferredProperty;
     }
 }
