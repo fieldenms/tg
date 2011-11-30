@@ -261,7 +261,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		// the original order of "included properties" will be used for "checked properties" at first
 		for (final String includedProperty : includedProps) {
 		    if (!isDummyMarker(includedProperty) ) {
-			if (isCheckedNaturally(rootPossiblyEnhanced, includedProperty)) {
+			if (isCheckedNaturally(rootPossiblyEnhanced, reflectionProperty(includedProperty))) {
 			    checkedProps.add(includedProperty);
 			}
 		    }
