@@ -134,7 +134,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 	this.propertyAnnotationType = propertyAnnotationType;
 	this.calculated = calculated;
 	this.upperCase = upperCase;
-	this.dependentPropertyNames = dependentPropertyNames != null ? Arrays.copyOf(dependentPropertyNames, dependentPropertyNames.length) : null;
+	this.dependentPropertyNames = dependentPropertyNames != null ? Arrays.copyOf(dependentPropertyNames, dependentPropertyNames.length) : new String[]{};
     }
 
     /**
