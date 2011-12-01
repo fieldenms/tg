@@ -7,7 +7,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationPanel;
 
-public class SingleAnalysisEntityCentre<T extends AbstractEntity> extends EntityCentre<T> {
+public class SingleAnalysisEntityCentre<T extends AbstractEntity> extends AbstractEntityCentre<T> {
 
     private static final long serialVersionUID = -4025190200012481751L;
 

@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
+import ua.com.fielden.platform.swing.review.report.centre.EntityCentreModel;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
@@ -86,10 +87,13 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 
 
 
-    //    public EntityCentreModel<T> createEntityCentreModel() {
-    //	return null;
-    //	return new EntityCentreModel<T>(criteriaGenerator.generateCentreQueryCriteria(entityType, cdtm));
-    //    }
+    public EntityCentreModel<T> createEntityCentreModel() {
+	final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(getEntityType(), getName());
+	if(cdtm == null){
+	    throw new IllegalStateException("The centre manager is not specified");
+	}
+	return new EntityCentreModel<T>(criteriaGenerator.generateCentreQueryCriteria(entityType, cdtm));
+    }
 
     private EntityFactory getEntityFactory() {
 	return entityFactory;

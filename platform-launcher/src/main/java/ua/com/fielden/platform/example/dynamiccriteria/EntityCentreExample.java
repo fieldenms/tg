@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleECEEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationModel;
-import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationView;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.SingleAnalysisEntityCentreConfigurationView;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
@@ -63,7 +63,7 @@ public class EntityCentreExample extends AbstractUiApplication {
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
 	final CentreConfigurationModel<SimpleECEEntity> model = new CentreConfigurationModel<SimpleECEEntity>(SimpleECEEntity.class, null, gdtm, entityFactory, criteriaGenerator);
 	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "");
-	final CentreConfigurationView<SimpleECEEntity> centre = new CentreConfigurationView<SimpleECEEntity>(model, progressLayer);
+	final SingleAnalysisEntityCentreConfigurationView<SimpleECEEntity> centre = new SingleAnalysisEntityCentreConfigurationView<SimpleECEEntity>(model, progressLayer);
 	progressLayer.setView(centre);
 	centre.open();
 	centre.setPreferredSize(new Dimension(640,800));
