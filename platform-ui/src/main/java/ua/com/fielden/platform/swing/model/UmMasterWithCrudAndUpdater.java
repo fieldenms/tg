@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.model;
 
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
@@ -59,8 +60,12 @@ public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity, C ext
 	case EDIT_PRE_ACTION:
 	    updateTitle(title + ": " + getManagedEntity().getKey() + " -- " + getManagedEntity().getDesc() + " (editing)");
 	    break;
-	case NEW_POST_ACTION:
+	case NEW_POST_ACTION: // falls through to EDIT_POST_ACTION to focus the preferred property
 	    updateTitle(title + " (new)");
+	case EDIT_POST_ACTION:
+	    if (!StringUtils.isEmpty(getEntity().getPreferredProperty())) {
+		getEditors().get(getEntity().getPreferredProperty()).getEditor().requestFocusInWindow();
+	    }
 	    break;
 	case REFRESH_POST_ACTION:
 	    if (getManagedEntity().isPersisted()) {
