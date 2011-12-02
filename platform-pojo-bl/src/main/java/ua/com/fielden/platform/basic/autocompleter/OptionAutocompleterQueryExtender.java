@@ -46,11 +46,13 @@ public class OptionAutocompleterQueryExtender<T extends AbstractEntity, DAO exte
 	    @SuppressWarnings("rawtypes")
 	    final AbstractEntity ent = (AbstractEntity) entity;
 	    final MetaProperty searchProp = ent.getProperty(propertyName);
-	    for (final String dependentProperty : ent.getProperty(propertyName).getDependentPropertyNames()) {
-		if (Finder.isPropertyPresent(searchProp.getType(), dependentProperty)) {
-		    final Object value = ent.get(dependentProperty);
-		    compoundStatement = compoundStatement == null ? whereStatement.prop(dependentProperty).eq().val(value)
-			    : compoundStatement.and().prop(dependentProperty).eq().val(value);
+	    if (ent.getProperty(propertyName) != null) {
+		for (final String dependentProperty : ent.getProperty(propertyName).getDependentPropertyNames()) {
+		    if (Finder.isPropertyPresent(searchProp.getType(), dependentProperty)) {
+			final Object value = ent.get(dependentProperty);
+			compoundStatement = compoundStatement == null ? whereStatement.prop(dependentProperty).eq().val(value)
+				: compoundStatement.and().prop(dependentProperty).eq().val(value);
+		    }
 		}
 	    }
 	}
@@ -97,16 +99,12 @@ public class OptionAutocompleterQueryExtender<T extends AbstractEntity, DAO exte
 	throw new UnsupportedOperationException("The exporting in to the external file is unsupported yet.");
     }
 
-
-
     public IBindingEntity getEntity() {
-        return entity;
+	return entity;
     }
 
-
-
     public void setEntity(final IBindingEntity entity) {
-        this.entity = entity;
+	this.entity = entity;
     }
 
 }
