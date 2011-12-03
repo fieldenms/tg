@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.equery.equery.select;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -28,11 +29,13 @@ import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.EntityWithByteArray;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.equery.interfaces.IQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.entity.BaseEntity;
 import ua.com.fielden.platform.serialisation.entity.EntityWithPolymorphicProperty;
+import ua.com.fielden.platform.serialisation.entity.EntityWithQueryProperty;
 import ua.com.fielden.platform.serialisation.entity.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.entity.SubBaseEntity2;
 import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
@@ -54,8 +57,8 @@ public class EntitySerialisationWithKryoTest {
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private final TgKryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class));
-    private final TgKryo kryoReader = new TgKryo(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class));
+    private final TgKryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class));
+    private final TgKryo kryoReader = new TgKryo(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class));
     private Entity entity;
     private Entity entityForResult;
     private Entity entForProp;
@@ -179,6 +182,24 @@ public class EntitySerialisationWithKryoTest {
 
 	// test non-collectional and non-AE-descendant property serialisation
 	assertEquals("Property of type " + ClassWithMap.class.getName() + " was not serialised correctly.", entity.getClassWithMapProp().getMapProp(), restoredEntity.getClassWithMapProp().getMapProp());
+    }
+
+    @Test
+    public void serialisation_of_entity_with_query_property() {
+	final EntityWithQueryProperty entity = factory.newEntity(EntityWithQueryProperty.class, 1L, "key", "description");
+	final IQueryModel<BaseEntity> model = select(BaseEntity.class).model();
+	entity.setQuery(model);
+
+	final ByteBuffer writeBuffer = ByteBuffer.allocate(10485760);
+	kryoWriter.writeObject(writeBuffer, entity);
+	writeBuffer.flip();
+	final byte[] data = new byte[writeBuffer.limit()];
+	writeBuffer.get(data);
+	writeBuffer.clear();
+
+	final ByteBuffer readBuffer = ByteBuffer.wrap(data);
+	final EntityWithQueryProperty restoredEntity = kryoReader.readObject(readBuffer, EntityWithQueryProperty.class);
+	assertNotNull(restoredEntity.getQuery());
     }
 
     @Test
