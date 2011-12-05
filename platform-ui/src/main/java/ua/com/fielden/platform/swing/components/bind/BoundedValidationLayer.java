@@ -87,9 +87,16 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 	this(component, originalToolTipText, true);
     }
 
-    public JComponent getIncapsulatedComponent() {
-	return (this.getView() instanceof JXLayer) ? ((JXLayer<?>) this.getView()).getView() : this.getView();
+    private static <M extends JComponent> JComponent getIncapsulatedComponent(final JXLayer<M> layer) {
+	return (layer.getView() instanceof JXLayer) ? getIncapsulatedComponent((JXLayer<?>) layer.getView()) : layer.getView();
     }
+
+    public JComponent getIncapsulatedComponent() {
+	return getIncapsulatedComponent(this);
+    }
+//    public JComponent getIncapsulatedComponent() {
+//	return (this.getView() instanceof JXLayer) ? ((JXLayer<?>) this.getView()).getView() : this.getView();
+//    }
 
     @Override
     public BoundedValidationUi getUI() {
