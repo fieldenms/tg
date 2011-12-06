@@ -19,12 +19,12 @@ import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.rao.RestClientUtil;
 
 /**
- * This {@link IReportDao} implementor sends request to server in order to obtain reports.
+ * This {@link IReport} implementor sends request to server in order to obtain reports.
  *
  * @author TG Team
  *
  */
-public class ReportRao implements IReportDao {
+public class ReportRao implements IReport {
 
     private final RestClientUtil restUtil;
 

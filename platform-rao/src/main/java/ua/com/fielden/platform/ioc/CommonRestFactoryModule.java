@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.ioc;
 
-import ua.com.fielden.platform.file_reports.IReportDao;
+import ua.com.fielden.platform.file_reports.IReport;
 import ua.com.fielden.platform.file_reports.ReportRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
 
@@ -20,7 +20,7 @@ public class CommonRestFactoryModule extends RestPropertyFactoryModule {
     protected void configure() {
 	super.configure();
 
-	bind(IReportDao.class).toInstance(new ReportRao(restUtil));
+	bind(IReport.class).toInstance(new ReportRao(restUtil));
     }
 
 }

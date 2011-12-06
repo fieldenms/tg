@@ -16,12 +16,12 @@ import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import com.google.inject.Inject;
 
 /**
- * Implementation of {@link IReportDao} interface, which uses a set of registered {@link IReportFactory}s associated with report type to provide reports.
+ * Implementation of {@link IReport} interface, which uses a set of registered {@link IReportFactory}s associated with report type to provide reports.
  *
  * @author TG Team
  *
  */
-public class ReportDao implements IReportDao {
+public class ReportDao implements IReport {
 
     private String username;
 

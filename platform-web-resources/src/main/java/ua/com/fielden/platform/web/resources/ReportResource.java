@@ -16,7 +16,7 @@ import org.restlet.resource.Variant;
 
 import ua.com.fielden.platform.equery.EntityAggregates;
 import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
-import ua.com.fielden.platform.file_reports.IReportDao;
+import ua.com.fielden.platform.file_reports.IReport;
 
 /**
  * Resource for handling report requests.
@@ -27,10 +27,10 @@ import ua.com.fielden.platform.file_reports.IReportDao;
 public class ReportResource extends Resource {
 
     private final RestServerUtil restUtil;
-    private final IReportDao dao;
+    private final IReport dao;
     private final String username;
 
-    public ReportResource(final IReportDao dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public ReportResource(final IReport dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;

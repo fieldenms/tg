@@ -11,7 +11,7 @@ import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
  * @author TG Team
  *
  */
-public interface IReportDao {
+public interface IReport {
 
     /**
      * This method should return compressed report of <code>reportType</code> filled with data obtained from specified <code>query</code>. <br>
