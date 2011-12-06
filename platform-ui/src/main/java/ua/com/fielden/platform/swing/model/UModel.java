@@ -3,6 +3,7 @@ package ua.com.fielden.platform.swing.model;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.Action;
@@ -97,7 +98,7 @@ public abstract class UModel<M extends AbstractEntity, D extends AbstractEntity,
     private final C controller;
     private final ILightweightPropertyBinder<D> propertyBinder;
     private UmState state = UmState.VIEW;
-    private Map<String, IPropertyEditor> editors;
+    private Map<String, IPropertyEditor> editors = new HashMap<String, IPropertyEditor>();
 
     private final Action newAction;
     private final Action editAction;
