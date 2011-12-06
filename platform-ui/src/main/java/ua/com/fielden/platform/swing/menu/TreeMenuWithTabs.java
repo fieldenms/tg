@@ -58,7 +58,8 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
 
     // private final JPopupMenu popupMenu;
 
-    private final Action activateMenuItemAction, closeTabAction;
+    private final ActionWithPostAction activateMenuItemAction;
+    private final Action closeTabAction;
 
     private final String DEFAULT_INFO = "<html>"
 	    + "<h2>Information</h2>"
@@ -408,12 +409,12 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
      *
      * @return
      */
-    private Action createActivateItemAction() {
-	return new AbstractAction() {
+    private ActionWithPostAction createActivateItemAction() {
+	return new ActionWithPostAction() {
 	    private static final long serialVersionUID = 1L;
 
 	    @Override
-	    public void actionPerformed(final ActionEvent e) {
+	    public void action(final ActionEvent e) {
 		final TreeMenuItem<?> item = getSelectedItem();
 		if (item != null && !item.isGroupItem()) {
 		    final int tabIndex = menuItemTab(item);
@@ -515,6 +516,13 @@ public class TreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMenu<V> {
      */
     public void activateFirstItem() {
 	setSelectionRow(0);
+	activateMenuItemAction.setPostAction(null);
+	activateMenuItemAction.actionPerformed(null);
+    }
+
+    public void activateFirstItem(final Action followedByAction) {
+	setSelectionRow(0);
+	activateMenuItemAction.setPostAction(followedByAction);
 	activateMenuItemAction.actionPerformed(null);
     }
 
