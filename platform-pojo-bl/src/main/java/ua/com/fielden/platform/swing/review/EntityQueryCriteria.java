@@ -62,7 +62,7 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity, DAO extends 
     /**
      * Constructs {@link EntityQueryCriteria} instance with specified {@link IEntityAggregatesDao} and {@link IValueMatcherFactory}.
      * Needed mostly for instantiating through injector.
-     * 
+     *
      * @param entityAggregatesDao
      * @param valueMatcherFactory
      */
@@ -87,7 +87,7 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity, DAO extends 
 
     protected abstract fetch<T> createFetchModel();
 
-    protected Class<?> getQueryResultType() {
+    public Class<?> getQueryResultType() {
 	return null;
     }
 

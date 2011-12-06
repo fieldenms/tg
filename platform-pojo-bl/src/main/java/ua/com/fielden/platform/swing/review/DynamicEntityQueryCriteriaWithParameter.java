@@ -46,7 +46,7 @@ public class DynamicEntityQueryCriteriaWithParameter<T extends AbstractEntity, D
     }
 
     @Override
-    protected ICompleted createQuery() {
+    public ICompleted createQuery() {
 	ICompleted completed = DynamicQueryBuilder.buildConditions(createJoinCondition(), createQueryProperties(), getAlias());
 	for (final Pair<IDistributedProperty, Object> entry : parameters) {
 	    final IWhere where = createWhereCondition(completed);

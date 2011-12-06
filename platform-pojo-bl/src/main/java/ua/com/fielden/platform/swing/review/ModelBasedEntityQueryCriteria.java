@@ -63,7 +63,7 @@ public class ModelBasedEntityQueryCriteria<T extends AbstractEntity, DAO extends
     }
 
     @Override
-    protected ICompleted createQuery() {
+    public ICompleted createQuery() {
 	return queryModel;
     }
 

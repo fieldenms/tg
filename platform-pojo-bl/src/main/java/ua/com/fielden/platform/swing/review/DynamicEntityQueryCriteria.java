@@ -316,7 +316,7 @@ public class DynamicEntityQueryCriteria<T extends AbstractEntity, DAO extends IE
     }
 
     @Override
-    protected ICompleted createQuery() {
+    public ICompleted createQuery() {
 	if (checkForUnions()) {
 	    throw new IllegalStateException("Criteira has union properperties. These properties arent't supported yet.");
 	}
