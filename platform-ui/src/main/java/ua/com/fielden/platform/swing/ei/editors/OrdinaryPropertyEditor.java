@@ -102,7 +102,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 
     @SuppressWarnings("unchecked")
     private JComponent createEditor(final AbstractEntity<?> entity, final String bindingPropertyName, final Class type, final String title, final String desc, final boolean upperCase, final Long defaultTimePortionMillis) {
-	JComponent editor = null;
+	final JComponent editor;
 	if (Integer.class == type || int.class == type) {
 	    // final BoundedValidationLayer<JFormattedTextField> component = ComponentFactory.createIntegerTextField(entity, propertyName, true, desc);
 	    final BoundedValidationLayer<JSpinner> component = ComponentFactory.createNumberSpinner(entity, bindingPropertyName, true, desc, 1);
@@ -187,7 +187,8 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 	    radioEditor = radioPanel;
 	    editor = radioPanel;
 	} else {
-	    throw new RuntimeException("Could not determined an editor for property " + bindingPropertyName + " of type " + type + ".");
+	    logger.warn("Could not determined an editor for property " + bindingPropertyName + " of type " + type + ".");
+	    editor = null;
 	}
 
 	return editor;
