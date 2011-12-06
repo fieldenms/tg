@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.components;
 
 import java.awt.Component;
+import java.awt.event.MouseListener;
 
 import javax.swing.AbstractButton;
 import javax.swing.JSpinner;
@@ -22,6 +23,19 @@ public class EditableSpinner extends JSpinner {
     public EditableSpinner(final SpinnerModel model, final Number actualValue) {
 	setModel(new WrapperModel(model));
 	this.actualValue = actualValue;
+    }
+
+    /** Overridden to provide correct mouse listener assignment not only to inner text editor, but also to arrow buttons etc. */
+    @Override
+    public synchronized void addMouseListener(final MouseListener listener) {
+	// get the actual text field and assign listener:
+	if (getEditor() instanceof DefaultEditor) {
+	    ((DefaultEditor) getEditor()).getTextField().addMouseListener(listener);
+	}
+	// get actual arrow buttons and assign listener:
+	for (final Component c : getComponents()) {
+	    c.addMouseListener(listener);
+	}
     }
 
     public void resetSpinnerModelValue(){

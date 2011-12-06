@@ -149,7 +149,15 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 		component.getView().getDocument().addDocumentListener(DummyBuilder.createInputLimiter(length));
 		rebindableEditor = component;
 		radioEditor = null;
-		editor = new JScrollPane(rebindableEditor);
+		final JScrollPane scrollPane = new JScrollPane(rebindableEditor) {
+		    private static final long serialVersionUID = -5987466954900293008L;
+
+		    @Override
+		    public boolean requestFocusInWindow() {
+		        return getViewport().getView().requestFocusInWindow(); // should be overridden to provide automatic refocusing from scroll pane to its wrapped component
+		    }
+		};
+		editor = scrollPane;
 	    } else {
 		boolean isSecrete = false;
 		try {

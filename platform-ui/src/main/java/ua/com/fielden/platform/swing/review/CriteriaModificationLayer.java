@@ -22,8 +22,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
-import javax.swing.JSpinner;
-import javax.swing.JSpinner.DefaultEditor;
 
 import org.apache.commons.lang.StringUtils;
 import org.jdesktop.jxlayer.JXLayer;
@@ -413,19 +411,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 		}
 	    });
 
-	    if (bvl.getIncapsulatedComponent() instanceof JSpinner) {
-		final JSpinner spinner = (JSpinner) bvl.getIncapsulatedComponent();
-		// get the actual text field and assign popup shower:
-		if (spinner.getEditor() instanceof DefaultEditor) {
-		    ((DefaultEditor) spinner.getEditor()).getTextField().addMouseListener(popupShower);
-		}
-		// get actual arrow buttons and assign popup shower:
-		for (final Component c : spinner.getComponents()) {
-		    c.addMouseListener(popupShower);
-		}
-	    } else {
-		bvl.getIncapsulatedComponent().addMouseListener(popupShower);
-	    }
+	    bvl.addIncapsulatedMouseListener(popupShower);
 	}
     }
 
@@ -813,21 +799,9 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	    final JComponent component = layer.getView();
 	    paintColour(g2, backgroundColor, component);
 
-	    // JSpinner is a special case of incapsulated component, so it should be handled specially...
-	    final JComponent incapsulatedComponent;
-	    if (leftValidationLayer.getIncapsulatedComponent() instanceof JSpinner) {
-		final JSpinner spinner = (JSpinner) leftValidationLayer.getIncapsulatedComponent();
-		if (spinner.getEditor() instanceof DefaultEditor) {
-		    incapsulatedComponent = ((DefaultEditor) spinner.getEditor()).getTextField();
-		} else {
-		    incapsulatedComponent = leftValidationLayer.getIncapsulatedComponent();
-		}
-	    } else {
-		incapsulatedComponent = leftValidationLayer.getIncapsulatedComponent();
-	    }
-
+	    final int leftInset = leftValidationLayer.getIncapsulatedInsets().left;
 	    // define how many characters in the caption can be drawn
-	    final int actualInsets = incapsulatedComponent.getInsets().left - component.getInsets().left;
+	    final int actualInsets = leftInset - component.getInsets().left;
 
 //	    // define how many characters in the caption can be drawn
 //	    final FontMetrics fm = g2.getFontMetrics();
@@ -844,7 +818,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	    g2.setColor(new Color(0f, 0f, 0f, 1.0f));
 	    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 
-	    final double xPos = incapsulatedComponent.getInsets().left;
+	    final double xPos = leftInset;
 	    final Rectangle2D textBounds = g2.getFontMetrics().getStringBounds(textToDisplay, g2);
 	    final int h = component.getSize().height;
 	    final double yPos = (h - textBounds.getHeight()) / 2. + g2.getFontMetrics().getAscent();

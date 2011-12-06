@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.swing.model;
 
-import javax.swing.JComponent;
-import javax.swing.JScrollPane;
-
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -11,9 +8,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.ei.PropertyBinderWithDynamicAutocompleter;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 
 /**
@@ -69,7 +64,7 @@ public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity, C ext
 	    updateTitle(title + " (new)");
 	case EDIT_POST_ACTION:
 	    if (!StringUtils.isEmpty(getEntity().getPreferredProperty())) {
-		requestFocusInEditor(getEditors().get(getEntity().getPreferredProperty()));
+		getEditors().get(getEntity().getPreferredProperty()).getEditor().requestFocusInWindow();
 	    }
 	    break;
 	case REFRESH_POST_ACTION:
@@ -84,19 +79,6 @@ public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity, C ext
 	    updateTitle(title + " (could not save)");
 	    break;
 	}
-    }
-
-    /**
-     * Requests a focus for a specified <code>propertyEditor</code> with respect of wrapped scroll panes, validation layers, etc.
-     * TODO Perhaps this logic can be resolved more elegantly (without asking what type of editor is behind <code>propertyEditor</code>).
-     *
-     * @param propertyEditor
-     */
-    protected void requestFocusInEditor(final IPropertyEditor propertyEditor) {
-	final JComponent component = propertyEditor.getEditor();
-	final JComponent component2 = (component instanceof JScrollPane) ? (JComponent) ((JScrollPane) component).getViewport().getView() : component;
-	final JComponent component3 = (component2 instanceof BoundedValidationLayer) ? (JComponent) ((BoundedValidationLayer) component2).getIncapsulatedComponent() : component2;
-	component3.requestFocusInWindow();
     }
 
     public FrameTitleUpdater getTitleUpdater() {

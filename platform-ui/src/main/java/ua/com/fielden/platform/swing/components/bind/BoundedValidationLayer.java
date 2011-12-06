@@ -6,6 +6,7 @@ import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.MouseListener;
 import java.awt.geom.Rectangle2D;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -14,6 +15,8 @@ import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JSpinner;
+import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.JTextField;
 import javax.swing.text.JTextComponent;
 
@@ -87,16 +90,48 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 	this(component, originalToolTipText, true);
     }
 
+    /**
+     *
+     * Gets the insets of inner incapsulated component. In case of spinner incapsulated component,
+     * provides left inset as for inner text component in case when the editor of spinner is a {@link DefaultEditor} instance.
+     *
+     * @return
+     */
+    public Insets getIncapsulatedInsets() {
+        if (getIncapsulatedComponent() instanceof JSpinner) {
+            final JSpinner spinner = ((JSpinner) getIncapsulatedComponent());
+            final Insets spinnerInsets = spinner.getInsets();
+            if (spinner.getEditor() instanceof DefaultEditor) {
+        	return new Insets(spinnerInsets.top, ((DefaultEditor) spinner.getEditor()).getTextField().getInsets().left, spinnerInsets.bottom, spinnerInsets.right);
+            } else {
+        	return spinnerInsets;
+            }
+        } else {
+            return getIncapsulatedComponent().getInsets();
+        }
+    }
+
+    /**
+     * Adds a mouse listener to inner incapsulated component.
+     *
+     * @param listener
+     */
+    public synchronized void addIncapsulatedMouseListener(final MouseListener listener) {
+	getIncapsulatedComponent().addMouseListener(listener);
+    }
+
     private static <M extends JComponent> JComponent getIncapsulatedComponent(final JXLayer<M> layer) {
 	return (layer.getView() instanceof JXLayer) ? getIncapsulatedComponent((JXLayer<?>) layer.getView()) : layer.getView();
     }
 
-    public JComponent getIncapsulatedComponent() {
+    private JComponent getIncapsulatedComponent() {
 	return getIncapsulatedComponent(this);
     }
-//    public JComponent getIncapsulatedComponent() {
-//	return (this.getView() instanceof JXLayer) ? ((JXLayer<?>) this.getView()).getView() : this.getView();
-//    }
+
+    @Override
+    public boolean requestFocusInWindow() {
+        return getIncapsulatedComponent().requestFocusInWindow(); // should be overridden to provide automatic refocusing from validation layer to its wrapped component
+    }
 
     @Override
     public BoundedValidationUi getUI() {
@@ -105,7 +140,7 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 
     /**
      * Sets a colour to be painted on top of bounded validation layer.
-     * 
+     *
      * @param colour
      */
     public void setColour(final Color colour){
