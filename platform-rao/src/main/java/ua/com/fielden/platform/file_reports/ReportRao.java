@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import org.restlet.data.Method;
@@ -32,11 +33,12 @@ public class ReportRao implements IReportDao {
     }
 
     @Override
-    public byte[] getReport(final String reportName, final IQueryOrderedModel<EntityAggregates> query) throws IOException {
+    public byte[] getReport(final String reportName, final IQueryOrderedModel<EntityAggregates> query, final Map<String, Object> params) throws IOException {
 	// create request envelope containing Entity Query
 	final List<Object> requestContent = new ArrayList<Object>();
 	requestContent.add(reportName);
 	requestContent.add(query);
+	requestContent.add(params);
 	final Representation envelope = restUtil.represent(requestContent);
 	// send request
 	final Response response = restUtil.send(new Request(Method.POST, restUtil.getReportUri(), envelope));

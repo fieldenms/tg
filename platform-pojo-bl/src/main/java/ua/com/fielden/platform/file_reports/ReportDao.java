@@ -47,7 +47,7 @@ public class ReportDao implements IReportDao {
     }
 
     @Override
-    public byte[] getReport(final String reportType, final IQueryOrderedModel<EntityAggregates> query) throws Exception {
+    public byte[] getReport(final String reportType, final IQueryOrderedModel<EntityAggregates> query, final Map<String, Object> params) throws Exception {
 	final IReportFactory reportFactory = reportFactories.get(reportType);
 	if (reportFactory == null) {
 	    return null;
@@ -55,7 +55,7 @@ public class ReportDao implements IReportDao {
 	    // zipping pdf report
 	    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 	    final GZipOutputStreamEx zipperStream = new GZipOutputStreamEx(outputStream, Deflater.BEST_COMPRESSION);
-	    final byte[] pdfData = reportFactory.createReport(query, aggregatesDao);
+	    final byte[] pdfData = reportFactory.createReport(query, aggregatesDao, params);
 	    zipperStream.write(pdfData);
 	    zipperStream.close();
 

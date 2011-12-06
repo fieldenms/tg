@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.file_reports;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.equery.EntityAggregates;
 import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 
@@ -21,7 +23,7 @@ public interface IReportDao {
      * @return
      * @throws Exception
      */
-    byte[] getReport(String reportType, IQueryOrderedModel<EntityAggregates> query) throws Exception;
+    byte[] getReport(String reportType, IQueryOrderedModel<EntityAggregates> query, final Map<String, Object> params) throws Exception;
 
     /**
      * Username should be provided for every DAO instance in order to support data filtering and auditing.

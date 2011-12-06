@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Map;
 
 import org.restlet.Context;
 import org.restlet.data.MediaType;
@@ -61,8 +62,9 @@ public class ReportResource extends Resource {
 	    final List<?> list = restUtil.restoreList(envelope);
 	    final String reportName = (String) list.get(0);
 	    final IQueryOrderedModel<EntityAggregates> query = (IQueryOrderedModel<EntityAggregates>) list.get(1);
+	    final Map<String, Object> params = (Map<String, Object>) list.get(2);
 
-	    getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(dao.getReport(reportName, query)), MediaType.APPLICATION_OCTET_STREAM));
+	    getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(dao.getReport(reportName, query, params)), MediaType.APPLICATION_OCTET_STREAM));
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
 	    getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));

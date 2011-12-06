@@ -71,6 +71,12 @@
 			<version>3.1.1</version>
 		</dependency>
 		<dependency>
+      		<groupId>jasperreports</groupId>
+      		<artifactId>jasperreports</artifactId>
+      		<version>3.7.1</version>
+      		<scope>compile</scope>
+    	</dependency>
+		<dependency>
 			<groupId>antlr</groupId>
 			<artifactId>antlr3-runtime</artifactId>
 			<version>3.1.1</version>
