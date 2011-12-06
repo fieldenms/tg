@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.equery.equery.select;
-
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -54,6 +52,8 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import static ua.com.fielden.platform.equery.equery.select;
 
 /**
  * This class contains the Hibernate driven implementation of getting results from the provided IQueryOrderedModel.
@@ -133,14 +133,21 @@ class Fetcher<E extends AbstractEntity> {
 	    }
 	}
 
+	final List<String> params = Arrays.asList(q.getNamedParameters());
+
 	for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {
 	    logger.info("about to set param: name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
-	    if (paramEntry.getValue() instanceof Collection) {
-		q.setParameterList(paramEntry.getKey(), (Collection) paramEntry.getValue());
+
+	    if (params.contains(paramEntry.getKey())) {
+		    if (paramEntry.getValue() instanceof Collection) {
+			q.setParameterList(paramEntry.getKey(), (Collection) paramEntry.getValue());
+		    } else {
+			q.setParameter(paramEntry.getKey(), paramEntry.getValue());
+		    }
+		    logger.debug("setting param: name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
 	    } else {
-		q.setParameter(paramEntry.getKey(), paramEntry.getValue());
+		logger.info("skipping not-existing param with name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
 	    }
-	    logger.debug("setting param: name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
 	}
 
 	return q;
