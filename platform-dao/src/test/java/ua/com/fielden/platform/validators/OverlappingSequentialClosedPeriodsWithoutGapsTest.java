@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.validators;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -99,6 +102,40 @@ public class OverlappingSequentialClosedPeriodsWithoutGapsTest extends AbstractD
 
 	ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 12:00:00")).setFinishDate(date("2011-11-01 14:00:00")).setIncident("001");
 	assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person", "incident"));
+    }
+
+    @Test
+    public void should_have_found_overlapping_timesheet_when_overlapping_with_several_matching_properties() {
+	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 12:30:00")).setFinishDate(date("2011-11-01 14:00:00"));
+	final TgTimesheet offendedTs = Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person");
+	assertNotNull(offendedTs);
+	assertEquals("Incorrect offended timesheet.", "USER1", offendedTs.getPerson());
+	assertEquals("Incorrect offended timesheet.", date("2011-11-01 12:00:00"), offendedTs.getStartDate());
+    }
+
+    @Test
+    public void should_have_found_overlapping_timesheet_when_overlapping_last_existing() {
+	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 14:30:00"));
+	final TgTimesheet offendedTs = Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person");
+	assertNotNull(offendedTs);
+	assertEquals("Incorrect offended timesheet.", "USER1", offendedTs.getPerson());
+	assertEquals("Incorrect offended timesheet.", date("2011-11-01 13:00:00"), offendedTs.getStartDate());
+    }
+
+    @Test
+    public void should_found_overlapping_timesheet_when_overlapping_with_the_first_existing_as_result_of_open_end() {
+	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 11:00:00"));
+	final TgTimesheet offendedTs = Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person");
+	assertNotNull(offendedTs);
+	assertEquals("Incorrect offended timesheet.", "USER1", offendedTs.getPerson());
+	assertEquals("Incorrect offended timesheet.", date("2011-11-01 12:00:00"), offendedTs.getStartDate());
+    }
+
+    @Test
+    public void should_not_found_overlapping_timesheets() {
+	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 11:00:00")).setFinishDate(date("2011-11-01 11:55:00"));
+	final TgTimesheet offendedTs = Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person");
+	assertNull(offendedTs);
     }
 
     @Override

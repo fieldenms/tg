@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.validators;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -49,6 +51,34 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
 	ts.setFinishDate(date("2011-11-01 15:30:00"));
 	assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
+
+    @Test
+    public void should_have_found_overlapping_timesheet_when_overlapping_with_open_ended_one() {
+	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 16:30:00")).setFinishDate(date("2011-11-01 19:00:00"));
+	final TgTimesheet offendedTs = Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person");
+	assertNotNull(offendedTs);
+	assertEquals("Incorrect offended timesheet.", "USER1", offendedTs.getPerson());
+	assertEquals("Incorrect offended timesheet.", date("2011-11-01 15:00:00"), offendedTs.getStartDate());
+    }
+
+    @Test
+    public void should_have_found_overlapping_timesheet_when_itself_is_open_ended_and_overlapping_with_open_ended_too() {
+	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 16:30:00"));
+	final TgTimesheet offendedTs = Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person");
+	assertNotNull(offendedTs);
+	assertEquals("Incorrect offended timesheet.", "USER1", offendedTs.getPerson());
+	assertEquals("Incorrect offended timesheet.", date("2011-11-01 15:00:00"), offendedTs.getStartDate());
+    }
+
+    @Test
+    public void should_have_found_overlapping_timesheet_when_itself_is_open_ended_and_starts_without_overlaps_and_overlapping_with_open_ended_too() {
+	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 14:30:00"));
+	final TgTimesheet offendedTs = Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person");
+	assertNotNull(offendedTs);
+	assertEquals("Incorrect offended timesheet.", "USER1", offendedTs.getPerson());
+	assertEquals("Incorrect offended timesheet.", date("2011-11-01 15:00:00"), offendedTs.getStartDate());
+    }
+
     @Override
     protected void populateDomain() {
 	save(new_(TgTimesheet.class, "USER1", date("2011-11-01 12:00:00")).setFinishDate(date("2011-11-01 14:00:00")).setIncident("001"));
