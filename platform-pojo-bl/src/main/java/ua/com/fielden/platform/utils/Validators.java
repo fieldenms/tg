@@ -98,9 +98,6 @@ public final class Validators {
 	if (entity.get(fromDateProperty) == null) {
 	    throw new IllegalArgumentException("Property \"" + fromDateProperty + "\" should have a value.");
 	}
-	if (!entity.isValid().isSuccessful()) {
-	    throw new IllegalArgumentException("Entity \"" + entity + "\" should be valid: " + entity.isValid().getMessage());
-	}
 
 	/////////////// start query composition ///////////////////
 	// add matching conditions
