@@ -5,6 +5,8 @@ import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +29,8 @@ import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.entity.CategoryItemEntity;
 import org.jfree.chart.entity.CategoryLabelEntity;
 import org.jfree.chart.entity.ChartEntity;
+import org.jfree.chart.labels.AbstractCategoryItemLabelGenerator;
+import org.jfree.chart.labels.CategoryItemLabelGenerator;
 import org.jfree.chart.labels.CategoryToolTipGenerator;
 import org.jfree.chart.labels.ItemLabelAnchor;
 import org.jfree.chart.labels.ItemLabelPosition;
@@ -133,7 +137,7 @@ public class CategoryChartReviewModel<T extends AbstractEntity, DAO extends IEnt
     }
 
     void updateCriteria(final IDistributedProperty selectedDistributionProperty, final List<IAggregatedProperty> selectedAggregatedProperty, final Pair<IAggregatedProperty, SortOrder> selectedSorter)
-    throws IllegalStateException {
+	    throws IllegalStateException {
 	final IDistributedProperty distributionProperty = selectedDistributionProperty;
 	if (distributionProperty == null) {
 	    throw new IllegalStateException("Please choose distribution property");
@@ -223,11 +227,15 @@ public class CategoryChartReviewModel<T extends AbstractEntity, DAO extends IEnt
 
 	private final AnalysisReportQueryCriteriaExtender<T, DAO> criteria;
 
+	private final NumberFormat numberFormat;
+
 	private DefaultCategoryDataset mainDataSet, countDataSet;
 
 	public CategoryChartFactory(final AnalysisReportQueryCriteriaExtender<T, DAO> criteria, final AggregationQueryDataModel<T, DAO> chartEntryModel, final boolean all, final int... indexes) {
 	    this.chartEntryModel = chartEntryModel;
 	    this.criteria = criteria;
+	    this.numberFormat = new DecimalFormat("#,##0.00");
+	    numberFormat.setRoundingMode(RoundingMode.HALF_UP);
 	    setModel(chartEntryModel.getModel(), all, indexes);
 	}
 
@@ -355,6 +363,7 @@ public class CategoryChartReviewModel<T extends AbstractEntity, DAO extends IEnt
 	    plot.setDomainAxis(domainAxis);
 	    plot.setDomainAxisLocation(AxisLocation.BOTTOM_OR_RIGHT);
 	    initToolTips(plot);
+	    initItemLabels(plot);
 	    return plot;
 	}
 
@@ -464,17 +473,34 @@ public class CategoryChartReviewModel<T extends AbstractEntity, DAO extends IEnt
 
 	private void initToolTips(final CategoryPlot categoryPlot) {
 	    categoryPlot.getRenderer().setBaseToolTipGenerator(new CategoryToolTipGenerator() {
-		private final NumberFormat numberFormat = NumberFormat.getInstance();
-
 		@Override
 		public String generateToolTip(final CategoryDataset dataset, final int row, final int column) {
 		    final String toolTip = "<html>" + numberFormat.format(dataset.getValue(row, column)) + " (" + dataset.getRowKey(row).toString() + ")<br>" //
-		    + "<b>" + getKeyFor(dataset, row, column) + "</b><br>"//
-		    + "<i>" + getDescFor(dataset, row, column) + "</i></html>";
+			    + "<b>" + getKeyFor(dataset, row, column) + "</b><br>"//
+			    + "<i>" + getDescFor(dataset, row, column) + "</i></html>";
 		    return toolTip;
 		}
 
 	    });
+	}
+
+	private void initItemLabels(final CategoryPlot categoryPlot){
+	    categoryPlot.getRenderer().setBaseItemLabelGenerator(new AnalysisChartLabelGenerator(numberFormat));
+	}
+
+	private static class AnalysisChartLabelGenerator extends AbstractCategoryItemLabelGenerator implements CategoryItemLabelGenerator{
+
+	    private static final long serialVersionUID = -5658827075252974472L;
+
+	    protected AnalysisChartLabelGenerator(final NumberFormat formatter) {
+		super("", formatter);
+	    }
+
+	    @Override
+	    public String generateLabel(final CategoryDataset dataset, final int row, final int column) {
+		return getNumberFormat().format(dataset.getValue(row, column));
+	    }
+
 	}
 
 	@Override

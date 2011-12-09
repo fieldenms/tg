@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.swing.analysis.ndec.dec;
 
 import java.awt.Color;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,6 +12,8 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.labels.AbstractCategoryItemLabelGenerator;
+import org.jfree.chart.labels.CategoryItemLabelGenerator;
 import org.jfree.chart.labels.CategoryToolTipGenerator;
 import org.jfree.chart.labels.StandardCategoryItemLabelGenerator;
 import org.jfree.chart.plot.CategoryPlot;
@@ -32,6 +36,7 @@ public class DecModel {
     private final String chartName;
     private final String domainAxisName;
     private final String valueAxisName;
+    private final NumberFormat numberFormat;
 
     private final List<CalculatedNumber> calcNumbers;
 
@@ -45,6 +50,9 @@ public class DecModel {
 	this.domainAxisName = domainAxisName;
 	this.valueAxisName = valueAxisName;
 
+	this.numberFormat = new DecimalFormat("#,##0.00");
+	numberFormat.setRoundingMode(RoundingMode.HALF_UP);
+
 	this.calcNumbers = new ArrayList<CalculatedNumber>();
 	this.lineCalculators = new ArrayList<Line>();
     }
@@ -53,8 +61,8 @@ public class DecModel {
 	return chartModel;
     }
 
-    public DecModel addLine(final ILineCalculator lineCalculator, final Color color, final boolean labelVisible, final boolean shapesVisible){
-	lineCalculators.add(new Line(lineCalculator, color, shapesVisible, labelVisible));
+    public DecModel addLine(final ILineCalculator lineCalculator, final Color color, final boolean labelVisible, final boolean shapesVisible, final String description){
+	lineCalculators.add(new Line(lineCalculator, color, shapesVisible, labelVisible, description));
 	return this;
     }
 
@@ -119,7 +127,11 @@ public class DecModel {
 	    plot.setRenderer(1, createLineRenderer());
 	}
 
-	initToolTips(plot);
+	final List<IDescriptionRetriever> descriptionRetrievers = new ArrayList<IDescriptionRetriever>();
+	/*				*/descriptionRetrievers.add(createBarChartDescriptionRetriever());
+	/*				*/descriptionRetrievers.add(createLineChartDescriptionRetriever());
+	initToolTips(plot, descriptionRetrievers);
+	initItemLabels(plot);
 	return plot;
     }
 
@@ -148,21 +160,42 @@ public class DecModel {
 	return renderer;
     }
 
-    private void initToolTips(final CategoryPlot categoryPlot) {
+    private void initToolTips(final CategoryPlot categoryPlot, final List<IDescriptionRetriever> descriptionRetrievers) {
 	for(int renderIndex = 0; renderIndex < categoryPlot.getRendererCount(); renderIndex++){
+	    final IDescriptionRetriever descriptionRetriever = descriptionRetrievers.get(renderIndex);
 	    categoryPlot.getRenderer(renderIndex).setBaseToolTipGenerator(new CategoryToolTipGenerator() {
-		private final NumberFormat numberFormat = NumberFormat.getInstance();
 
 		@Override
 		public String generateToolTip(final CategoryDataset dataset, final int row, final int column) {
-		    final String toolTip = "<html>" + numberFormat.format(dataset.getValue(row, column)) + " (" + dataset.getRowKey(row).toString() + ")<br>" //
-		    + "<b>" + getKeyFor(dataset, column) + "</b><br>"//
-		    + "<i>" + getDescFor(dataset, column) + "</i></html>";
+		    final String toolTip = "<html>" + numberFormat.format(dataset.getValue(row, column)) + " (" + descriptionRetriever.getDescription(dataset, row, column) + ")<br>" //
+			    + "<b>" + getKeyFor(dataset, column) + "</b><br>"//
+			    + "<i>" + getDescFor(dataset, column) + "</i></html>";
 		    return toolTip;
 		}
 
 	    });
 	}
+    }
+
+    private void initItemLabels(final CategoryPlot categoryPlot){
+	for(int renderIndex = 0; renderIndex < categoryPlot.getRendererCount(); renderIndex++){
+	    categoryPlot.getRenderer(renderIndex).setBaseItemLabelGenerator(new AnalysisChartLabelGenerator(numberFormat));
+	}
+    }
+
+    private static class AnalysisChartLabelGenerator extends AbstractCategoryItemLabelGenerator implements CategoryItemLabelGenerator{
+
+	private static final long serialVersionUID = -5658827075252974472L;
+
+	protected AnalysisChartLabelGenerator(final NumberFormat formatter) {
+	    super("", formatter);
+	}
+
+	@Override
+	public String generateLabel(final CategoryDataset dataset, final int row, final int column) {
+	    return getNumberFormat().format(dataset.getValue(row, column));
+	}
+
     }
 
     private String getKeyFor(final CategoryDataset dataset, final int column) {
@@ -171,6 +204,26 @@ public class DecModel {
 
     private String getDescFor(final CategoryDataset dataset, final int column) {
 	return ((EntityWrapper) dataset.getColumnKey(column)).getDesc();
+    }
+
+    private IDescriptionRetriever createBarChartDescriptionRetriever() {
+	return new IDescriptionRetriever() {
+
+	    @Override
+	    public String getDescription(final CategoryDataset dataset, final int row, final int column) {
+		return dataset.getRowKey(row).toString();
+	    }
+	};
+    }
+
+    private IDescriptionRetriever createLineChartDescriptionRetriever() {
+	return new IDescriptionRetriever() {
+
+	    @Override
+	    public String getDescription(final CategoryDataset dataset, final int row, final int column) {
+		return lineCalculators.get(row).description;
+	    }
+	};
     }
 
     public String getChartName() {
@@ -187,12 +240,34 @@ public class DecModel {
 
 	public final ILineCalculator lineCalculator;
 
-	public Line(final ILineCalculator lineCalculator, final Color color, final boolean shapesVisible, final boolean labelVisible){
+	public final String description;
+
+	public Line(final ILineCalculator lineCalculator, final Color color, final boolean shapesVisible, final boolean labelVisible, final String description){
 	    this.lineCalculator = lineCalculator;
 	    this.color = color;
 	    this.labelVisible = labelVisible;
 	    this.shapesVisible = shapesVisible;
+	    this.description = description;
 	}
 
+    }
+
+    /**
+     * Contract that allows to retrieve description for category data set.
+     * 
+     * @author TG Team
+     *
+     */
+    private interface IDescriptionRetriever{
+
+	/**
+	 * Retrieves the description for the specified data set, row and column.
+	 * 
+	 * @param dataset
+	 * @param row
+	 * @param column
+	 * @return
+	 */
+	String getDescription(final CategoryDataset dataset, final int row, final int column);
     }
 }

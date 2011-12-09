@@ -26,7 +26,7 @@ public abstract class CalculatedNumber {
 	this.caption = caption;
 	this.number = 0;
 
-	this.numberFormat = new DecimalFormat("#,###.##");
+	this.numberFormat = new DecimalFormat("#,##0.00");
 	numberFormat.setRoundingMode(RoundingMode.HALF_UP);
 	this.listenerList = new EventListenerList();
 
