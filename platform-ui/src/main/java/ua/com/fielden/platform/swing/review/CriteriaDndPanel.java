@@ -44,9 +44,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Panel, which provides drag'n'drop support for label-editor pairs.
- * 
+ *
  * @author yura
- * 
+ *
  */
 public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T>> extends JPanel {
 
@@ -110,7 +110,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Returns the number of columns.
-     * 
+     *
      * @return
      */
     public int getColumns() {
@@ -147,7 +147,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Merges pairs of editors for range or boolean properties into single <code>IPropertyEditor</code>s for corresponding ranges/booleans.
-     * 
+     *
      * @return
      */
     private List<IPropertyEditor> createOneCellRangeAndBoolEditors(final List<Pair<IPropertyEditor, IPropertyEditor>> rangeOrBoolEditors) {
@@ -160,7 +160,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Merges two editors into single using one of labels and two editors separated by "TO" label.
-     * 
+     *
      * @param doubleEditor
      * @return
      */
@@ -169,7 +169,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     }
 
     private Action createToggleAction() {
-	return new AbstractAction("Design") {
+	final Action action = new AbstractAction("Design") {
 	    private static final long serialVersionUID = 1L;
 
 	    @Override
@@ -182,6 +182,13 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 		}
 	    }
 	};
+
+	action.putValue(Action.SHORT_DESCRIPTION, "<html>Depress the button to enable the design mode for selection criteria.<br>" +
+			"Once enabled, the selection criteria layout can be changed by applying the Drag'n'Drop action to the criteria controls.<br>" +
+			"Release the button to complete layout changes." +
+			"</html>");
+
+	return action;
     }
 
     private Action createBackToNormalAction() {
@@ -445,7 +452,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Adds draggable label and editor at the specified position.
-     * 
+     *
      * @param label
      * @param editor
      * @param position
@@ -463,7 +470,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Adds placeholder at the specified position.
-     * 
+     *
      * @param column
      * @param row
      */
@@ -481,7 +488,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Returns position of editor with the specified propertyName. Key represents column, value - row.
-     * 
+     *
      * @param propertyName
      * @return
      */
@@ -498,7 +505,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Swaps positions of the specified component copies.
-     * 
+     *
      * @param compCopy1
      * @param compCopy2
      */
@@ -530,9 +537,9 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Class, representing position of a cell as row and column.
-     * 
+     *
      * @author yura
-     * 
+     *
      */
     public static class CellPosition {
 	private final int column;
@@ -555,9 +562,9 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Class encapsulating positions of label and editor on the {@link CriteriaDndPanel}.
-     * 
+     *
      * @author yura
-     * 
+     *
      */
     private static class Position extends CellPosition {
 	private final String labelConstr;
@@ -567,7 +574,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	/**
 	 * Creates {@link Position} instance with specified column and row of label component (editor component should be placed at cell with coordinates (column + 1;row)). Also
 	 * additional label and editor layout constraints may be specified.
-	 * 
+	 *
 	 * @param column
 	 * @param row
 	 * @param labelConstr
@@ -599,9 +606,9 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     /**
      * Represents visual copy of {@link JComponent}, which contains link to another {@link LinkedComponentCopy} instance. This was done in order to keep references between label
      * and editor copies.
-     * 
+     *
      * @author yura
-     * 
+     *
      * @param <T>
      */
     @SuppressWarnings("unchecked")
@@ -617,7 +624,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * In case of {@link JLabel}, sets minimum size of this component to size of original component.
-	 * 
+	 *
 	 * @param original
 	 */
 	public LinkedComponentCopy(final IPropertyEditor propEditor, final JComponent component, final boolean isLabel) {
@@ -628,7 +635,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * Sets cross-references between this instance and the specified one.
-	 * 
+	 *
 	 * @param compCopy
 	 */
 	public void linkWith(final LinkedComponentCopy compCopy) {
@@ -653,8 +660,8 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * Used for correct painting of component copy. (without black bounds)
-	 * 
-	 * 
+	 *
+	 *
 	 * @param propertyEditor
 	 * @return
 	 */
@@ -687,9 +694,9 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Listener which is notified whenever layout is changed (criteria order has been changed via drag-n-drop) on the {@link CriteriaDndPanel}, to which this listener is attached.
-     * 
+     *
      * @author yura
-     * 
+     *
      */
     public static interface CriteriaLayoutListener {
 	void layoutChanged();
@@ -698,7 +705,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     // Methods ported from DynamicEntityReview (to make CriteriaDndPanel more independent from dynamic criteria)
     /**
      * Returns max row which is met among editors.
-     * 
+     *
      * @param criteria
      * @return
      */
@@ -715,9 +722,9 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     /**
      * Represents boolean matrix, which is used to represent positions on the {@link CriteriaDndPanel}. If cell at some row and column holds value of {@link Boolean#TRUE} it means
      * this cell is occupied.
-     * 
+     *
      * @author yura
-     * 
+     *
      */
     private static class BoolMatrix {
 
@@ -727,7 +734,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * Creates matrix with the specified number of columns and no rows.
-	 * 
+	 *
 	 * @param columns
 	 */
 	public BoolMatrix(final int columns) {
@@ -736,7 +743,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * Creates matrix with the specified number of rows and columns filled with {@link Boolean#FALSE} values.
-	 * 
+	 *
 	 * @param rows
 	 * @param columns
 	 */
@@ -761,7 +768,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * Iterates over {@link PropertyPersistentObject}s and sets values of {@link Boolean#TRUE} for the occupied cells.
-	 * 
+	 *
 	 * @param propertyPersistentObjects
 	 */
 	public void fillMatrix(final Collection<PropertyPersistentObject> propertyPersistentObjects) {
@@ -781,7 +788,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	/**
 	 * Searches for a cells to place editorsCount number of editors, each of which has length of editorSize columns (this value usually is 1 or 2). It is assumed that there are
 	 * sufficient space in matrix to put these editors. When place is found, it is marked as occupied.
-	 * 
+	 *
 	 * @param startFromRow
 	 * @param editorSize
 	 * @param editorsCount
@@ -819,7 +826,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	/**
 	 * Searches for a cells to place editorsCount number of editors, each of which has length of editorSize columns (this value usually is 1 or 2). If there are insufficient
 	 * space in the matrix, this method may add new rows.
-	 * 
+	 *
 	 * @param editorSize
 	 * @param editorsCount
 	 * @return
@@ -838,7 +845,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * This method adds new rows in order to place editorsCount number of editors, each of which occupies editorSize number of columns.
-	 * 
+	 *
 	 * @param editorSize
 	 * @param editorsCount
 	 * @return
@@ -856,7 +863,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * Adds specified number of rows filled with {@link Boolean#FALSE} value.
-	 * 
+	 *
 	 * @param rowsToAdd
 	 */
 	private void addRows(final int rowsToAdd) {
@@ -872,7 +879,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * Mark cells column-by-column in the same row with the specified value (occupied) starting from column till column + editorSize.
-	 * 
+	 *
 	 * @param row
 	 * @param column
 	 * @param editorSize
@@ -886,7 +893,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * Marks cells row-by-row in the 0 column with the specified value (occupied) starting from row till row + editorSize.
-	 * 
+	 *
 	 * @param row
 	 * @param editorSize
 	 * @param occupied
@@ -899,7 +906,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * Returns true if in the specified row all cells between column inclusively and column + editorSize exclusively are free.
-	 * 
+	 *
 	 * @param row
 	 * @param column
 	 * @param editorSize
@@ -918,7 +925,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * Returns true if in the 0 column all cells between row inclusively and column + editorSize exclusively are free.
-	 * 
+	 *
 	 * @param row
 	 * @param editorSize
 	 * @return
@@ -936,7 +943,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
 	/**
 	 * Removes empty rows and updates (shifts up) already aligned editors.
-	 * 
+	 *
 	 * @param persistentObjects
 	 */
 	public void removeEmptyRowsAndUpdate(final Collection<PropertyPersistentObject> persistentObjects) {
@@ -971,7 +978,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     // adding editors:
     /**
      * Fills unoccupied cells with place-holders.
-     * 
+     *
      * @param panel
      * @param posMatrix
      */
@@ -988,7 +995,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Adds one cell editors.
-     * 
+     *
      * @param panel
      * @param collectionalEditors
      * @param oneCellPositions
@@ -1003,7 +1010,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Adds editors, which positions were already adjusted.
-     * 
+     *
      * @param panel
      * @param criteria
      */
@@ -1035,7 +1042,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     // //////////////////////////////////////////////
     /**
      * Returns list of collectional editors, which positions were not yet specified.
-     * 
+     *
      * @param criteria
      * @return
      */
@@ -1056,7 +1063,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     /**
      * Returns list of either range editors (if range parameter is true) or boolean editors (otherwise), which are new (i.e. they were just added in the property tree and their
      * positions are not yet initialised).
-     * 
+     *
      * @param criteria
      * @param range
      * @return
@@ -1085,7 +1092,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     /**
      * Creates string for mig layout of columns.
-     * 
+     *
      * @param columns
      * @return
      */
