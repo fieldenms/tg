@@ -7,12 +7,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
 public class EntQuery implements ISingleOperand {
     private final EntQuerySourcesModel sources;
     private final ConditionsModel conditions;
     private final YieldsModel yields;
     private final GroupsModel groups;
+    private EntQuery master;
 
     public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups) {
 	super();
@@ -20,6 +20,23 @@ public class EntQuery implements ISingleOperand {
 	this.conditions = conditions;
 	this.yields = yields;
 	this.groups = groups;
+
+	for (final EntQuery entQuery : getImmediateSubqueries()) {
+	    entQuery.master = this;
+	}
+    }
+
+    public List<EntQuery> getLeafSubqueries() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	for (final EntQuery entQuery : getImmediateSubqueries()) {
+	    final List<EntQuery> subSubQueries = entQuery.getImmediateSubqueries();
+	    if (subSubQueries.size() > 0) {
+		result.addAll(entQuery.getLeafSubqueries());
+	    } else {
+		result.add(entQuery);
+	    }
+	}
+	return result;
     }
 
     public List<String> resolveProps() {
@@ -48,13 +65,16 @@ public class EntQuery implements ISingleOperand {
 
     /**
      * By immediate prop names here are meant props used within this query and not within it's (nested) subqueries.
+     *
      * @return
      */
     public Set<String> getImmediatePropNames() {
 	final Set<String> result = new HashSet<String>();
 	result.addAll(getPropNamesFromYields());
 	result.addAll(getPropNamesFromGroups());
-	result.addAll(conditions.getPropNames());
+	if (conditions != null) {
+	    result.addAll(conditions.getPropNames());
+	}
 	result.addAll(getPropNamesFromSources());
 	return result;
     }
@@ -63,7 +83,9 @@ public class EntQuery implements ISingleOperand {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	result.addAll(getSubqueriesFromYields());
 	result.addAll(getSubqueriesFromGroups());
-	result.addAll(conditions.getSubqueries());
+	if (conditions != null) {
+	    result.addAll(conditions.getSubqueries());
+	}
 	result.addAll(getSubqueriesFromSources());
 	return result;
     }
@@ -73,20 +95,8 @@ public class EntQuery implements ISingleOperand {
     }
 
     public List<EntQuery> getSubqueries() {
-	return Arrays.asList(new EntQuery[]{this});
+	return Arrays.asList(new EntQuery[] { this });
     }
-
-
-//    public Set<String> getQrySourcesNames() {
-//	final Set<String> result = new HashSet<String>();
-//	if (sources.getMain().getAlias() != null) {
-//	    result.add(sources.getMain().getAlias());
-//	}
-//	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
-//	    result.add(compSource.getSource().getAlias());
-//	}
-//	return result;
-//    }
 
     private Set<String> getPropNamesFromYields() {
 	final Set<String> result = new HashSet<String>();
@@ -205,4 +215,19 @@ public class EntQuery implements ISingleOperand {
     public GroupsModel getGroups() {
 	return groups;
     }
+
+    public EntQuery getMaster() {
+	return master;
+    }
 }
+
+//public Set<String> getQrySourcesNames() {
+//	final Set<String> result = new HashSet<String>();
+//	if (sources.getMain().getAlias() != null) {
+//	    result.add(sources.getMain().getAlias());
+//	}
+//	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
+//	    result.add(compSource.getSource().getAlias());
+//	}
+//	return result;
+//}

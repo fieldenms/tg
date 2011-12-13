@@ -646,4 +646,14 @@ public class QueryModelCompositionTest {
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(expressionModel, ComparisonOperator.GT, new EntValue(1000)), new ArrayList<CompoundConditionModel>());
 	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
     }
+
+    @Test
+    public void test_simple_query_model_22a() {
+	final EntityResultQueryModel<TgVehicle> subQry0 = query.select(TgVehicle.class).where().val(1).isNotNull().model();
+	final EntityResultQueryModel<TgVehicle> subQry1 = query.select(TgVehicle.class).where().exists(subQry0).model();
+	final EntityResultQueryModel<TgWorkOrder> subQry2 = query.select(TgWorkOrder.class).model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().existsAnyOf(subQry1, subQry2).model();
+	final List<EntQuery> exp = Arrays.asList(new EntQuery[]{qb.generateEntQuery(subQry0), qb.generateEntQuery(subQry2)});
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getLeafSubqueries());
+    }
 }
