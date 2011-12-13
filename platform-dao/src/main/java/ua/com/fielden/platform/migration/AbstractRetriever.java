@@ -7,7 +7,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashMap;
@@ -47,7 +46,8 @@ import com.google.inject.Inject;
 public abstract class AbstractRetriever<T extends AbstractEntity> implements IRetriever<T> {
     private final Logger logger = Logger.getLogger(this.getClass());
     protected final IEntityDao<T> dao;
-    @Inject private DynamicEntityDao dynamicDao;
+    @Inject
+    private DynamicEntityDao dynamicDao;
 
     private Map<String, IPropertyValueRetriever> pvr = new HashMap<String, IPropertyValueRetriever>();
 
@@ -69,6 +69,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 
     /**
      * Creates entity instance based of the current row of the result set of data retrieved from legacy db.
+     *
      * @param rs
      * @param sessionFactory
      * @param retrievers
@@ -76,39 +77,45 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
      * @throws Exception
      */
     @Transactional
-    private final SaveResult produceInstance(final ResultSet rs, final Collection<Container> containers, final List<String> keyPropNames, final EntityFactory factory)
+    private final SaveResult produceInstance(final ResultSet rs, final List<Container> keyContainers, final List<Container> nonKeyContainers, final EntityFactory factory)
 	    throws Exception {
-	final Map<String, Object> propAdoptedValues = new HashMap<String, Object>();
 
-	for (final Container container : containers) {
-	    propAdoptedValues.put(container.propName, container.getPropValue(this, rs, dynamicDao, factory));
+	final Object[] keyValues = new Object[keyContainers.size()];
+
+	for (int i = 0; i < keyContainers.size(); i++) {
+	    keyValues[i] = keyContainers.get(i).getPropValue(this, rs, dynamicDao, factory);
 	}
 
-	T instance = dao.findByKeyAndFetch(new fetchAll(type()), getKeyPropsValues(keyPropNames, propAdoptedValues));
+	T instance = dao.findByKeyAndFetch(new fetchAll(type()), keyValues);
 	Long originalVersion = null;
 	boolean inserted = true;
 
 	if (instance != null) {
 	    inserted = false;
 	    originalVersion = instance.getVersion();
-	    for (final Map.Entry<String, Object> propValueEntry : propAdoptedValues.entrySet()) {
-		if (!keyPropNames.contains(propValueEntry.getKey())) {
-		    try {
-			instance.set(propValueEntry.getKey(), propValueEntry.getValue());
-		    } catch (final Exception e) {
-		    }
+	    for (final Container container : nonKeyContainers) {
+		try {
+		    instance.set(container.propName, container.getPropValue(this, rs, dynamicDao, factory));
+		} catch (final Exception e) {
 		}
 	    }
 	} else if (updateOnly()) {
 	    throw new IllegalStateException("There is no such entity found for update!");
 	} else {
 	    instance = factory.newEntity(type(), null);
-	    for (final Map.Entry<String, Object> propValueEntry : propAdoptedValues.entrySet()) {
+
+	    for (int i = 0; i < keyContainers.size(); i++) {
+		instance.set(keyContainers.get(i).propName, keyValues[i]);
+	    }
+
+	    for (final Container container : nonKeyContainers) {
 		try {
-		    instance.set(propValueEntry.getKey(), propValueEntry.getValue());
+		    // System.out.println("setting: " + propValueEntry.getKey() + " to " + propValueEntry.getValue());
+		    instance.set(container.propName, container.getPropValue(this, rs, dynamicDao, factory));
 		} catch (final Exception e) {
-		    //ignoring exception here because the order of assignment is arbitrary and may result into errors,
-		    //but once everything is assigned the revalidation will clear out any previously occurring set errors.
+		    System.out.println("failed due to: " + e);
+		    // ignoring exception here because the order of assignment is arbitrary and may result into errors,
+		    // but once everything is assigned the revalidation will clear out any previously occurring set errors.
 		}
 	    }
 	}
@@ -139,14 +146,26 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 	return new SaveResult(inserted, updated);
     }
 
-    private String produceInstanceRawDataStringRepresentation(final ResultSet rs, final Collection<Container> containers) throws Exception {
+    private String produceInstanceRawDataStringRepresentation(final ResultSet rs, final List<Container> keyContainers, final List<Container> nonKeyContainers) throws Exception {
 	final List<String> result = new ArrayList<String>();
-	for (final Container container : containers) {
+	for (final Container container : keyContainers) {
+	    result.add(container.getRepresentation(rs));
+	}
+
+	for (final Container container : nonKeyContainers) {
 	    result.add(container.getRepresentation(rs));
 	}
 	return result.toString();
     }
 
+    /**
+     * Extracts entity key values from list of all entity props values.
+     *
+     * @param keyPropsNames
+     * @param propAdoptedValues
+     * @return
+     * @throws Exception
+     */
     final private Object[] getKeyPropsValues(final List<String> keyPropsNames, final Map<String, Object> propAdoptedValues) throws Exception {
 	final List<Object> result = new ArrayList<Object>();
 	for (final String keyPropName : keyPropsNames) {
@@ -155,6 +174,14 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 	return result.toArray();
     }
 
+    /**
+     * Generates map of properties to their Java type and index of value in the result set.
+     *
+     * @param md
+     * @param entityType
+     * @return Map of property name (dot.notated) to it's Java type and index of value in the result set.
+     * @throws Exception
+     */
     final private SortedMap<String, Pair<Class, Integer>> getResultEntityMetadata(final ResultSetMetaData md, final Class<?> entityType) throws Exception {
 	final SortedMap<String, Pair<Class, Integer>> props = new TreeMap<String, Pair<Class, Integer>>();
 	for (int index = 1; index <= md.getColumnCount(); index++) {
@@ -165,7 +192,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 	return props;
     }
 
-    final private Map<String, Container> getContainers(final SortedMap<String, Pair<Class, Integer>> props, final Class<?> entityType) {
+    final private Map<String, Container> createContainers(final SortedMap<String, Pair<Class, Integer>> props, final Class<?> entityType) {
 	final Map<String, Container> result = new HashMap<String, Container>();
 
 	SortedMap<String, Pair<Class, Integer>> propsGroup = new TreeMap<String, Pair<Class, Integer>>();
@@ -179,7 +206,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 		// if group already exist - flush it
 		if (groupProp != null) {
 		    final Class groupPropType = PropertyTypeDeterminator.determinePropertyType(entityType, groupProp);
-		    result.put(groupProp, new Container(groupProp, groupPropType, getContainers(propsGroup, groupPropType)));
+		    result.put(groupProp, new Container(groupProp, groupPropType, createContainers(propsGroup, groupPropType)));
 		    groupProp = null;
 		}
 
@@ -195,6 +222,24 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 	}
 
 	return result;
+    }
+
+    final private Pair<List<Container>, List<Container>> reorderContainers(final Map<String, Container> containers, final List<String> keyPropNames) {
+
+	final List<Container> nonKeyProps = new ArrayList<Container>();
+	final List<Container> keyProps = new ArrayList<Container>();
+
+	for (final String keyProp : keyPropNames) {
+	    keyProps.add(containers.get(keyProp));
+	}
+
+	for (final Map.Entry<String, Container> entry : containers.entrySet()) {
+	    if (!keyProps.contains(entry.getValue())) {
+		nonKeyProps.add(entry.getValue());
+	    }
+	}
+
+	return new Pair<List<Container>, List<Container>>(keyProps, nonKeyProps);
     }
 
     private static class Container {
@@ -266,14 +311,13 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 	}
     }
 
-
     private String getSubsetSql(final String subset) {
 	final String baseSql = selectSql().toUpperCase();
 	final int orderByStart = baseSql.indexOf("ORDER BY");
 	final String unorderedSql = orderByStart != -1 ? baseSql.substring(0, orderByStart) : baseSql;
 	final String orderBySql = orderByStart != -1 ? baseSql.substring(orderByStart) : "";
 	final String splitPropertyColumn = AbstractRetriever.encodePropertyName(splitProperty());
-	return "SELECT * FROM (" + unorderedSql + ") A WHERE A." + splitPropertyColumn + " IN " + subset + " " +  orderBySql;
+	return "SELECT * FROM (" + unorderedSql + ") A WHERE A." + splitPropertyColumn + " IN " + subset + " " + orderBySql;
     }
 
     /**
@@ -303,12 +347,12 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 	    final Statement st = conn.createStatement();
 	    final ResultSet rs = st.executeQuery(legacyDataSql);
 	    final List<String> keyPropNames = Finder.getFieldNames(Finder.getKeyMembers(type()));
-	    final Collection<Container> containers = getContainers(getResultEntityMetadata(rs.getMetaData(), type()), type()).values();
+	    final Pair<List<Container>, List<Container>> containers = reorderContainers(createContainers(getResultEntityMetadata(rs.getMetaData(), type()), type()), keyPropNames);
 
 	    while (rs.next()) {
 		retrievedCount = retrievedCount + 1;
 		try {
-		    final SaveResult saveResult = produceInstance(rs, containers, keyPropNames, factory);
+		    final SaveResult saveResult = produceInstance(rs, containers.getKey(), containers.getValue(), factory);
 		    if (saveResult.inserted) {
 			insertedCount = insertedCount + 1;
 		    } else if (saveResult.updated) {
@@ -319,7 +363,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 		    final MigrationError error = ex instanceof Result ? (MigrationError) ((Result) ex).getInstance() : error(factory, null, null, null);
 		    final Exception resultEx = ex instanceof Result ? ((Result) ex).getEx() : ex;
 
-		    error.setRawData(produceInstanceRawDataStringRepresentation(rs, containers));
+		    error.setRawData(produceInstanceRawDataStringRepresentation(rs, containers.getKey(), containers.getValue()));
 		    error.setMigrationHistory(hist);
 		    error.setErrorNo(failedCount);
 		    error.setErrorType(resultEx.getClass().getName());
@@ -345,7 +389,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 	return new Result(hist.toString());
     }
 
-    protected Object getAdoptedPropValue(final String propName, final Class<?> propType, final Object rawValue ) throws Exception {
+    protected Object getAdoptedPropValue(final String propName, final Class<?> propType, final Object rawValue) throws Exception {
 	final Object propValue = convertValue(propName, propType, rawValue);
 	if (propValue == null) {
 	    return null;
@@ -530,18 +574,18 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
     }
 
     public DynamicEntityDao getDynamicDao() {
-        return dynamicDao;
+	return dynamicDao;
     }
 
     public void setDynamicDao(final DynamicEntityDao dynamicDao) {
-        this.dynamicDao = dynamicDao;
+	this.dynamicDao = dynamicDao;
     }
 
     static class SaveResult {
 	boolean inserted;
 	boolean updated;
 
-	SaveResult (final boolean inserted, final boolean updated) {
+	SaveResult(final boolean inserted, final boolean updated) {
 	    this.inserted = inserted;
 	    this.updated = updated;
 	}

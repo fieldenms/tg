@@ -204,6 +204,7 @@ public class DataMigrator {
      * @throws Exception
      */
     private boolean validateRetrievalSql(final IRetriever retriever, final Connection conn) throws Exception {
+	System.out.print("Validating " + retriever.getClass().getSimpleName() + " ... ");
 	boolean foundErrors = false;
 	final String legacyDataSql = retriever.selectSql();
 	if (!StringUtils.isEmpty(legacyDataSql)) {
@@ -254,6 +255,7 @@ public class DataMigrator {
 		st.close();
 	    }
 	}
+	System.out.println("done.");
 	return foundErrors;
     }
 
@@ -305,7 +307,7 @@ public class DataMigrator {
 
 		for (final Iterator<Pair<Set<String>, Long>> iterator = DataMigrator.splitIntoBatches(populateData(ret), threadCount).iterator(); iterator.hasNext();) {
 		    final Connection conn = injector.getInstance(Connection.class);
-		    tasks.add(new Task("Done.", injector, sFactory, conn, factory, migrationRun, ret.getClass(), iterator.next().getKey().toArray(new String[] {})));
+		    tasks.add(new Task("done.", injector, sFactory, conn, factory, migrationRun, ret.getClass(), iterator.next().getKey().toArray(new String[] {})));
 		}
 
 		final ExecutorService exec = Executors.newFixedThreadPool(tasks.size());
@@ -316,8 +318,7 @@ public class DataMigrator {
 		}
 
 		for (int index = 0; index < results.size(); index++) {
-		    System.out.println(ret.getClass().getSimpleName() + " ... waiting for task with index " + index + "...");
-		    System.out.println(results.get(index).get());
+		    System.out.println(ret.getClass().getSimpleName() + " ... waiting for task with index " + index + " ... " + results.get(index).get());
 		}
 
 		exec.shutdown(); // do not forget to shutdown the threads
