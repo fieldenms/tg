@@ -181,15 +181,20 @@ public abstract class CommonEntityDao<T extends AbstractEntity> extends Abstract
 		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " entity already exists."));
 		}
 
+
+		// Get an entity version from the database using Entity Query instead of the Hibernate session
+		// in order to avoid trigerring of Hibernate proxies, which leads to ACE and BCE execution and version update (version update does not always happen)
+		// first check any concurrent modification
+		final Long persistedVersion = lastVersion(entity); //peVersion.getVersion(); //
+		final Long currVersion = entity.getVersion();
+		if (persistedVersion != null && persistedVersion > currVersion) {
+		    throw new Result(entity, new IllegalStateException("Cannot save a stale entity " + entity.getKey() + " (" + TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey() + "): version of the persisted entity is " + persistedVersion + ", where is current version is " + currVersion + "."));
+		}
+
 		// If entity with id exists then the returned instance is proxied since it is retrieved using standard Hibernate session get method,
 		// and thus is associated with current Hibernate session.
 		// This seems to be advantageous since entity validation would work relying on standard Hibernate lazy initialisation.
-
 		final T persistedEntity = (T) getSession().load(getEntityType(), entity.getId());
-		// first check any concurrent modification
-		if (persistedEntity.getVersion() != null && persistedEntity.getVersion() > entity.getVersion()) {
-		    throw new Result(entity, new IllegalStateException("Cannot save a stale entity " + entity.getKey() + " (" + TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey() + ") -- another user has changed it."));
-		}
 		// if there are changes persist them
 		// Setting modified values triggers any associated validation.
 		// An interesting case is with validation based on associative properties such as a work order for purchase order item.
@@ -238,6 +243,16 @@ public abstract class CommonEntityDao<T extends AbstractEntity> extends Abstract
 	getSession().clear();
 
 	return entity;
+    }
+
+    private Long lastVersion(final T entity) {
+	if (!entity.isPersisted()) {
+	    return 0L;
+	}
+	final IQueryOrderedModel<EntityAggregates> model = select(entity.getType()).where().prop("id").eq().val(entity.getId()).yieldProp("version").model(EntityAggregates.class);
+	final Fetcher<EntityAggregates> fetcher = new Fetcher<EntityAggregates>();
+	final List<EntityAggregates> version = fetcher.list(getSession(), mappingExtractor, entityFactory, model);
+	return (Long) version.get(0).get("version");
     }
 
     private void assignTransactionDate(final T entity) throws Exception {
@@ -675,4 +690,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity> extends Abstract
     public User getUser() {
 	return userDao.findByKey(getUsername());
     }
+
+    public static void main(final String[] args) {
+	final Long one = new Long(1);
+	final Long two = new Long(0);
+	System.out.println(one.compareTo(two) > 0);
+    }
+
 }
