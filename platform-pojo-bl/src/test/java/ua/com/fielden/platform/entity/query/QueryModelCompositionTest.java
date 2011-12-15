@@ -2,8 +2,10 @@ package ua.com.fielden.platform.entity.query;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Ignore;
@@ -23,7 +25,6 @@ import ua.com.fielden.platform.entity.query.model.elements.CompoundConditionMode
 import ua.com.fielden.platform.entity.query.model.elements.CompoundSingleOperand;
 import ua.com.fielden.platform.entity.query.model.elements.ConditionsModel;
 import ua.com.fielden.platform.entity.query.model.elements.DayOfModel;
-import ua.com.fielden.platform.entity.query.model.elements.EntParam;
 import ua.com.fielden.platform.entity.query.model.elements.EntProp;
 import ua.com.fielden.platform.entity.query.model.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.model.elements.EntQueryCompoundSourceModel;
@@ -442,11 +443,14 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_03() {
+	final Map<String, Object> paramValues = new HashMap<String, Object>();
+	paramValues.put("eqclass", "class1");
+
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().prop("model").isNotNull().and().param("eqclass").isNull().model();
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
-	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntParam("eqclass"), false)));
+	others.add(new CompoundConditionModel(LogicalOperator.AND, new NullTestModel(new EntValue("class1"), false)));
 	final ConditionsModel exp = new ConditionsModel(new NullTestModel(new EntProp("model"), true), others);
-	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry, paramValues).getConditions());
     }
 
     @Test
@@ -589,15 +593,17 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_simple_query_model_20() {
+	final Map<String, Object> paramValues = new HashMap<String, Object>();
+	paramValues.put("param", 20);
 	final EntityResultQueryModel<TgWorkOrder> qry = query.select(TgVehicle.class).yield().prop("eqClass").as("ec").yield().beginExpr().prop("model").add().param("param").endExpr().as("m").modelAsEntity(TgWorkOrder.class);
 	final List<YieldModel> yields = new ArrayList<YieldModel>();
 	yields.add(new YieldModel(new EntProp("eqClass"), "ec"));
 	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
-	compSingleOperands.add(new CompoundSingleOperand(new EntParam("param"), ArithmeticalOperator.ADD));
+	compSingleOperands.add(new CompoundSingleOperand(new EntValue(20), ArithmeticalOperator.ADD));
 	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
 	yields.add(new YieldModel(expression, "m"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, qb.generateEntQuery(qry).getYields());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry, paramValues).getYields());
     }
 
     @Test
@@ -636,15 +642,19 @@ public class QueryModelCompositionTest {
 
     @Test
     public void test_expressions1() {
+	final Map<String, Object> paramValues = new HashMap<String, Object>();
+	paramValues.put("costMultiplier", 1);
+	paramValues.put("costDivider", 2);
+
 	final EntityResultQueryModel<TgWorkOrder> qry =  query.select(TgWorkOrder.class).as("wo").where().beginExpr().beginExpr().beginExpr().beginExpr().prop("wo.actCost.amount").mult().param("costMultiplier").endExpr().add().prop("wo.estCost.amount").div().param("costDivider").endExpr().add().prop("wo.yearlyCost.amount").endExpr().div().val(12).endExpr().gt().val(1000).model();
 	// ((((wo.actCost.amount * :costMultiplier) + wo.estCost.amount / :costDivider) + wo.yearlyCost.amount) / 12 )
-	final Expression expressionModel1 = new Expression(new EntProp("wo.actCost.amount"), Arrays.asList(new CompoundSingleOperand[]{new CompoundSingleOperand(new EntParam("costMultiplier"), ArithmeticalOperator.MULT)}));
-	final Expression expressionModel2 = new Expression(expressionModel1, Arrays.asList(new CompoundSingleOperand[]{new CompoundSingleOperand(new EntProp("wo.estCost.amount"), ArithmeticalOperator.ADD), new CompoundSingleOperand(new EntParam("costDivider"), ArithmeticalOperator.DIV)}));
+	final Expression expressionModel1 = new Expression(new EntProp("wo.actCost.amount"), Arrays.asList(new CompoundSingleOperand[]{new CompoundSingleOperand(new EntValue(1), ArithmeticalOperator.MULT)}));
+	final Expression expressionModel2 = new Expression(expressionModel1, Arrays.asList(new CompoundSingleOperand[]{new CompoundSingleOperand(new EntProp("wo.estCost.amount"), ArithmeticalOperator.ADD), new CompoundSingleOperand(new EntValue(2), ArithmeticalOperator.DIV)}));
 	final Expression expressionModel3 = new Expression(expressionModel2, Arrays.asList(new CompoundSingleOperand[]{new CompoundSingleOperand(new EntProp("wo.yearlyCost.amount"), ArithmeticalOperator.ADD)}));
 	final Expression expressionModel = new Expression(expressionModel3, Arrays.asList(new CompoundSingleOperand[]{new CompoundSingleOperand(new EntValue(12), ArithmeticalOperator.DIV)}));
 
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(expressionModel, ComparisonOperator.GT, new EntValue(1000)), new ArrayList<CompoundConditionModel>());
-	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry, paramValues).getConditions());
     }
 
     @Test

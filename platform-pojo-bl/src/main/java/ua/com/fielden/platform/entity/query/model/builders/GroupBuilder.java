@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.builders;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.entity.query.model.elements.GroupModel;
 import ua.com.fielden.platform.entity.query.model.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
@@ -7,8 +9,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class GroupBuilder extends AbstractTokensBuilder {
 
-    protected GroupBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
-	super(parent, dbVersion);
+    protected GroupBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
+	super(parent, dbVersion, paramValues);
     }
 
     @Override

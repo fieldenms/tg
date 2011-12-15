@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.model.builders;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.model.elements.CompoundConditionModel;
 import ua.com.fielden.platform.entity.query.model.elements.GroupedConditionsModel;
@@ -14,10 +15,10 @@ public class GroupedConditionsBuilder extends AbstractTokensBuilder {
 
     private final boolean negated;
 
-    protected GroupedConditionsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final boolean negated) {
-	super(parent, dbVersion);
+    protected GroupedConditionsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues, final boolean negated) {
+	super(parent, dbVersion, paramValues);
 	this.negated = negated;
-	setChild(new ConditionBuilder(this, dbVersion));
+	setChild(new ConditionBuilder(this, dbVersion, paramValues));
     }
 
     @Override

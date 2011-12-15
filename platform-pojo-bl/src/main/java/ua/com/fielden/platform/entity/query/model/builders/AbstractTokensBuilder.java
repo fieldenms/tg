@@ -2,10 +2,10 @@ package ua.com.fielden.platform.entity.query.model.builders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.entity.query.model.elements.EntParam;
 import ua.com.fielden.platform.entity.query.model.elements.EntProp;
 import ua.com.fielden.platform.entity.query.model.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.model.elements.EntSet;
@@ -28,36 +28,38 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private ITokensBuilder child;
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
     private final DbVersion dbVersion;
+    private final Map<String, Object> paramValues;
     private final EntQueryGenerator queryBuilder;
 
-    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
+    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
 	this.parent = parent;
 	this.dbVersion = dbVersion;
 	this.queryBuilder = new EntQueryGenerator(dbVersion);
+	this.paramValues = paramValues;
     }
 
     private void add (final Functions function) {
 	switch (function) {
 	case SUM:
-	    setChild(new SumOfBuilder(this, dbVersion));
+	    setChild(new SumOfBuilder(this, dbVersion, getParamValues()));
 	    break;
 	case COUNT:
-	    setChild(new CountOfBuilder(this, dbVersion));
+	    setChild(new CountOfBuilder(this, dbVersion, getParamValues()));
 	    break;
 	case AVERAGE:
-	    setChild(new AverageOfBuilder(this, dbVersion));
+	    setChild(new AverageOfBuilder(this, dbVersion, getParamValues()));
 	    break;
 	case MIN:
-	    setChild(new MinOfBuilder(this, dbVersion));
+	    setChild(new MinOfBuilder(this, dbVersion, getParamValues()));
 	    break;
 	case MAX:
-	    setChild(new MaxOfBuilder(this, dbVersion));
+	    setChild(new MaxOfBuilder(this, dbVersion, getParamValues()));
 	    break;
 	case DAY:
-	    setChild(new DayOfBuilder(this, dbVersion));
+	    setChild(new DayOfBuilder(this, dbVersion, getParamValues()));
 	    break;
 	case MONTH:
-	    setChild(new MonthOfBuilder(this, dbVersion));
+	    setChild(new MonthOfBuilder(this, dbVersion, getParamValues()));
 	    break;
 	default:
 	    // TODO implement the rest
@@ -71,16 +73,16 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	} else {
 	    switch (cat) {
 	    case BEGIN_EXPR: //eats token
-		setChild(new ExpressionBuilder(this, dbVersion));
+		setChild(new ExpressionBuilder(this, dbVersion, getParamValues()));
 		break;
 	    case FUNCTION: //eats token
 		add((Functions) value);
 		break;
 	    case BEGIN_COND: //eats token
-		setChild(new GroupedConditionsBuilder(this, dbVersion, (Boolean) value));
+		setChild(new GroupedConditionsBuilder(this, dbVersion, getParamValues(), (Boolean) value));
 		break;
 	    case LOGICAL_OPERATOR:
-		setChild(new CompoundConditionBuilder(this, dbVersion, cat, value));
+		setChild(new CompoundConditionBuilder(this, dbVersion, getParamValues(), cat, value));
 		break;
 	    default:
 		tokens.add(new Pair<TokenCategory, Object>(cat, value));
@@ -159,18 +161,18 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case PROP:
 	    return new EntProp((String) value);
 	case PARAM:
-	    return new EntParam((String) value);
+	    return new EntValue(getParamValues().get(value));//EntParam((String) value);
 	case VAL:
 	    return new EntValue(value);
 	case EXPR:
 	case FUNCTION_MODEL:
 	    return (ISingleOperand) value;
 	case EXPR_TOKENS:
-	    return (ISingleOperand) new StandAloneExpressionBuilder(dbVersion, (ExpressionModel) value).getResult().getValue();
+	    return (ISingleOperand) new StandAloneExpressionBuilder(dbVersion, getParamValues(), (ExpressionModel) value).getResult().getValue();
 	case EQUERY_TOKENS:
 	case ALL_OPERATOR:
 	case ANY_OPERATOR:
-	    return queryBuilder.generateEntQuery((QueryModel) value);
+	    return queryBuilder.generateEntQuery((QueryModel) value, getParamValues());
 	default:
 	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
 	}
@@ -250,5 +252,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
     protected EntQueryGenerator getQueryBuilder() {
         return queryBuilder;
+    }
+
+    public Map<String, Object> getParamValues() {
+        return paramValues;
     }
 }

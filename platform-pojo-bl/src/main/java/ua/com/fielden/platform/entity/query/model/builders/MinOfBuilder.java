@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.entity.query.model.builders;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.entity.query.model.elements.MonthOfModel;
 
 public class MinOfBuilder extends AbstractFunctionBuilder {
 
-    protected MinOfBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
-	super(parent, dbVersion);
+    protected MinOfBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
+	super(parent, dbVersion, paramValues);
     }
 
     @Override

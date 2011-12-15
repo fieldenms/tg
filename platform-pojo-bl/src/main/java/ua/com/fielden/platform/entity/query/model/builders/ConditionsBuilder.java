@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.model.builders;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.model.elements.CompoundConditionModel;
 import ua.com.fielden.platform.entity.query.model.elements.ConditionsModel;
@@ -12,9 +13,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class ConditionsBuilder extends AbstractTokensBuilder {
 
-    protected ConditionsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
-	super(parent, dbVersion);
-	setChild(new ConditionBuilder(this, dbVersion));
+    protected ConditionsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
+	super(parent, dbVersion, paramValues);
+	setChild(new ConditionBuilder(this, dbVersion, paramValues));
     }
 
     @Override

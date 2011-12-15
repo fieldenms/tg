@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity.query.model.builders;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.elements.ConditionsModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntQuery;
@@ -17,11 +20,11 @@ public class EntQueryGenerator {
 	this.dbVersion = dbVersion;
     }
 
-    public EntQuery generateEntQuery(final QueryModel qryModel) {
+    public EntQuery generateEntQuery(final QueryModel qryModel, final Map<String, Object> paramValues) {
 	ConditionsBuilder where = null;
-	final QrySourcesBuilder from = new QrySourcesBuilder(null, dbVersion);
-	final QryYieldsBuilder select = new QryYieldsBuilder(null, dbVersion);
-	final QryGroupsBuilder groupBy = new QryGroupsBuilder(null, dbVersion);
+	final QrySourcesBuilder from = new QrySourcesBuilder(null, dbVersion, paramValues);
+	final QryYieldsBuilder select = new QryYieldsBuilder(null, dbVersion, paramValues);
+	final QryGroupsBuilder groupBy = new QryGroupsBuilder(null, dbVersion, paramValues);
 
 	ITokensBuilder active = null;
 
@@ -33,7 +36,7 @@ public class EntQueryGenerator {
 	    } else {
 		switch ((QueryTokens) pair.getValue()) {
 		case WHERE: //eats token
-		    where = new ConditionsBuilder(null, dbVersion);
+		    where = new ConditionsBuilder(null, dbVersion, paramValues);
 		    active = where;
 		    break;
 		case FROM: //eats token
@@ -41,11 +44,11 @@ public class EntQueryGenerator {
 		    break;
 		case YIELD: //eats token
 		    active = select;
-		    select.setChild(new YieldBuilder(select, dbVersion));
+		    select.setChild(new YieldBuilder(select, dbVersion, paramValues));
 		    break;
 		case GROUP_BY: //eats token
 		    active = groupBy;
-		    groupBy.setChild(new GroupBuilder(groupBy, dbVersion));
+		    groupBy.setChild(new GroupBuilder(groupBy, dbVersion, paramValues));
 		    break;
 		default:
 		    break;
@@ -55,5 +58,9 @@ public class EntQueryGenerator {
 	}
 
 	return new EntQuery((EntQuerySourcesModel) from.getResult().getValue(), where != null ? (ConditionsModel) where.getResult().getValue() : null, (YieldsModel) select.getResult().getValue(), (GroupsModel) groupBy.getResult().getValue());
+    }
+
+    public EntQuery generateEntQuery(final QueryModel qryModel) {
+	return generateEntQuery(qryModel, new HashMap<String, Object>());
     }
 }

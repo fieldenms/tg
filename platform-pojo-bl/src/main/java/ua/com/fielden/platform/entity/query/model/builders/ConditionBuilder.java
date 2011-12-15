@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.elements.ComparisonOperator;
@@ -37,8 +38,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	mutlipleOperands.addAll(mutlipleAnyOperands);
     }
 
-    protected ConditionBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
-	super(parent, dbVersion);
+    protected ConditionBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
+	super(parent, dbVersion, paramValues);
     }
 
     private boolean isPlainExistenceTest() {
@@ -305,7 +306,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private Pair<TokenCategory, Object> getResultForPlainExistenceTest() {
-	return new Pair<TokenCategory, Object>(TokenCategory.EXISTENCE_TEST, new ExistenceTestModel((Boolean) firstValue(), getQueryBuilder().generateEntQuery((QueryModel) secondValue())));
+	return new Pair<TokenCategory, Object>(TokenCategory.EXISTENCE_TEST, new ExistenceTestModel((Boolean) firstValue(), getQueryBuilder().generateEntQuery((QueryModel) secondValue(), getParamValues())));
     }
 
     private Pair<TokenCategory, Object> getResultForPlainSetTest() {

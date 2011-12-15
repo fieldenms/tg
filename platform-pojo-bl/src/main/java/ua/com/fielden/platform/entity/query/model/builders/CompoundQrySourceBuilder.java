@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.builders;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.entity.query.model.elements.ConditionsModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntQueryCompoundSourceModel;
 import ua.com.fielden.platform.entity.query.model.elements.IEntQuerySource;
@@ -9,10 +11,10 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
 
-    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final TokenCategory cat, final Object value) {
-	super(parent, dbVersion);
+    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues, final TokenCategory cat, final Object value) {
+	super(parent, dbVersion, paramValues);
 	getTokens().add(new Pair<TokenCategory, Object>(cat, value));
-	setChild(new QrySourceBuilder(this, dbVersion));
+	setChild(new QrySourceBuilder(this, dbVersion, paramValues));
     }
 
     @Override
@@ -20,7 +22,7 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
 	switch (cat) {
 	case ON: //eats token
 	    finaliseChild();
-	    setChild(new ConditionsBuilder(this, getDbVersion()));
+	    setChild(new ConditionsBuilder(this, getDbVersion(), getParamValues()));
 	    break;
 	default:
 	    super.add(cat, value);

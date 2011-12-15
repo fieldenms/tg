@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query.model.builders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.model.elements.YieldModel;
 import ua.com.fielden.platform.entity.query.model.elements.YieldsModel;
@@ -10,8 +11,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QryYieldsBuilder extends AbstractTokensBuilder {
 
-    protected QryYieldsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion) {
-	super(parent, dbVersion);
+    protected QryYieldsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
+	super(parent, dbVersion, paramValues);
     }
 
     @Override

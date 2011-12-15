@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.model.builders;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.elements.ArithmeticalOperator;
@@ -14,8 +15,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class StandAloneExpressionBuilder extends AbstractTokensBuilder {
 
-    protected StandAloneExpressionBuilder(final DbVersion dbVersion, final ExpressionModel exprModel) {
-	super(null, dbVersion);
+    protected StandAloneExpressionBuilder(final DbVersion dbVersion, final Map<String, Object> paramValues, final ExpressionModel exprModel) {
+	super(null, dbVersion, paramValues);
 
 	for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
 	    add(tokenPair.getKey(), tokenPair.getValue());
