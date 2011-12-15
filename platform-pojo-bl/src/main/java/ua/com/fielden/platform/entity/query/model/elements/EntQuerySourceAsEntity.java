@@ -67,4 +67,9 @@ public class EntQuerySourceAsEntity implements IEntQuerySource {
 	    return false;
 	}
     }
+
+    @Override
+    public Class getType() {
+	return entityType;
+    }
 }

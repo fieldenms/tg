@@ -7,6 +7,7 @@ import java.util.Set;
 
 public class EntProp implements ISingleOperand {
     private final String name;
+    private Class propType; //TODO ?
 
     public EntProp(final String name) {
 	super();
@@ -53,5 +54,13 @@ public class EntProp implements ISingleOperand {
 	    return false;
 	}
 	return true;
+    }
+
+    public Class getPropType() {
+        return propType;
+    }
+
+    public void setPropType(final Class propType) {
+        this.propType = propType;
     }
 }

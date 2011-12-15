@@ -3,6 +3,9 @@ package ua.com.fielden.platform.entity.query.model.elements;
 import java.util.Arrays;
 import java.util.List;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.reflection.Finder;
 
 public class EntQuerySourceAsModel implements IEntQuerySource {
     private final List<EntQuery> models;
@@ -15,7 +18,7 @@ public class EntQuerySourceAsModel implements IEntQuerySource {
     }
 
     public String getAlias() {
-        return alias;
+	return alias;
     }
 
     @Override
@@ -58,7 +61,28 @@ public class EntQuerySourceAsModel implements IEntQuerySource {
 
     @Override
     public boolean hasProperty(final String dotNotatedPropName) {
-	// TODO Auto-generated method stub
-	return false;
+	final Class sourceResultType = getType();
+
+	if (AbstractEntity.class.isAssignableFrom(sourceResultType) && !EntityAggregates.class.isAssignableFrom(sourceResultType)) {
+	    if (dotNotatedPropName.equalsIgnoreCase(alias)) {
+		return true; // id property is meant here
+	    }
+
+	    try {
+		Finder.findFieldByName(sourceResultType, (alias == null ? dotNotatedPropName : (!dotNotatedPropName.startsWith(alias + ".") ? dotNotatedPropName
+			: dotNotatedPropName.substring(alias.length() + 1))));
+		return true;
+	    } catch (final Exception e) {
+		return false;
+	    }
+
+	} else {
+	    return false; // TODO need to cover case of EntityAggregates and Primitives
+	}
+    }
+
+    @Override
+    public Class getType() {
+	return models.get(0).getResultType();
     }
 }

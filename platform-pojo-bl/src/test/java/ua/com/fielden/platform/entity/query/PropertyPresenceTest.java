@@ -27,6 +27,20 @@ public class PropertyPresenceTest {
     }
 
     @Test
+    public void test_prop1a() {
+	final AggregatedResultQueryModel qry = query.select(query.select(TgVehicle.class).model()).modelAsAggregate();
+
+	assertEquals("Property should be present", true, qb.generateEntQuery(qry).getSources().getMain().hasProperty("id"));
+	assertEquals("Property should be present", true, qb.generateEntQuery(qry).getSources().getMain().hasProperty("key"));
+	assertEquals("Property should be present", true, qb.generateEntQuery(qry).getSources().getMain().hasProperty("desc"));
+	assertEquals("Property should be present", true, qb.generateEntQuery(qry).getSources().getMain().hasProperty("model"));
+	assertEquals("Property should be present", true, qb.generateEntQuery(qry).getSources().getMain().hasProperty("model.desc"));
+	assertEquals("Property should be present", true, qb.generateEntQuery(qry).getSources().getMain().hasProperty("model.make.desc"));
+    }
+
+
+
+    @Test
     public void test_prop2() {
 	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).as("v").modelAsAggregate();
 

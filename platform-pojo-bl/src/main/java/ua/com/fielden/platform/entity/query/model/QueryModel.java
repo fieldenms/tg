@@ -8,7 +8,6 @@ import ua.com.fielden.platform.utils.Pair;
 public class QueryModel {
     private final List<Pair<TokenCategory, Object>> tokens;
     private Class resultType;
-    private boolean lightweight;
 
     @Override
     public String toString() {
@@ -24,14 +23,6 @@ public class QueryModel {
 	this.resultType = resultType;
     }
 
-    public boolean isLightweight() {
-	return lightweight;
-    }
-
-    public void setLightweight(final boolean lightweight) {
-	this.lightweight = lightweight;
-    }
-
     public List<Pair<TokenCategory, Object>> getTokens() {
         return tokens;
     }
@@ -40,7 +31,6 @@ public class QueryModel {
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	result = prime * result + (lightweight ? 1231 : 1237);
 	result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
 	result = prime * result + ((tokens == null) ? 0 : tokens.hashCode());
 	return result;
@@ -58,9 +48,7 @@ public class QueryModel {
 	    return false;
 	}
 	final QueryModel other = (QueryModel) obj;
-	if (lightweight != other.lightweight) {
-	    return false;
-	}
+
 	if (resultType == null) {
 	    if (other.resultType != null) {
 		return false;
@@ -76,5 +64,9 @@ public class QueryModel {
 	    return false;
 	}
 	return true;
+    }
+
+    public Class getResultType() {
+        return resultType;
     }
 }

@@ -12,14 +12,16 @@ public class EntQuery implements ISingleOperand {
     private final ConditionsModel conditions;
     private final YieldsModel yields;
     private final GroupsModel groups;
+    private final Class resultType;
     private EntQuery master;
 
-    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups) {
+    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType) {
 	super();
 	this.sources = sources;
 	this.conditions = conditions;
 	this.yields = yields;
 	this.groups = groups;
+	this.resultType = resultType != null ? resultType : (sources.getMain().getType());
 
 	for (final EntQuery entQuery : getImmediateSubqueries()) {
 	    entQuery.master = this;
@@ -218,6 +220,10 @@ public class EntQuery implements ISingleOperand {
 
     public EntQuery getMaster() {
 	return master;
+    }
+
+    public Class getResultType() {
+        return resultType;
     }
 }
 

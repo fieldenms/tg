@@ -57,7 +57,7 @@ public class EntQueryGenerator {
 	    }
 	}
 
-	return new EntQuery((EntQuerySourcesModel) from.getResult().getValue(), where != null ? (ConditionsModel) where.getResult().getValue() : null, (YieldsModel) select.getResult().getValue(), (GroupsModel) groupBy.getResult().getValue());
+	return new EntQuery((EntQuerySourcesModel) from.getResult().getValue(), where != null ? (ConditionsModel) where.getResult().getValue() : null, (YieldsModel) select.getResult().getValue(), (GroupsModel) groupBy.getResult().getValue(), qryModel.getResultType());
     }
 
     public EntQuery generateEntQuery(final QueryModel qryModel) {

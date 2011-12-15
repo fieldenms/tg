@@ -153,11 +153,11 @@ public class EntityFetcher<E extends AbstractEntity> {
      * @return
      */
     @SessionRequired
-    public List<E> list(final Session session, final EntityFactory entityFactory, final QueryModel queryModel, final Integer pageNumber, final Integer pageCapacity, final fetch<E> fetchModel) {
+    public List<E> list(final Session session, final EntityFactory entityFactory, final QueryModel queryModel, final Integer pageNumber, final Integer pageCapacity, final fetch<E> fetchModel, final boolean lightweight) {
 	this.session = session;
 	this.entityFactory = entityFactory;
 	try {
-	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity, fetchModel), queryModel.isLightweight());
+	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity, fetchModel), lightweight);
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw new IllegalStateException(e);
@@ -165,8 +165,8 @@ public class EntityFetcher<E extends AbstractEntity> {
     }
 
 
-    public List<E> list(final Session session, final EntityFactory entityFactory, final QueryModel queryModel) {
-	return list(session, entityFactory, queryModel, null, null, null);
+    public List<E> list(final Session session, final EntityFactory entityFactory, final QueryModel queryModel, final boolean lightweight) {
+	return list(session, entityFactory, queryModel, null, null, null, lightweight);
     }
 
 
