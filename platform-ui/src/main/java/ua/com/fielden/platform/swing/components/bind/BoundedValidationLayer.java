@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.components.bind;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.RenderingHints;
@@ -53,9 +54,9 @@ import com.jgoodies.binding.value.ValueModel;
 public class BoundedValidationLayer<T extends JComponent> extends ValidationLayer<T> implements IOnCommitActionable {
     private static final long serialVersionUID = -4862787312025734939L;
 
-    public static final Color 	INVALID_COLOUR = new Color(190, 0, 0, 90), //
-    REQUIRED_COLOUR = new Color(120, 186, 244, 90), //
-    WARNING_COLOUR = new Color(255, 255, 65, 90);
+    public static final Color INVALID_COLOUR = new Color(190, 0, 0, 90), //
+	    REQUIRED_COLOUR = new Color(120, 186, 244, 90), //
+	    WARNING_COLOUR = new Color(255, 255, 65, 90);
 
     private IOnCommitActionable onCommitActionable;
 
@@ -67,7 +68,7 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 
     private Color colourOnTop = null;
 
-    public BoundedValidationLayer(final T component, final String originalToolTipText, final boolean selectAfterFocusGained){
+    public BoundedValidationLayer(final T component, final String originalToolTipText, final boolean selectAfterFocusGained) {
 	super(component);
 	this.setUI(new BoundedValidationUi(component));
 	getIncapsulatedComponent().setToolTipText(this.originalToolTipText = originalToolTipText);
@@ -92,23 +93,23 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 
     /**
      *
-     * Gets the insets of inner incapsulated component. In case of spinner incapsulated component,
-     * provides left inset as for inner text component in case when the editor of spinner is a {@link DefaultEditor} instance.
+     * Gets the insets of inner incapsulated component. In case of spinner incapsulated component, provides left inset as for inner text component in case when the editor of
+     * spinner is a {@link DefaultEditor} instance.
      *
      * @return
      */
     public Insets getIncapsulatedInsets() {
-        if (getIncapsulatedComponent() instanceof JSpinner) {
-            final JSpinner spinner = ((JSpinner) getIncapsulatedComponent());
-            final Insets spinnerInsets = spinner.getInsets();
-            if (spinner.getEditor() instanceof DefaultEditor) {
-        	return new Insets(spinnerInsets.top, ((DefaultEditor) spinner.getEditor()).getTextField().getInsets().left, spinnerInsets.bottom, spinnerInsets.right);
-            } else {
-        	return spinnerInsets;
-            }
-        } else {
-            return getIncapsulatedComponent().getInsets();
-        }
+	if (getIncapsulatedComponent() instanceof JSpinner) {
+	    final JSpinner spinner = ((JSpinner) getIncapsulatedComponent());
+	    final Insets spinnerInsets = spinner.getInsets();
+	    if (spinner.getEditor() instanceof DefaultEditor) {
+		return new Insets(spinnerInsets.top, ((DefaultEditor) spinner.getEditor()).getTextField().getInsets().left, spinnerInsets.bottom, spinnerInsets.right);
+	    } else {
+		return spinnerInsets;
+	    }
+	} else {
+	    return getIncapsulatedComponent().getInsets();
+	}
     }
 
     /**
@@ -130,7 +131,7 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 
     @Override
     public boolean requestFocusInWindow() {
-        return getIncapsulatedComponent().requestFocusInWindow(); // should be overridden to provide automatic refocusing from validation layer to its wrapped component
+	return getIncapsulatedComponent().requestFocusInWindow(); // should be overridden to provide automatic refocusing from validation layer to its wrapped component
     }
 
     @Override
@@ -143,7 +144,7 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
      *
      * @param colour
      */
-    public void setColour(final Color colour){
+    public void setColour(final Color colour) {
 	this.colourOnTop = colour;
     }
 
@@ -190,7 +191,7 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 		g2.fillRect(0, 0, layer.getWidth(), layer.getHeight());
 	    }
 
-	    if (colourOnTop != null){
+	    if (colourOnTop != null) {
 		g2.setColor(colourOnTop);
 		g2.fillRect(0, 0, layer.getWidth(), layer.getHeight());
 	    }
@@ -410,18 +411,30 @@ public class BoundedValidationLayer<T extends JComponent> extends ValidationLaye
 
     @Override
     public void setEnabled(final boolean enabled) {
+	searchAndDisable(getView(), enabled);
+	if (JSpinner.class.isAssignableFrom(getView().getClass())) {
+	    searchAndDisable(((JSpinner) getView()).getEditor(), enabled);
+	}
+	super.setEnabled(enabled);
+    }
+
+    private void searchAndDisable(final Component topComponent, final boolean enabled) {
+	final JComponent jtopComponent = (JComponent) topComponent;
 	try {
-	    final Method method = Reflector.getMethod(getView().getClass(), "setEditable", boolean.class);
+	    final Method method = Reflector.getMethod(topComponent.getClass(), "setEditable", boolean.class);
 	    if (method != null) {
-		method.invoke(getView(), enabled);
+		method.invoke(topComponent, enabled);
 	    } else {
-		getView().setEnabled(enabled);
+		topComponent.setEnabled(enabled);
 	    }
 	} catch (final Exception e) {
-	    getView().setEnabled(enabled);
+	    topComponent.setEnabled(enabled);
 	}
-	//getUI().setEnabled(enabled);
-	super.setEnabled(enabled);
+
+	for (final Component component : jtopComponent.getComponents()) {
+	    searchAndDisable(component, enabled);
+	}
+
     }
 
     /**
