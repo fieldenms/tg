@@ -501,4 +501,8 @@ public abstract class UmDetailsWithCrudMany<M extends AbstractEntity, D extends 
 	return onRowSelect;
     }
 
+    protected void setModifying(final boolean isModifying) {
+	this.isModifying = isModifying;
+    }
+
 }
