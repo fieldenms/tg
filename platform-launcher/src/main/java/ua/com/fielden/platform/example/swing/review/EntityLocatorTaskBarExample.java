@@ -34,7 +34,7 @@ import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuild
 import ua.com.fielden.platform.swing.review.EntityLocator;
 import ua.com.fielden.platform.swing.review.EntityLocatorModel;
 import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.ISelectionListener;
+import ua.com.fielden.platform.swing.review.IEntitySelectionListener;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
 import com.google.inject.Injector;
@@ -110,7 +110,7 @@ public class EntityLocatorTaskBarExample extends AbstractUiApplication {
 
 	final PropertyTableModelBuilder<Wheelset> rotableTableModelBuilder = new PropertyTableModelBuilder<Wheelset>(Wheelset.class).addReadonly("key", "No").addReadonly("desc", "Description").addReadonly("status", "Status").addReadonly("rotableClass", "Class");
 
-	rotableReviewModel = new EntityLocatorModel<Wheelset, IWheelsetDao, EntityQueryCriteria<Wheelset, IWheelsetDao>>(criteria, rotableTableModelBuilder, new ISelectionListener() {
+	rotableReviewModel = new EntityLocatorModel<Wheelset, IWheelsetDao, EntityQueryCriteria<Wheelset, IWheelsetDao>>(criteria, rotableTableModelBuilder, new IEntitySelectionListener() {
 
 	    @Override
 	    public boolean isSelected(final AbstractEntity entityToCheck) {

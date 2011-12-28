@@ -13,8 +13,11 @@ import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel.CanNotSetModeException;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel.UndefinedFormatException;
+import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.events.WizardEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
+import ua.com.fielden.platform.swing.review.report.interfaces.ISelectable;
+import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizardEventListener;
 import ua.com.fielden.platform.swing.view.BasePanel;
@@ -27,7 +30,7 @@ import ua.com.fielden.platform.swing.view.BasePanel;
  * @param <VT>
  * @param <WT>
  */
-public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, WT extends BasePanel & IWizard> extends BasePanel {
+public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, WT extends BasePanel & IWizard> extends BasePanel implements ISelectable{
 
     private static final long serialVersionUID = 362789325125491283L;
 
@@ -53,6 +56,24 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
     }
 
     /**
+     * Returns the previous configurabel review. If this configuration panel is in the report mode then this method returns currently visible entity review.
+     * 
+     * @return
+     */
+    public VT getPreviousView() {
+	return previousView;
+    }
+
+    /**
+     * Returns the previous wizard view. If this configuration panel is in the wizard mode then this method returns currently visible wizard.
+     * 
+     * @return
+     */
+    public WT getPreviousWizard() {
+	return previousWizard;
+    }
+
+    /**
      * Returns the associated {@link AbstractConfigurationModel}.
      * 
      * @return
@@ -68,6 +89,23 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
      */
     public final BlockingIndefiniteProgressLayer getProgressLayer() {
 	return progressLayer;
+    }
+
+    @Override
+    public void addSelectionEventListener(final ISelectionEventListener l) {
+	listenerList.add(ISelectionEventListener.class, l);
+    }
+
+    @Override
+    public void removeSelectionEventListener(final ISelectionEventListener l) {
+	listenerList.remove(ISelectionEventListener.class, l);
+    }
+
+    /**
+     * Selects this {@link AbstractConfigurationModel} and fires {@link SelectionEvent}.
+     */
+    public void select(){
+	fireSelectionEvent(new SelectionEvent(this));
     }
 
     /**
@@ -111,7 +149,8 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 			setView(previousWizard);
 			break;
 		    case REPORT:
-			setView(createConfigurableView());
+			previousView = createConfigurableView();
+			setView(previousView);
 			break;
 		    }
 		}
@@ -145,6 +184,17 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 		return true;
 	    }
 	};
+    }
+
+    /**
+     * Notifies all registered {@link ISelectionEventListener} that this configuration model was selected.
+     * 
+     * @param event
+     */
+    protected final void fireSelectionEvent(final SelectionEvent event){
+	for(final ISelectionEventListener listener : listenerList.getListeners(ISelectionEventListener.class)){
+	    listener.viewWasSelected(event);
+	}
     }
 
     /**

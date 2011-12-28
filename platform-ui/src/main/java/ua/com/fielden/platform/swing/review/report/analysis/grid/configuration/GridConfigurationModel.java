@@ -6,10 +6,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
+import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisModel;
-import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel;
 
-public class GridConfigurationModel<T extends AbstractEntity> extends AbstractConfigurationModel {
+public class GridConfigurationModel<T extends AbstractEntity> extends AbstractAnalysisConfigurationModel {
 
     private final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria;
 

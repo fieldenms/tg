@@ -59,4 +59,21 @@ public abstract class EntityQueryCriteria<C extends IDomainTreeManager, T extend
     }
 
     //TODO must implement later.
+
+    /**
+     * Must load default values for the properties of the binding entity.
+     */
+    public void defaultValues(){
+	//TODO implement default values for this criteria values.
+    }
+
+    /**
+     * Determines whether default values can be set or not.
+     * 
+     * @return
+     */
+    public boolean isDefaultEnabled(){
+	//TODO implement is default enable method
+	return false;
+    }
 }

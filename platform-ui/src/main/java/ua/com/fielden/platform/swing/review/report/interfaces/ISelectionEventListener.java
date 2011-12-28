@@ -4,8 +4,8 @@ import java.util.EventListener;
 
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 
-public interface ISelectedEventListener extends EventListener {
+public interface ISelectionEventListener extends EventListener {
 
-    void modelWasSelected(SelectionEvent event);
+    void viewWasSelected(SelectionEvent event);
 
 }

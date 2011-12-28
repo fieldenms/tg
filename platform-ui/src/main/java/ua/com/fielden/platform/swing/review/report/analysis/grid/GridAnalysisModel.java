@@ -5,19 +5,19 @@ import java.util.ArrayList;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
-import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.report.events.DataLoadedEvent;
+import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 
-public class GridAnalysisModel<T extends AbstractEntity> extends AbstractEntityReviewModel<T, ICentreDomainTreeManager> {
+public class GridAnalysisModel<T extends AbstractEntity> extends AbstractAnalysisReviewModel<T, IAbstractAnalysisDomainTreeManager> {
 
     private final PropertyTableModel<T> gridModel;
 
     public GridAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria) {
-	super(criteria);
+	super(criteria, null);
 	this.gridModel = createTableModel();
     }
 
@@ -34,12 +34,4 @@ public class GridAnalysisModel<T extends AbstractEntity> extends AbstractEntityR
     public final PropertyTableModel<T> getGridModel(){
 	return gridModel;
     }
-
-    @Override
-    public void loadData() {
-	// TODO Auto-generated method stub
-	// TODO Must implement data loading and view updating
-	fireDataLoadedEvent(new DataLoadedEvent(gridModel, null));
-    }
-
 }

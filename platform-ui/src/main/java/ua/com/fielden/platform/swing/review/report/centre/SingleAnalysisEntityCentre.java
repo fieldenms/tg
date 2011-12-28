@@ -13,16 +13,21 @@ public class SingleAnalysisEntityCentre<T extends AbstractEntity> extends Abstra
 
     public SingleAnalysisEntityCentre(final EntityCentreModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
+	createReview();
+	layoutComponents();
+    }
+
+    private void createReview() {
+	final BlockingIndefiniteProgressLayer reviewProgressLayer = getReviewProgressLayer();
+	final GridConfigurationModel<T> configModel = new GridConfigurationModel<T>(getModel().getCriteria());
+	final GridConfigurationPanel<T> gridConfigView = new GridConfigurationPanel<T>("Main details", configModel, this, reviewProgressLayer);
+	reviewProgressLayer.setView(gridConfigView);
+	gridConfigView.open();
+	setCurrentAnalysisConfigurationView(gridConfigView);
     }
 
     @Override
-    protected JComponent createReview() {
-	final GridConfigurationModel<T> configModel = getModel().createMainDetailsModel();
-	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "");
-	final GridConfigurationPanel<T> gridConfigView = new GridConfigurationPanel<T>(configModel, progressLayer);
-	progressLayer.setView(gridConfigView);
-	gridConfigView.open();
-	configModel.select();
-	return progressLayer;
+    public JComponent getReviewPanel() {
+	return getReviewProgressLayer();
     }
 }

@@ -5,25 +5,15 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
-import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel;
-import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
-import ua.com.fielden.platform.swing.review.report.interfaces.ISelectedEventListener;
 
+//TODO consider the necessity of entity centre model existence.
 public class EntityCentreModel<T extends AbstractEntity> extends AbstractEntityReviewModel<T, ICentreDomainTreeManager> {
 
-    private AbstractConfigurationModel resultViewModel;
+    //TODO is result view model is needed?
+    //private AbstractAnalysisConfigurationModel resultViewModel;
 
     public EntityCentreModel(final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria){
 	super(criteria);
-    }
-
-    @Override
-    public void loadData() {
-    }
-
-    protected final void setResultViewModel(final AbstractConfigurationModel resultViewModel){
-	this.resultViewModel = resultViewModel;
     }
 
     //    private final AbstractConfigurationModel getResultViewModel(){
@@ -31,16 +21,26 @@ public class EntityCentreModel<T extends AbstractEntity> extends AbstractEntityR
     //    }
 
 
-    protected GridConfigurationModel<T> createMainDetailsModel(){
-	final GridConfigurationModel<T> gridConfigModel = new GridConfigurationModel<T>(getCriteria());
-	gridConfigModel.addSelectedEventListener(new ISelectedEventListener() {
+    //    protected final GridConfigurationModel<T> createMainDetailsModel(){
+    //	final GridConfigurationModel<T> gridConfigModel = new GridConfigurationModel<T>(getCriteria());
+    //	gridConfigModel.addSelectedEventListener(createSelectionListener(gridConfigModel));
+    //	return gridConfigModel;
+    //    }
 
-	    @Override
-	    public void modelWasSelected(final SelectionEvent event) {
-		setResultViewModel(gridConfigModel);
-	    }
-	});
-	return gridConfigModel;
-    }
+    //    public IPageModel createPaginationModel() {
+    //	throw new UnsupportedOperationException("Pagination model can not be created right now");
+    //	//return null;
+    //    }
+
+    //    private ISelectedEventListener createSelectionListener(final AbstractAnalysisConfigurationModel resultViewModel){
+    //	return new ISelectedEventListener() {
+    //
+    //	    @Override
+    //	    public void modelWasSelected(final SelectionEvent event) {
+    //		EntityCentreModel.this.resultViewModel = resultViewModel;
+    //	    }
+    //	};
+    //    }
+
 }
 

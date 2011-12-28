@@ -8,8 +8,6 @@ import javax.swing.event.EventListenerList;
 
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
-import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
-import ua.com.fielden.platform.swing.review.report.interfaces.ISelectedEventListener;
 
 public abstract class AbstractConfigurationModel {
 
@@ -75,42 +73,6 @@ public abstract class AbstractConfigurationModel {
      */
     public void removePropertyChangeListener(final PropertyChangeListener l){
 	this.listenerList.remove(PropertyChangeListener.class, l);
-    }
-
-    /**
-     * See {@link EventListenerList#add(Class, java.util.EventListener)}.
-     * 
-     * @param l
-     */
-    public void addSelectedEventListener(final ISelectedEventListener l){
-	this.listenerList.add(ISelectedEventListener.class, l);
-    }
-
-    /**
-     * See {@link EventListenerList#remove(Class, java.util.EventListener)}.
-     * 
-     * @param l
-     */
-    public void removeSelectedEventListener(final ISelectedEventListener l){
-	this.listenerList.remove(ISelectedEventListener.class, l);
-    }
-
-    /**
-     * Selects this {@link AbstractConfigurationModel} and fires {@link SelectionEvent}.
-     */
-    public void select(){
-	fireModelWasSelectedEvent(new SelectionEvent(this));
-    }
-
-    /**
-     * Notifies all registered {@link ISelectedEventListener} that this configuration model was selected.
-     * 
-     * @param event
-     */
-    protected final void fireModelWasSelectedEvent(final SelectionEvent event){
-	for(final ISelectedEventListener listener : listenerList.getListeners(ISelectedEventListener.class)){
-	    listener.modelWasSelected(event);
-	}
     }
 
     /**

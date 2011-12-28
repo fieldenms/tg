@@ -6,6 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -53,5 +54,14 @@ public class CriteriaReflector {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static List<Field> getCriteriaProperties(final Class<? extends EntityQueryCriteria> criteriaClass) {
 	return Finder.findProperties(criteriaClass, IsProperty.class, CriteriaProperty.class);
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static Pair<Class<?>, String> getCriteriaProperty(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
+	final CriteriaProperty annotation = AnnotationReflector.getPropertyAnnotation(CriteriaProperty.class, criteriaClass, propertyName);
+	if(annotation != null){
+	    return new Pair<Class<?>, String>(annotation.rootType(), annotation.propertyName());
+	}
+	return new Pair<Class<?>, String>(null, null);
     }
 }

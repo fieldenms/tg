@@ -20,7 +20,7 @@ import com.jidesoft.grid.TableModelWrapperUtils;
 
 public class DynamicEntityLocatorModel<T extends AbstractEntity, DAO extends IEntityDao<T>, R extends AbstractEntity> extends DynamicEntityReviewModel<T, DAO, R> {
 
-    private final ISelectionListener selectionListener;
+    private final IEntitySelectionListener entitySelectionListener;
 
     private final Action selectAction, cancelAction;
 
@@ -32,14 +32,14 @@ public class DynamicEntityLocatorModel<T extends AbstractEntity, DAO extends IEn
     final ActionChangerBuilder actionChangerBuilder,//
     final int columns, //
     final Map<String, PropertyPersistentObject> criteriaProperties,//
-    final ISelectionListener selectionListener,//
+    final IEntitySelectionListener entitySelectionListener,//
     final Action selectAction,//
     final Action cancelAction,//
     final boolean useForAutcompleter,//
     final boolean searchByKey, final boolean searchByDesc,//
     final Runnable... afterRunActions) {
 	super(criteria, builder, null, actionChangerBuilder, columns, criteriaProperties, null, afterRunActions);
-	this.selectionListener = selectionListener;
+	this.entitySelectionListener = entitySelectionListener;
 	this.selectAction = selectAction;
 	selectAction.setEnabled(false);
 	this.cancelAction = cancelAction;
@@ -50,7 +50,7 @@ public class DynamicEntityLocatorModel<T extends AbstractEntity, DAO extends IEn
 
 	    @Override
 	    public void run() {
-		DynamicEntityLocatorModel.this.selectionListener.clearSelection();
+		DynamicEntityLocatorModel.this.entitySelectionListener.clearSelection();
 		getTableModel().getEntityGridInspector().getSelectionModel().clearSelection();
 		selectAction.setEnabled(false);
 	    }
@@ -62,7 +62,7 @@ public class DynamicEntityLocatorModel<T extends AbstractEntity, DAO extends IEn
 	    @Override
 	    public void tableChanged(final TableModelEvent e) {
 		for (final T instance : getTableModel().instances()) {
-		    if (selectionListener.isSelected(instance)) {
+		    if (entitySelectionListener.isSelected(instance)) {
 			final int row = getTableModel().getRowOf(instance);
 			final int actualRow = TableModelWrapperUtils.getRowAt(getTableModel().getEntityGridInspector().getModel(), row);
 			if (actualRow >= 0) {
@@ -89,9 +89,9 @@ public class DynamicEntityLocatorModel<T extends AbstractEntity, DAO extends IEn
 		    if (e.getFirstIndex() < 0 || e.getLastIndex() < 0) {
 			return;
 		    }
-		    final int rows[] = selectionListener.isMultiselection() ? new int[e.getLastIndex() - e.getFirstIndex() + 1] //
+		    final int rows[] = entitySelectionListener.isMultiselection() ? new int[e.getLastIndex() - e.getFirstIndex() + 1] //
 			    : new int[e.getFirstIndex() == e.getLastIndex() ? 1 : 2];
-		    if (!selectionListener.isMultiselection()) {
+		    if (!entitySelectionListener.isMultiselection()) {
 			if (e.getFirstIndex() == e.getLastIndex()) {
 			    rows[0] = e.getFirstIndex();
 			} else {
@@ -107,19 +107,19 @@ public class DynamicEntityLocatorModel<T extends AbstractEntity, DAO extends IEn
 		    for (int rowIndex = 0; rowIndex < actualRows.length; rowIndex++) {
 			final T instance = getTableModel().instance(actualRows[rowIndex]);
 			final boolean isSelected = getTableModel().getEntityGridInspector().isRowSelected(rows[rowIndex]);
-			if (selectionListener.isMultiselection()) {
+			if (entitySelectionListener.isMultiselection()) {
 			    if (isSelected) {
-				selectionListener.performSelection(instance);
+				entitySelectionListener.performSelection(instance);
 			    } else {
-				selectionListener.performDeselect(instance);
+				entitySelectionListener.performDeselect(instance);
 			    }
 			} else {
 			    if (isSelected) {
-				selectionListener.performSelection(instance);
+				entitySelectionListener.performSelection(instance);
 			    }
 			}
 		    }
-		    if (selectionListener.isSelectionEmpty()) {
+		    if (entitySelectionListener.isSelectionEmpty()) {
 			selectAction.setEnabled(false);
 		    } else {
 			selectAction.setEnabled(true);
@@ -156,7 +156,7 @@ public class DynamicEntityLocatorModel<T extends AbstractEntity, DAO extends IEn
      * @return
      */
     public boolean isMultiselection() {
-	return selectionListener.isMultiselection();
+	return entitySelectionListener.isMultiselection();
     }
 
     public boolean isUseForAutocompleter() {

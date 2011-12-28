@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.review;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public interface ISelectionListener {
+public interface IEntitySelectionListener {
 
     void performSelection(AbstractEntity selectedObject);
 

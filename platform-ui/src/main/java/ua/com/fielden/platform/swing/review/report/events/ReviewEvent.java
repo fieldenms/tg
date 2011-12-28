@@ -2,8 +2,6 @@ package ua.com.fielden.platform.swing.review.report.events;
 
 import java.util.EventObject;
 
-import ua.com.fielden.platform.swing.review.report.interfaces.IReview.ReviewAction;
-
 /**
  * {@link EventObject} that represents review's configure event.
  * 
@@ -13,6 +11,20 @@ import ua.com.fielden.platform.swing.review.report.interfaces.IReview.ReviewActi
 public class ReviewEvent extends EventObject {
 
     private static final long serialVersionUID = -8695504451663349353L;
+
+    /**
+     * Represents phases of review actions: configure, save, save as, remove.
+     * 
+     * @author TG Team
+     *
+     */
+    public enum ReviewAction{
+	PRE_CONFIGURE, CONFIGURE, POST_CONFIGURE,
+	PRE_SAVE, SAVE, POST_SAVE,
+	PRE_SAVE_AS, SAVE_AS, POST_SAVE_AS,
+	PRE_SAVE_AS_DEFAULT, SAVE_AS_DEFAULT, POST_SAVE_AS_DEFAULT,
+	PRE_REMOVE, REMOVE, POST_REMOVE;
+    }
 
     private final ReviewAction reviewAction;
 

@@ -8,18 +8,7 @@ package ua.com.fielden.platform.swing.review.report.interfaces;
  * @author TG Team
  *
  */
-public interface IWizard {
-
-    /**
-     * Special wizard actions: build, cancel.
-     * 
-     * @author TG Team
-     *
-     */
-    public enum WizardAction{
-	PRE_BUILD, BUILD, POST_BUILD,
-	PRE_CANCEL, CANCEL, POST_CANCEL;
-    }
+public interface IWizard extends ISelectable{
 
     /**
      * Adds {@link IWizardEventListener} instance to listen wizard events.

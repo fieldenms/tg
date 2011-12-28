@@ -52,7 +52,7 @@ import ua.com.fielden.platform.swing.review.DynamicEntityReview;
 import ua.com.fielden.platform.swing.review.DynamicEntityReviewModel;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.IOrderSetter;
-import ua.com.fielden.platform.swing.review.ISelectionListener;
+import ua.com.fielden.platform.swing.review.IEntitySelectionListener;
 import ua.com.fielden.platform.swing.review.LocatorPersistentObject;
 import ua.com.fielden.platform.swing.review.factory.IEntityReviewFactory;
 import ua.com.fielden.platform.swing.review.factory.IWizardModelFactory;
@@ -236,9 +236,9 @@ public class OptionAutocompleterUi extends AutocompleterUi {
 	};
     }
 
-    private ISelectionListener createSelectionListener() {
+    private IEntitySelectionListener createSelectionListener() {
 	selectedEntities.clear();
-	return new ISelectionListener() {
+	return new IEntitySelectionListener() {
 
 	    @Override
 	    public boolean isSelected(final AbstractEntity entityToCheck) {

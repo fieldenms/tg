@@ -85,8 +85,6 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 	return Result.successful(this);
     }
 
-
-
     public EntityCentreModel<T> createEntityCentreModel() {
 	final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(getEntityType(), getName());
 	if(cdtm == null){
@@ -106,8 +104,6 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
     private String getName(){
 	return name;
     }
-
-
 
     public DomainTreeEditorModel<T> createDomainTreeEditorModel() {
 	final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(getEntityType(), getName());

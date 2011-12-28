@@ -2,8 +2,6 @@ package ua.com.fielden.platform.swing.review.report.events;
 
 import java.util.EventObject;
 
-import ua.com.fielden.platform.swing.review.report.interfaces.IWizard.WizardAction;
-
 /**
  * {@link EventObject} that represents wizard's build or cancel events.
  * 
@@ -13,6 +11,17 @@ import ua.com.fielden.platform.swing.review.report.interfaces.IWizard.WizardActi
 public class WizardEvent extends EventObject {
 
     private static final long serialVersionUID = -8370129218433979205L;
+
+    /**
+     * Special wizard actions: build, cancel.
+     * 
+     * @author TG Team
+     *
+     */
+    public enum WizardAction{
+	PRE_BUILD, BUILD, POST_BUILD,
+	PRE_CANCEL, CANCEL, POST_CANCEL;
+    }
 
     private final WizardAction wizardAction;
 

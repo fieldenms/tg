@@ -34,19 +34,19 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 
     //    private final JLabel treeCaption;
 
-    public DomainTreeEditorView(final DomainTreeEditorModel<T> wizardModel){
+    public DomainTreeEditorView(final DomainTreeEditorModel<T> domainTreeEditorModel){
 	super(new MigLayout("fill, insets 0", "[fill, grow]", "[][fill, grow][]"));
-	this.domainTreeEditorModel = wizardModel;
+	this.domainTreeEditorModel = domainTreeEditorModel;
 
 
 	//Configuring the property management action panel.
-	final JToolBar toolBar = wizardModel.getPropertyManagementActionPanel().buildActionPanel();
+	final JToolBar toolBar = domainTreeEditorModel.getPropertyManagementActionPanel().buildActionPanel();
 	toolBar.setFloatable(false);
 	toolBar.setBorder(BorderFactory.createEmptyBorder());
 	add(toolBar, "wrap");
 
 	//Configuring the entities tree.
-	final EntitiesTreeModel2 treeModel = wizardModel.createTreeModel();
+	final EntitiesTreeModel2 treeModel = domainTreeEditorModel.createTreeModel();
 	final EntitiesTree tree = new EntitiesTree(treeModel, "selection criteria", "result set");
 	tree.addMouseListener(createPropertyChosenListener(tree, treeModel));
 	tree.getSelectionModel().addTreeSelectionListener(createCalculatedPropertySelectionListener(tree, treeModel));
@@ -54,11 +54,11 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 	add(treePanel, "wrap");
 
 	//Configuring the expression editor.
-	final ExpressionEditorView editorView = new ExpressionEditorView(wizardModel.getExpressionModel());
+	final ExpressionEditorView editorView = new ExpressionEditorView(domainTreeEditorModel.getExpressionModel());
 	final JXCollapsiblePane editorPanel = new JXCollapsiblePane(new MigLayout("fill, insets 0","[fill, grow]","[fill, grow]"));
 	editorPanel.setCollapsed(true);
 	editorPanel.add(editorView);
-	wizardModel.addPropertyEditListener(createPropertyEditListener(editorPanel, tree));
+	domainTreeEditorModel.addPropertyEditListener(createPropertyEditListener(editorPanel, tree));
 	add(editorPanel);
     }
 

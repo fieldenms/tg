@@ -13,15 +13,15 @@ import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuild
 
 public class EntityLocatorModel<T extends AbstractEntity, DAO extends IEntityDao<T>, C extends EntityQueryCriteria<T, DAO>> extends EntityReviewModel<T, DAO, C> {
 
-    private final ISelectionListener selectionListener;
+    private final IEntitySelectionListener entitySelectionListener;
 
     public EntityLocatorModel(//
     final C criteria,//
     final PropertyTableModelBuilder<T> builder,//
-    final ISelectionListener selectionListener,//
+    final IEntitySelectionListener entitySelectionListener,//
     final Runnable... afterRunActions) {
 	super(criteria, builder, null, afterRunActions);
-	this.selectionListener = selectionListener;
+	this.entitySelectionListener = entitySelectionListener;
     }
 
     public Action createSelectAction(final EntityLocator<T, DAO, C> entityLocator) {
@@ -33,7 +33,7 @@ public class EntityLocatorModel<T extends AbstractEntity, DAO extends IEntityDao
 	    protected Void action(final ActionEvent e) throws Exception {
 		final List<T> selectedItems = entityLocator.getSelectedItems();
 		for (final T selectedItem : selectedItems) {
-		    selectionListener.performSelection(selectedItem);
+		    entitySelectionListener.performSelection(selectedItem);
 		}
 		return null;
 	    }
@@ -45,8 +45,8 @@ public class EntityLocatorModel<T extends AbstractEntity, DAO extends IEntityDao
 	return action;
     }
 
-    public ISelectionListener getSelectionListener() {
-	return selectionListener;
+    public IEntitySelectionListener getSelectionListener() {
+	return entitySelectionListener;
     }
 
 }

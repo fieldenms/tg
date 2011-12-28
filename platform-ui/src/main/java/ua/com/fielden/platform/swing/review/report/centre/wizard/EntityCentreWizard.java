@@ -17,7 +17,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardView;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
-import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorView;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 
 public class EntityCentreWizard<T extends AbstractEntity> extends AbstractWizardView<T> {
@@ -26,25 +25,18 @@ public class EntityCentreWizard<T extends AbstractEntity> extends AbstractWizard
 
     public EntityCentreWizard(final DomainTreeEditorModel<T> treeEditorModel, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(treeEditorModel, progressLayer);
+	layoutComponents();
     }
 
     @Override
-    protected void initView() {
-	setLayout(new MigLayout("fill, insets 0", "[fill, grow]", "[fill, grow][]"));
-
-	//Create domain tree editor (i.e. domain property tree with expression editor).
-	final DomainTreeEditorView<T> domainTreeEditorView = new DomainTreeEditorView<T>(getTreeEditorModel());
-
-	//Creates action panel with build and cancel actions.
+    protected JPanel createActionPanel() {
 	final JPanel actionPanel = new JPanel(new MigLayout("fill, insets 10", "[][][]30:push[fill, :100:][fill, :100:]", "[c]"));
 	actionPanel.add(DummyBuilder.label("Columns"));
 	actionPanel.add(new JSpinner(createSpinnerModel()));
 	actionPanel.add(createAutoRunCheckBox());
 	actionPanel.add(new JButton(getBuildAction()));
 	actionPanel.add(new JButton(getCancelAction()));
-
-	add(domainTreeEditorView, "wrap");
-	add(actionPanel);
+	return actionPanel;
     }
 
     private JCheckBox createAutoRunCheckBox() {
