@@ -58,6 +58,10 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, DTM extends
 	return removeAction;
     }
 
+    public BlockingIndefiniteProgressLayer getProgressLayer() {
+	return progressLayer;
+    }
+
     @Override
     public void addSelectionEventListener(final ISelectionEventListener l) {
 	listenerList.add(ISelectionEventListener.class, l);
@@ -100,36 +104,36 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, DTM extends
     }
 
     protected Action createRemoveAction() {
-        return createReviewAction("Delete", "Delete current report", ReviewAction.PRE_REMOVE, ReviewAction.REMOVE, ReviewAction.POST_REMOVE);
+	return createReviewAction("Delete", "Delete current report", ReviewAction.PRE_REMOVE, ReviewAction.REMOVE, ReviewAction.POST_REMOVE);
     }
 
     protected Action createSaveAsDefaultAction() {
-        return createReviewAction("Save as default", "Saves the locator as default and updates local configuration", ReviewAction.PRE_SAVE_AS_DEFAULT, ReviewAction.SAVE_AS_DEFAULT, ReviewAction.POST_SAVE_AS_DEFAULT);
+	return createReviewAction("Save as default", "Saves the locator as default and updates local configuration", ReviewAction.PRE_SAVE_AS_DEFAULT, ReviewAction.SAVE_AS_DEFAULT, ReviewAction.POST_SAVE_AS_DEFAULT);
     }
 
     protected Action createSaveAsAction() {
-        return createReviewAction("Save as", "Save an entity centre copy", ReviewAction.PRE_SAVE_AS, ReviewAction.SAVE_AS, ReviewAction.POST_SAVE_AS);
+	return createReviewAction("Save as", "Save an entity centre copy", ReviewAction.PRE_SAVE_AS, ReviewAction.SAVE_AS, ReviewAction.POST_SAVE_AS);
     }
 
     protected Action createSaveAction() {
-        return createReviewAction("Save", "Saves the entity centre", ReviewAction.PRE_SAVE, ReviewAction.SAVE, ReviewAction.POST_SAVE);
+	return createReviewAction("Save", "Saves the entity centre", ReviewAction.PRE_SAVE, ReviewAction.SAVE, ReviewAction.POST_SAVE);
     }
 
     protected Action createConfigureAction(){
-        return createReviewAction("Configure", "Configure entity centre", ReviewAction.PRE_CONFIGURE, ReviewAction.CONFIGURE, ReviewAction.POST_CONFIGURE);
+	return createReviewAction("Configure", "Configure entity centre", ReviewAction.PRE_CONFIGURE, ReviewAction.CONFIGURE, ReviewAction.POST_CONFIGURE);
     }
 
     protected boolean notifyReviewAction(final ReviewEvent ev) {
-        // Guaranteed to return a non-null array
-        final IReviewEventListener[] listeners = getListeners(IReviewEventListener.class);
-        // Process the listeners last to first, notifying
-        // those that are interested in this event
-        boolean result = true;
-    
-        for (final IReviewEventListener listener : listeners) {
-            result &= listener.configureActionPerformed(ev);
-        }
-        return result;
+	// Guaranteed to return a non-null array
+	final IReviewEventListener[] listeners = getListeners(IReviewEventListener.class);
+	// Process the listeners last to first, notifying
+	// those that are interested in this event
+	boolean result = true;
+
+	for (final IReviewEventListener listener : listeners) {
+	    result &= listener.configureActionPerformed(ev);
+	}
+	return result;
     }
 
     /**
@@ -138,9 +142,9 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, DTM extends
      * @param event
      */
     protected final void fireSelectionEvent(final SelectionEvent event){
-        for(final ISelectionEventListener listener : listenerList.getListeners(ISelectionEventListener.class)){
-            listener.viewWasSelected(event);
-        }
+	for(final ISelectionEventListener listener : listenerList.getListeners(ISelectionEventListener.class)){
+	    listener.viewWasSelected(event);
+	}
     }
 
     /**
@@ -153,36 +157,36 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, DTM extends
      * @return
      */
     private Action createReviewAction(final String name, final String shortDescription, final ReviewAction preAction, final ReviewAction action, final ReviewAction postAction){
-        return new BlockingLayerCommand<Void>(name, progressLayer){
-    
-            private static final long serialVersionUID = 4502256665545168359L;
-    
-            {
-        	putValue(Action.SHORT_DESCRIPTION, shortDescription);
-            }
-    
-            @Override
-            protected boolean preAction() {
-        	final boolean result = super.preAction();
-        	if(!result){
-        	    return false;
-        	}
-        	return notifyReviewAction(new ReviewEvent(AbstractEntityReview.this, preAction));
-            }
-    
-            @Override
-            protected Void action(final ActionEvent e) throws Exception {
-        	notifyReviewAction(new ReviewEvent(AbstractEntityReview.this, action));
-        	return null;
-            }
-    
-            @Override
-            protected void postAction(final Void value) {
-        	notifyReviewAction(new ReviewEvent(AbstractEntityReview.this, postAction));
-        	super.postAction(value);
-            }
-    
-        };
+	return new BlockingLayerCommand<Void>(name, progressLayer){
+
+	    private static final long serialVersionUID = 4502256665545168359L;
+
+	    {
+		putValue(Action.SHORT_DESCRIPTION, shortDescription);
+	    }
+
+	    @Override
+	    protected boolean preAction() {
+		final boolean result = super.preAction();
+		if(!result){
+		    return false;
+		}
+		return notifyReviewAction(new ReviewEvent(AbstractEntityReview.this, preAction));
+	    }
+
+	    @Override
+	    protected Void action(final ActionEvent e) throws Exception {
+		notifyReviewAction(new ReviewEvent(AbstractEntityReview.this, action));
+		return null;
+	    }
+
+	    @Override
+	    protected void postAction(final Void value) {
+		notifyReviewAction(new ReviewEvent(AbstractEntityReview.this, postAction));
+		super.postAction(value);
+	    }
+
+	};
     }
 
 }

@@ -67,12 +67,13 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
     private final Paginator paginator;
 
     //control panel actions (i.e. run, export, default actions)
+    private final JComponent customActionChanger;
     private final Action defaultAction;
     private final Action exportAction;
     private final Action runAction;
 
     //Holds current operable analysis report.
-    private AbstractAnalysisConfigurationView<T, ?, ?, ?> currentAnalysisConfigurationView;
+    private AbstractAnalysisConfigurationView<T, ?, ?, ?, ?> currentAnalysisConfigurationView;
 
     /**
      * Initiates this {@link AbstractEntityCentre}. Creates all parts and components of entity centre.
@@ -92,6 +93,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
 	this.defaultAction = createDefaultAction();
 	this.exportAction = createExportAction();
 	this.runAction = createRunAction();
+	this.customActionChanger = createCustomActionButton();
 	//Initiates the main parts of the entity centre.
 	this.toolBar = createToolBar();
 	this.criteriaPanel = createCriteriaPanel();
@@ -110,7 +112,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
      * 
      * @return
      */
-    public final AbstractAnalysisConfigurationView<T, ?, ?, ?> getCurrentAnalysisConfigurationView() {
+    public final AbstractAnalysisConfigurationView<T, ?, ?, ?, ?> getCurrentAnalysisConfigurationView() {
 	return currentAnalysisConfigurationView;
     }
 
@@ -130,6 +132,15 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
      */
     public final Action getDefaultAction() {
 	return defaultAction;
+    }
+
+    /**
+     * Returns the component that might be a {@link JButton} or {@link ActionChangeButton} instance. This component allows user to save or modify entity centre.
+     * 
+     * @return
+     */
+    public JComponent getCustomActionChanger() {
+	return customActionChanger;
     }
 
     /**
@@ -225,8 +236,8 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
      * 
      * @param currentAnalysisConfigurationView
      */
-    protected final void setCurrentAnalysisConfigurationView(final AbstractAnalysisConfigurationView<T, ?, ?, ?> currentAnalysisConfigurationView) {
-	final AbstractAnalysisConfigurationView<T, ?, ?, ?> oldAnalysisConfigurationView = this.currentAnalysisConfigurationView;
+    protected final void setCurrentAnalysisConfigurationView(final AbstractAnalysisConfigurationView<T, ?, ?, ?, ?> currentAnalysisConfigurationView) {
+	final AbstractAnalysisConfigurationView<T, ?, ?, ?, ?> oldAnalysisConfigurationView = this.currentAnalysisConfigurationView;
 	this.currentAnalysisConfigurationView = currentAnalysisConfigurationView;
 	firePropertyChange("currentAnalysisConfigurationView", oldAnalysisConfigurationView, this.currentAnalysisConfigurationView);
     }
@@ -381,7 +392,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
 	    columnConstraints.append("[70::,fill]");
 	    controlButtons.add(new JToggleButton(getCriteriaPanel().getSwitchAction()));
 	}
-	columnConstraints.append(addToComponents(controlButtons, "[160::,fill]", createCustomActionButton()));
+	columnConstraints.append(addToComponents(controlButtons, "[160::,fill]", getCustomActionChanger()));
 
 	final JPanel controlPanel = new JPanel(new MigLayout("fill, insets 0", "[70::,fill]" + columnConstraints.toString() + "20:push[][][][]20[]push[:70:,fill][:70:,fill]", "[c,fill]"));
 

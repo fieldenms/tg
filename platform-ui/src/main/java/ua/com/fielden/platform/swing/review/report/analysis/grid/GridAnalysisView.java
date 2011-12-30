@@ -5,13 +5,15 @@ import javax.swing.Action;
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.egi.EgiPanel;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
-public class GridAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, IAbstractAnalysisDomainTreeManager> {
+public class GridAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, IAbstractAnalysisDomainTreeManager, IPage<T>> {
 
     private static final long serialVersionUID = 8538099803371092525L;
 
@@ -56,6 +58,30 @@ public class GridAnalysisView<T extends AbstractEntity> extends AbstractAnalysis
     @Override
     protected Action createSaveAsDefaultAction() {
 	return null;
+    }
+
+    @Override
+    protected void enableRelatedActions(final boolean enable, final boolean navigate) {
+	// TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected Result canLoadData() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    protected IPage<T> executeAnalysisQuery() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    protected void setDataToView(final IPage<T> data) {
+	// TODO Auto-generated method stub
+
     }
 
 }

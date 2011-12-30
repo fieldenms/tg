@@ -16,6 +16,16 @@ public class StubCriteriaPanel extends JPanel implements ICriteriaPanel {
 	return true;
     }
 
+    /**
+     * Must updates the underlying model according to it's view.
+     * 
+     * @return
+     */
+    public boolean updateModel(){
+	//TODO must implement that.
+	return true;
+    }
+
     @Override
     public Action getSwitchAction() {
 	return new AbstractAction() {

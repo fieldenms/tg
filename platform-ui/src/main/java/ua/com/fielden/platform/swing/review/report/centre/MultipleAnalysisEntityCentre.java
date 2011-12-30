@@ -80,7 +80,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
 	    public void setSelectedIndex(final int index) {
 		if(!getReviewProgressLayer().isLocked()){
 		    super.setSelectedIndex(index);
-		    final AbstractAnalysisConfigurationView<T, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView)tabPane.getSelectedComponent();
+		    final AbstractAnalysisConfigurationView<T, ?, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView)tabPane.getSelectedComponent();
 		    setCurrentAnalysisConfigurationView(analysis);
 		}else{
 		    JOptionPane.showMessageDialog(tabPane, "The " + tabPane.getTitleAt(index) + " analysis can not be selected right now, " +

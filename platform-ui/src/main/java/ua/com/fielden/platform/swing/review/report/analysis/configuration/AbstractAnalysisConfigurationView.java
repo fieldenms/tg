@@ -11,7 +11,7 @@ import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardView;
 
-public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity, ADTM extends IAbstractAnalysisDomainTreeManager,VT extends AbstractAnalysisReview<T, ADTM>, WT extends AbstractWizardView<T>> extends AbstractConfigurationView<VT, WT> {
+public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity, ADTM extends IAbstractAnalysisDomainTreeManager, LDT, VT extends AbstractAnalysisReview<T, ADTM, LDT>, WT extends AbstractWizardView<T>> extends AbstractConfigurationView<VT, WT> {
 
     private static final long serialVersionUID = -7493238859906828458L;
 
