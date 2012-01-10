@@ -29,7 +29,7 @@ public interface ICategoryChartEntryModel {
      *            - the index of the series (row)
      * @return
      */
-    Comparable getSeries(final int index);
+    Comparable<?> getSeries(final int index);
 
     /**
      * Returns the category (column) for the specified index
@@ -38,7 +38,7 @@ public interface ICategoryChartEntryModel {
      *            - the index of the category (column)
      * @return
      */
-    Comparable getCategory(final int index);
+    Comparable<?> getCategory(final int index);
 
     /**
      * Returns the value for the specified series (row) and category (column) index
@@ -51,9 +51,17 @@ public interface ICategoryChartEntryModel {
      */
     Number getValue(final int row, final int column);
 
-    //TODO write documentation
+    /**
+     * Adds the {@link ChartModelChangedListener} instance, that listens the chart model change events.
+     * 
+     * @param l
+     */
     void addChartModelChangedListener(final ChartModelChangedListener l);
 
-    //TODO write documentation
+    /**
+     * Removes the {@link ChartModelChangedListener} instance.
+     * 
+     * @param l
+     */
     void removeChartModelChangedListener(final ChartModelChangedListener l);
 }

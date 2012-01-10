@@ -26,18 +26,17 @@ import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
  *
  */
 public class CriteriaModificationLayer extends JXLayer<JComponent> implements ItemListener {
-    private static final long serialVersionUID = -9123603131112707930L;
+
+    public CriteriaModificationLayer(final IPropertyEditor propertyEditor) {
+	// TODO Remove after the code below will be uncommented
+    }
 
     @Override
     public void itemStateChanged(final ItemEvent e) {
-	// TODO Auto-generated method stub
-
+	// TODO Remove after the code below will be uncommented.
     }
-
-    public CriteriaModificationLayer(final IPropertyEditor propertyEditor) {
-	//	super(propertyEditor.getEditor());
-    }
-
+    //    private static final long serialVersionUID = -9123603131112707930L;
+    //
     //    private final static String MISSING_VALUE = "Missing value", NOT = "Not", EXCLUSIVE = "Exclusive", ALL = "All";
     //
     //    private final BoundedValidationLayer<?> leftValidationLayer, rightValidationLayer;
@@ -47,14 +46,13 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     //
     //    // menu related items:
     //    private final JPopupMenu popup;
-    //    private final JCheckBoxMenuItem nullMenuItem, notMenuItem, fromExclusiveMenuItem, toExclusiveMenuItem, allMenuItem;
+    //    private final JCheckBoxMenuItem nullMenuItem, notMenuItem, fromExclusiveMenuItem, toExclusiveMenuItem;
     //    private final JSeparator dateMenusSeparator;
     //    private final JMenu prevMenu, currMenu, nextMenu;
     //    private final Map<DateState, DateCheckBoxMenuItem> dateStateItems;
     //
     //    ////////////////////////// state related fields: //////////////////////////
     //    private Boolean fromExclusive = null, toExclusive = null, isInFromEditorHierarchy = null;
-    //    private Boolean all = null;
     //    private Boolean not = null;
     //    private Boolean orNull = null;
     //    private final DateState dateState = new DateState();
@@ -195,7 +193,6 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     //	}catch(final IllegalArgumentException e) {
     //	    //The associated property doesn't have second value
     //	}
-    //	all = ftm.getAll(rootType, propertyName); // update ALL
     //
     //	// create popup menu and its items and update their initial state:
     //	popup = new JPopupMenu();
@@ -216,13 +213,6 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     //	notMenuItem.addItemListener(this);
     //	if (isNotBoolOrCritOnlyDate) { // all criteria could be negated except single (TODO should it be?) /boolean criteria
     //	    popup.add(notMenuItem);
-    //	}
-    //	allMenuItem = new JCheckBoxMenuItem(ALL);
-    //	allMenuItem.setMnemonic(KeyEvent.VK_A);
-    //	allMenuItem.setSelected(Boolean.TRUE.equals(all));
-    //	allMenuItem.addItemListener(this);
-    //	if (mainProperty.isWithinCollectionalHierarchy()) {
-    //	    popup.add(allMenuItem);
     //	}
     //	fromExclusiveMenuItem = new JCheckBoxMenuItem(EXCLUSIVE);
     //	fromExclusiveMenuItem.setMnemonic(KeyEvent.VK_X);

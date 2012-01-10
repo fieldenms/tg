@@ -1,21 +1,22 @@
 package ua.com.fielden.platform.example.swing.expressioneditor;
 
 import java.awt.Dimension;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.cfg.Configuration;
 
 import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.dao.MappingExtractor;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.example.entities.Vehicle;
 import ua.com.fielden.platform.example.ioc.ExampleRmaHibernateModule;
-import ua.com.fielden.platform.expression.entity.ExpressionEntity;
-import ua.com.fielden.platform.expression.entity.validator.ExpressionValidator;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
+import ua.com.fielden.platform.serialisation.ClientSerialiser;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorView;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
@@ -41,16 +42,14 @@ public class ExpressionEditorExample extends AbstractUiApplication {
 	final Injector injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
 	entityFactory = injector.getInstance(EntityFactory.class);
 	interceptor.setFactory(entityFactory);
-	configValidation(injector.getInstance(DomainValidationConfig.class));
-    }
-
-    private void configValidation(final DomainValidationConfig dvc){
-	dvc.setValidator(ExpressionEntity.class, "expression", new ExpressionValidator());
     }
 
     @Override
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
-	final DomainTreeEditorView<Vehicle> wizard = new DomainTreeEditorView<Vehicle>(new DomainTreeEditorModel<Vehicle>(entityFactory, null, Vehicle.class));
+	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
+	rootTypes.add(Vehicle.class);
+	final CentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(new ClientSerialiser(entityFactory), rootTypes);
+	final DomainTreeEditorView<Vehicle> wizard = new DomainTreeEditorView<Vehicle>(new DomainTreeEditorModel<Vehicle>(entityFactory, cdtme, Vehicle.class));
 	wizard.setPreferredSize(new Dimension(640,800));
 	SimpleLauncher.show("Expression editor example", wizard);
     }

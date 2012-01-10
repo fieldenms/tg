@@ -12,8 +12,10 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
+import ua.com.fielden.platform.expression.entity.validator.ExpressionValidator;
 import ua.com.fielden.platform.utils.ClassComparator;
 
 /**
@@ -61,6 +63,9 @@ public class ExpressionEntity extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     @Title(value = "Expression", desc = "Property evaluation formula")
     @Required
+    @BeforeChange({
+	@Handler(ExpressionValidator.class)
+    })
     private String expression;
 
     /**
@@ -108,7 +113,6 @@ public class ExpressionEntity extends AbstractEntity<DynamicEntityKey> {
 
     @Observable
     @NotNull
-    @DomainValidation
     public void setExpression(final String expression) {
 	this.expression = expression;
     }
