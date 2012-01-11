@@ -1,11 +1,15 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.Finder;
 
 public class EntQuerySourceAsEntity implements IEntQuerySource {
     private final Class<? extends AbstractEntity> entityType;
     private final String alias; // can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end
+    private final Set<String> referencingProps = new HashSet<String>();
 
     public EntQuerySourceAsEntity(final Class<? extends AbstractEntity> entityType, final String alias) {
 	this.entityType = entityType;
@@ -61,7 +65,10 @@ public class EntQuerySourceAsEntity implements IEntQuerySource {
 	}
 
 	try {
-	    Finder.findFieldByName(entityType, (alias == null ? dotNotatedPropName : (!dotNotatedPropName.startsWith(alias + ".") ? dotNotatedPropName : dotNotatedPropName.substring(alias.length() + 1))));
+	    final String propNameWithoutAlias = (alias == null ? dotNotatedPropName : (!dotNotatedPropName.startsWith(alias + ".") ? dotNotatedPropName : dotNotatedPropName.substring(alias.length() + 1)));
+	    Finder.findFieldByName(entityType, propNameWithoutAlias);
+	    referencingProps.add(propNameWithoutAlias);
+	    System.out.println("adding prop [" + propNameWithoutAlias + "] to " + entityType.getSimpleName() + " aliased as [" + alias + "]");
 	    return true;
 	} catch (final Exception e) {
 	    return false;
