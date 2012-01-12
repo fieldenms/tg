@@ -30,13 +30,13 @@ public class EntitiesTreePanel extends JPanel {
 
     private static final long serialVersionUID = 8553947680672851151L;
 
-    private final EntitiesTree entitiesTree;
+    private final EntitiesTree2 entitiesTree;
 
     //    private final JPanel search;
     //
     //    private final FilterControl filterControl;
 
-    public EntitiesTreePanel(final EntitiesTree entitiesTree) {
+    public EntitiesTreePanel(final EntitiesTree2 entitiesTree) {
 	super(new MigLayout("fill, insets 0", "[150::,grow,fill]", "[:30:][grow,fill]"));
 
 	this.entitiesTree = entitiesTree;
@@ -131,7 +131,7 @@ public class EntitiesTreePanel extends JPanel {
 	//	this.filterControl = filterControl;
     }
 
-    public EntitiesTree getTree() {
+    public EntitiesTree2 getTree() {
 	return entitiesTree;
     }
 

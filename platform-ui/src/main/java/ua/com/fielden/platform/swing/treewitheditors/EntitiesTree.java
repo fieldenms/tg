@@ -33,9 +33,9 @@ import ua.com.fielden.platform.treemodel.EntitiesTreeModel.TitledObject;
 
 /**
  * The tree with entities and sub-properties and 2 check-boxes for each node. Contains features like filtering, toolTips and node's enablement.
- * 
+ *
  * @author Jhou
- * 
+ *
  */
 public class EntitiesTree extends MultipleCheckboxTree{
     private static final long serialVersionUID = 1L;
@@ -122,7 +122,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 
     /**
      * Creates entities tree and provides : filtering, toolTips and node's enablement.
-     * 
+     *
      * @param entitiesTreeModel
      *            - the tree model to be used in EntitiesTree.
      * @param criteriaCaption
@@ -172,7 +172,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 
     /**
      * Extracts toolTip from node's titledObject (if "desc" == true then extracts description otherwise - title).
-     * 
+     *
      * @param treeNode
      * @param desc
      * @return
@@ -184,7 +184,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 
     /**
      * Creates and returns {@link ITooltipProvider} for the renderer's label.
-     * 
+     *
      * @return
      */
     protected ITooltipProvider createLabelToolTipProvider() {
@@ -200,7 +200,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 
     /**
      * Creates and returns {@link ITooltipProvider} for the first {@link JCheckBox} component, that is responsible for adding property to the criteria or rule.
-     * 
+     *
      * @param criteriaName
      * @return
      */
@@ -225,7 +225,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 
     /**
      * Creates and returns {@link ITooltipProvider} for the second {@link JCheckBox} component, that is responsible for adding property to the resultant set of properties.
-     * 
+     *
      * @param resultantName
      * @return
      */
@@ -247,7 +247,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 
     /**
      * Wraps entitiesTreeModel with filtering.
-     * 
+     *
      * @param entitiesTreeModel
      * @return
      */
@@ -281,7 +281,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 
     /**
      * Returns true if the property represented with given tree node is common for {@link AbstractUnionEntity} class, otherwise returns false.
-     * 
+     *
      * @param treeNode
      * @return
      */
@@ -295,7 +295,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 
     /**
      * Returns parent tree node for specified one.
-     * 
+     *
      * @param treeNode
      * @return
      */
@@ -323,7 +323,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 
     /**
      * Set the paths those satisfies the filter to enable. Column identifies the index of the {@link TreeCheckingModel} in the tree.
-     * 
+     *
      * @param column
      * @param enable
      * @param filter
@@ -334,7 +334,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
 
     /**
      * Set the paths those satisfies the filter to be checked. {@code column} identifies the index of the {@link TreeCheckingModel} in the tree.
-     * 
+     *
      * @param column
      * @param check
      * @param filter
@@ -346,7 +346,7 @@ public class EntitiesTree extends MultipleCheckboxTree{
     /**
      * Set the paths those satisfies the filter to be checked. Checking process starts with {@code path}. {@code column} identifies the index of the {@link TreeCheckingModel} in
      * the tree.
-     * 
+     *
      * @param column
      * @param path
      * @param check

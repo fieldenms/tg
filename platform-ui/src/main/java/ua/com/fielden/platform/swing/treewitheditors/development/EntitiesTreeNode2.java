@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.domaintree;
+package ua.com.fielden.platform.swing.treewitheditors.development;
 
 import java.util.Collections;
 import java.util.List;
@@ -8,11 +8,11 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.utils.Pair;
 
-public class EntitiesTreeNode extends DefaultMutableTreeNode implements ITreeNode<Pair<Class<?>, String>> {
+public class EntitiesTreeNode2 extends DefaultMutableTreeNode implements ITreeNode<Pair<Class<?>, String>> {
 
     private static final long serialVersionUID = -1846717362518717357L;
 
-    public EntitiesTreeNode(final Pair<Class<?>, String> userObject) {
+    public EntitiesTreeNode2(final Pair<Class<?>, String> userObject) {
 	super(userObject);
     }
 

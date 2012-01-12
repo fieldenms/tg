@@ -17,11 +17,11 @@ import net.miginfocom.swing.MigLayout;
 
 import org.jdesktop.swingx.JXCollapsiblePane;
 
-import ua.com.fielden.platform.domaintree.EntitiesTreeModel2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorView;
 import ua.com.fielden.platform.swing.model.UmState;
-import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTree;
+import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeModel2;
+import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTree2;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreePanel;
 import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.utils.Pair;
@@ -47,7 +47,7 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 
 	//Configuring the entities tree.
 	final EntitiesTreeModel2 treeModel = domainTreeEditorModel.createTreeModel();
-	final EntitiesTree tree = new EntitiesTree(treeModel, "selection criteria", "result set");
+	final EntitiesTree2 tree = new EntitiesTree2(treeModel, "selection criteria", "result set");
 	tree.addMouseListener(createPropertyChosenListener(tree, treeModel));
 	tree.getSelectionModel().addTreeSelectionListener(createCalculatedPropertySelectionListener(tree, treeModel));
 	final EntitiesTreePanel treePanel = new EntitiesTreePanel(tree);
@@ -77,7 +77,7 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 	return null;
     }
 
-    private IPropertyEditListener createPropertyEditListener(final JXCollapsiblePane editorPanel, final EntitiesTree tree) {
+    private IPropertyEditListener createPropertyEditListener(final JXCollapsiblePane editorPanel, final EntitiesTree2 tree) {
 	return new IPropertyEditListener() {
 
 	    @Override

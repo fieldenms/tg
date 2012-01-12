@@ -8,18 +8,18 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import ua.com.fielden.platform.domaintree.EntitiesTreeModel2;
-import ua.com.fielden.platform.domaintree.EntitiesTreeNode;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.dynamicreportstree.EntitiesTreeColumn;
 import ua.com.fielden.platform.swing.menu.filter.FilterableTreeModel;
-import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeCellRenderer;
+import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeModel2;
+import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeNode2;
+import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeCellRenderer2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
-public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer {
+public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 {
 
     private static final long serialVersionUID = 2940223267761789273L;
 
@@ -29,7 +29,7 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer {
     private final String criteriaName;
     private final String resultSetName;
 
-    public EntitiesTreeCellRenderer(final EntitiesTree tree, final String criteriaName, final String resultSetName) {
+    public EntitiesTreeCellRenderer(final EntitiesTree2 tree, final String criteriaName, final String resultSetName) {
 	super(tree);
 	this.model = tree.getFilterableModel();
 	this.criteriaName = criteriaName;
@@ -51,15 +51,15 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer {
 	}
 
 	// "Entity" node distinguishing from property nodes :
-	if (((EntitiesTreeNode) value).getLevel() == 1) {
+	if (((EntitiesTreeNode2) value).getLevel() == 1) {
 	    label.setFont(label.getFont().deriveFont(label.getFont().getStyle() + Font.ITALIC));
 	}
 	return super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
     }
 
     @Override
-    public EntitiesTree getTree() {
-	return (EntitiesTree) super.getTree();
+    public EntitiesTree2 getTree() {
+	return (EntitiesTree2) super.getTree();
     }
 
     @SuppressWarnings("unchecked")
@@ -77,7 +77,7 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer {
     @Override
     protected String getCheckingComponentToolTipText(final int index, final TreePath treePath) {
 	if(treePath != null){
-	    final Pair<Class<?>, String> rootAndProp = ((EntitiesTreeNode) treePath.getLastPathComponent()).getUserObject();
+	    final Pair<Class<?>, String> rootAndProp = ((EntitiesTreeNode2) treePath.getLastPathComponent()).getUserObject();
 	    final Class<?> root = rootAndProp.getKey();
 	    final String property = rootAndProp.getValue();
 

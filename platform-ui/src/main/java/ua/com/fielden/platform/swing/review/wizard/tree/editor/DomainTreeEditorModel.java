@@ -5,7 +5,6 @@ import javax.swing.event.EventListenerList;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
-import ua.com.fielden.platform.domaintree.EntitiesTreeModel2;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -16,6 +15,7 @@ import ua.com.fielden.platform.expression.entity.ExpressionEntity;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.ei.LightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeModel2;
 
 /**
  * Wizard that allows one to create/edit calculated properties and configure entity review.

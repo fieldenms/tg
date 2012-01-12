@@ -12,25 +12,25 @@ import javax.swing.tree.TreePath;
 
 /**
  * Represents the check box with four different states (see {@link State} for more information about check box states) that will be placed on the tree item. This implementation of
- * the {@link ITreeCheckingModelComponent} must be associated with {@link DefaultTreeCheckingModel}
- * 
+ * the {@link ITreeCheckingModelComponent2} must be associated with {@link DefaultTreeCheckingModel}
+ *
  * @author TG Team
- * 
+ *
  */
-public class CheckBoxTreeComponent implements ITreeCheckingModelComponent {
+public class CheckBoxTreeComponent2 implements ITreeCheckingModelComponent2 {
 
     private final QuadristateCheckbox checkBox;
 
-    private final MultipleCheckboxTree checkboxTree;
+    private final MultipleCheckboxTree2 checkboxTree;
 
     private final int index;
 
     /**
-     * Creates new {@link CheckBoxTreeComponent} with {@link QuadristateCheckbox} and associated {@link DefaultTreeCheckingModel}
-     * 
+     * Creates new {@link CheckBoxTreeComponent2} with {@link QuadristateCheckbox} and associated {@link DefaultTreeCheckingModel}
+     *
      * @param treeCheckingModel
      */
-    public CheckBoxTreeComponent(final MultipleCheckboxTree checkboxTree, final int index) {
+    public CheckBoxTreeComponent2(final MultipleCheckboxTree2 checkboxTree, final int index) {
 	this.checkBox = new QuadristateCheckbox(){
 
 	    private static final long serialVersionUID = 5159933744944567866L;
@@ -56,7 +56,7 @@ public class CheckBoxTreeComponent implements ITreeCheckingModelComponent {
 
 	    private void processCheckboxAction() {
 		final TreePath editingPath = checkboxTree.getEditingPath();
-		checkboxTree.getCheckingModel(index).toggleCheckingPath(editingPath);
+		checkboxTree.getSpecificModel().getCheckingModel(index).toggleCheckingPath(editingPath);
 		updateComponent(editingPath);
 		grabFocus();
 	    }
@@ -74,9 +74,9 @@ public class CheckBoxTreeComponent implements ITreeCheckingModelComponent {
     @Override
     public void updateComponent(final TreePath treePath) {
 	getComponent().setOpaque(false);
-	getComponent().setEnabled(checkboxTree.getCheckingModel(index).isPathEnabled(treePath) && checkboxTree.isEnabled());
-	final boolean checked = checkboxTree.getCheckingModel(index).isPathChecked(treePath);
-	final boolean greyed = checkboxTree.getCheckingModel(index).isPathGreyed(treePath);
+	getComponent().setEnabled(checkboxTree.getSpecificModel().getCheckingModel(index).isPathEnabled(treePath) && checkboxTree.isEnabled());
+	final boolean checked = checkboxTree.getSpecificModel().getCheckingModel(index).isPathChecked(treePath);
+	final boolean greyed = checkboxTree.getSpecificModel().getCheckingModel(index).isPathGreyed(treePath);
 	if (checked && !greyed) {
 	    getComponent().setState(State.CHECKED);
 	}

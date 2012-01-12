@@ -18,26 +18,26 @@ import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTreeCellRen
 
 /**
  * Class that provides basic functionality for editing {@link TreeNode} meta parameters.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-public class MultipleCheckboxTreeCellEditor extends AbstractCellEditor implements TreeCellEditor {
+public class MultipleCheckboxTreeCellEditor2 extends AbstractCellEditor implements TreeCellEditor {
 
     private static final long serialVersionUID = -6872693277320582798L;
 
-    private final MultipleCheckboxTree tree;
-    private final MultipleCheckboxTreeCellRenderer renderer;
+    private final MultipleCheckboxTree2 tree;
+    private final MultipleCheckboxTreeCellRenderer2 renderer;
 
     /**
-     * Creates {@link MultipleCheckboxTreeCellEditor} and initiates it with {@link EntitiesTree}, {@link MultipleCheckboxTreeCellRendererWithParameter} and
+     * Creates {@link MultipleCheckboxTreeCellEditor2} and initiates it with {@link EntitiesTree}, {@link MultipleCheckboxTreeCellRendererWithParameter} and
      * {@link ITooltipProvider} for editor.
-     * 
+     *
      * @param tree
      * @param renderer
      * @param editorToolTipProvider
      */
-    public MultipleCheckboxTreeCellEditor(final MultipleCheckboxTree tree, final MultipleCheckboxTreeCellRenderer renderer) {
+    public MultipleCheckboxTreeCellEditor2(final MultipleCheckboxTree2 tree, final MultipleCheckboxTreeCellRenderer2 renderer) {
 	this.tree = tree;
 	this.renderer = renderer;
     }
@@ -57,8 +57,8 @@ public class MultipleCheckboxTreeCellEditor extends AbstractCellEditor implement
     public boolean isCellEditable(final EventObject event) {
 
 	if (event == null) {
-	    for (int modelCounter = 0; modelCounter < tree.getCheckingModelCount(); modelCounter++) {
-		if (tree.getCheckingModel(modelCounter).isPathEnabled(tree.getSelectionPath())) {
+	    for (int modelCounter = 0; modelCounter < tree.getSpecificModel().getCheckingModelCount(); modelCounter++) {
+		if (tree.getSpecificModel().getCheckingModel(modelCounter).isPathEnabled(tree.getSelectionPath())) {
 		    return true;
 		}
 	    }
@@ -75,8 +75,8 @@ public class MultipleCheckboxTreeCellEditor extends AbstractCellEditor implement
 
 		    final TreePath path = tree.getPathForRow(row);
 
-		    final boolean isCriteriaEnable = tree.getCheckingModel(0).isPathEnabled(path);
-		    final boolean isResultantEnable = tree.getCheckingModel(1).isPathEnabled(path);
+		    final boolean isCriteriaEnable = tree.getSpecificModel().getCheckingModel(0).isPathEnabled(path);
+		    final boolean isResultantEnable = tree.getSpecificModel().getCheckingModel(1).isPathEnabled(path);
 
 		    final TreeNode value = (TreeNode)path.getLastPathComponent();
 		    final boolean selected = tree.isPathSelected(path);
@@ -105,18 +105,18 @@ public class MultipleCheckboxTreeCellEditor extends AbstractCellEditor implement
     }
 
     /**
-     * Returns tree associated with this {@link MultipleCheckboxTreeCellEditor}.
-     * 
+     * Returns tree associated with this {@link MultipleCheckboxTreeCellEditor2}.
+     *
      * @return
      */
 
-    public MultipleCheckboxTree getTree() {
+    public MultipleCheckboxTree2 getTree() {
 	return tree;
     }
 
     /**
      * Override this to provide specific logic that determines whether specified path can be edited or not.
-     * 
+     *
      * @param path
      * @return
      */
@@ -125,14 +125,14 @@ public class MultipleCheckboxTreeCellEditor extends AbstractCellEditor implement
     }
 
     /**
-     * Returns the index of {@link ITreeCheckingModelComponent} that contains the point with specified x and y coordinates.
-     * 
+     * Returns the index of {@link ITreeCheckingModelComponent2} that contains the point with specified x and y coordinates.
+     *
      * @param x
      * @param y
      * @return
      */
     private int getCheckboxIndex(final int x, final int y){
-	for (int componentCounter = 0; componentCounter < tree.getCheckingModelCount(); componentCounter++) {
+	for (int componentCounter = 0; componentCounter < tree.getSpecificModel().getCheckingModelCount(); componentCounter++) {
 	    if (renderer.checkingComponents.get(componentCounter).getComponent().getBounds().contains(x, y)) {
 		return componentCounter;
 	    }

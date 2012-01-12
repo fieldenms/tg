@@ -5,12 +5,12 @@ import it.cnr.imaa.essi.lablib.gui.checkboxtree.QuadristateCheckbox;
 import javax.swing.tree.TreePath;
 
 /**
- * Represents the component on the {@link MultipleCheckboxTree} item
+ * Represents the component on the {@link MultipleCheckboxTree2} item
  * 
  * @author TG Team
  * 
  */
-public interface ITreeCheckingModelComponent {
+public interface ITreeCheckingModelComponent2 {
 
     /**
      * Returns the component that must be placed on the tree item
@@ -20,7 +20,7 @@ public interface ITreeCheckingModelComponent {
     QuadristateCheckbox getComponent();
 
     /**
-     * Updates the components state according to the changes made in the {@link MultipleCheckboxTree}
+     * Updates the components state according to the changes made in the {@link MultipleCheckboxTree2}
      * 
      * @param treePath
      */

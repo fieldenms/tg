@@ -16,35 +16,35 @@ import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 
 /**
- * {@link TreeCellRenderer} for the {@link MultipleCheckboxTree}.
- * 
+ * {@link TreeCellRenderer} for the {@link MultipleCheckboxTree2}.
+ *
  * @author TG Team
  *
  */
-public class MultipleCheckboxTreeCellRenderer extends JPanel implements TreeCellRenderer {
+public class MultipleCheckboxTreeCellRenderer2 extends JPanel implements TreeCellRenderer {
 
     private static final long serialVersionUID = 8994506736938836724L;
 
     protected final DefaultTreeCellRenderer label;
 
-    protected final List<ITreeCheckingModelComponent> checkingComponents;
+    protected final List<ITreeCheckingModelComponent2> checkingComponents;
 
-    protected final MultipleCheckboxTree tree;
+    protected final MultipleCheckboxTree2 tree;
 
     /**
-     * Initiates this {@link MultipleCheckboxTreeCellRenderer} with specified {@link MultipleCheckboxTree} instance.
-     * 
+     * Initiates this {@link MultipleCheckboxTreeCellRenderer2} with specified {@link MultipleCheckboxTree2} instance.
+     *
      * @param tree
      */
-    public MultipleCheckboxTreeCellRenderer(final MultipleCheckboxTree tree){
+    public MultipleCheckboxTreeCellRenderer2(final MultipleCheckboxTree2 tree){
 
 	this.tree = tree;
 	this.label = new DefaultTreeCellRenderer();
-	this.checkingComponents = new ArrayList<ITreeCheckingModelComponent>(tree.getCheckingModelCount());
+	this.checkingComponents = new ArrayList<ITreeCheckingModelComponent2>(tree.getSpecificModel().getCheckingModelCount());
 
 	this.setBackground(UIManager.getColor("Tree.textBackground"));
-	for (int modelIndex = 0; modelIndex < tree.getCheckingModelCount(); modelIndex++) {
-	    this.checkingComponents.add(new CheckBoxTreeComponent(tree, modelIndex));
+	for (int modelIndex = 0; modelIndex < tree.getSpecificModel().getCheckingModelCount(); modelIndex++) {
+	    this.checkingComponents.add(new CheckBoxTreeComponent2(tree, modelIndex));
 	}
 
 	initView();
@@ -54,7 +54,7 @@ public class MultipleCheckboxTreeCellRenderer extends JPanel implements TreeCell
     public Dimension getPreferredSize() {
 	final Dimension d_label = this.label.getPreferredSize();
 	int width = d_label.width, height = d_label.height;
-	for (int componentCounter = 0; componentCounter < tree.getCheckingModelCount(); componentCounter++) {
+	for (int componentCounter = 0; componentCounter < tree.getSpecificModel().getCheckingModelCount(); componentCounter++) {
 	    final Dimension d_component = checkingComponents.get(componentCounter).getComponent().getPreferredSize();
 	    width += d_component.width;
 	    height = height < d_component.height ? d_component.height : height;
@@ -76,7 +76,7 @@ public class MultipleCheckboxTreeCellRenderer extends JPanel implements TreeCell
 	    label.setToolTipText(getLabelToolTipText(path));
 
 
-	    for (int componentCounter = 0; componentCounter < this.tree.getCheckingModelCount(); componentCounter++) {
+	    for (int componentCounter = 0; componentCounter < this.tree.getSpecificModel().getCheckingModelCount(); componentCounter++) {
 		checkingComponents.get(componentCounter).updateComponent(path);
 		checkingComponents.get(componentCounter).getComponent().setToolTipText(getCheckingComponentToolTipText(componentCounter, path));
 	    }
@@ -95,11 +95,11 @@ public class MultipleCheckboxTreeCellRenderer extends JPanel implements TreeCell
     }
 
     /**
-     * Returns tree associated with this {@link MultipleCheckboxTreeCellRenderer}.
-     * 
+     * Returns tree associated with this {@link MultipleCheckboxTreeCellRenderer2}.
+     *
      * @return
      */
-    public MultipleCheckboxTree getTree() {
+    public MultipleCheckboxTree2 getTree() {
 	return tree;
     }
 
@@ -109,7 +109,7 @@ public class MultipleCheckboxTreeCellRenderer extends JPanel implements TreeCell
     protected void initView(){
 	setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 
-	for (int modelIndex = 0; modelIndex < tree.getCheckingModelCount(); modelIndex++) {
+	for (int modelIndex = 0; modelIndex < tree.getSpecificModel().getCheckingModelCount(); modelIndex++) {
 	    add(checkingComponents.get(modelIndex).getComponent());
 	}
 	add(label);
@@ -117,7 +117,7 @@ public class MultipleCheckboxTreeCellRenderer extends JPanel implements TreeCell
 
     /**
      * Override this method to provide tool tip text for label.
-     * 
+     *
      * @param treePath
      * @return
      */
@@ -127,7 +127,7 @@ public class MultipleCheckboxTreeCellRenderer extends JPanel implements TreeCell
 
     /**
      * Override this method to provide tool tip text for checking component.
-     * 
+     *
      * @param index
      * @param treePath
      * @return
@@ -138,7 +138,7 @@ public class MultipleCheckboxTreeCellRenderer extends JPanel implements TreeCell
 
     /**
      * Returns the component that contains the point specified with x and y coordinates.
-     * 
+     *
      * @param x
      * @param y
      * @return
