@@ -28,8 +28,7 @@ public class ConditionsBuilder extends AbstractTokensBuilder {
 	return getChild() == null;
     }
 
-    @Override
-    public Pair<TokenCategory, Object> getResult() {
+    public ConditionsModel getModel() {
 	if (getChild() != null) {
 	    throw new RuntimeException("Unable to produce result - unfinished model state!");
 	}
@@ -40,6 +39,11 @@ public class ConditionsBuilder extends AbstractTokensBuilder {
 	    final CompoundConditionModel subsequentCompoundCondition = (CompoundConditionModel) iterator.next().getValue();
 	    otherConditions.add(subsequentCompoundCondition);
 	}
-	return new Pair<TokenCategory, Object>(TokenCategory.CONDITIONS, new ConditionsModel(firstCondition, otherConditions));
+	return new ConditionsModel(firstCondition, otherConditions);
+    }
+
+    @Override
+    public Pair<TokenCategory, Object> getResult() {
+	throw new RuntimeException("Not applicable!");
     }
 }

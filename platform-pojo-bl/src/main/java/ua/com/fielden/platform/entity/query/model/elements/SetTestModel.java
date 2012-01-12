@@ -34,6 +34,11 @@ public class SetTestModel implements ICondition {
     }
 
     @Override
+    public boolean ignore() {
+	return leftOperand.ignore();
+    }
+
+    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;

@@ -22,8 +22,7 @@ public class QryYieldsBuilder extends AbstractTokensBuilder {
 
     // TODO handle yield().entity(String joinAlias) properly
 
-    @Override
-    public Pair<TokenCategory, Object> getResult() {
+    public YieldsModel getModel() {
 	if (getChild() != null && getSize() == 0) {
 	    finaliseChild();
 	    //throw new RuntimeException("Unable to produce result - unfinished model state!");
@@ -33,6 +32,12 @@ public class QryYieldsBuilder extends AbstractTokensBuilder {
 	    yields.add((YieldModel) pair.getValue());
 	}
 
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELDS, new YieldsModel(yields));
+	return new YieldsModel(yields);
+    }
+
+
+    @Override
+    public Pair<TokenCategory, Object> getResult() {
+	throw new RuntimeException("Not applicable!");
     }
 }

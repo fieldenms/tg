@@ -74,4 +74,9 @@ public class Expression implements ISingleOperand {
 	}
 	return true;
     }
+
+    @Override
+    public boolean ignore() {
+	return false;
+    }
 }

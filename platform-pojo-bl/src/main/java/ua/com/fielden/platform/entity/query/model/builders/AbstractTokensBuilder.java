@@ -38,7 +38,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	this.paramValues = paramValues;
     }
 
-    private void add (final Functions function) {
+    private void add(final Functions function) {
 	switch (function) {
 	case SUM:
 	    setChild(new SumOfBuilder(this, dbVersion, getParamValues()));
@@ -161,9 +161,13 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case PROP:
 	    return new EntProp((String) value);
 	case PARAM:
-	    return new EntValue(getParamValues().get(value));//EntParam((String) value);
+	    return new EntValue(getParamValue((String) value));
+	case IPARAM:
+	    return new EntValue(getParamValue((String) value), true);
 	case VAL:
 	    return new EntValue(value);
+	case IVAL:
+	    return new EntValue(value, true);
 	case EXPR:
 	case FUNCTION_MODEL:
 	    return (ISingleOperand) value;
@@ -175,6 +179,14 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	    return queryBuilder.generateEntQuery((QueryModel) value, getParamValues());
 	default:
 	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
+	}
+    }
+
+    protected Object getParamValue(final String paramName) {
+	if (getParamValues().containsKey(paramName)) {
+	    return getParamValues().get(paramName);
+	} else {
+	    throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
 	}
     }
 
@@ -247,14 +259,14 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     public DbVersion getDbVersion() {
-        return dbVersion;
+	return dbVersion;
     }
 
     protected EntQueryGenerator getQueryBuilder() {
-        return queryBuilder;
+	return queryBuilder;
     }
 
     public Map<String, Object> getParamValues() {
-        return paramValues;
+	return paramValues;
     }
 }

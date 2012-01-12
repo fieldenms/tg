@@ -5,7 +5,7 @@ import java.util.List;
 
 
 public class Table implements IQuerySource {
-    private final Class entityType;
+    private final Class entityType; // e.g. TgVehicle.class
     private final String name; // e.g. EQDET
     private final List<TableColumn> columns = new ArrayList<TableColumn>();
     private IQuerySource predecessor;

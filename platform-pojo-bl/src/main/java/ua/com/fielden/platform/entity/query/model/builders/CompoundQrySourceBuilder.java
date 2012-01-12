@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity.query.model.builders;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.model.elements.ConditionsModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntQueryCompoundSourceModel;
 import ua.com.fielden.platform.entity.query.model.elements.IEntQuerySource;
 import ua.com.fielden.platform.entity.query.model.elements.JoinType;
@@ -43,8 +42,11 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
     @Override
     public Pair<TokenCategory, Object> getResult() {
 	if (getChild() != null) {
-	    finaliseChild();
+	    final ITokensBuilder last = getChild();
+	    setChild(null);
+	    return new Pair<TokenCategory, Object>(TokenCategory.QRY_COMPOUND_SOURCE, new EntQueryCompoundSourceModel((IEntQuerySource) secondValue(), (JoinType) firstValue(), ((ConditionsBuilder) last).getModel()));
+	} else {
+	    return new Pair<TokenCategory, Object>(TokenCategory.QRY_COMPOUND_SOURCE, new EntQueryCompoundSourceModel((IEntQuerySource) secondValue(), (JoinType) firstValue(), null));
 	}
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_COMPOUND_SOURCE, new EntQueryCompoundSourceModel((IEntQuerySource) secondValue(), (JoinType) firstValue(), (ConditionsModel) thirdValue()));
     }
 }

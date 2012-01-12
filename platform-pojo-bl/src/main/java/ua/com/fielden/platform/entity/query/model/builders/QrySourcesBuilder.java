@@ -42,8 +42,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
 	return getChild() == null;
     }
 
-    @Override
-    public Pair<TokenCategory, Object> getResult() {
+    public EntQuerySourcesModel getModel() {
 	if (getChild() != null) {
 	    finaliseChild();
 	}
@@ -54,6 +53,12 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
 	    final EntQueryCompoundSourceModel subsequentSource= (EntQueryCompoundSourceModel) iterator.next().getValue();
 	    otherSources.add(subsequentSource);
 	}
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCES, new EntQuerySourcesModel(mainSource, otherSources));
+	return new EntQuerySourcesModel(mainSource, otherSources);
+
+    }
+
+    @Override
+    public Pair<TokenCategory, Object> getResult() {
+	throw new RuntimeException("Not applicable!");
     }
 }

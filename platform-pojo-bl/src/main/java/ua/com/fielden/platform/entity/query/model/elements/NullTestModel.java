@@ -57,4 +57,9 @@ public class NullTestModel implements ICondition {
 	}
 	return true;
     }
+
+    @Override
+    public boolean ignore() {
+	return operand.ignore();
+    }
 }

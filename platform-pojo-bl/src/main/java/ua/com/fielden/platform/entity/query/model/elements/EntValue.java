@@ -7,10 +7,18 @@ import java.util.Set;
 
 public class EntValue implements ISingleOperand {
     private final Object value;
+    private final boolean ignoreNull;
 
     public EntValue(final Object value) {
 	super();
 	this.value = value;
+	this.ignoreNull = false;
+    }
+
+    public EntValue(final Object value, final boolean ignoreNull) {
+	super();
+	this.value = value;
+	this.ignoreNull = ignoreNull;
     }
 
     @Override
@@ -51,5 +59,10 @@ public class EntValue implements ISingleOperand {
 	    return false;
 	}
 	return true;
+    }
+
+    @Override
+    public boolean ignore() {
+	return ignoreNull && value == null;
     }
 }

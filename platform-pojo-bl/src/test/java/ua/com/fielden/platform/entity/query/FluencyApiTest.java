@@ -77,25 +77,25 @@ public class FluencyApiTest extends TestCase {
 
     public void test_IWhere0(){
 	final EntityQueryProgressiveInterfaces.IWhere0 qry = query.select(AbstractEntity.class).where();
-	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param" ,"val", "begin", "notBegin", "beginExpr", "expr"}, exists, functions, anyOfs);
+	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param", "iParam", "val", "iVal", "begin", "notBegin", "beginExpr", "expr"}, exists, functions, anyOfs);
 	assertNull(result, result);
     }
 
     public void test_IFunctionLastArgument_1_ICompleted_1_(){
 	final EntityQueryProgressiveInterfaces.IFunctionLastArgument<EntityQueryProgressiveInterfaces.ICompleted> qry = query.select(AbstractEntity.class).groupBy();
-	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param" ,"val", "beginExpr", "expr"}, functions);
+	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param" , "iParam", "val", "iVal", "beginExpr", "expr"}, functions);
 	assertNull(result, result);
     }
 
     public void test_IFunctionLastArgument_1_IOrder_2_ICompletedAndOrdered_2__1_(){
 	final EntityQueryProgressiveInterfaces.IFunctionLastArgument<EntityQueryProgressiveInterfaces.IOrder<EntityQueryProgressiveInterfaces.ICompletedAndOrdered>> qry = query.select(AbstractEntity.class).orderBy();
-	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param" ,"val", "beginExpr", "expr"}, functions);
+	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param", "iParam", "val", "iVal", "beginExpr", "expr"}, functions);
 	assertNull(result, result);
     }
 
     public void test_IFunctionYieldedLastArgument_1_IFirstYieldedItemAlias_2_ISubsequentCompletedAndYielded_2__1_(){
 	final EntityQueryProgressiveInterfaces.IFunctionYieldedLastArgument<EntityQueryProgressiveInterfaces.IFirstYieldedItemAlias<EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded>> qry = query.select(AbstractEntity.class).yield();
-	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param" ,"val", "beginExpr", "expr", "join"}, functions, aggregateFunctions);
+	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param", "iParam", "val", "iVal", "beginExpr", "expr", "join"}, functions, aggregateFunctions);
 	assertNull(result, result);
     }
 
@@ -107,20 +107,20 @@ public class FluencyApiTest extends TestCase {
 
     public void test_(){
 	final EntityQueryProgressiveInterfaces.IFunctionLastArgument<EntityQueryProgressiveInterfaces.IFirstYieldedItemAlias<EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded>> qry = query.select(AbstractEntity.class).yield().secondOf();
-	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param" ,"val", "beginExpr", "expr"}, functions);
+	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param", "iParam", "val", "iVal", "beginExpr", "expr"}, functions);
 	assertNull(result, result);
 	final EntityQueryProgressiveInterfaces.IFunctionLastArgument<EntityQueryProgressiveInterfaces.IComparisonOperator0> qry2 = query.select(AbstractEntity.class).where().secondOf();
-	final String result2 = compare(getMethods(qry2.getClass()), new String[]{"model", "prop", "param" ,"val", "beginExpr", "expr"}, functions);
+	final String result2 = compare(getMethods(qry2.getClass()), new String[]{"model", "prop", "param", "iParam", "val", "iVal", "beginExpr", "expr"}, functions);
 	assertNull(result2, result2);
 
     }
 
     public void test_2(){
 	final EntityQueryProgressiveInterfaces.IYieldExprItem0<EntityQueryProgressiveInterfaces.IFirstYieldedItemAlias<EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded>> qry = query.select(AbstractEntity.class).yield().beginExpr();
-	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param" ,"val", "beginExpr", "expr", "join"}, functions, aggregateFunctions);
+	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param", "iParam", "val", "iVal", "beginExpr", "expr", "join"}, functions, aggregateFunctions);
 	assertNull(result, result);
 	final EntityQueryProgressiveInterfaces.IYieldExprItem1<EntityQueryProgressiveInterfaces.IFirstYieldedItemAlias<EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded>> qry2 = query.select(AbstractEntity.class).yield().beginExpr().beginExpr();
-	final String result2 = compare(getMethods(qry2.getClass()), new String[]{"model", "prop", "param" ,"val", "beginExpr", "expr", "join"}, functions, aggregateFunctions);
+	final String result2 = compare(getMethods(qry2.getClass()), new String[]{"model", "prop", "param", "iParam", "val", "iVal", "beginExpr", "expr", "join"}, functions, aggregateFunctions);
 	assertNull(result2, result2);
 
 	final EntityQueryProgressiveInterfaces.IWhere0 where = query.select(AbstractEntity.class).where();

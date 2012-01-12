@@ -59,8 +59,11 @@ import static org.junit.Assert.assertEquals;
 
 public class QueryModelCompositionTest {
     private final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
+    private final ComparisonTestModel alwaysTrueCondition = new ComparisonTestModel(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
+
 
     @Test
+    @Ignore
     public void test_query_model1() {
 	final AggregatedResultQueryModel a =
 		query.select(TgWorkOrder.class).as("wo")
@@ -69,6 +72,7 @@ public class QueryModelCompositionTest {
 		.begin()
 		.beginExpr().param("param1").mult().beginExpr().param("v").add().prop("wo.vehicle.initPrice").endExpr().endExpr().eq().prop("wo.insuranceAmount")
 		.and()
+		.val("a").isNull().and()
 		.prop("wo.insuranceAmount").isNotNull()
 		.end()
 		.modelAsAggregate();
@@ -273,6 +277,19 @@ public class QueryModelCompositionTest {
     @Test
     public void test_query_sources1() {
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").join(TgWorkOrder.class).as("wo").on().prop("a").eq().prop("b").model();
+
+	final ConditionsModel condition = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
+
+	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
+	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo"), JoinType.IJ, condition));
+
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, "v"), others);
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
+    }
+
+    @Test
+    public void test_query_sources1a() {
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").join(TgWorkOrder.class).as("wo").on().prop("a").eq().prop("b").where().val(1).isNotNull().model();
 
 	final ConditionsModel condition = new ConditionsModel(new ComparisonTestModel(new EntProp("a"), ComparisonOperator.EQ, new EntProp("b")), new ArrayList<CompoundConditionModel>());
 
@@ -689,4 +706,43 @@ public class QueryModelCompositionTest {
 //	final List<EntQuery> exp = Arrays.asList(new EntQuery[]{qb.generateEntQuery(subQry0), qb.generateEntQuery(subQry2)});
 //	assertEquals("models are different", exp, qb.generateEntQuery(qry).getLeafSubqueries());
 //    }
+
+    @Test
+    public void test_ignore_of_null_value_in_condition1() {
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().prop("model.desc").like().iVal("MERC%").model();
+	final ConditionsModel exp = new ConditionsModel(new LikeTestModel(new EntProp("model.desc"), new EntValue("MERC%"), false, false), new ArrayList<CompoundConditionModel>());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
+    }
+
+    @Test
+    public void test_ignore_of_null_value_in_condition2() {
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().prop("model.desc").like().iVal(null).model();
+	final ConditionsModel exp = new ConditionsModel(alwaysTrueCondition, new ArrayList<CompoundConditionModel>());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
+    }
+
+    @Test
+    public void test_ignore_of_null_value_in_condition3() {
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().prop("model.desc").like().param("param").model();
+	final ConditionsModel exp = new ConditionsModel(new LikeTestModel(new EntProp("model.desc"), new EntValue("MERC%"), false, false), new ArrayList<CompoundConditionModel>());
+	final Map<String, Object> paramValues = new HashMap<String, Object>();
+	paramValues.put("param", "MERC%");
+	assertEquals("models are different", exp, qb.generateEntQuery(qry, paramValues).getConditions());
+    }
+
+    @Test
+    public void test_ignore_of_null_value_in_condition4() {
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().prop("model.desc").like().iParam("param").model();
+	final ConditionsModel exp = new ConditionsModel(alwaysTrueCondition, new ArrayList<CompoundConditionModel>());
+	final Map<String, Object> paramValues = new HashMap<String, Object>();
+	paramValues.put("param", null);
+	assertEquals("models are different", exp, qb.generateEntQuery(qry, paramValues).getConditions());
+    }
+
+    @Test
+    public void test_ignore_of_null_value_in_condition5() {
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().prop("model.desc").like().anyOfValues().model();
+	final ConditionsModel exp = new ConditionsModel(new GroupedConditionsModel(false, alwaysTrueCondition, new ArrayList<CompoundConditionModel>()), new ArrayList<CompoundConditionModel>());
+	assertEquals("models are different", exp, qb.generateEntQuery(qry).getConditions());
+    }
 }

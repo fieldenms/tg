@@ -20,8 +20,7 @@ public class QryGroupsBuilder extends AbstractTokensBuilder {
 	return false;
     }
 
-    @Override
-    public Pair<TokenCategory, Object> getResult() {
+    public GroupsModel getModel() {
 	if (getChild() != null && getSize() == 0) {
 	    throw new RuntimeException("Unable to produce result - unfinished model state!");
 	}
@@ -30,6 +29,11 @@ public class QryGroupsBuilder extends AbstractTokensBuilder {
 	    groups.add((GroupModel) pair.getValue());
 	}
 
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_GROUPS, new GroupsModel(groups));
+	return new GroupsModel(groups);
+    }
+
+    @Override
+    public Pair<TokenCategory, Object> getResult() {
+	throw new RuntimeException("Not applicable!");
     }
 }

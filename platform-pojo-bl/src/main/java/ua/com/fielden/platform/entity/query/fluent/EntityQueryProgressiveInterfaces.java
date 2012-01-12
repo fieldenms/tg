@@ -80,7 +80,9 @@ public interface EntityQueryProgressiveInterfaces {
     interface ISingleOperand<T> {
         T prop(String propertyName);
         T val(Object value);
+        T iVal(Object value);
         T param(String paramName);
+        T iParam(String paramName);
         <E extends AbstractEntity> T model(PrimitiveResultQueryModel model);
         T expr(ExpressionModel Expr);
 

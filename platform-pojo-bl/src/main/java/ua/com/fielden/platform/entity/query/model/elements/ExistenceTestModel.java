@@ -25,6 +25,11 @@ public class ExistenceTestModel implements ICondition {
     }
 
     @Override
+    public boolean ignore() {
+	return false;
+    }
+
+    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;

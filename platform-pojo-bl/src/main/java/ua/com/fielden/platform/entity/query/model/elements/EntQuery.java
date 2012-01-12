@@ -264,4 +264,9 @@ public class EntQuery implements ISingleOperand {
     public List<Pair<EntQuery, String>> getUnresolvedProps() {
         return unresolvedProps;
     }
+
+    @Override
+    public boolean ignore() {
+	return false;
+    }
 }

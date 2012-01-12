@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -144,6 +146,10 @@ final class Tokens {
 	return add(TokenCategory.VAL, value);
     }
 
+    public Tokens iVal(final Object value) {
+	return add(TokenCategory.IVAL, value);
+    }
+
     public Tokens model(final PrimitiveResultQueryModel model) {
 	return add(TokenCategory.EQUERY_TOKENS, model);
     }
@@ -153,7 +159,19 @@ final class Tokens {
     }
 
     public Tokens param(final String paramName) {
-	return add(TokenCategory.PARAM, paramName);
+	if (!StringUtils.isEmpty(paramName)) {
+	    return add(TokenCategory.PARAM, paramName);
+	} else {
+	    throw new RuntimeException("Param name has not been specified");
+	}
+    }
+
+    public Tokens iParam(final String paramName) {
+	if (!StringUtils.isEmpty(paramName)) {
+	    return add(TokenCategory.IPARAM, paramName);
+	} else {
+	    throw new RuntimeException("Param name has not been specified");
+	}
     }
 
     public Tokens expr(final ExpressionModel exprModel) {

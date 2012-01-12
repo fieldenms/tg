@@ -4,11 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.entity.query.model.elements.ConditionsModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntQuery;
-import ua.com.fielden.platform.entity.query.model.elements.EntQuerySourcesModel;
-import ua.com.fielden.platform.entity.query.model.elements.GroupsModel;
-import ua.com.fielden.platform.entity.query.model.elements.YieldsModel;
 import ua.com.fielden.platform.entity.query.tokens.QueryTokens;
 import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
@@ -53,11 +49,10 @@ public class EntQueryGenerator {
 		default:
 		    break;
 		}
-
 	    }
 	}
 
-	return new EntQuery((EntQuerySourcesModel) from.getResult().getValue(), where != null ? (ConditionsModel) where.getResult().getValue() : null, (YieldsModel) select.getResult().getValue(), (GroupsModel) groupBy.getResult().getValue(), qryModel.getResultType());
+	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), qryModel.getResultType());
     }
 
     public EntQuery generateEntQuery(final QueryModel qryModel) {

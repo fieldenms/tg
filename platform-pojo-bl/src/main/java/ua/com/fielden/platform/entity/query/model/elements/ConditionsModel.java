@@ -19,7 +19,10 @@ public class ConditionsModel implements IPropertyCollector {
     @Override
     public List<EntQuery> getSubqueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
-	result.addAll(getFirstCondition().getSubqueries());
+	if (firstCondition != null) {
+	    result.addAll(getFirstCondition().getSubqueries());
+	}
+
 	for (final CompoundConditionModel compCondModel : getOtherConditions()) {
 	    result.addAll(compCondModel.getCondition().getSubqueries());
 	}
@@ -29,7 +32,10 @@ public class ConditionsModel implements IPropertyCollector {
     @Override
     public Set<String> getPropNames() {
 	final Set<String> result = new HashSet<String>();
-	result.addAll(getFirstCondition().getPropNames());
+	if (firstCondition != null) {
+		result.addAll(getFirstCondition().getPropNames());
+	}
+
 	for (final CompoundConditionModel compCondModel : getOtherConditions()) {
 	    result.addAll(compCondModel.getCondition().getPropNames());
 	}

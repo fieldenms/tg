@@ -63,4 +63,9 @@ public class EntProp implements ISingleOperand {
     public void setPropType(final Class propType) {
         this.propType = propType;
     }
+
+    @Override
+    public boolean ignore() {
+	return false;
+    }
 }

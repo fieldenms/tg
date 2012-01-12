@@ -24,6 +24,12 @@ abstract class AbstractSingleOperand<T> extends AbstractQueryLink implements ISi
     }
 
     @Override
+    public T iVal(final Object value) {
+	getTokens().iVal(value);
+	return getParent();
+    }
+
+    @Override
     public <E extends AbstractEntity> T model(final PrimitiveResultQueryModel model) {
 	getTokens().model(model);
 	return getParent();
@@ -32,6 +38,12 @@ abstract class AbstractSingleOperand<T> extends AbstractQueryLink implements ISi
     @Override
     public T param(final String paramName) {
 	getTokens().param(paramName);
+	return getParent();
+    }
+
+    @Override
+    public T iParam(final String paramName) {
+	getTokens().iParam(paramName);
 	return getParent();
     }
 
