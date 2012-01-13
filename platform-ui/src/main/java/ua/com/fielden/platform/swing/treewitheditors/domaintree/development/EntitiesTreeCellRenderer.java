@@ -62,6 +62,10 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 	return (EntitiesTree2) super.getTree();
     }
 
+    private IDomainTreeManagerAndEnhancer getManager() {
+	return getTree().getEntitiesModel().getManager();
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected String getLabelToolTipText(final TreePath treePath) {
@@ -69,7 +73,7 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 	    final Pair<Class<?>, String> rootAndProp = (Pair<Class<?>, String>) ((DefaultMutableTreeNode) treePath.getLastPathComponent()).getUserObject();
 	    final Class<?> root = rootAndProp.getKey();
 	    final String property = rootAndProp.getValue();
-	    return EntitiesTreeModel2.extractTitleAndDesc(root, property).getValue();
+	    return EntitiesTreeModel2.extractTitleAndDesc(getManager().getEnhancer().getManagedType(root), property).getValue();
 	}
 	return null;
     }
@@ -78,7 +82,7 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
     protected String getCheckingComponentToolTipText(final int index, final TreePath treePath) {
 	if(treePath != null){
 	    final Pair<Class<?>, String> rootAndProp = ((EntitiesTreeNode2) treePath.getLastPathComponent()).getUserObject();
-	    final Class<?> root = rootAndProp.getKey();
+	    final Class<?> root = getManager().getEnhancer().getManagedType(rootAndProp.getKey());
 	    final String property = rootAndProp.getValue();
 
 	    if(index == EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()){

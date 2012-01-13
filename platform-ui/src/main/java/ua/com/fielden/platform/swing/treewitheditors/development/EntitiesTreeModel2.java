@@ -297,7 +297,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 
 	    @Override
 	    public String toString() {
-		return extractTitleAndDesc(root, property).getKey();
+		return extractTitleAndDesc(getManager().getEnhancer().getManagedType(root), property).getKey();
 	    }
 	};
     }

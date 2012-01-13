@@ -16,8 +16,8 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;

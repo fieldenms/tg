@@ -11,13 +11,14 @@ import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IStructureChangedListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickManagerWithMutability;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.IncludedAndCheckedPropertiesSynchronisationListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -137,13 +138,18 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 		    // the property is not excluded 1) by contract 2) was not excluded manually
 		    // this is a new property. "includedProperties" should be updated (the new property added).
 		    final String parent = PropertyTypeDeterminator.isDotNotation(newProperty) ? PropertyTypeDeterminator.penultAndLast(newProperty).getKey() : "";
+		    // ! important ! the parent should be warmed up before adding anything to it!
+		    dtr.warmUp(root, parent);
+
 		    final int pathIndex = inclProps.indexOf(parent);
 		    // add the property on the place of the last parent child (just before next branch of properties)
 		    final int nextBranchIndex = nextBranchIndex(pathIndex, parent, inclProps);
-		    if (nextBranchIndex < inclProps.size()) {
-			dtr.includedPropertiesMutable(root).add(nextBranchIndex, newProperty);
-		    } else {
-			dtr.includedPropertiesMutable(root).add(newProperty);
+		    if (nextBranchIndex > 0 && !EntityUtils.equalsEx(inclProps.get(nextBranchIndex - 1), newProperty)) { // edge-case : when warming up a NEW calc property WILL BE restored from enhanced type, and it should not be added twice
+			if (nextBranchIndex < inclProps.size()) {
+			    dtr.includedPropertiesMutable(root).add(nextBranchIndex, newProperty);
+			} else {
+			    dtr.includedPropertiesMutable(root).add(newProperty);
+			}
 		    }
 		}
 	    }
@@ -257,13 +263,13 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    // inject an enhanced type into method implementation
 	    return base.checkedPropertiesMutable(enhancerWithPropertiesPopulation.getManagedType(root));
 	}
-	
+
 	@Override
 	protected boolean isCheckedMutably(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    return base.isCheckedMutably(enhancerWithPropertiesPopulation.getManagedType(root), property);
 	}
-	
+
 	@Override
 	public boolean isCheckedNaturally(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation

@@ -15,10 +15,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.Function;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
@@ -341,6 +340,14 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 	dtm().getEnhancer().removeCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop2");
 	dtm().getEnhancer().apply();
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+    }
+
+    @Test
+    public void test_that_domain_changes_for_Second_Level_circular_properties_are_correctly_reflected_in_Included_properties() {
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityPropOfSelfType.prop1", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "1 * 2", "Property 1", "desc"));
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.desc", "entityPropOfSelfType.integerProp", "entityPropOfSelfType.entityPropOfSelfType", "entityPropOfSelfType.entityPropOfSelfType.dummy-property", "entityPropOfSelfType.entityProp", "entityPropOfSelfType.entityProp.integerProp", "entityPropOfSelfType.entityProp.moneyProp", "entityPropOfSelfType.entityPropCollection", "entityPropOfSelfType.entityPropCollection.integerProp", "entityPropOfSelfType.entityPropCollection.moneyProp", "entityPropOfSelfType.prop1", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp").toString(), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class).toString());
     }
 
     @Test
