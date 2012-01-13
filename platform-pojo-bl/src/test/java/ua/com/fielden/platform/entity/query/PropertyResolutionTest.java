@@ -22,7 +22,6 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 public class PropertyResolutionTest {
     private final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
 
-
     @Test
     @Ignore
     public void test_prop0() {

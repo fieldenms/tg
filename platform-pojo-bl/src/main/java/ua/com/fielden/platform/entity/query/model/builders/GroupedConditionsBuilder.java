@@ -62,5 +62,4 @@ public class GroupedConditionsBuilder extends AbstractTokensBuilder {
 	    return false;
 	return true;
     }
-
 }

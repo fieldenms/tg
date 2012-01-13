@@ -39,8 +39,6 @@ public class PropertyPresenceTest {
 	assertEquals("Property should be present", true, qb.generateEntQuery(qry).getSources().getMain().hasProperty("model.make.desc"));
     }
 
-
-
     @Test
     public void test_prop2() {
 	final AggregatedResultQueryModel qry = select(TgVehicle.class).as("v").modelAsAggregate();

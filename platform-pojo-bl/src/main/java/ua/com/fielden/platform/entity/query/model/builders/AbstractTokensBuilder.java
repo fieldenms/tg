@@ -61,8 +61,26 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case MONTH:
 	    setChild(new MonthOfBuilder(this, dbVersion, getParamValues()));
 	    break;
-	default:
+	case YEAR:
+	    setChild(new YearOfBuilder(this, dbVersion, getParamValues()));
+	    break;
+	case COUNT_DAYS:
+	case CASE_WHEN:
+	case ROUND:
+	case IF_NULL:
+	case UPPERCASE:
+	case LOWERCASE:
+	case NOW:
+	case SECOND:
+	case MINUTE:
+	case HOUR:
+	case SUM_DISTINCT:
+	case COUNT_DISTINCT:
+	case AVERAGE_DISTINCT:
+	case COUNT_ALL:
 	    // TODO implement the rest
+	    throw new RuntimeException("Not yet implemented: " + function);
+	default:
 	    throw new RuntimeException("Unrecognised function token: " + function);
 	}
     }
