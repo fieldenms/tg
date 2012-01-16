@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.query.model.elements;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -19,11 +18,23 @@ public class EntQuery implements ISingleOperand {
     private final Class resultType;
     private EntQuery master;
     // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
-    private final List<Pair<EntQuery, String>> unresolvedProps;
+  //  private final List<Pair<EntQuery, String>> unresolvedPropNames;
+    private final List<Pair<EntQuery, EntProp>> unresolvedProps;
     // modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for unresolved only
     // if at some master the property of this subquery is resolved - it should be removed from here
 
 
+//    public Class getYieldType(final String yieldName) {
+//	if (!yields.getYields().containsKey(yieldName)) {
+//	    return null;
+//	} else {
+//	    return yields.getYields().get(yieldName).getOperand().type();
+//	}
+//    }
+
+    public YieldModel getYield(final String yieldName) {
+	return yields.getYields().get(yieldName);
+    }
 
     public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType) {
 	super();
@@ -36,12 +47,12 @@ public class EntQuery implements ISingleOperand {
 	// TODO enhance short-cuts in yield section (e.g. the following:
 	// assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
 	if (this.resultType != null && yields.getYields().size() == 1 && AbstractEntity.class.isAssignableFrom(this.resultType) && !EntityAggregates.class.isAssignableFrom(this.resultType)) {
-	    final YieldModel idModel = new YieldModel(yields.getYields().get(0).getOperand(), "id");
-	    yields.getYields().remove(0);
-	    yields.getYields().add(idModel);
+	    final YieldModel idModel = new YieldModel(yields.getYields().values().iterator().next().getOperand(), "id");
+	    yields.getYields().clear();
+	    yields.getYields().put("id", idModel);
 	}
 
-	final List<Pair<EntQuery, String>> unresolvedPropsFromSubqueries = new ArrayList<Pair<EntQuery, String>>();
+	final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries = new ArrayList<Pair<EntQuery, EntProp>>();
 	for (final EntQuery entQuery : getImmediateSubqueries()) {
 	    entQuery.master = this;
 	    unresolvedPropsFromSubqueries.addAll(entQuery.unresolvedProps);
@@ -64,20 +75,20 @@ public class EntQuery implements ISingleOperand {
 //	return result;
 //    }
 
-    private List<Pair<EntQuery, String>> resolveProps(final List<Pair<EntQuery, String>> unresolvedPropsFromSubqueries) {
-	final List<Pair<EntQuery, String>> unresolvedProps = new ArrayList<Pair<EntQuery, String>>();
-	final Set<String> props = getImmediatePropNames();
+    private List<Pair<EntQuery, EntProp>> resolveProps(final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries) {
+	final List<Pair<EntQuery, EntProp>> unresolvedProps = new ArrayList<Pair<EntQuery, EntProp>>();
+	final List<EntProp> props = getImmediateProps();
 	System.out.println("Props: " + props);
 
-	for (final Pair<EntQuery, String> unresolvedPropPair : unresolvedPropsFromSubqueries) {
-	    final Pair<EntQuery,String> propResolutionResult = performResolveAction(unresolvedPropPair.getKey(), unresolvedPropPair.getValue());
+	for (final Pair<EntQuery, EntProp> unresolvedPropPair : unresolvedPropsFromSubqueries) {
+	    final Pair<EntQuery,EntProp> propResolutionResult = performPropResolveAction(unresolvedPropPair.getKey(), unresolvedPropPair.getValue());
 	    if (propResolutionResult != null) {
 		unresolvedProps.add(propResolutionResult);
 	    }
 	}
 
-	for (final String prop : props) {
-	    final Pair<EntQuery,String> propResolutionResult = performResolveAction(this, prop);
+	for (final EntProp prop : props) {
+	    final Pair<EntQuery,EntProp> propResolutionResult = performPropResolveAction(this, prop);
 	    if (propResolutionResult != null) {
 		unresolvedProps.add(propResolutionResult);
 	    }
@@ -86,7 +97,7 @@ public class EntQuery implements ISingleOperand {
 	return unresolvedProps;
     }
 
-    private Pair<EntQuery, String> performResolveAction(final EntQuery holder, final String prop) {
+    private Pair<EntQuery, EntProp> performPropResolveAction(final EntQuery holder, final EntProp prop) {
 	int resolvedCount = sources.getMain().hasProperty(prop) ? 1 : 0;
 
 	for (final EntQueryCompoundSourceModel source : sources.getCompounds()) {
@@ -97,22 +108,22 @@ public class EntQuery implements ISingleOperand {
 	    throw new IllegalStateException("Ambiguous property: " + prop);
 	}
 
-	return resolvedCount == 0 ? new Pair<EntQuery, String>(holder, prop) : null;
+	return resolvedCount == 0 ? new Pair<EntQuery, EntProp>(holder, prop) : null;
     }
 
     /**
-     * By immediate prop names here are meant props used within this query and not within it's (nested) subqueries.
+     * By immediate props here are meant props used within this query and not within it's (nested) subqueries.
      *
      * @return
      */
-    public Set<String> getImmediatePropNames() {
-	final Set<String> result = new HashSet<String>();
-	result.addAll(getPropNamesFromYields());
-	result.addAll(getPropNamesFromGroups());
+    public List<EntProp> getImmediateProps() {
+	final List<EntProp> result = new ArrayList<EntProp>();
+	result.addAll(getPropsFromSources());
 	if (conditions != null) {
-	    result.addAll(conditions.getPropNames());
+	    result.addAll(conditions.getProps());
 	}
-	result.addAll(getPropNamesFromSources());
+	result.addAll(getPropsFromGroups());
+	result.addAll(getPropsFromYields());
 	return result;
     }
 
@@ -131,37 +142,42 @@ public class EntQuery implements ISingleOperand {
 	return Collections.emptySet();
     }
 
+    @Override
+    public List<EntProp> getProps() {
+	return Collections.emptyList();
+    }
+
     public List<EntQuery> getSubqueries() {
 	return Arrays.asList(new EntQuery[] { this });
     }
 
-    private Set<String> getPropNamesFromYields() {
-	final Set<String> result = new HashSet<String>();
-	for (final YieldModel yield : yields.getYields()) {
-	    result.addAll(yield.getOperand().getPropNames());
+    private List<EntProp> getPropsFromYields() {
+	final List<EntProp> result = new ArrayList<EntProp>();
+	for (final YieldModel yield : yields.getYields().values()) {
+	    result.addAll(yield.getOperand().getProps());
 	}
 	return result;
     }
 
-    private Set<String> getPropNamesFromGroups() {
-	final Set<String> result = new HashSet<String>();
+    private List<EntProp> getPropsFromGroups() {
+	final List<EntProp> result = new ArrayList<EntProp>();
 	for (final GroupModel group : groups.getGroups()) {
-	    result.addAll(group.getOperand().getPropNames());
+	    result.addAll(group.getOperand().getProps());
 	}
 	return result;
     }
 
-    private Set<String> getPropNamesFromSources() {
-	final Set<String> result = new HashSet<String>();
+    private List<EntProp> getPropsFromSources() {
+	final List<EntProp> result = new ArrayList<EntProp>();
 	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
-	    result.addAll(compSource.getJoinConditions().getPropNames());
+	    result.addAll(compSource.getJoinConditions().getProps());
 	}
 	return result;
     }
 
     private List<EntQuery> getSubqueriesFromYields() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
-	for (final YieldModel yield : yields.getYields()) {
+	for (final YieldModel yield : yields.getYields().values()) {
 	    result.addAll(yield.getOperand().getSubqueries());
 	}
 	return result;
@@ -261,12 +277,24 @@ public class EntQuery implements ISingleOperand {
         return resultType;
     }
 
-    public List<Pair<EntQuery, String>> getUnresolvedProps() {
+    public List<Pair<EntQuery, EntProp>> getUnresolvedProps() {
         return unresolvedProps;
     }
 
     @Override
     public boolean ignore() {
 	return false;
+    }
+
+    public void validate() {
+	if (unresolvedProps.size() > 0) {
+	    System.out.println(unresolvedProps.size());
+	    throw new RuntimeException("Couldn't resolve all properties");
+	}
+    }
+
+    @Override
+    public Class type() {
+	return resultType;
     }
 }

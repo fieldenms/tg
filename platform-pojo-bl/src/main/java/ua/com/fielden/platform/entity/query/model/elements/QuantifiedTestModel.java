@@ -27,6 +27,14 @@ public class QuantifiedTestModel implements ICondition {
     }
 
     @Override
+    public List<EntProp> getProps() {
+	final List<EntProp> result = new ArrayList<EntProp>();
+	result.addAll(leftOperand.getProps());
+	result.addAll(rightOperand.getProps());
+	return result;
+    }
+
+    @Override
     public List<EntQuery> getSubqueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	result.addAll(leftOperand.getSubqueries());

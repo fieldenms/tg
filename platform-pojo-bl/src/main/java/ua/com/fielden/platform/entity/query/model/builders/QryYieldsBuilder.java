@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.builders;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.model.elements.YieldModel;
@@ -27,9 +26,9 @@ public class QryYieldsBuilder extends AbstractTokensBuilder {
 	    finaliseChild();
 	    //throw new RuntimeException("Unable to produce result - unfinished model state!");
 	}
-	final List<YieldModel> yields = new ArrayList<YieldModel>();
+	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();
 	for (final Pair<TokenCategory, Object> pair : getTokens()) {
-	    yields.add((YieldModel) pair.getValue());
+	    yields.put(((YieldModel) pair.getValue()).getAlias(), (YieldModel) pair.getValue());
 	}
 
 	return new YieldsModel(yields);

@@ -27,6 +27,11 @@ public class EntValue implements ISingleOperand {
     }
 
     @Override
+    public List<EntProp> getProps() {
+	return Collections.emptyList();
+    }
+
+    @Override
     public List<EntQuery> getSubqueries() {
 	return Collections.emptyList();
     }
@@ -64,5 +69,10 @@ public class EntValue implements ISingleOperand {
     @Override
     public boolean ignore() {
 	return ignoreNull && value == null;
+    }
+
+    @Override
+    public Class type() {
+	return value != null ? value.getClass() : null;
     }
 }

@@ -1,16 +1,16 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.List;
+import java.util.Map;
 
 
 public class YieldsModel {
-    private final List<YieldModel> yields;
+    private final Map<String, YieldModel> yields;
 
-    public YieldsModel(final List<YieldModel> yields) {
+    public YieldsModel(final Map<String, YieldModel> yields) {
 	this.yields = yields;
     }
 
-    public List<YieldModel> getYields() {
+    public Map<String, YieldModel> getYields() {
         return yields;
     }
 

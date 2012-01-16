@@ -6,27 +6,24 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.fluent.query;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.builders.DbVersion;
-import ua.com.fielden.platform.entity.query.model.builders.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.model.elements.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.model.elements.ComparisonTestModel;
 import ua.com.fielden.platform.entity.query.model.elements.CompoundConditionModel;
 import ua.com.fielden.platform.entity.query.model.elements.ConditionsModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntProp;
+import ua.com.fielden.platform.entity.query.model.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.model.elements.EntQueryCompoundSourceModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntQuerySourceAsEntity;
 import ua.com.fielden.platform.entity.query.model.elements.EntQuerySourceAsModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntQuerySourcesModel;
-import ua.com.fielden.platform.entity.query.model.elements.EntValue;
 import ua.com.fielden.platform.entity.query.model.elements.JoinType;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import static org.junit.Assert.assertEquals;
 
-public class QueryModelSourcesCompositionTest {
-    private final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
-    private final ComparisonTestModel alwaysTrueCondition = new ComparisonTestModel(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
+public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
 
     @Test
     public void test_query_sources1() {
@@ -84,13 +81,27 @@ public class QueryModelSourcesCompositionTest {
 
     @Test
     public void test_query_with_derived_sources() {
-	final EntityResultQueryModel<TgVehicle> subQry = query.select(TgVehicle.class).as("v").where().prop("v.model").isNotNull().model();
-	final EntityResultQueryModel<TgVehicle> qry = query.select(subQry).as("v").where().prop("v.model").isNotNull().model();
+	final EntityResultQueryModel<TgVehicle> sourceQry = query.select(TgVehicle.class).as("v").where().prop("v.model").isNotNull().model();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(sourceQry).as("v").where().prop("v.model").isNotNull().model();
 
-	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsModel("v", qb.generateEntQuery(subQry)), new ArrayList<EntQueryCompoundSourceModel>());
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsModel("v", qb.generateEntQuery(sourceQry)), new ArrayList<EntQueryCompoundSourceModel>());
 	assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
     }
 
+
+    @Test
+    public void test_query_with_derived_sources2() {
+	final AggregatedResultQueryModel sourceQry = query.select(TgVehicle.class).as("v").where().prop("v.model").isNotNull().
+		groupBy().prop("model").
+		groupBy().yearOf().prop("initDate").
+		yield().prop("model").as("vehModel").
+		yield().yearOf().prop("initDate").as("modelYear").modelAsAggregate();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(sourceQry).as("v").where().prop("vehModel").isNotNull().and().prop("modelYear").ge().val(2000).model();
+	final EntQuery entQry = qb.generateEntQuery(qry);
+	entQry.validate();
+	//final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsModel("v", qb.generateEntQuery(sourceQry)), new ArrayList<EntQueryCompoundSourceModel>());
+	//assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
+    }
 
     @Test
     public void test_simple_query_model_13() {
@@ -107,5 +118,4 @@ public class QueryModelSourcesCompositionTest {
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(TgVehicle.class, null), others);
 	assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
     }
-
 }

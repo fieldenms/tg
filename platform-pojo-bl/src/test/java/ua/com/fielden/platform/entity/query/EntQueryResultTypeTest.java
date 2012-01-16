@@ -5,15 +5,12 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.builders.DbVersion;
-import ua.com.fielden.platform.entity.query.model.builders.EntQueryGenerator;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
-public class EntQueryResultTypeTest {
-    private final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
+public class EntQueryResultTypeTest extends BaseEntQueryTCase {
 
     @Test
     public void test1() {

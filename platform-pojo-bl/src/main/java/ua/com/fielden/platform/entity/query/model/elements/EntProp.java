@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -22,10 +23,38 @@ public class EntProp implements ISingleOperand {
     }
 
     @Override
+    public List<EntProp> getProps() {
+	final List<EntProp> result = new ArrayList<EntProp>();
+	result.add(this);
+	return result;
+    }
+
+    @Override
     public List<EntQuery> getSubqueries() {
 	return Collections.emptyList();
     }
 
+    public Class getPropType() {
+        return propType;
+    }
+
+    public void setPropType(final Class propType) {
+        this.propType = propType;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public boolean ignore() {
+	return false;
+    }
+
+    @Override
+    public Class type() {
+	return propType;
+    }
     @Override
     public int hashCode() {
 	final int prime = 31;
@@ -54,18 +83,5 @@ public class EntProp implements ISingleOperand {
 	    return false;
 	}
 	return true;
-    }
-
-    public Class getPropType() {
-        return propType;
-    }
-
-    public void setPropType(final Class propType) {
-        this.propType = propType;
-    }
-
-    @Override
-    public boolean ignore() {
-	return false;
     }
 }

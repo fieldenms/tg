@@ -5,5 +5,6 @@ import java.util.Set;
 
 public interface IPropertyCollector {
     Set<String> getPropNames();
+    List<EntProp> getProps();
     List<EntQuery> getSubqueries();
 }

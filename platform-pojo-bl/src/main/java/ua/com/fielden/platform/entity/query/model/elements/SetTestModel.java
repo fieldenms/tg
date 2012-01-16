@@ -34,6 +34,14 @@ public class SetTestModel implements ICondition {
     }
 
     @Override
+    public List<EntProp> getProps() {
+	final List<EntProp> result = new ArrayList<EntProp>();
+	result.addAll(leftOperand.getProps());
+	result.addAll(rightOperand.getProps());
+	return result;
+    }
+
+    @Override
     public boolean ignore() {
 	return leftOperand.ignore();
     }

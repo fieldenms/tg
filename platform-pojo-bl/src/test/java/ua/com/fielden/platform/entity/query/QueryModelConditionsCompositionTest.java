@@ -11,8 +11,6 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.query.fluent.query;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.query.model.builders.DbVersion;
-import ua.com.fielden.platform.entity.query.model.builders.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.model.elements.ArithmeticalOperator;
 import ua.com.fielden.platform.entity.query.model.elements.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.model.elements.ComparisonTestModel;
@@ -45,9 +43,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import static org.junit.Assert.assertEquals;
 
-public class QueryModelConditionsCompositionTest {
-    private final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
-    private final ComparisonTestModel alwaysTrueCondition = new ComparisonTestModel(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
+public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
     private final EntValue mercLikeValue = new EntValue("MERC%");
     private final EntValue mercValue = new EntValue("MERC");
     private final EntValue audiValue = new EntValue("AUDI");

@@ -6,14 +6,10 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.query;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.builders.DbVersion;
-import ua.com.fielden.platform.entity.query.model.builders.EntQueryGenerator;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import static org.junit.Assert.assertEquals;
 
-public class QueryModelCompositionTest {
-    private final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
-
+public class QueryModelCompositionTest extends BaseEntQueryTCase {
 
     @Test
     @Ignore

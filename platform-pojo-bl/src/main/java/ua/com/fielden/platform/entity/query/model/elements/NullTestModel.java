@@ -20,8 +20,18 @@ public class NullTestModel implements ICondition {
     }
 
     @Override
+    public List<EntProp> getProps() {
+	return operand.getProps();
+    }
+
+    @Override
     public List<EntQuery> getSubqueries() {
 	return operand.getSubqueries();
+    }
+
+    @Override
+    public boolean ignore() {
+	return operand.ignore();
     }
 
     @Override
@@ -56,10 +66,5 @@ public class NullTestModel implements ICondition {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    public boolean ignore() {
-	return operand.ignore();
     }
 }

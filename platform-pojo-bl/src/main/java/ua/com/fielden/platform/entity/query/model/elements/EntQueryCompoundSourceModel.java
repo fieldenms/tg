@@ -34,9 +34,15 @@ public class EntQueryCompoundSourceModel implements IPropertyCollector {
     }
 
     @Override
+    public List<EntProp> getProps() {
+	return joinConditions.getProps();
+    }
+
+    @Override
     public List<EntQuery> getSubqueries() {
 	return joinConditions.getSubqueries();
     }
+
 
     @Override
     public int hashCode() {

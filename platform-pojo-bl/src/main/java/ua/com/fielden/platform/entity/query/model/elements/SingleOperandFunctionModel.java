@@ -13,7 +13,6 @@ abstract class SingleOperandFunctionModel implements ISingleOperand {
 	this.operand = operand;
     }
 
-
     @Override
     public List<EntQuery> getSubqueries() {
 	return operand.getSubqueries();
@@ -22,6 +21,16 @@ abstract class SingleOperandFunctionModel implements ISingleOperand {
     @Override
     public Set<String> getPropNames() {
 	return operand.getPropNames();
+    }
+
+    @Override
+    public List<EntProp> getProps() {
+	return operand.getProps();
+    }
+
+    @Override
+    public Class type() {
+	return null;
     }
 
     @Override

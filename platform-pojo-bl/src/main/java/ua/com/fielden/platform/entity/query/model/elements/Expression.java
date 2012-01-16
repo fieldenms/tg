@@ -28,6 +28,21 @@ public class Expression implements ISingleOperand {
     }
 
     @Override
+    public List<EntProp> getProps() {
+	final List<EntProp> result = new ArrayList<EntProp>();
+	result.addAll(first.getProps());
+	for (final CompoundSingleOperand compSingleOperand : items) {
+	    result.addAll(compSingleOperand.getOperand().getProps());
+	}
+	return result;
+    }
+
+    @Override
+    public boolean ignore() {
+	return false;
+    }
+
+    @Override
     public List<EntQuery> getSubqueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	result.addAll(first.getSubqueries());
@@ -35,6 +50,11 @@ public class Expression implements ISingleOperand {
 	    result.addAll(compSingleOperand.getOperand().getSubqueries());
 	}
 	return result;
+    }
+
+    @Override
+    public Class type() {
+	return null;
     }
 
     @Override
@@ -73,10 +93,5 @@ public class Expression implements ISingleOperand {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    public boolean ignore() {
-	return false;
     }
 }

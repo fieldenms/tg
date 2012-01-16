@@ -1,30 +1,42 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.lang.reflect.Field;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.Finder;
 
-public class EntQuerySourceAsEntity implements IEntQuerySource {
+public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
     private final Class<? extends AbstractEntity> entityType;
-    private final String alias; // can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end
-    private final Set<String> referencingProps = new HashSet<String>();
 
     public EntQuerySourceAsEntity(final Class<? extends AbstractEntity> entityType, final String alias) {
+	super(alias);
 	this.entityType = entityType;
-	this.alias = alias;
     }
 
-    public String getAlias() {
-        return alias;
+    @Override
+    public Class getType() {
+	return entityType;
+    }
+
+    @Override
+    protected Class determinePropertyType(final String dotNotatedPropName) {
+	if (dotNotatedPropName.equalsIgnoreCase(getAlias())) {
+	    return Long.class; // id property is meant here
+	}
+
+	try {
+	    final Field field = Finder.findFieldByName(entityType, dealiasPropName(dotNotatedPropName, getAlias()));
+	    return field.getType();
+	} catch (final Exception e) {
+	    return null;
+	}
     }
 
     @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	result = prime * result + ((alias == null) ? 0 : alias.hashCode());
+	result = prime * result + ((getAlias() == null) ? 0 : getAlias().hashCode());
 	result = prime * result + ((entityType == null) ? 0 : entityType.hashCode());
 	return result;
     }
@@ -41,11 +53,11 @@ public class EntQuerySourceAsEntity implements IEntQuerySource {
 	    return false;
 	}
 	final EntQuerySourceAsEntity other = (EntQuerySourceAsEntity) obj;
-	if (alias == null) {
-	    if (other.alias != null) {
+	if (getAlias() == null) {
+	    if (other.getAlias() != null) {
 		return false;
 	    }
-	} else if (!alias.equals(other.alias)) {
+	} else if (!getAlias().equals(other.getAlias())) {
 	    return false;
 	}
 	if (entityType == null) {
@@ -56,27 +68,5 @@ public class EntQuerySourceAsEntity implements IEntQuerySource {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    public boolean hasProperty(final String dotNotatedPropName) {
-	if (dotNotatedPropName.equalsIgnoreCase(alias)) {
-	    return true; // id property is meant here
-	}
-
-	try {
-	    final String propNameWithoutAlias = (alias == null ? dotNotatedPropName : (!dotNotatedPropName.startsWith(alias + ".") ? dotNotatedPropName : dotNotatedPropName.substring(alias.length() + 1)));
-	    Finder.findFieldByName(entityType, propNameWithoutAlias);
-	    referencingProps.add(propNameWithoutAlias);
-	    System.out.println("adding prop [" + propNameWithoutAlias + "] to " + entityType.getSimpleName() + " aliased as [" + alias + "]");
-	    return true;
-	} catch (final Exception e) {
-	    return false;
-	}
-    }
-
-    @Override
-    public Class getType() {
-	return entityType;
     }
 }

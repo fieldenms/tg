@@ -42,6 +42,19 @@ public class ConditionsModel implements IPropertyCollector {
 	return result;
     }
 
+    @Override
+    public List<EntProp> getProps() {
+	final List<EntProp> result = new ArrayList<EntProp>();
+	if (firstCondition != null) {
+		result.addAll(getFirstCondition().getProps());
+	}
+
+	for (final CompoundConditionModel compCondModel : getOtherConditions()) {
+	    result.addAll(compCondModel.getCondition().getProps());
+	}
+	return result;
+    }
+
     public ICondition getFirstCondition() {
         return firstCondition;
     }
