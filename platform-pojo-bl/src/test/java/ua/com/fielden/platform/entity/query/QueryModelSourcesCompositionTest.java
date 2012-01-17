@@ -104,6 +104,19 @@ public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
     }
 
     @Test
+    public void test_query_with_derived_sources3() {
+	final AggregatedResultQueryModel sourceQry = query.select(TgVehicle.class).as("v").where().prop("v.model").isNotNull().
+		groupBy().prop("model").
+		yield().prop("model").as("vehModel").
+		yield().minOf().yearOf().prop("initDate").as("modelYear").modelAsAggregate();
+	final EntityResultQueryModel<TgVehicle> qry = query.select(sourceQry).as("v").where().prop("vehModel").isNotNull().and().prop("modelYear").ge().val(2000).model();
+	final EntQuery entQry = qb.generateEntQuery(qry);
+	entQry.validate();
+	//final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsModel("v", qb.generateEntQuery(sourceQry)), new ArrayList<EntQueryCompoundSourceModel>());
+	//assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
+    }
+
+    @Test
     public void test_simple_query_model_13() {
 	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").model();
 	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
