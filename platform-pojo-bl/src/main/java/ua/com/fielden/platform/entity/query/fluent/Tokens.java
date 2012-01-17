@@ -206,6 +206,26 @@ final class Tokens {
 	return add(TokenCategory.ANY_OF_EXPR_TOKENS, getListFromArray(expressions));
     }
 
+    public Tokens allOfProps(final String... props) {
+	return add(TokenCategory.ALL_OF_PROPS, getListFromArray(props));
+    }
+
+    public Tokens allOfParams(final String... params) {
+	return add(TokenCategory.ALL_OF_PARAMS, getListFromArray(params));
+    }
+
+    public Tokens allOfModels(final PrimitiveResultQueryModel... models) {
+	return add(TokenCategory.ALL_OF_EQUERY_TOKENS, getListFromArray(models));
+    }
+
+    public Tokens allOfValues(final Object... values) {
+	return add(TokenCategory.ALL_OF_VALUES, getListFromArray(values));
+    }
+
+    public Tokens allOfExpressions(final ExpressionModel... expressions) {
+	return add(TokenCategory.ALL_OF_EXPR_TOKENS, getListFromArray(expressions));
+    }
+
     public Tokens any(final UnorderedQueryModel subQuery) {
 	return add(TokenCategory.ANY_OPERATOR, subQuery);
     }

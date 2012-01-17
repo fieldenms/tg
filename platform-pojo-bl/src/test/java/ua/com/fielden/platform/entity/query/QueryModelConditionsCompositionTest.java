@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.fluent.query;
@@ -71,6 +72,35 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
 	assertEquals("models are different", exp2, qb.generateEntQuery(qry).getConditions());
+    }
+
+    @Test
+    public void test_multiple_vs_single_comparison_test_using_equivalent_model() {
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().anyOfProps("model", "eqClass").eq().val("MERC").model();
+	final EntityResultQueryModel<TgVehicle> qry2 = query.select(TgVehicle.class).where().begin().prop("model").eq().val("MERC").or().prop("eqClass").eq().val("MERC").end().model();
+	assertEquals("models are different", qb.generateEntQuery(qry2), qb.generateEntQuery(qry));
+    }
+
+    @Test
+    public void test_multiple_vs_single_like_test_using_equivalent_model() {
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().allOfProps("model.key", "model.make.key").like().anyOfValues("MERC%", "AUDI%", "BMW%").model();
+	final EntityResultQueryModel<TgVehicle> qry2 = query.select(TgVehicle.class).where().begin().
+		begin().prop("model.key").like().val("MERC%").or().prop("model.key").like().val("AUDI%").or().prop("model.key").like().val("BMW%").end().and().
+		begin().prop("model.make.key").like().val("MERC%").or().prop("model.make.key").like().val("AUDI%").or().prop("model.make.key").like().val("BMW%").end().
+		end().model();
+	assertEquals("models are different", qb.generateEntQuery(qry2), qb.generateEntQuery(qry));
+    }
+
+    @Ignore
+    @Test
+    public void test_ignore_in_multiple_vs_single_like_test_using_equivalent_model() {
+	final String [] values = new String[]{null, null, null};
+	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).where().allOfProps("model.key", "model.make.key").like().anyOfValues(values).model();
+	final EntityResultQueryModel<TgVehicle> qry2 = query.select(TgVehicle.class).where().begin().
+		begin().val(0).eq().val(0).or().val(0).eq().val(0).or().val(0).eq().val(0).end().and().
+		begin().val(0).eq().val(0).or().val(0).eq().val(0).or().val(0).eq().val(0).end().
+		end().model();
+	assertEquals("models are different", qb.generateEntQuery(qry2), qb.generateEntQuery(qry));
     }
 
     @Test

@@ -39,4 +39,35 @@ abstract class AbstractMultipleOperand<T> extends AbstractSingleOperand<T> imple
 	getTokens().anyOfExpressions(expressions);
 	return getParent();
     }
+
+    @Override
+    public T allOfProps(final String... propertyNames) {
+	getTokens().allOfProps(propertyNames);
+	return getParent();
+    }
+
+    @Override
+    public T allOfValues(final Object... values) {
+	getTokens().allOfValues(values);
+	return getParent();
+    }
+
+    @Override
+    public T allOfParams(final String... paramNames) {
+	getTokens().allOfParams(paramNames);
+	return getParent();
+    }
+
+    @Override
+    public T allOfModels(final PrimitiveResultQueryModel... models) {
+	getTokens().allOfModels(models);
+	return getParent();
+    }
+
+    @Override
+    public T allOfExpressions(final ExpressionModel... expressions) {
+	getTokens().allOfExpressions(expressions);
+	return getParent();
+    }
+
 }

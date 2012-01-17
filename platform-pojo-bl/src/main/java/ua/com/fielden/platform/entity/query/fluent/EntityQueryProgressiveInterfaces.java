@@ -108,6 +108,11 @@ public interface EntityQueryProgressiveInterfaces {
         T anyOfParams(String... paramNames);
         T anyOfModels(PrimitiveResultQueryModel... models);
         T anyOfExpressions(ExpressionModel... Expressions);
+        T allOfProps(String... propertyNames);
+        T allOfValues(Object... values);
+        T allOfParams(String... paramNames);
+        T allOfModels(PrimitiveResultQueryModel... models);
+        T allOfExpressions(ExpressionModel... Expressions);
     }
 
     interface IComparisonOperand<T> extends IMultipleOperand<T>, IBeginExpression<IExprOperand0<T>> /*another entry point*/{

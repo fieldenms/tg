@@ -15,5 +15,4 @@ public class BaseEntQueryTCase {
     }
 
     protected final ComparisonTestModel alwaysTrueCondition = new ComparisonTestModel(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
-
 }

@@ -24,14 +24,6 @@ public class EntQuery implements ISingleOperand {
     // if at some master the property of this subquery is resolved - it should be removed from here
 
 
-//    public Class getYieldType(final String yieldName) {
-//	if (!yields.getYields().containsKey(yieldName)) {
-//	    return null;
-//	} else {
-//	    return yields.getYields().get(yieldName).getOperand().type();
-//	}
-//    }
-
     public YieldModel getYield(final String yieldName) {
 	return yields.getYields().get(yieldName);
     }
@@ -62,23 +54,9 @@ public class EntQuery implements ISingleOperand {
 	unresolvedProps = resolveProps(unresolvedPropsFromSubqueries);
     }
 
-//    public List<EntQuery> getLeafSubqueries() {
-//	final List<EntQuery> result = new ArrayList<EntQuery>();
-//	for (final EntQuery entQuery : getImmediateSubqueries()) {
-//	    final List<EntQuery> subSubQueries = entQuery.getImmediateSubqueries();
-//	    if (subSubQueries.size() > 0) {
-//		result.addAll(entQuery.getLeafSubqueries());
-//	    } else {
-//		result.add(entQuery);
-//	    }
-//	}
-//	return result;
-//    }
-
     private List<Pair<EntQuery, EntProp>> resolveProps(final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries) {
 	final List<Pair<EntQuery, EntProp>> unresolvedProps = new ArrayList<Pair<EntQuery, EntProp>>();
 	final List<EntProp> props = getImmediateProps();
-	System.out.println("Props: " + props);
 
 	for (final Pair<EntQuery, EntProp> unresolvedPropPair : unresolvedPropsFromSubqueries) {
 	    final Pair<EntQuery,EntProp> propResolutionResult = performPropResolveAction(unresolvedPropPair.getKey(), unresolvedPropPair.getValue());
@@ -98,6 +76,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Pair<EntQuery, EntProp> performPropResolveAction(final EntQuery holder, final EntProp prop) {
+	// TODO perform referencing list update and ent prop type setting only if single source for prop has been determined
 	int resolvedCount = sources.getMain().hasProperty(prop) ? 1 : 0;
 
 	for (final EntQueryCompoundSourceModel source : sources.getCompounds()) {
