@@ -216,23 +216,6 @@ public interface EntityQueryProgressiveInterfaces {
         T endExpr();
     }
 
-//    public interface IJoin<J> {
-//
-//        <T extends AbstractEntity> IJoinAlias<J> join(final Class<T> entityType);
-//
-//        <T extends AbstractEntity> IJoinAlias<J> leftJoin(final Class<T> entityType);
-//
-//        <T extends AbstractEntity> IJoinAlias<J> join(final EntityResultQueryModel<T> model);
-//
-//        <T extends AbstractEntity> IJoinAlias<J> join(final AggregatedResultQueryModel model);
-//
-//        <T extends AbstractEntity> IJoinAlias<J> leftJoin(final EntityResultQueryModel<T> model);
-//
-//        <T extends AbstractEntity> IJoinAlias<J> leftJoin(final AggregatedResultQueryModel model);
-//
-//    }
-
-
     public interface IJoin extends IPlainJoin {
 
         <T extends AbstractEntity> IJoinAlias join(final Class<T> entityType);

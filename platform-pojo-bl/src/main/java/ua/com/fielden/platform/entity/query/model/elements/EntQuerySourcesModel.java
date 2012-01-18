@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -19,6 +20,15 @@ public class EntQuerySourcesModel {
 
     public List<EntQueryCompoundSourceModel> getCompounds() {
         return compounds;
+    }
+
+    public List<IEntQuerySource> getAllSources() {
+	final List<IEntQuerySource> result = new ArrayList<IEntQuerySource>();
+	result.add(main);
+	for (final EntQueryCompoundSourceModel compound : compounds) {
+	    result.add(compound.getSource());
+	}
+	return result;
     }
 
     @Override
