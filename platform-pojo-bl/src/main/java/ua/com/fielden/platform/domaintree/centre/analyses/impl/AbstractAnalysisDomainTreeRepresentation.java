@@ -6,6 +6,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.ChangedAction;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.IPropertyStructureChangedListener;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
@@ -87,6 +89,27 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	    //		    Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation != null && !EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination())));// disable integer calculated properties which were originated not from Date property
 	    //(!isEntityItself && !EntityUtils.isEntityType(propertyType) && !EntityUtils.isDate(propertyType) && !EntityUtils.isBoolean(propertyType)); // disable properties of "entity with AE or composite key" type
 	}
+
+	@Override
+	public final void disableImmutably(final Class<?> root, final String property) {
+	    super.disableImmutably(root, property);
+
+	    fireDisablingEvent(root, property);
+	}
+
+	@Override
+	public final void checkImmutably(final Class<?> root, final String property) {
+	    super.checkImmutably(root, property);
+
+	    fireDisablingEvent(root, property);
+	}
+
+	private void fireDisablingEvent(final Class<?> root, final String property) {
+	    // fire DISABLED event after successful "disabled" action
+	    for (final IPropertyStructureChangedListener listener : getDtr().dtm().listeners()) {
+		listener.propertyStructureChanged(root, property, ChangedAction.DISABLED_SECOND_TICK);
+	    }
+	}
     }
 
     /**
@@ -127,6 +150,27 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	    //	    (Reflector.isSynthetic(propertyType)) || // disable synthetic entities itself (and also synthetic properties -- rare case)
 	    //	    // TODO (!isEntityItself && EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))) || // disable properties of "entity with AE or composite key" type
 	    //	    (!isEntityItself && (EntityUtils.isDate(propertyType) || EntityUtils.isBoolean(propertyType))); // disable date and boolean properties
+	}
+
+	@Override
+	public final void disableImmutably(final Class<?> root, final String property) {
+	    super.disableImmutably(root, property);
+
+	    fireDisablingEvent(root, property);
+	}
+
+	@Override
+	public final void checkImmutably(final Class<?> root, final String property) {
+	    super.checkImmutably(root, property);
+
+	    fireDisablingEvent(root, property);
+	}
+
+	private void fireDisablingEvent(final Class<?> root, final String property) {
+	    // fire DISABLED event after successful "disabled" action
+	    for (final IPropertyStructureChangedListener listener : getDtr().dtm().listeners()) {
+		listener.propertyStructureChanged(root, property, ChangedAction.DISABLED_FIRST_TICK);
+	    }
 	}
 
 	@Override

@@ -41,7 +41,7 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
      * @param firstTick
      * @param secondTick
      */
-    protected AnalysisDomainTreeManager(final ISerialiser serialiser, final IAnalysisDomainTreeRepresentation dtr, final Boolean visible, final AnalysisAddToDistributionTickManager firstTick, final AnalysisAddToAggregationTickManager secondTick, final Integer visibleDistributedValuesNumber) {
+    protected AnalysisDomainTreeManager(final ISerialiser serialiser, final AnalysisDomainTreeRepresentation dtr, final Boolean visible, final AnalysisAddToDistributionTickManager firstTick, final AnalysisAddToAggregationTickManager secondTick, final Integer visibleDistributedValuesNumber) {
 	super(serialiser, dtr, visible, firstTick, secondTick);
 
 	this.visibleDistributedValuesNumber = visibleDistributedValuesNumber;

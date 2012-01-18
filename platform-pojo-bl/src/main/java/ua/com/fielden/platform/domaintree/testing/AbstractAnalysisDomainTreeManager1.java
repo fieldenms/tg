@@ -4,8 +4,8 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
@@ -36,7 +36,7 @@ public class AbstractAnalysisDomainTreeManager1 extends AbstractAnalysisDomainTr
      * @param firstTick
      * @param secondTick
      */
-    protected AbstractAnalysisDomainTreeManager1(final ISerialiser serialiser, final IAbstractAnalysisDomainTreeRepresentation dtr, final Boolean visible, final AbstractAnalysisAddToDistributionTickManager1 firstTick, final AbstractAnalysisAddToAggregationTickManager1 secondTick) {
+    protected AbstractAnalysisDomainTreeManager1(final ISerialiser serialiser, final AbstractAnalysisDomainTreeRepresentation dtr, final Boolean visible, final AbstractAnalysisAddToDistributionTickManager1 firstTick, final AbstractAnalysisAddToAggregationTickManager1 secondTick) {
 	super(serialiser, dtr, visible, firstTick, secondTick);
     }
 

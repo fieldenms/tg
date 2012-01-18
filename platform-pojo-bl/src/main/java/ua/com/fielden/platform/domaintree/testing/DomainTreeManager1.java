@@ -3,9 +3,9 @@ package ua.com.fielden.platform.domaintree.testing;
 import java.nio.ByteBuffer;
 import java.util.Set;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
@@ -32,7 +32,7 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
      * @param firstTick
      * @param secondTick
      */
-    protected DomainTreeManager1(final ISerialiser serialiser, final IDomainTreeRepresentation dtr, final TickManager firstTick, final TickManager secondTick) {
+    protected DomainTreeManager1(final ISerialiser serialiser, final AbstractDomainTreeRepresentation dtr, final TickManager firstTick, final TickManager secondTick) {
 	super(serialiser, dtr, firstTick, secondTick);
     }
 
@@ -50,6 +50,11 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
 	@Override
 	protected boolean isCheckedMutably(final Class<?> root, final String property) {
 	    return property.endsWith("mutablyCheckedProp");
+	}
+
+	@Override
+	protected void firePostCheckEvent(final IPropertyStructureChangedListener listener, final Class<?> root, final String property, final boolean check) {
+	    listener.propertyStructureChanged(root, property, check ? ChangedAction.CHECKED_FIRST_TICK : ChangedAction.UNCHECKED_FIRST_TICK); // first? second?
 	}
     }
 

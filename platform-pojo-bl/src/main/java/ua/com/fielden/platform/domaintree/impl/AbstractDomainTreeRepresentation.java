@@ -17,6 +17,8 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.ChangedAction;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.IPropertyStructureChangedListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -52,7 +54,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private final ITickRepresentation secondTick;
     /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
     private final EnhancementRootsMap<ListenedArrayList> includedProperties;
-    private final transient List<IStructureChangedListener> listeners, disabledListeners;
+    private final transient AbstractDomainTreeManager dtm;
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
@@ -65,6 +67,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	this.excludedProperties.addAll(excludedProperties);
 	this.firstTick = firstTick;
 	this.secondTick = secondTick;
+
+	this.dtm = null; // IMPORTANT : to use this "dtm", this representation should be passed into manager constructor, which should initialise "dtm" field.
 
 	// initialise the references on this instance in its children
 	try {
@@ -79,8 +83,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    throw new IllegalStateException(e);
 	}
 
-	listeners = new ArrayList<IStructureChangedListener>();
-	disabledListeners = new ArrayList<IStructureChangedListener>();
 	// this field unfortunately should be lazy loaded due to heavy-weight nature (deep, circular tree of properties)
 	this.includedProperties = createRootsMap();
 	this.includedProperties.putAll(includedProperties);
@@ -88,14 +90,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	for (final Entry<Class<?>, ListenedArrayList> entry : this.includedProperties.entrySet()) {
 	    // initialise the references on this instance in "included properties" lists
 	    try {
-		final Field parentDtrField = Finder.findFieldByName(ListenedArrayList.class, "parentDtr");
-		boolean isAccessible = parentDtrField.isAccessible();
-		parentDtrField.setAccessible(true);
-		parentDtrField.set(entry.getValue(), this);
-		parentDtrField.setAccessible(isAccessible);
-
 		final Field rootField = Finder.findFieldByName(ListenedArrayList.class, "root");
-		isAccessible = rootField.isAccessible();
+		final boolean isAccessible = rootField.isAccessible();
 		rootField.setAccessible(true);
 		rootField.set(entry.getValue(), entry.getKey());
 		rootField.setAccessible(isAccessible);
@@ -329,28 +325,24 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     public static class ListenedArrayList extends ArrayList<String> {
 	private static final long serialVersionUID = -4295706377290507263L;
 	private final transient Class<?> root;
-	private final transient AbstractDomainTreeRepresentation parentDtr;
+	private final transient AbstractDomainTreeManager parentDtm;
 
 	public ListenedArrayList() {
 	    this(null, null);
 	}
 
-	public ListenedArrayList(final Class<?> root, final AbstractDomainTreeRepresentation parentDtr) {
+	public ListenedArrayList(final Class<?> root, final AbstractDomainTreeManager parentDtm) {
 	    super();
 	    this.root = root;
-	    this.parentDtr = parentDtr;
+	    this.parentDtm = parentDtm;
 	    // System.out.println("======================Constructed ListenedArrayList with root = " + this.root.getSimpleName());
 	}
 
 	private void fireProperty(final Class<?> root, final String property, final boolean added) {
 	    // System.out.println("fire property [" + property + "] for type [" + root.getSimpleName() + "] added [" + added +"].");
-	    if (parentDtr != null) {
-		for (final IStructureChangedListener listener : parentDtr.listeners()) {
-		    if (added) {
-			listener.propertyAdded(root, property);
-		    } else {
-			listener.propertyRemoved(root, property);
-		    }
+	    if (parentDtm != null) {
+		for (final IPropertyStructureChangedListener listener : parentDtm.listeners()) {
+		    listener.propertyStructureChanged(root, property, added ? ChangedAction.ADDED : ChangedAction.REMOVED);
 		}
 	    }
 	}
@@ -416,9 +408,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	final Class<?> root = DynamicEntityClassLoader.getOriginalType(root1);
 	if (includedProperties.get(root) == null) { // not yet loaded
 	    final Date st = new Date();
-	    enableListening(false);
+	    dtm.enableListening(false);
 	    // initialise included properties using isExcluded contract and manually excluded properties
-	    final ListenedArrayList includedProps = new ListenedArrayList(root, this);
+	    final ListenedArrayList includedProps = new ListenedArrayList(root, this.dtm);
 	    if (!isExcludedImmutably(root, "")) { // the entity itself is included -- add it to "included properties" list
 		includedProps.add("");
 		if (!EntityUtils.isEntityType(root)) {
@@ -426,41 +418,16 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		}
 		includedProps.addAll(constructProperties(root, "", constructKeysAndProperties(root)));
 	    }
-	    enableListening(true);
+	    dtm.enableListening(true);
 	    includedProperties.put(root, includedProps);
 	    logger().info("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + includedProps.size() + " included properties => [" + includedProps + "].");
 	}
         return includedProperties.get(root);
     }
 
-    /**
-     * Enables or disables listening for each {@link ListenedArrayList} structures.
-     *
-     * @param enable
-     */
-    private void enableListening(final boolean enable) {
-	if (enable) {
-	    listeners.addAll(disabledListeners);
-	    disabledListeners.clear();
-	} else {
-	    disabledListeners.addAll(listeners);
-	    listeners.clear();
-	}
-    }
-
     @Override
     public List<String> includedProperties(final Class<?> root) {
         return Collections.unmodifiableList(includedPropertiesMutable(root));
-    }
-
-    @Override
-    public boolean addStructureChangedListener(final IStructureChangedListener listener) {
-	return listeners.add(listener);
-    }
-
-    @Override
-    public boolean removeStructureChangedListener(final IStructureChangedListener listener) {
-        return listeners.remove(listener);
     }
 
     /**
@@ -528,7 +495,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     protected static abstract class AbstractTickRepresentation implements ITickRepresentation {
 	private final EnhancementSet disabledProperties;
 	private final Set<Pair<Class<?>, String>> checkedProperties;
-	private final transient IDomainTreeRepresentation dtr;
+	private final transient AbstractDomainTreeRepresentation dtr;
 	private final transient TickManager tickManager;
 
 	/**
@@ -549,7 +516,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	@Override
-	public final void disableImmutably(final Class<?> root, final String property) {
+	public void disableImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not disable already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    disabledProperties.add(key(root, property));
 	}
@@ -561,13 +528,13 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	@Override
-	public final void checkImmutably(final Class<?> root, final String property) {
+	public void checkImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not check immutably already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    tickManager.checkSimply(root, property, true);
 	    checkedProperties.add(key(root, property));
 	}
 
-	public IDomainTreeRepresentation getDtr() {
+	public AbstractDomainTreeRepresentation getDtr() {
 	    return dtr;
 	}
 
@@ -776,7 +743,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	return true;
     }
 
-    protected List<IStructureChangedListener> listeners() {
-        return listeners;
+    /** Please do not use this directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
+    protected EnhancementRootsMap<ListenedArrayList> includedProperties() {
+        return includedProperties;
+    }
+
+    public AbstractDomainTreeManager dtm() {
+        return dtm;
     }
 }

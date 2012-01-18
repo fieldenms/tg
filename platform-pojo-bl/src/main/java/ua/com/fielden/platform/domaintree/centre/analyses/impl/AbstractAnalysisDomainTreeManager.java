@@ -4,13 +4,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation.IAbstractAnalysisAddToAggregationTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -56,7 +56,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
      * @param firstTick
      * @param secondTick
      */
-    protected AbstractAnalysisDomainTreeManager(final ISerialiser serialiser, final IDomainTreeRepresentation dtr, final Boolean visible, final TickManager firstTick, final TickManager secondTick) {
+    protected AbstractAnalysisDomainTreeManager(final ISerialiser serialiser, final AbstractDomainTreeRepresentation dtr, final Boolean visible, final TickManager firstTick, final TickManager secondTick) {
 	super(serialiser, dtr, firstTick, secondTick);
 	this.visible = visible;
     }
@@ -109,6 +109,11 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	public AbstractAnalysisAddToDistributionTickManager() {
 	    super();
 	    rootsListsOfUsedProperties = createRootsMap();
+	}
+
+	@Override
+	protected void firePostCheckEvent(final IPropertyStructureChangedListener listener, final Class<?> root, final String property, final boolean check) {
+	    listener.propertyStructureChanged(root, property, check ? ChangedAction.CHECKED_SECOND_TICK : ChangedAction.UNCHECKED_SECOND_TICK);
 	}
 
 	@Override
@@ -187,6 +192,11 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    super();
 	    rootsListsOfOrderings = createRootsMap();
 	    rootsListsOfUsedProperties = createRootsMap();
+	}
+
+	@Override
+	protected void firePostCheckEvent(final IPropertyStructureChangedListener listener, final Class<?> root, final String property, final boolean check) {
+	    listener.propertyStructureChanged(root, property, check ? ChangedAction.CHECKED_FIRST_TICK : ChangedAction.UNCHECKED_FIRST_TICK);
 	}
 
 	@Override

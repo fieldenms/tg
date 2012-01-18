@@ -50,18 +50,8 @@ public class EntitiesTree2Example extends AbstractUiApplication{
 	manager.getEnhancer().addCalculatedProperty(new CalculatedProperty(Vehicle.class, "replacing.replacing.calculated", CalculatedPropertyCategory.EXPRESSION, "replacing.replacing.numValue", BigDecimal.class, "2 * [replacing.replacing.numValue]", "Double Num Value", "Double Num Value description")); // excludeImmutably(Vehicle.class, "commonProperty");
 	manager.getEnhancer().apply();
 
-	// final EntitiesTreeModel2 treeModel = createTreeModel(/*MasterEntityForIncludedPropertiesLogic*/Vehicle.class);
 	final EntitiesTreeModel2 model = new EntitiesTreeModel2(manager);
-
-//	final DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode) model.getRoot();
-//	final TreePath path = new TreePath(model.getPathToRoot(rootNode.getChildAt(0)));
-//	model.addCheckingPath(path, 0);
-//	model.getCheckingModel(1).addCheckingPath(path);
-//	System.out.println("model.getCheckingModel(1).isPathChecked(path) == " + model.getCheckingModel(1).isPathChecked(path));
-	// model.getCheckingModel(0).setPathEnabled(path, false);
-
 	final EntitiesTree2 entitiesTree = new EntitiesTree2(model, "selection criteria", "result set");
-//	System.out.println("entitiesTree.getEntitiesModel().getCheckingModel(1).isPathChecked(path) == " + entitiesTree.getEntitiesModel().getCheckingModel(1).isPathChecked(path));
 
 	manager.getRepresentation().excludeImmutably(Vehicle.class, "replacing.commonProperty");
 	manager.getRepresentation().getSecondTick().checkImmutably(Vehicle.class, "desc");

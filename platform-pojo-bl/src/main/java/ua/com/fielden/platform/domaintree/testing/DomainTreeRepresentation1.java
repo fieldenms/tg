@@ -3,6 +3,8 @@ package ua.com.fielden.platform.domaintree.testing;
 import java.nio.ByteBuffer;
 import java.util.Set;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.ChangedAction;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.IPropertyStructureChangedListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
@@ -40,6 +42,27 @@ public class DomainTreeRepresentation1 extends AbstractDomainTreeRepresentation 
 	 */
 	public TickRepresentationForTest() {
 	    super();
+	}
+
+	@Override
+	public final void disableImmutably(final Class<?> root, final String property) {
+	    super.disableImmutably(root, property);
+
+	    fireDisablingEvent(root, property);
+	}
+
+	@Override
+	public final void checkImmutably(final Class<?> root, final String property) {
+	    super.checkImmutably(root, property);
+
+	    fireDisablingEvent(root, property);
+	}
+
+	private void fireDisablingEvent(final Class<?> root, final String property) {
+	    // fire DISABLED event after successful "disabled" action
+	    for (final IPropertyStructureChangedListener listener : getDtr().dtm().listeners()) {
+		listener.propertyStructureChanged(root, property, ChangedAction.DISABLED_FIRST_TICK); // TODO first? second?
+	    }
 	}
     }
 

@@ -54,7 +54,7 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
      * @param firstTick
      * @param secondTick
      */
-    protected LocatorDomainTreeManager(final ISerialiser serialiser, final ILocatorDomainTreeRepresentation dtr, final AddToCriteriaTickManagerForLocator firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses, final Boolean runAutomatically, final Boolean useForAutocompletion, final SearchBy searchBy) {
+    protected LocatorDomainTreeManager(final ISerialiser serialiser, final LocatorDomainTreeRepresentation dtr, final AddToCriteriaTickManagerForLocator firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses, final Boolean runAutomatically, final Boolean useForAutocompletion, final SearchBy searchBy) {
 	super(serialiser, dtr, firstTick, secondTick, persistentAnalyses, runAutomatically);
 
 	this.useForAutocompletion = useForAutocompletion;

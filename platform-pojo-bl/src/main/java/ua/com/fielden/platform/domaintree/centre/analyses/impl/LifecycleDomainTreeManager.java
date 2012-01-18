@@ -47,7 +47,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
      * @param firstTick
      * @param secondTick
      */
-    protected LifecycleDomainTreeManager(final ISerialiser serialiser, final ILifecycleDomainTreeRepresentation dtr, final Boolean visible, final LifecycleAddToDistributionTickManager firstTick, final LifecycleAddToCategoriesTickManager secondTick, final Pair<Class<?>, String> lifecycleProperty, final Date from, final Date to, final Boolean total) {
+    protected LifecycleDomainTreeManager(final ISerialiser serialiser, final LifecycleDomainTreeRepresentation dtr, final Boolean visible, final LifecycleAddToDistributionTickManager firstTick, final LifecycleAddToCategoriesTickManager secondTick, final Pair<Class<?>, String> lifecycleProperty, final Date from, final Date to, final Boolean total) {
 	super(serialiser, dtr, visible, firstTick, secondTick);
 
 	this.lifecycleProperty = lifecycleProperty;

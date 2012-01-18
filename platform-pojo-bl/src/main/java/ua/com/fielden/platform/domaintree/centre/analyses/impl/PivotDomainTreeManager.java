@@ -38,7 +38,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
      * @param firstTick
      * @param secondTick
      */
-    protected PivotDomainTreeManager(final ISerialiser serialiser, final IPivotDomainTreeRepresentation dtr, final Boolean visible, final PivotAddToDistributionTickManager firstTick, final PivotAddToAggregationTickManager secondTick) {
+    protected PivotDomainTreeManager(final ISerialiser serialiser, final PivotDomainTreeRepresentation dtr, final Boolean visible, final PivotAddToDistributionTickManager firstTick, final PivotAddToAggregationTickManager secondTick) {
 	super(serialiser, dtr, visible, firstTick, secondTick);
     }
 

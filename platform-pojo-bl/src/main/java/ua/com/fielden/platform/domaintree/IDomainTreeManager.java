@@ -61,6 +61,49 @@ public interface IDomainTreeManager {
     ITickManager getSecondTick();
 
     /**
+     * A listener interface for structural changes of property structures (e.g. trees, lists etc.).
+     *
+     * @author TG Team
+     *
+     */
+    public interface IPropertyStructureChangedListener {
+	/**
+	 * Invokes after successful "change" of property (e.g. added / removed, checked, disabled, etc.)
+	 *
+	 * @param root
+	 * @param property
+	 * @param changedAction
+	 */
+	void propertyStructureChanged(final Class<?> root, final String property, final ChangedAction changedAction);
+    }
+
+    /**
+     * The types of actions that can be done with properties in Domain Trees.
+     *
+     * @author TG Team
+     *
+     */
+    public enum ChangedAction {
+	ADDED, REMOVED, DISABLED_FIRST_TICK, DISABLED_SECOND_TICK, CHECKED_FIRST_TICK, UNCHECKED_FIRST_TICK, CHECKED_SECOND_TICK, UNCHECKED_SECOND_TICK
+    }
+
+    /**
+     * Adds a structural changes listener, which is necessary to reflect structural changes on depending models (Entities tree model etc.).
+     *
+     * @param listener
+     * @return
+     */
+    boolean addPropertyStructureChangedListener(final IPropertyStructureChangedListener listener);
+
+    /**
+     * Removes a previously added structural changes listener, which was necessary to reflect structural changes on depending models (Entities tree model etc.).
+     *
+     * @param listener
+     * @return
+     */
+    boolean removePropertyStructureChangedListener(final IPropertyStructureChangedListener listener);
+
+    /**
      * This interface defines how domain tree can be managed. <br><br>
      * Domain tree consists of a tree of properties.
      * Each property has two true-false modifiers.<br><br>
@@ -107,7 +150,7 @@ public interface IDomainTreeManager {
          * The order of the checked properties should be following (if it was not altered using {@link #swap(Class, String, String)}/{@link #move(Class, String, String)} methods):<br>
          * 1. all checked properties as defined by a) {@link #isChecked(Class, String)} contract b) {@link IDomainTreeRepresentation#includedProperties(Class)} order<br>
          * 2. all manually checked properties (in order that they were checked)
-         * 
+         *
          * @param root -- a root type that contains a checked properties.
          * @return
          */

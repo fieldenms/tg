@@ -13,7 +13,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IStructureChangedListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickManagerWithMutability;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.IncludedAndCheckedPropertiesSynchronisationListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
@@ -219,10 +218,21 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	secondTick = createSecondTick((TickManager) base.getSecondTick());
 	enhancerWithPropertiesPopulation = new DomainTreeEnhancerWithPropertiesPopulation((DomainTreeEnhancer) this.enhancer, dtr);
 
-	final IStructureChangedListener oldListener = this.base.listener();
-	final IStructureChangedListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick);
-	this.dtr.base.removeStructureChangedListener(oldListener);
-	this.dtr.addStructureChangedListener(newListener);
+	final IPropertyStructureChangedListener oldListener = this.base.listener();
+	final IPropertyStructureChangedListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick);
+	this.base.removePropertyStructureChangedListener(oldListener);
+	this.addPropertyStructureChangedListener(newListener);
+    }
+
+
+    @Override
+    public boolean addPropertyStructureChangedListener(final IPropertyStructureChangedListener listener) {
+	return base.addPropertyStructureChangedListener(listener);
+    }
+
+    @Override
+    public boolean removePropertyStructureChangedListener(final IPropertyStructureChangedListener listener) {
+	return base.removePropertyStructureChangedListener(listener);
     }
 
     @Override
@@ -440,16 +450,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	public List<String> includedProperties(final Class<?> root) {
 	    // inject an enhanced type into method implementation
 	    return base.includedProperties(enhancerWithPropertiesPopulation.getManagedType(root));
-	}
-
-	@Override
-	public boolean addStructureChangedListener(final IStructureChangedListener listener) {
-	    return base.addStructureChangedListener(listener);
-	}
-
-	@Override
-	public boolean removeStructureChangedListener(final IStructureChangedListener listener) {
-	    return base.removeStructureChangedListener(listener);
 	}
 
 	@Override

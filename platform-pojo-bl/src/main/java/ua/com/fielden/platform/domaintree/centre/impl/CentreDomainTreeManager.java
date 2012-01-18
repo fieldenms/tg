@@ -71,7 +71,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @param firstTick
      * @param secondTick
      */
-    protected CentreDomainTreeManager(final ISerialiser serialiser, final ICentreDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses, final Boolean runAutomatically) {
+    protected CentreDomainTreeManager(final ISerialiser serialiser, final CentreDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses, final Boolean runAutomatically) {
 	super(serialiser, dtr, firstTick, secondTick);
 	this.persistentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
 	this.persistentAnalyses.putAll(persistentAnalyses);
@@ -178,6 +178,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	@Override
 	public Set<Class<?>> rootTypes() {
 	    return locatorManager.rootTypes();
+	}
+
+	@Override
+	protected void firePostCheckEvent(final IPropertyStructureChangedListener listener, final Class<?> root, final String property, final boolean check) {
+	    listener.propertyStructureChanged(root, property, check ? ChangedAction.CHECKED_FIRST_TICK : ChangedAction.UNCHECKED_FIRST_TICK);
 	}
 
 	@Override
@@ -539,6 +544,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    super();
 	    propertiesWidths = createPropertiesMap();
 	    rootsListsOfOrderings = createRootsMap();
+	}
+
+	@Override
+	protected void firePostCheckEvent(final IPropertyStructureChangedListener listener, final Class<?> root, final String property, final boolean check) {
+	    listener.propertyStructureChanged(root, property, check ? ChangedAction.CHECKED_SECOND_TICK : ChangedAction.UNCHECKED_SECOND_TICK);
 	}
 
 	@Override

@@ -13,9 +13,10 @@ import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.ChangedAction;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.IPropertyStructureChangedListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IStructureChangedListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -64,19 +65,50 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	}
 
 	// add the listener into manager to correctly reflect includedProperties changes in this EntityTreeModel
-	final IStructureChangedListener listener = new IStructureChangedListener() {
+	final IPropertyStructureChangedListener listener = new IPropertyStructureChangedListener() {
 	    @Override
-	    public void propertyRemoved(final Class<?> root, final String property) {
-		node(root, property).removeFromParent();
-		nodesCache.remove(AbstractDomainTree.key(root, property));
-	    }
-
-	    @Override
-	    public void propertyAdded(final Class<?> root, final String property) {
-		addNode(root, property);
+	    public void propertyStructureChanged(final Class<?> root, final String property, final ChangedAction changedAction) {
+		if (ChangedAction.REMOVED.equals(changedAction)) {
+		    node(root, property).removeFromParent();
+		    nodesCache.remove(AbstractDomainTree.key(root, property));
+		} else if (ChangedAction.ADDED.equals(changedAction)) {
+		    addNode(root, property);
+		} else if (ChangedAction.CHECKED_FIRST_TICK.equals(changedAction)) {
+		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
+		    if (!AbstractDomainTree.isDummyMarker(property)) {
+			getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).addCheckingPath(path);
+		    }
+		} else if (ChangedAction.CHECKED_SECOND_TICK.equals(changedAction)) {
+		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
+		    if (!AbstractDomainTree.isDummyMarker(property)) {
+			getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).addCheckingPath(path);
+		    }
+		} else if (ChangedAction.UNCHECKED_FIRST_TICK.equals(changedAction)) {
+		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
+		    if (!AbstractDomainTree.isDummyMarker(property)) {
+			getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).removeCheckingPath(path);
+		    }
+		} else if (ChangedAction.UNCHECKED_SECOND_TICK.equals(changedAction)) {
+		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
+		    if (!AbstractDomainTree.isDummyMarker(property)) {
+			getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).removeCheckingPath(path);
+		    }
+		} else if (ChangedAction.DISABLED_FIRST_TICK.equals(changedAction)) {
+		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
+		    if (!AbstractDomainTree.isDummyMarker(property)) {
+			getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).setPathEnabled(path, false);
+		    }
+		} else if (ChangedAction.DISABLED_SECOND_TICK.equals(changedAction)) {
+		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
+		    if (!AbstractDomainTree.isDummyMarker(property)) {
+			getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).setPathEnabled(path, false);
+		    }
+		} else if (ChangedAction.ADDED.equals(changedAction)) {
+		    addNode(root, property);
+		}
 	    }
 	};
-	this.manager.getRepresentation().addStructureChangedListener(listener);
+	this.manager.addPropertyStructureChangedListener(listener);
 
 	//////////////////////// TODO absolutely similar listener should be provided for "disabling / checking / etc." logic ///////////////////////
 	//////////////////////// TODO absolutely similar listener should be provided for "disabling / checking / etc." logic ///////////////////////
