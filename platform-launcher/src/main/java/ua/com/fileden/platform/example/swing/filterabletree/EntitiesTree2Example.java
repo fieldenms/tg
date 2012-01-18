@@ -47,8 +47,6 @@ public class EntitiesTree2Example extends AbstractUiApplication{
 	manager.getRepresentation().getFirstTick().disableImmutably(Vehicle.class, "eqClass");
 	manager.getFirstTick().check(Vehicle.class, "replacing", true);
 	manager.getFirstTick().move(Vehicle.class, "replacing", "desc");
-
-	// manager.getEnhancer().addCalculatedProperty(new CalculatedProperty(Vehicle.class, "replacing.calculated", CalculatedPropertyCategory.EXPRESSION, "replacing.replacing.numValue", BigDecimal.class, "2 * [replacing.replacing.numValue]", "Double Num Value", "Double Num Value description")); // excludeImmutably(Vehicle.class, "commonProperty");
 	manager.getEnhancer().addCalculatedProperty(new CalculatedProperty(Vehicle.class, "replacing.replacing.calculated", CalculatedPropertyCategory.EXPRESSION, "replacing.replacing.numValue", BigDecimal.class, "2 * [replacing.replacing.numValue]", "Double Num Value", "Double Num Value description")); // excludeImmutably(Vehicle.class, "commonProperty");
 	manager.getEnhancer().apply();
 
@@ -65,8 +63,13 @@ public class EntitiesTree2Example extends AbstractUiApplication{
 	final EntitiesTree2 entitiesTree = new EntitiesTree2(model, "selection criteria", "result set");
 //	System.out.println("entitiesTree.getEntitiesModel().getCheckingModel(1).isPathChecked(path) == " + entitiesTree.getEntitiesModel().getCheckingModel(1).isPathChecked(path));
 
+	manager.getRepresentation().excludeImmutably(Vehicle.class, "replacing.commonProperty");
+	manager.getRepresentation().getSecondTick().checkImmutably(Vehicle.class, "desc");
+	manager.getRepresentation().getSecondTick().disableImmutably(Vehicle.class, "eqClass");
 	manager.getSecondTick().check(Vehicle.class, "replacing", true);
-	manager.getSecondTick().check(Vehicle.class, "replacing.desc", true);
+	manager.getSecondTick().move(Vehicle.class, "replacing", "desc");
+	manager.getEnhancer().addCalculatedProperty(new CalculatedProperty(Vehicle.class, "replacedBy.replacedBy.calculated", CalculatedPropertyCategory.EXPRESSION, "replacedBy.replacedBy.numValue", BigDecimal.class, "2 * [replacedBy.replacedBy.numValue]", "Double Num Value", "Double Num Value description")); // excludeImmutably(Vehicle.class, "commonProperty");
+	manager.getEnhancer().apply();
 
 	final EntitiesTreePanel treePanel = new EntitiesTreePanel(entitiesTree);
 	treePanel.setPreferredSize(new Dimension(640, 480));

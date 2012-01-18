@@ -95,7 +95,11 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     ////////// Any property to be specifically checked //////////
     @IsProperty
     private Integer checkedManuallyProp;
-    
+
+    ////////// Any property to be specifically checked //////////
+    @IsProperty
+    private Integer checkedManuallyProp2;
+
     ////////// Any property to be unchecked //////////
     @IsProperty
     private Integer uncheckedProp;
@@ -434,12 +438,20 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     public void setCritOnlySingleAEProp(final SlaveEntity critOnlySingleAEProp) {
         this.critOnlySingleAEProp = critOnlySingleAEProp;
     }
-    
+
     public Integer getUncheckedProp() {
         return uncheckedProp;
     }
     @Observable
     public void setUncheckedProp(final Integer uncheckedProp) {
         this.uncheckedProp = uncheckedProp;
+    }
+
+    public Integer getCheckedManuallyProp2() {
+        return checkedManuallyProp2;
+    }
+    @Observable
+    public void setCheckedManuallyProp2(final Integer checkedManuallyProp2) {
+        this.checkedManuallyProp2 = checkedManuallyProp2;
     }
 }

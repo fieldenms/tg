@@ -18,6 +18,7 @@ import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -528,14 +529,16 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	private final EnhancementSet disabledProperties;
 	private final Set<Pair<Class<?>, String>> checkedProperties;
 	private final transient IDomainTreeRepresentation dtr;
+	private final transient TickManager tickManager;
 
 	/**
-	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr" field.
+	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor and then into manager constructor, which should initialise "dtr" and "tickManager" fields.
 	 */
 	protected AbstractTickRepresentation() {
 	    this.disabledProperties = createSet();
 	    this.checkedProperties = createSet();
 	    this.dtr = null; // IMPORTANT : to use this tick it should be passed into representation constructor, which should initialise "dtr" field.
+	    this.tickManager = null; // IMPORTANT : to use this tick it should be passed into manager constructor, which should initialise "tickManager" field.
 	}
 
 	@Override
@@ -559,7 +562,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
 	@Override
 	public final void checkImmutably(final Class<?> root, final String property) {
-	    illegalExcludedProperties(dtr, root, property, "Could not disable already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    illegalExcludedProperties(dtr, root, property, "Could not check immutably already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    tickManager.checkSimply(root, property, true);
 	    checkedProperties.add(key(root, property));
 	}
 

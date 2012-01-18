@@ -12,6 +12,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IStructureChangedListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -51,6 +52,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	this.secondTick = secondTick;
 
 	// initialise the references on "dtr" instance in "firstTick" and "secondTick" fields
+	// and initialise the references on "firstTick" and "secondTick" instances in "dtr.firstTick" and "dtr.secondTick" fields
 	try {
 	    final Field dtrField = Finder.findFieldByName(TickManager.class, "dtr");
 	    boolean isAccessible = dtrField.isAccessible();
@@ -65,6 +67,13 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    trField.set(this.firstTick, dtr.getFirstTick());
 	    trField.set(this.secondTick, dtr.getSecondTick());
 	    trField.setAccessible(isAccessible);
+
+	    final Field tickManagerField = Finder.findFieldByName(AbstractTickRepresentation.class, "tickManager");
+	    isAccessible = tickManagerField.isAccessible();
+	    tickManagerField.setAccessible(true);
+	    tickManagerField.set(this.dtr.getFirstTick(), this.firstTick);
+	    tickManagerField.set(this.dtr.getSecondTick(), this.secondTick);
+	    tickManagerField.setAccessible(isAccessible);
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw new IllegalStateException(e);
@@ -128,8 +137,16 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    if (!isDummyMarker(property)) {
 		final String reflectionProperty = reflectionProperty(property);
 		// update checked properties
-		firstTick.checkedPropertiesMutable(root).remove(reflectionProperty);
-		secondTick.checkedPropertiesMutable(root).remove(reflectionProperty);
+		if (firstTick.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+		    firstTick.checkedPropertiesMutable(root).remove(reflectionProperty);
+		} else {
+		    logger().warn("Could not uncheck already unchecked property [" + reflectionProperty + "] in type [" + root.getSimpleName() + "].");
+		}
+		if (secondTick.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+		    secondTick.checkedPropertiesMutable(root).remove(reflectionProperty);
+		} else {
+		    logger().warn("Could not uncheck already unchecked property [" + reflectionProperty + "] in type [" + root.getSimpleName() + "].");
+		}
 	    }
 	}
 
@@ -230,6 +247,10 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    if (tr.isDisabledImmutably(root, property)) {
 		throw new IllegalArgumentException("Could not [un]check 'disabled' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    }
+	    checkSimply(root, property, check);
+	}
+
+	protected void checkSimply(final Class<?> root, final String property, final boolean check) {
 	    loadParent(root, property);
 	    if (check) {
 		if (!checkedPropertiesMutable(root).contains(property)) {
