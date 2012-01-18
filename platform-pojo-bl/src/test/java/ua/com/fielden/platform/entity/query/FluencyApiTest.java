@@ -33,6 +33,8 @@ public class FluencyApiTest extends TestCase {
 
     private static String[] anyOfs = new String[]{"anyOfProps", "anyOfModels", "anyOfValues", "anyOfParams", "anyOfExpressions"};
 
+    private static String[] allOfs = new String[]{"allOfProps", "allOfModels", "allOfValues", "allOfParams", "allOfExpressions"};
+
     private static String[] exists = new String[]{"exists", "notExists", "existsAnyOf", "notExistsAnyOf", "existsAllOf", "notExistsAllOf"};
 
     private Set<String> getMethods(final Class type) {
@@ -77,7 +79,7 @@ public class FluencyApiTest extends TestCase {
 
     public void test_IWhere0(){
 	final EntityQueryProgressiveInterfaces.IWhere0 qry = query.select(AbstractEntity.class).where();
-	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param", "iParam", "val", "iVal", "begin", "notBegin", "beginExpr", "expr"}, exists, functions, anyOfs);
+	final String result = compare(getMethods(qry.getClass()), new String[]{"model", "prop", "param", "iParam", "val", "iVal", "begin", "notBegin", "beginExpr", "expr"}, exists, functions, anyOfs, allOfs);
 	assertNull(result, result);
     }
 
