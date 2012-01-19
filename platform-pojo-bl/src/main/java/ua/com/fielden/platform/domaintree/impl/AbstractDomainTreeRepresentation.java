@@ -335,11 +335,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    super();
 	    this.root = root;
 	    this.parentDtm = parentDtm;
-	    // System.out.println("======================Constructed ListenedArrayList with root = " + this.root.getSimpleName());
 	}
 
 	private void fireProperty(final Class<?> root, final String property, final boolean added) {
-	    // System.out.println("fire property [" + property + "] for type [" + root.getSimpleName() + "] added [" + added +"].");
 	    if (parentDtm != null) {
 		for (final IPropertyStructureChangedListener listener : parentDtm.listeners()) {
 		    listener.propertyStructureChanged(root, property, added ? ChangedAction.ADDED : ChangedAction.REMOVED);
@@ -516,9 +514,25 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	@Override
-	public void disableImmutably(final Class<?> root, final String property) {
+	public final void disableImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not disable already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    disabledProperties.add(key(root, property));
+
+	    fireDisablingEvent(root, property);
+	}
+
+	/**
+	 * TODO
+	 *
+	 *
+	 * @param root
+	 * @param property
+	 */
+	private void fireDisablingEvent(final Class<?> root, final String property) {
+	    // fire DISABLED event after successful "disabled" action
+	    for (final IPropertyStructureChangedListener listener : getDtr().dtm().listeners()) {
+		listener.propertyStructureChanged(root, property, ChangedAction.ENABLEMENT_OR_CHECKING_CHANGED);
+	    }
 	}
 
 	@Override
@@ -528,10 +542,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 
 	@Override
-	public void checkImmutably(final Class<?> root, final String property) {
+	public final void checkImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not check immutably already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    tickManager.checkSimply(root, property, true);
 	    checkedProperties.add(key(root, property));
+
+	    fireDisablingEvent(root, property);
 	}
 
 	public AbstractDomainTreeRepresentation getDtr() {

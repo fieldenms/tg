@@ -181,11 +181,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
-	protected void firePostCheckEvent(final IPropertyStructureChangedListener listener, final Class<?> root, final String property, final boolean check) {
-	    listener.propertyStructureChanged(root, property, check ? ChangedAction.CHECKED_FIRST_TICK : ChangedAction.UNCHECKED_FIRST_TICK);
-	}
-
-	@Override
 	public ILocatorDomainTreeManagerAndEnhancer produceLocatorManagerByDefault(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not init a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return locatorManager.produceLocatorManagerByDefault(root, property);
@@ -544,11 +539,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    super();
 	    propertiesWidths = createPropertiesMap();
 	    rootsListsOfOrderings = createRootsMap();
-	}
-
-	@Override
-	protected void firePostCheckEvent(final IPropertyStructureChangedListener listener, final Class<?> root, final String property, final boolean check) {
-	    listener.propertyStructureChanged(root, property, check ? ChangedAction.CHECKED_SECOND_TICK : ChangedAction.UNCHECKED_SECOND_TICK);
 	}
 
 	@Override

@@ -51,11 +51,6 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
 	protected boolean isCheckedMutably(final Class<?> root, final String property) {
 	    return property.endsWith("mutablyCheckedProp");
 	}
-
-	@Override
-	protected void firePostCheckEvent(final IPropertyStructureChangedListener listener, final Class<?> root, final String property, final boolean check) {
-	    listener.propertyStructureChanged(root, property, check ? ChangedAction.CHECKED_FIRST_TICK : ChangedAction.UNCHECKED_FIRST_TICK); // first? second?
-	}
     }
 
     /**

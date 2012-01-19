@@ -3,8 +3,10 @@ package ua.com.fielden.platform.swing.treewitheditors.development;
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.DefaultTreeCheckingModel;
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingEvent;
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingListener;
+import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingModel;
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingModel.CheckingMode;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.event.TreeExpansionEvent;
@@ -12,6 +14,9 @@ import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ChangedAction;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
@@ -37,7 +42,9 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
     private final IDomainTreeManagerAndEnhancer manager;
     private final EntitiesTreeNode2 rootNode;
     private final EnhancementPropertiesMap<EntitiesTreeNode2> nodesCache;
-    private TreeCheckingListener [] listeners = null;
+    private final EnhancementPropertiesMap<EntitiesTreeNode2> nodesForSimplePropertiesCache;
+    private final TreeCheckingListener [] listeners;
+    private final Logger logger = Logger.getLogger(getClass());
 
     /**
      * Creates a new tree model for the 'entities tree' relying on {@link IDomainTreeManagerAndEnhancer}.
@@ -47,96 +54,110 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
     public EntitiesTreeModel2(final IDomainTreeManagerAndEnhancer manager) {
 	super(2);
 
-	listeners = new TreeCheckingListener [2];
-
-	this.manager = manager;
-	this.rootNode = new EntitiesTreeNode2(createUserObject(EntitiesTreeModel2.class, ROOT_PROPERTY));
-	setRoot(rootNode);
-
 	getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).setCheckingMode(CheckingMode.SIMPLE);
 	getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).setCheckingMode(CheckingMode.SIMPLE);
 
-	nodesCache = AbstractDomainTree.createPropertiesMap();
+	this.manager = manager;
+	this.listeners = new TreeCheckingListener [] { createTreeCheckingListener(this.manager.getFirstTick()), createTreeCheckingListener(this.manager.getSecondTick()) };
+	this.rootNode = new EntitiesTreeNode2(createUserObject(EntitiesTreeModel2.class, ROOT_PROPERTY));
+	setRoot(this.rootNode);
+	this.nodesCache = AbstractDomainTree.createPropertiesMap();
+	this.nodesForSimplePropertiesCache = AbstractDomainTree.createPropertiesMap();
+	// initialise nodes according to included properties of the manager (these include "dummy" and "common properties" stuff)
 	for (final Class<?> root : manager.getRepresentation().rootTypes()) {
 	    final List<String> properties = manager.getRepresentation().includedProperties(root);
 	    for (final String property : properties) {
-		addNode(root, property);
+		createAndAddNode(root, property);
+		updateNodeState(manager, root, property, ChangedAction.ADDED);
 	    }
 	}
 
-	// add the listener into manager to correctly reflect includedProperties changes in this EntityTreeModel
-	final IPropertyStructureChangedListener listener = new IPropertyStructureChangedListener() {
+	// add the listener into manager to correctly reflect structural changes (property added / removed / checked / disabled / etc.) in this EntitiesTreeModel
+	final IPropertyStructureChangedListener managerListener = new IPropertyStructureChangedListener() {
 	    @Override
 	    public void propertyStructureChanged(final Class<?> root, final String property, final ChangedAction changedAction) {
 		if (ChangedAction.REMOVED.equals(changedAction)) {
-		    node(root, property).removeFromParent();
-		    nodesCache.remove(AbstractDomainTree.key(root, property));
+		    removeNode(root, property);
 		} else if (ChangedAction.ADDED.equals(changedAction)) {
-		    addNode(root, property);
-		} else if (ChangedAction.CHECKED_FIRST_TICK.equals(changedAction)) {
-		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
-		    if (!AbstractDomainTree.isDummyMarker(property)) {
-			getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).addCheckingPath(path);
-		    }
-		} else if (ChangedAction.CHECKED_SECOND_TICK.equals(changedAction)) {
-		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
-		    if (!AbstractDomainTree.isDummyMarker(property)) {
-			getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).addCheckingPath(path);
-		    }
-		} else if (ChangedAction.UNCHECKED_FIRST_TICK.equals(changedAction)) {
-		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
-		    if (!AbstractDomainTree.isDummyMarker(property)) {
-			getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).removeCheckingPath(path);
-		    }
-		} else if (ChangedAction.UNCHECKED_SECOND_TICK.equals(changedAction)) {
-		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
-		    if (!AbstractDomainTree.isDummyMarker(property)) {
-			getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).removeCheckingPath(path);
-		    }
-		} else if (ChangedAction.DISABLED_FIRST_TICK.equals(changedAction)) {
-		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
-		    if (!AbstractDomainTree.isDummyMarker(property)) {
-			getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).setPathEnabled(path, false);
-		    }
-		} else if (ChangedAction.DISABLED_SECOND_TICK.equals(changedAction)) {
-		    final TreePath path = new TreePath(getPathToRoot(node(root, property)));
-		    if (!AbstractDomainTree.isDummyMarker(property)) {
-			getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).setPathEnabled(path, false);
-		    }
-		} else if (ChangedAction.ADDED.equals(changedAction)) {
-		    addNode(root, property);
+		    createAndAddNode(root, property);
 		}
+		updateNodeState(manager, root, property, changedAction);
 	    }
 	};
-	this.manager.addPropertyStructureChangedListener(listener);
-
-	//////////////////////// TODO absolutely similar listener should be provided for "disabling / checking / etc." logic ///////////////////////
-	//////////////////////// TODO absolutely similar listener should be provided for "disabling / checking / etc." logic ///////////////////////
-	//////////////////////// TODO absolutely similar listener should be provided for "disabling / checking / etc." logic ///////////////////////
-	// add the listener into manager to correctly reflect includedProperties changes in this EntityTreeModel
-//	final IStructureChangedListener listener = new IStructureChangedListener() {
-//	    @Override
-//	    public void propertyRemoved(final Class<?> root, final String property) {
-//		node(root, property).removeFromParent();
-//		nodesCache.remove(AbstractDomainTree.key(root, property));
-//	    }
-//
-//	    @Override
-//	    public void propertyAdded(final Class<?> root, final String property) {
-//		addNode(root, property);
-//	    }
-//	};
-//	this.manager.getRepresentation().addStructureChangedListener(listener);
-	//////////////////////// TODO absolutely similar listener should be provided for "disabling / checking / etc." logic ///////////////////////
-	//////////////////////// TODO absolutely similar listener should be provided for "disabling / checking / etc." logic ///////////////////////
-	//////////////////////// TODO absolutely similar listener should be provided for "disabling / checking / etc." logic ///////////////////////
-
-
-	// TODO most likely should be deleted --> new BreadthFirstSearch<Pair<Class<?>, String>, EntitiesTreeNode2>().search(rootNode, createTreeTracerPredicate());
+	this.manager.addPropertyStructureChangedListener(managerListener);
 
 	// Added tree checking listeners those listen tree node checking events and add checked property to the appropriate manager.
-	addTreeCheckingListener(listeners[0] = createTreeCheckingListener(this.manager.getFirstTick()), 0);
-	addTreeCheckingListener(listeners[1] = createTreeCheckingListener(this.manager.getSecondTick()), 1);
+	addTreeCheckingListener(listeners[0], 0);
+	addTreeCheckingListener(listeners[1], 1);
+    }
+
+    private void createAndAddNode(final Class<?> root, final String property) {
+	final EntitiesTreeNode2 parentNode = StringUtils.isEmpty(property) ? rootNode //
+		: !PropertyTypeDeterminator.isDotNotation(property) ? node(root, "") //
+			: node(root, PropertyTypeDeterminator.penultAndLast(property).getKey());
+	final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
+	nodesCache.put(AbstractDomainTree.key(root, property), node);
+	if (!AbstractDomainTree.isDummyMarker(property)) {
+	    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
+	}
+	parentNode.add(node);
+    }
+
+    private void removeNode(final Class<?> root, final String property) {
+	node(root, property).removeFromParent();
+	nodesCache.remove(AbstractDomainTree.key(root, property));
+	if (!AbstractDomainTree.isDummyMarker(property)) {
+	    nodesForSimplePropertiesCache.remove(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)));
+	}
+    }
+
+    private void provideCheckingPath(final TreeCheckingModel model, final TreePath path, final boolean checked) {
+	final List<TreePath> currentPaths = Arrays.asList(model.getCheckingPaths());
+	if (checked) {
+	    if (!currentPaths.contains(path)) {
+		model.addCheckingPath(path);
+	    } else {
+		logger.warn("Currently checked path [" + path + "] is trying to be checked again.");
+	    }
+	} else {
+	    if (!currentPaths.contains(path)) {
+		logger.warn("Currently unchecked path [" + path + "] is trying to be unchecked again.");
+	    } else {
+		model.removeCheckingPath(path);
+	    }
+	}
+    }
+
+    private void updateNodeState(final IDomainTreeManagerAndEnhancer manager, final Class<?> root, final String property, final ChangedAction changedAction) {
+	if (ChangedAction.REMOVED.equals(changedAction)) { // do nothing with an useless item
+	    return;
+	} else if (ChangedAction.ADDED.equals(changedAction)) { // in this case property can be "dummy" or under "common-properties" umbrella
+	    if (!AbstractDomainTree.isDummyMarker(property)) { // Update the state of newly created node according to a property state in manager (ignore "dummy" due to its temporal nature)
+
+		// TODO remove two ticks for "common-property" and second tick for uncommon union properties
+
+		final EntitiesTreeNode2 node = node(root, property);
+		provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property), new TreePath(getPathToRoot(node)));
+	    }
+	} else if (ChangedAction.ENABLEMENT_OR_CHECKING_CHANGED.equals(changedAction)) {
+	    final EntitiesTreeNode2 node = nodeForSimpleProperty(root, property);
+	    provideNodeState(manager, root, property, new TreePath(getPathToRoot(node)));
+	}
+    }
+
+    private void provideNodeState(final IDomainTreeManagerAndEnhancer manager, final Class<?> root, final String property, final TreePath path) {
+	final boolean firstChecked = manager.getFirstTick().isChecked(root, property);
+	final boolean secondChecked = manager.getSecondTick().isChecked(root, property);
+	final boolean firstDisabled = manager.getRepresentation().getFirstTick().isDisabledImmutably(root, property);
+	final boolean secondDisabled = manager.getRepresentation().getSecondTick().isDisabledImmutably(root, property);
+
+	final int firstIndex = EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex();
+	final int secondIndex = EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex();
+
+	provideCheckingPath(getCheckingModel(firstIndex), path, firstChecked);
+	provideCheckingPath(getCheckingModel(secondIndex), path, secondChecked);
+	getCheckingModel(firstIndex).setPathEnabled(path, !firstDisabled);
+	getCheckingModel(secondIndex).setPathEnabled(path, !secondDisabled);
     }
 
     /**
@@ -150,7 +171,6 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 
 	public DefaultTreeCheckingModelWithoutLosingCheckingWithListenersRemoval(final TreeModel model, final int index) {
 	    super(model);
-
 	    this.index = index;
 	}
 
@@ -173,32 +193,6 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
     protected DefaultTreeCheckingModel createCheckingModel(final int index) {
 	return new DefaultTreeCheckingModelWithoutLosingCheckingWithListenersRemoval(this, index);
     }
-
-//    private ITreeNodePredicate<Pair<Class<?>, String>, EntitiesTreeNode2> createTreeTracerPredicate(){
-//	return new ITreeNodePredicate<Pair<Class<?>,String>, EntitiesTreeNode2>() {
-//
-//	    @Override
-//	    public boolean eval(final EntitiesTreeNode2 node) {
-//		final Pair<Class<?>, String> userObject = node.getUserObject();
-//		final Class<?> root = userObject.getKey();
-//		final String property = AbstractDomainTree.reflectionProperty(userObject.getValue());
-//		final TreePath path = new TreePath(getPathToRoot(node));
-//		if(isRoot(node) || getManager().getRepresentation().getFirstTick().isDisabledImmutably(root, property)){
-//		    getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).setPathEnabled(path, false);
-//		}
-//		if(isRoot(node) || getManager().getRepresentation().getSecondTick().isDisabledImmutably(root, property)){
-//		    getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).setPathEnabled(path, false);
-//		}
-//		if(!isRoot(node) && getManager().getFirstTick().isChecked(root, property)){
-//		    getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).addCheckingPath(path);
-//		}
-//		if(!isRoot(node) && getManager().getSecondTick().isChecked(root, property)){
-//		    getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).addCheckingPath(path);
-//		}
-//		return false;
-//	    }
-//	};
-//    }
 
     private TreeCheckingListener createTreeCheckingListener(final ITickManager tickManager) {
 	return new TreeCheckingListener() {
@@ -232,6 +226,17 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      */
     private EntitiesTreeNode2 node(final Class<?> root, final String property) {
 	return nodesCache.get(AbstractDomainTree.key(root, property));
+    }
+
+    /**
+     * Finds a node corresponding to a simple property (no "dummy" or "common-properties" stuff).
+     *
+     * @param root
+     * @param property
+     * @return
+     */
+    private EntitiesTreeNode2 nodeForSimpleProperty(final Class<?> root, final String property) {
+	return nodesForSimplePropertiesCache.get(AbstractDomainTree.key(root, property));
     }
 
     /**
@@ -288,40 +293,40 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	return manager;
     }
 
-    /**
-     * Creates a new node for the property and adds it to the appropriate place on the hierarchy.
-     * <p>
-     * The parent is determined from property dot-notation name and the property will be added to the end of parent's children list (so the order of adding is important).
-     *
-     * @param root
-     * @param property
-     */
-    protected void addNode(final Class<?> root, final String property) {
-	if (property == null) {
-	    throw new IllegalArgumentException();
-	}
-	final EntitiesTreeNode2 parentNode = "".equals(property) ? rootNode : (PropertyTypeDeterminator.isDotNotation(property) ? node(root, PropertyTypeDeterminator.penultAndLast(property).getKey()) : node(root, ""));
-
-	final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
-	nodesCache.put(AbstractDomainTree.key(root, property), node);
-	parentNode.add(node);
-
-	// TODO remove two ticks for "common-property" and second tick for uncommon union properties
-	final TreePath path = new TreePath(getPathToRoot(node));
-	final String reflectionProperty = AbstractDomainTree.reflectionProperty(property);
-	if (!AbstractDomainTree.isDummyMarker(property) && manager.getFirstTick().isChecked(root, reflectionProperty)) {
-	    getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).addCheckingPath(path);
-	}
-	if (!AbstractDomainTree.isDummyMarker(property) && manager.getSecondTick().isChecked(root, reflectionProperty)) {
-	    getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).addCheckingPath(path);
-	}
-	if (!AbstractDomainTree.isDummyMarker(property) && manager.getRepresentation().getFirstTick().isDisabledImmutably(root, reflectionProperty)) {
-	    getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).setPathEnabled(path, false);
-	}
-	if (!AbstractDomainTree.isDummyMarker(property) && manager.getRepresentation().getSecondTick().isDisabledImmutably(root, reflectionProperty)) {
-	    getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).setPathEnabled(path, false);
-	}
-    }
+//    /**
+//     * Creates a new node for the property and adds it to the appropriate place on the hierarchy.
+//     * <p>
+//     * The parent is determined from property dot-notation name and the property will be added to the end of parent's children list (so the order of adding is important).
+//     *
+//     * @param root
+//     * @param property
+//     */
+//    protected void addNode(final Class<?> root, final String property) {
+//	if (property == null) {
+//	    throw new IllegalArgumentException();
+//	}
+//	final EntitiesTreeNode2 parentNode = "".equals(property) ? rootNode : (PropertyTypeDeterminator.isDotNotation(property) ? node(root, PropertyTypeDeterminator.penultAndLast(property).getKey()) : node(root, ""));
+//
+//	final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
+//	nodesCache.put(AbstractDomainTree.key(root, property), node);
+//	parentNode.add(node);
+//
+//	// TODO remove two ticks for "common-property" and second tick for uncommon union properties
+//	final TreePath path = new TreePath(getPathToRoot(node));
+//	final String reflectionProperty = AbstractDomainTree.reflectionProperty(property);
+//	if (!AbstractDomainTree.isDummyMarker(property) && manager.getFirstTick().isChecked(root, reflectionProperty)) {
+//	    getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).addCheckingPath(path);
+//	}
+//	if (!AbstractDomainTree.isDummyMarker(property) && manager.getSecondTick().isChecked(root, reflectionProperty)) {
+//	    getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).addCheckingPath(path);
+//	}
+//	if (!AbstractDomainTree.isDummyMarker(property) && manager.getRepresentation().getFirstTick().isDisabledImmutably(root, reflectionProperty)) {
+//	    getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).setPathEnabled(path, false);
+//	}
+//	if (!AbstractDomainTree.isDummyMarker(property) && manager.getRepresentation().getSecondTick().isDisabledImmutably(root, reflectionProperty)) {
+//	    getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).setPathEnabled(path, false);
+//	}
+//    }
 
     private Pair<Class<?>, String> createUserObject(final Class<?> root, final String property) {
 	return new Pair<Class<?>, String>(root, property) {

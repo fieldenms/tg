@@ -112,11 +112,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	}
 
 	@Override
-	protected void firePostCheckEvent(final IPropertyStructureChangedListener listener, final Class<?> root, final String property, final boolean check) {
-	    listener.propertyStructureChanged(root, property, check ? ChangedAction.CHECKED_SECOND_TICK : ChangedAction.UNCHECKED_SECOND_TICK);
-	}
-
-	@Override
 	public final boolean isUsed(final Class<?> root, final String property) {
 	    illegalUncheckedProperties(this, root, property, "It's illegal to ask whether the specified property [" + property + "] is 'used' if it is not 'checked' in type [" + root.getSimpleName() + "].");
 	    return rootsListsOfUsedProperties.containsKey(root) && rootsListsOfUsedProperties.get(root).contains(property);
@@ -192,11 +187,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    super();
 	    rootsListsOfOrderings = createRootsMap();
 	    rootsListsOfUsedProperties = createRootsMap();
-	}
-
-	@Override
-	protected void firePostCheckEvent(final IPropertyStructureChangedListener listener, final Class<?> root, final String property, final boolean check) {
-	    listener.propertyStructureChanged(root, property, check ? ChangedAction.CHECKED_FIRST_TICK : ChangedAction.UNCHECKED_FIRST_TICK);
 	}
 
 	@Override

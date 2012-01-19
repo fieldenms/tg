@@ -300,10 +300,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    checkSimply(root, property, check);
 	}
 
-	protected void firePostCheckEvent(final IPropertyStructureChangedListener listener, final Class<?> root, final String property, final boolean check) {
-	    // listener.propertyStructureChanged(root, property, check ? ChangedAction.CHECKED_FIRST_TICK : ChangedAction.UNCHECKED_FIRST_TICK);
-	}
-
 	protected void checkSimply(final Class<?> root, final String property, final boolean check) {
 	    loadParent(root, property);
 	    final boolean contains = checkedPropertiesMutable(root).contains(property);
@@ -313,7 +309,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
 		    // fire CHECKED event after successful "checked" action
 		    for (final IPropertyStructureChangedListener listener : dtr.dtm().listeners()) {
-			firePostCheckEvent(listener, root, property, check);
+			listener.propertyStructureChanged(root, property, ChangedAction.ENABLEMENT_OR_CHECKING_CHANGED);
 		    }
 		} else {
 		    logger().warn("Could not check already checked property [" + property + "] in type [" + root.getSimpleName() + "].");
@@ -324,7 +320,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
 		    // fire UNCHECKED event after successful "unchecked" action
 		    for (final IPropertyStructureChangedListener listener : dtr.dtm().listeners()) {
-			firePostCheckEvent(listener, root, property, check);
+			listener.propertyStructureChanged(root, property, ChangedAction.ENABLEMENT_OR_CHECKING_CHANGED);
 		    }
 		} else {
 		    logger().warn("Could not uncheck already unchecked property [" + property + "] in type [" + root.getSimpleName() + "].");

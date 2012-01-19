@@ -61,14 +61,14 @@ public interface IDomainTreeManager {
     ITickManager getSecondTick();
 
     /**
-     * A listener interface for structural changes of property structures (e.g. trees, lists etc.).
+     * A listener interface for structural changes of property structures (e.g. property added / removed / checked / disabled / etc.).
      *
      * @author TG Team
      *
      */
     public interface IPropertyStructureChangedListener {
 	/**
-	 * Invokes after successful "change" of property (e.g. added / removed, checked, disabled, etc.)
+	 * Invokes after successful "change" of property (e.g. added / removed / checked / disabled / etc.).
 	 *
 	 * @param root
 	 * @param property
@@ -84,7 +84,7 @@ public interface IDomainTreeManager {
      *
      */
     public enum ChangedAction {
-	ADDED, REMOVED, DISABLED_FIRST_TICK, DISABLED_SECOND_TICK, CHECKED_FIRST_TICK, UNCHECKED_FIRST_TICK, CHECKED_SECOND_TICK, UNCHECKED_SECOND_TICK
+	ADDED, REMOVED, ENABLEMENT_OR_CHECKING_CHANGED
     }
 
     /**

@@ -58,6 +58,7 @@ public class EntitiesTree2Example extends AbstractUiApplication{
 	manager.getRepresentation().getSecondTick().disableImmutably(Vehicle.class, "eqClass");
 	manager.getSecondTick().check(Vehicle.class, "replacing", true);
 	manager.getSecondTick().move(Vehicle.class, "replacing", "desc");
+	manager.getSecondTick().check(Vehicle.class, "replacing", false);
 	manager.getEnhancer().addCalculatedProperty(new CalculatedProperty(Vehicle.class, "replacedBy.replacedBy.calculated", CalculatedPropertyCategory.EXPRESSION, "replacedBy.replacedBy.numValue", BigDecimal.class, "2 * [replacedBy.replacedBy.numValue]", "Double Num Value", "Double Num Value description")); // excludeImmutably(Vehicle.class, "commonProperty");
 	manager.getEnhancer().apply();
 
