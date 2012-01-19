@@ -28,12 +28,16 @@ public enum Dialogs {
     }
 
     public static void showMessageDialog(final Component parentComponent, final String message, final String title, final Dialogs messageType) throws HeadlessException {
-	SwingUtilitiesEx.invokeLater(new Runnable() {
-	    @Override
-	    public void run() {
-		JOptionPane.showMessageDialog(parentComponent, message, title, messageType.msgType);
-	    }
-	});
+	try {
+	    SwingUtilitiesEx.invokeAndWaitIfPossible(new Runnable() {
+	        @Override
+	        public void run() {
+	    	JOptionPane.showMessageDialog(parentComponent, message, title, messageType.msgType);
+	        }
+	    });
+	} catch (final Exception e) {
+	    throw new IllegalStateException(e);
+	}
     }
 
     /**
@@ -46,15 +50,19 @@ public enum Dialogs {
      * @throws HeadlessException
      */
     public static void showMessageDialog(final Image titleImage, final String message, final String title, final Dialogs messageType) throws HeadlessException {
-	SwingUtilitiesEx.invokeLater(new Runnable() {
-	    @Override
-	    public void run() {
-		final JFrame frm = new JFrame();
-		frm.setIconImage(titleImage);
-		JOptionPane.showMessageDialog(frm, message, title, messageType.msgType);
-		frm.dispose();
-	    }
-	});
+	try {
+	    SwingUtilitiesEx.invokeAndWaitIfPossible(new Runnable() {
+	        @Override
+	        public void run() {
+	    	final JFrame frm = new JFrame();
+	    	frm.setIconImage(titleImage);
+	    	JOptionPane.showMessageDialog(frm, message, title, messageType.msgType);
+	    	frm.dispose();
+	        }
+	    });
+	} catch (final Exception e) {
+	    throw new IllegalStateException(e);
+	}
     }
 
 
