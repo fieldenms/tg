@@ -3,6 +3,7 @@ package ua.com.fielden.platform.swing.dialogs;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.HeadlessException;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
@@ -51,9 +52,10 @@ public class DialogWithDetails extends JDialog {
     private final JPanel detailsPanel;
     private final Action closeAction;
 
-    public DialogWithDetails(final Frame owner, final String title, final String msg, final String details) throws HeadlessException {
+
+    public DialogWithDetails(final Frame owner, final String title, final String msg, final String details, final Image appIcon) throws HeadlessException {
 	super(owner, title, true);
-	setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
+	setIconImage(appIcon);
 	closeAction = createCloseAction();
 
 	// create all the panels including the main dialog panel
@@ -69,6 +71,10 @@ public class DialogWithDetails extends JDialog {
 	setLocationRelativeTo(owner);
     }
 
+    public DialogWithDetails(final Frame owner, final String title, final String msg, final String details) throws HeadlessException {
+	this(owner, title, msg, details, ResourceLoader.getImage("images/tg-icon.png"));
+    }
+
     /**
      * A convenient constructor that builds dialog message and details content based on the exception.
      *
@@ -80,6 +86,10 @@ public class DialogWithDetails extends JDialog {
      */
     public DialogWithDetails(final Frame owner, final String title, final Throwable ex) throws HeadlessException {
 	this(owner, title, ex.getMessage(), composeDetails(ex));
+    }
+
+    public DialogWithDetails(final Frame owner, final String title, final Throwable ex, final Image appIcon) throws HeadlessException {
+	this(owner, title, ex.getMessage(), composeDetails(ex), appIcon);
     }
 
     /**

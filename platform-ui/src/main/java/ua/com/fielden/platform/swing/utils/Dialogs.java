@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.HeadlessException;
 import java.awt.Image;
 
+import javax.swing.Icon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -30,10 +31,23 @@ public enum Dialogs {
     public static void showMessageDialog(final Component parentComponent, final String message, final String title, final Dialogs messageType) throws HeadlessException {
 	try {
 	    SwingUtilitiesEx.invokeAndWaitIfPossible(new Runnable() {
-	        @Override
-	        public void run() {
-	    	JOptionPane.showMessageDialog(parentComponent, message, title, messageType.msgType);
-	        }
+		@Override
+		public void run() {
+		    JOptionPane.showMessageDialog(parentComponent, message, title, messageType.msgType);
+		}
+	    });
+	} catch (final Exception e) {
+	    throw new IllegalStateException(e);
+	}
+    }
+
+    public static void showMessageDialog(final Component parentComponent, final String message, final String title, final Dialogs messageType, final Icon appIcon) throws HeadlessException {
+	try {
+	    SwingUtilitiesEx.invokeAndWaitIfPossible(new Runnable() {
+		@Override
+		public void run() {
+		    JOptionPane.showMessageDialog(parentComponent, message, title, messageType.msgType, appIcon);
+		}
 	    });
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
