@@ -11,6 +11,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
@@ -18,7 +20,7 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
  *
  * TODO need to complete implementation of the running bubbles beneath the message.
  *
- * @author 01es
+ * @author TG Team
  *
  */
 public class SplashController implements ActionListener {
@@ -31,20 +33,21 @@ public class SplashController implements ActionListener {
     private final SplashScreen splash;
     private Graphics2D graph;
 
+    private final Logger logger = Logger.getLogger(SplashController.class);
+
     public SplashController(final int msgXOffset, final int msgYOffset) {
 	splash = SplashScreen.getSplashScreen();
 	if (splash == null) {
-	    System.out.println("Error: no splash image specified on the command line");
-	    return;
+	    logger.warn("Error: no splash image specified on the command line");
+	} else {
+	    // compute base positions for text and progress bar
+	    final Dimension splashSize = splash.getSize();
+	    textY = splashSize.height - msgYOffset;
+	    barY = splashSize.height - msgYOffset;
+
+	    graph = splash.createGraphics();
+	    //timer.start();
 	}
-
-	// compute base positions for text and progress bar
-	final Dimension splashSize = splash.getSize();
-	textY = splashSize.height - msgYOffset;
-	barY = splashSize.height - msgYOffset;
-
-	graph = splash.createGraphics();
-	//timer.start();
     }
 
     public SplashController() {
@@ -65,39 +68,43 @@ public class SplashController implements ActionListener {
     private String msg;
 
     public void drawSplashProgress(final String msg) {
-	SwingUtilitiesEx.invokeLater(new Runnable() {
-	    @Override
-	    public void run() {
-		SplashController.this.msg = msg;
-		graph.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-		graph.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		graph.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		graph.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+	if (graph == null) {
+	    logger.warn("Requested splash update without an actual splash screen provided.");
+	} else {
+	    SwingUtilitiesEx.invokeLater(new Runnable() {
+		@Override
+		public void run() {
+		    SplashController.this.msg = msg;
+		    graph.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		    graph.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		    graph.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		    graph.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
-		// clear what we don't need from previous state
-		graph.setComposite(AlphaComposite.Clear);
+		    // clear what we don't need from previous state
+		    graph.setComposite(AlphaComposite.Clear);
 
-		final FontMetrics fm = graph.getFontMetrics();
-		final Rectangle2D textsize = fm.getStringBounds(msg, graph);
+		    final FontMetrics fm = graph.getFontMetrics();
+		    final Rectangle2D textsize = fm.getStringBounds(msg, graph);
 
-		graph.fillRect(X, textY - 1, W, (int) textsize.getHeight() + 5);
-		if (barPos == 0) {
-		    graph.fillRect(X - 3, barY, W + 10, BAR_H);
+		    graph.fillRect(X, textY - 1, W, (int) textsize.getHeight() + 5);
+		    if (barPos == 0) {
+			graph.fillRect(X - 3, barY, W + 10, BAR_H);
+		    }
+
+		    // draw new state
+		    graph.setPaintMode();
+
+		    // draw message
+		    graph.setColor(Color.BLACK);
+		    graph.drawString(msg, X, textY + TEXT_H);
+		    try {
+			splash.update();
+		    } catch (final IllegalStateException e) {
+			logger.warn("Could not update the splash.", e);
+		    }
 		}
-
-		// draw new state
-		graph.setPaintMode();
-
-		// draw message
-		graph.setColor(Color.BLACK);
-		graph.drawString(msg, X, textY + TEXT_H);
-		try {
-		    splash.update();
-		} catch (final IllegalStateException e) {
-		    // can be ignored
-		}
-	    }
-	});
+	    });
+	}
     }
 
     public static void main(final String args[]) throws Exception {
