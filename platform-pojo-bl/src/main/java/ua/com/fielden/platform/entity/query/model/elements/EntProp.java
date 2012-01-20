@@ -10,6 +10,11 @@ public class EntProp implements ISingleOperand {
     private final String name;
     private Class propType; //TODO ?
 
+    @Override
+    public String toString() {
+        return name + " type: " + propType;
+    }
+
     public EntProp(final String name) {
 	super();
 	this.name = name;

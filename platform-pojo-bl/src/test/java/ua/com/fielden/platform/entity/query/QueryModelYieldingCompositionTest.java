@@ -9,6 +9,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.fluent.query;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.elements.ArithmeticalOperator;
@@ -18,10 +19,12 @@ import ua.com.fielden.platform.entity.query.model.elements.EntValue;
 import ua.com.fielden.platform.entity.query.model.elements.Expression;
 import ua.com.fielden.platform.entity.query.model.elements.YieldModel;
 import ua.com.fielden.platform.entity.query.model.elements.YieldsModel;
+import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 
@@ -39,7 +42,6 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	final YieldsModel exp = new YieldsModel(yields);
 	assertEquals("models are different", exp, qb.generateEntQuery(qry, paramValues).getYields());
     }
-
 
     @Test
     public void test_simple_query_model_18() {
@@ -77,5 +79,41 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	yields.put(null, new YieldModel(new EntProp("v.model"), null));
 	final YieldsModel exp = new YieldsModel(yields);
 	assertEquals("models are different", exp, qb.generateEntQuery(qry).getYields());
+    }
+
+    @Test
+    @Ignore
+    public void test_validation_of_yielded_tree_with_broken_hierarchy() {
+	// TODO YieldsModel should be validate to prevent misuse of dot.notated convention - broken hierarchy in yields
+	final AggregatedResultQueryModel sourceQry = query.select(TgFuelUsage.class). //
+	groupBy().yearOf().prop("readingDate"). //
+	groupBy().prop("vehicle"). //
+	yield().prop("vehicle").as("vehicle"). //
+	yield().yearOf().prop("readingDate").as("readingYear"). //
+	yield().prop("vehicle.model.make").as("vehicle.model.make"). //
+	modelAsAggregate();
+	try {
+	    qb.generateEntQuery(sourceQry).validate();
+	    fail("Should have failed!");
+	} catch (final Exception e) {
+	}
+    }
+
+    @Test
+    @Ignore
+    public void test_validation_of_yielded_tree_with_not_existing_prop_in_hierarchy() {
+	// TODO YieldsModel should be validate to prevent misuse of dot.notated convention - not-existing/invalid property in hierarchy
+	final AggregatedResultQueryModel sourceQry = query.select(TgFuelUsage.class). //
+	groupBy().yearOf().prop("readingDate"). //
+	groupBy().prop("vehicle"). //
+	yield().prop("vehicle").as("vehicle"). //
+	yield().yearOf().prop("readingDate").as("readingYear"). //
+	yield().prop("vehicle.model.make").as("vehicle.mordor"). //
+	modelAsAggregate();
+	try {
+	    qb.generateEntQuery(sourceQry).validate();
+	    fail("Should have failed!");
+	} catch (final Exception e) {
+	}
     }
 }

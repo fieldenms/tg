@@ -3,11 +3,17 @@ package ua.com.fielden.platform.entity.query.model.elements;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.elements.AbstractEntQuerySource.PropResolutionInfo;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
@@ -75,19 +81,65 @@ public class EntQuery implements ISingleOperand {
 	return unresolvedProps;
     }
 
+    /**
+     * If property is found within holder query sources then establish link between them (inlc. prop type setting) and return null, else return pair (holder, prop).
+     * @param holder
+     * @param prop
+     * @return
+     */
     private Pair<EntQuery, EntProp> performPropResolveAction(final EntQuery holder, final EntProp prop) {
-	// TODO perform referencing list update and ent prop type setting only if single source for prop has been determined
-	int resolvedCount = sources.getMain().hasProperty(prop) ? 1 : 0;
+	final Map<IEntQuerySource, PropResolutionInfo> result = new HashMap<IEntQuerySource, PropResolutionInfo>();
 
-	for (final EntQueryCompoundSourceModel source : sources.getCompounds()) {
-	    resolvedCount = resolvedCount + (source.getSource().hasProperty(prop) ? 1 : 0);
+	for (final IEntQuerySource source : sources.getAllSources()) {
+	    final Pair<Boolean, PropResolutionInfo> hasProp = source.containsProperty(prop);
+	    if (hasProp.getKey()) {
+		result.put(source, hasProp.getValue());
+	    }
 	}
 
-	if (resolvedCount > 1) {
-	    throw new IllegalStateException("Ambiguous property: " + prop);
-	}
+	if (result.size() == 0) {
+	    return new Pair<EntQuery, EntProp>(holder, prop);
+	} else if (result.size() == 1) {
+	    prop.setPropType(result.values().iterator().next().propType);
+	    result.keySet().iterator().next().addReferencingProp(prop);
+	    return null;
+	} else {
+	    final SortedSet<Integer> preferenceNumbers = new TreeSet<Integer>();
+	    final Map<Integer, List<IEntQuerySource>> sourcesPreferences = new HashMap<Integer, List<IEntQuerySource>>();
+	    for (final Entry<IEntQuerySource, PropResolutionInfo> entry : result.entrySet()) {
+		final Integer currPrefNumber = entry.getValue().getPreferenceNumber();
+		preferenceNumbers.add(currPrefNumber);
+		if (!sourcesPreferences.containsKey(currPrefNumber)) {
+		    sourcesPreferences.put(currPrefNumber, new ArrayList<IEntQuerySource>());
+		}
+		sourcesPreferences.get(currPrefNumber).add(entry.getKey());
+	    }
 
-	return resolvedCount == 0 ? new Pair<EntQuery, EntProp>(holder, prop) : null;
+	    final Integer preferenceResult = preferenceNumbers.first();
+
+	    System.out.println("for prop [" + prop.getName() +"] preferenceResult = " + preferenceResult);
+	    for (final Entry<Integer, List<IEntQuerySource>> entry : sourcesPreferences.entrySet()) {
+		System.out.println(entry.getKey() + " ... " + entry.getValue());
+	    }
+
+	    final List<IEntQuerySource> preferedSourceList = sourcesPreferences.get(preferenceResult);
+	    if (preferedSourceList.size() == 1) {
+		sourcesPreferences.get(preferenceResult).get(0).addReferencingProp(prop);
+		// TODO set type to prop
+		return null;
+	    } else if (preferedSourceList.size() == 2) {
+		if (result.get(sourcesPreferences.get(preferenceResult).get(0)).aliasPart == null) {
+		    sourcesPreferences.get(preferenceResult).get(0).addReferencingProp(prop);
+		} else  if (result.get(sourcesPreferences.get(preferenceResult).get(1)).aliasPart == null){
+		    sourcesPreferences.get(preferenceResult).get(1).addReferencingProp(prop);
+		} else {
+		    throw new IllegalStateException("Ambiguous property: " + prop.getName());
+		}
+		return null;
+	    } else {
+		throw new IllegalStateException("Ambiguous property: " + prop.getName());
+	    }
+	}
     }
 
     /**

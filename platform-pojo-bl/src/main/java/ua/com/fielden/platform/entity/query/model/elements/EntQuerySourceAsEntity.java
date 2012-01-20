@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.lang.reflect.Field;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
     private final Class<? extends AbstractEntity> entityType;
@@ -19,17 +17,8 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
     }
 
     @Override
-    protected Class determinePropertyType(final String dotNotatedPropName) {
-	if (dotNotatedPropName.equalsIgnoreCase(getAlias())) {
-	    return Long.class; // id property is meant here
-	}
-
-	try {
-	    final Field field = Finder.findFieldByName(entityType, dealiasPropName(dotNotatedPropName, getAlias()));
-	    return field.getType();
-	} catch (final Exception e) {
-	    return null;
-	}
+    public String toString() {
+        return entityType.getSimpleName() + " aliased as [" + getAlias() + "]";
     }
 
     @Override
@@ -68,5 +57,10 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
 	    return false;
 	}
 	return true;
+    }
+
+    @Override
+    Pair<Boolean, Class> lookForPropInEntAggregatesType(final Class parentType, final String dotNotatedPropName) {
+	throw new RuntimeException("Should not be invoked from here!");
     }
 }

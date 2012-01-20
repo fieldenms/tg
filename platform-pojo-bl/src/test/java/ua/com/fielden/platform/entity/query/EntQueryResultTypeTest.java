@@ -14,6 +14,7 @@ public class EntQueryResultTypeTest extends BaseEntQueryTCase {
 
     @Test
     public void test1() {
+	// TODO this is irrational combination
 	final AggregatedResultQueryModel qry = select(TgVehicle.class).modelAsAggregate();
 	assertEquals("Incorrect result type", EntityAggregates.class, qb.generateEntQuery(qry).getResultType());
     }
@@ -39,16 +40,13 @@ public class EntQueryResultTypeTest extends BaseEntQueryTCase {
 
     @Test
     public void test5() {
-	System.out.println("KEY");
 	final PrimitiveResultQueryModel qry = select(TgVehicle.class).yield().prop("key").modelAsPrimitive();
 	assertEquals("Incorrect result type", null, qb.generateEntQuery(qry).getResultType());
     }
 
     @Test
     public void test6() {
-	System.out.println("KEY");
 	final PrimitiveResultQueryModel qry = select(TgVehicle.class).yield().prop("key").modelAsPrimitive(String.class);
 	assertEquals("Incorrect result type", String.class, qb.generateEntQuery(qry).getResultType());
     }
-
 }

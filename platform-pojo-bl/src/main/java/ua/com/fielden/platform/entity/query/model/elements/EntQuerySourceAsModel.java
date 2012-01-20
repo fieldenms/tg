@@ -1,12 +1,9 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuerySourceAsModel extends AbstractEntQuerySource {
     private final List<EntQuery> models;
@@ -22,53 +19,17 @@ public class EntQuerySourceAsModel extends AbstractEntQuerySource {
     }
 
     @Override
-    protected Class determinePropertyType(final String dotNotatedPropName) {
-	final Class sourceResultType = getType();
-
-	if (AbstractEntity.class.isAssignableFrom(sourceResultType) && !EntityAggregates.class.isAssignableFrom(sourceResultType)) {
-	    if (dotNotatedPropName.equalsIgnoreCase(getAlias())) {
-		return Long.class; // id property is meant here
-	    }
-
-	    try {
-		final Field field = Finder.findFieldByName(sourceResultType, dealiasPropName(dotNotatedPropName, getAlias()));
-		return field.getType();
-	    } catch (final Exception e) {
-		return null;
-	    }
-
-	} else if (EntityAggregates.class.isAssignableFrom(sourceResultType)) {
-	    final String delalisedDotNotatedPropName = dealiasPropName(dotNotatedPropName, getAlias());
-	    final String firstLevelPropName = delalisedDotNotatedPropName.contains(".") ? delalisedDotNotatedPropName.substring(0, delalisedDotNotatedPropName.indexOf("."))
-		    : delalisedDotNotatedPropName;
-	    final YieldModel firstLevelPropYield = models.get(0).getYield(firstLevelPropName);
-	    if (firstLevelPropYield == null) {
-		return null;
-	    } else if (firstLevelPropYield.getOperand().type() == null) {
-		if (firstLevelPropName.equalsIgnoreCase(delalisedDotNotatedPropName)) {
-		    return Class.class;
-		} else {
-		    return null;
-		}
-	    } else {
-		final Class firstLevelPropType = firstLevelPropYield.getOperand().type();
-		if (AbstractEntity.class.isAssignableFrom(firstLevelPropType)) {
-		    if (firstLevelPropName.equalsIgnoreCase(delalisedDotNotatedPropName)) {
-			return firstLevelPropType;
-		    } else {
-			try {
-			    final Field field = Finder.findFieldByName(sourceResultType, dealiasPropName(delalisedDotNotatedPropName, firstLevelPropName));
-			    return field.getType();
-			} catch (final Exception e) {
-			    return null;
-			}
-		    }
-		} else {
-		    return firstLevelPropType;
-		}
-	    }
+    protected Pair<Boolean, Class> lookForPropInEntAggregatesType(final Class parentType, final String dotNotatedPropName) {
+	final Pair<String, String> splitByDot = splitPropByFirstDot(dotNotatedPropName);
+	final String first = splitByDot.getKey();
+	final String rest = splitByDot.getValue();
+	final YieldModel firstLevelPropYield = models.get(0).getYield(first);
+	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query props
+	    return new Pair<Boolean, Class>(false, null);
+	} else if (firstLevelPropYield.getOperand().type() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
+	    return new Pair<Boolean, Class>(rest == null, null);
 	} else {
-	    return sourceResultType;
+	    return lookForProp(firstLevelPropYield.getOperand().type(), rest); //continue recursively to subproperties
 	}
     }
 

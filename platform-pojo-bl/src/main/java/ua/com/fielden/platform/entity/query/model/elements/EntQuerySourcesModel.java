@@ -31,6 +31,15 @@ public class EntQuerySourcesModel {
 	return result;
     }
 
+    public List<List<EntProp>> getSourcesReferencingProps() {
+	final List<List<EntProp>> result = new ArrayList<List<EntProp>>();
+	for (final IEntQuerySource source : getAllSources()) {
+	    result.add(source.getReferencingProps());
+	}
+
+	return result;
+    }
+
     @Override
     public int hashCode() {
 	final int prime = 31;
