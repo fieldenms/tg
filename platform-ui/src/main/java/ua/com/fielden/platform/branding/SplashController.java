@@ -22,7 +22,7 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
  *
  */
 public class SplashController implements ActionListener {
-    private static final int X = 20, W = 300;
+    private static final int X = 20, W = 800;
     private static final int TEXT_H = 10, BAR_H = 10;
 
     private int textY, barY;
