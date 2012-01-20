@@ -41,7 +41,8 @@ public enum Dialogs {
 	}
     }
 
-    public static void showMessageDialog(final Component parentComponent, final String message, final String title, final Dialogs messageType, final Icon appIcon) throws HeadlessException {
+    public static void showMessageDialog(final Component parentComponent, final String message, final String title, final Dialogs messageType, final Icon appIcon)
+	    throws HeadlessException {
 	try {
 	    SwingUtilitiesEx.invokeAndWaitIfPossible(new Runnable() {
 		@Override
@@ -55,8 +56,8 @@ public enum Dialogs {
     }
 
     /**
-     * A convenient method to displaying a dialog when no parent is available, but there is a need to provide a custom title bar icon.
-     * The method works by creating a temporary frame with the provided icon set, which is then used as the dialog's parent.
+     * A convenient method to displaying a dialog when no parent is available, but there is a need to provide a custom title bar icon. The method works by creating a temporary
+     * frame with the provided icon set, which is then used as the dialog's parent.
      *
      * @param message
      * @param title
@@ -66,19 +67,18 @@ public enum Dialogs {
     public static void showMessageDialog(final Image titleImage, final String message, final String title, final Dialogs messageType) throws HeadlessException {
 	try {
 	    SwingUtilitiesEx.invokeAndWaitIfPossible(new Runnable() {
-	        @Override
-	        public void run() {
-	    	final JFrame frm = new JFrame();
-	    	frm.setIconImage(titleImage);
-	    	JOptionPane.showMessageDialog(frm, message, title, messageType.msgType);
-	    	frm.dispose();
-	        }
+		@Override
+		public void run() {
+		    final JFrame frm = new JFrame();
+		    frm.setIconImage(titleImage);
+		    JOptionPane.showMessageDialog(frm, message, title, messageType.msgType);
+		    frm.dispose();
+		}
 	    });
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
     }
-
 
     public static int showYesNoCancelDialog(final Component parentComponent, final String message, final String title) {
 	final int[] result = new int[] { -1 };
@@ -114,27 +114,27 @@ public enum Dialogs {
 	return result[0];
     }
 
-//    public static void main(final String[] args) throws Exception {
-//        System.out.println(System.getProperty("os.name")
-//            + " " + System.getProperty("os.version")
-//            + " " + System.getProperty("java.version"));
-//        final UIManager.LookAndFeelInfo[] lfa =
-//            UIManager.getInstalledLookAndFeels();
-//        for (final UIManager.LookAndFeelInfo lf : lfa) {
-//            UIManager.setLookAndFeel(lf.getClassName());
-//            final UIDefaults uid = UIManager.getLookAndFeelDefaults();
-//            System.out.println("***"
-//                + " " + lf.getName()
-//                + " " + lf.getClassName()
-//                + " " + uid.size() + " entries");
-//
-//            final Enumeration newKeys = uid.keys();
-//
-//            while (newKeys.hasMoreElements()) {
-//              final Object obj = newKeys.nextElement();
-//              System.out.printf("%50s : %s\n", obj, UIManager.get(obj));
-//            }
-//        }
-//    }
+    //    public static void main(final String[] args) throws Exception {
+    //        System.out.println(System.getProperty("os.name")
+    //            + " " + System.getProperty("os.version")
+    //            + " " + System.getProperty("java.version"));
+    //        final UIManager.LookAndFeelInfo[] lfa =
+    //            UIManager.getInstalledLookAndFeels();
+    //        for (final UIManager.LookAndFeelInfo lf : lfa) {
+    //            UIManager.setLookAndFeel(lf.getClassName());
+    //            final UIDefaults uid = UIManager.getLookAndFeelDefaults();
+    //            System.out.println("***"
+    //                + " " + lf.getName()
+    //                + " " + lf.getClassName()
+    //                + " " + uid.size() + " entries");
+    //
+    //            final Enumeration newKeys = uid.keys();
+    //
+    //            while (newKeys.hasMoreElements()) {
+    //              final Object obj = newKeys.nextElement();
+    //              System.out.printf("%50s : %s\n", obj, UIManager.get(obj));
+    //            }
+    //        }
+    //    }
 
 }
