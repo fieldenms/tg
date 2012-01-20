@@ -22,4 +22,9 @@ public class MainMenuItemControllerDao extends CommonEntityDao<MainMenuItem> imp
 	super(filter);
     }
 
+    @Override
+    public void delete(final MainMenuItem entity) {
+        defaultDelete(entity);
+    }
+
 }

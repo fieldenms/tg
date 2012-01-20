@@ -11,13 +11,34 @@ import ua.com.fielden.platform.swing.menu.TreeMenuItemWrapper;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 
-public class TreeMenuDumpUtility {
+/**
+ * Traverses the main menu tree and persists each relevant item together with its configuration stored locally.
+ * <p>
+ * This is one of the classes responsible for synchronising local main menu structure with remote (persisted) structure.
+ *
+ * @author TG Team
+ *
+ */
+public class AdjustTreeMenuStructureUtility {
 
-    public void saveTreeMenu(final TreeMenuItem menuItem, final IMainMenuItemController controller, final EntityFactory factory){
-	new BreadthFirstSearch<ITreeNode, ITreeNode<ITreeNode>>().search(menuItem, new TreeNodePredicate(controller, factory));
+    /**
+     * This method should be invoked to initiate main menu tree traversal to persist main menu items.
+     *
+     * @param menuRoot -- the root element of the main menu to be persisted.
+     * @param controller -- main menu item controller, which can persist a menu item.
+     * @param factory -- entity factory required for creation of menu instance.
+     */
+    public void saveTreeMenu(final TreeMenuItem menuRoot, final IMainMenuItemController controller, final EntityFactory factory){
+	new BreadthFirstSearch<ITreeNode, ITreeNode<ITreeNode>>().search(menuRoot, new TreeNodePredicate(controller, factory));
     }
 
 
+    /**
+     * The implementation of {@link ITreeNodePredicate}, which performs the actual creation/update of an individual main menu item.
+     *
+     * @author TG Team
+     *
+     */
     private static class TreeNodePredicate implements ITreeNodePredicate<ITreeNode, ITreeNode<ITreeNode>>{
 
 	private final IMainMenuItemController controller;
@@ -31,6 +52,9 @@ public class TreeMenuDumpUtility {
 	}
 
 
+	/**
+	 * Evaluates a menu item whether it should be persisted, and persists it if relevant.
+	 */
 	@Override
 	public boolean eval(final ITreeNode<ITreeNode> node) {
 	    if(canSave(node)){

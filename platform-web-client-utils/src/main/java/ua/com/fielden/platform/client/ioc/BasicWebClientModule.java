@@ -135,6 +135,7 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	    bind(IMasterConfigurationController.class).to(RemoteMasterConfigurationController.class).in(Scopes.SINGLETON);
 	} else {
 	    ///////////////////////////// local
+	    bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
 	    bind(ITreeMenuItemVisibilityProvider.class).to(LocalTreeMenuItemVisibilityProvider.class).in(Scopes.SINGLETON);
 	    bind(IMainMenuStructureBuilder.class).to(mainMenuStructureBuilderType);
 

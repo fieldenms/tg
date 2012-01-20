@@ -10,5 +10,10 @@ import ua.com.fielden.platform.swing.menu.api.ITreeMenuFactory;
  *
  */
 public interface IMainMenuBinder {
+    /**
+     * Mutates(!) <code>menuFactory</code> parameter by assigning factories to relevant main menu items.
+     *
+     * @param menuFactory
+     */
     void bindMainMenuItemFactories(final ITreeMenuFactory menuFactory);
 }

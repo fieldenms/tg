@@ -293,7 +293,9 @@ public class WebClientStartupUtility {
 	    final TreeMenuItem<?> menuItems, //
 	    final UndockableTreeMenuWithTabs<?> menu) {
 	final IApplicationSettings settings = injector.getInstance(IApplicationSettings.class);
-	final ITreeMenuFactory menuFactory = Workflows.development.equals(Workflows.valueOf(settings.workflow())) ? new LocalTreeMenuFactory(menuItems, menu, injector) : new RemoteTreeMenuFactory(menuItems, menu, injector);
+	final ITreeMenuFactory menuFactory = Workflows.development.equals(Workflows.valueOf(settings.workflow()))
+		? new LocalTreeMenuFactory(menuItems, menu, injector)
+		: new RemoteTreeMenuFactory(menuItems, menu, injector);
 	mmBinder.bindMainMenuItemFactories(menuFactory);
 	final IMainMenuStructureBuilder mmsBuilder = injector.getInstance(IMainMenuStructureBuilder.class);
 	final List<MainMenuItem> itemsFromCloud = mmsBuilder.build(restUtil.getUsername());
