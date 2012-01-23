@@ -24,14 +24,26 @@ public class EntQuery implements ISingleOperand {
     private final Class resultType;
     private EntQuery master;
     // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
-  //  private final List<Pair<EntQuery, String>> unresolvedPropNames;
+    //  private final List<Pair<EntQuery, String>> unresolvedPropNames;
     private final List<Pair<EntQuery, EntProp>> unresolvedProps;
+
     // modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for unresolved only
     // if at some master the property of this subquery is resolved - it should be removed from here
 
-
     public YieldModel getYield(final String yieldName) {
 	return yields.getYields().get(yieldName);
+    }
+
+    private boolean resultTypeIsRealEntity() {
+	return resultType != null && AbstractEntity.class.isAssignableFrom(resultType) && !EntityAggregates.class.isAssignableFrom(resultType);
+    }
+
+    private boolean onlyOneYieldAndWithoutAlias() {
+	return yields.getYields().size() == 1 && yields.getYields().keySet().iterator().next() == null;
+    }
+
+    private boolean idAliasEnhancementRequired() {
+	return onlyOneYieldAndWithoutAlias() && resultTypeIsRealEntity();
     }
 
     public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType) {
@@ -42,12 +54,11 @@ public class EntQuery implements ISingleOperand {
 	this.groups = groups;
 	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? sources.getMain().getType() : null);
 
-	// TODO enhance short-cuts in yield section (e.g. the following:
-	// assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
-	if (this.resultType != null && yields.getYields().size() == 1 && AbstractEntity.class.isAssignableFrom(this.resultType) && !EntityAggregates.class.isAssignableFrom(this.resultType)) {
+	// enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
+	if (idAliasEnhancementRequired()) {
 	    final YieldModel idModel = new YieldModel(yields.getYields().values().iterator().next().getOperand(), "id");
 	    yields.getYields().clear();
-	    yields.getYields().put("id", idModel);
+	    yields.getYields().put(idModel.getAlias(), idModel);
 	}
 
 	final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries = new ArrayList<Pair<EntQuery, EntProp>>();
@@ -65,14 +76,14 @@ public class EntQuery implements ISingleOperand {
 	final List<EntProp> props = getImmediateProps();
 
 	for (final Pair<EntQuery, EntProp> unresolvedPropPair : unresolvedPropsFromSubqueries) {
-	    final Pair<EntQuery,EntProp> propResolutionResult = performPropResolveAction(unresolvedPropPair.getKey(), unresolvedPropPair.getValue());
+	    final Pair<EntQuery, EntProp> propResolutionResult = performPropResolveAction(unresolvedPropPair.getKey(), unresolvedPropPair.getValue());
 	    if (propResolutionResult != null) {
 		unresolvedProps.add(propResolutionResult);
 	    }
 	}
 
 	for (final EntProp prop : props) {
-	    final Pair<EntQuery,EntProp> propResolutionResult = performPropResolveAction(this, prop);
+	    final Pair<EntQuery, EntProp> propResolutionResult = performPropResolveAction(this, prop);
 	    if (propResolutionResult != null) {
 		unresolvedProps.add(propResolutionResult);
 	    }
@@ -83,6 +94,7 @@ public class EntQuery implements ISingleOperand {
 
     /**
      * If property is found within holder query sources then establish link between them (inlc. prop type setting) and return null, else return pair (holder, prop).
+     *
      * @param holder
      * @param prop
      * @return
@@ -90,18 +102,23 @@ public class EntQuery implements ISingleOperand {
     private Pair<EntQuery, EntProp> performPropResolveAction(final EntQuery holder, final EntProp prop) {
 	final Map<IEntQuerySource, PropResolutionInfo> result = new HashMap<IEntQuerySource, PropResolutionInfo>();
 
+//	System.out.println("LOOKING FOR PROP: " + prop.getName());
+//	System.out.println(" result BEGIN: ");
 	for (final IEntQuerySource source : sources.getAllSources()) {
 	    final Pair<Boolean, PropResolutionInfo> hasProp = source.containsProperty(prop);
 	    if (hasProp.getKey()) {
 		result.put(source, hasProp.getValue());
+//		System.out.println("source: " + source + " propResolution: " + hasProp.getValue());
 	    }
 	}
+//	System.out.println(" result END: ");
 
 	if (result.size() == 0) {
 	    return new Pair<EntQuery, EntProp>(holder, prop);
 	} else if (result.size() == 1) {
 	    prop.setPropType(result.values().iterator().next().propType);
 	    result.keySet().iterator().next().addReferencingProp(prop);
+	    //System.out.println("=== setting " + prop.getName() + " to type " + result.values().iterator().next().propType);
 	    return null;
 	} else {
 	    final SortedSet<Integer> preferenceNumbers = new TreeSet<Integer>();
@@ -117,26 +134,25 @@ public class EntQuery implements ISingleOperand {
 
 	    final Integer preferenceResult = preferenceNumbers.first();
 
-	    System.out.println("for prop [" + prop.getName() +"] preferenceResult = " + preferenceResult);
-	    for (final Entry<Integer, List<IEntQuerySource>> entry : sourcesPreferences.entrySet()) {
-		System.out.println(entry.getKey() + " ... " + entry.getValue());
-	    }
-
 	    final List<IEntQuerySource> preferedSourceList = sourcesPreferences.get(preferenceResult);
 	    if (preferedSourceList.size() == 1) {
 		sourcesPreferences.get(preferenceResult).get(0).addReferencingProp(prop);
-		// TODO set type to prop
-		return null;
-	    } else if (preferedSourceList.size() == 2) {
-		if (result.get(sourcesPreferences.get(preferenceResult).get(0)).aliasPart == null) {
-		    sourcesPreferences.get(preferenceResult).get(0).addReferencingProp(prop);
-		} else  if (result.get(sourcesPreferences.get(preferenceResult).get(1)).aliasPart == null){
-		    sourcesPreferences.get(preferenceResult).get(1).addReferencingProp(prop);
-		} else {
-		    throw new IllegalStateException("Ambiguous property: " + prop.getName());
-		}
+		prop.setPropType(result.get(sourcesPreferences.get(preferenceResult).get(0)).propType);
 		return null;
 	    } else {
+		int notAliasedSourcesCount = 0;
+		for (final IEntQuerySource qrySource : preferedSourceList) {
+		    if (result.get(qrySource).aliasPart == null) {
+			qrySource.addReferencingProp(prop);
+			prop.setPropType(result.get(qrySource).propType);
+			notAliasedSourcesCount = notAliasedSourcesCount + 1;
+		    }
+		}
+
+		if (notAliasedSourcesCount == 1) {
+		    return null;
+		}
+
 		throw new IllegalStateException("Ambiguous property: " + prop.getName());
 	    }
 	}
@@ -305,11 +321,11 @@ public class EntQuery implements ISingleOperand {
     }
 
     public Class getResultType() {
-        return resultType;
+	return resultType;
     }
 
     public List<Pair<EntQuery, EntProp>> getUnresolvedProps() {
-        return unresolvedProps;
+	return unresolvedProps;
     }
 
     @Override
@@ -319,8 +335,11 @@ public class EntQuery implements ISingleOperand {
 
     public void validate() {
 	if (unresolvedProps.size() > 0) {
-	    System.out.println(unresolvedProps.size());
-	    throw new RuntimeException("Couldn't resolve all properties");
+	    final StringBuffer sb = new StringBuffer();
+	    for (final Pair<EntQuery, EntProp> pair : unresolvedProps) {
+		sb.append(pair.getValue().getName() + "\n");
+	    }
+	    throw new RuntimeException("Couldn't resolve all properties: \n" + sb.toString());
 	}
     }
 

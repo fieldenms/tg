@@ -28,6 +28,9 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty @MapTo()
     private TgVehicle replacedBy;
 
+    @IsProperty @MapTo()
+    private TgOrgUnit5 station;
+
     @IsProperty
     @MapTo
     @Title(value = "Model", desc = "Model")
@@ -58,7 +61,15 @@ public class TgVehicle extends AbstractEntity<String> {
 	return model;
     }
 
+    @Observable
+    public TgVehicle setStation(final TgOrgUnit5 station) {
+	this.station = station;
+	return this;
+    }
 
+    public TgOrgUnit5 getStation() {
+	return station;
+    }
 
     @IsProperty @MapTo(userType = ISimpleMoneyType.class)
     private Money purchasePrice;

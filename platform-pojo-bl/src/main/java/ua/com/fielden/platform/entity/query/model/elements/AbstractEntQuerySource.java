@@ -65,6 +65,7 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
     }
 
     protected Pair<Boolean, Class> lookForPropInRealPropType(final Class parentType, final String dotNotatedPropName) {
+//	System.out.println("  lookingRE for [" + dotNotatedPropName + "]  in type " + parentType.getSimpleName());
 	try {
 	    final Field field = Finder.findFieldByName(parentType, dotNotatedPropName);
 	    return new Pair<Boolean, Class>(true, field.getType());
@@ -76,6 +77,7 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
     abstract Pair<Boolean, Class> lookForPropInEntAggregatesType(final Class parentType, final String dotNotatedPropName);
 
     protected Pair<Boolean, Class> lookForProp(final Class type, final String dotNotatedPropName) {
+//	System.out.println("--looking for prop [" + dotNotatedPropName + "] in type " + type.getSimpleName());
 	if (isRealEntity(type)) {
 	    return lookForPropInRealPropType(type, dotNotatedPropName);
 	} else if (isEntityAggregates(type)) {
@@ -87,6 +89,7 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     protected PropResolutionInfo propAsIs(final String propName) {
 	final Pair<Boolean, Class> propAsIsSearchResult = lookForProp(getType(), propName);
+//	System.out.println("  propAsIsSearchResult: " + propAsIsSearchResult);
 	return propAsIsSearchResult.getKey() ? new PropResolutionInfo(null, propName, false, propAsIsSearchResult.getValue()) : null;
     }
 
@@ -125,14 +128,21 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 	final PropResolutionInfo propAsIs = propAsIs(prop.getName());
 	final PropResolutionInfo propAsAliased = propAsAliased(prop.getName());
 	final PropResolutionInfo propAsImplicitId = propAsImplicitId(prop.getName());
+//	System.out.println("propAsIs: " + propAsIs);
+//	System.out.println("propAsAliased: " + propAsAliased);
+//	System.out.println("propAsImplicitId: " + propAsImplicitId);
 
 	if (propAsIs == null && propAsAliased == null && propAsImplicitId == null) {
+//	    System.out.println("prop [" + prop.getName() + "] not found within type " + getType().getSimpleName());
 	    return new Pair<Boolean, PropResolutionInfo>(false, null);
 	} else if (propAsIs != null && propAsAliased == null) {
+//	    System.out.println("prop [" + prop.getName() + "] found within type " + getType().getSimpleName() + " :AsIs: " + propAsIs);
 	    return new Pair<Boolean, PropResolutionInfo>(true, propAsIs);
 	} else if (propAsAliased != null) {
+//	    System.out.println("prop [" + prop.getName() + "] found within type " + getType().getSimpleName() + " :AsAliased: " + propAsAliased);
 	    return new Pair<Boolean, PropResolutionInfo>(true, propAsAliased);
 	} else if (propAsImplicitId != null) {
+//	    System.out.println("prop [" + prop.getName() + "] found within type " + getType().getSimpleName() + " :ImpId: " + propAsImplicitId);
 	    return new Pair<Boolean, PropResolutionInfo>(true, propAsImplicitId);
 	} else {
 	    throw new RuntimeException("Unforeseen branch!");
@@ -145,10 +155,16 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 	boolean implicitId;
 	Class propType;
 
+	@Override
+	public String toString() {
+	    return "PropResolutionInfo: aliasPart = " + aliasPart + " : propPart = " + propPart + " : impId = " + implicitId + " : type = " + (propType != null ? propType.getSimpleName() : null);
+	}
+
 	public PropResolutionInfo(final String aliasPart, final String propPart, final boolean implicitId, final Class propType) {
 	    this.aliasPart = aliasPart;
 	    this.propPart = propPart;
 	    this.implicitId = implicitId;
+	    this.propType = propType;
 	}
 
 	public String getAliasPart() {

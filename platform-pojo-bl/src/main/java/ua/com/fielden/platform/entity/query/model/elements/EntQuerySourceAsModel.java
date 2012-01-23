@@ -20,16 +20,25 @@ public class EntQuerySourceAsModel extends AbstractEntQuerySource {
 
     @Override
     protected Pair<Boolean, Class> lookForPropInEntAggregatesType(final Class parentType, final String dotNotatedPropName) {
+//	System.out.println("  lookingEA for [" + dotNotatedPropName + "]  in type " + parentType.getSimpleName());
 	final Pair<String, String> splitByDot = splitPropByFirstDot(dotNotatedPropName);
 	final String first = splitByDot.getKey();
 	final String rest = splitByDot.getValue();
+//	System.out.println("first = " + first + "; rest = " + rest);
+
 	final YieldModel firstLevelPropYield = models.get(0).getYield(first);
+//	System.out.println(firstLevelPropYield);
 	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query props
+//	    System.out.println("return not found");
 	    return new Pair<Boolean, Class>(false, null);
 	} else if (firstLevelPropYield.getOperand().type() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
+//	    System.out.println("return " + (rest == null)  + " with unknown type");
 	    return new Pair<Boolean, Class>(rest == null, null);
-	} else {
+	} else if (rest != null){
+//	    System.out.println("3: " + firstLevelPropYield.getOperand().type().getSimpleName());
 	    return lookForProp(firstLevelPropYield.getOperand().type(), rest); //continue recursively to subproperties
+	} else {
+	    return new Pair<Boolean, Class>(true, firstLevelPropYield.getOperand().type());
 	}
     }
 

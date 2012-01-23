@@ -2,8 +2,6 @@ package ua.com.fielden.platform.sample.domain;
 
 import java.math.BigInteger;
 
-import org.junit.Ignore;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -18,7 +16,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(TgVehicleModel.class)
 @MapEntityTo
 @DescTitle("Description")
-@Ignore
 public class TgModelYearCount extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import java.math.BigInteger;
+import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -11,30 +11,30 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
-@KeyType(TgVehicleModel.class)
+@KeyType(String.class)
 @MapEntityTo
 @DescTitle("Description")
-public class TgModelCount extends AbstractEntity<TgVehicleModel> {
+@Ignore
+public class TgOrgUnit4 extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo
-    @Title(value = "Count", desc = "Vehicle Count per Model")
-    private BigInteger count;
+    @Title(value = "Parent", desc = "Parent")
+    private TgOrgUnit3 parent;
 
     @Observable
-    public TgModelCount setCount(final BigInteger count) {
-	this.count = count;
+    public TgOrgUnit4 setParent(final TgOrgUnit3 parent) {
+	this.parent = parent;
 	return this;
     }
 
-    public BigInteger getCount() {
-	return count;
+    public TgOrgUnit3 getParent() {
+	return parent;
     }
-
     /**
      * Constructor for (@link EntityFactory}.
      */
-    protected TgModelCount() {
+    protected TgOrgUnit4() {
     }
 }
