@@ -5,11 +5,14 @@ import java.util.List;
 
 import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
 import ua.com.fielden.platform.expression.lexer.BaseNonDeterministicAutomata;
-import ua.com.fielden.platform.expression.lexer.avg.AvgTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.comma.CommaTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.date_constant.DateConstantTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.decimal.DecimalTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.div.DivTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.avg.AvgTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.max.MaxTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.min.MinTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.sum.SumTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.integer.IntegerTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.lparen.LparenTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.minus.MinusTokenAutomata;
@@ -18,7 +21,6 @@ import ua.com.fielden.platform.expression.lexer.name.NameTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.plus.PlusTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.rparen.RparenTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.string.StringTokenAutomata;
-import ua.com.fielden.platform.expression.lexer.sum.SumTokenAutomata;
 
 
 /**
@@ -35,7 +37,7 @@ public class ExpressionLexer {
     private static final BaseNonDeterministicAutomata[] tokenLexers = {//
 	new LparenTokenAutomata(), new RparenTokenAutomata(), new CommaTokenAutomata(), //
 	new PlusTokenAutomata(), new MinusTokenAutomata(), new MultTokenAutomata(), new DivTokenAutomata(), //
-	new AvgTokenAutomata(), new SumTokenAutomata(),//
+	new AvgTokenAutomata(), new SumTokenAutomata(), new MinTokenAutomata(), new MaxTokenAutomata(),//
 	new NameTokenAutomata(),//
 	new StringTokenAutomata(),//
 	new DateConstantTokenAutomata(), new DecimalTokenAutomata(), new IntegerTokenAutomata()};

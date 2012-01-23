@@ -7,22 +7,22 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;
 import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
-import ua.com.fielden.platform.expression.lexer.function.avg.AvgTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.min.MinTokenAutomata;
 
-public class AvgTokenAutomataTest {
-    private AvgTokenAutomata automata = new AvgTokenAutomata();
+public class MinTokenAutomataTest {
+    private MinTokenAutomata automata = new MinTokenAutomata();
 
     @Test
     public void test_full_recognition_of_correct_sequences() throws NoTransitionAvailable, SequenceRecognitionFailed {
-	assertEquals("Incorrect recognition result", "AVG", automata.recognisePartiallyFromStart("AVG(", 0));
-	assertEquals("Incorrect recognition result", "AVG", automata.recognisePartiallyFromStart("   AvG (", 0));
-	assertEquals("Incorrect recognition result", "AVG", automata.recognisePartiallyFromStart("\t\naVg\t(", 0));
+	assertEquals("Incorrect recognition result", "MIN", automata.recognisePartiallyFromStart("MIN(", 0));
+	assertEquals("Incorrect recognition result", "MIN", automata.recognisePartiallyFromStart("   MiN (", 0));
+	assertEquals("Incorrect recognition result", "MIN", automata.recognisePartiallyFromStart("\t\nmIn\t(", 0));
     }
 
     @Test
     public void test_recognition_of_partially_correct_sequences() throws NoTransitionAvailable, SequenceRecognitionFailed {
-	assertEquals("Incorrect recognition result", "AVG", automata.recognisePartiallyFromStart(" avg ( property )", 0));
-	assertEquals("Incorrect recognition result", "AVG", automata.recognisePartiallyFromStart("\tAVG\t (\"", 0));
+	assertEquals("Incorrect recognition result", "MIN", automata.recognisePartiallyFromStart(" min ( property )", 0));
+	assertEquals("Incorrect recognition result", "MIN", automata.recognisePartiallyFromStart("\tMIN\t (\"", 0));
     }
 
     @Test
@@ -33,37 +33,37 @@ public class AvgTokenAutomataTest {
 	} catch (final SequenceRecognitionFailed e) {
 	}
 	try {
-	    automata.recognisePartiallyFromStart("+AVG(", 0);
+	    automata.recognisePartiallyFromStart("+MIN(", 0);
 	    fail("Should have failed");
 	} catch (final SequenceRecognitionFailed e) {
 	}
 	try {
-	    automata.recognisePartiallyFromStart("AVG_(", 0);
+	    automata.recognisePartiallyFromStart("MIN_(", 0);
 	    fail("Should have failed");
 	} catch (final SequenceRecognitionFailed e) {
 	}
 	try {
-	    automata.recognisePartiallyFromStart("AV G(", 0);
+	    automata.recognisePartiallyFromStart("MI N(", 0);
 	    fail("Should have failed");
 	} catch (final SequenceRecognitionFailed e) {
 	}
 	try {
-	    automata.recognisePartiallyFromStart("A VG(", 0);
+	    automata.recognisePartiallyFromStart("M IN(", 0);
 	    fail("Should have failed");
 	} catch (final SequenceRecognitionFailed e) {
 	}
 	try {
-	    automata.recognisePartiallyFromStart("AVG  ", 0);
+	    automata.recognisePartiallyFromStart("MIN  ", 0);
 	    fail("Should have failed");
 	} catch (final SequenceRecognitionFailed e) {
 	}
 	try {
-	    automata.recognisePartiallyFromStart("AVG  d(", 0);
+	    automata.recognisePartiallyFromStart("MIN  d(", 0);
 	    fail("Should have failed");
 	} catch (final SequenceRecognitionFailed e) {
 	}
 	try {
-	    automata.recognisePartiallyFromStart("AVG)", 0);
+	    automata.recognisePartiallyFromStart("MIN)", 0);
 	    fail("Should have failed");
 	} catch (final SequenceRecognitionFailed e) {
 	}

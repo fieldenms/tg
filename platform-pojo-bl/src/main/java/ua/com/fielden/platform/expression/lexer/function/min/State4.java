@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.expression.lexer.sum;
+package ua.com.fielden.platform.expression.lexer.function.min;
 
 import ua.com.fielden.platform.expression.automata.AbstractState;
 import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;

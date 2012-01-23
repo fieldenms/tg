@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.expression.lexer.avg;
+package ua.com.fielden.platform.expression.lexer.function.avg;
 
 import ua.com.fielden.platform.expression.EgTokenCategory;
 import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;

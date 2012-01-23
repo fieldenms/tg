@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.expression.lexer.avg;
+package ua.com.fielden.platform.expression.lexer.function.sum;
 
 import ua.com.fielden.platform.expression.automata.AbstractState;
 import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;
@@ -17,7 +17,7 @@ public class State2 extends AbstractState {
 
     @Override
     protected AbstractState transition(final char symbol) throws NoTransitionAvailable {
-	if (symbol == 'g' || symbol == 'G') {
+	if (symbol == 'm' || symbol == 'M') {
 	    return getAutomata().getState("S3");
 	}
 	throw new NoTransitionAvailable("Invalid symbol '" + symbol + "'" , this, symbol);

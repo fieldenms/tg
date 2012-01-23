@@ -1,26 +1,18 @@
-package ua.com.fielden.platform.expression.lexer.avg;
+package ua.com.fielden.platform.expression.lexer.function.sum;
 
 import ua.com.fielden.platform.expression.automata.AbstractState;
 import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;
 
-/**
- * Handles white space after the word 'AVG'.
- *
- * @author TG Team
- *
- */
-public class State3 extends AbstractState {
+public class State1 extends AbstractState {
 
-    public State3() {
-	super("S3", false);
+    public State1() {
+	super("S1", false);
     }
 
     @Override
     protected AbstractState transition(final char symbol) throws NoTransitionAvailable {
-	if (isWhiteSpace(symbol)) {
-	    return this;
-	} else if (symbol == '(') {
-	    return getAutomata().getState("S4");
+	if (symbol == 'u' || symbol == 'U') {
+	    return getAutomata().getState("S2");
 	}
 	throw new NoTransitionAvailable("Invalid symbol '" + symbol + "'" , this, symbol);
     }

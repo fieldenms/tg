@@ -1,18 +1,20 @@
-package ua.com.fielden.platform.expression.lexer.sum;
+package ua.com.fielden.platform.expression.lexer.function.max;
 
 import ua.com.fielden.platform.expression.automata.AbstractState;
 import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;
 
-public class State1 extends AbstractState {
+public class State0 extends AbstractState {
 
-    public State1() {
-	super("S1", false);
+    public State0() {
+	super("S0", false);
     }
 
     @Override
     protected AbstractState transition(final char symbol) throws NoTransitionAvailable {
-	if (symbol == 'u' || symbol == 'U') {
-	    return getAutomata().getState("S2");
+	if (symbol == 'm' || symbol == 'M') {
+	    return getAutomata().getState("S1");
+	} else if (isWhiteSpace(symbol)) {
+	    return this;
 	}
 	throw new NoTransitionAvailable("Invalid symbol '" + symbol + "'" , this, symbol);
     }

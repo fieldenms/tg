@@ -108,7 +108,7 @@ public class TypeEnforcementVisitor implements IAstVisitor {
     private void processAvgSum(final AstNode node) throws SemanticException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
 	if (node.getChildren().size() != 1) {
-	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 1 operands, found " + node.getChildren().size(), node.getToken());
+	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 1 operand, found " + node.getChildren().size(), node.getToken());
 	}
 	// ensure that type of the operand is determined
 	final Class<?> type = node.getChildren().get(0).getType();

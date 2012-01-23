@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;
 import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
-import ua.com.fielden.platform.expression.lexer.sum.SumTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.sum.SumTokenAutomata;
 
 public class SumTokenAutomataTest {
     private SumTokenAutomata automata = new SumTokenAutomata();

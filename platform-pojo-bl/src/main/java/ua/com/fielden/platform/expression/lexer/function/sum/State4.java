@@ -1,19 +1,22 @@
-package ua.com.fielden.platform.expression.lexer.avg;
+package ua.com.fielden.platform.expression.lexer.function.sum;
 
 import ua.com.fielden.platform.expression.automata.AbstractState;
 import ua.com.fielden.platform.expression.automata.NoTransitionAvailable;
 
-public class State1 extends AbstractState {
+/**
+ * Final state.
+ *
+ * @author TG Team
+ *
+ */
+public class State4 extends AbstractState {
 
-    public State1() {
-	super("S1", false);
+    public State4() {
+	super("S4", true);
     }
 
     @Override
     protected AbstractState transition(final char symbol) throws NoTransitionAvailable {
-	if (symbol == 'v' || symbol == 'V') {
-	    return getAutomata().getState("S2");
-	}
 	throw new NoTransitionAvailable("Invalid symbol '" + symbol + "'" , this, symbol);
     }
 
