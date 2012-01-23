@@ -19,7 +19,7 @@ import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeMod
 
 /**
  * Wizard that allows one to create/edit calculated properties and configure entity review.
- * 
+ *
  * @author TG Team
  *
  */
@@ -45,7 +45,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * Returns value that indicates whether specified property name in the entityClass is calculated or not.
-     * 
+     *
      * @param entityClass
      * @param propertyName
      * @return
@@ -56,7 +56,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * Creates the {@link IPropertySelectionListener} that listens the entity property selection change event.
-     * 
+     *
      * @return
      */
     private IPropertySelectionListener createPropertySelectedListener() {
@@ -72,7 +72,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * Generates next property name for calculated property.
-     * 
+     *
      * @return
      */
     private String generateNextPropertyName() {
@@ -81,7 +81,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * Returns the selection model associated with this {@link DomainTreeEditorModel}
-     * 
+     *
      * @return
      */
     public final CalculatedPropertySelectModel getPropertySelectionModel() {
@@ -90,7 +90,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * Returns associated {@link ExpressionEditorModel} instance.
-     * 
+     *
      * @return
      */
     public final ExpressionEditorModel getExpressionModel() {
@@ -102,7 +102,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
     }
 
     public EntitiesTreeModel2 createTreeModel() {
-	return new EntitiesTreeModel2(dtme);
+	return new EntitiesTreeModel2(dtme, "selection criteria", "result set");
 	//return new CriteriaTreeModel(getEntityClass(), new DefaultDynamicCriteriaPropertyFilter(), null);
     }
 
@@ -122,7 +122,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * Adds {@link IPropertyEditListener} to the list of listeners to be notified when the edit calculated property action will take place.
-     * 
+     *
      * @param l
      */
     public void addPropertyEditListener(final IPropertyEditListener l) {
@@ -131,7 +131,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * Removes the {@link IPropertyEditListener} from the list of listeners.
-     * 
+     *
      * @param l
      */
     public void removePropertyEditListener(final IPropertyEditListener l) {
@@ -140,7 +140,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * Notify all listeners that have registered interest for notification on the edit event.
-     * 
+     *
      * @param action.
      */
     private void firePropertyProcessAction(final IPropertyProcessingAction action) {
@@ -158,7 +158,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * {@link ExpressionEditorModel} that handles new/edit/cancel/save actions.
-     * 
+     *
      * @author TG Team
      *
      */
@@ -215,14 +215,14 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * A contract that allows to process edit listener.
-     * 
+     *
      * @author TG Team
      */
     private static interface IPropertyProcessingAction{
 
 	/**
 	 * Processes {@link IPropertyEditListener}.
-	 * 
+	 *
 	 * @param listener - specified listener to process.
 	 */
 	void processPropertyEditAction(IPropertyEditListener listener);

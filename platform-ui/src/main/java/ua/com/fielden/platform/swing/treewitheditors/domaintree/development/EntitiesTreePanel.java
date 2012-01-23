@@ -49,7 +49,7 @@ public class EntitiesTreePanel extends JPanel {
 	// ///////////////////////////////////////////////////
 	final JPanel search = new JPanel(new MigLayout("fill, insets 2 2 2 2", "[fill,grow]1[]1[]1[]", "[fill,grow]"));
 	search.setBackground(Color.white);
-	final IFilterableModel filterableModel = getTree().getFilterableModel();
+	final IFilterableModel filterableModel = getTree().getEntitiesModel().getFilterableModel();
 	final JTextField filterTextControl = new JTextField();
 	final FilterControl filterControl = new FilterControl(filterTextControl, filterableModel, "find property...");
 	search.add(filterControl, "grow");

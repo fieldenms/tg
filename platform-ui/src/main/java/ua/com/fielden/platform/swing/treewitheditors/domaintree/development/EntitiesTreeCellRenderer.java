@@ -12,7 +12,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerA
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.dynamicreportstree.EntitiesTreeColumn;
-import ua.com.fielden.platform.swing.menu.filter.FilterableTreeModel;
 import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeModel2;
 import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeNode2;
 import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeCellRenderer2;
@@ -23,15 +22,13 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 
     private static final long serialVersionUID = 2940223267761789273L;
 
-    private final FilterableTreeModel model;
     private final Font originalFont;
     private final Font derivedFont;
     private final String criteriaName;
     private final String resultSetName;
 
-    public EntitiesTreeCellRenderer(final EntitiesTree2 tree, final String criteriaName, final String resultSetName) {
-	super(tree);
-	this.model = tree.getFilterableModel();
+    public EntitiesTreeCellRenderer(final EntitiesTreeModel2 model, final String criteriaName, final String resultSetName) {
+	super(model);
 	this.criteriaName = criteriaName;
 	this.resultSetName = resultSetName;
 	originalFont = label.getFont();
@@ -44,7 +41,7 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
     @Override
     public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean selected, final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
 	// this action should make matched nodes to render bold.
-	if (model.matches((TreeNode) value)) {
+	if (getModel().getFilterableModel().matches((TreeNode) value)) {
 	    label.setFont(derivedFont);
 	} else {
 	    label.setFont(originalFont);
@@ -57,13 +54,8 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 	return super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
     }
 
-    @Override
-    public EntitiesTree2 getTree() {
-	return (EntitiesTree2) super.getTree();
-    }
-
     private IDomainTreeManagerAndEnhancer getManager() {
-	return getTree().getEntitiesModel().getManager();
+	return getModel().getManager();
     }
 
     @SuppressWarnings("unchecked")
@@ -96,7 +88,7 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
     }
 
     private String createCriteriaCheckboxToolTipText(final Class<?> root, final String property) {
-	final IDomainTreeManagerAndEnhancer manager = getTree().getEntitiesModel().getManager();
+	final IDomainTreeManagerAndEnhancer manager = getModel().getManager();
 	if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getFirstTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
 	    return null;
 	}
@@ -107,10 +99,15 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
     }
 
     private String createResultSetCheckboxToolTipText(final Class<?> root, final String property) {
-	final IDomainTreeManagerAndEnhancer manager = getTree().getEntitiesModel().getManager();
+	final IDomainTreeManagerAndEnhancer manager = getModel().getManager();
 	if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getSecondTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
 	    return null;
 	}
 	return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, property).getKey() + "</b> to/from " + resultSetName + "</html>";
+    }
+
+    @Override
+    public EntitiesTreeModel2 getModel() {
+	return (EntitiesTreeModel2) super.getModel();
     }
 }

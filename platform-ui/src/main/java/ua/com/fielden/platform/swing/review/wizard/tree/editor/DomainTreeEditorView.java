@@ -47,7 +47,7 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 
 	//Configuring the entities tree.
 	final EntitiesTreeModel2 treeModel = domainTreeEditorModel.createTreeModel();
-	final EntitiesTree2 tree = new EntitiesTree2(treeModel, "selection criteria", "result set");
+	final EntitiesTree2 tree = new EntitiesTree2(treeModel);
 	tree.addMouseListener(createPropertyChosenListener(tree, treeModel));
 	tree.getSelectionModel().addTreeSelectionListener(createCalculatedPropertySelectionListener(tree, treeModel));
 	final EntitiesTreePanel treePanel = new EntitiesTreePanel(tree);

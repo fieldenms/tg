@@ -38,8 +38,8 @@ public class MultipleCheckboxTree2 extends Tree {
 	ToolTipManager.sharedInstance().registerComponent(this);
 
 	setEditable(true);
-	setCellRenderer(new MultipleCheckboxTreeCellRenderer2(this));
-	final MultipleCheckboxTreeCellRenderer2 renderer = new MultipleCheckboxTreeCellRenderer2(this);
+	setCellRenderer(new MultipleCheckboxTreeCellRenderer2(model));
+	final MultipleCheckboxTreeCellRenderer2 renderer = new MultipleCheckboxTreeCellRenderer2(model);
 	setCellEditor(new MultipleCheckboxTreeCellEditor2(this, renderer));
 
 	getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);

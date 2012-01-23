@@ -436,11 +436,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param fromPath
      * @param toPath
      */
-    protected void warmUp(final Class<?> root, final String fromPath, final String toPath) {
+    protected final boolean warmUp(final Class<?> root, final String fromPath, final String toPath) {
 	// System.out.println("Warm up => from = " + fromPath + "; to = " + toPath);
 	if (includedPropertiesMutable(root).contains(fromPath)) { // the property itself exists in "included properties" cache
 	    final String dummyMarker = createDummyMarker(fromPath);
-	    if (includedPropertiesMutable(root).contains(dummyMarker)) { // the property is circular and has no children loaded -- it has to be done now
+	    final boolean shouldBeLoaded = includedPropertiesMutable(root).contains(dummyMarker);
+	    if (shouldBeLoaded) { // the property is circular and has no children loaded -- it has to be done now
 		final int index = includedPropertiesMutable(root).indexOf(dummyMarker);
 		includedPropertiesMutable(root).remove(dummyMarker); // remove dummy property
 		includedPropertiesMutable(root).addAll(index, constructProperties(root, fromPath, constructKeysAndProperties(PropertyTypeDeterminator.determinePropertyType(root, fromPath))));
@@ -449,7 +450,10 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		final String part = "".equals(fromPath) ? toPath : toPath.replaceFirst(fromPath + ".", "");
 		final String part2 = part.indexOf(".") > 0 ? part.substring(0, part.indexOf(".")) : part;
 		final String part3 = "".equals(fromPath) ? part2 : (fromPath + "." + part2);
-		warmUp(root, part3, toPath);
+		final boolean hasBeenWarmedUp = warmUp(root, part3, toPath);
+		return shouldBeLoaded || hasBeenWarmedUp;
+	    } else {
+		return shouldBeLoaded;
 	    }
 	} else {
 	    throw new IllegalArgumentException("The property [" + fromPath + "] in root [" + root.getSimpleName() + "] should be already loaded into 'included properties'.");
@@ -461,8 +465,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	final Date st = new Date();
 	illegalExcludedProperties(this, root, reflectionProperty(property), "Could not 'warm up' an 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "]. Only properties that are not excluded can be 'warmed up'.");
 	includedPropertiesMutable(root); // ensure "included properties" to be loaded
-	warmUp(root, "", property);
-	logger().info("Warmed up root's [" + root.getSimpleName() + "] property [" + property + "] within " + (new Date().getTime() - st.getTime()) + "ms.");
+	if (warmUp(root, "", property)) {
+	    logger().info("Warmed up root's [" + root.getSimpleName() + "] property [" + property + "] within " + (new Date().getTime() - st.getTime()) + "ms.");
+	}
     }
 
     /**

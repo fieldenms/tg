@@ -14,7 +14,7 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
     public EntitiesTreeCellEditor(final EntitiesTree2 tree, final EntitiesTreeCellRenderer renderer) {
 	super(tree, renderer);
 
-	tree.getFilterableModel().addFilterListener(new IFilterListener() {
+	tree.getEntitiesModel().getFilterableModel().addFilterListener(new IFilterListener() {
 
 	    @Override
 	    public boolean nodeVisibilityChanged(final TreeNode treeNode, final boolean prevValue, final boolean newValue) {

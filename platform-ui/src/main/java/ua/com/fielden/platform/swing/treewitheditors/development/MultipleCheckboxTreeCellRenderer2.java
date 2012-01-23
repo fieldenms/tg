@@ -15,6 +15,8 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 
+import ua.com.fielden.platform.swing.treewitheditors.ITreeCheckingModelComponent;
+
 /**
  * {@link TreeCellRenderer} for the {@link MultipleCheckboxTree2}.
  *
@@ -22,29 +24,25 @@ import javax.swing.tree.TreePath;
  *
  */
 public class MultipleCheckboxTreeCellRenderer2 extends JPanel implements TreeCellRenderer {
-
     private static final long serialVersionUID = 8994506736938836724L;
 
     protected final DefaultTreeCellRenderer label;
-
     protected final List<ITreeCheckingModelComponent2> checkingComponents;
-
-    protected final MultipleCheckboxTree2 tree;
+    protected final MultipleCheckboxTreeModel2 model;
 
     /**
-     * Initiates this {@link MultipleCheckboxTreeCellRenderer2} with specified {@link MultipleCheckboxTree2} instance.
+     * Initiates this {@link MultipleCheckboxTreeCellRenderer2} with specified {@link MultipleCheckboxTreeModel2} instance.
      *
      * @param tree
      */
-    public MultipleCheckboxTreeCellRenderer2(final MultipleCheckboxTree2 tree){
-
-	this.tree = tree;
+    public MultipleCheckboxTreeCellRenderer2(final MultipleCheckboxTreeModel2 model){
+	this.model = model;
 	this.label = new DefaultTreeCellRenderer();
-	this.checkingComponents = new ArrayList<ITreeCheckingModelComponent2>(tree.getSpecificModel().getCheckingModelCount());
+	this.checkingComponents = new ArrayList<ITreeCheckingModelComponent2>(model.getCheckingModelCount());
 
 	this.setBackground(UIManager.getColor("Tree.textBackground"));
-	for (int modelIndex = 0; modelIndex < tree.getSpecificModel().getCheckingModelCount(); modelIndex++) {
-	    this.checkingComponents.add(new CheckBoxTreeComponent2(tree, modelIndex));
+	for (int modelIndex = 0; modelIndex < model.getCheckingModelCount(); modelIndex++) {
+	    this.checkingComponents.add(new CheckBoxTreeComponent2(this.model, modelIndex));
 	}
 
 	initView();
@@ -54,7 +52,7 @@ public class MultipleCheckboxTreeCellRenderer2 extends JPanel implements TreeCel
     public Dimension getPreferredSize() {
 	final Dimension d_label = this.label.getPreferredSize();
 	int width = d_label.width, height = d_label.height;
-	for (int componentCounter = 0; componentCounter < tree.getSpecificModel().getCheckingModelCount(); componentCounter++) {
+	for (int componentCounter = 0; componentCounter < model.getCheckingModelCount(); componentCounter++) {
 	    final Dimension d_component = checkingComponents.get(componentCounter).getComponent().getPreferredSize();
 	    width += d_component.width;
 	    height = height < d_component.height ? d_component.height : height;
@@ -64,25 +62,24 @@ public class MultipleCheckboxTreeCellRenderer2 extends JPanel implements TreeCel
 
     @Override
     public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean selected, final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
-	if(this.tree == tree){
-	    label.setOpaque(false);
-	    setOpaque(false);
+	// if(this.tree == tree){
+	label.setOpaque(false);
+	setOpaque(false);
 
-	    final TreePath path = this.tree.getPathForRow(row);
-	    /*
-	     * most of the rendering is delegated to the wrapped DefaultTreeCellRenderer, the rest depends on the TreeCheckingModel
-	     */
-	    label.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
-	    label.setToolTipText(getLabelToolTipText(path));
+	final TreePath path = tree.getPathForRow(row);
+	/*
+	 * most of the rendering is delegated to the wrapped DefaultTreeCellRenderer, the rest depends on the TreeCheckingModel
+	 */
+	label.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+	label.setToolTipText(getLabelToolTipText(path));
 
-
-	    for (int componentCounter = 0; componentCounter < this.tree.getSpecificModel().getCheckingModelCount(); componentCounter++) {
-		checkingComponents.get(componentCounter).updateComponent(path);
-		checkingComponents.get(componentCounter).getComponent().setToolTipText(getCheckingComponentToolTipText(componentCounter, path));
-	    }
-	    return this;
+	for (int componentCounter = 0; componentCounter < this.model.getCheckingModelCount(); componentCounter++) {
+	    checkingComponents.get(componentCounter).updateComponent(path);
+	    checkingComponents.get(componentCounter).getComponent().setToolTipText(getCheckingComponentToolTipText(componentCounter, path));
 	}
-	return null;
+	return this;
+	// }
+	// return null;
     }
 
     @Override
@@ -95,21 +92,12 @@ public class MultipleCheckboxTreeCellRenderer2 extends JPanel implements TreeCel
     }
 
     /**
-     * Returns tree associated with this {@link MultipleCheckboxTreeCellRenderer2}.
-     *
-     * @return
-     */
-    public MultipleCheckboxTree2 getTree() {
-	return tree;
-    }
-
-    /**
      * Override this method to provide custom components layout.
      */
     protected void initView(){
 	setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 
-	for (int modelIndex = 0; modelIndex < tree.getSpecificModel().getCheckingModelCount(); modelIndex++) {
+	for (int modelIndex = 0; modelIndex < model.getCheckingModelCount(); modelIndex++) {
 	    add(checkingComponents.get(modelIndex).getComponent());
 	}
 	add(label);
@@ -152,4 +140,31 @@ public class MultipleCheckboxTreeCellRenderer2 extends JPanel implements TreeCel
 	return null;
     }
 
+    /**
+     * Set specified {@link ITreeCheckingModelComponent} visible property to specified one.
+     *
+     * @param index
+     * @param visible
+     */
+    protected void setCheckingComponentVisible(final int index, final boolean visible) {
+	final ITreeCheckingModelComponent2 checkingComponent = checkingComponents.get(index);
+	if (checkingComponent.getComponent().isVisible() != visible) {
+	    checkingComponent.getComponent().setVisible(visible);
+	}
+    }
+
+    /**
+     * Set the checking components visible property to specified one.
+     *
+     * @param visible
+     */
+    protected void setCheckingComponentVisible(final boolean visible) {
+	for (int componentIndex = 0; componentIndex < model.getCheckingModelCount(); componentIndex++) {
+	    setCheckingComponentVisible(componentIndex, visible);
+	}
+    }
+
+    public MultipleCheckboxTreeModel2 getModel() {
+	return model;
+    }
 }
