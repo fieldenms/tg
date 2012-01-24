@@ -10,7 +10,7 @@ import ua.com.fielden.platform.expression.exception.UnwantedTokenException;
 /**
  * The expression language grammar parser, which constructs an AST as it parses the expression.
  *
- * The main method is {@link #parse()} that either return a root node of the constructed AST or throws {@link RecognitionException}.
+ * The main method is {@link #parse()} that either returns a root node of the constructed AST or throws {@link RecognitionException}.
  * <p>
  * Here is a usage example:
  *

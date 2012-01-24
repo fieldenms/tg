@@ -111,14 +111,14 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 1 operand, found " + node.getChildren().size(), node.getToken());
 	}
 	// ensure that type of the operand is determined
-	final Class<?> type = node.getChildren().get(0).getType();
-	if (type == null) {
+	final Class<?> operandType = node.getChildren().get(0).getType();
+	if (operandType == null) {
 	    throw new TypeCompatibilityException("Operand " + node.getChildren().get(0) + " is missing type.", node.getChildren().get(0).getToken());
 	}
 
 	// validate operand type
-	if (!Money.class.isAssignableFrom(type) && !BigDecimal.class.isAssignableFrom(type) && !Integer.class.isAssignableFrom(type)) {
-	    throw new UnsupportedTypeException("Operand type " + type.getName() + " is not supported.", node.getToken());
+	if (!Money.class.isAssignableFrom(operandType) && !BigDecimal.class.isAssignableFrom(operandType) && !Integer.class.isAssignableFrom(operandType)) {
+	    throw new UnsupportedTypeException("Operand type " + operandType.getName() + " is not supported.", node.getToken());
 	}
 	// check whether operand is a constant value
 	if (node.getChildren().get(0).getValue() != null) {
@@ -126,17 +126,17 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	}
 	// determine resulting type
 	if (EgTokenCategory.AVG == cat) {
-	    if (Money.class.isAssignableFrom(type)) {
+	    if (Money.class.isAssignableFrom(operandType)) {
 		node.setType(Money.class);
 	    } else {
 		node.setType(BigDecimal.class);
 	    }
 	} else if (EgTokenCategory.SUM == cat) {
-	    if (Money.class.isAssignableFrom(type)) {
+	    if (Money.class.isAssignableFrom(operandType)) {
 		node.setType(Money.class);
-	    } else if (BigDecimal.class.isAssignableFrom(type)) {
+	    } else if (BigDecimal.class.isAssignableFrom(operandType)) {
 		node.setType(BigDecimal.class);
-	    } else if (Integer.class.isAssignableFrom(type)) {
+	    } else if (Integer.class.isAssignableFrom(operandType)) {
 		node.setType(Integer.class);
 	    }
 	}
@@ -144,23 +144,40 @@ public class TypeEnforcementVisitor implements IAstVisitor {
     }
 
     /**
-     * Validates correctness of the operand for the COUNT aggregation function and determines the type of the node.
+     * Validates correctness of the operand for the MIN, MAX aggregation functions and determines the type of the node.
      *
      * @param node
      * @throws SemanticException
      */
     private void processMinMax(final AstNode node) throws SemanticException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
-	if (node.getChildren().size() != 1) {
-	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 1 operands, found " + node.getChildren().size(), node.getToken());
-	}
 	// ensure that type of the operand is determined
-	final Class<?> type = node.getChildren().get(0).getType();
-	if (type == null) {
+	final Class<?> operandType = node.getChildren().get(0).getType();
+	if (operandType == null) {
 	    throw new TypeCompatibilityException("Operand " + node.getChildren().get(0) + " is missing type.", node.getChildren().get(0).getToken());
 	}
-	// set the node type
-	node.setType(Integer.class);
+
+	// validate operand type
+	if (!Money.class.isAssignableFrom(operandType) && !BigDecimal.class.isAssignableFrom(operandType) && !Integer.class.isAssignableFrom(operandType)
+		&& !Date.class.isAssignableFrom(operandType) && !String.class.isAssignableFrom(operandType)) {
+	    throw new UnsupportedTypeException("Operand type " + operandType.getName() + " is not supported.", node.getToken());
+	}
+	// check whether operand is a constant value
+	if (node.getChildren().get(0).getValue() != null) {
+	    throw new TypeCompatibilityException("Constant value is not applicable to aggregation functions.", node.getChildren().get(0).getToken());
+	}
+	// resulting type should be compatible or match the operand type
+	if (Money.class.isAssignableFrom(operandType)) {
+	    node.setType(Money.class);
+	} else if (BigDecimal.class.isAssignableFrom(operandType)) {
+	    node.setType(BigDecimal.class);
+	} else if (Integer.class.isAssignableFrom(operandType)) {
+	    node.setType(Integer.class);
+	} else if (Date.class.isAssignableFrom(operandType)) {
+	    node.setType(Date.class);
+	} else {
+	    node.setType(operandType);
+	}
     }
 
     /**
@@ -378,7 +395,8 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    }
 	case MINUS:
 	    if (isDate(leftOperandType) || isDate(rightOperandType)) {
-		throw new UnsupportedTypeException("Operands of date type are not applicable to operation " + cat + ".\nPlease consider using " + EgTokenCategory.DAY_DIFF + " function.", node.getToken());
+		throw new UnsupportedTypeException("Operands of date type are not applicable to operation " + cat + ".\nPlease consider using " + EgTokenCategory.DAY_DIFF
+			+ " function.", node.getToken());
 	    }
 	    if (String.class.isAssignableFrom(leftOperandType)) {
 		throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, node.getToken());
