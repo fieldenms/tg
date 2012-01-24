@@ -10,8 +10,10 @@ import ua.com.fielden.platform.expression.lexer.date_constant.DateConstantTokenA
 import ua.com.fielden.platform.expression.lexer.decimal.DecimalTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.div.DivTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.avg.AvgTokenAutomata;
-import ua.com.fielden.platform.expression.lexer.function.max.MaxTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.count.CountTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.day.DayTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.min.MinTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.month.MonthTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.sum.SumTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.integer.IntegerTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.lparen.LparenTokenAutomata;
@@ -37,7 +39,10 @@ public class ExpressionLexer {
     private static final BaseNonDeterministicAutomata[] tokenLexers = {//
 	new LparenTokenAutomata(), new RparenTokenAutomata(), new CommaTokenAutomata(), //
 	new PlusTokenAutomata(), new MinusTokenAutomata(), new MultTokenAutomata(), new DivTokenAutomata(), //
-	new AvgTokenAutomata(), new SumTokenAutomata(), new MinTokenAutomata(), new MaxTokenAutomata(),//
+	///////////////////// functions ////////////////////
+	new AvgTokenAutomata(), new SumTokenAutomata(), new MinTokenAutomata(), //
+	new CountTokenAutomata(), new DayTokenAutomata(), new MonthTokenAutomata(), //
+	////////////////////////////////////////////////////
 	new NameTokenAutomata(),//
 	new StringTokenAutomata(),//
 	new DateConstantTokenAutomata(), new DecimalTokenAutomata(), new IntegerTokenAutomata()};
