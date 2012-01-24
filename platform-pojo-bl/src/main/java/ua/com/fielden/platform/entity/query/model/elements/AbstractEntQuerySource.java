@@ -175,4 +175,14 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    return implicitId ? 2000 : propPart.length();
 	}
     }
+
+    @Override
+    public Class parentType() {
+	return getType();
+    }
+
+    @Override
+    public Class propType(final String propSimpleName) {
+	return Finder.findFieldByName(getType(), propSimpleName).getType();
+    }
 }

@@ -33,6 +33,11 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
     }
 
     @Override
+    Pair<Boolean, Class> lookForPropInEntAggregatesType(final Class parentType, final String dotNotatedPropName) {
+	throw new RuntimeException("Should not be invoked from here!");
+    }
+
+    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
@@ -68,10 +73,5 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    Pair<Boolean, Class> lookForPropInEntAggregatesType(final Class parentType, final String dotNotatedPropName) {
-	throw new RuntimeException("Should not be invoked from here!");
     }
 }

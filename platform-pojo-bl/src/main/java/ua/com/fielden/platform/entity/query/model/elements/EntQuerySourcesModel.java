@@ -3,6 +3,8 @@ package ua.com.fielden.platform.entity.query.model.elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.utils.Pair;
+
 
 public class EntQuerySourcesModel {
     private final IEntQuerySource main;
@@ -27,6 +29,15 @@ public class EntQuerySourcesModel {
 	result.add(main);
 	for (final EntQueryCompoundSourceModel compound : compounds) {
 	    result.add(compound.getSource());
+	}
+	return result;
+    }
+
+    public List<Pair<IEntQuerySource, Boolean>> getAllSourcesWithJoinType() {
+	final List<Pair<IEntQuerySource, Boolean>> result = new ArrayList<Pair<IEntQuerySource, Boolean>>();
+	result.add(new Pair<IEntQuerySource, Boolean>(main, false));
+	for (final EntQueryCompoundSourceModel compound : compounds) {
+	    result.add(new Pair<IEntQuerySource, Boolean>(compound.getSource(), compound.getJoinType() == JoinType.LJ));
 	}
 	return result;
     }

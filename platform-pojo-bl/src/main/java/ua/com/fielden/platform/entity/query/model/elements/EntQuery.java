@@ -18,6 +18,8 @@ import ua.com.fielden.platform.entity.query.model.elements.AbstractEntQuerySourc
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
+
+    private final EntQuerySourcesEnhancer entQrySourcesEnhancer = new EntQuerySourcesEnhancer();
     private final EntQuerySourcesModel sources;
     private final ConditionsModel conditions;
     private final YieldsModel yields;
@@ -25,7 +27,6 @@ public class EntQuery implements ISingleOperand {
     private final Class resultType;
     private EntQuery master;
     // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
-    //  private final List<Pair<EntQuery, String>> unresolvedPropNames;
     private final List<Pair<EntQuery, EntProp>> unresolvedProps;
 
     // modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for unresolved only
@@ -71,14 +72,18 @@ public class EntQuery implements ISingleOperand {
 
 	unresolvedProps = resolveProps(unresolvedPropsFromSubqueries);
 
-	if (!sources.getMain().getType().equals(EntityAggregates.class)) {
-	    final EntQuerySourcesEnhancer eqse = new EntQuerySourcesEnhancer();
-	    final Set<PropTree> propTrees = eqse.doS(sources.getMain().getType(), sources.getMain().getAlias(), false, extractNames(sources.getMain().getReferencingProps(), sources.getMain().getAlias()));
-	    for (final PropTree propTree : propTrees) {
-		sources.getCompounds().addAll(propTree.getSourceModels());
-	    }
-
+	for (final Pair<IEntQuerySource, Boolean> sourceWithJoinType : sources.getAllSourcesWithJoinType()) {
+	    sources.getCompounds().addAll(generateImplicitSources(sourceWithJoinType.getKey(), sourceWithJoinType.getValue()));
 	}
+    }
+
+    private List<EntQueryCompoundSourceModel> generateImplicitSources(final IEntQuerySource source, final boolean leftJoined) {
+	final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
+	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, source.getAlias(), leftJoined, extractNames(source.getReferencingProps(), source.getAlias()));
+	for (final PropTree propTree : propTrees) {
+	    result.addAll(propTree.getSourceModels());
+	}
+	return result;
     }
 
     private List<Pair<EntQuery, EntProp>> resolveProps(final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries) {
@@ -120,23 +125,18 @@ public class EntQuery implements ISingleOperand {
     private Pair<EntQuery, EntProp> performPropResolveAction(final EntQuery holder, final EntProp prop) {
 	final Map<IEntQuerySource, PropResolutionInfo> result = new HashMap<IEntQuerySource, PropResolutionInfo>();
 
-//	System.out.println("LOOKING FOR PROP: " + prop.getName());
-//	System.out.println(" result BEGIN: ");
 	for (final IEntQuerySource source : sources.getAllSources()) {
 	    final Pair<Boolean, PropResolutionInfo> hasProp = source.containsProperty(prop);
 	    if (hasProp.getKey()) {
 		result.put(source, hasProp.getValue());
-//		System.out.println("source: " + source + " propResolution: " + hasProp.getValue());
 	    }
 	}
-//	System.out.println(" result END: ");
 
 	if (result.size() == 0) {
 	    return new Pair<EntQuery, EntProp>(holder, prop);
 	} else if (result.size() == 1) {
 	    prop.setPropType(result.values().iterator().next().getPropType());
 	    result.keySet().iterator().next().addReferencingProp(prop);
-	    //System.out.println("=== setting " + prop.getName() + " to type " + result.values().iterator().next().propType);
 	    return null;
 	} else {
 	    final SortedSet<Integer> preferenceNumbers = new TreeSet<Integer>();

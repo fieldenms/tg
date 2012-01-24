@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.model.elements.AbstractEntQuerySourc
 import ua.com.fielden.platform.utils.Pair;
 
 
-public interface IEntQuerySource {
+public interface IEntQuerySource extends IEntQuerySourceDataProvider {
     String getAlias();
     Class getType();
     Pair<Boolean, PropResolutionInfo> containsProperty(EntProp prop);
