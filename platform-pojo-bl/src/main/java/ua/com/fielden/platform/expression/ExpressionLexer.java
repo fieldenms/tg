@@ -15,6 +15,7 @@ import ua.com.fielden.platform.expression.lexer.function.day.DayTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.min.MinTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.month.MonthTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.sum.SumTokenAutomata;
+import ua.com.fielden.platform.expression.lexer.function.upper.UpperTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.function.year.YearTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.integer.IntegerTokenAutomata;
 import ua.com.fielden.platform.expression.lexer.lparen.LparenTokenAutomata;
@@ -43,6 +44,7 @@ public class ExpressionLexer {
 	///////////////////// functions ////////////////////
 	new AvgTokenAutomata(), new SumTokenAutomata(), new MinTokenAutomata(), //
 	new CountTokenAutomata(), new DayTokenAutomata(), new MonthTokenAutomata(), new YearTokenAutomata(), //
+	new UpperTokenAutomata(), //
 	////////////////////////////////////////////////////
 	new NameTokenAutomata(),//
 	new StringTokenAutomata(),//
