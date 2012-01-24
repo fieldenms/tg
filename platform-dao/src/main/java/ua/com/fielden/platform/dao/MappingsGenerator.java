@@ -25,6 +25,7 @@ import ua.com.fielden.platform.persistence.DdlGenerator;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Injector;
 
@@ -200,15 +201,6 @@ public class MappingsGenerator {
 	return sb.toString();
     }
 
-    /**
-     * Checks whether the given entity type is mapped to database.
-     * @param entityType
-     * @return
-     */
-    private boolean isPersisted(final Class entityType) {
-	return AbstractEntity.class.isAssignableFrom(entityType) && AnnotationReflector.getAnnotation(MapEntityTo.class, entityType) != null;
-    }
-
     private boolean isOneToOne(final Class entityType) {
 	return AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(entityType));
     }
@@ -257,7 +249,7 @@ public class MappingsGenerator {
 
 		    if (Collection.class.isAssignableFrom(field.getType())) {
 			sb.append(getSet(field.getName(), columnName, PropertyTypeDeterminator.determinePropertyType(entityType, field.getName())));
-		    } else if (isPersisted(field.getType())) {
+		    } else if (EntityUtils.isPersistedEntityType(field.getType())) {
 			sb.append(getManyToOneProperty(field.getName(), columnName, field.getType()));
 		    } else if (!StringUtils.isEmpty(mapTo.typeName())) {
 			sb.append(getPlainProperty(field.getName(), columnName, mapTo.typeName()));

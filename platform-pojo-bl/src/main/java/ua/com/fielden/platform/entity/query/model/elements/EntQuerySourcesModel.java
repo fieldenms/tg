@@ -34,7 +34,9 @@ public class EntQuerySourcesModel {
     public List<List<EntProp>> getSourcesReferencingProps() {
 	final List<List<EntProp>> result = new ArrayList<List<EntProp>>();
 	for (final IEntQuerySource source : getAllSources()) {
-	    result.add(source.getReferencingProps());
+	    if (!source.generated()) {
+		result.add(source.getReferencingProps());
+	    }
 	}
 
 	return result;

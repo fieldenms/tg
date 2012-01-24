@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,6 +15,11 @@ public class ConditionsModel implements IPropertyCollector {
     public ConditionsModel(final ICondition firstCondition, final List<CompoundConditionModel> otherConditions) {
 	this.firstCondition = firstCondition;
 	this.otherConditions = otherConditions;
+    }
+
+    public ConditionsModel(final ICondition firstCondition) {
+	this.firstCondition = firstCondition;
+	this.otherConditions = Collections.emptyList();
     }
 
     @Override

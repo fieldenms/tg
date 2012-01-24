@@ -8,15 +8,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.equery.IQueryModelProvider;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 abstract class AbstractEntQuerySource implements IEntQuerySource {
     private final String alias; // can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end
     private final List<EntProp> referencingProps = new ArrayList<EntProp>();
-
-    protected boolean isRealEntity(final Class type) {
-	return AbstractEntity.class.isAssignableFrom(type) && !EntityAggregates.class.isAssignableFrom(type) && !IQueryModelProvider.class.isAssignableFrom(type);
-    }
 
     protected boolean isEntityAggregates(final Class type) {
 	return EntityAggregates.class.isAssignableFrom(type);
@@ -55,15 +52,6 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 	return (sourceAlias == null || !dotNotatedPropName.startsWith(sourceAlias + ".")) ? dotNotatedPropName : dotNotatedPropName.substring(sourceAlias.length() + 1);
     }
 
-    protected Pair<String, String> splitPropByFirstDot(final String dotNotatedPropName) {
-	final int firstDotIndex = dotNotatedPropName.indexOf(".");
-	if (firstDotIndex != -1) {
-	    return new Pair<String, String>(dotNotatedPropName.substring(0, firstDotIndex), dotNotatedPropName.substring(firstDotIndex + 1));
-	} else {
-	    return new Pair<String, String>(dotNotatedPropName, null);
-	}
-    }
-
     protected Pair<Boolean, Class> lookForPropInRealPropType(final Class parentType, final String dotNotatedPropName) {
 //	System.out.println("  lookingRE for [" + dotNotatedPropName + "]  in type " + parentType.getSimpleName());
 	try {
@@ -78,7 +66,7 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     protected Pair<Boolean, Class> lookForProp(final Class type, final String dotNotatedPropName) {
 //	System.out.println("--looking for prop [" + dotNotatedPropName + "] in type " + type.getSimpleName());
-	if (isRealEntity(type)) {
+	if (EntityUtils.isPersistedEntityType(type)) {
 	    return lookForPropInRealPropType(type, dotNotatedPropName);
 	} else if (isEntityAggregates(type)) {
 	    return lookForPropInEntAggregatesType(type, dotNotatedPropName);
@@ -100,7 +88,7 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
     }
 
     protected PropResolutionInfo propAsImplicitId(final String propName) {
-	if (isRealEntity(getType())) {
+	if (EntityUtils.isPersistedEntityType(getType())) {
 	    return propName.equalsIgnoreCase(getAlias()) ? new PropResolutionInfo(getAlias(), null, true, Long.class) : null; // id property is meant here, but is it for all contexts?
 	} else {
 	    return null;
@@ -150,10 +138,10 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
     }
 
     class PropResolutionInfo {
-	String aliasPart;
-	String propPart;
-	boolean implicitId;
-	Class propType;
+	private String aliasPart;
+	private String propPart;
+	private boolean implicitId;
+	private Class propType;
 
 	@Override
 	public String toString() {

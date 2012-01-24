@@ -12,4 +12,5 @@ public interface IEntQuerySource {
     Pair<Boolean, PropResolutionInfo> containsProperty(EntProp prop);
     void addReferencingProp(EntProp prop);
     List<EntProp> getReferencingProps();
+    boolean generated();
 }

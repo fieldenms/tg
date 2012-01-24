@@ -16,8 +16,11 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
@@ -459,10 +462,6 @@ public class EntityUtils {
 	}
     }
 
-    public static void main(final String[] args) {
-	System.out.println(new BigDecimal("0.236"));
-    }
-
     /**
      * Indicates whether type represents enumeration.
      *
@@ -519,6 +518,15 @@ public class EntityUtils {
      */
     public static boolean isEntityType(final Class<?> type) {
         return AbstractEntity.class.isAssignableFrom(type);
+    }
+
+    /**
+     * Indicates that given entity type is mapped to database.
+     *
+     * @return
+     */
+    public static boolean isPersistedEntityType(final Class<?> type) {
+	return isEntityType(type) && AnnotationReflector.getAnnotation(MapEntityTo.class, type) != null;
     }
 
     /**
@@ -640,5 +648,33 @@ public class EntityUtils {
 	}
 	instance.setDirty(false);
 	return instance;
+    }
+
+    /**
+     * Splits dot.notated property in two parts: fist level property and the rest of subproperties.
+     * @param dotNotatedPropName
+     * @return
+     */
+    public static Pair<String, String> splitPropByFirstDot(final String dotNotatedPropName) {
+	final int firstDotIndex = dotNotatedPropName.indexOf(".");
+	if (firstDotIndex != -1) {
+	    return new Pair<String, String>(dotNotatedPropName.substring(0, firstDotIndex), dotNotatedPropName.substring(firstDotIndex + 1));
+	} else {
+	    return new Pair<String, String>(dotNotatedPropName, null);
+	}
+    }
+
+    public static boolean isPropertyPartOfKey(final Class entityType, final String firstLevelPropName) {
+	if (firstLevelPropName.contains(".")) {
+	    throw new IllegalArgumentException("First level prop name expected, but was [" + firstLevelPropName + "]");
+	}
+	return Finder.getFieldNames(Finder.getKeyMembers(entityType)).contains(firstLevelPropName);
+    }
+
+    public static boolean isPropertyRequired(final Class entityType, final String firstLevelPropName) {
+	if (firstLevelPropName.contains(".")) {
+	    throw new IllegalArgumentException("First level prop name expected, but was [" + firstLevelPropName + "]");
+	}
+	return Finder.getFieldNames(Finder.findProperties(entityType, Required.class)).contains(firstLevelPropName);
     }
 }

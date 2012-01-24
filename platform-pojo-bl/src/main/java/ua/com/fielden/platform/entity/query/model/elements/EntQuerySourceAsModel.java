@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.model.elements;
 import java.util.Arrays;
 import java.util.List;
 
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuerySourceAsModel extends AbstractEntQuerySource {
@@ -19,9 +20,14 @@ public class EntQuerySourceAsModel extends AbstractEntQuerySource {
     }
 
     @Override
+    public boolean generated() {
+	return false;
+    }
+
+    @Override
     protected Pair<Boolean, Class> lookForPropInEntAggregatesType(final Class parentType, final String dotNotatedPropName) {
 //	System.out.println("  lookingEA for [" + dotNotatedPropName + "]  in type " + parentType.getSimpleName());
-	final Pair<String, String> splitByDot = splitPropByFirstDot(dotNotatedPropName);
+	final Pair<String, String> splitByDot = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
 	final String first = splitByDot.getKey();
 	final String rest = splitByDot.getValue();
 //	System.out.println("first = " + first + "; rest = " + rest);

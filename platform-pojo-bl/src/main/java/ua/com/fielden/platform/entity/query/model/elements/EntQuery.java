@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -69,6 +70,15 @@ public class EntQuery implements ISingleOperand {
 	}
 
 	unresolvedProps = resolveProps(unresolvedPropsFromSubqueries);
+
+	if (!sources.getMain().getType().equals(EntityAggregates.class)) {
+	    final EntQuerySourcesEnhancer eqse = new EntQuerySourcesEnhancer();
+	    final Set<PropTree> propTrees = eqse.doS(sources.getMain().getType(), sources.getMain().getAlias(), false, extractNames(sources.getMain().getReferencingProps(), sources.getMain().getAlias()));
+	    for (final PropTree propTree : propTrees) {
+		sources.getCompounds().addAll(propTree.getSourceModels());
+	    }
+
+	}
     }
 
     private List<Pair<EntQuery, EntProp>> resolveProps(final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries) {
@@ -90,6 +100,14 @@ public class EntQuery implements ISingleOperand {
 	}
 
 	return unresolvedProps;
+    }
+
+    private Set<String> extractNames(final List<EntProp> props, final String sourceAlias) {
+	final Set<String> result = new HashSet<String>();
+	for (final EntProp prop : props) {
+	    result.add(sourceAlias != null && prop.getName().startsWith(sourceAlias + ".") ? prop.getName().substring(sourceAlias.length() + 1) : prop.getName());
+	}
+	return result;
     }
 
     /**
@@ -116,7 +134,7 @@ public class EntQuery implements ISingleOperand {
 	if (result.size() == 0) {
 	    return new Pair<EntQuery, EntProp>(holder, prop);
 	} else if (result.size() == 1) {
-	    prop.setPropType(result.values().iterator().next().propType);
+	    prop.setPropType(result.values().iterator().next().getPropType());
 	    result.keySet().iterator().next().addReferencingProp(prop);
 	    //System.out.println("=== setting " + prop.getName() + " to type " + result.values().iterator().next().propType);
 	    return null;
@@ -137,14 +155,14 @@ public class EntQuery implements ISingleOperand {
 	    final List<IEntQuerySource> preferedSourceList = sourcesPreferences.get(preferenceResult);
 	    if (preferedSourceList.size() == 1) {
 		sourcesPreferences.get(preferenceResult).get(0).addReferencingProp(prop);
-		prop.setPropType(result.get(sourcesPreferences.get(preferenceResult).get(0)).propType);
+		prop.setPropType(result.get(sourcesPreferences.get(preferenceResult).get(0)).getPropType());
 		return null;
 	    } else {
 		int notAliasedSourcesCount = 0;
 		for (final IEntQuerySource qrySource : preferedSourceList) {
-		    if (result.get(qrySource).aliasPart == null) {
+		    if (result.get(qrySource).getAliasPart() == null) {
 			qrySource.addReferencingProp(prop);
-			prop.setPropType(result.get(qrySource).propType);
+			prop.setPropType(result.get(qrySource).getPropType());
 			notAliasedSourcesCount = notAliasedSourcesCount + 1;
 		    }
 		}
@@ -155,6 +173,106 @@ public class EntQuery implements ISingleOperand {
 
 		throw new IllegalStateException("Ambiguous property: " + prop.getName());
 	    }
+	}
+    }
+
+    public static class PropTree {
+	boolean leftJoin;
+	String parentName;
+	String parentFullName;
+	Class parentType;
+	Set<PropTree> subprops;
+
+	public PropTree(final String parentName, final String parentFullName, final Class parentType, final boolean leftJoin, final Set<PropTree> subprops) {
+	    this.parentName = parentName;
+	    this.parentFullName = parentFullName;
+	    this.parentType = parentType;
+	    this.subprops = subprops;
+	    this.leftJoin = leftJoin;
+	}
+
+	private ConditionsModel joinCondition(final String leftProp, final String rightProp) {
+	    return new ConditionsModel(new ComparisonTestModel(new EntProp(leftProp), ComparisonOperator.EQ, new EntProp(rightProp)));
+	}
+
+	private IEntQuerySource querySource(final Class entityType, final String sourceAlias) {
+	    return new EntQuerySourceAsEntity(entityType, sourceAlias, true);
+	}
+
+	private JoinType joinType(final boolean leftJoin) {
+	    return leftJoin ? JoinType.LJ : JoinType.IJ;
+	}
+
+	public List<EntQueryCompoundSourceModel> getSourceModels() {
+	    final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
+	    result.add(new EntQueryCompoundSourceModel(querySource(parentType, parentFullName), joinType(leftJoin), joinCondition(parentFullName, parentFullName + ".id")));
+	    for (final PropTree subPropTree : subprops) {
+		result.addAll(subPropTree.getSourceModels());
+	    }
+	    return result;
+	}
+
+	@Override
+	public String toString() {
+	    return parentName + " _ " + parentFullName + " _ " + parentType.getSimpleName() + " _ " + subprops + " _ " + leftJoin;
+	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = 1;
+	    result = prime * result + (leftJoin ? 1231 : 1237);
+	    result = prime * result + ((parentFullName == null) ? 0 : parentFullName.hashCode());
+	    result = prime * result + ((parentName == null) ? 0 : parentName.hashCode());
+	    result = prime * result + ((parentType == null) ? 0 : parentType.hashCode());
+	    result = prime * result + ((subprops == null) ? 0 : subprops.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj) {
+		return true;
+	    }
+	    if (obj == null) {
+		return false;
+	    }
+	    if (!(obj instanceof PropTree)) {
+		return false;
+	    }
+	    final PropTree other = (PropTree) obj;
+	    if (leftJoin != other.leftJoin) {
+		return false;
+	    }
+	    if (parentFullName == null) {
+		if (other.parentFullName != null) {
+		    return false;
+		}
+	    } else if (!parentFullName.equals(other.parentFullName)) {
+		return false;
+	    }
+	    if (parentName == null) {
+		if (other.parentName != null) {
+		    return false;
+		}
+	    } else if (!parentName.equals(other.parentName)) {
+		return false;
+	    }
+	    if (parentType == null) {
+		if (other.parentType != null) {
+		    return false;
+		}
+	    } else if (!parentType.equals(other.parentType)) {
+		return false;
+	    }
+	    if (subprops == null) {
+		if (other.subprops != null) {
+		    return false;
+		}
+	    } else if (!subprops.equals(other.subprops)) {
+		return false;
+	    }
+	    return true;
 	}
     }
 

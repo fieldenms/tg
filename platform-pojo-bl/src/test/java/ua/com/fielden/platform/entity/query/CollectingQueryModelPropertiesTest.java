@@ -21,11 +21,15 @@ public class CollectingQueryModelPropertiesTest extends BaseEntQueryTCase {
 	groupBy().prop("eqClass.desc").
 	yield().beginExpr().prop("volume").add().prop("weight").endExpr().as("calc").modelAsAggregate();
 	final List<EntProp> exp = new ArrayList<EntProp>();
+	// TODO needed to add these as generated properties are currently taken into account in getImmediateProps method
+	exp.add(prop("model"));
+	exp.add(prop("model.id"));
+
 	exp.add(prop("model.desc"));
 	exp.add(prop("eqClass.desc"));
 	exp.add(prop("volume"));
 	exp.add(prop("weight"));
-	System.out.println(qb.generateEntQuery(qry).getImmediateProps());
+
 	assertEquals("models are different", exp, qb.generateEntQuery(qry).getImmediateProps());
     }
 

@@ -5,10 +5,21 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
     private final Class<? extends AbstractEntity> entityType;
+    private final boolean generated;
 
     public EntQuerySourceAsEntity(final Class<? extends AbstractEntity> entityType, final String alias) {
+    	this(entityType, alias, false);
+    }
+
+    public EntQuerySourceAsEntity(final Class<? extends AbstractEntity> entityType, final String alias, final boolean generated) {
 	super(alias);
 	this.entityType = entityType;
+	this.generated = generated;
+    }
+
+    @Override
+    public boolean generated() {
+	return generated;
     }
 
     @Override

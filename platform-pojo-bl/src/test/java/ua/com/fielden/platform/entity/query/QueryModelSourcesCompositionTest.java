@@ -88,7 +88,6 @@ public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
 	assertEquals("models are different", exp, qb.generateEntQuery(qry).getSources());
     }
 
-
     @Test
     public void test_query_with_derived_sources2() {
 	final AggregatedResultQueryModel sourceQry = query.select(TgVehicle.class).as("v").where().prop("v.model").isNotNull().
