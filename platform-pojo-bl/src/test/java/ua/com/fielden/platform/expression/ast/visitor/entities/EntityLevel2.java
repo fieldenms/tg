@@ -14,7 +14,20 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class EntityLevel2 extends AbstractEntity<String> {
 
     @IsProperty
-    private Integer intProperty;
+    @MapTo
+    @Title(value = "String Property", desc = "Property to test string functions in expression language")
+    private String strProperty;
+
+    @Observable
+    public EntityLevel2 setStrProperty(final String strProperty) {
+	this.strProperty = strProperty;
+	return this;
+    }
+
+    public String getStrProperty() {
+	return strProperty;
+    }
+
 
     @IsProperty
     @MapTo
@@ -31,6 +44,8 @@ public class EntityLevel2 extends AbstractEntity<String> {
 	return dateProperty;
     }
 
+    @IsProperty
+    private Integer intProperty;
 
     @IsProperty(EntityLevel3.class)
     private List<EntityLevel3> collectional;

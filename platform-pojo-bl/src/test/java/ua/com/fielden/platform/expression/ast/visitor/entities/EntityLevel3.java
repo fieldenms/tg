@@ -14,6 +14,21 @@ import ua.com.fielden.platform.types.Money;
 public class EntityLevel3 extends AbstractEntity<String> {
 
     @IsProperty
+    @MapTo
+    @Title(value = "String Property", desc = "Property to test string functions in expression language.")
+    private String strProperty;
+
+    @Observable
+    public EntityLevel3 setStrProperty(final String strProperty) {
+	this.strProperty = strProperty;
+	return this;
+    }
+
+    public String getStrProperty() {
+	return strProperty;
+    }
+
+    @IsProperty
     private Money moneyProperty;
 
     public Money getMoneyProperty() {
