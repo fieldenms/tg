@@ -152,7 +152,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
     public void test_case_12() throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "collectional.intProperty");
 	try {
-	    final AstNode root = ev.convert();
+	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
 	    assertEquals("Incorrect message", "Incompatible expression context (collectional).", ex.getMessage());
@@ -163,7 +163,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
     public void test_case_13() throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "collectional.collectional.moneyProperty");
 	try {
-	    final AstNode root = ev.convert();
+	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
 	    assertEquals("Incorrect message", "Incompatible expression context (collectional.collectional).", ex.getMessage());
@@ -186,7 +186,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
     public void test_case_15() throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(entityProperty.collectional.moneyProperty + moneyProperty) + SUM(collectional.intProperty)");
 	try {
-	    final AstNode root = ev.convert();
+	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
 	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());

@@ -1,17 +1,36 @@
 package ua.com.fielden.platform.expression.ast.visitor.entities;
 
+import java.util.Date;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(String.class)
 public class EntityLevel2 extends AbstractEntity<String> {
 
     @IsProperty
     private Integer intProperty;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Date Property", desc = "Property to test date functions in expression language.")
+    private Date dateProperty;
+
+    @Observable
+    public EntityLevel2 setDateProperty(final Date dateProperty) {
+	this.dateProperty = dateProperty;
+	return this;
+    }
+
+    public Date getDateProperty() {
+	return dateProperty;
+    }
+
 
     @IsProperty(EntityLevel3.class)
     private List<EntityLevel3> collectional;
