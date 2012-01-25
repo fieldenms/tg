@@ -19,7 +19,7 @@ import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
  * @author TG Team
  *
  */
-public class ExpressionTextToModelConverter {
+public class ExpressionText2ModelConverter {
     private final String text;
     private final Class<? extends AbstractEntity> context;
 
@@ -29,7 +29,7 @@ public class ExpressionTextToModelConverter {
      * @param context -- an entity type serving as an expression contexts; this usually means an new calculated property is going to be added to this type.
      * @param expressionText -- a textual representations of the expression, which gets parsed and validated.
      */
-    public ExpressionTextToModelConverter(final Class<? extends AbstractEntity> context, final String expressionText) {
+    public ExpressionText2ModelConverter(final Class<? extends AbstractEntity> context, final String expressionText) {
 	this.context = context;
 	this.text = expressionText;
     }

@@ -22,7 +22,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_01() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "(COUNT(collectional.intProperty) + intProperty + decimalProperty + moneyProperty) * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(COUNT(collectional.intProperty) + intProperty + decimalProperty + moneyProperty) * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -36,7 +36,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_02() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "(COUNT(collectional.intProperty) + intProperty) * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(COUNT(collectional.intProperty) + intProperty) * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -48,7 +48,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_03() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "(COUNT(collectional.intProperty) + intProperty) * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(COUNT(collectional.intProperty) + intProperty) * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -60,7 +60,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_04() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "intProperty * intProperty / COUNT(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "intProperty * intProperty / COUNT(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -72,7 +72,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_05() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "intProperty * intProperty / (COUNT(collectional.intProperty) * intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "intProperty * intProperty / (COUNT(collectional.intProperty) * intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -86,7 +86,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_06() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "entityProperty.intProperty * intProperty / (COUNT(collectional.intProperty) * intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "entityProperty.intProperty * intProperty / (COUNT(collectional.intProperty) * intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -99,7 +99,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_07() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "entityProperty.intProperty * COUNT(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "entityProperty.intProperty * COUNT(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -110,7 +110,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_08() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "entityProperty.intProperty * COUNT(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "entityProperty.intProperty * COUNT(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -121,7 +121,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_09() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "selfProperty.intProperty - COUNT(entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "selfProperty.intProperty - COUNT(entityProperty.collectional.moneyProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -132,7 +132,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_10() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "COUNT(entityProperty.collectional.moneyProperty) + COUNT(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(entityProperty.collectional.moneyProperty) + COUNT(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -144,7 +144,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_11() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "COUNT(entityProperty.collectional.moneyProperty + moneyProperty) + SUM(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(entityProperty.collectional.moneyProperty + moneyProperty) + SUM(collectional.intProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -155,7 +155,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_12() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "COUNT(collectional.intProperty + selfProperty.collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(collectional.intProperty + selfProperty.collectional.intProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -166,7 +166,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_13() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "COUNT(selfProperty.intProperty) + COUNT(entityProperty.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(selfProperty.intProperty) + COUNT(entityProperty.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 	assertEquals("Incorrect expression tag", ABOVE, root.getTag());
@@ -179,7 +179,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_14() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "COUNT(selfProperty.collectional.intProperty) + COUNT(entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(selfProperty.collectional.intProperty) + COUNT(entityProperty.collectional.moneyProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -192,7 +192,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_15() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "COUNT(MAX(collectional.collectional.moneyProperty)) + intProperty");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(MAX(collectional.collectional.moneyProperty)) + intProperty");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -205,7 +205,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_16() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "COUNT(COUNT(collectional.collectional.moneyProperty) + collectional.intProperty) + intProperty");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(COUNT(collectional.collectional.moneyProperty) + collectional.intProperty) + intProperty");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -219,7 +219,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_17() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "COUNT(COUNT(collectional.collectional.moneyProperty) + intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(COUNT(collectional.collectional.moneyProperty) + intProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -230,7 +230,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_18() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "COUNT(SUM(collectional.collectional.moneyProperty) + collectional.intProperty) + " +
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(SUM(collectional.collectional.moneyProperty) + collectional.intProperty) + " +
 			"AVG(COUNT(selfProperty.collectional.collectional.moneyProperty))");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
@@ -247,7 +247,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_19() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(COUNT(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(COUNT(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -258,7 +258,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_20() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(COUNT(collectional.collectional.moneyProperty) + collectional.intProperty) / " +
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(COUNT(collectional.collectional.moneyProperty) + collectional.intProperty) / " +
 			"COUNT(SUM(selfProperty.collectional.collectional.moneyProperty))");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
@@ -275,7 +275,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_21() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "COUNT(COUNT(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(COUNT(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -287,7 +287,7 @@ public class ExpressionText2ModelConverter4CountTest {
     @Test
     public void test_case_22() throws RecognitionException, SemanticException {
 	final String expressionText = "COUNT(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty";
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, expressionText);
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, expressionText);
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -299,7 +299,7 @@ public class ExpressionText2ModelConverter4CountTest {
 
     @Test
     public void test_case_23() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "COUNT(SUM(collectional.collectional.moneyProperty)) + COUNT(entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(SUM(collectional.collectional.moneyProperty)) + COUNT(entityProperty.collectional.moneyProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());

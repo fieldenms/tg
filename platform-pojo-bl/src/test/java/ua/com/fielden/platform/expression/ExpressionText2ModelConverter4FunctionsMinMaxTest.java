@@ -18,11 +18,11 @@ import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperand
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.types.Money;
 
-public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
+public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 
     @Test
     public void test_case_01() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "(MAX(collectional.intProperty) + intProperty + decimalProperty + moneyProperty) * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(MAX(collectional.intProperty) + intProperty + decimalProperty + moneyProperty) * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -36,7 +36,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_02() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "(MIN(collectional.intProperty) + intProperty + decimalProperty + moneyProperty) * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(MIN(collectional.intProperty) + intProperty + decimalProperty + moneyProperty) * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -50,7 +50,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_03() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "(MAX(collectional.intProperty) + intProperty) * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(MAX(collectional.intProperty) + intProperty) * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -62,7 +62,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_04() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "(MIN(collectional.intProperty) + intProperty) * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(MIN(collectional.intProperty) + intProperty) * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -74,7 +74,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_05() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "intProperty * intProperty / MAX(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "intProperty * intProperty / MAX(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -86,7 +86,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_06() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "intProperty * intProperty / MIN(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "intProperty * intProperty / MIN(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -98,7 +98,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_07() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "intProperty * intProperty / (MAX(collectional.intProperty) * intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "intProperty * intProperty / (MAX(collectional.intProperty) * intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -111,7 +111,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_08() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "intProperty * intProperty / (MIN(collectional.intProperty) * intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "intProperty * intProperty / (MIN(collectional.intProperty) * intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -124,7 +124,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_09() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "entityProperty.intProperty * intProperty / (MAX(collectional.intProperty) * intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "entityProperty.intProperty * intProperty / (MAX(collectional.intProperty) * intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -137,7 +137,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_10() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "entityProperty.intProperty * intProperty / (MIN(collectional.intProperty) * intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "entityProperty.intProperty * intProperty / (MIN(collectional.intProperty) * intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -150,7 +150,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_11() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "entityProperty.intProperty * MAX(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "entityProperty.intProperty * MAX(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -161,7 +161,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_12() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "entityProperty.intProperty * MIN(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "entityProperty.intProperty * MIN(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -172,7 +172,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_13() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "selfProperty.intProperty - MAX(entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "selfProperty.intProperty - MAX(entityProperty.collectional.moneyProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -183,7 +183,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_14() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "selfProperty.intProperty - MIN(entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "selfProperty.intProperty - MIN(entityProperty.collectional.moneyProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -194,7 +194,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_15() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MAX(entityProperty.collectional.moneyProperty) + MIN(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MAX(entityProperty.collectional.moneyProperty) + MIN(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -206,7 +206,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_16() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(entityProperty.collectional.moneyProperty + moneyProperty) + SUM(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(entityProperty.collectional.moneyProperty + moneyProperty) + SUM(collectional.intProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -217,7 +217,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_17() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MAX(entityProperty.collectional.moneyProperty + moneyProperty) + SUM(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MAX(entityProperty.collectional.moneyProperty + moneyProperty) + SUM(collectional.intProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -228,7 +228,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_18() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(collectional.intProperty + selfProperty.collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(collectional.intProperty + selfProperty.collectional.intProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -239,7 +239,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_19() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MAX(collectional.intProperty + selfProperty.collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MAX(collectional.intProperty + selfProperty.collectional.intProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -250,7 +250,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_20() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(selfProperty.intProperty) + MAX(entityProperty.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(selfProperty.intProperty) + MAX(entityProperty.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 	assertEquals("Incorrect expression tag", ABOVE, root.getTag());
@@ -263,7 +263,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_21() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(selfProperty.collectional.intProperty) + MAX(entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(selfProperty.collectional.intProperty) + MAX(entityProperty.collectional.moneyProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -276,7 +276,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_22() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(MAX(collectional.collectional.moneyProperty)) + intProperty");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(MAX(collectional.collectional.moneyProperty)) + intProperty");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -289,7 +289,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_23() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MAX(MIN(collectional.collectional.moneyProperty) + collectional.intProperty) + intProperty");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MAX(MIN(collectional.collectional.moneyProperty) + collectional.intProperty) + intProperty");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -303,7 +303,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_24() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(MAX(collectional.collectional.moneyProperty) + intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(MAX(collectional.collectional.moneyProperty) + intProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -314,7 +314,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_25() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(SUM(collectional.collectional.moneyProperty) + collectional.intProperty) + " +
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(SUM(collectional.collectional.moneyProperty) + collectional.intProperty) + " +
 			"AVG(MAX(selfProperty.collectional.collectional.moneyProperty))");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
@@ -331,7 +331,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_26() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(MAX(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(MAX(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -342,7 +342,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_27() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(MAX(collectional.collectional.moneyProperty) + collectional.intProperty) / " +
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(MAX(collectional.collectional.moneyProperty) + collectional.intProperty) / " +
 			"AVG(SUM(selfProperty.collectional.collectional.moneyProperty))");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
@@ -359,7 +359,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_28() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "AVG(MAX(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "AVG(MAX(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -370,7 +370,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_29() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "AVG(MIN(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "AVG(MIN(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -382,7 +382,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
     @Test
     public void test_case_30() throws RecognitionException, SemanticException {
 	final String expressionText = "MIN(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty";
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, expressionText);
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, expressionText);
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -395,7 +395,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
     @Test
     public void test_case_31() throws RecognitionException, SemanticException {
 	final String expressionText = "MAX(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty";
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, expressionText);
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, expressionText);
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -407,7 +407,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_32() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MIN(SUM(collectional.collectional.moneyProperty)) + AVG(entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(SUM(collectional.collectional.moneyProperty)) + AVG(entityProperty.collectional.moneyProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -421,7 +421,7 @@ public class ExpressionTextToModelConverterForFunctionsMinMaxTest {
 
     @Test
     public void test_case_33() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "MAX(SUM(collectional.collectional.moneyProperty)) + AVG(entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MAX(SUM(collectional.collectional.moneyProperty)) + AVG(entityProperty.collectional.moneyProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());

@@ -18,11 +18,11 @@ import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperand
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.types.Money;
 
-public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
+public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_01() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "intProperty + decimalProperty + moneyProperty * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "intProperty + decimalProperty + moneyProperty * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -32,7 +32,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_02() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "(intProperty + decimalProperty + moneyProperty) * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(intProperty + decimalProperty + moneyProperty) * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -42,7 +42,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_03() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "(selfProperty.moneyProperty + intProperty + decimalProperty + moneyProperty) * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(selfProperty.moneyProperty + intProperty + decimalProperty + moneyProperty) * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -53,7 +53,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_04() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "(SUM(collectional.intProperty) + intProperty + decimalProperty + moneyProperty) * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(SUM(collectional.intProperty) + intProperty + decimalProperty + moneyProperty) * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -67,7 +67,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_05() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "(SUM(collectional.intProperty) + intProperty) * 2");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(SUM(collectional.intProperty) + intProperty) * 2");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -79,7 +79,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_06() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "intProperty * intProperty / SUM(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "intProperty * intProperty / SUM(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -91,7 +91,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_07() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "intProperty * intProperty / (SUM(collectional.intProperty) * intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "intProperty * intProperty / (SUM(collectional.intProperty) * intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -104,7 +104,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_08() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "entityProperty.intProperty * intProperty / (SUM(collectional.intProperty) * intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "entityProperty.intProperty * intProperty / (SUM(collectional.intProperty) * intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 
@@ -118,7 +118,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_09() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "entityProperty.intProperty * intProperty");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "entityProperty.intProperty * intProperty");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -128,7 +128,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_10() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "entityProperty.intProperty * SUM(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "entityProperty.intProperty * SUM(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
 
@@ -139,7 +139,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_11() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "selfProperty.intProperty - SUM(entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "selfProperty.intProperty - SUM(entityProperty.collectional.moneyProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -150,7 +150,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_12() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "collectional.intProperty");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "collectional.intProperty");
 	try {
 	    final AstNode root = ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -161,7 +161,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_13() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "collectional.collectional.moneyProperty");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "collectional.collectional.moneyProperty");
 	try {
 	    final AstNode root = ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -172,7 +172,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_14() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "SUM(entityProperty.collectional.moneyProperty) + SUM(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(entityProperty.collectional.moneyProperty) + SUM(collectional.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 
@@ -184,7 +184,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_15() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "SUM(entityProperty.collectional.moneyProperty + moneyProperty) + SUM(collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(entityProperty.collectional.moneyProperty + moneyProperty) + SUM(collectional.intProperty)");
 	try {
 	    final AstNode root = ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -195,7 +195,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_16() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "SUM(collectional.intProperty + selfProperty.collectional.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(collectional.intProperty + selfProperty.collectional.intProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -206,7 +206,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_17() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "SUM(selfProperty.intProperty) + AVG(entityProperty.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(selfProperty.intProperty) + AVG(entityProperty.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
 	assertEquals("Incorrect expression tag", ABOVE, root.getTag());
@@ -220,7 +220,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_18() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "SUM(selfProperty.collectional.intProperty) + AVG(entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(selfProperty.collectional.intProperty) + AVG(entityProperty.collectional.moneyProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -234,7 +234,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_19() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty)) + intProperty");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty)) + intProperty");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -247,7 +247,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_20() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty) + collectional.intProperty) + intProperty");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty) + collectional.intProperty) + intProperty");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
@@ -261,7 +261,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_21() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty) + intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty) + intProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -272,7 +272,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_22() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty) + collectional.intProperty) + " +
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty) + collectional.intProperty) + " +
 			"AVG(SUM(selfProperty.collectional.collectional.moneyProperty))");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
@@ -289,7 +289,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_23() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -300,7 +300,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_24() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty) + collectional.intProperty) / " +
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(SUM(collectional.collectional.moneyProperty) + collectional.intProperty) / " +
 			"AVG(SUM(selfProperty.collectional.collectional.moneyProperty))");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
@@ -317,7 +317,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_25() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "collectional.collectional.moneyProperty + entityProperty.collectional.moneyProperty");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "collectional.collectional.moneyProperty + entityProperty.collectional.moneyProperty");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -328,7 +328,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_26() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "AVG(SUM(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "AVG(SUM(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty)");
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -340,7 +340,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
     @Test
     public void test_case_27() throws RecognitionException, SemanticException {
 	final String expressionText = "SUM(collectional.collectional.moneyProperty) + entityProperty.collectional.moneyProperty";
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, expressionText);
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, expressionText);
 	try {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
@@ -352,7 +352,7 @@ public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_28() throws RecognitionException, SemanticException {
-	final ExpressionTextToModelConverter ev = new ExpressionTextToModelConverter(EntityLevel1.class, "AVG(SUM(collectional.collectional.moneyProperty)) + AVG(entityProperty.collectional.moneyProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "AVG(SUM(collectional.collectional.moneyProperty)) + AVG(entityProperty.collectional.moneyProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 	assertEquals("Incorrect expression tag", THIS, root.getTag());
