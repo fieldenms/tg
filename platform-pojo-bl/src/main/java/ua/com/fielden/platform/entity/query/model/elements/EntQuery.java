@@ -26,6 +26,7 @@ public class EntQuery implements ISingleOperand {
     private final GroupsModel groups;
     private final Class resultType;
     private EntQuery master;
+
     // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
     private final List<Pair<EntQuery, EntProp>> unresolvedProps;
 
@@ -176,7 +177,7 @@ public class EntQuery implements ISingleOperand {
 	}
     }
 
-    public static class PropTree {
+    public static class PropTree implements Comparable<PropTree>{
 	boolean leftJoin;
 	String parentName;
 	String parentFullName;
@@ -273,6 +274,11 @@ public class EntQuery implements ISingleOperand {
 		return false;
 	    }
 	    return true;
+	}
+
+	@Override
+	public int compareTo(final PropTree o) {
+	    return this.parentFullName.compareTo(o.parentFullName);
 	}
     }
 

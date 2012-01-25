@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.equery.equery.select;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -44,6 +42,8 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.equery.equery.select;
 
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
@@ -690,11 +690,4 @@ public abstract class CommonEntityDao<T extends AbstractEntity> extends Abstract
     public User getUser() {
 	return userDao.findByKey(getUsername());
     }
-
-    public static void main(final String[] args) {
-	final Long one = new Long(1);
-	final Long two = new Long(0);
-	System.out.println(one.compareTo(two) > 0);
-    }
-
 }

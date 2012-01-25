@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.elements.EntQuery.PropTree;
@@ -32,8 +34,8 @@ public class EntQuerySourcesEnhancer {
 	return predecessorAlias == null ? propAlias : predecessorAlias + "." + propAlias;
     }
 
-    public Set<PropTree> produceSourcesTree(final IEntQuerySourceDataProvider entQrySourceDataProvider, final String parentAlias, final boolean parentLeftJoin, final Set<String> props) {
-	final Set<PropTree> result = new HashSet<PropTree>();
+    public SortedSet<PropTree> produceSourcesTree(final IEntQuerySourceDataProvider entQrySourceDataProvider, final String parentAlias, final boolean parentLeftJoin, final Set<String> props) {
+	final SortedSet<PropTree> result = new TreeSet<PropTree>();
 	final Map<String, Set<String>> propGrops = determinePropGroups(props);
 
 	for (final Map.Entry<String, Set<String>> entry : propGrops.entrySet()) {
