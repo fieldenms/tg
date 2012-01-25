@@ -118,7 +118,7 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 
 	// validate operand type
 	if (!Money.class.isAssignableFrom(operandType) && !BigDecimal.class.isAssignableFrom(operandType) && !Integer.class.isAssignableFrom(operandType)) {
-	    throw new UnsupportedTypeException("Operand type " + operandType.getName() + " is not supported.", node.getToken());
+	    throw new UnsupportedTypeException(operandType, node.getToken());
 	}
 	// check whether operand is a constant value
 	if (node.getChildren().get(0).getValue() != null) {
@@ -162,8 +162,8 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 
 	// validate operand type
 	if (!Money.class.isAssignableFrom(operandType) && !BigDecimal.class.isAssignableFrom(operandType) && !Integer.class.isAssignableFrom(operandType)
-		&& !Date.class.isAssignableFrom(operandType) && !String.class.isAssignableFrom(operandType)) {
-	    throw new UnsupportedTypeException("Operand type " + operandType.getName() + " is not supported.", node.getToken());
+		&& !Date.class.isAssignableFrom(operandType) && !DateTime.class.isAssignableFrom(operandType) && !String.class.isAssignableFrom(operandType)) {
+	    throw new UnsupportedTypeException(operandType, node.getToken());
 	}
 	// check whether operand is a constant value
 	if (node.getChildren().get(0).getValue() != null) {
@@ -178,6 +178,8 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    node.setType(Integer.class);
 	} else if (Date.class.isAssignableFrom(operandType)) {
 	    node.setType(Date.class);
+	} else if (DateTime.class.isAssignableFrom(operandType)) {
+	    node.setType(DateTime.class);
 	} else {
 	    node.setType(operandType);
 	}
@@ -231,11 +233,11 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	}
 
 	// validate operand types
-	if (Date.class.isAssignableFrom(firstOperandType) && DateTime.class.isAssignableFrom(firstOperandType)) {
-	    throw new UnsupportedTypeException("First operand type " + firstOperandType.getName() + " is not supported.", firstOperand.getToken());
+	if (!Date.class.isAssignableFrom(firstOperandType) && !DateTime.class.isAssignableFrom(firstOperandType)) {
+	    throw new UnsupportedTypeException(firstOperandType, firstOperand.getToken());
 	}
-	if (Date.class.isAssignableFrom(secondOperandType) && DateTime.class.isAssignableFrom(secondOperandType)) {
-	    throw new UnsupportedTypeException("Secod operand type " + secondOperandType.getName() + " is not supported.", secondOperand.getToken());
+	if (!Date.class.isAssignableFrom(secondOperandType) && !DateTime.class.isAssignableFrom(secondOperandType)) {
+	    throw new UnsupportedTypeException(secondOperandType, secondOperand.getToken());
 	}
 
 	// set the node type
@@ -254,13 +256,13 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 1 operand, found " + node.getChildren().size(), node.getToken());
 	}
 	// ensure that type of the operand is determined
-	final Class<?> type = node.getChildren().get(0).getType();
-	if (type == null) {
+	final Class<?> operandType = node.getChildren().get(0).getType();
+	if (operandType == null) {
 	    throw new TypeCompatibilityException("Operand " + node.getChildren().get(0) + " is missing type.", node.getChildren().get(0).getToken());
 	}
 	// validate operand type
-	if (String.class.isAssignableFrom(type)) {
-	    throw new UnsupportedTypeException("Operand type " + type.getName() + " is not supported.", node.getChildren().get(0).getToken());
+	if (!String.class.isAssignableFrom(operandType)) {
+	    throw new UnsupportedTypeException(operandType, node.getChildren().get(0).getToken());
 	}
 
 	// set the node type
@@ -268,7 +270,7 @@ public class TypeEnforcementVisitor implements IAstVisitor {
     }
 
     /**
-     * Validates correctness of the operand for the date part extraction functions and determines the type of the node.
+     * Validates correctness of the operand for the date part extraction functions such as DAY, MONTH, YEAR and determines the type of the node.
      *
      * @param node
      * @throws SemanticException
@@ -279,13 +281,13 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 1 operand, found " + node.getChildren().size(), node.getToken());
 	}
 	// ensure that type of the operand is determined
-	final Class<?> type = node.getChildren().get(0).getType();
-	if (type == null) {
+	final Class<?> operandType = node.getChildren().get(0).getType();
+	if (operandType == null) {
 	    throw new TypeCompatibilityException("Operand " + node.getChildren().get(0) + " is missing type.", node.getChildren().get(0).getToken());
 	}
 	// validate operand type
-	if (Date.class.isAssignableFrom(type) && DateTime.class.isAssignableFrom(type)) {
-	    throw new UnsupportedTypeException("Operand type " + type.getName() + " is not supported.", node.getChildren().get(0).getToken());
+	if (!Date.class.isAssignableFrom(operandType) && !DateTime.class.isAssignableFrom(operandType)) {
+	    throw new UnsupportedTypeException(operandType, node.getChildren().get(0).getToken());
 	}
 
 	// set the node type
@@ -314,7 +316,7 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	} else if (Date.class.isAssignableFrom(type)) {
 	    return Date.class;
 	}
-	throw new UnsupportedTypeException("Property of type " + type.getName() + " is not supported.", node.getToken());
+	throw new UnsupportedTypeException(type, node.getToken());
     }
 
     /**
@@ -357,8 +359,11 @@ public class TypeEnforcementVisitor implements IAstVisitor {
     private Class<?> operationType(final AstNode node, final Class<?> leftOperandType, final Class<?> rightOperandType, final EgTokenCategory cat) throws SemanticException {
 	switch (cat) {
 	case PLUS:
-	    if (isDate(leftOperandType) || isDate(rightOperandType)) {
-		throw new UnsupportedTypeException("Operands of date type are not applicable to operation " + cat, node.getToken());
+	    if (isDate(leftOperandType)) {
+		throw new UnsupportedTypeException("Left operand of date type is not applicable to operation " + cat, leftOperandType, node.getToken());
+	    }
+	    if (isDate(rightOperandType)) {
+		throw new UnsupportedTypeException("Right operand of date type are not applicable to operation " + cat, rightOperandType, node.getToken());
 	    }
 	    // is String?
 	    if (String.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) {
@@ -401,12 +406,17 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 		return Year.class;
 	    }
 	case MINUS:
-	    if (isDate(leftOperandType) || isDate(rightOperandType)) {
-		throw new UnsupportedTypeException("Operands of date type are not applicable to operation " + cat + ".\nPlease consider using " + EgTokenCategory.DAY_DIFF
-			+ " function.", node.getToken());
+	    if (isDate(leftOperandType)) {
+		throw new UnsupportedTypeException("Left operand of date type is not applicable to operation " + cat + ".\nPlease consider using " + EgTokenCategory.DAY_DIFF
+			+ " function.", leftOperandType, node.getToken());
 	    }
-	    if (String.class.isAssignableFrom(leftOperandType)) {
-		throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, node.getToken());
+	    if (isDate(rightOperandType)) {
+		throw new UnsupportedTypeException("Right operand of date type is not applicable to operation " + cat + ".\nPlease consider using " + EgTokenCategory.DAY_DIFF
+			+ " function.", rightOperandType, node.getToken());
+	    }
+
+	    if (String.class.isAssignableFrom(leftOperandType) || String.class.isAssignableFrom(rightOperandType)) {
+		throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, String.class, node.getToken());
 	    }
 	    // is BigDecimal or Money?
 	    if (BigDecimal.class.isAssignableFrom(leftOperandType)) {
@@ -447,14 +457,18 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    }
 	    break;
 	case MULT:
-	    if (isDate(leftOperandType) || isDate(rightOperandType)) {
-		throw new UnsupportedTypeException("Operands of date type are not applicable to operation " + cat, node.getToken());
+	    if (isDate(leftOperandType)) {
+		throw new UnsupportedTypeException("Left operand of date type is not applicable to operation " + cat, leftOperandType, node.getToken());
 	    }
-	    if (String.class.isAssignableFrom(leftOperandType)) {
-		throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, node.getToken());
+	    if (isDate(rightOperandType)) {
+		throw new UnsupportedTypeException("Right operand of date type is not applicable to operation " + cat, rightOperandType, node.getToken());
+	    }
+
+	    if (String.class.isAssignableFrom(leftOperandType) || String.class.isAssignableFrom(rightOperandType)) {
+		throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, String.class, node.getToken());
 	    }
 	    if (AbstractDateLiteral.class.isAssignableFrom(leftOperandType) || AbstractDateLiteral.class.isAssignableFrom(rightOperandType)) {
-		throw new UnsupportedTypeException("Operands of date literal type are not applicable to operation " + cat, node.getToken());
+		throw new UnsupportedTypeException("Operands of date literal type are not applicable to operation " + cat, AbstractDateLiteral.class, node.getToken());
 	    }
 
 	    // is BigDecimal or Money?
@@ -487,14 +501,18 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    }
 	    break;
 	case DIV:
-	    if (isDate(leftOperandType) || isDate(rightOperandType)) {
-		throw new UnsupportedTypeException("Operands of date type are not applicable to operation " + cat, node.getToken());
+	    if (isDate(leftOperandType)) {
+		throw new UnsupportedTypeException("Left operand of date type is not applicable to operation " + cat, leftOperandType, node.getToken());
 	    }
-	    if (String.class.isAssignableFrom(leftOperandType)) {
-		throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, node.getToken());
+	    if (isDate(rightOperandType)) {
+		throw new UnsupportedTypeException("Right operand of date type is not applicable to operation " + cat, rightOperandType, node.getToken());
+	    }
+
+	    if (String.class.isAssignableFrom(leftOperandType) || String.class.isAssignableFrom(rightOperandType)) {
+		throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, String.class, node.getToken());
 	    }
 	    if (AbstractDateLiteral.class.isAssignableFrom(leftOperandType) || AbstractDateLiteral.class.isAssignableFrom(rightOperandType)) {
-		throw new UnsupportedTypeException("Operands of date literal type are not applicable to operation " + cat, node.getToken());
+		throw new UnsupportedTypeException("Operands of date literal type are not applicable to operation " + cat, AbstractDateLiteral.class, node.getToken());
 	    }
 
 	    // is BigDecimal or Money?

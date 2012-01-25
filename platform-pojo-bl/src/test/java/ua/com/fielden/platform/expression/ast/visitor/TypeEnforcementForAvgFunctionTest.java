@@ -61,7 +61,7 @@ public class TypeEnforcementForAvgFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + String.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type " + String.class.getName() + " is not supported here.", ex.getMessage());
 	}
     }
 
@@ -74,7 +74,7 @@ public class TypeEnforcementForAvgFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + Day.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type " + Day.class.getName() + " is not supported here.", ex.getMessage());
 	}
     }
 
@@ -87,7 +87,7 @@ public class TypeEnforcementForAvgFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + Month.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type " + Month.class.getName() + " is not supported here.", ex.getMessage());
 	}
     }
 
@@ -100,7 +100,7 @@ public class TypeEnforcementForAvgFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + Year.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type " + Year.class.getName() + " is not supported here.", ex.getMessage());
 	}
     }
 
@@ -160,7 +160,7 @@ public class TypeEnforcementForAvgFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + String.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type " + String.class.getName() + " is not supported here.", ex.getMessage());
 	}
     }
 
@@ -173,7 +173,7 @@ public class TypeEnforcementForAvgFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + Date.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type " + Date.class.getName() + " is not supported here.", ex.getMessage());
 	}
     }
 

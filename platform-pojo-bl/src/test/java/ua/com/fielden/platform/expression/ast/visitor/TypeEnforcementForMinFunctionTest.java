@@ -74,7 +74,7 @@ public class TypeEnforcementForMinFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + Day.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type " + Day.class.getName() + " is not supported here.", ex.getMessage());
 	}
     }
 
@@ -87,7 +87,7 @@ public class TypeEnforcementForMinFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + Month.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type " + Month.class.getName() + " is not supported here.", ex.getMessage());
 	}
     }
 
@@ -100,7 +100,7 @@ public class TypeEnforcementForMinFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + Year.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type " + Year.class.getName() + " is not supported here.", ex.getMessage());
 	}
     }
 
@@ -116,7 +116,6 @@ public class TypeEnforcementForMinFunctionTest {
 	    assertEquals("Incorrect error message.", "Constant value is not applicable to aggregation functions.", ex.getMessage());
 	}
     }
-
 
     @Test
     public void test_min_int_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {

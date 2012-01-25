@@ -296,7 +296,7 @@ public class TypeEnforcementForDivOperationTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operands of date type are not applicable to operation " + EgTokenCategory.DIV, ex.getMessage());
+	    assertEquals("Incorrect error message.", "Left operand of date type is not applicable to operation " + EgTokenCategory.DIV, ex.getMessage());
 	}
     }
 

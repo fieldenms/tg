@@ -19,9 +19,6 @@ import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
 import ua.com.fielden.platform.expression.exception.semantic.UnsupportedTypeException;
-import ua.com.fielden.platform.expression.type.Day;
-import ua.com.fielden.platform.expression.type.Month;
-import ua.com.fielden.platform.expression.type.Year;
 import ua.com.fielden.platform.types.Money;
 
 public class TypeEnforcementForMaxFunctionTest {
@@ -74,7 +71,7 @@ public class TypeEnforcementForMaxFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + Day.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type ua.com.fielden.platform.expression.type.Day is not supported here.", ex.getMessage());
 	}
     }
 
@@ -87,7 +84,7 @@ public class TypeEnforcementForMaxFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + Month.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type ua.com.fielden.platform.expression.type.Month is not supported here.", ex.getMessage());
 	}
     }
 
@@ -100,7 +97,7 @@ public class TypeEnforcementForMaxFunctionTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Operand type " + Year.class.getName() + " is not supported.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Type ua.com.fielden.platform.expression.type.Year is not supported here.", ex.getMessage());
 	}
     }
 
