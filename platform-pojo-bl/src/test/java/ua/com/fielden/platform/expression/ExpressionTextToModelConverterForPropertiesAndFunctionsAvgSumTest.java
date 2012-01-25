@@ -18,7 +18,7 @@ import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperand
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.types.Money;
 
-public class ExpressionTextToModelConverterTest {
+public class ExpressionTextToModelConverterForPropertiesAndFunctionsAvgSumTest {
 
     @Test
     public void test_case_01() throws RecognitionException, SemanticException {
