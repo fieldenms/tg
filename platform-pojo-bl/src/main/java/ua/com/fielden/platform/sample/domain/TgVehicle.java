@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
@@ -32,16 +33,18 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty @MapTo()
     private TgOrgUnit5 station;
 
-    @IsProperty
-    @Required
-    @MapTo
-    @Title(value = "Model", desc = "Model")
+    @IsProperty @MapTo @Required @Title(value = "Model", desc = "Model")
     private TgVehicleModel model;
 
-    @IsProperty
-    @MapTo
-    @Title(value = "Price", desc = "Price")
+    @IsProperty @MapTo @Title(value = "Price", desc = "Price")
     private Money price;
+
+    @IsProperty @MapTo(userType = ISimpleMoneyType.class)
+    private Money purchasePrice;
+
+    public Money getPrice() {
+	return price;
+    }
 
     @Observable
     public TgVehicle setPrice(final Money price) {
@@ -49,13 +52,13 @@ public class TgVehicle extends AbstractEntity<String> {
 	return this;
     }
 
-    public Money getPrice() {
-	return price;
+    public Money getPurchasePrice() {
+	return purchasePrice;
     }
 
     @Observable
-    public TgVehicle setModel(final TgVehicleModel model) {
-	this.model = model;
+    public TgVehicle setPurchasePrice(final Money purchasePrice) {
+	this.purchasePrice = purchasePrice;
 	return this;
     }
 
@@ -63,9 +66,9 @@ public class TgVehicle extends AbstractEntity<String> {
 	return model;
     }
 
-    @Observable
-    public TgVehicle setStation(final TgOrgUnit5 station) {
-	this.station = station;
+    @Observable  @EntityExists(TgVehicleModel.class)
+    public TgVehicle setModel(final TgVehicleModel model) {
+	this.model = model;
 	return this;
     }
 
@@ -73,8 +76,11 @@ public class TgVehicle extends AbstractEntity<String> {
 	return station;
     }
 
-    @IsProperty @MapTo(userType = ISimpleMoneyType.class)
-    private Money purchasePrice;
+    @Observable  @EntityExists(TgOrgUnit5.class)
+    public TgVehicle setStation(final TgOrgUnit5 station) {
+	this.station = station;
+	return this;
+    }
 
     /**
      * Constructor for (@link EntityFactory}.

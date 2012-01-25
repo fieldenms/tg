@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -16,7 +17,10 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
@@ -664,6 +668,12 @@ public class EntityUtils {
 	}
     }
 
+    /**
+     * Checks whether given first level property is part of given entity type key.
+     * @param entityType
+     * @param firstLevelPropName
+     * @return
+     */
     public static boolean isPropertyPartOfKey(final Class entityType, final String firstLevelPropName) {
 	if (firstLevelPropName.contains(".")) {
 	    throw new IllegalArgumentException("First level prop name expected, but was [" + firstLevelPropName + "]");
@@ -671,10 +681,52 @@ public class EntityUtils {
 	return Finder.getFieldNames(Finder.getKeyMembers(entityType)).contains(firstLevelPropName);
     }
 
+    /**
+     * Checks whether given first level property of the given entity type is marked as "required".
+     * @param entityType
+     * @param firstLevelPropName
+     * @return
+     */
     public static boolean isPropertyRequired(final Class entityType, final String firstLevelPropName) {
 	if (firstLevelPropName.contains(".")) {
 	    throw new IllegalArgumentException("First level prop name expected, but was [" + firstLevelPropName + "]");
 	}
 	return Finder.getFieldNames(Finder.findProperties(entityType, Required.class)).contains(firstLevelPropName);
+    }
+
+    /**
+     * Checks whether given entity type has composite key
+     * @param entityType
+     * @return
+     */
+    public static boolean entityWithDynamicKey(final Class entityType) {
+	return DynamicEntityKey.class.equals(AnnotationReflector.getKeyType(entityType));
+    }
+
+
+    /**
+     * Retrieves names of all persisted properties within given entity type
+     *
+     * @param entityType
+     * @return
+     */
+    public static List<String> getPersistedPropertiesNames(final Class entityType) {
+	final List<String> result = new ArrayList<String>();
+	result.add("id");
+	result.add("version");
+
+	for (final Field propField : Finder.findRealProperties(entityType, MapTo.class)) {
+	    result.add(propField.getName());
+	}
+
+	if (entityWithDynamicKey(entityType)) {
+	    result.remove("key");
+	}
+
+	if (!AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType)) {
+	    result.remove("desc");
+	}
+
+	return result;
     }
 }

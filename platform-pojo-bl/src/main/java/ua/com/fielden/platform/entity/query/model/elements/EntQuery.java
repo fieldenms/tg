@@ -15,6 +15,7 @@ import java.util.TreeSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.elements.AbstractEntQuerySource.PropResolutionInfo;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
@@ -49,19 +50,28 @@ public class EntQuery implements ISingleOperand {
 	return onlyOneYieldAndWithoutAlias() && resultTypeIsRealEntity();
     }
 
+    private boolean allPropsYieldEnhancementRequired() {
+	return yields.getYields().size() == 0 && resultTypeIsRealEntity();
+    }
+
     public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType) {
 	super();
 	this.sources = sources;
 	this.conditions = conditions;
 	this.yields = yields;
 	this.groups = groups;
+	System.out.println("rs: " + resultType);
 	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? sources.getMain().getType() : null);
-
 	// enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
 	if (idAliasEnhancementRequired()) {
 	    final YieldModel idModel = new YieldModel(yields.getYields().values().iterator().next().getOperand(), "id");
 	    yields.getYields().clear();
 	    yields.getYields().put(idModel.getAlias(), idModel);
+	} else if (allPropsYieldEnhancementRequired()) {
+	    final String yieldPropAlias = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+	    for (final String propName : EntityUtils.getPersistedPropertiesNames(type())) {
+		yields.getYields().put(propName, new YieldModel(new EntProp(yieldPropAlias + propName), propName));
+	    }
 	}
 
 	final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries = new ArrayList<Pair<EntQuery, EntProp>>();
