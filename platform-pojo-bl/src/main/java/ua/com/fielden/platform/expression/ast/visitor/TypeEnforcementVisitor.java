@@ -210,7 +210,7 @@ public class TypeEnforcementVisitor implements IAstVisitor {
     }
 
     /**
-     * Validates correctness of the operand for the DAY_DIFF function and determines the type of the node.
+     * Validates correctness of operands for the DAY_DIFF function and determines the type of the node.
      *
      * @param node
      * @throws SemanticException
