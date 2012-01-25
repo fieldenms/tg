@@ -245,7 +245,7 @@ public class TypeEnforcementVisitor implements IAstVisitor {
     }
 
     /**
-     * Validates correctness of the operand for the string functions and determines the type of the node.
+     * Validates correctness of the operand for the string functions UPPER, LOWER and determines the type of the node.
      *
      * @param node
      * @throws SemanticException
