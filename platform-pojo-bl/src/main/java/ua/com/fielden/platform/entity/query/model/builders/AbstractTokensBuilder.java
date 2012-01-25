@@ -195,7 +195,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case EQUERY_TOKENS:
 	case ALL_OPERATOR:
 	case ANY_OPERATOR:
-	    return queryBuilder.generateEntQuery((QueryModel) value, getParamValues());
+	    return queryBuilder.generateEntQueryAsSubquery((QueryModel) value, getParamValues());
 	default:
 	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
 	}

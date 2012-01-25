@@ -359,7 +359,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private ExistenceTestModel getPlainExistenceTest() {
-	return new ExistenceTestModel((Boolean) firstValue(), getQueryBuilder().generateEntQuery((QueryModel) secondValue(), getParamValues()));
+	return new ExistenceTestModel((Boolean) firstValue(), getQueryBuilder().generateEntQueryAsSubquery((QueryModel) secondValue(), getParamValues()));
     }
 
     private SetTestModel getPlainSetTest() {

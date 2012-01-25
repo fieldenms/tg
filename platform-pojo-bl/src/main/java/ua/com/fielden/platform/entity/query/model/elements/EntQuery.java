@@ -20,6 +20,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
 
+    private static String id = "id";
+
     private final EntQuerySourcesEnhancer entQrySourcesEnhancer = new EntQuerySourcesEnhancer();
     private final EntQuerySourcesModel sources;
     private final ConditionsModel conditions;
@@ -27,6 +29,7 @@ public class EntQuery implements ISingleOperand {
     private final GroupsModel groups;
     private final Class resultType;
     private EntQuery master;
+    private final boolean subquery;
 
     // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
     private final List<Pair<EntQuery, EntProp>> unresolvedProps;
@@ -51,20 +54,29 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean allPropsYieldEnhancementRequired() {
-	return yields.getYields().size() == 0 && resultTypeIsRealEntity();
+	return yields.getYields().size() == 0 && resultTypeIsRealEntity() && !subquery;
     }
 
-    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType) {
+    private boolean idPropYieldEnhancementRequired() {
+	return yields.getYields().size() == 0 && resultTypeIsRealEntity() && subquery;
+    }
+
+    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType, final boolean subquery) {
 	super();
+	this.subquery = subquery;
 	this.sources = sources;
 	this.conditions = conditions;
 	this.yields = yields;
 	this.groups = groups;
-	System.out.println("rs: " + resultType);
 	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? sources.getMain().getType() : null);
+
+	final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
+
+	associateSubqueriesWithMasterQuery(immediateSubqueries);
+
 	// enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
 	if (idAliasEnhancementRequired()) {
-	    final YieldModel idModel = new YieldModel(yields.getYields().values().iterator().next().getOperand(), "id");
+	    final YieldModel idModel = new YieldModel(yields.getYields().values().iterator().next().getOperand(), id);
 	    yields.getYields().clear();
 	    yields.getYields().put(idModel.getAlias(), idModel);
 	} else if (allPropsYieldEnhancementRequired()) {
@@ -72,20 +84,38 @@ public class EntQuery implements ISingleOperand {
 	    for (final String propName : EntityUtils.getPersistedPropertiesNames(type())) {
 		yields.getYields().put(propName, new YieldModel(new EntProp(yieldPropAlias + propName), propName));
 	    }
+	} else if (idPropYieldEnhancementRequired()) {
+	    final String yieldPropAlias = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+	    yields.getYields().put(id, new YieldModel(new EntProp(yieldPropAlias + id), id));
 	}
 
-	final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries = new ArrayList<Pair<EntQuery, EntProp>>();
-	for (final EntQuery entQuery : getImmediateSubqueries()) {
-	    entQuery.master = this;
-	    unresolvedPropsFromSubqueries.addAll(entQuery.unresolvedProps);
-	    entQuery.unresolvedProps.clear();
-	}
-
-	unresolvedProps = resolveProps(unresolvedPropsFromSubqueries);
+	unresolvedProps = resolveProps(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
 
 	for (final Pair<IEntQuerySource, Boolean> sourceWithJoinType : sources.getAllSourcesWithJoinType()) {
 	    sources.getCompounds().addAll(generateImplicitSources(sourceWithJoinType.getKey(), sourceWithJoinType.getValue()));
 	}
+
+	//resolveProps(unresolvedPropsFromSubqueries);
+    }
+
+
+    private void assignMaster(final EntQuery master) {
+	this.master = master;
+    }
+
+    private void associateSubqueriesWithMasterQuery(final List<EntQuery> immediateSubqueries) {
+	for (final EntQuery entQuery : immediateSubqueries) {
+	    entQuery.assignMaster(this);
+	}
+    }
+
+    private List<Pair<EntQuery, EntProp>> collectUnresolvedPropsFromSubqueries(final List<EntQuery> immediateSubqueries) {
+	final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries = new ArrayList<Pair<EntQuery, EntProp>>();
+	for (final EntQuery entQuery : immediateSubqueries) {
+	    unresolvedPropsFromSubqueries.addAll(entQuery.unresolvedProps);
+	    entQuery.unresolvedProps.clear();
+	}
+	return unresolvedPropsFromSubqueries;
     }
 
     private List<EntQueryCompoundSourceModel> generateImplicitSources(final IEntQuerySource source, final boolean leftJoined) {

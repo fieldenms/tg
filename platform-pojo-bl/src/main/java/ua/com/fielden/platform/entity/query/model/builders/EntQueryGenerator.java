@@ -17,6 +17,22 @@ public class EntQueryGenerator {
     }
 
     public EntQuery generateEntQuery(final QueryModel qryModel, final Map<String, Object> paramValues) {
+	return generateEntQuery(qryModel, paramValues, false);
+    }
+
+    public EntQuery generateEntQuery(final QueryModel qryModel) {
+	return generateEntQuery(qryModel, new HashMap<String, Object>());
+    }
+
+    public EntQuery generateEntQueryAsSubquery(final QueryModel qryModel, final Map<String, Object> paramValues) {
+	return generateEntQuery(qryModel, paramValues, true);
+    }
+
+    public EntQuery generateEntQueryAsSubquery(final QueryModel qryModel) {
+	return generateEntQueryAsSubquery(qryModel, new HashMap<String, Object>());
+    }
+
+    private EntQuery generateEntQuery(final QueryModel qryModel, final Map<String, Object> paramValues, final boolean subquery) {
 	ConditionsBuilder where = null;
 	final QrySourcesBuilder from = new QrySourcesBuilder(null, dbVersion, paramValues);
 	final QryYieldsBuilder select = new QryYieldsBuilder(null, dbVersion, paramValues);
@@ -52,10 +68,6 @@ public class EntQueryGenerator {
 	    }
 	}
 
-	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), qryModel.getResultType());
-    }
-
-    public EntQuery generateEntQuery(final QueryModel qryModel) {
-	return generateEntQuery(qryModel, new HashMap<String, Object>());
+	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), qryModel.getResultType(), subquery);
     }
 }

@@ -14,6 +14,7 @@ import ua.com.fielden.platform.utils.Pair;
 abstract class AbstractEntQuerySource implements IEntQuerySource {
     private final String alias; // can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end
     private final List<EntProp> referencingProps = new ArrayList<EntProp>();
+    //private final List<EntProp> finalReferencingProps = new ArrayList<EntProp>();
 
     protected boolean isEntityAggregates(final Class type) {
 	return EntityAggregates.class.isAssignableFrom(type);
@@ -185,4 +186,8 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
     public Class propType(final String propSimpleName) {
 	return Finder.findFieldByName(getType(), propSimpleName).getType();
     }
+
+//    public List<EntProp> getFinalReferencingProps() {
+//        return finalReferencingProps;
+//    }
 }

@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.BaseEntQueryTCase;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import static org.junit.Assert.assertEquals;
@@ -61,6 +62,31 @@ public class QueryYieldsEnhancementTest extends BaseEntQueryTCase {
 		yield().prop("price").as("price"). //
 		yield().prop("purchasePrice").as("purchasePrice"). //
 		modelAsEntity(VEHICLE);
+
+	assertEquals("Incorrect yields enhancement", entValidQuery(explicitQry), entValidQuery(shortcutQry));
+    }
+
+    @Test
+    public void test_model_with_subquery() {
+	final EntityResultQueryModel<TgVehicle> shortcutSubQry = select(MAKE). //
+		where().prop("key").like().val("MERC%").and().prop("model.make").eq().prop("id"). //
+		model();
+
+	final PrimitiveResultQueryModel shortcutQry = select(VEHICLE). //
+		where().exists(shortcutSubQry). //
+		yield().prop("key").modelAsPrimitive();
+
+	final EntityResultQueryModel<TgVehicleMake> explicitSubQry = select(MAKE). //
+		where().prop("key").like().val("MERC%").and().prop("model.make").eq().prop("id"). //
+		yield().prop("id").as("id").modelAsEntity(MAKE);
+
+	final PrimitiveResultQueryModel explicitQry = select(VEHICLE). //
+		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
+		where().exists(explicitSubQry). //
+		yield().prop("key").modelAsPrimitive();
+
+	final EntQuery qry1 = entValidQuery(explicitQry);
+	final EntQuery qry2 = entValidQuery(shortcutQry);
 
 	assertEquals("Incorrect yields enhancement", entValidQuery(explicitQry), entValidQuery(shortcutQry));
     }

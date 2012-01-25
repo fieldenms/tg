@@ -35,6 +35,10 @@ public class BaseEntQueryTCase {
 	return qb.generateEntQuery(qryModel);
     }
 
+    protected EntQuery entSubQuery1(final QueryModel qryModel) {
+	return qb.generateEntQueryAsSubquery(qryModel);
+    }
+
     protected EntQuery entQuery1(final QueryModel qryModel, final Map<String, Object> paramValues) {
 	return qb.generateEntQuery(qryModel, paramValues);
     }

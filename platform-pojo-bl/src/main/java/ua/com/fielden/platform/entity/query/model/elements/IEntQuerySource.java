@@ -12,5 +12,6 @@ public interface IEntQuerySource extends IEntQuerySourceDataProvider {
     Pair<Boolean, PropResolutionInfo> containsProperty(EntProp prop);
     void addReferencingProp(EntProp prop);
     List<EntProp> getReferencingProps();
+    //List<EntProp> getFinalReferencingProps();
     boolean generated();
 }
