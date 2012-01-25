@@ -86,7 +86,7 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    break;
 	// bi-operand date type functions
 	case DAY_DIFF:
-	    processDateDiffFunction(node);
+	    processDayDiffFunction(node);
 	    break;
 	// uno-operand aggregation functions
 	case AVG:
@@ -151,6 +151,9 @@ public class TypeEnforcementVisitor implements IAstVisitor {
      */
     private void processMinMax(final AstNode node) throws SemanticException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (node.getChildren().size() != 1) {
+	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 1 operand, found " + node.getChildren().size(), node.getToken());
+	}
 	// ensure that type of the operand is determined
 	final Class<?> operandType = node.getChildren().get(0).getType();
 	if (operandType == null) {
@@ -192,21 +195,25 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 1 operands, found " + node.getChildren().size(), node.getToken());
 	}
 	// ensure that type of the operand is determined
-	final Class<?> type = node.getChildren().get(0).getType();
-	if (type == null) {
+	final Class<?> operandType = node.getChildren().get(0).getType();
+	if (operandType == null) {
 	    throw new TypeCompatibilityException("Operand " + node.getChildren().get(0) + " is missing type.", node.getChildren().get(0).getToken());
 	}
+	// check whether operand is a constant value
+	if (node.getChildren().get(0).getValue() != null) {
+	    throw new TypeCompatibilityException("Constant value is not applicable to aggregation functions.", node.getChildren().get(0).getToken());
+	}
 	// set the node type
-	node.setType(type);
+	node.setType(Integer.class);
     }
 
     /**
-     * Validates correctness of the operand for the date diff function and determines the type of the node.
+     * Validates correctness of the operand for the DAY_DIFF function and determines the type of the node.
      *
      * @param node
      * @throws SemanticException
      */
-    private void processDateDiffFunction(final AstNode node) throws SemanticException {
+    private void processDayDiffFunction(final AstNode node) throws SemanticException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
 	if (node.getChildren().size() != 2) {
 	    throw new UnexpectedNumberOfOperandsException("Operation " + cat + " expects 2 operands, found " + node.getChildren().size(), node.getToken());
