@@ -20,7 +20,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
     @Test
     public void test_prop_to_source_association1() {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).where().prop("model.make.key").eq().val("MERC").yield().maxOf().prop("model.make.key").modelAsPrimitive();
-	final EntQuery entQry = entValidQuery(qry);
+	final EntQuery entQry = entQuery1(qry);
 	final List<EntProp> expReferencingProps = Arrays.asList(new EntProp[] { prop("model.make.key"), prop("model.make.key") });
 	assertEquals("Incorrect list of unresolved props", expReferencingProps, entQry.getSources().getAllSources().get(0).getReferencingProps());
     }
@@ -30,7 +30,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final PrimitiveResultQueryModel qry = select(VEHICLE). //
 	join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
 	where().prop("model.make.key").eq().val("MERC").yield().maxOf().prop("model.make.key").modelAsPrimitive();
-	final EntQuery entQry = entValidQuery(qry);
+	final EntQuery entQry = entQuery1(qry);
 	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("model") });
 	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("model.id"), prop("model.make.key"), prop("model.make.key") });
 	assertEquals("Incorrect list of unresolved props", Arrays.asList(new List[] { qrySource1props, qrySource2props }), entQry.getSources().getSourcesReferencingProps());
@@ -42,7 +42,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
 	join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").yield().maxOf().prop("model.make.key").modelAsPrimitive();
-	final EntQuery entQry = entValidQuery(qry);
+	final EntQuery entQry = entQuery1(qry);
 	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("model") });
 	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("model.id"), prop("model.make") });
 	final List<EntProp> qrySource3props = Arrays.asList(new EntProp[] { prop("model.make.id"), prop("model.make.key"), prop("model.make.key") });
@@ -54,7 +54,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v"). //
 	join(MODEL).as("m").on().prop("model").eq().prop("m.id"). //
 	where().prop("m.make.key").eq().val("MERC").and().prop("v.model.make.key").like().val("MERC%").yield().maxOf().prop("m.make.key").modelAsPrimitive();
-	final EntQuery entQry = entValidQuery(qry);
+	final EntQuery entQry = entQuery1(qry);
 	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("model"), prop("v.model.make.key") });
 	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("m.id"), prop("m.make.key"), prop("m.make.key") });
 	assertEquals("Incorrect list of unresolved props", Arrays.asList(new List[] { qrySource1props, qrySource2props }), entQry.getSources().getSourcesReferencingProps());
@@ -63,7 +63,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
     @Test
     public void test_prop_to_source_association5() {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v").join(MODEL).as("m").on().prop("model").eq().prop("m").where().prop("m.make.key").eq().val("MERC").yield().maxOf().prop("m.make.key").modelAsPrimitive();
-	final EntQuery entQry = entValidQuery(qry);
+	final EntQuery entQry = entQuery1(qry);
 	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("model") });
 	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("m"), prop("m.make.key"), prop("m.make.key") });
 	assertEquals("Incorrect list of unresolved props", Arrays.asList(new List[] { qrySource1props, qrySource2props }), entQry.getSources().getSourcesReferencingProps());
@@ -73,7 +73,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
     public void test_prop_to_source_association6() {
 	final AggregatedResultQueryModel sourceQry = select(VEHICLE).groupBy().prop("model").yield().prop("model").as("model").yield().minOf().yearOf().prop("initDate").as("earliestInitYear").modelAsAggregate();
 	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("earliestInitYear").ge().val(2000).modelAsAggregate();
-	final EntQuery entQry = entValidQuery(qry);
+	final EntQuery entQry = entQuery1(qry);
 	final List<EntProp> expReferencingProps = Arrays.asList(new EntProp[] { prop("model.make.key"), prop("earliestInitYear") });
 	assertEquals("Incorrect list of unresolved props", expReferencingProps, entQry.getSources().getAllSources().get(0).getReferencingProps());
     }
@@ -87,8 +87,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	modelAsEntity(TgModelCount.class);
 
 	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("key.make.key").eq().val("MERC").and().prop("count").ge().val(2000).modelAsAggregate();
-	final EntQuery entQry = entValidQuery(qry);
-	entQry.validate();
+	final EntQuery entQry = entQuery1(qry);
 	final List<EntProp> expReferencingProps = Arrays.asList(new EntProp[] { prop("key.make.key"), prop("count") });
 	assertEquals("Incorrect list of unresolved props", expReferencingProps, entQry.getSources().getAllSources().get(0).getReferencingProps());
     }
@@ -114,8 +113,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	prop("earliestInitYear").ge().val(2000).and(). //
 	prop("count").ge().val(25).modelAsAggregate();
 
-	final EntQuery entQry = entValidQuery(qry);
-	entQry.validate();
+	final EntQuery entQry = entQuery1(qry);
 	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("model"), prop("model.make.key"), prop("earliestInitYear") });
 	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("mc.key"), prop("count") });
 	assertEquals("Incorrect list of unresolved props", Arrays.asList(new List[] { qrySource1props, qrySource2props }), entQry.getSources().getSourcesReferencingProps());
@@ -154,8 +152,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	yield().prop("totalVehCount").as("a3"). //
 	modelAsAggregate();
 
-	final EntQuery entQry = entValidQuery(qry);
-	entQry.validate();
+	final EntQuery entQry = entQuery1(qry);
 	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("totalVehCount"), prop("make.key"), prop("earliestInitYearPerMake"), prop("totalVehCount")});
 	assertEquals("Incorrect list of unresolved props", Arrays.asList(new List[] { qrySource1props }), entQry.getSources().getSourcesReferencingProps());
     }
@@ -169,8 +166,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	join(ORG2).as("parent.parent.parent").on().prop("parent.parent.parent").eq().prop("parent.parent.parent.id"). //
 	join(ORG1).as("parent.parent.parent.parent").on().prop("parent.parent.parent.parent").eq().prop("parent.parent.parent.parent.id"). //
 	where().prop("parent.parent.parent.parent.key").eq().val("NORTH").yield().prop("parent.parent.parent.parent.key").modelAsPrimitive();
-	final EntQuery entQry = entValidQuery(qry);
-	entQry.validate();
+	final EntQuery entQry = entQuery1(qry);
 	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("parent") });
 	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("parent.id"), prop("parent.parent") });
 	final List<EntProp> qrySource3props = Arrays.asList(new EntProp[] { prop("parent.parent.id"), prop("parent.parent.parent") });
@@ -184,7 +180,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final EntityResultQueryModel<TgOrgUnit5> qry = select(ORG5). //
 	join(ORG4).on().prop("parent.parent.parent.parent").eq().prop("parent.parent.parent").model();
 	try {
-	    entValidQuery(qry);
+	    entQuery1(qry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	    assertEquals("Incorrect exception message", "Ambiguous property: parent.parent.parent", e.getMessage());
@@ -201,7 +197,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	join(ORG1).as("parent.parent.parent.parent").on().prop("parent.parent.parent.parent").eq().prop("parent.parent.parent.parent.id"). //
 	where().prop("parent.parent.parent.parent.key").eq().val("NORTH").model();
 	try {
-	    entValidQuery(qry);
+	    entQuery1(qry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	    assertEquals("Incorrect exception message", "Ambiguous property: parent", e.getMessage());

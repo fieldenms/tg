@@ -18,8 +18,10 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 
 public class BaseEntQueryTCase {
+    protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
     protected static final Class<TgVehicle> VEHICLE = TgVehicle.class;
     protected static final Class<TgVehicleModel> MODEL = TgVehicleModel.class;
     protected static final Class<TgVehicleMake> MAKE = TgVehicleMake.class;
@@ -29,7 +31,7 @@ public class BaseEntQueryTCase {
     protected static final Class<TgOrgUnit2> ORG2 = TgOrgUnit2.class;
     protected static final Class<TgOrgUnit1> ORG1 = TgOrgUnit1.class;
 
-    protected final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
+    private final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
 
     protected EntQuery entQuery1(final QueryModel qryModel) {
 	return qb.generateEntQuery(qryModel);
@@ -42,19 +44,6 @@ public class BaseEntQueryTCase {
     protected EntQuery entQuery1(final QueryModel qryModel, final Map<String, Object> paramValues) {
 	return qb.generateEntQuery(qryModel, paramValues);
     }
-
-    protected EntQuery entValidQuery(final QueryModel qryModel) {
-	final EntQuery result = qb.generateEntQuery(qryModel);
-	result.validate();
-	return result;
-    }
-
-    protected EntQuery entValidQuery(final QueryModel qryModel, final Map<String, Object> paramValues) {
-	final EntQuery result = qb.generateEntQuery(qryModel, paramValues);
-	result.validate();
-	return result;
-    }
-
 
     protected EntProp prop(final String propName) {
 	return new EntProp(propName);

@@ -4,10 +4,11 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.query;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.query.expr;
+import static ua.com.fielden.platform.entity.query.fluent.query.select;
+
 
 public class QueryModelCompositionTest extends BaseEntQueryTCase {
 
@@ -15,7 +16,7 @@ public class QueryModelCompositionTest extends BaseEntQueryTCase {
     @Ignore
     public void test_query_model1() {
 	final AggregatedResultQueryModel a =
-		query.select(TgWorkOrder.class).as("wo")
+		select(WORK_ORDER).as("wo")
 		.where().beginExpr().beginExpr().beginExpr().beginExpr().prop("wo.actCost.amount").mult().param("costMultiplier").endExpr().add().prop("wo.estCost.amount").div().param("costDivider").endExpr().add().prop("wo.yearlyCost.amount").endExpr().div().val(12).endExpr().gt().val(1000)
 		.and()
 		.begin()
@@ -25,9 +26,9 @@ public class QueryModelCompositionTest extends BaseEntQueryTCase {
 		.prop("wo.insuranceAmount").isNotNull()
 		.end()
 		.modelAsAggregate();
-	qb.generateEntQuery(a);//.getPropNames();
+	entQuery1(a);//.getPropNames();
 
-	query.select(TgWorkOrder.class).where()
+	select(WORK_ORDER).where()
 		.upperCase()
 				.beginExpr()
 					.prop("bbb").add().prop("aaa")
@@ -53,21 +54,21 @@ public class QueryModelCompositionTest extends BaseEntQueryTCase {
 
 	final String expString = "SELECT\nFROM ua.com.fielden.platform.entity.AbstractEntity AS a\nWHERE (((($a + :v)))) > 1 AND ((:a * (:v + $c)) = $d AND $ad IS NOT NULL) AND UPPERCASE($bbb + $aaa) LIKE UPPERCASE(AaA) AND $SomeDate > NOW() AND YEAR($LastChange) = ROUND(($prop1 + $prop2), 1) AND :a = COALESCE($interProp, 1) AND $aaa = DATEDIFF(COALESCE($End, NOW()), (($Start1 + $Start2))) AND $haha IN ($p1, $p2, $p3) AND :AAA IN (1, 2, 3)";
 
-	final Object b = query.select(a).as("a_alias").where().prop("a_alias.p1").eq().val(100).and().prop("a_alias.p2").like().anyOfValues("%AC", "%AB", "DD%").model();
+	final Object b = select(a).as("a_alias").where().prop("a_alias.p1").eq().val(100).and().prop("a_alias.p2").like().anyOfValues("%AC", "%AB", "DD%").model();
     }
 
     @Ignore
     @Test
     public void test_expressions() {
-	assertEquals("Incorrect expression model string representation", "1 + :a + 2", query.expr().val(1).add().param("a").add().val(2).model().toString());
-	assertEquals("Incorrect expression model string representation", "1", query.expr().val(1).model().toString());
-	assertEquals("Incorrect expression model string representation", "1 + :a + AVG(SUM($fuelCost)) + NOW() * SECOND(NOW())", query.expr().val(1).add().param("a").add().avgOf().expr(query.expr().sumOf().prop("fuelCost").model()).add().now().mult().expr(query.expr().secondOf().now().model()).model().toString());
+	assertEquals("Incorrect expression model string representation", "1 + :a + 2", expr().val(1).add().param("a").add().val(2).model().toString());
+	assertEquals("Incorrect expression model string representation", "1", expr().val(1).model().toString());
+	assertEquals("Incorrect expression model string representation", "1 + :a + AVG(SUM($fuelCost)) + NOW() * SECOND(NOW())", expr().val(1).add().param("a").add().avgOf().expr(expr().sumOf().prop("fuelCost").model()).add().now().mult().expr(expr().secondOf().now().model()).model().toString());
     }
 
     @Ignore
     @Test
     public void test_query_model3() {
-	final Object a = query.select(AbstractEntity.class).as("a")
+	final Object a = select(WORK_ORDER).as("a")
 	    .join(AbstractEntity.class).as("b")
 	    .on().prop("a").eq().prop("v").and()
 	    .begin().begin().beginExpr().prop("a").add().param("v").endExpr().eq().prop("c").end().end()
@@ -152,7 +153,7 @@ public class QueryModelCompositionTest extends BaseEntQueryTCase {
 //	final EntityResultQueryModel<TgVehicle> subQry1 = query.select(TgVehicle.class).where().exists(subQry0).model();
 //	final EntityResultQueryModel<TgWorkOrder> subQry2 = query.select(TgWorkOrder.class).model();
 //	final EntityResultQueryModel<TgVehicle> qry = query.select(TgVehicle.class).as("v").where().existsAnyOf(subQry1, subQry2).model();
-//	final List<EntQuery> exp = Arrays.asList(new EntQuery[]{qb.generateEntQuery(subQry0), qb.generateEntQuery(subQry2)});
-//	assertEquals("models are different", exp, qb.generateEntQuery(qry).getLeafSubqueries());
+//	final List<EntQuery> exp = Arrays.asList(new EntQuery[]{entQuery1(subQry0), entQuery1(subQry2)});
+//	assertEquals("models are different", exp, entQuery1(qry).getLeafSubqueries());
 //    }
 }

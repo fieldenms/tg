@@ -15,12 +15,12 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 public class PropertyPresenceTest extends BaseEntQueryTCase {
 
     private IEntQuerySource getMainSource(final QueryModel qry) {
-	return qb.generateEntQuery(qry).getSources().getMain();
+	return entQuery1(qry).getSources().getMain();
     }
 
     @Test
     public void test_prop1() {
-	final IEntQuerySource mainSource = getMainSource(select(TgVehicle.class).model());
+	final IEntQuerySource mainSource = getMainSource(select(VEHICLE).model());
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("id")).getKey());
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("key")).getKey());
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("desc")).getKey());
@@ -31,7 +31,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 
     @Test
     public void test_prop1a() {
-	final EntityResultQueryModel<TgVehicle> sourceQry = select(TgVehicle.class).model();
+	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).model();
 	final IEntQuerySource mainSource = getMainSource(select(sourceQry).model());
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("id")).getKey());
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("key")).getKey());
@@ -43,7 +43,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 
     @Test
     public void test_prop2() {
-	final IEntQuerySource mainSource = getMainSource(select(TgVehicle.class).as("v").model());
+	final IEntQuerySource mainSource = getMainSource(select(VEHICLE).as("v").model());
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("id")).getKey());
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("key")).getKey());
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("desc")).getKey());
@@ -54,7 +54,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 
     @Test
     public void test_prop2a() {
-	final EntityResultQueryModel<TgVehicle> sourceQry = select(TgVehicle.class).model();
+	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).model();
 	final IEntQuerySource mainSource = getMainSource(select(sourceQry).as("v").model());
 
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("id")).getKey());
@@ -67,7 +67,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 
     @Test
     public void test_prop3() {
-	final IEntQuerySource mainSource = getMainSource(select(TgVehicle.class).as("v").model());
+	final IEntQuerySource mainSource = getMainSource(select(VEHICLE).as("v").model());
 
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("v")).getKey());
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("v.key")).getKey());
@@ -79,7 +79,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 
     @Test
     public void test_prop3a() {
-	final EntityResultQueryModel<TgVehicle> sourceQry = select(TgVehicle.class).model();
+	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).model();
 	final IEntQuerySource mainSource = getMainSource(select(sourceQry).as("v").model());
 
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("v")).getKey());
@@ -92,7 +92,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 
     @Test
     public void test_prop4() {
-	final IEntQuerySource mainSource = getMainSource(select(TgVehicle.class).as("model").model());
+	final IEntQuerySource mainSource = getMainSource(select(VEHICLE).as("model").model());
 
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("model")).getKey());
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("model.model")).getKey());
@@ -102,7 +102,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 
     @Test
     public void test_prop4a() {
-	final EntityResultQueryModel<TgVehicle> sourceQry = select(TgVehicle.class).model();
+	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).model();
 	final IEntQuerySource mainSource = getMainSource(select(sourceQry).as("model").model());
 
 	assertEquals("Property should be present", true, mainSource.containsProperty(prop("model")).getKey());
@@ -211,7 +211,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 
     @Test
     public void test_prop9() {
-	final AggregatedResultQueryModel sourceQry = select(TgVehicle.class).
+	final AggregatedResultQueryModel sourceQry = select(VEHICLE).
 	groupBy().prop("model").
 	yield().prop("model").as("model").yield().minOf().yearOf().prop("initDate").as("earliestInitYear").modelAsAggregate();
 	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("earliestInitYear").ge().val(2000).modelAsAggregate();

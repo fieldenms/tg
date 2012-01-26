@@ -27,9 +27,9 @@ public class EntQuery implements ISingleOperand {
     private final ConditionsModel conditions;
     private final YieldsModel yields;
     private final GroupsModel groups;
-    private final Class resultType;
+    private final Class resultType; // TODO add to equals/hashCode
     private EntQuery master;
-    private final boolean subquery;
+    private final boolean subquery; // TODO add to equals/hashCode
 
     // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
     private final List<Pair<EntQuery, EntProp>> unresolvedProps;
@@ -90,6 +90,10 @@ public class EntQuery implements ISingleOperand {
 	}
 
 	unresolvedProps = resolveProps(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
+
+	if (!subquery) {
+	    validate();
+	}
 
 	for (final Pair<IEntQuerySource, Boolean> sourceWithJoinType : sources.getAllSourcesWithJoinType()) {
 	    sources.getCompounds().addAll(generateImplicitSources(sourceWithJoinType.getKey(), sourceWithJoinType.getValue()));
@@ -497,7 +501,7 @@ public class EntQuery implements ISingleOperand {
 	return false;
     }
 
-    public void validate() {
+    private void validate() {
 	if (unresolvedProps.size() > 0) {
 	    final StringBuffer sb = new StringBuffer();
 	    for (final Pair<EntQuery, EntProp> pair : unresolvedProps) {

@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.fluent.query;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.elements.EntProp;
@@ -17,37 +16,37 @@ import ua.com.fielden.platform.entity.query.model.elements.GroupsModel;
 import ua.com.fielden.platform.entity.query.model.elements.YearOfModel;
 import ua.com.fielden.platform.entity.query.model.elements.YieldModel;
 import ua.com.fielden.platform.entity.query.model.elements.YieldsModel;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 public class QueryModelGroupingCompositionTest extends BaseEntQueryTCase {
     @Test
     public void test_query_with_one_group() {
-	final EntityResultQueryModel<TgWorkOrder> qry = query.select(TgVehicle.class).groupBy().prop("lastWo").yield().prop("lastWo").modelAsEntity(TgWorkOrder.class);
-	final EntQuery act = qb.generateEntQuery(qry);
+	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
+	final EntQuery act = entQuery1(qry);
 
 	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();
-	yields.put("id", new YieldModel(new EntProp("lastWo"), "id"));
+	yields.put("id", new YieldModel(new EntProp("model"), "id"));
 	final YieldsModel exp = new YieldsModel(yields);
 
 	assertEquals("models are different", exp, act.getYields());
 
 	final List<GroupModel> groups = new ArrayList<GroupModel>();
-	groups.add(new GroupModel(new EntProp("lastWo")));
+	groups.add(new GroupModel(new EntProp("model")));
 	final GroupsModel exp2 = new GroupsModel(groups);
 	assertEquals("models are different", exp2, act.getGroups());
     }
 
     @Test
     public void test_query_with_several_groups() {
-	final AggregatedResultQueryModel qry = query.select(TgVehicle.class).groupBy().prop("eqClass").groupBy().yearOf().prop("initDate").yield().prop("eqClass").as("eqClass").yield().yearOf().prop("initDate").as("initYear").modelAsAggregate();
-	final EntQuery act = qb.generateEntQuery(qry);
+	final AggregatedResultQueryModel qry = select(VEHICLE).groupBy().prop("model").groupBy().yearOf().prop("initDate").yield().prop("model").as("model").yield().yearOf().prop("initDate").as("initYear").modelAsAggregate();
+	final EntQuery act = entQuery1(qry);
 	final YearOfModel yearOfModel = new YearOfModel(new EntProp("initDate"));
-	final EntProp eqClassProp = new EntProp("eqClass");
+	final EntProp eqClassProp = new EntProp("model");
 
 	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();
-	yields.put("eqClass", new YieldModel(eqClassProp, "eqClass"));
+	yields.put("model", new YieldModel(eqClassProp, "model"));
 	yields.put("initYear", new YieldModel(yearOfModel, "initYear"));
 	final YieldsModel exp = new YieldsModel(yields);
 	assertEquals("models are different", exp, act.getYields());
