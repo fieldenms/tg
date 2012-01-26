@@ -6,6 +6,11 @@ import java.util.Map;
 public class YieldsModel {
     private final Map<String, YieldModel> yields;
 
+    @Override
+    public String toString() {
+        return yields.toString();
+    }
+
     public YieldsModel(final Map<String, YieldModel> yields) {
 	this.yields = yields;
     }

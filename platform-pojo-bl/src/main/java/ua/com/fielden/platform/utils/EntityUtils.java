@@ -530,7 +530,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isPersistedEntityType(final Class<?> type) {
-	return isEntityType(type) && AnnotationReflector.getAnnotation(MapEntityTo.class, type) != null;
+	return type != null && isEntityType(type) && AnnotationReflector.getAnnotation(MapEntityTo.class, type) != null;
     }
 
     /**

@@ -95,6 +95,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
     @Ignore
     @Test
     public void test_ignore_in_multiple_vs_single_like_test_using_equivalent_model() {
+	// TODO implement anyOfIValues
 	final String [] values = new String[]{null, null, null};
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().allOfProps("model.key", "model.make.key").like().anyOfValues(values).model();
 	final EntityResultQueryModel<TgVehicle> qry2 = select(VEHICLE).where().begin().

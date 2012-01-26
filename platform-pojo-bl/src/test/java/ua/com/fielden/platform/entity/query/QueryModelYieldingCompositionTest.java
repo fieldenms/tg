@@ -70,7 +70,6 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
     }
 
     @Test
-    @Ignore
     public void test_query_2() {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsPrimitive(Long.class);
 	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();

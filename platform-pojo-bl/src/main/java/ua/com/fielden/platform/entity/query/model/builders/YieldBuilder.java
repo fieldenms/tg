@@ -21,7 +21,7 @@ public class YieldBuilder extends AbstractTokensBuilder {
     @Override
     public Pair<TokenCategory, Object> getResult() {
 	final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
-	final String alias = getSize() == 2 ? (String) secondValue() : "id";
+	final String alias = (String) secondValue();
 	return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new YieldModel(operand, alias));
     }
 }

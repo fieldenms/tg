@@ -12,8 +12,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.elements.AbstractEntQuerySource.PropResolutionInfo;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -32,48 +30,34 @@ public class EntQuery implements ISingleOperand {
     private final boolean subquery; // TODO add to equals/hashCode
 
     // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
-    private final List<Pair<EntQuery, EntProp>> unresolvedProps;
+
 
     // modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for unresolved only
     // if at some master the property of this subquery is resolved - it should be removed from here
+    private final List<Pair<EntQuery, EntProp>> unresolvedProps;
+
 
     public YieldModel getYield(final String yieldName) {
 	return yields.getYields().get(yieldName);
     }
 
-    private boolean resultTypeIsRealEntity() {
-	return resultType != null && AbstractEntity.class.isAssignableFrom(resultType) && !EntityAggregates.class.isAssignableFrom(resultType);
-    }
-
     private boolean onlyOneYieldAndWithoutAlias() {
-	return yields.getYields().size() == 1 && yields.getYields().keySet().iterator().next() == null;
+	return yields.getYields().size() == 1 && yields.getYields().values().iterator().next().getAlias() == null;
     }
 
     private boolean idAliasEnhancementRequired() {
-	return onlyOneYieldAndWithoutAlias() && resultTypeIsRealEntity();
+	return onlyOneYieldAndWithoutAlias() && EntityUtils.isPersistedEntityType(resultType);
     }
 
     private boolean allPropsYieldEnhancementRequired() {
-	return yields.getYields().size() == 0 && resultTypeIsRealEntity() && !subquery;
+	return yields.getYields().size() == 0 && EntityUtils.isPersistedEntityType(resultType) && !subquery;
     }
 
     private boolean idPropYieldEnhancementRequired() {
-	return yields.getYields().size() == 0 && resultTypeIsRealEntity() && subquery;
+	return yields.getYields().size() == 0 && EntityUtils.isPersistedEntityType(resultType) && subquery;
     }
 
-    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType, final boolean subquery) {
-	super();
-	this.subquery = subquery;
-	this.sources = sources;
-	this.conditions = conditions;
-	this.yields = yields;
-	this.groups = groups;
-	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? sources.getMain().getType() : null);
-
-	final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
-
-	associateSubqueriesWithMasterQuery(immediateSubqueries);
-
+    private void enhanceYieldsModel() {
 	// enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
 	if (idAliasEnhancementRequired()) {
 	    final YieldModel idModel = new YieldModel(yields.getYields().values().iterator().next().getOperand(), id);
@@ -88,8 +72,25 @@ public class EntQuery implements ISingleOperand {
 	    final String yieldPropAlias = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
 	    yields.getYields().put(id, new YieldModel(new EntProp(yieldPropAlias + id), id));
 	}
+    }
 
-	unresolvedProps = resolveProps(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
+    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType, final boolean subquery) {
+	super();
+	this.subquery = subquery;
+	this.sources = sources;
+	this.conditions = conditions;
+	this.yields = yields;
+	this.groups = groups;
+	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? sources.getMain().getType() : null);
+	final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
+
+	associateSubqueriesWithMasterQuery(immediateSubqueries);
+
+	enhanceYieldsModel();
+
+	final List<Pair<EntQuery, EntProp>> propsToBeResolved = collectPropsToBeResolved(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
+
+	unresolvedProps = resolveProps(propsToBeResolved);
 
 	if (!subquery) {
 	    validate();
@@ -131,19 +132,24 @@ public class EntQuery implements ISingleOperand {
 	return result;
     }
 
-    private List<Pair<EntQuery, EntProp>> resolveProps(final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries) {
-	final List<Pair<EntQuery, EntProp>> unresolvedProps = new ArrayList<Pair<EntQuery, EntProp>>();
+    private List<Pair<EntQuery, EntProp>> collectPropsToBeResolved(final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries) {
+	final List<Pair<EntQuery, EntProp>> result = new ArrayList<Pair<EntQuery, EntProp>>();
 	final List<EntProp> props = getImmediateProps();
 
-	for (final Pair<EntQuery, EntProp> unresolvedPropPair : unresolvedPropsFromSubqueries) {
-	    final Pair<EntQuery, EntProp> propResolutionResult = performPropResolveAction(unresolvedPropPair.getKey(), unresolvedPropPair.getValue());
-	    if (propResolutionResult != null) {
-		unresolvedProps.add(propResolutionResult);
-	    }
-	}
+	result.addAll(unresolvedPropsFromSubqueries);
 
 	for (final EntProp prop : props) {
-	    final Pair<EntQuery, EntProp> propResolutionResult = performPropResolveAction(this, prop);
+	    result.add(new Pair<EntQuery, EntProp>(this, prop));
+	}
+
+	return result;
+    }
+
+    private List<Pair<EntQuery, EntProp>> resolveProps(final List<Pair<EntQuery, EntProp>> propsToBeResolved) {
+	final List<Pair<EntQuery, EntProp>> unresolvedProps = new ArrayList<Pair<EntQuery, EntProp>>();
+
+	for (final Pair<EntQuery, EntProp> propToBeResolvedPair : propsToBeResolved) {
+	    final Pair<EntQuery, EntProp> propResolutionResult = performPropResolveAction(propToBeResolvedPair.getKey(), propToBeResolvedPair.getValue());
 	    if (propResolutionResult != null) {
 		unresolvedProps.add(propResolutionResult);
 	    }
@@ -414,60 +420,6 @@ public class EntQuery implements ISingleOperand {
 	return result;
     }
 
-    @Override
-    public int hashCode() {
-	final int prime = 31;
-	int result = 1;
-	result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
-	result = prime * result + ((groups == null) ? 0 : groups.hashCode());
-	result = prime * result + ((sources == null) ? 0 : sources.hashCode());
-	result = prime * result + ((yields == null) ? 0 : yields.hashCode());
-	return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj == null) {
-	    return false;
-	}
-	if (!(obj instanceof EntQuery)) {
-	    return false;
-	}
-	final EntQuery other = (EntQuery) obj;
-	if (conditions == null) {
-	    if (other.conditions != null) {
-		return false;
-	    }
-	} else if (!conditions.equals(other.conditions)) {
-	    return false;
-	}
-	if (groups == null) {
-	    if (other.groups != null) {
-		return false;
-	    }
-	} else if (!groups.equals(other.groups)) {
-	    return false;
-	}
-	if (sources == null) {
-	    if (other.sources != null) {
-		return false;
-	    }
-	} else if (!sources.equals(other.sources)) {
-	    return false;
-	}
-	if (yields == null) {
-	    if (other.yields != null) {
-		return false;
-	    }
-	} else if (!yields.equals(other.yields)) {
-	    return false;
-	}
-	return true;
-    }
-
     public EntQuerySourcesModel getSources() {
 	return sources;
     }
@@ -514,5 +466,71 @@ public class EntQuery implements ISingleOperand {
     @Override
     public Class type() {
 	return resultType;
+    }
+
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
+	result = prime * result + ((groups == null) ? 0 : groups.hashCode());
+	result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
+	result = prime * result + ((sources == null) ? 0 : sources.hashCode());
+	result = prime * result + (subquery ? 1231 : 1237);
+	result = prime * result + ((yields == null) ? 0 : yields.hashCode());
+	return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	if (this == obj) {
+	    return true;
+	}
+	if (obj == null) {
+	    return false;
+	}
+	if (!(obj instanceof EntQuery)) {
+	    return false;
+	}
+	final EntQuery other = (EntQuery) obj;
+	if (conditions == null) {
+	    if (other.conditions != null) {
+		return false;
+	    }
+	} else if (!conditions.equals(other.conditions)) {
+	    return false;
+	}
+	if (groups == null) {
+	    if (other.groups != null) {
+		return false;
+	    }
+	} else if (!groups.equals(other.groups)) {
+	    return false;
+	}
+	if (resultType == null) {
+	    if (other.resultType != null) {
+		return false;
+	    }
+	} else if (!resultType.equals(other.resultType)) {
+	    return false;
+	}
+	if (sources == null) {
+	    if (other.sources != null) {
+		return false;
+	    }
+	} else if (!sources.equals(other.sources)) {
+	    return false;
+	}
+	if (subquery != other.subquery) {
+	    return false;
+	}
+	if (yields == null) {
+	    if (other.yields != null) {
+		return false;
+	    }
+	} else if (!yields.equals(other.yields)) {
+	    return false;
+	}
+	return true;
     }
 }

@@ -12,6 +12,11 @@ public class YieldModel {
 	this.alias = alias;
     }
 
+    @Override
+    public String toString() {
+        return operand + " as " + alias;
+    }
+
     public ISingleOperand getOperand() {
         return operand;
     }
