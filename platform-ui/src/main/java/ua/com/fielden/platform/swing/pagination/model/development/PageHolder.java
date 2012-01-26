@@ -5,6 +5,7 @@ import javax.swing.event.EventListenerList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.pagination.model.development.IPaginatorModel.PageNavigationPhases;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
  * Holds the page and allows to change page and provides ability to listen page changing events.
@@ -20,13 +21,19 @@ public class PageHolder{
     private IPage<? extends AbstractEntity> page;
 
     /**
-     * Sets the new page for this page holder.
+     * Sets the new page for this page holder. This method also fires page changed event. Please note that the event processing will be performed on EDT.
      * 
      * @param newPage
      */
     public void newPage(final IPage<? extends AbstractEntity> newPage) {
 	this.page = newPage;
-	firePageChanged(new PageChangedEvent(this, newPage));
+	SwingUtilitiesEx.invokeLater(new Runnable() {
+
+	    @Override
+	    public void run() {
+		firePageChanged(new PageChangedEvent(PageHolder.this, newPage));
+	    }
+	});
     }
 
     /**

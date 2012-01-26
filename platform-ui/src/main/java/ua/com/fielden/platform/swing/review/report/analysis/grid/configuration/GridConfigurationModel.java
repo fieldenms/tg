@@ -31,7 +31,7 @@ public class GridConfigurationModel<T extends AbstractEntity> extends AbstractAn
     }
 
     public GridAnalysisModel<T> createGridAnalysisModel() {
-	return new GridAnalysisModel<T>(getCriteria());
+	return new GridAnalysisModel<T>(getCriteria(), getPageHolder());
     }
 
 }

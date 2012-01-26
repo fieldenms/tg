@@ -7,7 +7,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.EntityAggregates;
 import ua.com.fielden.platform.reportquery.AbstractCategoryChartEntryModel;
-import ua.com.fielden.platform.reportquery.ChartModelChangedEvent;
+import ua.com.fielden.platform.reportquery.AnalysisModelChangedEvent;
 import ua.com.fielden.platform.reportquery.IAggregatedProperty;
 import ua.com.fielden.platform.reportquery.ICategoryChartEntryModel;
 import ua.com.fielden.platform.swing.review.analysis.GroupReportQueryCriteriaExtender;
@@ -76,7 +76,7 @@ public class AggregationQueryDataModel<T extends AbstractEntity, DAO extends IEn
 	if(aggregation!=null){
 	    this.aggregation.addAll(aggregation);
 	}
-	notifyChartModelChanged(new ChartModelChangedEvent(this));
+	notifyChartModelChanged(new AnalysisModelChangedEvent(this));
     }
 
 }

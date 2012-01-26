@@ -8,8 +8,8 @@ import java.text.NumberFormat;
 
 import javax.swing.event.EventListenerList;
 
-import ua.com.fielden.platform.reportquery.ChartModelChangedEvent;
-import ua.com.fielden.platform.reportquery.ChartModelChangedListener;
+import ua.com.fielden.platform.reportquery.AnalysisModelChangedEvent;
+import ua.com.fielden.platform.reportquery.AnalysisModelChangedListener;
 import ua.com.fielden.platform.reportquery.ICategoryChartEntryModel;
 
 public abstract class CalculatedNumber {
@@ -31,7 +31,7 @@ public abstract class CalculatedNumber {
 	this.listenerList = new EventListenerList();
 
 	if(chartModel != null){
-	    chartModel.addChartModelChangedListener(createChartModelChangedListener());
+	    chartModel.addAnalysisModelChangedListener(createChartModelChangedListener());
 	}
 
 	for(final CalculatedNumber number : calculatedNumbers){
@@ -53,11 +53,11 @@ public abstract class CalculatedNumber {
 	};
     }
 
-    private ChartModelChangedListener createChartModelChangedListener() {
-	return new ChartModelChangedListener() {
+    private AnalysisModelChangedListener createChartModelChangedListener() {
+	return new AnalysisModelChangedListener() {
 
 	    @Override
-	    public void cahrtModelChanged(final ChartModelChangedEvent event) {
+	    public void cahrtModelChanged(final AnalysisModelChangedEvent event) {
 		setNumber(calculate());
 	    }
 	};

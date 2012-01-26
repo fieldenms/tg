@@ -5,11 +5,9 @@ import javax.swing.Action;
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.egi.EgiPanel;
-import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
@@ -19,8 +17,8 @@ public class GridAnalysisView<T extends AbstractEntity> extends AbstractAnalysis
 
     private final EgiPanel<T> egiPanel;
 
-    public GridAnalysisView(final GridAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T> owner, final PageHolder pageHolder) {
-	super(model, progressLayer, owner, pageHolder);
+    public GridAnalysisView(final GridAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T> owner) {
+	super(model, progressLayer, owner);
 	this.egiPanel = new EgiPanel<T>(getModel().getGridModel(), false);
 	layoutView();
     }
@@ -65,23 +63,4 @@ public class GridAnalysisView<T extends AbstractEntity> extends AbstractAnalysis
 	// TODO Auto-generated method stub
 
     }
-
-    @Override
-    protected Result canLoadData() {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    protected IPage<T> executeAnalysisQuery() {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    protected void setDataToView(final IPage<T> data) {
-	// TODO Auto-generated method stub
-
-    }
-
 }

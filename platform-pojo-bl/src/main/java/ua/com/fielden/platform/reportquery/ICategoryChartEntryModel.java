@@ -52,16 +52,16 @@ public interface ICategoryChartEntryModel {
     Number getValue(final int row, final int column);
 
     /**
-     * Adds the {@link ChartModelChangedListener} instance, that listens the chart model change events.
+     * Adds the {@link AnalysisModelChangedListener} instance, that listens the chart model change events.
      * 
      * @param l
      */
-    void addChartModelChangedListener(final ChartModelChangedListener l);
+    void addAnalysisModelChangedListener(final AnalysisModelChangedListener l);
 
     /**
-     * Removes the {@link ChartModelChangedListener} instance.
+     * Removes the {@link AnalysisModelChangedListener} instance.
      * 
      * @param l
      */
-    void removeChartModelChangedListener(final ChartModelChangedListener l);
+    void removeAnalysisModelChangedListener(final AnalysisModelChangedListener l);
 }

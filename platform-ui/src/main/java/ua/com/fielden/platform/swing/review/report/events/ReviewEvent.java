@@ -13,7 +13,10 @@ public class ReviewEvent extends EventObject {
     private static final long serialVersionUID = -8695504451663349353L;
 
     /**
-     * Represents phases of review actions: configure, save, save as, remove.
+     * Represents phases of review actions: configure, save, save as, save as default, load default, remove.
+     * The save as default and load default actions must be available only for entity locators.
+     * The save as action must be disabled for entity locator.
+     * The remove action must be disabled for entity locator and principle entity centre.
      * 
      * @author TG Team
      *
@@ -23,7 +26,8 @@ public class ReviewEvent extends EventObject {
 	PRE_SAVE, SAVE, POST_SAVE,
 	PRE_SAVE_AS, SAVE_AS, POST_SAVE_AS,
 	PRE_SAVE_AS_DEFAULT, SAVE_AS_DEFAULT, POST_SAVE_AS_DEFAULT,
-	PRE_REMOVE, REMOVE, POST_REMOVE;
+	PRE_REMOVE, REMOVE, POST_REMOVE,
+	PRE_LOAD_DEFAULT, LOAD_DEFAULT, POST_LOAD_DEFAULT;
     }
 
     private final ReviewAction reviewAction;
@@ -39,7 +43,7 @@ public class ReviewEvent extends EventObject {
 	this.reviewAction = reviewAction;
     }
 
-    public ReviewAction getConfigureAction() {
+    public ReviewAction getReviewAction() {
 	return reviewAction;
     }
 

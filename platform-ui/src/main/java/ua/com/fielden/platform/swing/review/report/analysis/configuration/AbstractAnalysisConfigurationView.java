@@ -3,7 +3,6 @@ package ua.com.fielden.platform.swing.review.report.analysis.configuration;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
-import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
@@ -25,18 +24,13 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
      */
     private final AbstractEntityCentre<T> owner;
 
-    /**
-     * The page holder for this analysis.
-     */
-    private final PageHolder pageHolder;
 
     public AbstractAnalysisConfigurationView(final String analysisName, final AbstractAnalysisConfigurationModel model, final AbstractEntityCentre<T> owner, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	this.analysisName = analysisName;
 	this.owner = owner;
-	this.pageHolder = new PageHolder();
 	addSelectionEventListener(createSelectionListener());
-	owner.getPageHolderManager().addPageHolder(getPageHolder());
+	owner.getPageHolderManager().addPageHolder(getModel().getPageHolder());
     }
 
     private ISelectionEventListener createSelectionListener() {
@@ -48,7 +42,7 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 		case REPORT : getPreviousView().select(); break;
 		case WIZARD : getPreviousWizard().select();break;
 		}
-		owner.getPageHolderManager().selectPageHolder(getPageHolder());
+		owner.getPageHolderManager().selectPageHolder(getModel().getPageHolder());
 	    }
 	};
     }
@@ -71,12 +65,8 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 	return analysisName;
     }
 
-    /**
-     * Returns the {@link PageHolder} instance for this analysis configuration view.
-     * 
-     * @return
-     */
-    public PageHolder getPageHolder() {
-	return pageHolder;
+    @Override
+    public AbstractAnalysisConfigurationModel getModel() {
+	return (AbstractAnalysisConfigurationModel)super.getModel();
     }
 }

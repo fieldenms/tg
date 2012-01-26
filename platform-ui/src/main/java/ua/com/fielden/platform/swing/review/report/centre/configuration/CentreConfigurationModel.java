@@ -69,48 +69,50 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 	this.criteriaGenerator = criteriaGenerator;
     }
 
+    public EntityCentreModel<T> createEntityCentreModel() {
+	final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(entityType(), name());
+	if(cdtm == null){
+	    throw new IllegalStateException("The centre manager is not specified");
+	}
+	return new EntityCentreModel<T>(criteriaGenerator.generateCentreQueryCriteria(entityType, cdtm), name());
+    }
 
+    public DomainTreeEditorModel<T> createDomainTreeEditorModel() {
+	final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(entityType(), name());
+	if(cdtm == null){
+	    gdtm.initEntityCentreManager(entityType(), name());
+	}
+	return new DomainTreeEditorModel<T>(getEntityFactory(), gdtm.getEntityCentreManager(entityType(), name()), entityType());
+    }
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
 	if(ReportMode.REPORT.equals(mode)){
-	    final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(getEntityType(), getName());
+	    final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(entityType(), name());
 	    if(cdtm == null){
 		return new Result(this, new CanNotSetModeException("This report is opened for the first time!"));
 	    }
-	    if(cdtm.getSecondTick().checkedProperties(getEntityType()).isEmpty()){
+	    if(cdtm.getSecondTick().checkedProperties(entityType()).isEmpty()){
 		return new Result(this, new Exception("Please chose prpoerties to see in the table."));
 	    }
 	}
 	return Result.successful(this);
     }
 
-    public EntityCentreModel<T> createEntityCentreModel() {
-	final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(getEntityType(), getName());
-	if(cdtm == null){
-	    throw new IllegalStateException("The centre manager is not specified");
-	}
-	return new EntityCentreModel<T>(criteriaGenerator.generateCentreQueryCriteria(entityType, cdtm));
-    }
-
     private EntityFactory getEntityFactory() {
 	return entityFactory;
     }
 
-    private Class<T> getEntityType() {
-	return entityType;
-    }
-
-    private String getName(){
+    final String name(){
 	return name;
     }
 
-    public DomainTreeEditorModel<T> createDomainTreeEditorModel() {
-	final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(getEntityType(), getName());
-	if(cdtm == null){
-	    gdtm.initEntityCentreManager(getEntityType(), getName());
-	}
-	return new DomainTreeEditorModel<T>(getEntityFactory(), gdtm.getEntityCentreManager(getEntityType(), getName()), getEntityType());
+    final IGlobalDomainTreeManager gdtm() {
+	return gdtm;
+    }
+
+    final Class<T> entityType(){
+	return entityType;
     }
 
     //    /**

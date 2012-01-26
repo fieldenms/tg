@@ -25,7 +25,7 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, DTM extends
 
     private final BlockingIndefiniteProgressLayer progressLayer;
 
-    private final Action configureAction, saveAction, saveAsAction, saveAsDefaultAction, removeAction;
+    private final Action configureAction, saveAction, saveAsAction, saveAsDefaultAction, loadDefaultAction, removeAction;
 
     public AbstractEntityReview(final AbstractEntityReviewModel<T, DTM> model, final BlockingIndefiniteProgressLayer progressLayer){
 	this.model = model;
@@ -34,6 +34,7 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, DTM extends
 	this.saveAction = createSaveAction();
 	this.saveAsAction = createSaveAsAction();
 	this.saveAsDefaultAction = createSaveAsDefaultAction();
+	this.loadDefaultAction = createLoadDefaultAction();
 	this.removeAction = createRemoveAction();
 
     }
@@ -44,6 +45,10 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, DTM extends
 
     public final Action getSaveAction(){
 	return saveAction;
+    }
+
+    public final Action getLoadDefaultAction(){
+	return loadDefaultAction;
     }
 
     public final Action getSaveAsDefaultAction() {
@@ -105,6 +110,10 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, DTM extends
 
     protected Action createRemoveAction() {
 	return createReviewAction("Delete", "Delete current report", ReviewAction.PRE_REMOVE, ReviewAction.REMOVE, ReviewAction.POST_REMOVE);
+    }
+
+    protected Action createLoadDefaultAction() {
+	return createReviewAction("Load default", "Loads default locator configuration and updates local configuration", ReviewAction.PRE_LOAD_DEFAULT, ReviewAction.LOAD_DEFAULT, ReviewAction.POST_LOAD_DEFAULT);
     }
 
     protected Action createSaveAsDefaultAction() {

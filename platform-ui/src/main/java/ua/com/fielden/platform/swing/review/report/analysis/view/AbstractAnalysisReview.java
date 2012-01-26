@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
-import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.utils.Pair;
@@ -22,23 +21,25 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity, ADTM exte
     private static final long serialVersionUID = -1195915524813089236L;
 
     private final AbstractEntityCentre<T> owner;
-    private final PageHolder pageHolder;
 
     private final Action loadAction;
     private final Action exportAction;
 
-    public AbstractAnalysisReview(final AbstractAnalysisReviewModel<T, ADTM> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T> owner, final PageHolder pageHolder) {
+    public AbstractAnalysisReview(final AbstractAnalysisReviewModel<T, ADTM, LDT> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T> owner) {
 	super(model, progressLayer);
 	this.owner = owner;
-	this.pageHolder = pageHolder;
-	pageHolder.newPage(null);
-
 	this.loadAction = createLoadAction();
 	this.exportAction = createExportAction();
     }
 
     public AbstractEntityCentre<T> getOwner() {
 	return owner;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public AbstractAnalysisReviewModel<T, ADTM, LDT> getModel() {
+	return (AbstractAnalysisReviewModel<T, ADTM, LDT>)super.getModel();
     }
 
     private Action createLoadAction() {
@@ -66,9 +67,9 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity, ADTM exte
 
 	    @Override
 	    protected Pair<Result,LDT> action(final ActionEvent e) throws Exception {
-		final Result result = canLoadData();
+		final Result result = getModel().canLoadData();
 		if(result.isSuccessful()){
-		    return new Pair<Result, LDT>(result, executeAnalysisQuery());
+		    return new Pair<Result, LDT>(result, getModel().executeAnalysisQuery());
 		}
 		return new Pair<Result, LDT>(result, null);
 	    }
@@ -77,9 +78,10 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity, ADTM exte
 	    protected void postAction(final Pair<Result,LDT> result) {
 		if (!result.getKey().isSuccessful()) {
 		    JOptionPane.showMessageDialog(AbstractAnalysisReview.this, result.getKey().getMessage());
-		} else {
-		    setDataToView(result.getValue()); // note that currently setting data to view and updating buttons state etc. perform in this single IReviewContract implementor method.
 		}
+		//		else {
+		//		    setDataToView(result.getValue()); // note that currently setting data to view and updating buttons state etc. perform in this single IReviewContract implementor method.
+		//		}
 		enableRelatedActions(true, false);
 		super.postAction(result);
 	    }
@@ -112,8 +114,8 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity, ADTM exte
     }
 
     /**
-     * Enables or disables actions related to this analysis (run, export, paginator actions e.t.c.). If the enable parameter is true then the second navigation parameter is ignored.
-     * If the enable is false then the second parameter determines whether the loaded data is navigated or it is loading for the first time.
+     * Enables or disables actions related to this analysis (run, export, paginator actions e.t.c.). The second parameter determines
+     * whether this method was invoked after page navigation or after the data loading.
      * 
      * @param enable
      * @param navigate
@@ -136,27 +138,6 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity, ADTM exte
     //	    getOwner().getRunAction().setEnabled(false);
     //	}
     //    }
-
-    /**
-     * Determines whether this analysis can load data, and returns {@link Result} instance with exception, warning, or successful result.
-     * 
-     * @return
-     */
-    abstract protected Result canLoadData();
-
-    /**
-     * Executes analysis query, and returns the result set of the query execution.
-     * 
-     * @return
-     */
-    abstract protected LDT executeAnalysisQuery();
-
-    /**
-     * Must update view according to the passed data.
-     * 
-     * @param value
-     */
-    abstract protected void setDataToView(final LDT data);
 
     //    public PageHolder<AbstractEntity> getPageHolder(){
     //	return pageHolder;

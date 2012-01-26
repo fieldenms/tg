@@ -25,7 +25,7 @@ public class GridConfigurationPanel<T extends AbstractEntity> extends AbstractAn
 
     @Override
     protected GridAnalysisView<T> createConfigurableView() {
-	return new GridAnalysisView<T>(getModel().createGridAnalysisModel(), getProgressLayer(), getOwner(), getPageHolder());
+	return new GridAnalysisView<T>(getModel().createGridAnalysisModel(), getProgressLayer(), getOwner());
     }
 
     @Override

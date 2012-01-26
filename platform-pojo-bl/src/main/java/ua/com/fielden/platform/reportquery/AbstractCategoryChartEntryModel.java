@@ -11,23 +11,23 @@ public abstract class AbstractCategoryChartEntryModel implements ICategoryChartE
     }
 
     @Override
-    public void addChartModelChangedListener(final ChartModelChangedListener l) {
-	listenerList.add(ChartModelChangedListener.class, l);
+    public void addAnalysisModelChangedListener(final AnalysisModelChangedListener l) {
+	listenerList.add(AnalysisModelChangedListener.class, l);
     }
 
     @Override
-    public void removeChartModelChangedListener(final ChartModelChangedListener l) {
-	listenerList.add(ChartModelChangedListener.class, l);
+    public void removeAnalysisModelChangedListener(final AnalysisModelChangedListener l) {
+	listenerList.add(AnalysisModelChangedListener.class, l);
     }
 
-    protected void notifyChartModelChanged(final ChartModelChangedEvent event){
+    protected void notifyChartModelChanged(final AnalysisModelChangedEvent event){
 	// Guaranteed to return a non-null array
 	final Object[] listeners = listenerList.getListenerList();
 	// Process the listeners last to first, notifying
 	// those that are interested in this event
 	for (int i = listeners.length-2; i>=0; i-=2) {
-	    if (listeners[i]==ChartModelChangedListener.class) {
-		((ChartModelChangedListener)listeners[i+1]).cahrtModelChanged(event);
+	    if (listeners[i]==AnalysisModelChangedListener.class) {
+		((AnalysisModelChangedListener)listeners[i+1]).cahrtModelChanged(event);
 	    }
 	}
 

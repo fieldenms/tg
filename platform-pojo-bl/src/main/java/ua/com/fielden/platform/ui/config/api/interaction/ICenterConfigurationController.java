@@ -11,41 +11,41 @@ import java.util.List;
 public interface ICenterConfigurationController extends IConfigurationController, ICenterConfigurationManager {
 
     /**
-     * Returns the key for the principle entity center.
+     * Returns the key for the principle entity centre.
      *
      * @param forType
-     *            - type for which entity center key should be generated.
+     *            - type for which entity centre key should be generated.
      * @return
      */
     String generateKeyForPrincipleCenter(final Class<?> forType);
 
     /**
-     * Returns the key for the non principle entity center specified with appropriate principle entity center and name of the non principle center.
+     * Returns the key for the non principle entity centre specified with appropriate principle entity center and name of the non principle center.
      *
      * @param principleCenterKey
-     *            - key for appropriate principle entity center.
+     *            - key for appropriate principle entity centre.
      * @param nonPrincipleCenterName
-     *            - the name of the non principle entity center.
+     *            - the name of the non principle entity centre.
      * @return
      */
     String generateKeyForNonPrincipleCenter(final String principleCenterKey, final String nonPrincipleCenterName);
 
     /**
-     * Returns all non principle entity centers for principle specified with principleCenterKey parameter.
+     * Returns all non principle entity centres for principle specified with principleCenterKey parameter.
      *
      * @param principleCenterKey
-     *            - specifies principle entity center for which non principle centers should be retrieved.
+     *            - specifies principle entity centre for which non principle centres should be retrieved.
      * @return
      */
     List<String> getNonPrincipleCenters(final String principleCenterKey);
 
     /**
-     * Determines whether specified non principle entity center name is valid or not.
+     * Determines whether specified non principle entity centre name is valid or not.
      *
      * @param principleCenterKey
-     *            - the principle entity center key for which nonPrincipleCenterName must be validated.
+     *            - the principle entity centre key for which nonPrincipleCenterName must be validated.
      * @param nonPrincipleCenterName
-     *            - Non principle entity center name.
+     *            - Non principle entity centre name.
      */
     boolean isNonPrincipleCenterNameValid(final String principleCenterKey, final String nonPrincipleCenterName);
 

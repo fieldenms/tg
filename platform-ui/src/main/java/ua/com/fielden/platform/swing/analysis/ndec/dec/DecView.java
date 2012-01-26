@@ -8,8 +8,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.reportquery.ChartModelChangedEvent;
-import ua.com.fielden.platform.reportquery.ChartModelChangedListener;
+import ua.com.fielden.platform.reportquery.AnalysisModelChangedEvent;
+import ua.com.fielden.platform.reportquery.AnalysisModelChangedListener;
 import ua.com.fielden.platform.swing.analysis.ndec.DecChartPanel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 
@@ -42,7 +42,7 @@ public class DecView{
 	    calculatedNumberPanel = null;
 	}
 	chartPanel = new DecChartPanel(model.createChart());
-	model.getChartModel().addChartModelChangedListener(createChartModelChangedListener(chartPanel));
+	model.getChartModel().addAnalysisModelChangedListener(createChartModelChangedListener(chartPanel));
     }
 
     public JPanel getCalculatedNumberPanel(){
@@ -53,11 +53,11 @@ public class DecView{
 	return chartPanel;
     }
 
-    private ChartModelChangedListener createChartModelChangedListener(final DecChartPanel chartPanel) {
-	return new ChartModelChangedListener() {
+    private AnalysisModelChangedListener createChartModelChangedListener(final DecChartPanel chartPanel) {
+	return new AnalysisModelChangedListener() {
 
 	    @Override
-	    public void cahrtModelChanged(final ChartModelChangedEvent event) {
+	    public void cahrtModelChanged(final AnalysisModelChangedEvent event) {
 		chartPanel.setChart(getModel().createChart());
 	    }
 	};

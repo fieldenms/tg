@@ -13,8 +13,20 @@ public class EntityCentreModel<T extends AbstractEntity> extends AbstractEntityR
     //TODO is result view model is needed?
     //private AbstractAnalysisConfigurationModel resultViewModel;
 
-    public EntityCentreModel(final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria){
+    private final String name;
+
+    public EntityCentreModel(final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final String name){
 	super(criteria);
+	this.name = name;
+    }
+
+    /**
+     * Returns the name of the entity centre. If the name is null then entity centre is principle, otherwise it is non principle entity centre.
+     * 
+     * @return
+     */
+    public String getName() {
+	return name;
     }
 
     /**

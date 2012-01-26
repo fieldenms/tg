@@ -41,8 +41,8 @@ public class AggregationSorter<T extends AbstractEntity, DAO extends IEntityDao<
 	    return defaultCompare(o1, o2);
 	}
 	for (final Pair<Integer, SortOrder> sortingParam : sortOrders) {
-	    final Comparable value1 = (Comparable) o1.getValueAt(sortingParam.getKey().intValue() + 1);
-	    final Comparable value2 = (Comparable) o2.getValueAt(sortingParam.getKey().intValue() + 1);
+	    final Comparable<?> value1 = (Comparable) o1.getValueAt(sortingParam.getKey().intValue() + 1);
+	    final Comparable<?> value2 = (Comparable) o2.getValueAt(sortingParam.getKey().intValue() + 1);
 	    int result = 0;
 	    if (value1 == null) {
 		if (value2 != null) {

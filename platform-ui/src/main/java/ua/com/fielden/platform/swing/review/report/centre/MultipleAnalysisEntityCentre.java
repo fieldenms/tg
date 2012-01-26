@@ -38,6 +38,21 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
 	return getReviewProgressLayer();
     }
 
+    @Override
+    protected Action createSaveAsDefaultAction() {
+	return null;
+    }
+
+    @Override
+    protected Action createLoadDefaultAction() {
+	return null;
+    }
+
+    @Override
+    protected Action createRemoveAction() {
+	return getModel().getName() == null ? null : super.createRemoveAction();
+    }
+
     private JideTabbedPane createReview() {
 	final JideTabbedPane tabPane = new JideTabbedPane();
 	tabPane.setModel(createTabbedPaneModel(tabPane));

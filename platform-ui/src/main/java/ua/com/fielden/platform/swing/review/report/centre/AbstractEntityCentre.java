@@ -446,6 +446,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
 	addActionIfNotNull(actionList, getSaveAction());
 	addActionIfNotNull(actionList, getSaveAsAction());
 	addActionIfNotNull(actionList, getSaveAsDefaultAction());
+	addActionIfNotNull(actionList, getLoadDefaultAction());
 	addActionIfNotNull(actionList, getRemoveAction());
 
 	if(actionList.size() == 1){

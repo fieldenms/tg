@@ -8,6 +8,8 @@ import javax.swing.event.EventListenerList;
 
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
+import ua.com.fielden.platform.swing.review.report.events.WizardCancelledEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.IWizardCancelledEventListener;
 
 public abstract class AbstractConfigurationModel {
 
@@ -39,6 +41,24 @@ public abstract class AbstractConfigurationModel {
     }
 
     /**
+     * This cancels the modifications made in the wizard and set the REPORT mode if it's possible.
+     * 
+     * @param mode
+     */
+    final void cancelWizardModification() throws Exception {
+	if(ReportMode.REPORT.equals(mode)){
+	    return;
+	}
+	final Result setModeResult = canSetMode(ReportMode.REPORT);
+	if(setModeResult.isSuccessful()){
+	    this.mode = ReportMode.REPORT;
+	    fireWizardModificationCancelledEvent(new WizardCancelledEvent(this));
+	}else{
+	    throw setModeResult.getEx();
+	}
+    }
+
+    /**
      * Set the specified mode for this {@link AbstractConfigurationModel}.
      * 
      * @param mode
@@ -55,6 +75,24 @@ public abstract class AbstractConfigurationModel {
 	}else{
 	    throw setModeResult.getEx();
 	}
+    }
+
+    /**
+     * See {@link EventListenerList#add(Class, java.util.EventListener)}.
+     * 
+     * @param l
+     */
+    public void addWizardCancelledEventListener(final IWizardCancelledEventListener l){
+	this.listenerList.add(IWizardCancelledEventListener.class, l);
+    }
+
+    /**
+     * See {@link EventListenerList#remove(Class, java.util.EventListener)}.
+     * 
+     * @param l
+     */
+    public void removeWizardCancelledEventListener(final IWizardCancelledEventListener l){
+	this.listenerList.remove(IWizardCancelledEventListener.class, l);
     }
 
     /**
@@ -83,6 +121,17 @@ public abstract class AbstractConfigurationModel {
     protected final void firePropertyChangeEvent(final PropertyChangeEvent event) {
 	for(final PropertyChangeListener listener : listenerList.getListeners(PropertyChangeListener.class)){
 	    listener.propertyChange(event);
+	}
+    }
+
+    /**
+     * Notifies all the {@link IWizardCancelledEventListener}s that the wizard cancelled it's changes.
+     * 
+     * @param event
+     */
+    protected final void fireWizardModificationCancelledEvent(final WizardCancelledEvent event){
+	for(final IWizardCancelledEventListener listener : listenerList.getListeners(IWizardCancelledEventListener.class)){
+	    listener.wizardCancelled(event);
 	}
     }
 
