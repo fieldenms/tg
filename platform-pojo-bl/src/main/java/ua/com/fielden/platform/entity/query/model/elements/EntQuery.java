@@ -35,7 +35,7 @@ public class EntQuery implements ISingleOperand {
 
     // modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for unresolved only
     // if at some master the property of this subquery is resolved - it should be removed from here
-    private final List<Pair<EntQuery, EntProp>> unresolvedProps;
+    private final List<EntProp> unresolvedProps;
 
 
     public YieldModel getYield(final String yieldName) {
@@ -83,13 +83,19 @@ public class EntQuery implements ISingleOperand {
 	this.yields = yields;
 	this.groups = groups;
 	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? sources.getMain().sourceType() : null);
-	final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
 
+	enhanceYieldsModel(); //!! adds new properties in yield section
+
+	final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
 	associateSubqueriesWithMasterQuery(immediateSubqueries);
 
-	enhanceYieldsModel();
+	final List<EntProp> immediateProperties = getImmediateProps();
+	associatePropertiesWithHoldingQuery(immediateProperties);
 
-	final List<Pair<EntQuery, EntProp>> propsToBeResolved = collectPropsToBeResolved(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
+
+	final List<EntProp> propsToBeResolved = new ArrayList<EntProp>();
+	propsToBeResolved.addAll(immediateProperties);
+	propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
 
 	unresolvedProps = resolveProps(propsToBeResolved);
 
@@ -104,19 +110,24 @@ public class EntQuery implements ISingleOperand {
 	//resolveProps(unresolvedPropsFromSubqueries);
     }
 
-
-    private void assignMaster(final EntQuery master) {
+    private void setMaster(final EntQuery master) {
 	this.master = master;
     }
 
     private void associateSubqueriesWithMasterQuery(final List<EntQuery> immediateSubqueries) {
 	for (final EntQuery entQuery : immediateSubqueries) {
-	    entQuery.assignMaster(this);
+	    entQuery.setMaster(this);
 	}
     }
 
-    private List<Pair<EntQuery, EntProp>> collectUnresolvedPropsFromSubqueries(final List<EntQuery> immediateSubqueries) {
-	final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries = new ArrayList<Pair<EntQuery, EntProp>>();
+    private void associatePropertiesWithHoldingQuery(final List<EntProp> immediateProperties) {
+	for (final EntProp entProp : immediateProperties) {
+	    entProp.setHolder(this);
+	}
+    }
+
+    private List<EntProp> collectUnresolvedPropsFromSubqueries(final List<EntQuery> immediateSubqueries) {
+	final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<EntProp>();
 	for (final EntQuery entQuery : immediateSubqueries) {
 	    unresolvedPropsFromSubqueries.addAll(entQuery.unresolvedProps);
 	    entQuery.unresolvedProps.clear();
@@ -126,31 +137,18 @@ public class EntQuery implements ISingleOperand {
 
     private List<EntQueryCompoundSourceModel> generateImplicitSources(final IEntQuerySource source, final boolean leftJoined) {
 	final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
-	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, extractNames(source.getReferencingProps(), source.getAlias()));
+	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, extractNames(source.getReferencingProps(), source.getAlias()), this);
 	for (final PropTree propTree : propTrees) {
 	    result.addAll(propTree.getSourceModels());
 	}
 	return result;
     }
 
-    private List<Pair<EntQuery, EntProp>> collectPropsToBeResolved(final List<Pair<EntQuery, EntProp>> unresolvedPropsFromSubqueries) {
-	final List<Pair<EntQuery, EntProp>> result = new ArrayList<Pair<EntQuery, EntProp>>();
-	final List<EntProp> props = getImmediateProps();
+    private List<EntProp> resolveProps(final List<EntProp> propsToBeResolved) {
+	final List<EntProp> unresolvedProps = new ArrayList<EntProp>();
 
-	result.addAll(unresolvedPropsFromSubqueries);
-
-	for (final EntProp prop : props) {
-	    result.add(new Pair<EntQuery, EntProp>(this, prop));
-	}
-
-	return result;
-    }
-
-    private List<Pair<EntQuery, EntProp>> resolveProps(final List<Pair<EntQuery, EntProp>> propsToBeResolved) {
-	final List<Pair<EntQuery, EntProp>> unresolvedProps = new ArrayList<Pair<EntQuery, EntProp>>();
-
-	for (final Pair<EntQuery, EntProp> propToBeResolvedPair : propsToBeResolved) {
-	    final Pair<EntQuery, EntProp> propResolutionResult = performPropResolveAction(propToBeResolvedPair.getKey(), propToBeResolvedPair.getValue());
+	for (final EntProp propToBeResolvedPair : propsToBeResolved) {
+	    final EntProp propResolutionResult = performPropResolveAction(propToBeResolvedPair);
 	    if (propResolutionResult != null) {
 		unresolvedProps.add(propResolutionResult);
 	    }
@@ -174,7 +172,7 @@ public class EntQuery implements ISingleOperand {
      * @param prop
      * @return
      */
-    private Pair<EntQuery, EntProp> performPropResolveAction(final EntQuery holder, final EntProp prop) {
+    private EntProp performPropResolveAction(final EntProp prop) {
 	final Map<IEntQuerySource, PropResolutionInfo> result = new HashMap<IEntQuerySource, PropResolutionInfo>();
 
 	for (final IEntQuerySource source : sources.getAllSources()) {
@@ -185,7 +183,7 @@ public class EntQuery implements ISingleOperand {
 	}
 
 	if (result.size() == 0) {
-	    return new Pair<EntQuery, EntProp>(holder, prop);
+	    return prop;
 	} else if (result.size() == 1) {
 	    prop.setPropType(result.values().iterator().next().getPropType());
 	    result.keySet().iterator().next().addReferencingProp(prop);
@@ -232,15 +230,17 @@ public class EntQuery implements ISingleOperand {
 	boolean leftJoin;
 	EntQuerySourceAsEntity qrySource;
 	Set<PropTree> subprops;
+	EntQuery owner;
 
-	public PropTree(final EntQuerySourceAsEntity qrySource, final boolean leftJoin, final Set<PropTree> subprops) {
+	public PropTree(final EntQuerySourceAsEntity qrySource, final boolean leftJoin, final Set<PropTree> subprops, final EntQuery owner) {
 	    this.qrySource = qrySource;
 	    this.subprops = subprops;
 	    this.leftJoin = leftJoin;
+	    this.owner = owner;
 	}
 
 	private ConditionsModel joinCondition(final String leftProp, final String rightProp) {
-	    return new ConditionsModel(new ComparisonTestModel(new EntProp(leftProp), ComparisonOperator.EQ, new EntProp(rightProp)));
+	    return new ConditionsModel(new ComparisonTestModel(new EntProp(leftProp, Long.class, owner), ComparisonOperator.EQ, new EntProp(rightProp, Long.class, owner)));
 	}
 
 	private JoinType joinType(final boolean leftJoin) {
@@ -421,7 +421,7 @@ public class EntQuery implements ISingleOperand {
 	return resultType;
     }
 
-    public List<Pair<EntQuery, EntProp>> getUnresolvedProps() {
+    public List<EntProp> getUnresolvedProps() {
 	return unresolvedProps;
     }
 
@@ -433,8 +433,8 @@ public class EntQuery implements ISingleOperand {
     private void validate() {
 	if (unresolvedProps.size() > 0) {
 	    final StringBuffer sb = new StringBuffer();
-	    for (final Pair<EntQuery, EntProp> pair : unresolvedProps) {
-		sb.append(pair.getValue().getName() + "\n");
+	    for (final EntProp pair : unresolvedProps) {
+		sb.append(pair.getName() + "\n");
 	    }
 	    throw new RuntimeException("Couldn't resolve all properties: \n" + sb.toString());
 	}

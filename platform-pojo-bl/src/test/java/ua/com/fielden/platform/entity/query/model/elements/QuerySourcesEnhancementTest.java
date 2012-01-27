@@ -175,4 +175,23 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 
 	assertEquals("Incorrect list of unresolved props", entQuery1(explicitQry), entQuery1(shortcutQry));
     }
+
+    @Test
+    public void test_prop_to_source_association24() {
+	final EntityResultQueryModel<TgVehicle> shortcutQry = select(VEHICLE). //
+	leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv"). //
+	join(VEHICLE).as("rv2").on().prop("rv.replacedBy").eq().prop("rv2"). //
+	where().prop("model.make.key").eq().val("MERC").and().prop("rv2.model.make.key").ne().val("MERC").model();
+	// this illustrates the case of records being ate by explicit IJ after explicit LJ and how implicit joins are generated for (sub)properties of explicit IJ (aliased as rv2)
+	final EntityResultQueryModel<TgVehicle> explicitQry = select(VEHICLE). //
+	leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv"). //
+	join(VEHICLE).as("rv2").on().prop("rv.replacedBy").eq().prop("rv2"). //
+	join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
+	leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+	join(MODEL).as("rv2.model").on().prop("rv2.model").eq().prop("rv2.model.id"). //
+	leftJoin(MAKE).as("rv2.model.make").on().prop("rv2.model.make").eq().prop("rv2.model.make.id"). //
+	where().prop("model.make.key").eq().val("MERC").and().prop("rv2.model.make.key").ne().val("MERC").model();
+
+	assertEquals("Incorrect list of unresolved props", entQuery1(explicitQry), entQuery1(shortcutQry));
+    }
 }

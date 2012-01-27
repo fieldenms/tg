@@ -11,6 +11,7 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
     	this(entityType, alias, false);
     }
 
+
     public EntQuerySourceAsEntity(final Class<? extends AbstractEntity> entityType, final String alias, final boolean generated) {
 	super(alias);
 	this.entityType = entityType;
@@ -29,7 +30,7 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
 
     @Override
     public String toString() {
-        return entityType.getSimpleName() + " aliased as [" + getAlias() + "]";
+        return entityType.getSimpleName() + "-table AS " + getAlias() + " /*GEN*/";
     }
 
     @Override

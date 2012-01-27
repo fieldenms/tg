@@ -16,6 +16,16 @@ public class EntQuerySourcesModel {
 	this.compounds = compounds;
     }
 
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer();
+        sb.append(main);
+        for (final EntQueryCompoundSourceModel compound : compounds) {
+            sb.append(" " + compound);
+        }
+        return sb.toString();
+    }
+
     public IEntQuerySource getMain() {
         return main;
     }

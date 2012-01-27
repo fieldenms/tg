@@ -11,6 +11,11 @@ public class ComparisonTestModel implements ICondition {
     private final ISingleOperand rightOperand;
     private final ComparisonOperator operator;
 
+    @Override
+    public String toString() {
+        return leftOperand + " " + operator + " " + rightOperand;
+    }
+
     public ComparisonTestModel(final ISingleOperand leftOperand, final ComparisonOperator operator, final ISingleOperand rightOperand) {
 	this.leftOperand = leftOperand;
 	this.rightOperand = rightOperand;

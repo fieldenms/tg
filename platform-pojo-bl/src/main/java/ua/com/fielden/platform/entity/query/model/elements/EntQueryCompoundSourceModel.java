@@ -16,6 +16,11 @@ public class EntQueryCompoundSourceModel implements IPropertyCollector {
 	this.joinConditions = joinConditions;
     }
 
+    @Override
+    public String toString() {
+        return joinType + " " + source + " ON " + joinConditions;
+    }
+
     public IEntQuerySource getSource() {
         return source;
     }

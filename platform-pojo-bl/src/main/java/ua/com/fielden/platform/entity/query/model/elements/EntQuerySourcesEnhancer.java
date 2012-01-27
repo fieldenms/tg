@@ -15,12 +15,12 @@ public class EntQuerySourcesEnhancer {
 
     /**
      *
-     * @param props
+     * @param dotNotatedPropNames
      * @return
      */
-    public Map<String, Set<String>> determinePropGroups(final Set<String> props) {
+    public Map<String, Set<String>> determinePropGroups(final Set<String> dotNotatedPropNames) {
 	final Map<String, Set<String>> result = new HashMap<String, Set<String>>();
-	for (final String dotNotatedPropName : props) {
+	for (final String dotNotatedPropName : dotNotatedPropNames) {
 	    final Pair<String, String> splitOfProperty = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
 	    Set<String> propGroup = result.get(splitOfProperty.getKey());
 	    if (propGroup == null) {
@@ -39,18 +39,18 @@ public class EntQuerySourcesEnhancer {
 	return predecessorAlias == null ? propAlias : predecessorAlias + "." + propAlias;
     }
 
-    public SortedSet<PropTree> produceSourcesTree(final IEntQuerySource entQrySourceDataProvider, final boolean parentLeftJoin, final Set<String> props) {
+    public SortedSet<PropTree> produceSourcesTree(final IEntQuerySource entQrySource, final boolean parentLeftJoinLegacy, final Set<String> props, final EntQuery holder) {
 	final SortedSet<PropTree> result = new TreeSet<PropTree>();
 
 	for (final Map.Entry<String, Set<String>> entry : determinePropGroups(props).entrySet()) {
 	    if (entry.getValue().size() > 0) {
-		final Class propType = entQrySourceDataProvider.propType(entry.getKey());
+		final Class propType = entQrySource.propType(entry.getKey());
 
-		final boolean propLeftJoin = parentLeftJoin
-			|| !(EntityUtils.isPropertyPartOfKey(entQrySourceDataProvider.sourceType(), entry.getKey()) || EntityUtils.isPropertyRequired(entQrySourceDataProvider.sourceType(), entry.getKey()));
+		final boolean propLeftJoin = parentLeftJoinLegacy
+			|| !(EntityUtils.isPropertyPartOfKey(entQrySource.sourceType(), entry.getKey()) || EntityUtils.isPropertyRequired(entQrySource.sourceType(), entry.getKey()));
 
 		if (EntityUtils.isPersistedEntityType(propType)) {
-		    result.add(new PropTree(new EntQuerySourceAsEntity(propType, composeAlias(entQrySourceDataProvider.getAlias(), entry.getKey()), true), propLeftJoin, produceSourcesTree(new EntQuerySourceAsEntity(propType, composeAlias(entQrySourceDataProvider.getAlias(), entry.getKey()), true), propLeftJoin, entry.getValue())));
+		    result.add(new PropTree(new EntQuerySourceAsEntity(propType, composeAlias(entQrySource.getAlias(), entry.getKey()), true), propLeftJoin, produceSourcesTree(new EntQuerySourceAsEntity(propType, composeAlias(entQrySource.getAlias(), entry.getKey()), true), propLeftJoin, entry.getValue(), holder), holder));
 		}
 	    }
 	}

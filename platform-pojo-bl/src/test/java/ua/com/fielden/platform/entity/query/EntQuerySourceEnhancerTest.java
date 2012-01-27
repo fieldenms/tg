@@ -48,9 +48,9 @@ public class EntQuerySourceEnhancerTest {
 
     @Test
     public void test1() {
-	final String[] props = new String[]{"model.make.key", "station.parent.parent", "desc", "price", "replacedBy.station"};
+	final String[] props = new String[]{"model.make.key", "model.make.desc", "station.parent.parent", "desc", "price", "replacedBy.station"};
 	final Map<String, Set<String>> exp = new HashMap<String, Set<String>>();
-	exp.put("model", set("make.key"));
+	exp.put("model", set("make.key", "make.desc"));
 	exp.put("station", set("parent.parent"));
 	exp.put("desc", emptyStringSet);
 	exp.put("price", emptyStringSet);
@@ -63,43 +63,43 @@ public class EntQuerySourceEnhancerTest {
     public void test2() {
 	final String[] props = new String[]{"model.make.key", "station.parent.parent.key", "desc", "price", "replacedBy.station.key"};
 	final Set<PropTree> exp = new HashSet<PropTree>();
-	exp.add(new PropTree(source("replacedBy", TgVehicle.class), true, set(new PropTree(source("replacedBy.station", TgOrgUnit5.class), true, emptyPropTreeSet))));
-	exp.add(new PropTree(source("model", TgVehicleModel.class), false, set(new PropTree(source("model.make", TgVehicleMake.class), true, emptyPropTreeSet))));
-	exp.add(new PropTree(source("station", TgOrgUnit5.class), true, set(new PropTree(source("station.parent", TgOrgUnit4.class), true, set(new PropTree(source("station.parent.parent", TgOrgUnit3.class), true, emptyPropTreeSet))))));
+	exp.add(new PropTree(source("replacedBy", TgVehicle.class), true, set(new PropTree(source("replacedBy.station", TgOrgUnit5.class), true, emptyPropTreeSet, null)), null));
+	exp.add(new PropTree(source("model", TgVehicleModel.class), false, set(new PropTree(source("model.make", TgVehicleMake.class), true, emptyPropTreeSet, null)), null));
+	exp.add(new PropTree(source("station", TgOrgUnit5.class), true, set(new PropTree(source("station.parent", TgOrgUnit4.class), true, set(new PropTree(source("station.parent.parent", TgOrgUnit3.class), true, emptyPropTreeSet, null)), null)), null));
 
-	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, set(props)));
+	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, set(props), null));
     }
 
     @Test
     public void test2a() {
 	final String[] props = new String[]{"model.make.key", "station.parent.parent.key", "desc", "price", "replacedBy.station.key"};
 	final Set<PropTree> exp = new HashSet<PropTree>();
-	exp.add(new PropTree(source("v.replacedBy", TgVehicle.class), true, set(new PropTree(source("v.replacedBy.station", TgOrgUnit5.class), true, emptyPropTreeSet))));
-	exp.add(new PropTree(source("v.model", TgVehicleModel.class), true, set(new PropTree(source("v.model.make", TgVehicleMake.class), true, emptyPropTreeSet))));
-	exp.add(new PropTree(source("v.station", TgOrgUnit5.class), true, set(new PropTree(source("v.station.parent", TgOrgUnit4.class), true, set(new PropTree(source("v.station.parent.parent", TgOrgUnit3.class), true, emptyPropTreeSet))))));
+	exp.add(new PropTree(source("v.replacedBy", TgVehicle.class), true, set(new PropTree(source("v.replacedBy.station", TgOrgUnit5.class), true, emptyPropTreeSet, null)), null));
+	exp.add(new PropTree(source("v.model", TgVehicleModel.class), true, set(new PropTree(source("v.model.make", TgVehicleMake.class), true, emptyPropTreeSet, null)), null));
+	exp.add(new PropTree(source("v.station", TgOrgUnit5.class), true, set(new PropTree(source("v.station.parent", TgOrgUnit4.class), true, set(new PropTree(source("v.station.parent.parent", TgOrgUnit3.class), true, emptyPropTreeSet, null)), null)), null));
 
-	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, "v"), true, set(props)));
+	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, "v"), true, set(props), null));
     }
 
     @Test
     public void test3() {
 	final String[] props = new String[]{"model.make.key", "station.parent.parent", "desc", "price", "replacedBy.station"};
 	final Set<PropTree> exp = new HashSet<PropTree>();
-	exp.add(new PropTree(source("replacedBy", TgVehicle.class), true, emptyPropTreeSet));
-	exp.add(new PropTree(source("model", TgVehicleModel.class), false, set(new PropTree(source("model.make", TgVehicleMake.class), true, emptyPropTreeSet))));
-	exp.add(new PropTree(source("station", TgOrgUnit5.class), true, set(new PropTree(source("station.parent", TgOrgUnit4.class), true, emptyPropTreeSet))));
+	exp.add(new PropTree(source("replacedBy", TgVehicle.class), true, emptyPropTreeSet, null));
+	exp.add(new PropTree(source("model", TgVehicleModel.class), false, set(new PropTree(source("model.make", TgVehicleMake.class), true, emptyPropTreeSet, null)), null));
+	exp.add(new PropTree(source("station", TgOrgUnit5.class), true, set(new PropTree(source("station.parent", TgOrgUnit4.class), true, emptyPropTreeSet, null)), null));
 
-	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, set(props)));
+	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, set(props), null));
     }
 
     @Test
     public void test4() {
 	final String[] props = new String[]{"model.make.key", "station.parent.parent", "desc", "price", "replacedBy.model.key"};
 	final Set<PropTree> exp = new HashSet<PropTree>();
-	exp.add(new PropTree(source("replacedBy", TgVehicle.class), true, set(new PropTree(source("replacedBy.model", TgVehicleModel.class), true, emptyPropTreeSet))));
-	exp.add(new PropTree(source("model", TgVehicleModel.class), false, set(new PropTree(source("model.make", TgVehicleMake.class), true, emptyPropTreeSet))));
-	exp.add(new PropTree(source("station", TgOrgUnit5.class), true, set(new PropTree(source("station.parent", TgOrgUnit4.class), true, emptyPropTreeSet))));
+	exp.add(new PropTree(source("replacedBy", TgVehicle.class), true, set(new PropTree(source("replacedBy.model", TgVehicleModel.class), true, emptyPropTreeSet, null)), null));
+	exp.add(new PropTree(source("model", TgVehicleModel.class), false, set(new PropTree(source("model.make", TgVehicleMake.class), true, emptyPropTreeSet, null)), null));
+	exp.add(new PropTree(source("station", TgOrgUnit5.class), true, set(new PropTree(source("station.parent", TgOrgUnit4.class), true, emptyPropTreeSet, null)), null));
 
-	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, set(props)));
+	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, set(props), null));
     }
 }

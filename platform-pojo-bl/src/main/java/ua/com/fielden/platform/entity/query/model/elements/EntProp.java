@@ -8,16 +8,23 @@ import java.util.Set;
 
 public class EntProp implements ISingleOperand {
     private final String name;
-    private Class propType; //TODO ?
+    private Class propType;
+    private EntQuery holder; // query, where given property resides (not to be mixed with the query, which source given property is resolved to - in case of correlated subqueries these two may be different queries (subquery and one of its master).
 
     @Override
     public String toString() {
-        return name + " type: " + propType;
+        return name; // + "-[" + propType + "]";
     }
 
     public EntProp(final String name) {
 	super();
 	this.name = name;
+    }
+
+    public EntProp(final String name, final Class propType, final EntQuery holder) {
+	this(name);
+	this.propType = propType;
+	this.holder = holder;
     }
 
     @Override
@@ -60,6 +67,15 @@ public class EntProp implements ISingleOperand {
     public Class type() {
 	return propType;
     }
+
+    public EntQuery getHolder() {
+        return holder;
+    }
+
+    public void setHolder(final EntQuery holder) {
+        this.holder = holder;
+    }
+
     @Override
     public int hashCode() {
 	final int prime = 31;
