@@ -33,7 +33,7 @@ public class EntQuerySourcesModel {
 	return result;
     }
 
-    public List<Pair<IEntQuerySource, Boolean>> getAllSourcesWithJoinType() {
+    public List<Pair<IEntQuerySource, Boolean>> getAllSourcesAndTheirJoinType() {
 	final List<Pair<IEntQuerySource, Boolean>> result = new ArrayList<Pair<IEntQuerySource, Boolean>>();
 	result.add(new Pair<IEntQuerySource, Boolean>(main, false));
 	for (final EntQueryCompoundSourceModel compound : compounds) {

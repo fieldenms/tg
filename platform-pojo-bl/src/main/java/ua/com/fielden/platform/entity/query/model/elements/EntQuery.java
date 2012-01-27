@@ -20,14 +20,15 @@ public class EntQuery implements ISingleOperand {
 
     private static String id = "id";
 
-    private final EntQuerySourcesEnhancer entQrySourcesEnhancer = new EntQuerySourcesEnhancer();
     private final EntQuerySourcesModel sources;
     private final ConditionsModel conditions;
     private final YieldsModel yields;
     private final GroupsModel groups;
-    private final Class resultType; // TODO add to equals/hashCode
+    private final Class resultType;
+    private final boolean subquery;
+
     private EntQuery master;
-    private final boolean subquery; // TODO add to equals/hashCode
+    private final EntQuerySourcesEnhancer entQrySourcesEnhancer = new EntQuerySourcesEnhancer();
 
     // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
 
@@ -81,7 +82,7 @@ public class EntQuery implements ISingleOperand {
 	this.conditions = conditions;
 	this.yields = yields;
 	this.groups = groups;
-	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? sources.getMain().getType() : null);
+	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? sources.getMain().sourceType() : null);
 	final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
 
 	associateSubqueriesWithMasterQuery(immediateSubqueries);
@@ -96,8 +97,8 @@ public class EntQuery implements ISingleOperand {
 	    validate();
 	}
 
-	for (final Pair<IEntQuerySource, Boolean> sourceWithJoinType : sources.getAllSourcesWithJoinType()) {
-	    sources.getCompounds().addAll(generateImplicitSources(sourceWithJoinType.getKey(), sourceWithJoinType.getValue()));
+	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : sources.getAllSourcesAndTheirJoinType()) {
+	    sources.getCompounds().addAll(generateImplicitSources(sourceAndItsJoinType.getKey(), sourceAndItsJoinType.getValue()));
 	}
 
 	//resolveProps(unresolvedPropsFromSubqueries);
@@ -125,7 +126,7 @@ public class EntQuery implements ISingleOperand {
 
     private List<EntQueryCompoundSourceModel> generateImplicitSources(final IEntQuerySource source, final boolean leftJoined) {
 	final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
-	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, source.getAlias(), leftJoined, extractNames(source.getReferencingProps(), source.getAlias()));
+	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, extractNames(source.getReferencingProps(), source.getAlias()));
 	for (final PropTree propTree : propTrees) {
 	    result.addAll(propTree.getSourceModels());
 	}
@@ -177,9 +178,9 @@ public class EntQuery implements ISingleOperand {
 	final Map<IEntQuerySource, PropResolutionInfo> result = new HashMap<IEntQuerySource, PropResolutionInfo>();
 
 	for (final IEntQuerySource source : sources.getAllSources()) {
-	    final Pair<Boolean, PropResolutionInfo> hasProp = source.containsProperty(prop);
-	    if (hasProp.getKey()) {
-		result.put(source, hasProp.getValue());
+	    final PropResolutionInfo hasProp = source.containsProperty(prop);
+	    if (hasProp != null) {
+		result.put(source, hasProp);
 	    }
 	}
 
@@ -229,15 +230,11 @@ public class EntQuery implements ISingleOperand {
 
     public static class PropTree implements Comparable<PropTree>{
 	boolean leftJoin;
-	String parentName;
-	String parentFullName;
-	Class parentType;
+	EntQuerySourceAsEntity qrySource;
 	Set<PropTree> subprops;
 
-	public PropTree(final String parentName, final String parentFullName, final Class parentType, final boolean leftJoin, final Set<PropTree> subprops) {
-	    this.parentName = parentName;
-	    this.parentFullName = parentFullName;
-	    this.parentType = parentType;
+	public PropTree(final EntQuerySourceAsEntity qrySource, final boolean leftJoin, final Set<PropTree> subprops) {
+	    this.qrySource = qrySource;
 	    this.subprops = subprops;
 	    this.leftJoin = leftJoin;
 	}
@@ -246,17 +243,13 @@ public class EntQuery implements ISingleOperand {
 	    return new ConditionsModel(new ComparisonTestModel(new EntProp(leftProp), ComparisonOperator.EQ, new EntProp(rightProp)));
 	}
 
-	private IEntQuerySource querySource(final Class entityType, final String sourceAlias) {
-	    return new EntQuerySourceAsEntity(entityType, sourceAlias, true);
-	}
-
 	private JoinType joinType(final boolean leftJoin) {
 	    return leftJoin ? JoinType.LJ : JoinType.IJ;
 	}
 
 	public List<EntQueryCompoundSourceModel> getSourceModels() {
 	    final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
-	    result.add(new EntQueryCompoundSourceModel(querySource(parentType, parentFullName), joinType(leftJoin), joinCondition(parentFullName, parentFullName + ".id")));
+	    result.add(new EntQueryCompoundSourceModel(qrySource, joinType(leftJoin), joinCondition(qrySource.getAlias(), qrySource.getAlias() + ".id")));
 	    for (final PropTree subPropTree : subprops) {
 		result.addAll(subPropTree.getSourceModels());
 	    }
@@ -265,7 +258,12 @@ public class EntQuery implements ISingleOperand {
 
 	@Override
 	public String toString() {
-	    return parentName + " _ " + parentFullName + " _ " + parentType.getSimpleName() + " _ " + subprops + " _ " + leftJoin;
+	    return qrySource + " _ " + subprops + " _ " + leftJoin;
+	}
+
+	@Override
+	public int compareTo(final PropTree o) {
+	    return this.qrySource.getAlias().compareTo(o.qrySource.getAlias());
 	}
 
 	@Override
@@ -273,9 +271,7 @@ public class EntQuery implements ISingleOperand {
 	    final int prime = 31;
 	    int result = 1;
 	    result = prime * result + (leftJoin ? 1231 : 1237);
-	    result = prime * result + ((parentFullName == null) ? 0 : parentFullName.hashCode());
-	    result = prime * result + ((parentName == null) ? 0 : parentName.hashCode());
-	    result = prime * result + ((parentType == null) ? 0 : parentType.hashCode());
+	    result = prime * result + ((qrySource == null) ? 0 : qrySource.hashCode());
 	    result = prime * result + ((subprops == null) ? 0 : subprops.hashCode());
 	    return result;
 	}
@@ -295,25 +291,11 @@ public class EntQuery implements ISingleOperand {
 	    if (leftJoin != other.leftJoin) {
 		return false;
 	    }
-	    if (parentFullName == null) {
-		if (other.parentFullName != null) {
+	    if (qrySource == null) {
+		if (other.qrySource != null) {
 		    return false;
 		}
-	    } else if (!parentFullName.equals(other.parentFullName)) {
-		return false;
-	    }
-	    if (parentName == null) {
-		if (other.parentName != null) {
-		    return false;
-		}
-	    } else if (!parentName.equals(other.parentName)) {
-		return false;
-	    }
-	    if (parentType == null) {
-		if (other.parentType != null) {
-		    return false;
-		}
-	    } else if (!parentType.equals(other.parentType)) {
+	    } else if (!qrySource.equals(other.qrySource)) {
 		return false;
 	    }
 	    if (subprops == null) {
@@ -324,11 +306,6 @@ public class EntQuery implements ISingleOperand {
 		return false;
 	    }
 	    return true;
-	}
-
-	@Override
-	public int compareTo(final PropTree o) {
-	    return this.parentFullName.compareTo(o.parentFullName);
 	}
     }
 

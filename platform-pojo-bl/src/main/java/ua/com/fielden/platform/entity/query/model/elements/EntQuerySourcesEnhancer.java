@@ -7,12 +7,17 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.elements.EntQuery.PropTree;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuerySourcesEnhancer {
+
+    /**
+     *
+     * @param props
+     * @return
+     */
     public Map<String, Set<String>> determinePropGroups(final Set<String> props) {
 	final Map<String, Set<String>> result = new HashMap<String, Set<String>>();
 	for (final String dotNotatedPropName : props) {
@@ -34,25 +39,22 @@ public class EntQuerySourcesEnhancer {
 	return predecessorAlias == null ? propAlias : predecessorAlias + "." + propAlias;
     }
 
-    public SortedSet<PropTree> produceSourcesTree(final IEntQuerySourceDataProvider entQrySourceDataProvider, final String parentAlias, final boolean parentLeftJoin, final Set<String> props) {
+    public SortedSet<PropTree> produceSourcesTree(final IEntQuerySource entQrySourceDataProvider, final boolean parentLeftJoin, final Set<String> props) {
 	final SortedSet<PropTree> result = new TreeSet<PropTree>();
-	final Map<String, Set<String>> propGrops = determinePropGroups(props);
 
-	for (final Map.Entry<String, Set<String>> entry : propGrops.entrySet()) {
+	for (final Map.Entry<String, Set<String>> entry : determinePropGroups(props).entrySet()) {
 	    if (entry.getValue().size() > 0) {
 		final Class propType = entQrySourceDataProvider.propType(entry.getKey());
 
-		if (entQrySourceDataProvider.parentType().equals(EntityAggregates.class)) {
-		    //throw new IllegalStateException("Prop of type EntityAggregates is not possible/supported");
-		}
-		final boolean propLeftJoin = parentLeftJoin || !(EntityUtils.isPropertyPartOfKey(entQrySourceDataProvider.parentType(), entry.getKey()) || EntityUtils.isPropertyRequired(entQrySourceDataProvider.parentType(), entry.getKey()));
-
+		final boolean propLeftJoin = parentLeftJoin
+			|| !(EntityUtils.isPropertyPartOfKey(entQrySourceDataProvider.sourceType(), entry.getKey()) || EntityUtils.isPropertyRequired(entQrySourceDataProvider.sourceType(), entry.getKey()));
 
 		if (EntityUtils.isPersistedEntityType(propType)) {
-		    result.add(new PropTree(entry.getKey(), composeAlias(parentAlias, entry.getKey()), propType, propLeftJoin, produceSourcesTree(new RealEntityTypeDataProvider(propType), composeAlias(parentAlias, entry.getKey()), propLeftJoin, entry.getValue())));
+		    result.add(new PropTree(new EntQuerySourceAsEntity(propType, composeAlias(entQrySourceDataProvider.getAlias(), entry.getKey()), true), propLeftJoin, produceSourcesTree(new EntQuerySourceAsEntity(propType, composeAlias(entQrySourceDataProvider.getAlias(), entry.getKey()), true), propLeftJoin, entry.getValue())));
 		}
 	    }
 	}
+
 	return result;
     }
 }

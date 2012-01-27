@@ -15,7 +15,7 @@ public class EntQuerySourceAsModel extends AbstractEntQuerySource {
     }
 
     @Override
-    public Class getType() {
+    public Class sourceType() {
 	return models.get(0).getResultType();
     }
 
@@ -35,7 +35,7 @@ public class EntQuerySourceAsModel extends AbstractEntQuerySource {
 	    return new Pair<Boolean, Class>(false, null);
 	} else if (firstLevelPropYield.getOperand().type() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
 	    return new Pair<Boolean, Class>(rest == null, null);
-	} else if (rest != null){
+	} else if (rest != null) {
 	    return lookForProp(firstLevelPropYield.getOperand().type(), rest); //continue recursively to subproperties
 	} else {
 	    return new Pair<Boolean, Class>(true, firstLevelPropYield.getOperand().type());
@@ -82,9 +82,9 @@ public class EntQuerySourceAsModel extends AbstractEntQuerySource {
 
     @Override
     public Class propType(final String propSimpleName) {
-	if (EntityUtils.isPersistedEntityType(getType())) {
+	if (EntityUtils.isPersistedEntityType(sourceType())) {
 	    return super.propType(propSimpleName);
-	} else if (isEntityAggregates(getType())){
+	} else if (isEntityAggregates(sourceType())) {
 	    return models.get(0).getYield(propSimpleName).getOperand().type();
 	} else {
 	    throw new RuntimeException("Not yet supported");

@@ -23,7 +23,7 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
     }
 
     @Override
-    public Class getType() {
+    public Class sourceType() {
 	return entityType;
     }
 

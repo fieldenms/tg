@@ -12,9 +12,13 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 abstract class AbstractEntQuerySource implements IEntQuerySource {
-    private final String alias; // can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end
+    private final String alias; // can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end)
     private final List<EntProp> referencingProps = new ArrayList<EntProp>();
-    //private final List<EntProp> finalReferencingProps = new ArrayList<EntProp>();
+    private final List<EntProp> finalReferencingProps = new ArrayList<EntProp>();
+
+    public AbstractEntQuerySource(final String alias) {
+	this.alias = alias;
+    }
 
     protected boolean isEntityAggregates(final Class type) {
 	return EntityAggregates.class.isAssignableFrom(type);
@@ -24,10 +28,6 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 	return AbstractEntity.class.isAssignableFrom(type) && IQueryModelProvider.class.isAssignableFrom(type);
     }
 
-    public AbstractEntQuerySource(final String alias) {
-	this.alias = alias;
-    }
-
     public String getAlias() {
 	return alias;
     }
@@ -35,6 +35,11 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
     @Override
     public void addReferencingProp(final EntProp prop) {
 	referencingProps.add(prop);
+    }
+
+    @Override
+    public void addFinalReferencingProp(final EntProp prop) {
+	finalReferencingProps.add(prop);
     }
 
     @Override
@@ -54,7 +59,6 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
     }
 
     protected Pair<Boolean, Class> lookForPropInRealPropType(final Class parentType, final String dotNotatedPropName) {
-//	System.out.println("  lookingRE for [" + dotNotatedPropName + "]  in type " + parentType.getSimpleName());
 	try {
 	    final Field field = Finder.findFieldByName(parentType, dotNotatedPropName);
 	    return new Pair<Boolean, Class>(true, field.getType());
@@ -66,7 +70,6 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
     abstract Pair<Boolean, Class> lookForPropInEntAggregatesType(final Class parentType, final String dotNotatedPropName);
 
     protected Pair<Boolean, Class> lookForProp(final Class type, final String dotNotatedPropName) {
-//	System.out.println("--looking for prop [" + dotNotatedPropName + "] in type " + type.getSimpleName());
 	if (EntityUtils.isPersistedEntityType(type)) {
 	    return lookForPropInRealPropType(type, dotNotatedPropName);
 	} else if (isEntityAggregates(type)) {
@@ -77,19 +80,18 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
     }
 
     protected PropResolutionInfo propAsIs(final String propName) {
-	final Pair<Boolean, Class> propAsIsSearchResult = lookForProp(getType(), propName);
-//	System.out.println("  propAsIsSearchResult: " + propAsIsSearchResult);
+	final Pair<Boolean, Class> propAsIsSearchResult = lookForProp(sourceType(), propName);
 	return propAsIsSearchResult.getKey() ? new PropResolutionInfo(null, propName, false, propAsIsSearchResult.getValue()) : null;
     }
 
     protected PropResolutionInfo propAsAliased(final String propName) {
 	final String dealisedProp = dealiasPropName(propName, getAlias());
-	final Pair<Boolean, Class> propAsAliasedSearchResult = lookForProp(getType(), dealisedProp);
+	final Pair<Boolean, Class> propAsAliasedSearchResult = lookForProp(sourceType(), dealisedProp);
 	return propAsAliasedSearchResult.getKey() ? new PropResolutionInfo(getAlias(), dealisedProp, false, propAsAliasedSearchResult.getValue()) : null;
     }
 
     protected PropResolutionInfo propAsImplicitId(final String propName) {
-	if (EntityUtils.isPersistedEntityType(getType())) {
+	if (EntityUtils.isPersistedEntityType(sourceType())) {
 	    return propName.equalsIgnoreCase(getAlias()) ? new PropResolutionInfo(getAlias(), null, true, Long.class) : null; // id property is meant here, but is it for all contexts?
 	} else {
 	    return null;
@@ -97,7 +99,17 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
     }
 
     @Override
-    public Pair<Boolean, PropResolutionInfo> containsProperty(final EntProp prop) {
+    public Class propType(final String propSimpleName) {
+	return Finder.findFieldByName(sourceType(), propSimpleName).getType();
+    }
+
+    @Override
+    public List<EntProp> getFinalReferencingProps() {
+	return finalReferencingProps;
+    }
+
+    @Override
+    public PropResolutionInfo containsProperty(final EntProp prop) {
 	// what are the cases/scenarios for one source and one property
 	// 1) AsIs
 	// 2) AsAliased
@@ -123,21 +135,26 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 
 	if (propAsIs == null && propAsAliased == null && propAsImplicitId == null) {
 //	    System.out.println("prop [" + prop.getName() + "] not found within type " + getType().getSimpleName());
-	    return new Pair<Boolean, PropResolutionInfo>(false, null);
+	    return null;
 	} else if (propAsIs != null && propAsAliased == null) {
 //	    System.out.println("prop [" + prop.getName() + "] found within type " + getType().getSimpleName() + " :AsIs: " + propAsIs);
-	    return new Pair<Boolean, PropResolutionInfo>(true, propAsIs);
+	    return propAsIs;
 	} else if (propAsAliased != null) {
 //	    System.out.println("prop [" + prop.getName() + "] found within type " + getType().getSimpleName() + " :AsAliased: " + propAsAliased);
-	    return new Pair<Boolean, PropResolutionInfo>(true, propAsAliased);
+	    return propAsAliased;
 	} else if (propAsImplicitId != null) {
 //	    System.out.println("prop [" + prop.getName() + "] found within type " + getType().getSimpleName() + " :ImpId: " + propAsImplicitId);
-	    return new Pair<Boolean, PropResolutionInfo>(true, propAsImplicitId);
+	    return propAsImplicitId;
 	} else {
 	    throw new RuntimeException("Unforeseen branch!");
 	}
     }
 
+    /**
+     * Represent data structure to hold information about potential prop resolution against some query source.
+     * @author TG Team
+     *
+     */
     class PropResolutionInfo {
 	private String aliasPart;
 	private String propPart;
@@ -176,18 +193,4 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    return implicitId ? 2000 : propPart.length();
 	}
     }
-
-    @Override
-    public Class parentType() {
-	return getType();
-    }
-
-    @Override
-    public Class propType(final String propSimpleName) {
-	return Finder.findFieldByName(getType(), propSimpleName).getType();
-    }
-
-//    public List<EntProp> getFinalReferencingProps() {
-//        return finalReferencingProps;
-//    }
 }
