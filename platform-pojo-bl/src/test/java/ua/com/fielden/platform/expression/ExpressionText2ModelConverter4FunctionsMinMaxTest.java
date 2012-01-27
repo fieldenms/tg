@@ -49,6 +49,17 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
     }
 
     @Test
+    public void test_case_056() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(collectional.intProperty - intProperty)"); // "MIN(collectional.intProperty) - intProperty"
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", Money.class, root.getType());
+
+	final ExpressionModel minus = expr().prop("collectional.intProperty").sub().prop("intProperty").model();
+	final ExpressionModel model = expr().minOf().expr(minus).model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
     public void test_case_03() throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "(MAX(collectional.intProperty) + intProperty) * 2");
 	final AstNode root = ev.convert();
