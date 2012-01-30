@@ -1,4 +1,4 @@
-\documentclass[a4paper,10pt,twocolumn]{article}
+\documentclass[a4paper,12pt,twocolumn]{article}
 \usepackage[english]{babel}
 \usepackage{times}
 \usepackage{setspace}
@@ -11,10 +11,26 @@
 \usepackage{moreverb}
 %for more info on hyperref package see http://en.wikibooks.org/wiki/LaTeX/Packages/Hyperref
 \usepackage[pdftex,colorlinks=true,linkcolor=blue]{hyperref}
-
+\usepackage{eso-pic}
 \setlength{\columnsep}{3em}
 
+\usepackage{geometry}
+%\geometry{hmargin={30mm,15mm},vmargin={26mm,26mm}}
+%\geometry{total={14cm,20.5cm},includehead}
+\geometry{hmargin={20mm,20mm},vmargin={20mm,20mm}}
+\geometry{mag=1414}
+
+\newcommand\BackgroundPic{
+\put(-15,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\centering
+  \includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{images/00-background.png}%
+\vfill
+}}}
+
 \begin{document}
+\AddToShipoutPicture{\BackgroundPic}
 \subsection*{What is TG?}
   Trident Genesis is a pure Java software platform for agile development of information systems in a domain-centric way.
   It addresses all aspects of application development: data tier, logic tier and presentation tier.
