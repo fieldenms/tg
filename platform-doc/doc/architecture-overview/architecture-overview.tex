@@ -17,7 +17,7 @@
 \usepackage{eso-pic}
 % tikz related packages to provide scalable graphics 
 \usepackage{tikz}
-\usetikzlibrary{mindmap,backgrounds}
+\usetikzlibrary{mindmap,backgrounds,positioning}
 \usepackage{lipsum}
 
 \newcommand\BackgroundPic{
@@ -26,41 +26,6 @@
 \vfill
 \centering
 \includegraphics[width=\paperwidth,height=\paperheight, keepaspectratio]{sections/01-intro/images/00-splash}%
-% \begin{tikzpicture}[mindmap, opacity=.4, scale=0.8, outer sep=0pt, transform shape,		    
-% 		    level 2 concept/.append style={level distance=130, sibling angle=20}]
-% 
-%   \begin{scope}[mindmap, concept color=green!50, text=green!50!black, level 1 concept/.append style={level distance=130, sibling angle=35}]
-%     \node [concept] at (-1.0, 2.0) (is) {Information Systems}[clockwise from=200] 
-%       child {node [concept] (log) {Domain Models}}
-%       child {node [concept] (alg) {Data Management}}
-%       child {node [concept] (log) {User Interface}}
-%       child {node [concept] (img) {Web Communication}}
-%       child {node [concept] (opt) {Analysis and Reporting}}
-%       child {node [concept] (res) {Security}};
-%   \end{scope}
-% 
-%   %\node (dev) at (2.1,-4) [circle, minimum size=4cm,fill,draw,thick,color=red!50, text=red!50!black] {Developers};
-%   \begin{scope}[mindmap, concept color=red!50, text=red!50, level 1 concept/.append style={level distance=140}, sibling angle=360]
-%     \node [concept] at (3.1,-4) (dev) {Developers}[clockwise from=150] 
-%       child {node [concept] (ide) {IDE}}
-%       child {node [concept] (req) {Requirements Managment}}
-%       child {node [concept] (dom) {Domain Modeling}}      
-%       child {node [concept] (src) {Source Version Control}};
-%   \end{scope}
-% 
-%   \begin{scope}[mindmap, concept color=blue!50, text=blue!50!black, level 1 concept/.append style={level distance=130, sibling angle=35}]
-%     \node [concept] at (0.2,-10.0) (bus) {Business Requirements}[clockwise from=-5] 
-%       child {node [concept] (accbud) {Accounting and Budgeting}}
-%       child {node [concept] (ship) {Shipments}}
-%       child {node [concept] (ord) {Ordering Products}}
-%       child {node [concept] (work) {Work Orders}}      
-%       child {node [concept] (hum) {Human Resources}};
-%   \end{scope}
-% % 
-% % Connections 
-%   \path (bus) to[circle connection bar switch color=from (blue!50) to (red!50)] (dev);
-%   \path (dev) to[circle connection bar switch color=from (red!50) to (green!50)] (is);
-% \end{tikzpicture}
 \vfill
 }}}
 
@@ -71,6 +36,7 @@
   \include{sections/00-toc/toc} % this file contains the title page and the abstract  
   \setcounter{page}{4} % need to reset page counter as by default after toc it start with 1 again 
   % using \input insterad of \include in order not statr every section from new page
-  \input{sections/01-intro/intro} % this file contains the first section of the docyment with all subsections
-  \input{sections/02-dsl-types-metadata/dsl-types-metadata} % use comments for providing useful information about document structure and content
+  \input{sections/01-intro/intro} %
+  \input{sections/02-platform-and-business-applications/platform-and-business-applications} %
+  \input{sections/03-dsl-types-metadata/dsl-types-metadata} %    
 \end{document}
