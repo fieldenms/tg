@@ -360,7 +360,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    desc = TitlesDescsGetter.italic("<b>Common properties</b>");
 	} else { // entity node
 	    final Pair<String, String> tad = "".equals(property) ? TitlesDescsGetter.getEntityTitleAndDesc(root) : TitlesDescsGetter.getTitleAndDesc(AbstractDomainTree.reflectionProperty(property), root);
-	    title = tad.getKey();
+	    title = StringUtils.isEmpty(tad.getKey()) ? property : tad.getKey();
 	    desc = TitlesDescsGetter.italic("<b>" + tad.getValue() + "</b>");
 	}
 	return new Pair<String, String>(title, desc);
