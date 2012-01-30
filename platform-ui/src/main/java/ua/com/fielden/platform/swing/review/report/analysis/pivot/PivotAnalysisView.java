@@ -22,6 +22,7 @@ import javax.swing.SortOrder;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
@@ -47,7 +48,7 @@ import ua.com.fielden.platform.swing.treetable.FilterableTreeTablePanel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 
-public class PivotAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, IPivotDomainTreeManager, Void> {
+public class PivotAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, ICentreDomainTreeManager, IPivotDomainTreeManager, Void> {
 
     private static final long serialVersionUID = 8295216779213506230L;
 
@@ -66,7 +67,7 @@ public class PivotAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
 
 
 
-    public PivotAnalysisView(final PivotAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T> owner) {
+    public PivotAnalysisView(final PivotAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, ICentreDomainTreeManager> owner) {
 	super(model, progressLayer, owner);
 
 	this.distributionList = createDistributionList();

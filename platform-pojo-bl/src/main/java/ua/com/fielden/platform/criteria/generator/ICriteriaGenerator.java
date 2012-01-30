@@ -2,6 +2,7 @@ package ua.com.fielden.platform.criteria.generator;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 
@@ -22,4 +23,6 @@ public interface ICriteriaGenerator {
      * @return
      */
     public <T extends AbstractEntity> EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> generateCentreQueryCriteria(Class<T> root, ICentreDomainTreeManager cdtm);
+
+    public <T extends AbstractEntity> EntityQueryCriteria<ILocatorDomainTreeManager, T, IEntityDao<T>> generateLocatorQueryCriteria(Class<T> root, ILocatorDomainTreeManager ldtm);
 }

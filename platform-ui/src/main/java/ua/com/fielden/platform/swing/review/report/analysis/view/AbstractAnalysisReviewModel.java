@@ -9,13 +9,13 @@ import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 
-public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity, ADTM extends IAbstractAnalysisDomainTreeManager, LDT> extends AbstractEntityReviewModel<T, ICentreDomainTreeManager> {
+public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager, ADTM extends IAbstractAnalysisDomainTreeManager, LDT> extends AbstractEntityReviewModel<T, DTM> {
 
     private final ADTM adtm;
 
     private final PageHolder pageHolder;
 
-    public AbstractAnalysisReviewModel(final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final ADTM adtm, final PageHolder pageHolder) {
+    public AbstractAnalysisReviewModel(final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria, final ADTM adtm, final PageHolder pageHolder) {
 	super(criteria);
 	this.adtm = adtm;
 	this.pageHolder = pageHolder;

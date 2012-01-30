@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.centre.MultipleAnalysisEntityCentre;
 
-public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEntity> extends AbstractCentreConfigurationView<T, MultipleAnalysisEntityCentre<T>> {
+public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEntity> extends AbstractCentreConfigurationView<T, ICentreDomainTreeManager, MultipleAnalysisEntityCentre<T>> {
 
     private static final long serialVersionUID = -6434256458143463705L;
 
@@ -17,4 +18,8 @@ public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEnt
 	return new MultipleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), getProgressLayer());
     }
 
+    @Override
+    public CentreConfigurationModel<T> getModel() {
+	return (CentreConfigurationModel<T>)super.getModel();
+    }
 }

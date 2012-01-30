@@ -9,11 +9,11 @@ import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisModel;
 
-public class GridConfigurationModel<T extends AbstractEntity> extends AbstractAnalysisConfigurationModel {
+public class GridConfigurationModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractAnalysisConfigurationModel {
 
-    private final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria;
+    private final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria;
 
-    public GridConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria){
+    public GridConfigurationModel(final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria){
 	this.criteria = criteria;
     }
 
@@ -26,12 +26,12 @@ public class GridConfigurationModel<T extends AbstractEntity> extends AbstractAn
 	return Result.successful(this);
     }
 
-    public EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> getCriteria() {
+    public EntityQueryCriteria<DTM, T, IEntityDao<T>> getCriteria() {
 	return criteria;
     }
 
-    public GridAnalysisModel<T> createGridAnalysisModel() {
-	return new GridAnalysisModel<T>(getCriteria(), getPageHolder());
+    public GridAnalysisModel<T, DTM> createGridAnalysisModel() {
+	return new GridAnalysisModel<T, DTM>(getCriteria(), getPageHolder());
     }
 
 }

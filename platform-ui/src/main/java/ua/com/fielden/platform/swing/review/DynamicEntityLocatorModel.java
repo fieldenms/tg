@@ -107,7 +107,7 @@ public class DynamicEntityLocatorModel<T extends AbstractEntity, DAO extends IEn
 		    for (int rowIndex = 0; rowIndex < actualRows.length; rowIndex++) {
 			final T instance = getTableModel().instance(actualRows[rowIndex]);
 			final boolean isSelected = getTableModel().getEntityGridInspector().isRowSelected(rows[rowIndex]);
-			if (entitySelectionListener.isMultiselection()) {
+			if (isMultiselection()) {
 			    if (isSelected) {
 				entitySelectionListener.performSelection(instance);
 			    } else {

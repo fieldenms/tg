@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.centre.SingleAnalysisEntityCentre;
 
-public class SingleAnalysisEntityCentreConfigurationView<T extends AbstractEntity> extends AbstractCentreConfigurationView<T, SingleAnalysisEntityCentre<T>> {
+public class SingleAnalysisEntityCentreConfigurationView<T extends AbstractEntity> extends AbstractCentreConfigurationView<T, ICentreDomainTreeManager ,SingleAnalysisEntityCentre<T>> {
 
     private static final long serialVersionUID = -3749891053466125465L;
 
@@ -15,6 +16,11 @@ public class SingleAnalysisEntityCentreConfigurationView<T extends AbstractEntit
     @Override
     protected SingleAnalysisEntityCentre<T> createConfigurableView() {
 	return new SingleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), getProgressLayer());
+    }
+
+    @Override
+    public CentreConfigurationModel<T> getModel() {
+	return (CentreConfigurationModel<T>)super.getModel();
     }
 
 }

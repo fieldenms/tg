@@ -30,9 +30,9 @@ public class DynamicEntityLocator<T extends AbstractEntity, DAO extends IEntityD
     private static final long serialVersionUID = -1486241935748873213L;
 
     public DynamicEntityLocator(//
-    final DynamicEntityLocatorModel<T, DAO, R> model,//
-    final boolean showRecords,//
-    final DynamicCriteriaModelBuilder<T, DAO, R> modelBuilder) {
+	    final DynamicEntityLocatorModel<T, DAO, R> model,//
+	    final boolean showRecords,//
+	    final DynamicCriteriaModelBuilder<T, DAO, R> modelBuilder) {
 	super(model, showRecords, true, modelBuilder);
 	final int selectionMode = model.isMultiselection() ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION;
 	getEntityGridInspector().setSelectionMode(selectionMode);

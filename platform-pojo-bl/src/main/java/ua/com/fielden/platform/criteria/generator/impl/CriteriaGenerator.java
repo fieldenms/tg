@@ -8,10 +8,13 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.criteria.enhanced.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.criteria.enhanced.EnhancedLocatorEntityQueryCriteria;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -56,16 +59,25 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     @Override
     public <T extends AbstractEntity> EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManager cdtm) {
+	return generateQueryCriteria(root, cdtm, EnhancedCentreEntityQueryCriteria.class);
+    }
+
+    @Override
+    public <T extends AbstractEntity> EntityQueryCriteria<ILocatorDomainTreeManager, T, IEntityDao<T>> generateLocatorQueryCriteria(final Class<T> root, final ILocatorDomainTreeManager ldtm) {
+	return generateQueryCriteria(root, ldtm, EnhancedLocatorEntityQueryCriteria.class);
+    }
+
+    private <T extends AbstractEntity, DTM extends IDomainTreeManager> EntityQueryCriteria<DTM, T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final DTM dtm, final Class<? extends EntityQueryCriteria> entityClass) {
 	final List<NewProperty> newProperties = new ArrayList<NewProperty>();
-	for(final String propertyName : cdtm.getFirstTick().checkedProperties(root)){
+	for(final String propertyName : dtm.getFirstTick().checkedProperties(root)){
 	    newProperties.addAll(generateCriteriaProperties(root, propertyName));
 	}
 
 	final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 
 	try {
-	    final Class<? extends EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>>> queryCriteriaClass = (Class<? extends EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>>>)cl.startModification(EnhancedCentreEntityQueryCriteria.class.getName()).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
-	    final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> entity = entityFactory.newByKey(queryCriteriaClass, "not required");
+	    final Class<? extends EntityQueryCriteria<DTM, T, IEntityDao<T>>> queryCriteriaClass = (Class<? extends EntityQueryCriteria<DTM, T, IEntityDao<T>>>) cl.startModification(entityClass.getName()).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
+	    final EntityQueryCriteria<DTM, T, IEntityDao<T>> entity = entityFactory.newByKey(queryCriteriaClass, "not required");
 
 	    //Set dao for generated entity query criteria.
 	    final Field daoField = Finder.findFieldByName(EntityQueryCriteria.class, "dao");
@@ -78,7 +90,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	    final Field dtmField = Finder.findFieldByName(EntityQueryCriteria.class, "dtm");
 	    final boolean isDtmAccessible = dtmField.isAccessible();
 	    dtmField.setAccessible(true);
-	    dtmField.set(entity, cdtm);
+	    dtmField.set(entity, dtm);
 	    dtmField.setAccessible(isDtmAccessible);
 
 	    return entity;

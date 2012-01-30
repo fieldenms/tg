@@ -21,7 +21,7 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.types.Money;
 
-public class ChartAnalysisModel<T extends AbstractEntity> extends AbstractAnalysisReviewModel<T, IAnalysisDomainTreeManager, Void> {
+public class ChartAnalysisModel<T extends AbstractEntity> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManager ,IAnalysisDomainTreeManager, Void> {
 
     private final ChartAnalysisDataProvider chartAnalysisDataProvider = new ChartAnalysisDataProvider();
 

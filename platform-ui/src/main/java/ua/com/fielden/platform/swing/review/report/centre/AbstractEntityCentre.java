@@ -49,7 +49,7 @@ import ua.com.fielden.platform.swing.taskpane.TaskPanel;
  *
  * @param <T>
  */
-public abstract class AbstractEntityCentre<T extends AbstractEntity> extends AbstractEntityReview<T, ICentreDomainTreeManager> {
+public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractEntityReview<T, DTM> {
 
     private static final long serialVersionUID = -6079569752962700417L;
 
@@ -73,7 +73,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
     private final Action runAction;
 
     //Holds current operable analysis report.
-    private AbstractAnalysisConfigurationView<T, ?, ?, ?, ?> currentAnalysisConfigurationView;
+    private AbstractAnalysisConfigurationView<T, DTM, ?, ?, ?, ?> currentAnalysisConfigurationView;
 
     /**
      * Initiates this {@link AbstractEntityCentre}. Creates all parts and components of entity centre.
@@ -81,7 +81,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
      * @param model
      * @param progressLayer
      */
-    public AbstractEntityCentre(final EntityCentreModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
+    public AbstractEntityCentre(final AbstractEntityCentreModel<T, DTM> model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	//Initiates the paginator related properties.
 	final PaginatorModel paginatorModel = new PaginatorModel();
@@ -103,8 +103,8 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
     }
 
     @Override
-    public EntityCentreModel<T> getModel() {
-	return (EntityCentreModel<T>)super.getModel();
+    public AbstractEntityCentreModel<T, DTM> getModel() {
+	return (AbstractEntityCentreModel<T, DTM>)super.getModel();
     }
 
     /**
@@ -112,7 +112,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
      * 
      * @return
      */
-    public final AbstractAnalysisConfigurationView<T, ?, ?, ?, ?> getCurrentAnalysisConfigurationView() {
+    public final AbstractAnalysisConfigurationView<T, DTM, ?, ?, ?, ?> getCurrentAnalysisConfigurationView() {
 	return currentAnalysisConfigurationView;
     }
 
@@ -236,8 +236,8 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity> extends Abs
      * 
      * @param currentAnalysisConfigurationView
      */
-    protected final void setCurrentAnalysisConfigurationView(final AbstractAnalysisConfigurationView<T, ?, ?, ?, ?> currentAnalysisConfigurationView) {
-	final AbstractAnalysisConfigurationView<T, ?, ?, ?, ?> oldAnalysisConfigurationView = this.currentAnalysisConfigurationView;
+    protected final void setCurrentAnalysisConfigurationView(final AbstractAnalysisConfigurationView<T, DTM, ?, ?, ?, ?> currentAnalysisConfigurationView) {
+	final AbstractAnalysisConfigurationView<T, DTM, ?, ?, ?, ?> oldAnalysisConfigurationView = this.currentAnalysisConfigurationView;
 	this.currentAnalysisConfigurationView = currentAnalysisConfigurationView;
 	firePropertyChange("currentAnalysisConfigurationView", oldAnalysisConfigurationView, this.currentAnalysisConfigurationView);
     }

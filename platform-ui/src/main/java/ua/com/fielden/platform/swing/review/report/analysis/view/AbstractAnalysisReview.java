@@ -16,30 +16,30 @@ import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.utils.Pair;
 
-public abstract class AbstractAnalysisReview<T extends AbstractEntity, ADTM extends IAbstractAnalysisDomainTreeManager, LDT> extends AbstractEntityReview<T, ICentreDomainTreeManager> {
+public abstract class AbstractAnalysisReview<T extends AbstractEntity, DTM extends ICentreDomainTreeManager, ADTM extends IAbstractAnalysisDomainTreeManager, LDT> extends AbstractEntityReview<T, DTM> {
 
     private static final long serialVersionUID = -1195915524813089236L;
 
-    private final AbstractEntityCentre<T> owner;
+    private final AbstractEntityCentre<T, DTM> owner;
 
     private final Action loadAction;
     private final Action exportAction;
 
-    public AbstractAnalysisReview(final AbstractAnalysisReviewModel<T, ADTM, LDT> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T> owner) {
+    public AbstractAnalysisReview(final AbstractAnalysisReviewModel<T, DTM, ADTM, LDT> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, DTM> owner) {
 	super(model, progressLayer);
 	this.owner = owner;
 	this.loadAction = createLoadAction();
 	this.exportAction = createExportAction();
     }
 
-    public AbstractEntityCentre<T> getOwner() {
+    public AbstractEntityCentre<T, DTM> getOwner() {
 	return owner;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public AbstractAnalysisReviewModel<T, ADTM, LDT> getModel() {
-	return (AbstractAnalysisReviewModel<T, ADTM, LDT>)super.getModel();
+    public AbstractAnalysisReviewModel<T, DTM, ADTM, LDT> getModel() {
+	return (AbstractAnalysisReviewModel<T, DTM, ADTM, LDT>)super.getModel();
     }
 
     private Action createLoadAction() {

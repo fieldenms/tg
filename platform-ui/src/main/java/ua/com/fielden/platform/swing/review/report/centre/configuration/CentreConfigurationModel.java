@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityCentreModel;
-import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
 /**
@@ -21,7 +20,7 @@ import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorM
  * @param <T>
  * @param <DAO>
  */
-public class CentreConfigurationModel<T extends AbstractEntity> extends AbstractConfigurationModel{
+public class CentreConfigurationModel<T extends AbstractEntity> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManager>{
 
     /**
      * The associated {@link GlobalDomainTreeManager} instance.
@@ -48,12 +47,6 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
      */
     private final ICriteriaGenerator criteriaGenerator;
 
-
-
-    //    private IWizard previousWizard;
-    //
-    //    private IConfigurable previousReview;
-
     /**
      * Initiates this {@link CentreConfigurationModel} with instance of {@link IGlobalDomainTreeManager}, entity type and {@link EntityFactory}.
      * 
@@ -69,37 +62,43 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 	this.criteriaGenerator = criteriaGenerator;
     }
 
-    public EntityCentreModel<T> createEntityCentreModel() {
+    @Override
+    protected EntityCentreModel<T> createEntityCentreModel() {
 	final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(entityType(), name());
-	if(cdtm == null){
+	if(cdtm == null || cdtm.getSecondTick().checkedProperties(entityType()).isEmpty()){
 	    throw new IllegalStateException("The centre manager is not specified");
 	}
 	return new EntityCentreModel<T>(criteriaGenerator.generateCentreQueryCriteria(entityType, cdtm), name());
     }
 
-    public DomainTreeEditorModel<T> createDomainTreeEditorModel() {
+    @Override
+    protected DomainTreeEditorModel<T> createDomainTreeEditorModel() {
 	final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(entityType(), name());
 	if(cdtm == null){
-	    gdtm.initEntityCentreManager(entityType(), name());
+	    throw new IllegalStateException("The centre manager is not specified");
 	}
-	return new DomainTreeEditorModel<T>(getEntityFactory(), gdtm.getEntityCentreManager(entityType(), name()), entityType());
+	return new DomainTreeEditorModel<T>(entityFactory(), gdtm.getEntityCentreManager(entityType(), name()), entityType());
     }
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
 	if(ReportMode.REPORT.equals(mode)){
-	    final ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(entityType(), name());
+	    ICentreDomainTreeManager cdtm = gdtm.getEntityCentreManager(entityType(), name());
 	    if(cdtm == null){
-		return new Result(this, new CanNotSetModeException("This report is opened for the first time!"));
+		gdtm.initEntityCentreManager(entityType(), name());
+		cdtm = gdtm.getEntityCentreManager(entityType(), name());
+	    }
+	    if(cdtm == null){
+		return new Result(this, new Exception("The entity centre must be initialized!"));
 	    }
 	    if(cdtm.getSecondTick().checkedProperties(entityType()).isEmpty()){
-		return new Result(this, new Exception("Please chose prpoerties to see in the table."));
+		return new Result(this, new CanNotSetModeException("This report is opened for the first time!"));
 	    }
 	}
 	return Result.successful(this);
     }
 
-    private EntityFactory getEntityFactory() {
+    private EntityFactory entityFactory() {
 	return entityFactory;
     }
 

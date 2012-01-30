@@ -37,6 +37,7 @@ import net.miginfocom.swing.MigLayout;
 import org.jfree.chart.ChartMouseEvent;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
@@ -64,7 +65,7 @@ import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
-public class ChartAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, IAnalysisDomainTreeManager, Void> {
+public class ChartAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, ICentreDomainTreeManager ,IAnalysisDomainTreeManager, Void> {
 
     private static final long serialVersionUID = -6505281133387254406L;
 
@@ -105,7 +106,7 @@ public class ChartAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
      */
     private boolean split = false;
 
-    public ChartAnalysisView(final ChartAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T> owner) {
+    public ChartAnalysisView(final ChartAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, ICentreDomainTreeManager> owner) {
 	super(model, progressLayer, owner);
 	this.dataModel = new CategoryDataModel(getModel().getChartAnalysisDataProvider());
 	this.chartPanel = new MultipleChartPanel<List<EntityAggregates>, CategoryChartTypes>();

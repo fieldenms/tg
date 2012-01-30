@@ -11,6 +11,7 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.SingleSelectionModel;
 
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
@@ -19,7 +20,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.G
 
 import com.jidesoft.swing.JideTabbedPane;
 
-public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends AbstractEntityCentre<T> {
+public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends AbstractEntityCentre<T, ICentreDomainTreeManager> {
 
     private static final long serialVersionUID = -5686015614708868918L;
 
@@ -64,7 +65,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
 	tabPane.setTabShape(JideTabbedPane.SHAPE_OFFICE2003);
 	tabPane.setBorder(BorderFactory.createLineBorder(new Color(146, 151, 161)));
 	//Initiates first tab with main details (i.e. grid analysis).
-	final GridConfigurationPanel<T> mainDetails = createGridAnalysis();
+	final GridConfigurationPanel<T, ICentreDomainTreeManager> mainDetails = createGridAnalysis();
 	tabPane.addTab(mainDetails.getAnalysisName(), mainDetails);
 
 	tabPane.setTabClosableAt(0, false);
@@ -95,7 +96,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
 	    public void setSelectedIndex(final int index) {
 		if(!getReviewProgressLayer().isLocked()){
 		    super.setSelectedIndex(index);
-		    final AbstractAnalysisConfigurationView<T, ?, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView)tabPane.getSelectedComponent();
+		    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManager, ?, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView)tabPane.getSelectedComponent();
 		    setCurrentAnalysisConfigurationView(analysis);
 		}else{
 		    JOptionPane.showMessageDialog(tabPane, "The " + tabPane.getTitleAt(index) + " analysis can not be selected right now, " +
@@ -106,10 +107,10 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
     }
 
 
-    private GridConfigurationPanel<T> createGridAnalysis(){
-	final GridConfigurationModel<T> configModel = new GridConfigurationModel<T>(getModel().getCriteria());
+    private GridConfigurationPanel<T, ICentreDomainTreeManager> createGridAnalysis(){
+	final GridConfigurationModel<T, ICentreDomainTreeManager> configModel = new GridConfigurationModel<T, ICentreDomainTreeManager>(getModel().getCriteria());
 	//TODO must consider what progress layer should be used.
-	final GridConfigurationPanel<T> gridConfigView = new GridConfigurationPanel<T>("Main details", configModel, this, getReviewProgressLayer());
+	final GridConfigurationPanel<T, ICentreDomainTreeManager> gridConfigView = new GridConfigurationPanel<T, ICentreDomainTreeManager>("Main details", configModel, this, getReviewProgressLayer());
 	gridConfigView.open();
 	return gridConfigView;
     }

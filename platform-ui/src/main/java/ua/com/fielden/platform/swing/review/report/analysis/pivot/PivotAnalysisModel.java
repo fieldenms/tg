@@ -25,7 +25,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 
-public class PivotAnalysisModel<T extends AbstractEntity> extends AbstractAnalysisReviewModel<T, IPivotDomainTreeManager, Void> {
+public class PivotAnalysisModel<T extends AbstractEntity> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManager, IPivotDomainTreeManager, Void> {
 
     private final PivotTreeTableModel pivotModel;
 

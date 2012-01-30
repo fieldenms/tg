@@ -17,11 +17,11 @@ import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 
-public class GridAnalysisModel<T extends AbstractEntity> extends AbstractAnalysisReviewModel<T, IAbstractAnalysisDomainTreeManager, IPage<T>> {
+public class GridAnalysisModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractAnalysisReviewModel<T, DTM, IAbstractAnalysisDomainTreeManager, IPage<T>> {
 
     private final PropertyTableModel<T> gridModel;
 
-    public GridAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final PageHolder pageHolder) {
+    public GridAnalysisModel(final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria, final PageHolder pageHolder) {
 	super(criteria, null, pageHolder);
 	this.gridModel = createTableModel();
 	getPageHolder().addPageChangedListener(new IPageChangedListener() {
