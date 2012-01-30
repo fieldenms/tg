@@ -21,11 +21,11 @@
 \usepackage{lipsum}
 
 \newcommand\BackgroundPic{
-\put(0,-230){
+\put(0,0){
 \parbox[b][\paperheight]{\paperwidth}{%
 \vfill
 \centering
-\includegraphics[width=\paperwidth,height=\paperheight, keepaspectratio]{sections/01-intro/images/00-splash}%
+  %\includegraphics[width=\paperwidth,height=\paperheight, keepaspectratio]{sections/01-intro/images/00-splash}%
 \vfill
 }}}
 
@@ -38,5 +38,10 @@
   % using \input insterad of \include in order not statr every section from new page
   \input{sections/01-intro/intro} %
   \input{sections/02-platform-and-business-applications/platform-and-business-applications} %
-  \input{sections/03-dsl-types-metadata/dsl-types-metadata} %    
+  \input{sections/03-dsl-types-metadata/dsl-types-metadata} %
+  \input{sections/04-data-management-and-web-resources/data-management-and-web-resources} %
+  \input{sections/05-user-interface/user-interface} %
+  \input{sections/06-analytical-and-reporting-capabilities/analytical-and-reporting-capabilities} %
+  \input{sections/07-deployment-and-versioning/deployment-and-versioning} %
+  \input{sections/08-conclusion-and-future/conclusion-and-future} %
 \end{document}

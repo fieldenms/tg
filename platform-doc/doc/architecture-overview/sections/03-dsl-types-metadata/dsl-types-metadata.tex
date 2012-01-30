@@ -5,16 +5,16 @@
 
 \subsection{Domain Specific Languages}
 
-  In recent years there was a spike in popularity of the Domain-Specific Languages (DSL) concept, which can be explainded by the programming issues outlined in section \ref{sec:01}, which affect not only the business oriented information systems, but also other domains dependent on various informations systems.
+  In recent years there was a spike in popularity of the Domain-Specific Languages (DSL) concept, which can be explained by the programming issues outlined in section \ref{sec:01}, which affect not only the business oriented information systems, but also other domains dependent on various information systems.
 
   The concept of DSL is not new.
-  In fact, there are well established solutions for business software what exist for a long time and explictly utilise this concept.
+  In fact, there are well established solutions for business software what exist for a long time and explicitly utilise this concept.
   For example, SAP Business Suite offers a specialised language ABAP and Microsoft Dynamics Axapta provides X++.
   These are examples of so called \emph{external DSL}, which are separate or external to the programming language used natively for creation of the mentioned products.
   The main disadvantage with external DSLs is this: if there is a need to express a complex algorithm the expressive power of a DSL should be adequate to implement such algorithm, which in turn makes that DSL yet another general purpose programming language\footnote{External DSLs, which have the expressive power of general purpose languages have the disadvantage of being a lot less popular, making difficult to find experienced software developers to support existing systems.}.
   If the internal DSL is not expressive enough then developers would have to anyway resort to some general purpose programming language.
 
-  An opposite to external DSL is the concept of \emph{interna DSL} -- a specialised language, which utilises the capabilities of a specific general purpose programming language (host language) of expressing language-like constructs that can be used together with the general purpose programming language.
+  An opposite to external DSL is the concept of \emph{internal DSL} -- a specialised language, which utilises the capabilities of a specific general purpose programming language (host language) of expressing language-like constructs that can be used together with the general purpose programming language.
   Internal DSLs share the development and execution infrastructure of the corresponding general purpose programming language taking a significant advantage of reusing debugging, profiling tools, code editors, existing programming libraries etc.
 
   \begin{wrapfigure}{l}{90mm}
@@ -42,46 +42,67 @@
   
   Different general purpose programming languages provide different degrees of support for developing sophisticated internal DSLs.
   For example, scripting languages generally provide better ways of implementing internal DSLs (e.g. Ruby).
-  However, in our strong oppinion statically type langugages are of essential importantce for constructing complex business oriented information systems.
+  However, in our strong opinion statically typed languages are of essential importance for constructing complex business oriented information systems.
   
   From the very beginning the Trident Genesis Platform was envisaged as an application platform founded on concepts of the internal DSL and domain-driven development (inspired by Eric Evans's ``Domain-Driven Design: Tackling Complexity in the Heart of Software'').
-  In order to ensure wider acceptance by the software development community\footnote{Popularisation of the paltform among developers and the existance of multiple business applications built on top of it forms a community, which provides an invaluable resource for new developers and helps identifying additional features that should be incorporated into the platform leading to further improvement of its abstraction mechanism.}, the platform taps into the power of modern IDEs and existing programming skills of softare developers using the Java programming language\footnote{Java is not the best host language for developing internal DSLs (e.g. Scala is a lot more adequate), but the maturity of the existing Java infrastructure and the development experience played a critical part in this decision.}.
-  The internal DSLs are used for expressing the application's behaviour in a declarative way addressing key areas of any software solution such as web, database communication and the user interface desing.
+  In order to ensure wider acceptance by the software development community\footnote{Popularisation of the platform among developers and the existence of multiple business applications built on top of it forms a community, which provides an invaluable resource for new developers and helps identifying additional features that should be incorporated into the platform leading to further improvement of its abstraction mechanism.}, the platform taps into the power of modern IDEs and existing programming skills of software developers using the Java programming language\footnote{Java is not the best host language for developing internal DSLs (e.g. Scala is a lot more adequate), but the maturity of the existing Java infrastructure and the development experience played a critical part in this decision.}.
+  The internal DSLs are used for expressing the application's behaviour in a declarative way addressing key areas of any software solution such as web, database communication and the user interface design.
 
 \subsection{Type System and Metadata}
-  The concept of \emph{metadata driven} software development is well accepted and repidly gaining its popularity among practitioners, affecting all modern software platforms and frameworks.
+  The concept of \emph{metadata driven} software development is well accepted and rapidly gaining its popularity among practitioners, affecting all modern software platforms and frameworks.
   The TG platform provides its unique type system and metadata support specifically targeted at the development of business applications.
-  The core of any TG-based applications is formed out of types modeling the business entityes and the metadata, which complements the types.
+  The core of any TG-based applications is formed out of types modeling the business entities and the metadata, which complements the types.
   Together types and metadata define the object hierarchy used for building all main parts of the business application as well as for determining all aspect of its behaviour.
   Basically, the execution of such business applications effectively interprets the developed types and metadata, which provides all necessary application functionality.
 
   The business domain entities are modeled by reusing provided in the platform type system, which supports well-defined patterns for modeling real-life interoperability between domain entities.  
-  Metadata privides a declarative way to associate various business rules with domain entities (e.g. validation rules), define application security, control transaction demracation, visual representation of domain entities and more.
-  It also assists in fine-tuning of the business domain models with the support for configuration-based behaviour achieved by means of dependecy injection.
+  Metadata provides a declarative way to associate various business rules with domain entities (e.g. validation rules), define application security, control transaction demarcation, visual representation of domain entities and more.
+  It also assists in fine-tuning of the business domain models with the support for configuration-based behaviour achieved by means of dependency injection.
   
+  \begin{wrapfigure}{r}{50mm}
+    \vspace{-30pt}
+    \centering    
+    \begin{tikzpicture}[node distance=1cm, auto, opacity=0.8]
+      \tikzset{
+	  arrow/.style={draw=black, thin, inner sep=1em, minimum size=3em, text centered}
+      }      
+      \fill[circle, color=blue!50!white, opacity=0.3] (0,0) circle (1.0cm);
+      \shade[ball color=green!50!white] (0, 0) circle (0.5cm)  node [below,text=blue!50!black,yshift=-1.2cm] {Domain Entity Model};
+      
+      \def\corearrow{+(0cm,0cm) -- +(0.7cm,0.5cm) -- +(2.2cm,0.5cm)}
+
+      \draw (0.0,0.3) [arrow] \corearrow node [above,text=green!50!black,scale=0.8,xshift=-1.0cm,yshift=-0.3cm] {Entity Type};
+      \draw (0.1,0.8) [arrow, xscale=-1] \corearrow node [above,text=blue!50!black,scale=0.8,xshift=0.8cm,yshift=-0.3cm] {Metadata};
+    \end{tikzpicture} 
+    \vspace{-30pt}
+  \end{wrapfigure}
+
   By describing the application in terms of types and metadata, the developer informs the platform of a lot of useful information, which can be used by the platform in many different ways.
-  Based on this information, the platform automatically constructs a large part of the application internals, which provides the support for a complete application lifecycle.
+  Based on this information, the platform automatically constructs a large part of the application internals, which provides the support for a complete application life-cycle.
   For instance, provided metadata and types are sufficient for automatic construction of the application user interface that leverages the declared validation rules and dependencies between domain entities.
   Even more, the platform utilises this information for providing experienced end-users (i.e. without programming skills) of the business application with facilities to build comprehensive reports and analyses.
 
   So, be basic idea behind the type system and metadata driven approach to model the business domain is to depart from the old imperative paradigm towards the declarative way of defining the information system while remaining in the realm of the pure Java programming language\footnote{TG strives to confine the application development process to the use of Java only without the need for XML or any other external to Java language for modeling the business domain.}.
   
+  \subsection{Model Driven Architecture}
+  Trident Genesis enforces a strict orientation on model-driven development of business applications.
+  The notion of \emph{model} here means not only the business model as outline previously, but the a complete programming model supported by the platform.
+  This includes approaches for constructing data structures, implementation of the business logic, the ways of binding domain entities and user interface components, layouting application functionality at different layers and more.
+
+  The major advantage of the enforced model it that all TG-based applications follow exactly the same development model, which ensures structural and behavioural uniformity.
+  When the developer needs to implement a specific feature of some a particular business domain, the platform provides a well-defined set of approaches for achieving it.
+  On the one hand, such strict model enforcement limits the freedom of developers\footnote{This is done purposefully.}, but on the other hand this protects them from multitude of programming errors provisioning for getting a working solution in short terms, which can be easily supported\footnote{Due to the platform uniform programming model.} by the original or new developers.
+
+  One of the obvious results of this is the isolation of software developers working on business solutions from many technical details such as data storage, application layering, handling of web communication etc.
+  For example, as has been already mentioned, developers can easily specify a different database engine without any applications modification, or they can adjust descriptions of business entities without the need to update any user interfaces.
+  Data manipulation is also performed at the high-level programming model, which is interpreted by the platform in accordance with the specified database engine.
   
+  Having a unified well-defined programming model significantly simplifies and improves comprehensibility of TG-based business applications, which further contributes to ease of application development and support.
+  Application development is completely done in the same system of concepts, which establishes a ubiquitous language carried out through all stages of development and support for all applications.
+  Developers do not need to learn new concepts when supporting different TG-based applications and loose time otherwise required for switching between non-uniformly developed applications\footnote{This platform's singularity provides a way for establishing a Software Product Line for business solutions targeted at a specific problem domain.}.
+  
+  For example, the business entities modeled with platform's type system and metadata mechanism uniformly determine respective data structures in the underlying database.
+  Any manipulation of business entities is done in the same way regardless of whether it is the applications served side or the client side without concerning at what architectural layer these manipulations need to occur.
+  Thus, there is no need to switch between SQL when requesting data from a database and some HTTP specific API when communicating with a web resource.
 
-%   \begin{figure}[!htp]
-%     \centering
-%     \includegraphics[width=10cm]{sections/01-intro/images/00-splash.jpg}
-%     \caption{Example of an Embedded Image}\label{fig:01}
-%   \end{figure}
-
-
-%  // calculates the average yearly maintenance cost (for the last 3 years) per sectors of NORTH division. Only vehicles of MERCEDES make and models starting from 315 or 316 or VITO model are taken into account.
-%         select(WorkOrder.class).
-%         where(). //
-%         prop("vehicle.model.make.key").eq().val("MERCEDES").and().
-%         begin().prop("vehicle.model.key").starts_with().any_of_values("315", "316" ).or().prop("vehicle.model.key").eq().val("VITO").end().and().
-%         year_of().prop("actualStart").in().values(2009, 2010, 2011).and().
-%         prop("vehicle.station.zone.sector.division.key").eq().val("NORTH").
-%         yield_and_group().prop("vehicle.station.zone.sector").as("sector").
-%         yield().begin_expr().sum_of().prop("actualCost").div().val(3).end_expr().as("averageYearlyMaintenanceCostPerSector").model_as_aggregate();
- 
+  Our estimations based on the experience building TG-based applications suggests that providing the unified programming model yields an order of magnitude higher performance creating new and modifying existing business applications.

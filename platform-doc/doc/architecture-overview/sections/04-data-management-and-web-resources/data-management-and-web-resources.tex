@@ -1,0 +1,12 @@
+\section{Data Management \& Web Resources}\label{sec:04}
+
+%  // calculates the average yearly maintenance cost (for the last 3 years) per sectors of NORTH division. Only vehicles of MERCEDES make and models starting from 315 or 316 or VITO model are taken into account.
+%         select(WorkOrder.class).
+%         where(). //
+%         prop("vehicle.model.make.key").eq().val("MERCEDES").and().
+%         begin().prop("vehicle.model.key").starts_with().any_of_values("315", "316" ).or().prop("vehicle.model.key").eq().val("VITO").end().and().
+%         year_of().prop("actualStart").in().values(2009, 2010, 2011).and().
+%         prop("vehicle.station.zone.sector.division.key").eq().val("NORTH").
+%         yield_and_group().prop("vehicle.station.zone.sector").as("sector").
+%         yield().begin_expr().sum_of().prop("actualCost").div().val(3).end_expr().as("averageYearlyMaintenanceCostPerSector").model_as_aggregate();
+
