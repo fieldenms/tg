@@ -12,6 +12,15 @@ public class ConditionsModel implements IPropertyCollector {
     private final ICondition firstCondition;
     private final List<CompoundConditionModel> otherConditions;
 
+    public String sql() {
+        final StringBuffer sb = new StringBuffer();
+        sb.append(firstCondition);
+        for (final CompoundConditionModel compound : otherConditions) {
+            sb.append(" " + compound);
+        }
+        return sb.toString();
+    }
+
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer();

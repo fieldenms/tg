@@ -38,11 +38,17 @@ public class EntQuery implements ISingleOperand {
     private final List<EntProp> unresolvedProps;
 
 
-    @Override
-    public String toString() {
+    public String sql() {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("SELECT ");
 	sb.append(yields.sql());
+	sb.append(" FROM ");
+	sb.append(sources.sql());
+	if (conditions != null) {
+	    sb.append(" WHERE ");
+	    sb.append(conditions.sql());
+	}
+
         return sb.toString();
     }
 
@@ -132,9 +138,9 @@ public class EntQuery implements ISingleOperand {
 	propsToBeResolvedFinally.addAll(immediatePropertiesFinally);
 	propsToBeResolvedFinally.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
 
-	resolvePropsFinally(propsToBeResolvedFinally);
-
 	sources.assignSqlAliases(getMasterIndex());
+
+	resolvePropsFinally(propsToBeResolvedFinally);
 
 	yields.assignSqlAliases();
     }

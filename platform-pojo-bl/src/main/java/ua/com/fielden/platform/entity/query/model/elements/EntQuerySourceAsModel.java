@@ -94,4 +94,9 @@ public class EntQuerySourceAsModel extends AbstractEntQuerySource {
 	    throw new RuntimeException("Not yet supported");
 	}
     }
+
+    @Override
+    public String sql() {
+	return "(" + models.get(0).sql() + ") AS " + sqlAlias + "/*" + alias + "*/";
+    }
 }

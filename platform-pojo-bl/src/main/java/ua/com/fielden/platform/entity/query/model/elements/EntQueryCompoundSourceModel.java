@@ -16,6 +16,10 @@ public class EntQueryCompoundSourceModel implements IPropertyCollector {
 	this.joinConditions = joinConditions;
     }
 
+    public String sql() {
+	return (joinType.equals(JoinType.IJ) ? "INNER JOIN" : "LEFT JOIN ") + source.sql() + " ON " + joinConditions.sql();
+    }
+
     @Override
     public String toString() {
         return joinType + " " + source + " ON " + joinConditions;

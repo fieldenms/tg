@@ -78,4 +78,9 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
 	}
 	return true;
     }
+
+    @Override
+    public String sql() {
+	return sourceType().getSimpleName().toUpperCase() + "_  AS " + sqlAlias + "/*" + alias + "*/";
+    }
 }

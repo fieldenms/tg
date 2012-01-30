@@ -52,4 +52,6 @@ public interface IEntQuerySource {
     List<PropResolutionInfo> getFinalReferencingProps();
 
     void assignSqlAlias(String sqlAlias);
+
+    String sql();
 }

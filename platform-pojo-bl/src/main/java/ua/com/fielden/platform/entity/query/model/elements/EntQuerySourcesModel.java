@@ -10,6 +10,17 @@ public class EntQuerySourcesModel {
     private final IEntQuerySource main;
     private final List<EntQueryCompoundSourceModel> compounds;
 
+    public String sql() {
+	final StringBuffer sb = new StringBuffer();
+	sb.append(main.sql());
+	for (final EntQueryCompoundSourceModel compoundSource : compounds) {
+	    sb.append(" ");
+	    sb.append(compoundSource.sql());
+	}
+
+	return sb.toString();
+    }
+
     public EntQuerySourcesModel(final IEntQuerySource main, final List<EntQueryCompoundSourceModel> compounds) {
 	super();
 	this.main = main;

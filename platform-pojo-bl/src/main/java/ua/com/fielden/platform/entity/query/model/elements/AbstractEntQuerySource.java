@@ -13,10 +13,10 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public abstract class AbstractEntQuerySource implements IEntQuerySource {
-    private final String alias; // can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end)
+    protected final String alias; // can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end)
     private final List<PropResolutionInfo> referencingProps = new ArrayList<PropResolutionInfo>();
     private final List<PropResolutionInfo> finalReferencingProps = new ArrayList<PropResolutionInfo>();
-    private String sqlAlias;
+    protected String sqlAlias;
     protected Map<String, String> sourceColumns = new HashMap<String, String>();
 
     public void assignSqlAlias(final String sqlAlias) {
@@ -47,7 +47,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
     @Override
     public void addFinalReferencingProp(final PropResolutionInfo prop) {
 	finalReferencingProps.add(prop);
-	prop.entProp.setSql(sourceColumns.get(prop.propPart));
+	prop.entProp.setSql(sqlAlias + "." + sourceColumns.get(prop.propPart));
     }
 
     @Override
