@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.entity.query.model.builders;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.query.model.elements.YieldModel;
 import ua.com.fielden.platform.entity.query.model.elements.YieldsModel;
@@ -26,7 +27,7 @@ public class QryYieldsBuilder extends AbstractTokensBuilder {
 	    finaliseChild();
 	    //throw new RuntimeException("Unable to produce result - unfinished model state!");
 	}
-	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();
+	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	for (final Pair<TokenCategory, Object> pair : getTokens()) {
 	    yields.put(((YieldModel) pair.getValue()).getAlias(), (YieldModel) pair.getValue());
 	}

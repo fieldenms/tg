@@ -703,7 +703,6 @@ public class EntityUtils {
 	return DynamicEntityKey.class.equals(AnnotationReflector.getKeyType(entityType));
     }
 
-
     /**
      * Retrieves names of all persisted properties within given entity type
      *

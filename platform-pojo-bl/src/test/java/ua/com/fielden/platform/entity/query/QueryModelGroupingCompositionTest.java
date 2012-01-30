@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.entity.query;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.junit.Test;
 
@@ -24,9 +24,9 @@ public class QueryModelGroupingCompositionTest extends BaseEntQueryTCase {
     @Test
     public void test_query_with_one_group() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
-	final EntQuery act = entQuery1(qry);
+	final EntQuery act = entQry(qry);
 
-	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();
+	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("id", new YieldModel(new EntProp("model"), "id"));
 	final YieldsModel exp = new YieldsModel(yields);
 
@@ -41,11 +41,11 @@ public class QueryModelGroupingCompositionTest extends BaseEntQueryTCase {
     @Test
     public void test_query_with_several_groups() {
 	final AggregatedResultQueryModel qry = select(VEHICLE).groupBy().prop("model").groupBy().yearOf().prop("initDate").yield().prop("model").as("model").yield().yearOf().prop("initDate").as("initYear").modelAsAggregate();
-	final EntQuery act = entQuery1(qry);
+	final EntQuery act = entQry(qry);
 	final YearOfModel yearOfModel = new YearOfModel(new EntProp("initDate"));
 	final EntProp eqClassProp = new EntProp("model");
 
-	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();
+	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("model", new YieldModel(eqClassProp, "model"));
 	yields.put("initYear", new YieldModel(yearOfModel, "initYear"));
 	final YieldsModel exp = new YieldsModel(yields);

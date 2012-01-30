@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -9,6 +8,7 @@ import ua.com.fielden.platform.entity.query.BaseEntQueryTCase;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.elements.AbstractEntQuerySource.PropResolutionInfo;
 import ua.com.fielden.platform.sample.domain.TgModelCount;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import static org.junit.Assert.assertEquals;
@@ -17,12 +17,29 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQueryTCase {
 
+    private final String incP2S = "Inccorect association between properties and query sources";
+    private final String incFP2S = "Inccorect association between properties and query sources";
+
     @Test
     public void test_prop_to_source_association1() {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).where().prop("model.make.key").eq().val("MERC").yield().maxOf().prop("model.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQuery1(qry);
-	final List<EntProp> expReferencingProps = Arrays.asList(new EntProp[] { prop("model.make.key"), prop("model.make.key") });
-	assertEquals("Incorrect list of unresolved props", expReferencingProps, entQry.getSources().getAllSources().get(0).getReferencingProps());
+	final EntQuery entQry = entQry(qry);
+	final List<PropResolutionInfo> src1Props = prepare( //
+		propResInf("model.make.key", null, "model.make.key", false, STRING), //
+		propResInf("model.make.key", null, "model.make.key", false, STRING));
+	assertEquals(incP2S, compose(src1Props), getSourcesReferencingProps(entQry));
+
+	final List<PropResolutionInfo> src1FinProps = prepare( //
+		propResInf("model", null, "model", false, MODEL));
+	final List<PropResolutionInfo> src2FinProps = prepare(  //
+		propResInf("model.id", "model", "id", false, LONG), //
+		propResInf("model.make", "model", "make", false, MAKE));
+	final List<PropResolutionInfo> src3FinProps = prepare(  //
+		propResInf("model.make.id", "model.make", "id", false, LONG), //
+		propResInf("model.make.key", "model.make", "key", false, STRING), //
+		propResInf("model.make.key", "model.make", "key", false, STRING));
+	assertEquals(incFP2S, compose(src1FinProps, src2FinProps, src3FinProps),
+		getSourcesFinalReferencingProps(entQry));
     }
 
     @Test
@@ -30,10 +47,12 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final PrimitiveResultQueryModel qry = select(VEHICLE). //
 	join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
 	where().prop("model.make.key").eq().val("MERC").yield().maxOf().prop("model.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQuery1(qry);
-	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("model") });
-	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("model.id"), prop("model.make.key"), prop("model.make.key") });
-	assertEquals("Incorrect list of unresolved props", Arrays.asList(new List[] { qrySource1props, qrySource2props }), entQry.getSources().getSourcesReferencingProps());
+	final EntQuery entQry = entQry(qry);
+	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", false, MODEL));
+	final List<PropResolutionInfo> src2Props = prepare( propResInf("model.id", "model", "id", false, LONG), //
+		propResInf("model.make.key", "model", "make.key", false, STRING), //
+		propResInf("model.make.key", "model", "make.key", false, STRING));
+	assertEquals(incP2S, compose(src1Props, src2Props), getSourcesReferencingProps(entQry));
     }
 
     @Test
@@ -42,11 +61,14 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
 	join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").yield().maxOf().prop("model.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQuery1(qry);
-	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("model") });
-	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("model.id"), prop("model.make") });
-	final List<EntProp> qrySource3props = Arrays.asList(new EntProp[] { prop("model.make.id"), prop("model.make.key"), prop("model.make.key") });
-	assertEquals("Incorrect list of unresolved props", Arrays.asList(new List[] { qrySource1props, qrySource2props, qrySource3props }), entQry.getSources().getSourcesReferencingProps());
+	final EntQuery entQry = entQry(qry);
+	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", false, MODEL));
+	final List<PropResolutionInfo> src2Props = prepare( propResInf("model.id", "model", "id", false, LONG), //
+		propResInf("model.make", "model", "make", false, MAKE));
+	final List<PropResolutionInfo> src3Props = prepare( propResInf("model.make.id", "model.make", "id", false, LONG), //
+		propResInf("model.make.key", "model.make", "key", false, STRING), //
+		propResInf("model.make.key", "model.make", "key", false, STRING));
+	assertEquals(incP2S, compose(src1Props, src2Props, src3Props), getSourcesReferencingProps(entQry));
     }
 
     @Test
@@ -54,28 +76,37 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v"). //
 	join(MODEL).as("m").on().prop("model").eq().prop("m.id"). //
 	where().prop("m.make.key").eq().val("MERC").and().prop("v.model.make.key").like().val("MERC%").yield().maxOf().prop("m.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQuery1(qry);
-	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("model"), prop("v.model.make.key") });
-	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("m.id"), prop("m.make.key"), prop("m.make.key") });
-	assertEquals("Incorrect list of unresolved props", Arrays.asList(new List[] { qrySource1props, qrySource2props }), entQry.getSources().getSourcesReferencingProps());
+	final EntQuery entQry = entQry(qry);
+	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", false, MODEL), //
+		propResInf("v.model.make.key", "v", "model.make.key", false, STRING));
+	final List<PropResolutionInfo> src2Props = prepare( propResInf("m.id", "m", "id", false, LONG), //
+		propResInf("m.make.key", "m", "make.key", false, STRING), //
+		propResInf("m.make.key", "m", "make.key", false, STRING));
+
+	assertEquals(incP2S, compose(src1Props, src2Props), getSourcesReferencingProps(entQry));
     }
 
     @Test
     public void test_prop_to_source_association5() {
-	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v").join(MODEL).as("m").on().prop("model").eq().prop("m").where().prop("m.make.key").eq().val("MERC").yield().maxOf().prop("m.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQuery1(qry);
-	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("model") });
-	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("m"), prop("m.make.key"), prop("m.make.key") });
-	assertEquals("Incorrect list of unresolved props", Arrays.asList(new List[] { qrySource1props, qrySource2props }), entQry.getSources().getSourcesReferencingProps());
+	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v"). //
+	join(MODEL).as("m").on().prop("model").eq().prop("m"). //
+	where().prop("m.make.key").eq().val("MERC").yield().maxOf().prop("m.make.key").modelAsPrimitive();
+	final EntQuery entQry = entQry(qry);
+	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", false, MODEL));
+	final List<PropResolutionInfo> src2Props = prepare( propResInf("m", "m", null, true, LONG), //
+		propResInf("m.make.key", "m", "make.key", false, STRING), //
+		propResInf("m.make.key", "m", "make.key", false, STRING));
+	assertEquals(incP2S, compose(src1Props, src2Props), getSourcesReferencingProps(entQry));
     }
 
     @Test
     public void test_prop_to_source_association6() {
 	final AggregatedResultQueryModel sourceQry = select(VEHICLE).groupBy().prop("model").yield().prop("model").as("model").yield().minOf().yearOf().prop("initDate").as("earliestInitYear").modelAsAggregate();
 	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("earliestInitYear").ge().val(2000).modelAsAggregate();
-	final EntQuery entQry = entQuery1(qry);
-	final List<EntProp> expReferencingProps = Arrays.asList(new EntProp[] { prop("model.make.key"), prop("earliestInitYear") });
-	assertEquals("Incorrect list of unresolved props", expReferencingProps, entQry.getSources().getAllSources().get(0).getReferencingProps());
+	final EntQuery entQry = entQry(qry);
+	final List<PropResolutionInfo> src1Props = prepare( propResInf("model.make.key", null, "model.make.key", false, STRING), //
+		propResInf("earliestInitYear", null, "earliestInitYear", false, null));
+	assertEquals(incP2S, compose(src1Props), getSourcesReferencingProps(entQry));
     }
 
     @Test
@@ -87,9 +118,10 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	modelAsEntity(TgModelCount.class);
 
 	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("key.make.key").eq().val("MERC").and().prop("count").ge().val(2000).modelAsAggregate();
-	final EntQuery entQry = entQuery1(qry);
-	final List<EntProp> expReferencingProps = Arrays.asList(new EntProp[] { prop("key.make.key"), prop("count") });
-	assertEquals("Incorrect list of unresolved props", expReferencingProps, entQry.getSources().getAllSources().get(0).getReferencingProps());
+	final EntQuery entQry = entQry(qry);
+	final List<PropResolutionInfo> src1Props = prepare( propResInf("key.make.key", null, "key.make.key", false, STRING), //
+		propResInf("count", null, "count", false, BIG_INTEGER));
+	assertEquals(incP2S, compose(src1Props), getSourcesReferencingProps(entQry));
     }
 
     @Test
@@ -110,13 +142,42 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	join(sourceQry2).as("mc").on().prop("model").eq().prop("mc.key").
 	where(). //
 	prop("model.make.key").eq().val("MERC").and(). //
+	prop("mc.key.make.key").eq().val("MERC").and(). //
 	prop("earliestInitYear").ge().val(2000).and(). //
 	prop("count").ge().val(25).modelAsAggregate();
 
-	final EntQuery entQry = entQuery1(qry);
-	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("model"), prop("model.make.key"), prop("earliestInitYear") });
-	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("mc.key"), prop("count") });
-	assertEquals("Incorrect list of unresolved props", Arrays.asList(new List[] { qrySource1props, qrySource2props }), entQry.getSources().getSourcesReferencingProps());
+	final EntQuery entQry = entQry(qry);
+	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", false, MODEL), //
+		propResInf("model.make.key", null, "model.make.key", false, STRING), //
+		propResInf("earliestInitYear", null, "earliestInitYear", false, null));
+	final List<PropResolutionInfo> src2Props = prepare( propResInf("mc.key", "mc", "key", false, MODEL), //
+		propResInf("mc.key.make.key", "mc", "key.make.key", false, STRING), //
+		propResInf("count", null, "count", false, BIG_INTEGER));
+	assertEquals(incP2S, compose(src1Props, src2Props), getSourcesReferencingProps(entQry));
+
+	final List<PropResolutionInfo> src1FinProps = prepare( //
+		propResInf("model", null, "model", false, MODEL), //
+		propResInf("model", null, "model", false, MODEL), //
+		propResInf("earliestInitYear", null, "earliestInitYear", false, null));
+	final List<PropResolutionInfo> src2FinProps = prepare(//
+		propResInf("model.id", "model", "id", false, LONG), //
+		propResInf("model.make", "model", "make", false, MAKE));
+	final List<PropResolutionInfo> src3FinProps = prepare( //
+		propResInf("model.make.id", "model.make", "id", false, LONG), //
+		propResInf("model.make.key", "model.make", "key", false, STRING));
+
+	final List<PropResolutionInfo> src4FinProps = prepare( //
+		propResInf("mc.key", "mc", "key", false, MODEL), //
+		propResInf("mc.key", "mc", "key", false, MODEL), //
+		propResInf("count", null, "count", false, BIG_INTEGER));
+
+	final List<PropResolutionInfo> src5FinProps = prepare( //
+		propResInf("mc.key.id", "mc.key", "id", false, LONG), //
+		propResInf("mc.key.make", "mc.key", "make", false, MAKE));
+	final List<PropResolutionInfo> src6FinProps = prepare( //
+		propResInf("mc.key.make.id", "mc.key.make", "id", false, LONG), //
+		propResInf("mc.key.make.key", "mc.key.make", "key", false, STRING));
+	assertEquals(incFP2S, compose(src1FinProps, src4FinProps, src2FinProps, src3FinProps, src5FinProps, src6FinProps), getSourcesFinalReferencingProps(entQry));
     }
 
     @Test
@@ -152,9 +213,12 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	yield().prop("totalVehCount").as("a3"). //
 	modelAsAggregate();
 
-	final EntQuery entQry = entQuery1(qry);
-	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("totalVehCount"), prop("make.key"), prop("earliestInitYearPerMake"), prop("totalVehCount")});
-	assertEquals("Incorrect list of unresolved props", Arrays.asList(new List[] { qrySource1props }), entQry.getSources().getSourcesReferencingProps());
+	final EntQuery entQry = entQry(qry);
+	final List<PropResolutionInfo> src1Props = prepare( propResInf("totalVehCount", null, "totalVehCount", false, null), //
+		propResInf("make.key", null, "make.key", false, STRING), //
+		propResInf("earliestInitYearPerMake", null, "earliestInitYearPerMake", false, null), //
+		propResInf("totalVehCount", null, "totalVehCount", false, null));
+	assertEquals(incP2S, compose(src1Props), getSourcesReferencingProps(entQry));
     }
 
     @Test
@@ -166,13 +230,18 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	join(ORG2).as("parent.parent.parent").on().prop("parent.parent.parent").eq().prop("parent.parent.parent.id"). //
 	join(ORG1).as("parent.parent.parent.parent").on().prop("parent.parent.parent.parent").eq().prop("parent.parent.parent.parent.id"). //
 	where().prop("parent.parent.parent.parent.key").eq().val("NORTH").yield().prop("parent.parent.parent.parent.key").modelAsPrimitive();
-	final EntQuery entQry = entQuery1(qry);
-	final List<EntProp> qrySource1props = Arrays.asList(new EntProp[] { prop("parent") });
-	final List<EntProp> qrySource2props = Arrays.asList(new EntProp[] { prop("parent.id"), prop("parent.parent") });
-	final List<EntProp> qrySource3props = Arrays.asList(new EntProp[] { prop("parent.parent.id"), prop("parent.parent.parent") });
-	final List<EntProp> qrySource4props = Arrays.asList(new EntProp[] { prop("parent.parent.parent.id"), prop("parent.parent.parent.parent") });
-	final List<EntProp> qrySource5props = Arrays.asList(new EntProp[] { prop("parent.parent.parent.parent.id"), prop("parent.parent.parent.parent.key"), prop("parent.parent.parent.parent.key") });
-	assertEquals("Incorrect association between properties and query sources", Arrays.asList(new List[] { qrySource1props, qrySource2props, qrySource3props, qrySource4props, qrySource5props}), entQry.getSources().getSourcesReferencingProps());
+	final EntQuery entQry = entQry(qry);
+	final List<PropResolutionInfo> src1Props = prepare( propResInf("parent", null, "parent", false, ORG4));
+	final List<PropResolutionInfo> src2Props = prepare( propResInf("parent.id", "parent", "id", false, LONG), //
+		propResInf("parent.parent", "parent", "parent", false, ORG3));
+	final List<PropResolutionInfo> src3Props = prepare( propResInf("parent.parent.id", "parent.parent", "id", false, LONG), //
+		propResInf("parent.parent.parent", "parent.parent", "parent", false, ORG2));
+	final List<PropResolutionInfo> src4Props = prepare( propResInf("parent.parent.parent.id", "parent.parent.parent", "id", false, LONG), //
+		propResInf("parent.parent.parent.parent", "parent.parent.parent", "parent", false, ORG1));
+	final List<PropResolutionInfo> src5Props = prepare( propResInf("parent.parent.parent.parent.id", "parent.parent.parent.parent", "id", false, LONG), //
+		propResInf("parent.parent.parent.parent.key", "parent.parent.parent.parent", "key", false, STRING), //
+		propResInf("parent.parent.parent.parent.key", "parent.parent.parent.parent", "key", false, STRING));
+	assertEquals(incP2S, compose(src1Props, src2Props, src3Props, src4Props, src5Props), getSourcesReferencingProps(entQry));
     }
 
     @Test
@@ -180,7 +249,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final EntityResultQueryModel<TgOrgUnit5> qry = select(ORG5). //
 	join(ORG4).on().prop("parent.parent.parent.parent").eq().prop("parent.parent.parent").model();
 	try {
-	    entQuery1(qry);
+	    entQry(qry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	    assertEquals("Incorrect exception message", "Ambiguous property: parent.parent.parent", e.getMessage());
@@ -197,7 +266,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	join(ORG1).as("parent.parent.parent.parent").on().prop("parent.parent.parent.parent").eq().prop("parent.parent.parent.parent.id"). //
 	where().prop("parent.parent.parent.parent.key").eq().val("NORTH").model();
 	try {
-	    entQuery1(qry);
+	    entQry(qry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	    assertEquals("Incorrect exception message", "Ambiguous property: parent", e.getMessage());

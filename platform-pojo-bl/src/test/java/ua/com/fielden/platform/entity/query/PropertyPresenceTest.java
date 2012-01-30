@@ -15,7 +15,7 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 public class PropertyPresenceTest extends BaseEntQueryTCase {
 
     private IEntQuerySource getMainSource(final QueryModel qry) {
-	return entQuery1(qry).getSources().getMain();
+	return entQry(qry).getSources().getMain();
     }
 
     @Test
@@ -213,11 +213,42 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
     public void test_prop9() {
 	final AggregatedResultQueryModel sourceQry = select(VEHICLE).
 	groupBy().prop("model").
-	yield().prop("model").as("model").yield().minOf().yearOf().prop("initDate").as("earliestInitYear").modelAsAggregate();
+	yield().prop("model").as("model"). //
+	yield().minOf().yearOf().prop("initDate").as("earliestInitYear"). //
+	modelAsAggregate();
 	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("earliestInitYear").ge().val(2000).modelAsAggregate();
 	final IEntQuerySource mainSource = getMainSource(qry);
 
 	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
 	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make")));
     }
+
+//    @Test
+//    public void test_prop10() {
+//	final AggregatedResultQueryModel sourceQry = select(VEHICLE).
+//	groupBy().prop("model").
+//	yield().prop("model").as("model"). //
+//	yield().minOf().yearOf().prop("initDate").as("aka.earliestInitYear"). //
+//	modelAsAggregate();
+//	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("aka.earliestInitYear").ge().val(2000).modelAsAggregate();
+//	final IEntQuerySource mainSource = getMainSource(qry);
+//
+//	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
+//	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make")));
+//    }
+//
+//
+//    @Test
+//    public void test_prop11() {
+//	final AggregatedResultQueryModel sourceQry = select(VEHICLE).
+//	groupBy().prop("model").
+//	yield().prop("model").as("my.model"). //
+//	yield().minOf().yearOf().prop("initDate").as("earliestInitYear"). //
+//	modelAsAggregate();
+//	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("my.model.make.key").eq().val("MERC").and().prop("earliestInitYear").ge().val(2000).modelAsAggregate();
+//	final IEntQuerySource mainSource = getMainSource(qry);
+//
+//	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
+//	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make")));
+//    }
 }

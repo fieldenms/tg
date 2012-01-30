@@ -52,15 +52,12 @@ public class EntQuerySourcesModel {
 	return result;
     }
 
-    public List<List<EntProp>> getSourcesReferencingProps() {
-	final List<List<EntProp>> result = new ArrayList<List<EntProp>>();
+    public void assignSqlAliases(final int masterIndex) {
+	int sourceIndex = 0;
 	for (final IEntQuerySource source : getAllSources()) {
-	    if (!source.generated()) {
-		result.add(source.getReferencingProps());
-	    }
+	    sourceIndex = sourceIndex + 1;
+	    source.assignSqlAlias("Q" + sourceIndex + (masterIndex == 0 ? "" : ("L" + masterIndex)));
 	}
-
-	return result;
     }
 
     @Override

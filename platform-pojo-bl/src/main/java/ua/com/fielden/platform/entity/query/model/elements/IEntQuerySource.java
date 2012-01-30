@@ -43,11 +43,13 @@ public interface IEntQuerySource {
      */
     boolean generated();
 
-    void addReferencingProp(EntProp prop);
+    void addReferencingProp(PropResolutionInfo prop);
 
-    List<EntProp> getReferencingProps();
+    List<PropResolutionInfo> getReferencingProps();
 
-    void addFinalReferencingProp(EntProp prop);
+    void addFinalReferencingProp(PropResolutionInfo prop);
 
-    List<EntProp> getFinalReferencingProps();
+    List<PropResolutionInfo> getFinalReferencingProps();
+
+    void assignSqlAlias(String sqlAlias);
 }

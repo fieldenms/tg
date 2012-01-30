@@ -5,11 +5,16 @@ package ua.com.fielden.platform.entity.query.model.elements;
 public class YieldModel {
     private final ISingleOperand operand;
     private final String alias;
+    private String sqlAlias;
 
     public YieldModel(final ISingleOperand operand, final String alias) {
 	super();
 	this.operand = operand;
 	this.alias = alias;
+    }
+
+    public void assignSqlAlias(final String sqlAlias) {
+	this.sqlAlias = sqlAlias;
     }
 
     @Override

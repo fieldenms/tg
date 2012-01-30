@@ -20,7 +20,7 @@ public class QueryYieldsEnhancementTest extends BaseEntQueryTCase {
 	join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
 	yield().prop("model.make").as("id").modelAsEntity(MAKE);
 
-	assertEquals("Incorrect yields enhancement", entQuery1(explicitQry), entQuery1(shortcutQry));
+	assertEquals("Incorrect yields enhancement", entQry(explicitQry), entQry(shortcutQry));
     }
 
     @Test
@@ -40,7 +40,7 @@ public class QueryYieldsEnhancementTest extends BaseEntQueryTCase {
 		yield().prop("purchasePrice").as("purchasePrice"). //
 		modelAsEntity(VEHICLE);
 
-	assertEquals("Incorrect yields enhancement", entQuery1(explicitQry), entQuery1(shortcutQry));
+	assertEquals("Incorrect yields enhancement", entQry(explicitQry), entQry(shortcutQry));
     }
 
     @Test
@@ -63,7 +63,7 @@ public class QueryYieldsEnhancementTest extends BaseEntQueryTCase {
 		yield().prop("purchasePrice").as("purchasePrice"). //
 		modelAsEntity(VEHICLE);
 
-	assertEquals("Incorrect yields enhancement", entQuery1(explicitQry), entQuery1(shortcutQry));
+	assertEquals("Incorrect yields enhancement", entQry(explicitQry), entQry(shortcutQry));
     }
 
     @Test
@@ -85,9 +85,6 @@ public class QueryYieldsEnhancementTest extends BaseEntQueryTCase {
 		where().exists(explicitSubQry). //
 		yield().prop("key").modelAsPrimitive();
 
-	final EntQuery qry1 = entQuery1(explicitQry);
-	final EntQuery qry2 = entQuery1(shortcutQry);
-
-	assertEquals("Incorrect yields enhancement", entQuery1(explicitQry), entQuery1(shortcutQry));
+	assertEquals("Incorrect yields enhancement", entQry(explicitQry), entQry(shortcutQry));
     }
 }

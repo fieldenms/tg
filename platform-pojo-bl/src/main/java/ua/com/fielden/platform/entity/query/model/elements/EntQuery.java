@@ -38,12 +38,22 @@ public class EntQuery implements ISingleOperand {
     private final List<EntProp> unresolvedProps;
 
 
+    private int getMasterIndex() {
+	int masterIndex = 0;
+	EntQuery currMaster = this.master;
+	while (currMaster != null) {
+	    masterIndex = masterIndex + 1;
+	    currMaster = currMaster.master;
+	}
+	return masterIndex;
+    }
+
     public YieldModel getYield(final String yieldName) {
 	return yields.getYields().get(yieldName);
     }
 
     private boolean onlyOneYieldAndWithoutAlias() {
-	return yields.getYields().size() == 1 && yields.getYields().values().iterator().next().getAlias() == null;
+	return yields.getYields().size() == 1 && yields.getYields().values().iterator().next().getAlias().equals("");
     }
 
     private boolean idAliasEnhancementRequired() {
@@ -107,7 +117,18 @@ public class EntQuery implements ISingleOperand {
 	    sources.getCompounds().addAll(generateImplicitSources(sourceAndItsJoinType.getKey(), sourceAndItsJoinType.getValue()));
 	}
 
-	//resolveProps(unresolvedPropsFromSubqueries);
+	final List<EntProp> immediatePropertiesFinally = getImmediateProps();
+	associatePropertiesWithHoldingQuery(immediatePropertiesFinally);
+
+	final List<EntProp> propsToBeResolvedFinally = new ArrayList<EntProp>();
+	propsToBeResolvedFinally.addAll(immediatePropertiesFinally);
+	propsToBeResolvedFinally.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
+
+	resolvePropsFinally(propsToBeResolvedFinally);
+
+	sources.assignSqlAliases(getMasterIndex());
+
+	yields.assignSqlAliases();
     }
 
     private void setMaster(final EntQuery master) {
@@ -122,7 +143,7 @@ public class EntQuery implements ISingleOperand {
 
     private void associatePropertiesWithHoldingQuery(final List<EntProp> immediateProperties) {
 	for (final EntProp entProp : immediateProperties) {
-	    entProp.setHolder(this);
+	    entProp.assignHolderIfNotAssigned(this);
 	}
     }
 
@@ -137,7 +158,7 @@ public class EntQuery implements ISingleOperand {
 
     private List<EntQueryCompoundSourceModel> generateImplicitSources(final IEntQuerySource source, final boolean leftJoined) {
 	final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
-	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, extractNames(source.getReferencingProps(), source.getAlias()), this);
+	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, extractNames(source.getReferencingProps()), this);
 	for (final PropTree propTree : propTrees) {
 	    result.addAll(propTree.getSourceModels());
 	}
@@ -148,20 +169,49 @@ public class EntQuery implements ISingleOperand {
 	final List<EntProp> unresolvedProps = new ArrayList<EntProp>();
 
 	for (final EntProp propToBeResolvedPair : propsToBeResolved) {
-	    final EntProp propResolutionResult = performPropResolveAction(propToBeResolvedPair);
-	    if (propResolutionResult != null) {
-		unresolvedProps.add(propResolutionResult);
+	    final Map<IEntQuerySource, PropResolutionInfo> sourceCandidates = findSourceMatchCandidates(propToBeResolvedPair);
+	    if (sourceCandidates.size() == 0) {
+		unresolvedProps.add(propToBeResolvedPair);
+	    } else {
+		final Pair<PropResolutionInfo, IEntQuerySource> propResolutionResult = performPropResolveAction(sourceCandidates);
+		propResolutionResult.getValue().addReferencingProp(propResolutionResult.getKey());
 	    }
 	}
 
 	return unresolvedProps;
     }
 
-    private Set<String> extractNames(final List<EntProp> props, final String sourceAlias) {
-	final Set<String> result = new HashSet<String>();
-	for (final EntProp prop : props) {
-	    result.add(sourceAlias != null && prop.getName().startsWith(sourceAlias + ".") ? prop.getName().substring(sourceAlias.length() + 1) : prop.getName());
+    private List<EntProp> resolvePropsFinally(final List<EntProp> propsToBeResolved) {
+	final List<EntProp> unresolvedProps = new ArrayList<EntProp>();
+
+	for (final EntProp propToBeResolvedPair : propsToBeResolved) {
+	    final Map<IEntQuerySource, PropResolutionInfo> sourceCandidates = findSourceMatchCandidates(propToBeResolvedPair);
+	    if (sourceCandidates.size() > 0) {
+		final Pair<PropResolutionInfo, IEntQuerySource> propResolutionResult = performPropResolveAction(sourceCandidates);
+		propResolutionResult.getValue().addFinalReferencingProp(propResolutionResult.getKey());
+	    }
 	}
+
+	return unresolvedProps;
+    }
+
+    private Set<String> extractNames(final List<PropResolutionInfo> props) {
+	final Set<String> result = new HashSet<String>();
+	for (final PropResolutionInfo prop : props) {
+	    result.add(!prop.isImplicitId() ? prop.getPropPart() : id);
+	}
+	return result;
+    }
+
+    private Map<IEntQuerySource, PropResolutionInfo> findSourceMatchCandidates(final EntProp prop) {
+	final Map<IEntQuerySource, PropResolutionInfo> result = new HashMap<IEntQuerySource, PropResolutionInfo>();
+	for (final IEntQuerySource source : sources.getAllSources()) {
+	    final PropResolutionInfo hasProp = source.containsProperty(prop);
+	    if (hasProp != null) {
+		result.put(source, hasProp);
+	    }
+	}
+
 	return result;
     }
 
@@ -172,26 +222,13 @@ public class EntQuery implements ISingleOperand {
      * @param prop
      * @return
      */
-    private EntProp performPropResolveAction(final EntProp prop) {
-	final Map<IEntQuerySource, PropResolutionInfo> result = new HashMap<IEntQuerySource, PropResolutionInfo>();
-
-	for (final IEntQuerySource source : sources.getAllSources()) {
-	    final PropResolutionInfo hasProp = source.containsProperty(prop);
-	    if (hasProp != null) {
-		result.put(source, hasProp);
-	    }
-	}
-
-	if (result.size() == 0) {
-	    return prop;
-	} else if (result.size() == 1) {
-	    prop.setPropType(result.values().iterator().next().getPropType());
-	    result.keySet().iterator().next().addReferencingProp(prop);
-	    return null;
+    private Pair<PropResolutionInfo, IEntQuerySource> performPropResolveAction(final Map<IEntQuerySource, PropResolutionInfo> candidates) {
+	if (candidates.size() == 1) {
+	    return new Pair<PropResolutionInfo, IEntQuerySource>(candidates.values().iterator().next(), candidates.keySet().iterator().next());
 	} else {
 	    final SortedSet<Integer> preferenceNumbers = new TreeSet<Integer>();
 	    final Map<Integer, List<IEntQuerySource>> sourcesPreferences = new HashMap<Integer, List<IEntQuerySource>>();
-	    for (final Entry<IEntQuerySource, PropResolutionInfo> entry : result.entrySet()) {
+	    for (final Entry<IEntQuerySource, PropResolutionInfo> entry : candidates.entrySet()) {
 		final Integer currPrefNumber = entry.getValue().getPreferenceNumber();
 		preferenceNumbers.add(currPrefNumber);
 		if (!sourcesPreferences.containsKey(currPrefNumber)) {
@@ -204,24 +241,22 @@ public class EntQuery implements ISingleOperand {
 
 	    final List<IEntQuerySource> preferedSourceList = sourcesPreferences.get(preferenceResult);
 	    if (preferedSourceList.size() == 1) {
-		sourcesPreferences.get(preferenceResult).get(0).addReferencingProp(prop);
-		prop.setPropType(result.get(sourcesPreferences.get(preferenceResult).get(0)).getPropType());
-		return null;
+		return new Pair<PropResolutionInfo, IEntQuerySource>(candidates.get(sourcesPreferences.get(preferenceResult).get(0)), sourcesPreferences.get(preferenceResult).get(0));
 	    } else {
 		int notAliasedSourcesCount = 0;
+		Pair<PropResolutionInfo, IEntQuerySource> resultPair = null;
 		for (final IEntQuerySource qrySource : preferedSourceList) {
-		    if (result.get(qrySource).getAliasPart() == null) {
-			qrySource.addReferencingProp(prop);
-			prop.setPropType(result.get(qrySource).getPropType());
+		    if (qrySource.getAlias() == null) {
+			resultPair = new Pair<PropResolutionInfo, IEntQuerySource>(candidates.get(qrySource), qrySource);
 			notAliasedSourcesCount = notAliasedSourcesCount + 1;
 		    }
 		}
 
 		if (notAliasedSourcesCount == 1) {
-		    return null;
+		    return resultPair;
 		}
 
-		throw new IllegalStateException("Ambiguous property: " + prop.getName());
+		throw new IllegalStateException("Ambiguous property: " + candidates.values().iterator().next().getEntProp().getName());
 	    }
 	}
     }

@@ -22,7 +22,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     public void test_prop0() {
 	final PrimitiveResultQueryModel qry = select(select(VEHICLE).where().anyOfProps("model", "eqClass").eq().val("MERC").yield().prop("model.key").as("vehicleModelKey").modelAsAggregate()).where().prop("vehicleModelKey").eq().val("MERC1").yield().prop("vehicleModelKey").modelAsPrimitive(String.class);
 	try {
-	    entQuery1(qry);
+	    entQry(qry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	}
@@ -80,7 +80,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
 	// TODO should such usage be permitted or maybe alias-less source prop preference should be given only to fisrt query source (normally only first source has no alias when implicit joins are generated)
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").leftJoin(MODEL).on().prop("v.model").eq().prop("id").where().anyOfProps("v.model.make.kay", "v.eqClass").eq().val("MERC").model();
 	try {
-	    entQuery1(qry);
+	    entQry(qry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	}

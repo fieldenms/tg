@@ -34,7 +34,7 @@ public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(WORK_ORDER, "wo"), JoinType.IJ, condition));
 
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(VEHICLE, "v"), others);
-	assertEquals("models are different", exp, entQuery1(qry).getSources());
+	assertEquals("models are different", exp, entQry(qry).getSources());
     }
 
     @Test
@@ -47,7 +47,7 @@ public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(WORK_ORDER, "wo"), JoinType.IJ, condition));
 
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(VEHICLE, "v"), others);
-	assertEquals("models are different", exp, entQuery1(qry).getSources());
+	assertEquals("models are different", exp, entQry(qry).getSources());
     }
 
     @Test
@@ -60,7 +60,7 @@ public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(WORK_ORDER, null), JoinType.IJ, condition));
 
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(VEHICLE, "v"), others);
-	assertEquals("models are different", exp, entQuery1(qry).getSources());
+	assertEquals("models are different", exp, entQry(qry).getSources());
     }
 
     @Test
@@ -75,7 +75,7 @@ public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(WORK_ORDER, "wo2"), JoinType.LJ, condition2));
 
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(VEHICLE, "v"), others);
-	assertEquals("models are different", exp, entQuery1(qry).getSources());
+	assertEquals("models are different", exp, entQry(qry).getSources());
     }
 
     @Test
@@ -83,8 +83,8 @@ public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
 	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).as("v").where().prop("v.model").isNotNull().model();
 	final EntityResultQueryModel<TgVehicle> qry = select(sourceQry).as("v").where().prop("v.model").isNotNull().model();
 
-	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsModel("v", entQuery1(sourceQry)), new ArrayList<EntQueryCompoundSourceModel>());
-	assertEquals("models are different", exp, entQuery1(qry).getSources());
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsModel("v", entQry(sourceQry)), new ArrayList<EntQueryCompoundSourceModel>());
+	assertEquals("models are different", exp, entQry(qry).getSources());
     }
 
     @Test
@@ -95,7 +95,7 @@ public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
 		yield().prop("model").as("vehModel").
 		yield().yearOf().prop("initDate").as("modelYear").modelAsAggregate();
 	final EntityResultQueryModel<TgVehicle> qry = select(sourceQry).as("v").where().prop("vehModel").isNotNull().and().prop("modelYear").ge().val(2000).model();
-	final EntQuery entQry = entQuery1(qry);
+	final EntQuery entQry = entQry(qry);
 	//final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsModel("v", entQuery1(sourceQry)), new ArrayList<EntQueryCompoundSourceModel>());
 	//assertEquals("models are different", exp, entQuery1(qry).getSources());
     }
@@ -107,7 +107,7 @@ public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
 		yield().prop("model").as("vehModel").
 		yield().minOf().yearOf().prop("initDate").as("modelYear").modelAsAggregate();
 	final EntityResultQueryModel<TgVehicle> qry = select(sourceQry).as("v").where().prop("vehModel").isNotNull().and().prop("modelYear").ge().val(2000).model();
-	final EntQuery entQry = entQuery1(qry);
+	final EntQuery entQry = entQry(qry);
 	//final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsModel("v", entQuery1(sourceQry)), new ArrayList<EntQueryCompoundSourceModel>());
 	//assertEquals("models are different", exp, entQuery1(qry).getSources());
     }
@@ -117,7 +117,7 @@ public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").model();
 	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(VEHICLE, "v"), others);
-	assertEquals("models are different", exp, entQuery1(qry).getSources());
+	assertEquals("models are different", exp, entQry(qry).getSources());
     }
 
     @Test
@@ -125,6 +125,6 @@ public class QueryModelSourcesCompositionTest extends BaseEntQueryTCase {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).model();
 	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(VEHICLE, null), others);
-	assertEquals("models are different", exp, entQuery1(qry).getSources());
+	assertEquals("models are different", exp, entQry(qry).getSources());
     }
 }

@@ -30,7 +30,7 @@ public class CollectingQueryModelPropertiesTest extends BaseEntQueryTCase {
 	exp.add(prop("initDate"));
 	exp.add(prop("initDate"));
 
-	assertEquals("models are different", exp, entQuery1(qry).getImmediateProps());
+	assertEquals("models are different", exp, entQry(qry).getImmediateProps());
     }
 
     @Test
@@ -49,7 +49,7 @@ public class CollectingQueryModelPropertiesTest extends BaseEntQueryTCase {
 	exp.add(prop("model.desc"));
 	exp.add(prop("initDate"));
 	exp.add(prop("initDate"));
-	assertEquals("models are different", exp, entQuery1(qry).getImmediateProps());
+	assertEquals("models are different", exp, entQry(qry).getImmediateProps());
     }
 
     @Test
@@ -68,7 +68,7 @@ public class CollectingQueryModelPropertiesTest extends BaseEntQueryTCase {
 	exp.add(prop("initDate"));
 	exp.add(prop("initDate"));
 
-	assertEquals("models are different", exp, entQuery1(qry).getImmediateProps());
+	assertEquals("models are different", exp, entQry(qry).getImmediateProps());
     }
 
 }

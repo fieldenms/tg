@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -31,7 +33,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("param", 20);
 	final AggregatedResultQueryModel qry = select(VEHICLE).yield().prop("station").as("st").yield().beginExpr().prop("model").add().param("param").endExpr().as("m").modelAsAggregate();
-	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();
+	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("st", new YieldModel(new EntProp("station"), "st"));
 	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
 	compSingleOperands.add(new CompoundSingleOperand(new EntValue(20), ArithmeticalOperator.ADD));
@@ -44,38 +46,38 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
     @Test
     public void test_simple_query_model_18() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).yield().prop("model").modelAsEntity(MODEL);
-	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();
+	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("id", new YieldModel(new EntProp("model"), "id"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, entQuery1(qry).getYields());
+	assertEquals("models are different", exp, entQry(qry).getYields());
     }
 
     @Test
     public void test_simple_query_model_19() {
 	final AggregatedResultQueryModel qry = select(VEHICLE).yield().prop("station").as("st").yield().prop("model").as("m").modelAsAggregate();
-	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();
+	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("st", new YieldModel(new EntProp("station"), "st"));
 	yields.put("m", new YieldModel(new EntProp("model"), "m"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, entQuery1(qry).getYields());
+	assertEquals("models are different", exp, entQry(qry).getYields());
     }
 
     @Test
     public void test_query_1() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsEntity(MODEL);
-	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();
+	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("id", new YieldModel(new EntProp("v.model"), "id"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, entQuery1(qry).getYields());
+	assertEquals("models are different", exp, entQry(qry).getYields());
     }
 
     @Test
     public void test_query_2() {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsPrimitive(Long.class);
-	final Map<String, YieldModel> yields = new HashMap<String, YieldModel>();
-	yields.put(null, new YieldModel(new EntProp("v.model"), null));
+	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
+	yields.put("", new YieldModel(new EntProp("v.model"), ""));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, entQuery1(qry).getYields());
+	assertEquals("models are different", exp, entQry(qry).getYields());
     }
 
     @Test
@@ -90,7 +92,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	yield().prop("vehicle.model.make").as("vehicle.model.make"). //
 	modelAsAggregate();
 	try {
-	    entQuery1(sourceQry);
+	    entQry(sourceQry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	}
@@ -108,7 +110,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	yield().prop("vehicle.model.make").as("vehicle.mordor"). //
 	modelAsAggregate();
 	try {
-	    entQuery1(sourceQry);
+	    entQry(sourceQry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	}

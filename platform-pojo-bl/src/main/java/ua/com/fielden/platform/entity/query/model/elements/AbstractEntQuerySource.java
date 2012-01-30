@@ -1,20 +1,27 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.equery.IQueryModelProvider;
-import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
-abstract class AbstractEntQuerySource implements IEntQuerySource {
+public abstract class AbstractEntQuerySource implements IEntQuerySource {
     private final String alias; // can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end)
-    private final List<EntProp> referencingProps = new ArrayList<EntProp>();
-    private final List<EntProp> finalReferencingProps = new ArrayList<EntProp>();
+    private final List<PropResolutionInfo> referencingProps = new ArrayList<PropResolutionInfo>();
+    private final List<PropResolutionInfo> finalReferencingProps = new ArrayList<PropResolutionInfo>();
+    private String sqlAlias;
+    private Map<String, String> sourceColumns = new HashMap<String, String>();
+
+    public void assignSqlAlias(final String sqlAlias) {
+	this.sqlAlias = sqlAlias;
+    }
 
     public AbstractEntQuerySource(final String alias) {
 	this.alias = alias;
@@ -33,35 +40,33 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
     }
 
     @Override
-    public void addReferencingProp(final EntProp prop) {
+    public void addReferencingProp(final PropResolutionInfo prop) {
 	referencingProps.add(prop);
     }
 
     @Override
-    public void addFinalReferencingProp(final EntProp prop) {
+    public void addFinalReferencingProp(final PropResolutionInfo prop) {
 	finalReferencingProps.add(prop);
     }
 
     @Override
-    public List<EntProp> getReferencingProps() {
+    public List<PropResolutionInfo> getReferencingProps() {
 	return referencingProps;
     }
 
     /**
-     * If it looks like that given property name uses given source alias, then remove it.
-     *
+     * If there is alias and property is prepended with this alias, then return property with alias removed, otherwise return null
      * @param dotNotatedPropName
      * @param sourceAlias
      * @return
      */
     protected String dealiasPropName(final String dotNotatedPropName, final String sourceAlias) {
-	return (sourceAlias == null || !dotNotatedPropName.startsWith(sourceAlias + ".")) ? dotNotatedPropName : dotNotatedPropName.substring(sourceAlias.length() + 1);
+	return (sourceAlias != null && dotNotatedPropName.startsWith(sourceAlias + ".")) ? dotNotatedPropName.substring(sourceAlias.length() + 1) : null;
     }
 
     protected Pair<Boolean, Class> lookForPropInRealPropType(final Class parentType, final String dotNotatedPropName) {
 	try {
-	    final Field field = Finder.findFieldByName(parentType, dotNotatedPropName);
-	    return new Pair<Boolean, Class>(true, field.getType());
+	    return new Pair<Boolean, Class>(true, PropertyTypeDeterminator.determinePropertyType(parentType, dotNotatedPropName));
 	} catch (final Exception e) {
 	    return new Pair<Boolean, Class>(false, null);
 	}
@@ -79,20 +84,24 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 	}
     }
 
-    protected PropResolutionInfo propAsIs(final String propName) {
-	final Pair<Boolean, Class> propAsIsSearchResult = lookForProp(sourceType(), propName);
-	return propAsIsSearchResult.getKey() ? new PropResolutionInfo(null, propName, false, propAsIsSearchResult.getValue()) : null;
+    protected PropResolutionInfo propAsIs(final EntProp prop) {
+	final Pair<Boolean, Class> propAsIsSearchResult = lookForProp(sourceType(), prop.getName());
+	return propAsIsSearchResult.getKey() ? new PropResolutionInfo(prop, null, prop.getName(), false, propAsIsSearchResult.getValue()) : null;
     }
 
-    protected PropResolutionInfo propAsAliased(final String propName) {
-	final String dealisedProp = dealiasPropName(propName, getAlias());
-	final Pair<Boolean, Class> propAsAliasedSearchResult = lookForProp(sourceType(), dealisedProp);
-	return propAsAliasedSearchResult.getKey() ? new PropResolutionInfo(getAlias(), dealisedProp, false, propAsAliasedSearchResult.getValue()) : null;
+    protected PropResolutionInfo propAsAliased(final EntProp prop) {
+	final String dealisedProp = dealiasPropName(prop.getName(), getAlias());
+	if (dealisedProp == null) {
+	    return null;
+	} else {
+		final Pair<Boolean, Class> propAsAliasedSearchResult = lookForProp(sourceType(), dealisedProp);
+		return propAsAliasedSearchResult.getKey() ? new PropResolutionInfo(prop, getAlias(), dealisedProp, false, propAsAliasedSearchResult.getValue()) : null;
+	}
     }
 
-    protected PropResolutionInfo propAsImplicitId(final String propName) {
+    protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
 	if (EntityUtils.isPersistedEntityType(sourceType())) {
-	    return propName.equalsIgnoreCase(getAlias()) ? new PropResolutionInfo(getAlias(), null, true, Long.class) : null; // id property is meant here, but is it for all contexts?
+	    return prop.getName().equalsIgnoreCase(getAlias()) ? new PropResolutionInfo(prop, getAlias(), null, true, Long.class) : null; // id property is meant here, but is it for all contexts?
 	} else {
 	    return null;
 	}
@@ -100,11 +109,11 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     @Override
     public Class propType(final String propSimpleName) {
-	return Finder.findFieldByName(sourceType(), propSimpleName).getType();
+	return PropertyTypeDeterminator.determinePropertyType(sourceType(), propSimpleName);
     }
 
     @Override
-    public List<EntProp> getFinalReferencingProps() {
+    public List<PropResolutionInfo> getFinalReferencingProps() {
 	return finalReferencingProps;
     }
 
@@ -126,24 +135,24 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 	//			else if (3) then 3
 	//			else exception
 
-	final PropResolutionInfo propAsIs = propAsIs(prop.getName());
-	final PropResolutionInfo propAsAliased = propAsAliased(prop.getName());
-	final PropResolutionInfo propAsImplicitId = propAsImplicitId(prop.getName());
+	final PropResolutionInfo propAsIs = propAsIs(prop);
+	final PropResolutionInfo propAsAliased = propAsAliased(prop);
+	final PropResolutionInfo propAsImplicitId = propAsImplicitId(prop);
 //	System.out.println("propAsIs: " + propAsIs);
 //	System.out.println("propAsAliased: " + propAsAliased);
 //	System.out.println("propAsImplicitId: " + propAsImplicitId);
 
 	if (propAsIs == null && propAsAliased == null && propAsImplicitId == null) {
-//	    System.out.println("prop [" + prop.getName() + "] not found within type " + getType().getSimpleName());
+//	    System.out.println("prop [" + prop.getName() + "] not found within type " + sourceType().getSimpleName());
 	    return null;
 	} else if (propAsIs != null && propAsAliased == null) {
-//	    System.out.println("prop [" + prop.getName() + "] found within type " + getType().getSimpleName() + " :AsIs: " + propAsIs);
+//	    System.out.println("prop [" + prop.getName() + "] found within type " + sourceType().getSimpleName() + " :AsIs: " + propAsIs);
 	    return propAsIs;
 	} else if (propAsAliased != null) {
-//	    System.out.println("prop [" + prop.getName() + "] found within type " + getType().getSimpleName() + " :AsAliased: " + propAsAliased);
+//	    System.out.println("prop [" + prop.getName() + "] found within type " + sourceType().getSimpleName() + " :AsAliased: " + propAsAliased);
 	    return propAsAliased;
 	} else if (propAsImplicitId != null) {
-//	    System.out.println("prop [" + prop.getName() + "] found within type " + getType().getSimpleName() + " :ImpId: " + propAsImplicitId);
+//	    System.out.println("prop [" + prop.getName() + "] found within type " + sourceType().getSimpleName() + " :ImpId: " + propAsImplicitId);
 	    return propAsImplicitId;
 	} else {
 	    throw new RuntimeException("Unforeseen branch!");
@@ -155,7 +164,8 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
      * @author TG Team
      *
      */
-    class PropResolutionInfo {
+    public static class PropResolutionInfo {
+	private EntProp entProp;
 	private String aliasPart;
 	private String propPart;
 	private boolean implicitId;
@@ -166,7 +176,11 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    return "PropResolutionInfo: aliasPart = " + aliasPart + " : propPart = " + propPart + " : impId = " + implicitId + " : type = " + (propType != null ? propType.getSimpleName() : null);
 	}
 
-	public PropResolutionInfo(final String aliasPart, final String propPart, final boolean implicitId, final Class propType) {
+	public PropResolutionInfo(final EntProp entProp, final String aliasPart, final String propPart, final boolean implicitId, final Class propType) {
+	    this.entProp = entProp;
+	    if(entProp.getPropType() == null && propType != null) {
+		entProp.setPropType(propType);
+	    }
 	    this.aliasPart = aliasPart;
 	    this.propPart = propPart;
 	    this.implicitId = implicitId;
@@ -191,6 +205,68 @@ abstract class AbstractEntQuerySource implements IEntQuerySource {
 
 	public Integer getPreferenceNumber() {
 	    return implicitId ? 2000 : propPart.length();
+	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = 1;
+	    result = prime * result + ((aliasPart == null) ? 0 : aliasPart.hashCode());
+	    result = prime * result + ((entProp == null) ? 0 : entProp.hashCode());
+	    result = prime * result + (implicitId ? 1231 : 1237);
+	    result = prime * result + ((propPart == null) ? 0 : propPart.hashCode());
+	    result = prime * result + ((propType == null) ? 0 : propType.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj) {
+		return true;
+	    }
+	    if (obj == null) {
+		return false;
+	    }
+	    if (!(obj instanceof PropResolutionInfo)) {
+		return false;
+	    }
+	    final PropResolutionInfo other = (PropResolutionInfo) obj;
+	    if (aliasPart == null) {
+		if (other.aliasPart != null) {
+		    return false;
+		}
+	    } else if (!aliasPart.equals(other.aliasPart)) {
+		return false;
+	    }
+	    if (entProp == null) {
+		if (other.entProp != null) {
+		    return false;
+		}
+	    } else if (!entProp.equals(other.entProp)) {
+		return false;
+	    }
+	    if (implicitId != other.implicitId) {
+		return false;
+	    }
+	    if (propPart == null) {
+		if (other.propPart != null) {
+		    return false;
+		}
+	    } else if (!propPart.equals(other.propPart)) {
+		return false;
+	    }
+	    if (propType == null) {
+		if (other.propType != null) {
+		    return false;
+		}
+	    } else if (!propType.equals(other.propType)) {
+		return false;
+	    }
+	    return true;
+	}
+
+	public EntProp getEntProp() {
+	    return entProp;
 	}
     }
 }

@@ -10,6 +10,7 @@ public class EntProp implements ISingleOperand {
     private final String name;
     private Class propType;
     private EntQuery holder; // query, where given property resides (not to be mixed with the query, which source given property is resolved to - in case of correlated subqueries these two may be different queries (subquery and one of its master).
+    private String sql;
 
     @Override
     public String toString() {
@@ -72,8 +73,10 @@ public class EntProp implements ISingleOperand {
         return holder;
     }
 
-    public void setHolder(final EntQuery holder) {
-        this.holder = holder;
+    public void assignHolderIfNotAssigned(final EntQuery holder) {
+        if (this.holder == null) {
+            this.holder = holder;
+        }
     }
 
     @Override
@@ -104,5 +107,13 @@ public class EntProp implements ISingleOperand {
 	    return false;
 	}
 	return true;
+    }
+
+    public String getSql() {
+        return sql;
+    }
+
+    public void setSql(final String sql) {
+        this.sql = sql;
     }
 }

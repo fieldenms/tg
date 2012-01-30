@@ -13,11 +13,6 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuerySourcesEnhancer {
 
-    /**
-     *
-     * @param dotNotatedPropNames
-     * @return
-     */
     public Map<String, Set<String>> determinePropGroups(final Set<String> dotNotatedPropNames) {
 	final Map<String, Set<String>> result = new HashMap<String, Set<String>>();
 	for (final String dotNotatedPropName : dotNotatedPropNames) {
