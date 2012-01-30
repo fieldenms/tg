@@ -38,6 +38,14 @@ public class EntQuery implements ISingleOperand {
     private final List<EntProp> unresolvedProps;
 
 
+    @Override
+    public String toString() {
+	final StringBuffer sb = new StringBuffer();
+	sb.append("SELECT ");
+	sb.append(yields.sql());
+        return sb.toString();
+    }
+
     private int getMasterIndex() {
 	int masterIndex = 0;
 	EntQuery currMaster = this.master;

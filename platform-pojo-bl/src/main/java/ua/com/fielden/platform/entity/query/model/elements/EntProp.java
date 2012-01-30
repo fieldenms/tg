@@ -14,7 +14,7 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public String toString() {
-        return name; // + "-[" + propType + "]";
+        return sql; // + "-[" + propType + "]";
     }
 
     public EntProp(final String name) {

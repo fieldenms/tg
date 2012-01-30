@@ -22,6 +22,10 @@ public class YieldModel {
         return operand + " as " + alias;
     }
 
+    public String sql() {
+	return operand + " AS " + sqlAlias + "/*" + alias + "*/";
+    }
+
     public ISingleOperand getOperand() {
         return operand;
     }
@@ -66,5 +70,9 @@ public class YieldModel {
 	    return false;
 	}
 	return true;
+    }
+
+    public String getSqlAlias() {
+        return sqlAlias;
     }
 }

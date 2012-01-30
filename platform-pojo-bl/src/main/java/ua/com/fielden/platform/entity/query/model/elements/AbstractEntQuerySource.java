@@ -17,7 +17,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
     private final List<PropResolutionInfo> referencingProps = new ArrayList<PropResolutionInfo>();
     private final List<PropResolutionInfo> finalReferencingProps = new ArrayList<PropResolutionInfo>();
     private String sqlAlias;
-    private Map<String, String> sourceColumns = new HashMap<String, String>();
+    protected Map<String, String> sourceColumns = new HashMap<String, String>();
 
     public void assignSqlAlias(final String sqlAlias) {
 	this.sqlAlias = sqlAlias;
@@ -47,6 +47,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
     @Override
     public void addFinalReferencingProp(final PropResolutionInfo prop) {
 	finalReferencingProps.add(prop);
+	prop.entProp.setSql(sourceColumns.get(prop.propPart));
     }
 
     @Override

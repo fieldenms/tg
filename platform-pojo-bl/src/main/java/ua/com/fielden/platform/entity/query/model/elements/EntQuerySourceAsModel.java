@@ -12,6 +12,10 @@ public class EntQuerySourceAsModel extends AbstractEntQuerySource {
     public EntQuerySourceAsModel(final String alias, final EntQuery... models) {
 	super(alias);
 	this.models = Arrays.asList(models);
+
+	for (final YieldModel yield : this.models.get(0).getYields().getYields().values()) {
+	    sourceColumns.put(yield.getAlias(), yield.getSqlAlias());
+	}
     }
 
     @Override

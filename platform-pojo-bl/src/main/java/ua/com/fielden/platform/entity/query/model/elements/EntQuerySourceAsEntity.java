@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
@@ -11,11 +12,13 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
     	this(entityType, alias, false);
     }
 
-
     public EntQuerySourceAsEntity(final Class<? extends AbstractEntity> entityType, final String alias, final boolean generated) {
 	super(alias);
 	this.entityType = entityType;
 	this.generated = generated;
+	for (final String propName : EntityUtils.getPersistedPropertiesNames(entityType)) {
+	    sourceColumns.put(propName, propName + "_");
+	}
     }
 
     @Override

@@ -1,14 +1,30 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.Iterator;
 import java.util.SortedMap;
 
 
 public class YieldsModel {
     private final SortedMap<String, YieldModel> yields;
 
+
+    public String sql() {
+	final StringBuffer sb = new StringBuffer();
+	for (final Iterator<YieldModel> iterator = yields.values().iterator(); iterator.hasNext();) {
+	    final YieldModel yieldModel = iterator.next();
+	    sb.append(yieldModel.sql());
+	    if (iterator.hasNext()) {
+		sb.append(", ");
+	    }
+	}
+
+	return sb.toString();
+    }
+
+
     @Override
     public String toString() {
-        return yields.toString();
+	return yields.toString();
     }
 
     public void assignSqlAliases() {
