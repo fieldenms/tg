@@ -2,9 +2,7 @@ package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 
@@ -14,9 +12,9 @@ public class ConditionsModel implements IPropertyCollector {
 
     public String sql() {
         final StringBuffer sb = new StringBuffer();
-        sb.append(firstCondition);
+        sb.append(firstCondition.sql());
         for (final CompoundConditionModel compound : otherConditions) {
-            sb.append(" " + compound);
+            sb.append(" " + compound.sql());
         }
         return sb.toString();
     }
@@ -55,19 +53,6 @@ public class ConditionsModel implements IPropertyCollector {
     }
 
     @Override
-    public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	if (firstCondition != null) {
-		result.addAll(getFirstCondition().getPropNames());
-	}
-
-	for (final CompoundConditionModel compCondModel : getOtherConditions()) {
-	    result.addAll(compCondModel.getCondition().getPropNames());
-	}
-	return result;
-    }
-
-    @Override
     public List<EntProp> getProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
 	if (firstCondition != null) {
@@ -76,6 +61,19 @@ public class ConditionsModel implements IPropertyCollector {
 
 	for (final CompoundConditionModel compCondModel : getOtherConditions()) {
 	    result.addAll(compCondModel.getCondition().getProps());
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	if (firstCondition != null) {
+	    result.addAll(getFirstCondition().getValues());
+	}
+
+	for (final CompoundConditionModel compCondModel : getOtherConditions()) {
+	    result.addAll(compCondModel.getCondition().getValues());
 	}
 	return result;
     }

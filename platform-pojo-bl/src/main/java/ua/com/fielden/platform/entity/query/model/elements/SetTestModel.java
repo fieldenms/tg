@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 
@@ -11,6 +9,12 @@ public class SetTestModel implements ICondition {
     private final ISingleOperand leftOperand;
     private final ISetOperand rightOperand;
     private final boolean negated;
+
+    @Override
+    public String sql() {
+	// TODO Auto-generated method stub
+	return leftOperand.sql() + (negated ? " NOT IN " : " IN ") + rightOperand.sql();
+    }
 
     public SetTestModel(final ISingleOperand leftOperand, final boolean negated, final ISetOperand rightOperand) {
 	this.leftOperand = leftOperand;
@@ -26,18 +30,18 @@ public class SetTestModel implements ICondition {
 	return result;    }
 
     @Override
-    public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	result.addAll(leftOperand.getPropNames());
-	result.addAll(rightOperand.getPropNames());
-	return result;
-    }
-
-    @Override
     public List<EntProp> getProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
 	result.addAll(leftOperand.getProps());
 	result.addAll(rightOperand.getProps());
+	return result;
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	result.addAll(leftOperand.getValues());
+	result.addAll(rightOperand.getValues());
 	return result;
     }
 

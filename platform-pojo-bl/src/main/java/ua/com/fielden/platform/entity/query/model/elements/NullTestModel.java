@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.List;
-import java.util.Set;
 
 
 
@@ -9,14 +8,14 @@ public class NullTestModel implements ICondition {
     private final ISingleOperand operand;
     private final boolean negated;
 
+    @Override
+    public String sql() {
+	return operand.sql() + (negated ? " IS NOT NULL" : " IS NULL");
+    }
+
     public NullTestModel(final ISingleOperand operand, final boolean negated) {
 	this.operand = operand;
 	this.negated = negated;
-    }
-
-    @Override
-    public Set<String> getPropNames() {
-	return operand.getPropNames();
     }
 
     @Override
@@ -27,6 +26,11 @@ public class NullTestModel implements ICondition {
     @Override
     public List<EntQuery> getSubqueries() {
 	return operand.getSubqueries();
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	return operand.getValues();
     }
 
     @Override

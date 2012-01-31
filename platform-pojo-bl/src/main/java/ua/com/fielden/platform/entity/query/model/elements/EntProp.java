@@ -1,10 +1,8 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class EntProp implements ISingleOperand {
     private final String name;
@@ -14,7 +12,12 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public String toString() {
-        return sql; // + "-[" + propType + "]";
+        return name + "[" + (propType != null ? propType.getSimpleName() : "") + "]";
+    }
+
+    @Override
+    public String sql() {
+	return sql;
     }
 
     public EntProp(final String name) {
@@ -29,21 +32,17 @@ public class EntProp implements ISingleOperand {
     }
 
     @Override
-    public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	result.add(name);
-	return result;
-    }
-
-    @Override
     public List<EntProp> getProps() {
-	final List<EntProp> result = new ArrayList<EntProp>();
-	result.add(this);
-	return result;
+	return Arrays.asList(new EntProp[]{this});
     }
 
     @Override
     public List<EntQuery> getSubqueries() {
+	return Collections.emptyList();
+    }
+
+    @Override
+    public List<EntValue> getValues() {
 	return Collections.emptyList();
     }
 

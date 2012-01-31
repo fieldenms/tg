@@ -5,6 +5,10 @@ public class CompoundSingleOperand {
     private final ISingleOperand operand;
     private final ArithmeticalOperator operator;
 
+    public String sql() {
+	return operator + " " + operand.sql();
+    }
+
     public CompoundSingleOperand(final ISingleOperand operand, final ArithmeticalOperator operator) {
 	super();
 	this.operand = operand;

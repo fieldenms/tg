@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 public class LikeTestModel implements ICondition {
@@ -12,19 +10,16 @@ public class LikeTestModel implements ICondition {
     private final boolean negated;
     private final boolean caseInsensitive;
 
+    @Override
+    public String sql() {
+	return leftOperand.sql() + (negated ? "NOT LIKE " : "LIKE ") + rightOperand.sql();
+    }
+
     public LikeTestModel(final ISingleOperand leftOperand, final ISingleOperand rightOperand, final boolean negated, final boolean caseInsensitive) {
 	this.leftOperand = leftOperand;
 	this.rightOperand = rightOperand;
 	this.negated = negated;
 	this.caseInsensitive = caseInsensitive;
-    }
-
-    @Override
-    public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	result.addAll(leftOperand.getPropNames());
-	result.addAll(rightOperand.getPropNames());
-	return result;
     }
 
     @Override
@@ -40,6 +35,14 @@ public class LikeTestModel implements ICondition {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	result.addAll(leftOperand.getSubqueries());
 	result.addAll(rightOperand.getSubqueries());
+	return result;
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	result.addAll(leftOperand.getValues());
+	result.addAll(rightOperand.getValues());
 	return result;
     }
 

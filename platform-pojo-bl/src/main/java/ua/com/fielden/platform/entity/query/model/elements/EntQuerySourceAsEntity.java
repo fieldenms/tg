@@ -17,7 +17,11 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
 	this.entityType = entityType;
 	this.generated = generated;
 	for (final String propName : EntityUtils.getPersistedPropertiesNames(entityType)) {
-	    sourceColumns.put(propName, propName + "_");
+	    if (propName.equals("id") || propName.equals("version")) {
+		sourceColumns.put(propName, "_" + propName);
+	    } else {
+		sourceColumns.put(propName, propName + "_");
+	    }
 	}
     }
 
@@ -81,6 +85,6 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
 
     @Override
     public String sql() {
-	return sourceType().getSimpleName().toUpperCase() + "_  AS " + sqlAlias + "/*" + alias + "*/";
+	return sourceType().getSimpleName().toUpperCase() + "_ AS " + sqlAlias + "/*" + alias + "*/";
     }
 }

@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 public class ComparisonTestModel implements ICondition {
@@ -16,18 +14,15 @@ public class ComparisonTestModel implements ICondition {
         return leftOperand + " " + operator + " " + rightOperand;
     }
 
+    @Override
+    public String sql() {
+	return leftOperand.sql() + " " + operator + " " + rightOperand.sql();
+    }
+
     public ComparisonTestModel(final ISingleOperand leftOperand, final ComparisonOperator operator, final ISingleOperand rightOperand) {
 	this.leftOperand = leftOperand;
 	this.rightOperand = rightOperand;
 	this.operator = operator;
-    }
-
-    @Override
-    public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	result.addAll(leftOperand.getPropNames());
-	result.addAll(rightOperand.getPropNames());
-	return result;
     }
 
     @Override
@@ -43,6 +38,14 @@ public class ComparisonTestModel implements ICondition {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	result.addAll(leftOperand.getSubqueries());
 	result.addAll(rightOperand.getSubqueries());
+	return result;
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	result.addAll(leftOperand.getValues());
+	result.addAll(rightOperand.getValues());
 	return result;
     }
 

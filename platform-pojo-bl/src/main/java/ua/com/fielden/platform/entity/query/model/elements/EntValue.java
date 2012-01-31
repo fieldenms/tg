@@ -1,29 +1,28 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 
 public class EntValue implements ISingleOperand {
     private final Object value;
     private final boolean ignoreNull;
+    private String paramName;
+
+    @Override
+    public String sql() {
+	return paramName != null ? ":" + paramName : value.toString();
+    }
 
     public EntValue(final Object value) {
-	super();
-	this.value = value;
-	this.ignoreNull = false;
+	this(value, false);
     }
 
     public EntValue(final Object value, final boolean ignoreNull) {
 	super();
 	this.value = value;
 	this.ignoreNull = ignoreNull;
-    }
-
-    @Override
-    public Set<String> getPropNames() {
-	return Collections.emptySet();
     }
 
     @Override
@@ -34,6 +33,11 @@ public class EntValue implements ISingleOperand {
     @Override
     public List<EntQuery> getSubqueries() {
 	return Collections.emptyList();
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	return Arrays.asList(new EntValue[]{this});
     }
 
     @Override
@@ -74,5 +78,17 @@ public class EntValue implements ISingleOperand {
     @Override
     public Class type() {
 	return value != null ? value.getClass() : null;
+    }
+
+    public String getParamName() {
+        return paramName;
+    }
+
+    public void setParamName(final String paramName) {
+        this.paramName = paramName;
+    }
+
+    public Object getValue() {
+        return value;
     }
 }

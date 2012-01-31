@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class QuantifiedTestModel implements ICondition {
     private final ISingleOperand leftOperand;
@@ -11,19 +9,16 @@ public class QuantifiedTestModel implements ICondition {
     private final Quantifier quantifier;
     private final ComparisonOperator operator;
 
+    @Override
+    public String sql() {
+	return leftOperand.sql() + " " + operator + " " + quantifier + " " + rightOperand.sql();
+    }
+
     public QuantifiedTestModel(final ISingleOperand leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final EntQuery rightOperand) {
 	this.leftOperand = leftOperand;
 	this.rightOperand = rightOperand;
 	this.operator = operator;
 	this.quantifier = quantifier;
-    }
-
-    @Override
-    public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	result.addAll(leftOperand.getPropNames());
-	result.addAll(rightOperand.getPropNames());
-	return result;
     }
 
     @Override
@@ -39,6 +34,14 @@ public class QuantifiedTestModel implements ICondition {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	result.addAll(leftOperand.getSubqueries());
 	result.addAll(rightOperand.getSubqueries());
+	return result;
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	result.addAll(leftOperand.getValues());
+	result.addAll(rightOperand.getValues());
 	return result;
     }
 

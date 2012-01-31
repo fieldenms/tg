@@ -2,11 +2,15 @@ package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 
 public class EntSetFromQryModel implements ISetOperand {
     private final EntQuery model;
+
+    @Override
+    public String sql() {
+	return model.sql();
+    }
 
     public EntSetFromQryModel(final EntQuery model) {
 	super();
@@ -14,13 +18,13 @@ public class EntSetFromQryModel implements ISetOperand {
     }
 
     @Override
-    public Set<String> getPropNames() {
-	return model.getPropNames();
+    public List<EntProp> getProps() {
+	return model.getProps();
     }
 
     @Override
-    public List<EntProp> getProps() {
-	return model.getProps();
+    public List<EntValue> getValues() {
+	return model.getValues();
     }
 
     @Override

@@ -6,6 +6,10 @@ public class CompoundConditionModel {
     private final LogicalOperator logicalOperator;
     private final ICondition condition;
 
+    public String sql() {
+	return " " + logicalOperator + " " + condition.sql();
+    }
+
     public CompoundConditionModel(final LogicalOperator logicalOperator, final ICondition condition) {
 	this.logicalOperator = logicalOperator;
 	this.condition = condition;

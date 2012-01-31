@@ -26,5 +26,8 @@
 	<RMA_PERSON/>
 	
 	<RMA_WODET/>
-			
+	
+	<TGVEHICLEMAKE_/>
+	
+	<TGVEHICLEMODEL_/>		
 </dataset>	

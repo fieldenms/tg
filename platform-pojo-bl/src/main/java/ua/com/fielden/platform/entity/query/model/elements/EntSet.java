@@ -1,26 +1,31 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 
 public class EntSet implements ISetOperand{
     private final List<ISingleOperand> operands;
 
+    @Override
+    public String sql() {
+	final StringBuffer sb = new StringBuffer();
+	sb.append("(");
+	for (final Iterator<ISingleOperand> iterator = operands.iterator(); iterator.hasNext();) {
+	    final ISingleOperand operand = iterator.next();
+	    sb.append(operand.sql());
+	    if (iterator.hasNext()) {
+		sb.append(", ");
+	    }
+	}
+	sb.append(")");
+	return sb.toString();
+    }
+
     public EntSet(final List<ISingleOperand> operands) {
 	super();
 	this.operands = operands;
-    }
-
-    @Override
-    public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	for (final ISingleOperand operand : operands) {
-	    result.addAll(operand.getPropNames());
-	}
-	return result;
     }
 
     @Override
@@ -37,6 +42,15 @@ public class EntSet implements ISetOperand{
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	for (final ISingleOperand operand : operands) {
 	    result.addAll(operand.getSubqueries());
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	for (final ISingleOperand operand : operands) {
+	    result.addAll(operand.getValues());
 	}
 	return result;
     }

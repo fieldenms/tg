@@ -1,10 +1,26 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
+import java.util.Iterator;
 import java.util.List;
 
 
 public class GroupsModel {
     private final List<GroupModel> groups;
+
+    public String sql() {
+	final StringBuffer sb = new StringBuffer();
+	if (groups.size() > 0) {
+	    sb.append("\nGROUP BY ");
+	}
+	for (final Iterator<GroupModel> iterator = groups.iterator(); iterator.hasNext();) {
+	    sb.append(iterator.next().sql());
+	    if (iterator.hasNext()) {
+		sb.append(", ");
+	    }
+	}
+
+	return sb.toString();
+    }
 
     public GroupsModel(final List<GroupModel> groups) {
 	this.groups = groups;

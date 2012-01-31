@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.elements.AbstractEntQuerySource.PropResolutionInfo;
 import ua.com.fielden.platform.sample.domain.TgModelCount;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
@@ -19,6 +20,59 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 
     private final String incP2S = "Inccorect association between properties and query sources";
     private final String incFP2S = "Inccorect association between properties and query sources";
+
+
+    @Test
+    public void test0() {
+	final PrimitiveResultQueryModel shortcutQry  = select(VEHICLE).as("v").where().prop("station.key").eq().val("AA").yield().prop("station.key").modelAsPrimitive(STRING);
+	final EntQuery entQry = entQry(shortcutQry);
+	System.out.println(entQry.getSources().getMain().getFinalReferencingProps());
+	System.out.println(entQry.getSources().getCompounds().get(0).getSource().getFinalReferencingProps());
+
+    }
+
+    @Test
+    public void test1() {
+	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).as("v").where().prop("station.key").eq().val("AA").model();
+	final PrimitiveResultQueryModel shortcutQry = select(sourceQry). //
+	where().prop("model.make.key").eq().val("MERC").yield().prop("model.make.key").modelAsPrimitive(STRING);
+	final EntQuery entQry = entQry(shortcutQry);
+	final List<PropResolutionInfo> src1Props = prepare( //
+		propResInf("model.make.key", null, "model.make.key", false, STRING), //
+		propResInf("model.make.key", null, "model.make.key", false, STRING));
+	assertEquals(incP2S, compose(src1Props), getSourcesReferencingProps(entQry));
+
+	final List<PropResolutionInfo> src1FinProps = prepare( //
+		propResInf("model", null, "model", false, MODEL));
+	final List<PropResolutionInfo> src2FinProps = prepare(  //
+		propResInf("model.id", "model", "id", false, LONG), //
+		propResInf("model.make", "model", "make", false, MAKE));
+	final List<PropResolutionInfo> src3FinProps = prepare(  //
+		propResInf("model.make.id", "model.make", "id", false, LONG), //
+		propResInf("model.make.key", "model.make", "key", false, STRING), //
+		propResInf("model.make.key", "model.make", "key", false, STRING));
+	assertEquals(incFP2S, compose(src1FinProps, src2FinProps, src3FinProps),
+		getSourcesFinalReferencingProps(entQry));
+    }
+
+    @Test
+    public void test2() {
+	final PrimitiveResultQueryModel shortcutQry  = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").yield().prop("v.station.key").modelAsPrimitive(STRING);
+	final EntQuery entQry = entQry(shortcutQry);
+	final List<PropResolutionInfo> src1Props = prepare( //
+		propResInf("v.station.key", "v", "station.key", false, STRING), //
+		propResInf("v.station.key", "v", "station.key", false, STRING));
+	assertEquals(incP2S, compose(src1Props), getSourcesReferencingProps(entQry));
+
+	final List<PropResolutionInfo> src1FinProps = prepare( //
+		propResInf("v.station", "v", "station", false, ORG5));
+	final List<PropResolutionInfo> src2FinProps = prepare(  //
+		propResInf("v.station.id", "v.station", "id", false, LONG), //
+		propResInf("v.station.key", "v.station", "key", false, STRING), //
+		propResInf("v.station.key", "v.station", "key", false, STRING));
+	assertEquals(incFP2S, compose(src1FinProps, src2FinProps),
+		getSourcesFinalReferencingProps(entQry));
+    }
 
     @Test
     public void test_prop_to_source_association1() {

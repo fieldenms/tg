@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 
 public class ExistenceTestModel implements ICondition {
@@ -15,8 +14,8 @@ public class ExistenceTestModel implements ICondition {
     }
 
     @Override
-    public Set<String> getPropNames() {
-	return subQuery.getPropNames();
+    public String sql() {
+	return (negated ? "NOT EXISTS " : "EXISTS ") + subQuery.sql();
     }
 
     @Override
@@ -27,6 +26,11 @@ public class ExistenceTestModel implements ICondition {
     @Override
     public List<EntQuery> getSubqueries() {
 	return Arrays.asList(new EntQuery[]{subQuery});
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	return subQuery.getValues();
     }
 
     @Override

@@ -1,26 +1,32 @@
 package ua.com.fielden.platform.entity.query;
 
-import ua.com.fielden.platform.entity.query.fetch;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.entity.query.model.builders.DbVersion;
+import ua.com.fielden.platform.entity.query.model.builders.EntQueryGenerator;
+import ua.com.fielden.platform.entity.query.model.elements.EntQuery;
+import ua.com.fielden.platform.entity.query.model.elements.YieldModel;
+import ua.com.fielden.platform.entity.query.model.elements.YieldsModel;
 import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult;
+import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
 
 public class ModelResultProducer {
 
-    //lets assume that all master model properties used within its subqueries are handled and transformed correctly and exist in master model query sources (IQuerySource)
-
-    public QueryModelResult getModelResult(final QueryModel query, final fetch fetch) {
-
-	//getSourceQueries recursively invokes getModelResult
-	//getProperties
-	//getSubqueries
-	//getMasterQuery result
-
-	final String sql = generateSql();
-	return null;
+    public QueryModelResult getModelResult(final QueryExecutionModel query, final DbVersion dbVersion) {
+	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion);
+	final EntQuery entQuery = gen.generateEntQuery(query.getQueryModel(), query.getParamValues());
+	final String sql = entQuery.sql();
+	return new QueryModelResult(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForParams());
     }
 
-    private String generateSql() {
-	// TODO Auto-generated method stub
-	return null;
+    private SortedSet<ResultPropertyInfo> getResultPropsInfos(final YieldsModel model) {
+	final SortedSet<ResultPropertyInfo> result = new TreeSet<ResultPropertyInfo>();
+	for (final Map.Entry<String, YieldModel> yieldEntry : model.getYields().entrySet()) {
+	    result.add(new ResultPropertyInfo(yieldEntry.getKey(), yieldEntry.getValue().getSqlAlias()));
+	}
+	return result;
     }
 }

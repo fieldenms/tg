@@ -406,8 +406,6 @@ public class HibernateEntityQueryModelTest extends DbDrivenTestCase {
     public void test_querying_with_prim_id_props_in_selected_properties11() {
 	final IQueryOrderedModel<EntityAggregates> wagon2Model = select(Wagon.class, "wa").leftJoin(WagonClass.class, "wc").on().prop("wa.wagonClass").eq().prop("wc.id").yieldProp("wa.wagonClass", "wclass").orderBy("wa.wagonClass.key").model(EntityAggregates.class);
 	final List<EntityAggregates> aggregates = aggregatesDao.listAggregates(wagon2Model, new fetch(EntityAggregates.class).with("wclass", new fetch(WagonClass.class)));
-	System.out.println(aggregates);
-	System.out.println(((WagonClass) aggregates.get(0).get("wclass")).getKey());
     }
 
     public void test_querying_with_prim_id_props_in_selected_properties2() {

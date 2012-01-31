@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
@@ -70,7 +69,7 @@ final class EntityResultTreeBuilder {
 		if (!result.containsKey(group)) {
 		    result.put(group, new ArrayList<ResultPropertyInfo>());
 		}
-		result.get(group).add(new ResultPropertyInfo(prop.getName().substring(firstDotIndex + 1), prop.getSqlAlias(), prop.getType()));
+		result.get(group).add(new ResultPropertyInfo(prop.getName().substring(firstDotIndex + 1), prop.getSqlAlias()/*, prop.getType()*/));
 	    }
 	}
 

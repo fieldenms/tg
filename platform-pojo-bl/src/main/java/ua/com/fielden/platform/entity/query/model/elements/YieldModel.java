@@ -19,11 +19,11 @@ public class YieldModel {
 
     @Override
     public String toString() {
-        return operand + " as " + alias;
+        return sql();
     }
 
     public String sql() {
-	return operand + " AS " + sqlAlias + "/*" + alias + "*/";
+	return operand.sql() + " AS " + sqlAlias + "/*" + alias + "*/";
     }
 
     public ISingleOperand getOperand() {

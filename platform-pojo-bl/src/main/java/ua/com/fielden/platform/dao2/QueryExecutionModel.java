@@ -19,4 +19,28 @@ public class QueryExecutionModel<T> {
 	this.paramValues = paramValues;
     }
 
+    public QueryExecutionModel(final QueryModel queryModel, final fetch fetchModel) {
+	super();
+	this.queryModel = queryModel;
+	this.orderModel = null;
+	this.fetchModel = fetchModel;
+	this.paramValues = null;
+    }
+
+    public QueryModel getQueryModel() {
+        return queryModel;
+    }
+
+    public QueryModel getOrderModel() {
+        return orderModel;
+    }
+
+    public fetch getFetchModel() {
+        return fetchModel;
+    }
+
+    public Map<String, Object> getParamValues() {
+        return paramValues;
+    }
+
 }

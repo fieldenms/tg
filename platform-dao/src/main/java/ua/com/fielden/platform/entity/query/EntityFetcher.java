@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedMap;
+import java.util.SortedSet;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Query;
@@ -16,9 +16,10 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.entity.query.model.builders.DbVersion;
 import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult;
 import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
 import ua.com.fielden.platform.utils.Pair;
@@ -37,15 +38,17 @@ public class EntityFetcher<E extends AbstractEntity> {
     private Logger logger = Logger.getLogger(this.getClass());
     private MappingsGenerator mappingsGenerator;
     private EntityEnhancer<E> entityEnhancer;
+    private DbVersion dbVersion;
 
     public EntityFetcher() {
     }
 
-    protected EntityFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator) {
+    public EntityFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion) {
 	this.session = session;
 	this.entityFactory = entityFactory;
 	this.mappingsGenerator = mappingsGenerator;
-	this.entityEnhancer = new EntityEnhancer<E>(session, entityFactory, mappingsGenerator);
+	this.entityEnhancer = new EntityEnhancer<E>(session, entityFactory, mappingsGenerator, dbVersion);
+	this.dbVersion = dbVersion;
     }
 
     /**
@@ -90,8 +93,8 @@ public class EntityFetcher<E extends AbstractEntity> {
      */
     @SessionRequired
     private List<EntityContainer<E>> listContainersAsIs(final QueryModelResult modelResult, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-	final SortedMap<String, ResultPropertyInfo> getYieldedPropsInfo = modelResult.getYieldedPropsInfo();
-	final EntityTree resultTree = new EntityResultTreeBuilder(mappingsGenerator).buildTree(modelResult.getResultType(), getYieldedPropsInfo.values());
+	final SortedSet<ResultPropertyInfo> getYieldedPropsInfo = modelResult.getYieldedPropsInfo();
+	final EntityTree resultTree = new EntityResultTreeBuilder(mappingsGenerator).buildTree(modelResult.getResultType(), getYieldedPropsInfo);
 
 	final Query query = produceHibernateQuery(modelResult.getSql(), getScalarInfo(resultTree), modelResult.getParamValues());
 	logger.info("query:\n   " + query.getQueryString() + "\n");
@@ -153,11 +156,11 @@ public class EntityFetcher<E extends AbstractEntity> {
      * @return
      */
     @SessionRequired
-    public List<E> list(final Session session, final EntityFactory entityFactory, final QueryModel queryModel, final Integer pageNumber, final Integer pageCapacity, final fetch<E> fetchModel, final boolean lightweight) {
+    public List<E> list(final Session session, final EntityFactory entityFactory, final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity, final boolean lightweight) {
 	this.session = session;
 	this.entityFactory = entityFactory;
 	try {
-	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity, fetchModel), lightweight);
+	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), lightweight);
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw new IllegalStateException(e);
@@ -165,16 +168,15 @@ public class EntityFetcher<E extends AbstractEntity> {
     }
 
 
-    public List<E> list(final Session session, final EntityFactory entityFactory, final QueryModel queryModel, final boolean lightweight) {
-	return list(session, entityFactory, queryModel, null, null, null, lightweight);
+    public List<E> list(final Session session, final EntityFactory entityFactory, final QueryExecutionModel queryModel, final boolean lightweight) {
+	return list(session, entityFactory, queryModel, null, null, lightweight);
     }
 
-
     @SessionRequired
-    protected List<EntityContainer<E>> listContainers(final QueryModel queryModel, final Integer pageNumber, final Integer pageCapacity, final fetch<E> fetchModel) throws Exception {
-	final QueryModelResult modelResult = new ModelResultProducer().getModelResult(queryModel, fetchModel);
+    protected List<EntityContainer<E>> listContainers(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
+	final QueryModelResult modelResult = new ModelResultProducer().getModelResult(queryModel, dbVersion);
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
-	return entityEnhancer.enhance(result, entityEnhancer.enhanceFetchModelWithKeyProperties(fetchModel, modelResult.getResultType()), modelResult.getResultType());
+	return entityEnhancer.enhance(result, entityEnhancer.enhanceFetchModelWithKeyProperties(queryModel.getFetchModel(), modelResult.getResultType()), modelResult.getResultType());
     }
 
 }

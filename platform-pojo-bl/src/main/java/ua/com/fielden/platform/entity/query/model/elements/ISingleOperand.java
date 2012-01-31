@@ -15,4 +15,6 @@ public interface ISingleOperand extends IPropertyCollector {
      * @return
      */
     Class type();
+
+    String sql();
 }

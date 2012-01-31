@@ -32,24 +32,28 @@ public class EntQuery implements ISingleOperand {
 
     // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
 
-
-    // modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for unresolved only
-    // if at some master the property of this subquery is resolved - it should be removed from here
+    /**
+     * modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for unresolved only;
+     * if at some master the property of this subquery is resolved - it should be removed from here
+     */
     private final List<EntProp> unresolvedProps;
-
 
     public String sql() {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("SELECT ");
 	sb.append(yields.sql());
-	sb.append(" FROM ");
+	sb.append("\nFROM ");
 	sb.append(sources.sql());
 	if (conditions != null) {
-	    sb.append(" WHERE ");
+	    sb.append("\nWHERE ");
 	    sb.append(conditions.sql());
 	}
+	sb.append(groups.sql());
 
-        return sb.toString();
+	if (!subquery) {
+	    System.out.println(sb.toString());
+	}
+        return subquery ? "(" + sb.toString() + ")" : sb.toString();
     }
 
     private int getMasterIndex() {
@@ -99,6 +103,22 @@ public class EntQuery implements ISingleOperand {
 	}
     }
 
+    private void assignParamNames() {
+	int paramCount = 0;
+	for (final EntValue value : getValues()) {
+	    paramCount = paramCount + 1;
+	    value.setParamName("P" + paramCount);
+	}
+    }
+
+    public Map<String, Object> getValuesForParams() {
+	final Map<String, Object> result = new HashMap<String, Object>();
+	for (final EntValue value : getValues()) {
+	    result.put(value.getParamName(), value.getValue());
+	}
+	return result;
+    }
+
     public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType, final boolean subquery) {
 	super();
 	this.subquery = subquery;
@@ -140,9 +160,16 @@ public class EntQuery implements ISingleOperand {
 
 	sources.assignSqlAliases(getMasterIndex());
 
-	resolvePropsFinally(propsToBeResolvedFinally);
+	final List<EntProp> unresolvedFinalProps = resolvePropsFinally(propsToBeResolvedFinally);
+	System.out.println(propsToBeResolvedFinally);
+
+	if (!subquery && unresolvedFinalProps.size() > 0) {
+	    throw new RuntimeException("Couldn't finally resolve the following props: " + unresolvedFinalProps);
+	}
 
 	yields.assignSqlAliases();
+
+	assignParamNames();
     }
 
     private void setMaster(final EntQuery master) {
@@ -385,17 +412,52 @@ public class EntQuery implements ISingleOperand {
 	return result;
     }
 
-    public Set<String> getPropNames() {
-	return Collections.emptySet();
-    }
-
     @Override
     public List<EntProp> getProps() {
 	return Collections.emptyList();
     }
 
+    @Override
     public List<EntQuery> getSubqueries() {
 	return Arrays.asList(new EntQuery[] { this });
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	result.addAll(getValuesFromSources());
+	if (conditions != null) {
+	    result.addAll(conditions.getValues());
+	}
+	result.addAll(getValuesFromGroups());
+	result.addAll(getValuesFromYields());
+	return result;
+
+	//return Collections.emptyList();
+    }
+
+    private List<EntValue> getValuesFromYields() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	for (final YieldModel yield : yields.getYields().values()) {
+	    result.addAll(yield.getOperand().getValues());
+	}
+	return result;
+    }
+
+    private List<EntValue> getValuesFromGroups() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	for (final GroupModel group : groups.getGroups()) {
+	    result.addAll(group.getOperand().getValues());
+	}
+	return result;
+    }
+
+    private List<EntValue> getValuesFromSources() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
+	    result.addAll(compSource.getJoinConditions().getValues());
+	}
+	return result;
     }
 
     private List<EntProp> getPropsFromYields() {

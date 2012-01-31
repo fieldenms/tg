@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.List;
-import java.util.Set;
 
 
 abstract class SingleOperandFunctionModel implements ISingleOperand {
@@ -19,13 +18,13 @@ abstract class SingleOperandFunctionModel implements ISingleOperand {
     }
 
     @Override
-    public Set<String> getPropNames() {
-	return operand.getPropNames();
+    public List<EntProp> getProps() {
+	return operand.getProps();
     }
 
     @Override
-    public List<EntProp> getProps() {
-	return operand.getProps();
+    public List<EntValue> getValues() {
+	return operand.getValues();
     }
 
     @Override
@@ -66,5 +65,9 @@ abstract class SingleOperandFunctionModel implements ISingleOperand {
     @Override
     public boolean ignore() {
 	return false;
+    }
+
+    public ISingleOperand getOperand() {
+        return operand;
     }
 }

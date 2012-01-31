@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 public class Expression implements ISingleOperand {
@@ -11,20 +9,23 @@ public class Expression implements ISingleOperand {
     private final ISingleOperand first;
     private final List<CompoundSingleOperand> items;
 
+    @Override
+    public String sql() {
+	final StringBuffer sb = new StringBuffer();
+	sb.append("(" + first.sql());
+	for (final CompoundSingleOperand compoundOperand : items) {
+	    sb.append(compoundOperand.sql());
+	}
+	sb.append(")");
+
+	return sb.toString();
+    }
+
+
     public Expression(final ISingleOperand first, final List<CompoundSingleOperand> items) {
 	super();
 	this.first = first;
 	this.items = items;
-    }
-
-    @Override
-    public Set<String> getPropNames() {
-	final Set<String> result = new HashSet<String>();
-	result.addAll(first.getPropNames());
-	for (final CompoundSingleOperand compSingleOperand : items) {
-	    result.addAll(compSingleOperand.getOperand().getPropNames());
-	}
-	return result;
     }
 
     @Override
@@ -48,6 +49,16 @@ public class Expression implements ISingleOperand {
 	result.addAll(first.getSubqueries());
 	for (final CompoundSingleOperand compSingleOperand : items) {
 	    result.addAll(compSingleOperand.getOperand().getSubqueries());
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	result.addAll(first.getValues());
+	for (final CompoundSingleOperand compSingleOperand : items) {
+	    result.addAll(compSingleOperand.getOperand().getValues());
 	}
 	return result;
     }

@@ -4,6 +4,10 @@ package ua.com.fielden.platform.entity.query.model.elements;
 public class GroupModel {
     private final ISingleOperand operand;
 
+    public String sql() {
+	return operand.sql();
+    }
+
     public GroupModel(final ISingleOperand operand) {
 	super();
 	this.operand = operand;

@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.query.model.elements;
 
 import java.util.List;
-import java.util.Set;
 
 
 public class EntQueryCompoundSourceModel implements IPropertyCollector {
@@ -17,7 +16,7 @@ public class EntQueryCompoundSourceModel implements IPropertyCollector {
     }
 
     public String sql() {
-	return (joinType.equals(JoinType.IJ) ? "INNER JOIN" : "LEFT JOIN ") + source.sql() + " ON " + joinConditions.sql();
+	return (joinType.equals(JoinType.IJ) ? "INNER JOIN " : "LEFT JOIN ") + source.sql() + " ON " + joinConditions.sql();
     }
 
     @Override
@@ -38,13 +37,13 @@ public class EntQueryCompoundSourceModel implements IPropertyCollector {
     }
 
     @Override
-    public Set<String> getPropNames() {
-	return joinConditions.getPropNames();
+    public List<EntProp> getProps() {
+	return joinConditions.getProps();
     }
 
     @Override
-    public List<EntProp> getProps() {
-	return joinConditions.getProps();
+    public List<EntValue> getValues() {
+	return joinConditions.getValues();
     }
 
     @Override
