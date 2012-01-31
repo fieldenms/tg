@@ -1,4 +1,4 @@
-\documentclass[a4paper,12pt,twocolumn]{article}
+\documentclass[a4paper,12pt,twocolumn,oneside,openright,final]{memoir}
 \usepackage[english]{babel}
 \usepackage{times}
 \usepackage{setspace}
@@ -6,7 +6,7 @@
 \usepackage{amssymb}
 \usepackage{amsfonts}
 \usepackage[pdftex]{graphicx}
-\usepackage{subfigure}
+%\usepackage{subfigure}
 \usepackage{alltt}
 \usepackage{moreverb}
 %for more info on hyperref package see http://en.wikibooks.org/wiki/LaTeX/Packages/Hyperref
@@ -17,7 +17,7 @@
 \usepackage{geometry}
 %\geometry{hmargin={30mm,15mm},vmargin={26mm,26mm}}
 %\geometry{total={14cm,20.5cm},includehead}
-\geometry{hmargin={20mm,20mm},vmargin={20mm,20mm}}
+\geometry{hmargin={15mm,15mm},vmargin={20mm,20mm}}
 \geometry{mag=1414}
 
 \newcommand\BackgroundPic{
@@ -83,7 +83,11 @@
     \item Ready to be extended by 3rd party developers if required.
   \end{itemize}
 
-\subsection*{Designed for ease of use and learning by end-users}
+\subsection*{Designed for ease of use and learning by end-users and developers alike}
+
+\subsubsection*{Development Model}
+  Platform ensures that all TG-based applications follow exactly the same development model leading to structural and behavioural uniformity.
+  This protects developers from multitude of programming errors provisioning for getting a working solution in short terms, which can be easily supported by the original or new developers.
  
 \subsubsection*{Intuitive}
   From constant communication with customers, Fielden understands how their applications are utilised. 
@@ -102,9 +106,9 @@
   The platform provides the highest level of consistency across all parts of the application to quickly move from function to function, without confusion and wasted effort.
  
 \subsubsection*{Flexibility}
-  Recognizing that every customer and every user is different, TG platform is designed to provide high flexiblity of the end product. 
+  Recognising that every customer and every user is different, TG platform is designed to provide high flexibility of the end product. 
   Organisations using TG-based solutions do not have to change processes or terminology -- their domain is fully reflected in the application. 
-  Users can customize the application to meet their unique needs.
+  Users can customise the application to meet their unique needs.
   The administrative function provides easy ways to configure and customise access to the features that users should access based on their role.
 
   \begin{figure}[!h]
@@ -120,6 +124,9 @@
   \centering
   \includegraphics[scale=0.18]{images/02-workspace-custom-layout.png}
   \end{figure}
+
+\subsubsection*{Cloud \& Scalability}
+  Due to the platform's stateless Resource Oriented Architecture and intelligent data processing, TG-based applications are highly scalable (no need to manage server-side state) and well suited to operate on cloud infrastructures such as Amazon EC2.
 
 \end{document}
 
