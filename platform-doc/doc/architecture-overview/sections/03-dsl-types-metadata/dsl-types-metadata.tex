@@ -106,3 +106,26 @@
   Thus, there is no need to switch between SQL when requesting data from a database and some HTTP specific API when communicating with a web resource.
 
   Our estimations based on the experience building TG-based applications suggests that providing the unified programming model yields an order of magnitude higher performance creating new and modifying existing business applications.
+
+\subsection{Domain Model Reuse}
+  One of the questions that is frequently raised when developing business solutions is the ability to reuse certain functionality between two or more applications.
+  This is especially critical if there are several business applications developed for the same or similar business domain, but different customers, as it would greatly simplify and improve application support (common enhancements, bug fixes etc.).
+  There are two distinct building blocks of any business application, which might need to be reused.
+  \begin{itemize}
+   \item \emph{Technical infrastructure} -- this is everything that has to do with technical aspects of software development and execution; it is critical to software applications, but brings the business value indirectly by making things possible.
+    \item \emph{Business domain model} --  this is the part of business applications, which has a direct correspondence to the actual business practices benefiting from software automation; thus representing the most valuable software asset to the business.
+  \end{itemize}
+
+  The Trident Genesis platform incorporates the \emph{technical infrastructure} reused by all TG-based business applications.
+  This completely eliminates any work on part of application developers otherwise required to ensure reuse of this building block across multiple applications.
+  The platform takes care of updates such as improvements to the underlying algorithms, handles API enhancements, backward compatibility and more.
+  Of course, there is no such thing as a free lunch -- all the complexity of supporting the technical infrastructure that enables natural reuse by all TG-based business solutions is hidden into the platform itself, shifting full responsibility to the platform developers\footnote{This is only natural and ensures clear responsibility separation. Such practices correspond to world-class software developments such as the Oracle Java Virtual Machine. 
+  Applications written for JVM are not concerned with the reuse of JMV as it occurs intrinsically. Similarly happens with TG-based applications, but at the higher level of abstraction.}.
+
+  \emph{Business domain models} (or simply \emph{domain models}) belong to the realm of the business application development.
+  The provided by the platform development model is well-suited for building reusable domain models.
+  Due to its highly modular nature, the platform greatly facilitates modularity at the application level.
+  There is a clear cut between all the constructs used for implementing domain models, which are woven together by means of injection of control.
+  This, for example, allows sharing the same domain entities without any modification as a separate module with capability to provide different business rules for their validation, which could be customer specific.
+
+  Thus, the Trident Genesis platform has an intrinsic nature for sharing technical infrastructure and provides rich functionality for reuse of business domain models and logic between multiple business applications.
