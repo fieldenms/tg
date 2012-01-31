@@ -116,6 +116,32 @@
     \item \emph{Business domain model} --  this is the part of business applications, which has a direct correspondence to the actual business practices benefiting from software automation; thus representing the most valuable software asset to the business.
   \end{itemize}
 
+  \begin{wrapfigure}{l}{90mm}
+    \vspace{-15pt}
+    \centering    
+    \begin{tikzpicture}[node distance=1cm, auto, opacity=0.8]
+      \tikzset{
+	  application/.style={rectangle,rounded corners,draw=black, top color=blue!50!white, bottom color=white,very thick, inner sep=1em, minimum size=3em, text centered, text=blue!50!black},
+	  reusableblock/.style={rectangle,rounded corners,draw=black, top color=red!50!white, bottom color=white,very thick, inner sep=1em, minimum size=3em, text centered, text=red!50!black},
+	  platform/.style={rectangle,rounded corners,draw=black, top color=white, bottom color=green!50!white,very thick, inner sep=1em, minimum size=3em, text centered, text=green!50!black},
+	  mylabel/.style={text width=7em, text centered} 
+      }  
+      
+      \def\platformpath{-- +(9cm,0cm) -- +(9cm,1.5cm) -- +(0.0cm,1.5cm) -- cycle}
+
+      \def\reusabledomain{-- +(3cm,0cm) -- +(3cm,1cm) -- +(0.0cm,1cm) -- cycle}
+
+      \def\appathone{-- +(2.75cm,0cm) -- +(2.75cm,1.25cm) -- +(4.35cm,1.25cm) -- +(4.35cm,2cm) -- +(0cm,2cm) -- cycle}
+      \def\appathtwo{+(1.6cm,1.25cm) -- +(1.6cm,0cm) -- +(4.35cm,0cm) -- +(4.35cm,2cm) -- +(0.15cm,2cm) -- +(0.15cm,1.25cm) -- cycle}
+
+      \draw (0,0) [platform] \platformpath  node [below, text centered,xshift=4.4cm, yshift=-0.1cm] {Trident Genesis Platform};
+      \draw (3,1.75) [reusableblock] \reusabledomain  node [below, text centered,xshift=1.5cm, scale=0.8] {Reusable Domain};
+      \draw (0,1.75) [application] \appathone node [above, text centered,xshift=2.0cm, yshift=-0.9cm, scale=0.8] {Business Application} node [above, text centered,xshift=1.5cm, yshift=-2.2cm, scale=1.5] {1};
+      \draw (4.65,1.75) [application] \appathtwo node [above, text centered,xshift=2.1cm, yshift=-0.15cm, scale=0.8] {Business Application } node [above, text centered,xshift=2.9cm, yshift=-1.4cm, scale=1.5] {2};
+    \end{tikzpicture} 
+    \vspace{-30pt}
+  \end{wrapfigure}
+
   The Trident Genesis platform incorporates the \emph{technical infrastructure} reused by all TG-based business applications.
   This completely eliminates any work on part of application developers otherwise required to ensure reuse of this building block across multiple applications.
   The platform takes care of updates such as improvements to the underlying algorithms, handles API enhancements, backward compatibility and more.
