@@ -31,7 +31,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     @Test
     public void test_prop1() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().anyOfProps("key", "eqClass").eq().val("MERC").model();
-	final EntQuery entQry = entSubQuery1(qry);
+	final EntQuery entQry = entSubQry(qry);
 	final List<EntProp> exp = new ArrayList<EntProp>();
 	exp.add(prop("eqClass"));
 	assertEquals("Incorrect list of unresolved props", exp, entQry.getUnresolvedProps());
@@ -40,7 +40,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     @Test
     public void test_prop2() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").where().anyOfProps("model", "v.eqClass").eq().val("MERC").model();
-	final EntQuery entQry = entSubQuery1(qry);
+	final EntQuery entQry = entSubQry(qry);
 	final List<EntProp> exp = new ArrayList<EntProp>();
 	exp.add(prop("v.eqClass"));
 	assertEquals("Incorrect list of unresolved props", exp, entQry.getUnresolvedProps());
@@ -49,7 +49,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     @Test
     public void test_prop3() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").where().anyOfProps("v.model", "v.eqClass").eq().val("MERC").model();
-	final EntQuery entQry = entSubQuery1(qry);
+	final EntQuery entQry = entSubQry(qry);
 	final List<EntProp> exp = new ArrayList<EntProp>();
 	exp.add(prop("v.eqClass"));
 	assertEquals("Incorrect list of unresolved props", exp, entQry.getUnresolvedProps());
@@ -58,7 +58,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     @Test
     public void test_prop4() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").where().anyOfProps("v.model.make.key", "v.eqClass").eq().val("MERC").model();
-	final EntQuery entQry = entSubQuery1(qry);
+	final EntQuery entQry = entSubQry(qry);
 	final List<EntProp> exp = new ArrayList<EntProp>();
 	exp.add(prop("v.eqClass"));
 	assertEquals("Incorrect list of unresolved props", exp, entQry.getUnresolvedProps());
@@ -67,7 +67,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     @Test
     public void test_prop5() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").where().anyOfProps("v.model.make.kay", "v.eqClass").eq().val("MERC").model();
-	final EntQuery entQry = entSubQuery1(qry);
+	final EntQuery entQry = entSubQry(qry);
 	final List<EntProp> exp = new ArrayList<EntProp>();
 	exp.add(prop("v.model.make.kay"));
 	exp.add(prop("v.eqClass"));
@@ -89,7 +89,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     @Test
     public void test_prop7() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).leftJoin(MODEL).as("m").on().prop("model").eq().prop("m.id").where().anyOfProps("model.make.key", "v.eqClass").eq().val("MERC").model();
-	final EntQuery entQry = entSubQuery1(qry);
+	final EntQuery entQry = entSubQry(qry);
 	final List<EntProp> exp = new ArrayList<EntProp>();
 	exp.add(prop("v.eqClass"));
 	assertEquals("Incorrect list of unresolved props", exp, entQry.getUnresolvedProps());
@@ -98,7 +98,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     @Test
     public void test_prop8() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().prop("price.amount").ge().val(1000).model();
-	final EntQuery entQry = entSubQuery1(qry);
+	final EntQuery entQry = entSubQry(qry);
 	final List<EntProp> exp = new ArrayList<EntProp>();
 	assertEquals("Incorrect list of unresolved props", exp, entQry.getUnresolvedProps());
     }
@@ -106,7 +106,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     @Test
     public void test_prop9() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().prop("price.currency").eq().val("AUD").model();
-	final EntQuery entQry = entSubQuery1(qry);
+	final EntQuery entQry = entSubQry(qry);
 	final List<EntProp> exp = new ArrayList<EntProp>();
 	assertEquals("Incorrect list of unresolved props", exp, entQry.getUnresolvedProps());
     }
@@ -114,7 +114,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     @Test
     public void test_prop10() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v.ehicle").where().anyOfProps("v.ehicle.model.make.key", "v.eqClass").eq().val("MERC").model();
-	final EntQuery entQry = entSubQuery1(qry);
+	final EntQuery entQry = entSubQry(qry);
 	final List<EntProp> exp = new ArrayList<EntProp>();
 	exp.add(prop("v.eqClass"));
 	assertEquals("Incorrect list of unresolved props", exp, entQry.getUnresolvedProps());
@@ -124,7 +124,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     public void test_prop11() {
 	final EntityResultQueryModel<TgVehicle> subQry = select(VEHICLE).leftJoin(MODEL).as("m").on().prop("model").eq().prop("m.id").where().anyOfProps("model.make.key", "v.key").eq().val("MERC").model();
 	final EntityResultQueryModel<TgModelCount> qry = select(TgModelCount.class).as("v").where().exists(subQry).model();
-	final EntQuery entQry = entSubQuery1(qry);
+	final EntQuery entQry = entSubQry(qry);
 	final List<EntProp> exp = new ArrayList<EntProp>();
 	assertEquals("Incorrect list of unresolved props", exp, entQry.getUnresolvedProps());
     }

@@ -40,7 +40,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
 	yields.put("m", new YieldModel(expression, "m"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, entQuery1(qry, paramValues).getYields());
+	assertEquals("models are different", exp, entQry(qry, paramValues).getYields());
     }
 
     @Test

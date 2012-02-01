@@ -11,6 +11,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 
+import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -28,15 +29,17 @@ public class EntityEnhancer<E extends AbstractEntity> {
     private EntityFactory entityFactory;
     private Logger logger = Logger.getLogger(this.getClass());
     private MappingsGenerator mappingsGenerator;
+    private MappingExtractor mappingExtractor;
     private DbVersion dbVersion;
 
     protected EntityEnhancer() {
     }
 
-    protected EntityEnhancer(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion) {
+    protected EntityEnhancer(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final MappingExtractor mappingExtractor, final DbVersion dbVersion) {
 	this.session = session;
 	this.entityFactory = entityFactory;
 	this.mappingsGenerator = mappingsGenerator;
+	this.mappingExtractor = mappingExtractor;
 	this.dbVersion = dbVersion;
     }
 
@@ -59,39 +62,40 @@ public class EntityEnhancer<E extends AbstractEntity> {
      * @param fetchModel
      * @param entitiesType
      * @return
+     * @throws Exception
      */
-    protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final fetch<E> fetchModel, final Class<E> entitiesType) {
-//	if (fetchModel != null) {
-//	    final Map<String, fetch> propertiesFetchModels = fetchModel.getFetchModels();
-//
-//	    for (final Map.Entry<String, fetch> entry : propertiesFetchModels.entrySet()) {
-//		final String propName = entry.getKey();
-//		final fetch propFetchModel = entry.getValue();
-//
-//		if (mappingExtractor.isNotPersisted(entitiesType) || //
-//			mappingExtractor.isManyToOne(entitiesType, propName) || //
-//			mappingExtractor.isAny(entitiesType, propName) || //
-//			mappingExtractor.isOneToOneDetails(entitiesType, propName) //
-//		) {
-//		    logger.debug("enhancing property [" + propName + "]");
-//		    enhanceProperty(entities, propName, propFetchModel);
-//		} else if (mappingExtractor.isSimpleValue(entitiesType, propName)) {
-//		    logger.debug("enhancing property [" + propName + "]: no enhancing is required because it is SimpleValue.");
-//		    // e.g. properties that getting here usually has hibernate custom user type and are not classic "entities", and doesn't require enhancing
-//		} else if (mappingExtractor.isCollection(entitiesType, propName)) {
-//		    final String parentPropName = mappingExtractor.getParentPropertyName(entitiesType, propName);
-//		    final Class propertyType = PropertyTypeDeterminator.determineClass(entitiesType, propName, true, false);
-//		    String indexPropName = null;
-//		    if (mappingExtractor.isList(entitiesType, propName)) {
-//			indexPropName = mappingExtractor.getIndexPropertyName(entitiesType, propName);
-//		    }
-//		    logger.debug("enhancing collectional property [" + propName + "]");
-//		    enhanceCollectional(entities, propName, propertyType, parentPropName, indexPropName, propFetchModel);
-//		} else {
-//		    throw new IllegalArgumentException("Unsupported mapping type: === parent entity type is " + entitiesType + "; property name is " + propName);
-//		}
-//	    }
-//	}
+    protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final fetch<E> fetchModel, final Class<E> entitiesType) throws Exception {
+	if (fetchModel != null) {
+	    final Map<String, fetch<?>> propertiesFetchModels = fetchModel.getFetchModels();
+
+	    for (final Map.Entry<String, fetch<?>> entry : propertiesFetchModels.entrySet()) {
+		final String propName = entry.getKey();
+		final fetch propFetchModel = entry.getValue();
+
+		if (mappingExtractor.isNotPersisted(entitiesType) || //
+			mappingExtractor.isManyToOne(entitiesType, propName) || //
+			mappingExtractor.isAny(entitiesType, propName) || //
+			mappingExtractor.isOneToOneDetails(entitiesType, propName) //
+		) {
+		    logger.debug("enhancing property [" + propName + "]");
+		    enhanceProperty(entities, propName, propFetchModel);
+		} else if (mappingExtractor.isSimpleValue(entitiesType, propName)) {
+		    logger.debug("enhancing property [" + propName + "]: no enhancing is required because it is SimpleValue.");
+		    // e.g. properties that getting here usually has hibernate custom user type and are not classic "entities", and doesn't require enhancing
+		} else if (mappingExtractor.isCollection(entitiesType, propName)) {
+		    final String parentPropName = mappingExtractor.getParentPropertyName(entitiesType, propName);
+		    final Class propertyType = PropertyTypeDeterminator.determineClass(entitiesType, propName, true, false);
+		    String indexPropName = null;
+		    if (mappingExtractor.isList(entitiesType, propName)) {
+			indexPropName = mappingExtractor.getIndexPropertyName(entitiesType, propName);
+		    }
+		    logger.debug("enhancing collectional property [" + propName + "]");
+		    enhanceCollectional(entities, propName, propertyType, parentPropName, indexPropName, propFetchModel);
+		} else {
+		    throw new IllegalArgumentException("Unsupported mapping type: === parent entity type is " + entitiesType + "; property name is " + propName);
+		}
+	    }
+	}
 
 	return entities;
     }
@@ -160,7 +164,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
 	    if (retrievedPropertyInstances.size() == 0) {
 		enhancedPropInstances = getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel);
 	    } else {
-		enhancedPropInstances = new EntityEnhancer(session, entityFactory, mappingsGenerator, dbVersion).enhance(retrievedPropertyInstances, fetchModel, fetchModel.getEntityType());
+		enhancedPropInstances = new EntityEnhancer(session, entityFactory, mappingsGenerator, mappingExtractor, dbVersion).enhance(retrievedPropertyInstances, fetchModel, fetchModel.getEntityType());
 	    }
 
 	    // Replacing in entities the proxies of properties with properly enhanced property instances.
@@ -192,7 +196,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
 	    @SuppressWarnings("unchecked")
 	    final QueryModel currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(ID_PROPERTY_NAME).in().values(batch).model()/*.getModelWithAbstractEntities()*/;
 	    @SuppressWarnings("unchecked")
-	    final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion).listContainers(new QueryExecutionModel(currTypePropertyModel, fetchModel), null, null);
+	    final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, mappingExtractor, dbVersion).listContainers(new QueryExecutionModel(currTypePropertyModel, fetchModel), null, null);
 	    result.addAll(properties);
 	    from = to;
 	    to = to + batchSize;
@@ -272,7 +276,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
 		final QueryModel currTypePropertyModel = (indexPropName != null ? base.orderBy().prop(parentPropName).asc().orderBy().prop(indexPropName).asc() : base.orderBy().prop(parentPropName).asc()).modelAsEntity(fetchModel.getEntityType())/*.getModelWithAbstractEntities()*/;
 		@SuppressWarnings("unchecked")
 		// final List<EntityContainer> properties = new Fetcher().listContainersWithoutKeyEnhanced(currTypePropertyModel, null, null);
-		final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion).listContainers(new QueryExecutionModel(currTypePropertyModel, fetchModel), null, null);
+		final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, mappingExtractor, dbVersion).listContainers(new QueryExecutionModel(currTypePropertyModel, fetchModel), null, null);
 		result.addAll(properties);
 		// TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
 		from = to;

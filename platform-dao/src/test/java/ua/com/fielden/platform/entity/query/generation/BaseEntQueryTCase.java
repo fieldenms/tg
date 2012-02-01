@@ -7,14 +7,14 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
-import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
+import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTestModel;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
+import ua.com.fielden.platform.entity.query.generation.elements.EntSet;
 import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
-import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
+import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
@@ -40,25 +40,33 @@ public class BaseEntQueryTCase {
     protected static final Class<Long> LONG = Long.class;
     protected static final Class<BigInteger> BIG_INTEGER = BigInteger.class;
 
-    private final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
+    private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
 
-    protected EntQuery entQry(final QueryModel qryModel) {
+    protected static EntQuery entQry(final QueryModel qryModel) {
 	return qb.generateEntQuery(qryModel);
     }
 
-    protected EntQuery entSubQuery1(final QueryModel qryModel) {
+    protected static EntQuery entSubQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsSubquery(qryModel);
     }
 
-    protected EntQuery entQuery1(final QueryModel qryModel, final Map<String, Object> paramValues) {
+    protected static EntQuery entQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
 	return qb.generateEntQuery(qryModel, paramValues);
     }
 
-    protected EntProp prop(final String propName) {
+    protected static EntProp prop(final String propName) {
 	return new EntProp(propName);
     }
 
-    protected PropResolutionInfo propResInf(final String propName, final String aliasPart, final String propPart, final boolean implicitId, final Class propType) {
+    protected static EntValue val(final Object value) {
+	return new EntValue(value);
+    }
+
+    protected static EntSet set(final ISingleOperand ... operands) {
+	return new EntSet(Arrays.asList(operands));
+    }
+
+    protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final String propPart, final boolean implicitId, final Class propType) {
 	return new PropResolutionInfo(prop(propName), aliasPart, propPart, implicitId, propType);
     }
 
