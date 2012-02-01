@@ -13,13 +13,6 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.UnorderedQueryModel;
-import ua.com.fielden.platform.entity.query.model.elements.ArithmeticalOperator;
-import ua.com.fielden.platform.entity.query.model.elements.ComparisonOperator;
-import ua.com.fielden.platform.entity.query.model.elements.Functions;
-import ua.com.fielden.platform.entity.query.model.elements.JoinType;
-import ua.com.fielden.platform.entity.query.model.elements.LogicalOperator;
-import ua.com.fielden.platform.entity.query.tokens.QueryTokens;
-import ua.com.fielden.platform.entity.query.tokens.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
 /**

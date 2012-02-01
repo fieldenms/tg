@@ -5,13 +5,12 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
-import ua.com.fielden.platform.entity.query.model.builders.DbVersion;
-import ua.com.fielden.platform.entity.query.model.builders.EntQueryGenerator;
-import ua.com.fielden.platform.entity.query.model.elements.EntQuery;
-import ua.com.fielden.platform.entity.query.model.elements.YieldModel;
-import ua.com.fielden.platform.entity.query.model.elements.YieldsModel;
-import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult;
-import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
+import ua.com.fielden.platform.entity.query.QueryModelResult.ResultPropertyInfo;
+import ua.com.fielden.platform.entity.query.generation.DbVersion;
+import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
+import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
+import ua.com.fielden.platform.entity.query.generation.elements.YieldModel;
+import ua.com.fielden.platform.entity.query.generation.elements.YieldsModel;
 
 public class ModelResultProducer {
 
@@ -19,7 +18,7 @@ public class ModelResultProducer {
 	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion);
 	final EntQuery entQuery = gen.generateEntQuery(query.getQueryModel(), query.getParamValues());
 	final String sql = entQuery.sql();
-	return new QueryModelResult(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForParams());
+	return new QueryModelResult(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
     }
 
     private SortedSet<ResultPropertyInfo> getResultPropsInfos(final YieldsModel model) {

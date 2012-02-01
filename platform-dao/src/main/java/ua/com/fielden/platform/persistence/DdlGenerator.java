@@ -6,6 +6,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class DdlGenerator {
 
@@ -48,6 +49,9 @@ public class DdlGenerator {
     }
 
     public String getTableClause(final Class entityType) {
+	if (!EntityUtils.isPersistedEntityType(entityType)) {
+	    throw new IllegalArgumentException("Trying to determine table name for not-persisted entity type [" + entityType + "]");
+	}
 	final String providedTableName = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType).value();
 	if (!StringUtils.isEmpty(providedTableName)) {
 	    return providedTableName;

@@ -704,28 +704,34 @@ public class EntityUtils {
     }
 
     /**
-     * Retrieves names of all persisted properties within given entity type
+     * Retrieves all persisted properties fields within given entity type
      *
      * @param entityType
      * @return
      */
-    public static List<String> getPersistedPropertiesNames(final Class entityType) {
-	final List<String> result = new ArrayList<String>();
-	result.add("id");
-	result.add("version");
+    public static List<Field> getPersistedProperties(final Class entityType) {
+	final List<Field> result = new ArrayList<Field>();
+	result.add(Finder.getFieldByName(entityType, "id"));
+	result.add(Finder.getFieldByName(entityType, "version"));
+	final boolean dynamicKey = entityWithDynamicKey(entityType);
+	final boolean noDesc = !AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType);
 
 	for (final Field propField : Finder.findRealProperties(entityType, MapTo.class)) {
-	    result.add(propField.getName());
-	}
-
-	if (entityWithDynamicKey(entityType)) {
-	    result.remove("key");
-	}
-
-	if (!AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType)) {
-	    result.remove("desc");
+	    if (!((propField.getName().equals("key") && dynamicKey) || (propField.getName().equals("desc") && noDesc))) {
+		result.add(propField);
+	    }
 	}
 
 	return result;
     }
+
+//    public static String getPropertyColumnName(final Field propField) {
+//	final MapTo mapTo = propField.getAnnotation(MapTo.class);
+//
+//    }
+//	final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, entityType, field.getName());
+//	if (mapTo != null) {
+//	    final String columnName = !StringUtils.isEmpty(mapTo.value()) ? mapTo.value(): field.getName().toUpperCase() + "_";
+//
+//    }
 }

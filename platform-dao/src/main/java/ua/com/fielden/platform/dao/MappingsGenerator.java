@@ -23,7 +23,6 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.persistence.DdlGenerator;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -238,14 +237,20 @@ public class MappingsGenerator {
 	if (AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType)/* && !isOneToOne(entityType)*/) {
 	    sb.append(getSimpleDesc());
 	}
+	sb.append(getClassMappingPartForCommonProps(entityType));
 
-	final List<Field> properties = Finder.findProperties(entityType);
+	sb.append("</class>\n");
+	return sb.toString();
+    }
+
+    private String getClassMappingPartForCommonProps(final Class entityType) throws Exception {
+	final StringBuffer sb = new StringBuffer();
+	final List<Field> properties = EntityUtils.getPersistedProperties(entityType);
 	for (final Field field : properties) {
 	    if (!specialProps.contains(field.getName())) {
 		final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, entityType, field.getName());
 		if (mapTo != null) {
 		    final String columnName = !StringUtils.isEmpty(mapTo.value()) ? mapTo.value(): field.getName().toUpperCase() + "_";
-
 
 		    if (Collection.class.isAssignableFrom(field.getType())) {
 			sb.append(getSet(field.getName(), columnName, PropertyTypeDeterminator.determinePropertyType(entityType, field.getName())));
@@ -264,7 +269,6 @@ public class MappingsGenerator {
 	    }
 	}
 
-	sb.append("</class>\n");
 	return sb.toString();
     }
 

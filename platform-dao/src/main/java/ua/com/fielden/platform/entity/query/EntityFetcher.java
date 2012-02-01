@@ -19,9 +19,8 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.model.builders.DbVersion;
-import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult;
-import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
+import ua.com.fielden.platform.entity.query.QueryModelResult.ResultPropertyInfo;
+import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.utils.Pair;
 
 

@@ -10,7 +10,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
-import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
+import ua.com.fielden.platform.entity.query.QueryModelResult.ResultPropertyInfo;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;

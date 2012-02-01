@@ -42,6 +42,12 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty @MapTo(userType = ISimpleMoneyType.class)
     private Money purchasePrice;
 
+    /**
+     * Constructor for (@link EntityFactory}.
+     */
+    protected TgVehicle() {
+    }
+
     public Money getPrice() {
 	return price;
     }
@@ -82,9 +88,21 @@ public class TgVehicle extends AbstractEntity<String> {
 	return this;
     }
 
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgVehicle() {
+    public Date getInitDate() {
+        return initDate;
+    }
+
+    @Observable
+    public void setInitDate(final Date initDate) {
+        this.initDate = initDate;
+    }
+
+    public TgVehicle getReplacedBy() {
+        return replacedBy;
+    }
+
+    @Observable  @EntityExists(TgVehicle.class)
+    public void setReplacedBy(final TgVehicle replacedBy) {
+        this.replacedBy = replacedBy;
     }
 }

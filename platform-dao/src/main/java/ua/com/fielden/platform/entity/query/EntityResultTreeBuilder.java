@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
-import ua.com.fielden.platform.entity.query.model.structure.QueryModelResult.ResultPropertyInfo;
+import ua.com.fielden.platform.entity.query.QueryModelResult.ResultPropertyInfo;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 final class EntityResultTreeBuilder {
