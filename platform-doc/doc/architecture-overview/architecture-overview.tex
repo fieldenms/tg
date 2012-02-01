@@ -17,9 +17,11 @@
 \usepackage{eso-pic}
 % tikz related packages to provide scalable graphics 
 \usepackage{tikz}
-\usetikzlibrary{mindmap,backgrounds,positioning}
-\usepackage{lipsum}
+\usetikzlibrary{mindmap,backgrounds,positioning,arrows,shapes,shapes.arrows,shapes.misc,automata,petri,patterns,scopes,chains,matrix,decorations.pathmorphing,shadows,calc}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%% Backgound picture %%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand\BackgroundPic{
 \put(-15,0){
 \parbox[b][\paperheight]{\paperwidth}{%
@@ -28,10 +30,57 @@
   \includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{sections/00-toc/images/background}%
 \vfill
 }}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%% progrma code formattin environment %%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{listings}
+\usepackage{float}
+\usepackage{caption}
+%allows use of "@" before \begin{document}
+\makeatletter
+% this creates a custom and simpler ruled box style
+\newcommand{\floatc@simplerule}[2]{{\@fs@cfont #1 #2}\par}
+\newcommand\fs@simplerule{\def\@fs@cfont{\bfseries}\let\@fs@capt\floatc@simplerule
+  \def\@fs@pre{}%\hrule height.4pt depth0pt \kern4pt
+  \def\@fs@post{}% \kern4pt\hrule height.4pt depth0pt \kern4pt \relax
+  \def\@fs@mid{}% \kern4pt
+  \let\@fs@iftopcapt\iftrue}
+
+% this code block defines the new and custom floatbox float environment
+\floatstyle{simplerule}
+\newfloat{program}{thp}{lop}
+\floatname{program}{Code Snippet}
+\definecolor{codebgcolor}{HTML}{FFF3BC}
+\definecolor{dkgreen}{rgb}{0,0.3,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\newenvironment{code}[2]
+{\begin{program}
+  \vspace*{5pt}
+  \captionsetup{format=plain,justification=centering,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}
+  \caption{#1}\label{#2}  
+  \begin{center}
+    \begin{tikzpicture}
+      \node [fill=dkgreen!10!white,rounded corners=5pt]
+      \bgroup
+      \bgroup
+      \begin{tabular}{l}}
+      {\end{tabular}
+      \egroup
+      \egroup;
+    \end{tikzpicture}
+  \end{center}
+\end{program}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 
 \begin{document}
- \AddToShipoutPicture*{\BackgroundPic}
+ %\AddToShipoutPicture*{\BackgroundPic}
   \setstretch{1.2}
   \include{sections/00-toc/toc} % this file contains the title page and the abstract  
   \setcounter{page}{4} % need to reset page counter as by default after toc it start with 1 again 
