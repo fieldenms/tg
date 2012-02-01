@@ -23,33 +23,32 @@
   Persisted business entities are requested declaratively, modified by changing their properties at the object level and saved also declaratively.
   The platform fully takes care of handling low technical details for translating decleratively expressed actions into corresponding Web or database related API calls.
   Such development model provides a convenient way to implement business rules ralated to changes of domain entities such as validation, before and after save logic, which can lead to modification of additional entities if required etc.
-  It also fully supports \emph{remote} or \emph{local}\footnote{The \emph{remote} here means the server-side application, and \emph{local} -- the client-side application running on users' local machines.} data processing, which provides developers with a flexible way to leverage computational resources by controlling how ``thin'' should their business client and server applications be.
+  It also fully supports both \emph{remote} and \emph{local}\footnote{The \emph{remote} here means the server-side application, and \emph{local} -- the client-side application running on users' local machines.} data processing, which provides developers with a flexible way to leverage computational resources by controlling how ``thin'' should their business client and server applications be.
 
   \subsection{Server- \& Client-Side Applications}
 
   \subsection{Entity Query Language}
   
-\lstset{language=Java,morekeywords={val,select,where,prop,eq,and,begin,end,starts_with,any_of_values,values,or,yield_and_group,as,yield,begin_expr,sum_of,div,end_expr,model_as_aggregate,year_of,in},numbers=left, numberstyle=\tiny, basicstyle=\scriptsize, stepnumber=1, numbersep=5pt, keywordstyle=\color{dkgreen}, stringstyle=\color{blue}}
-\begin{code}{Entity Query Example}{label1}
-\begin{lstlisting}
-  select(WorkOrder.class).
-  where(). //
-  prop("vehicle.model.make.key").eq().val("MERCEDES").and().
-  begin().
-    prop("vehicle.model.key").starts_with().any_of_values("315", "316" ).or().
-    prop("vehicle.model.key").eq().val("VITO").
-  end().
-  and().
-  year_of().prop("actualStart").in().values(2009, 2010, 2011).and().
-  prop("vehicle.station.zone.sector.division.key").eq().val("NORTH").
-  yield_and_group().prop("vehicle.station.zone.sector").as("sector").
-  yield().
-  begin_expr().
-    sum_of().prop("actualCost").div().val(3).
-  end_expr().as("averageYearlyMaintenanceCostPerSector").
-  model_as_aggregate();
-\end{lstlisting}
-\end{code}
+  \lstset{language=Java,morekeywords={val,select,where,prop,eq,and,begin,end,starts_with,any_of_values,values,or,yield_and_group,as,yield,begin_expr,sum_of,div,end_expr,model_as_aggregate,year_of,in},numbers=left, numberstyle=\tiny, basicstyle=\scriptsize, stepnumber=1, numbersep=5pt, keywordstyle=\color{dkgreen}, stringstyle=\color{blue}}
+  \begin{code}{Entity Query Example}{label1}
+  \begin{lstlisting}
+    select(WorkOrder.class).
+    where().
+    prop("vehicle.model.make.key").eq().val("MERCEDES").and().
+    begin().
+      prop("vehicle.model.key").starts_with().any_of_values("315", "316").or().
+      prop("vehicle.model.key").eq().val("VITO").
+    end().and().
+    year_of().prop("actualStart").in().values(2009, 2010, 2011).and().
+    prop("vehicle.station.zone.sector.division.key").eq().val("NORTH").
+    yield_and_group().prop("vehicle.station.zone.sector").as("sector").
+    yield().
+    begin_expr().
+      sum_of().prop("actualCost").div().val(3).
+    end_expr().as("averageYearlyMaintenanceCostPerSector").
+    model_as_aggregate();
+  \end{lstlisting}
+  \end{code}
   
   
 
