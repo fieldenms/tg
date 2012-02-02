@@ -27,7 +27,7 @@
 
   \subsection{Client- \& Server-Side Applications}
   With an advent of multi-tier software architecture, the three-tier architecture became a defacto standard for developing web-enabled applications.
-  The current state and trend in Web development technologies is twofold: on one side there is an ``in-browser'' model, where client applications are served as a web page, on another -- rich client application model, where client applications are fully capable desktop applications.
+  The current state and trend in Web development technologies is twofold: on one side there is an ``in-browser HTML'' model, where client applications are served as a web page, on another -- rich client application model, where client applications are fully capable desktop applications.
   Both models have their strengths and weaknesses.
 
   As mentioned above, the enforces by the platform programming model strives for uniformity. 
@@ -35,7 +35,7 @@
   One of the key aspects of this, is the use of Java as the only programming language required to develope business applications with TG.
   This is achieved by utilising the RIA paradigm for developing both client and server applications using ony the Java programming language.
   
-  From a practical perspective of software development this has a siginificant advantage over the ``in-browser'' model.  
+  From a practical perspective of software development this has a siginificant advantage over the ``in-browser HTML'' model.  
   For example, such important activities as debugging and profiling are performed in a familiar environment of the preferred IDE, where developers think in terms of their primary programming language instead of handling the complexity of context switching between several languages\footnote{E.g. Java for the server applicaiton and Java Script for the client application.}.
   At the same time, the end-users of business applications benefit from the power of the fully fledged JVM utilised by the client-side application to provide high performance and excellent usability experience.
   
@@ -44,7 +44,7 @@
   The provided development model hides the technical complexity of developing Web resources\footnote{Platform supports the development of custom Web resources if requried, but such need is unlikely due to rich sematics of the provided domain level abstractions.} by treating all domain entities as such.
   The platfrom understands the application execution context automatically choosing the appropriate handling mechanism of domain entities either as ordinary Java objects in the local memory or as Web resources residing at the server side.
   
-  For example, if the business application attempts to save a domain enity\footnote{It could either persistent or synthetic entity, which is possible due to the platform's uniform development model.}, the underlying platform mechanism would determine the origin of the request, resulting in either a call to the database for the server-side application or a corresponding Web resource for the client-side application.
+  For example, if the business application attempts to save a domain enity\footnote{It could either be persistent or synthetic entity, which is possible due to the platform's uniform development model.}, the underlying platform mechanism would determine the origin of the request, resulting in either a call to the database for the server-side application or a corresponding Web resource for the client-side application.
   This all is acompanied by automatic transaction demarcation ensuring referential integrity of the data.
 
   

@@ -19,20 +19,6 @@
 \usepackage{tikz}
 \usetikzlibrary{mindmap,backgrounds,positioning,arrows,shapes,shapes.arrows,shapes.misc,automata,petri,patterns,scopes,chains,matrix,decorations.pathmorphing,shadows,calc}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%% Backgound picture %%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newcommand\BackgroundPic{
-\put(-15,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\centering
-  \includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{sections/00-toc/images/background-new}%
-\vfill
-}}}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%% progrma code formattin environment %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,12 +63,33 @@
 }
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%% Backgound picture %%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand\BackgroundPic{
+\put(-15,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\centering
+  \includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{sections/00-toc/images/background-new}%
+\vfill
+}}}
+
+\newcommand\EveryPageBackgroundPic{
+\put(-2,17){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\centering
+  \includegraphics[width=1.0\paperwidth,height=1.0\paperheight, keepaspectratio]{sections/00-toc/images/every-page}%
+\vfill
+}}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\begin{document}
-  %\AddToShipoutPicture*{\BackgroundPic}
+\begin{document}  
   \setstretch{1.2}
   \include{sections/00-toc/toc} % this file contains the title page and the abstract  
+  \AddToShipoutPicture{\EveryPageBackgroundPic}
   \setcounter{page}{4} % need to reset page counter as by default after toc it start with 1 again 
   % using \input insterad of \include in order not statr every section from new page
   \input{sections/01-intro/intro} %

@@ -62,24 +62,21 @@
   \begin{wrapfigure}{r}{50mm}
     \vspace{-20pt}
     \centering   
-    \begin{tikzpicture}[node distance=1cm, auto, opacity=0.8]
+    \begin{tikzpicture}[>=latex']
       \tikzset{
-	  oarrow/.style={draw=blue!50!black, thin, inner sep=0em, minimum size=2em, ->}, % need to compile at home with >=latex', to ensure correct
-	  parrow/.style={draw=green!50!black, thin, inner sep=0em, minimum size=2em, ->}, % need to compile at home with >=latex', to ensure correct rendering; at work the rendering is wrong
-	  oarrow/.style={draw=blue!50!black, thin, inner sep=0em, minimum size=2em, ->}, % need to compile at home with >=latex', to ensure correct
 	  outercore/.style={circle, fill=blue!50!white, inner sep=0em, minimum size=2.3cm},
 	  core/.style={circle, shade, ball color=green!50!white, inner sep=0em, minimum size=1.3cm},
       }      
-      \node (o) at (0, 0) [outercore, opacity=0.3] {};	
-      \node (c) at (0, 0) [core] {};
-      \node at (0, -1.8cm) [text=blue!50!black] {Domain Entity Model};
-      
-      \node (ot) at (1.3, 1.5) [text=green!50!black,scale=0.8] {Entity Type};
-      \draw [parrow] (ot.south) to [out=220,in=80] (c.north);
-      
-      
-      \node (ct) at (-1.3, 2) [text=blue!50!black,scale=0.8] {Metadata};
-      \draw [oarrow] (ct.south) to [out=-100,in=150] (o.west);      
+      \begin{scope}[opacity=0.8]
+	\node (o) at (0, 0) [outercore, opacity=0.3] {};	
+	\node (c) at (0, 0) [core] {};
+	\node at (0, -1.8cm) [text=blue!50!black] {Domain Entity Model};
+      \end{scope}
+
+      \node (ot) at (1.3, 1.5) [text=green!50!black,scale=0.8] {Entity Type};	
+      \fill [green!50!black,->,out=220,in=80] (ot.south) edge (c.north);
+      \node (ct) at (-1.3, 2) [text=blue!50!black,scale=0.8] {Metadata};	
+      \fill [blue!50!black,->,out=-100,in=150] (ct.south) edge (o.west);      
     \end{tikzpicture} 
     \vspace{-10pt}
   \end{wrapfigure}
@@ -92,19 +89,19 @@
   \begin{wrapfigure}{l}{60mm}
     \vspace{-10pt}
     \centering    
-    \begin{tikzpicture}[node distance=1cm, auto, opacity=0.8]
+    \begin{tikzpicture}[>=latex']
       \tikzset{
-	  parrow/.style={draw=green!50!black, thin, inner sep=0em, minimum size=2em, ->}, % need to compile at home with >=latex', to ensure correct rendering; at work the rendering is wrong
-	  oarrow/.style={draw=blue!50!black, thin, inner sep=0em, minimum size=2em, ->}, % need to compile at home with >=latex', to ensure correct
 	  outercore/.style={circle, fill=blue!50!white, inner sep=0em, minimum size=0.6cm},
 	  core/.style={circle, shade, ball color=green!50!white, inner sep=0em, minimum size=0.3cm},
 	  score/.style={circle, fill=green!50!black, inner sep=0em, minimum size=0.3cm},
 	  outer/.style={circle, fill=blue!50!white, inner sep=0em, minimum size=2.3cm},
       }
-      \node (o) at (0, -0.25) [outer, opacity=0.3] {};      
-      \fill[circle, color=green!50!white] (0, -0.25) circle (0.7cm) node [below,text=blue!50!black,yshift=1.1cm] {Synthetic Domain Entity Model};
+      \begin{scope}[opacity=0.8]
+	\node (o) at (0, -0.25) [outer, opacity=0.3] {};      
+	\fill[circle, color=green!50!white] (0, -0.25) circle (0.7cm) node [below,text=blue!50!black,yshift=1.1cm] {Synthetic Domain Entity Model};
+      \end{scope}
       
-      \begin{scope}[scale=0.3]
+      \begin{scope}[scale=0.3,opacity=0.8]
 	\node (t) at (0,0) [outercore, opacity=0.5] {};	
 	\node at (0,0) [core, opacity=0.5] {};
 
@@ -115,13 +112,13 @@
 	\node at (-1,-1.2) [score] {};
       \end{scope}
       
-      \node (pe) at (1.3, 1.5) [text=green!50!black,scale=0.8] {Persistent Entities};
-      \draw [parrow] (pe.south) to [out=220,in=80] (t.north);
-      \draw [parrow] (pe.south) to [out=-100,in=80] (r.north);
+      \node (pe) at (1.3, 1.5) [text=green!50!black,scale=0.8] {Persistent Entities};      
+      \fill [green!50!black,->,out=-100, in=80] (pe.south) edge (t.north);
+      \fill [green!50!black,->,out=-100,in=80] (pe.south) edge (r.north);
       
       \node (se) at (-1.3, 2) [text=blue!50!black,scale=0.8] {Synthetic Entities};
-      \draw [oarrow] (se.south) to [out=-60,in=160] (l.west);
-      \draw [oarrow] (se.south) to [out=-80,in=160] (o.west);      
+      \fill [blue!50!black,->,out=-60,in=160] (se.south) edge (l.west);
+      \fill [blue!50!black,->,out=-80,in=160] (se.south) edge (o.west);      
     \end{tikzpicture} 
     \vspace{-75pt}
   \end{wrapfigure}
@@ -133,7 +130,6 @@
   Synthetic entities can mix in both persistent and other synthetic entities, which is especially powerful when there is a need to combine loosely coupled domain entities as a single business concept.
   This provides a uniform way for implementing business processes involving both synthetic and persistent domain entities, with capability to use them interchangeably\footnote{Synthetic entities can become persistent and the other way around.}.
   
-
   So, the basic idea behind the type system and metadata driven approach to model the business domain is to depart from the old imperative paradigm towards the declarative way of defining the information system while remaining in the realm of the pure Java programming language\footnote{TG strives to confine the application development process to the use of Java only without the need for XML or any other external to Java language for modeling the business domain.}.
   
   \subsection{Model Driven Architecture}
