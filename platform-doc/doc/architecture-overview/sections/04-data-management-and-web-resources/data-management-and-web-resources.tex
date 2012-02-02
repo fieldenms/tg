@@ -25,7 +25,21 @@
   Such development model provides a convenient way to implement business rules ralated to changes of domain entities such as validation, before and after save logic, which can lead to modification of additional entities if required etc.
   It also fully supports both \emph{remote} and \emph{local}\footnote{The \emph{remote} here means the server-side application, and \emph{local} -- the client-side application running on users' local machines.} data processing, which provides developers with a flexible way to leverage computational resources by controlling how ``thin'' should their business client and server applications be.
 
-  \subsection{Server- \& Client-Side Applications}
+  \subsection{Client- \& Server-Side Applications}
+  With an advent of multi-tier software architecture, the three-tier architecture became a defacto standard for developing web-enabled applications.
+  The current state and trend in Web development technologies is twofold: on one side there is an ``in-browser'' model, where client applications are served as a web page, on another -- rich client application model, where client applications are fully capable desktop applications.
+  Both models have their strengths and weaknesses.
+
+  As mentioned above, the enforces by the platform programming model strives for uniformity. 
+  The platform follows the path of reducing the number of concepts and technologies needed for development of business applications.
+  One of the key aspects of this, is the use of Java as the only programming language required to develope business applications with TG.
+  This is achieved by utilising the RIA paradigm for developing both client and server applications using ony the Java programming language.
+  
+  From a practical perspective of software development this has a siginificant advantage over the ``in-browser'' model.  
+  For example, such important activities as debugging and profiling are performed in a familiar environment of the preferred IDE, where developers think in terms of their primary programming language instead of handling the complexity of context switching between several languages\footnote{E.g. Java for the server applicaiton and Java Script for the client application.}.
+  At the same time, the end-users of business applications benefit from the power of the fully fledged JVM utilised by the client-side application to provide high performance and excellent usability experience.
+  
+  The server-side 
 
   \subsection{Entity Query Language}
   

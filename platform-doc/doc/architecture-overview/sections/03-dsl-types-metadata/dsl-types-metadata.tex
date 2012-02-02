@@ -60,27 +60,79 @@
   It also assists in fine-tuning of the business domain models with the support for configuration-based behaviour achieved by means of dependency injection.
   
   \begin{wrapfigure}{r}{50mm}
-    \vspace{-30pt}
-    \centering    
+    \vspace{-20pt}
+    \centering   
     \begin{tikzpicture}[node distance=1cm, auto, opacity=0.8]
       \tikzset{
-	  arrow/.style={draw=black, thin, inner sep=1em, minimum size=3em, text centered}
+	  oarrow/.style={draw=blue!50!black, thin, inner sep=0em, minimum size=2em, ->}, % need to compile at home with >=latex', to ensure correct
+	  parrow/.style={draw=green!50!black, thin, inner sep=0em, minimum size=2em, ->}, % need to compile at home with >=latex', to ensure correct rendering; at work the rendering is wrong
+	  oarrow/.style={draw=blue!50!black, thin, inner sep=0em, minimum size=2em, ->}, % need to compile at home with >=latex', to ensure correct
+	  outercore/.style={circle, fill=blue!50!white, inner sep=0em, minimum size=2.3cm},
+	  core/.style={circle, shade, ball color=green!50!white, inner sep=0em, minimum size=1.3cm},
       }      
-      \fill[circle, color=blue!50!white, opacity=0.3] (0,0) circle (1.0cm);
-      \shade[ball color=green!50!white] (0, 0) circle (0.5cm)  node [below,text=blue!50!black,yshift=-1.2cm] {Domain Entity Model};
+      \node (o) at (0, 0) [outercore, opacity=0.3] {};	
+      \node (c) at (0, 0) [core] {};
+      \node at (0, -1.8cm) [text=blue!50!black] {Domain Entity Model};
       
-      \def\corearrow{+(0cm,0cm) -- +(0.7cm,0.5cm) -- +(2.2cm,0.5cm)}
-
-      \draw (0.0,0.3) [arrow] \corearrow node [above,text=green!50!black,scale=0.8,xshift=-1.0cm,yshift=-0.3cm] {Entity Type};
-      \draw (0.1,0.8) [arrow, xscale=-1] \corearrow node [above,text=blue!50!black,scale=0.8,xshift=0.8cm,yshift=-0.3cm] {Metadata};
+      \node (ot) at (1.3, 1.5) [text=green!50!black,scale=0.8] {Entity Type};
+      \draw [parrow] (ot.south) to [out=220,in=80] (c.north);
+      
+      
+      \node (ct) at (-1.3, 2) [text=blue!50!black,scale=0.8] {Metadata};
+      \draw [oarrow] (ct.south) to [out=-100,in=150] (o.west);      
     \end{tikzpicture} 
-    \vspace{-30pt}
+    \vspace{-10pt}
   \end{wrapfigure}
 
   By describing the application in terms of types and metadata, the developer informs the platform of a lot of useful information, which can be used by the platform in many different ways.
   Based on this information, the platform automatically constructs a large part of the application internals, which provides the support for a complete application life-cycle.
   For instance, provided metadata and types are sufficient for automatic construction of the application user interface that leverages the declared validation rules and dependencies between domain entities.
   Even more, the platform utilises this information for providing experienced end-users (i.e. without programming skills) of the business application with facilities to build comprehensive reports and analyses.
+  
+  \begin{wrapfigure}{l}{60mm}
+    \vspace{-10pt}
+    \centering    
+    \begin{tikzpicture}[node distance=1cm, auto, opacity=0.8]
+      \tikzset{
+	  parrow/.style={draw=green!50!black, thin, inner sep=0em, minimum size=2em, ->}, % need to compile at home with >=latex', to ensure correct rendering; at work the rendering is wrong
+	  oarrow/.style={draw=blue!50!black, thin, inner sep=0em, minimum size=2em, ->}, % need to compile at home with >=latex', to ensure correct
+	  outercore/.style={circle, fill=blue!50!white, inner sep=0em, minimum size=0.6cm},
+	  core/.style={circle, shade, ball color=green!50!white, inner sep=0em, minimum size=0.3cm},
+	  score/.style={circle, fill=green!50!black, inner sep=0em, minimum size=0.3cm},
+	  outer/.style={circle, fill=blue!50!white, inner sep=0em, minimum size=2.3cm},
+      }
+      \node (o) at (0, -0.25) [outer, opacity=0.3] {};      
+      \fill[circle, color=green!50!white] (0, -0.25) circle (0.7cm) node [below,text=blue!50!black,yshift=1.1cm] {Synthetic Domain Entity Model};
+      
+      \begin{scope}[scale=0.3]
+	\node (t) at (0,0) [outercore, opacity=0.5] {};	
+	\node at (0,0) [core, opacity=0.5] {};
+
+	\node (r) at (1,-1.2) [outercore, opacity=0.5] {};	
+	\node at (1,-1.2) [core, opacity=0.5] {};
+
+	\node (l) at (-1,-1.2) [outercore, opacity=0.5] {};	
+	\node at (-1,-1.2) [score] {};
+      \end{scope}
+      
+      \node (pe) at (1.3, 1.5) [text=green!50!black,scale=0.8] {Persistent Entities};
+      \draw [parrow] (pe.south) to [out=220,in=80] (t.north);
+      \draw [parrow] (pe.south) to [out=-100,in=80] (r.north);
+      
+      \node (se) at (-1.3, 2) [text=blue!50!black,scale=0.8] {Synthetic Entities};
+      \draw [oarrow] (se.south) to [out=-60,in=160] (l.west);
+      \draw [oarrow] (se.south) to [out=-80,in=160] (o.west);      
+    \end{tikzpicture} 
+    \vspace{-75pt}
+  \end{wrapfigure}
+
+  Most business applications require the majority of domain entities to be stored for future reference or analyses.
+  Such domain entities are modeled with so-called \emph{persistent} entity types.
+  However, not all domain entities have or need to be persisted.
+  One of the unique domain modeling concepts in TG is \emph{synthetic entities}, which allows modeling of short-lived domain entities in exactly the same way as persistent entities.
+  Synthetic entities can mix in both persistent and other synthetic entities, which is especially powerful when there is a need to combine loosely coupled domain entities as a single business concept.
+  This provides a uniform way for implementing business processes involving both synthetic and persistent domain entities, with capability to use them interchangeably\footnote{Synthetic entities can become persistent and the other way around.}.
+  
 
   So, the basic idea behind the type system and metadata driven approach to model the business domain is to depart from the old imperative paradigm towards the declarative way of defining the information system while remaining in the realm of the pure Java programming language\footnote{TG strives to confine the application development process to the use of Java only without the need for XML or any other external to Java language for modeling the business domain.}.
   
@@ -116,7 +168,13 @@
     \item \emph{Business domain model} --  this is the part of business applications, which has a direct correspondence to the actual business practices benefiting from software automation; thus representing the most valuable software asset to the business.
   \end{itemize}
 
-  \begin{wrapfigure}{l}{90mm}
+  The Trident Genesis platform incorporates the \emph{technical infrastructure} reused by all TG-based business applications.
+  This completely eliminates any work on part of application developers otherwise required to ensure reuse of this building block across multiple applications.
+  The platform takes care of updates such as improvements to the underlying algorithms, handles API enhancements, backward compatibility and more.
+  Of course, there is no such thing as a free lunch -- all the complexity of supporting the technical infrastructure that enables natural reuse by all TG-based business solutions is hidden into the platform itself, shifting full responsibility to the platform developers\footnote{This is only natural and ensures clear responsibility separation. Such practices correspond to world-class software developments such as the Oracle Java Virtual Machine. 
+  Applications written for JVM are not concerned with the reuse of JMV as it occurs intrinsically. Similarly happens with TG-based applications, but at the higher level of abstraction.}.
+
+  \begin{wrapfigure}{r}{90mm}
     \vspace{-15pt}
     \centering    
     \begin{tikzpicture}[node distance=1cm, auto, opacity=0.8]
@@ -141,12 +199,6 @@
     \end{tikzpicture} 
     \vspace{-30pt}
   \end{wrapfigure}
-
-  The Trident Genesis platform incorporates the \emph{technical infrastructure} reused by all TG-based business applications.
-  This completely eliminates any work on part of application developers otherwise required to ensure reuse of this building block across multiple applications.
-  The platform takes care of updates such as improvements to the underlying algorithms, handles API enhancements, backward compatibility and more.
-  Of course, there is no such thing as a free lunch -- all the complexity of supporting the technical infrastructure that enables natural reuse by all TG-based business solutions is hidden into the platform itself, shifting full responsibility to the platform developers\footnote{This is only natural and ensures clear responsibility separation. Such practices correspond to world-class software developments such as the Oracle Java Virtual Machine. 
-  Applications written for JVM are not concerned with the reuse of JMV as it occurs intrinsically. Similarly happens with TG-based applications, but at the higher level of abstraction.}.
 
   \emph{Business domain models} (or simply \emph{domain models}) belong to the realm of the business application development.
   The provided by the platform development model is well-suited for building reusable domain models.
