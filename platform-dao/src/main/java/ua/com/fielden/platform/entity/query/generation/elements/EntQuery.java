@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,6 +15,7 @@ import java.util.TreeSet;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -106,6 +106,27 @@ public class EntQuery implements ISingleOperand {
 	}
     }
 
+    private void assignTypesToYields() {
+	if (EntityUtils.isPersistedEntityType(type())) {
+	    for (final YieldModel yield : yields.getYields().values()) {
+		final Class yieldTypeAccordingToQuerySources = yield.getOperand().type();
+		final Class yieldTypeAccordingToQueryResultType = PropertyTypeDeterminator.determinePropertyType(type(), yield.getAlias());
+
+		if (yieldTypeAccordingToQuerySources != null && !yieldTypeAccordingToQuerySources.equals(yieldTypeAccordingToQueryResultType)) {
+		    if (!(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQuerySources) && Long.class.equals(yieldTypeAccordingToQueryResultType))) {
+			throw new IllegalStateException("Different types: from source = " + yieldTypeAccordingToQuerySources.getSimpleName() + " from result type = " + yieldTypeAccordingToQueryResultType.getSimpleName());
+		    }
+		} else {
+		    yield.assignTypes(yieldTypeAccordingToQueryResultType);
+		}
+	    }
+	} else {
+	    for (final YieldModel yield : yields.getYields().values()) {
+		yield.assignTypes(yield.getOperand().type());
+	    }
+	}
+    }
+
     private void assignSqlParamNames() {
 	int paramCount = 0;
 	for (final EntValue value : getValues()) {
@@ -139,7 +160,6 @@ public class EntQuery implements ISingleOperand {
 	final List<EntProp> immediateProperties = getImmediateProps();
 	associatePropertiesWithHoldingQuery(immediateProperties);
 
-
 	final List<EntProp> propsToBeResolved = new ArrayList<EntProp>();
 	propsToBeResolved.addAll(immediateProperties);
 	propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
@@ -164,12 +184,12 @@ public class EntQuery implements ISingleOperand {
 	sources.assignSqlAliases(getMasterIndex());
 
 	final List<EntProp> unresolvedFinalProps = resolvePropsFinally(propsToBeResolvedFinally);
-	System.out.println(propsToBeResolvedFinally);
 
 	if (!subquery && unresolvedFinalProps.size() > 0) {
 	    throw new RuntimeException("Couldn't finally resolve the following props: " + unresolvedFinalProps);
 	}
 
+	assignTypesToYields();
 	yields.assignSqlAliases();
 
 	assignSqlParamNames();
@@ -202,7 +222,8 @@ public class EntQuery implements ISingleOperand {
 
     private List<EntQueryCompoundSourceModel> generateImplicitSources(final IEntQuerySource source, final boolean leftJoined) {
 	final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
-	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, extractNames(source.getReferencingProps()), this);
+//	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, entQrySourcesEnhancer.determinePropGroups(extractNames(source.getReferencingProps())), this);
+	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, source.determinePropGroups(), this);
 	for (final PropTree propTree : propTrees) {
 	    result.addAll(propTree.getSourceModels());
 	}
@@ -237,14 +258,6 @@ public class EntQuery implements ISingleOperand {
 	}
 
 	return unresolvedProps;
-    }
-
-    private Set<String> extractNames(final List<PropResolutionInfo> props) {
-	final Set<String> result = new HashSet<String>();
-	for (final PropResolutionInfo prop : props) {
-	    result.add(!prop.isImplicitId() ? prop.getPropPart() : id);
-	}
-	return result;
     }
 
     private Map<IEntQuerySource, PropResolutionInfo> findSourceMatchCandidates(final EntProp prop) {
@@ -307,11 +320,11 @@ public class EntQuery implements ISingleOperand {
 
     public static class PropTree implements Comparable<PropTree>{
 	boolean leftJoin;
-	EntQuerySourceAsEntity qrySource;
+	EntQuerySourceFromEntityType qrySource;
 	Set<PropTree> subprops;
 	EntQuery owner;
 
-	public PropTree(final EntQuerySourceAsEntity qrySource, final boolean leftJoin, final Set<PropTree> subprops, final EntQuery owner) {
+	public PropTree(final EntQuerySourceFromEntityType qrySource, final boolean leftJoin, final Set<PropTree> subprops, final EntQuery owner) {
 	    this.qrySource = qrySource;
 	    this.subprops = subprops;
 	    this.leftJoin = leftJoin;

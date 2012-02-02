@@ -6,18 +6,22 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
-public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
+public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
     private final Class<? extends AbstractEntity> entityType;
     private final boolean generated;
 
-    public EntQuerySourceAsEntity(final Class<? extends AbstractEntity> entityType, final String alias) {
+    public EntQuerySourceFromEntityType(final Class<? extends AbstractEntity> entityType, final String alias) {
     	this(entityType, alias, false);
     }
 
-    public EntQuerySourceAsEntity(final Class<? extends AbstractEntity> entityType, final String alias, final boolean generated) {
+    public EntQuerySourceFromEntityType(final Class<? extends AbstractEntity> entityType, final String alias, final boolean generated) {
 	super(alias);
 	this.entityType = entityType;
 	this.generated = generated;
+	generateSourceItems();
+    }
+
+    private void generateSourceItems() {
 	for (final Field propField : EntityUtils.getPersistedProperties(entityType)) {
 	    if (propField.getName().equals("id") || propField.getName().equals("version")) {
 		sourceColumns.put(propField.getName(), "_" + propField.getName());
@@ -43,11 +47,6 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
     }
 
     @Override
-    Pair<Boolean, Class> lookForPropInEntAggregatesType(final Class parentType, final String dotNotatedPropName) {
-	throw new RuntimeException("Should not be invoked from here!");
-    }
-
-    @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
@@ -64,10 +63,10 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
 	if (obj == null) {
 	    return false;
 	}
-	if (!(obj instanceof EntQuerySourceAsEntity)) {
+	if (!(obj instanceof EntQuerySourceFromEntityType)) {
 	    return false;
 	}
-	final EntQuerySourceAsEntity other = (EntQuerySourceAsEntity) obj;
+	final EntQuerySourceFromEntityType other = (EntQuerySourceFromEntityType) obj;
 	if (getAlias() == null) {
 	    if (other.getAlias() != null) {
 		return false;
@@ -88,5 +87,10 @@ public class EntQuerySourceAsEntity extends AbstractEntQuerySource {
     @Override
     public String sql() {
 	return sourceType().getSimpleName().toUpperCase() + "_ AS " + sqlAlias + "/*" + alias + "*/";
+    }
+
+    @Override
+    Pair<String, Class> lookForProp(final String dotNotatedPropName) {
+	return lookForPropOnPropTypeLevel(EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey(), sourceType(), dotNotatedPropName);
     }
 }

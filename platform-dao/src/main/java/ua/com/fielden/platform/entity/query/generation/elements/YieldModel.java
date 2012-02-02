@@ -6,6 +6,7 @@ public class YieldModel {
     private final ISingleOperand operand;
     private final String alias;
     private String sqlAlias;
+    private Class type;
 
     public YieldModel(final ISingleOperand operand, final String alias) {
 	super();
@@ -15,6 +16,10 @@ public class YieldModel {
 
     public void assignSqlAlias(final String sqlAlias) {
 	this.sqlAlias = sqlAlias;
+    }
+
+    public void assignTypes(final Class type) {
+	this.type = type;
     }
 
     @Override
@@ -74,5 +79,9 @@ public class YieldModel {
 
     public String getSqlAlias() {
         return sqlAlias;
+    }
+
+    public Class getType() {
+        return type;
     }
 }

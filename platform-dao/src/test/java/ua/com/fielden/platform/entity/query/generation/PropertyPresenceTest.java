@@ -2,6 +2,8 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
+import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -18,15 +20,20 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 	return entQry(qry).getSources().getMain();
     }
 
+    private PropResolutionInfo checkSrc1(final QueryModel model, final EntProp prop) {
+	return getMainSource(model).containsProperty(prop);
+    }
+
+
     @Test
     public void test_prop1() {
-	final IEntQuerySource mainSource = getMainSource(select(VEHICLE).model());
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("id")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make.desc")));
+	final QueryModel qry = select(VEHICLE).model();
+	assertNotNull("Property should be present", checkSrc1(qry, prop("id")));
+	assertNotNull("Property should be present", checkSrc1(qry, prop("key")));
+	assertNotNull("Property should be present", checkSrc1(qry, prop("desc")));
+	assertNotNull("Property should be present", checkSrc1(qry, prop("model")));
+	assertNotNull("Property should be present", checkSrc1(qry, prop("model.desc")));
+	assertNotNull("Property should be present", checkSrc1(qry, prop("model.make.desc")));
     }
 
     @Test
@@ -207,6 +214,18 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model.key")));
 	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model.desc")));
 	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model.make.desc")));
+    }
+
+    @Test
+    public void test_prop9a() {
+	final AggregatedResultQueryModel sourceQry = select(VEHICLE).
+	groupBy().prop("model").
+	yield().prop("model").as("model"). //
+	yield().minOf().yearOf().prop("initDate").as("aka.earliestInitYear"). //
+	modelAsAggregate();
+	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("aka.earliestInitYear").ge().val(2000).modelAsAggregate();
+
+	//assertNotNull("Property should be present", checkSrc1(qry, prop("aka.earliestInitYear")));
     }
 
     @Test

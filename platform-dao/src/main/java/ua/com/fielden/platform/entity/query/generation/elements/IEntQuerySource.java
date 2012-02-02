@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
 
@@ -54,4 +56,6 @@ public interface IEntQuerySource {
     void assignSqlAlias(String sqlAlias);
 
     String sql();
+
+    Map<String, Set<String>> determinePropGroups();
 }

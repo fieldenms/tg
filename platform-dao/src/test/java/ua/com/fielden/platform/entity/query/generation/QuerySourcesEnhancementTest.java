@@ -219,7 +219,5 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	where().prop("model.make.key").eq().val("MERC").and().prop("rv2.model.make.key").ne().val("MERC").model();
 
 	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
-	System.out.println(entQry(shortcutQry).sql());
-	System.out.println(entQry(explicitQry).sql());
     }
 }

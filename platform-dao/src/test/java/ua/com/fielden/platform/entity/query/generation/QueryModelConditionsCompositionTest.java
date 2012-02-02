@@ -21,13 +21,14 @@ import ua.com.fielden.platform.entity.query.generation.elements.ConditionsModel;
 import ua.com.fielden.platform.entity.query.generation.elements.DayOfModel;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQueryCompoundSourceModel;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourceAsEntity;
+import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourceFromEntityType;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourcesModel;
 import ua.com.fielden.platform.entity.query.generation.elements.EntSetFromQryModel;
 import ua.com.fielden.platform.entity.query.generation.elements.ExistenceTestModel;
 import ua.com.fielden.platform.entity.query.generation.elements.Expression;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditionsModel;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
+import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.LikeTestModel;
 import ua.com.fielden.platform.entity.query.generation.elements.MonthOfModel;
 import ua.com.fielden.platform.entity.query.generation.elements.NullTestModel;
@@ -35,7 +36,6 @@ import ua.com.fielden.platform.entity.query.generation.elements.QuantifiedTestMo
 import ua.com.fielden.platform.entity.query.generation.elements.Quantifier;
 import ua.com.fielden.platform.entity.query.generation.elements.SetTestModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
@@ -48,7 +48,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
     private final String merc = "MERC";
     private final String audi = "AUDI";
     private final static String message = "Condition models are different!";
-    private final IWhere0 base = select(VEHICLE).where();
+    private final IWhere0 where = select(VEHICLE).where();
 
     private final static ComparisonOperator _eq = ComparisonOperator.EQ;
     private final static ComparisonOperator _gt = ComparisonOperator.GT;
@@ -56,6 +56,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
     private final static LogicalOperator _and = LogicalOperator.AND;
     private final static LogicalOperator _or = LogicalOperator.OR;
     private final static ArithmeticalOperator _mult = ArithmeticalOperator.MULT;
+    private final static ArithmeticalOperator _add = ArithmeticalOperator.ADD;
 
     private static GroupedConditionsModel group(final boolean negation, final ICondition firstCondition, final CompoundConditionModel... otherConditions) {
 	return new GroupedConditionsModel(negation, firstCondition, Arrays.asList(otherConditions));
@@ -81,32 +82,40 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	return new ConditionsModel(firstCondition, Arrays.asList(otherConditions));
     }
 
+    private static Expression expression(final ISingleOperand first, final CompoundSingleOperand ... others) {
+	return new Expression(first, Arrays.asList(others));
+    }
+
+    private static CompoundSingleOperand compound(final ISingleOperand operand, final ArithmeticalOperator operator) {
+	return new CompoundSingleOperand(operand, operator);
+    }
+
     @Test
     public void test_like() {
 	assertModelsEquals( //
 		conditions(new LikeTestModel(prop("model.desc"), val(mercLike), false, false)), //
-		conditions(base.prop("model.desc").like().val(mercLike)));
+		conditions(where.prop("model.desc").like().val(mercLike)));
     }
 
     @Test
     public void test_notLike() {
 	assertModelsEquals( //
 		conditions(new LikeTestModel(prop("model.desc"), val(mercLike), true, false)), //
-		conditions(base.prop("model.desc").notLike().val(mercLike)));
+		conditions(where.prop("model.desc").notLike().val(mercLike)));
     }
 
     @Test
     public void test_set_test_with_values() {
 	assertModelsEquals(//
 		conditions(new SetTestModel(prop("model"), false, set(val(merc), val(audi)))), //
-		conditions(base.prop("model").in().values(merc, audi)));
+		conditions(where.prop("model").in().values(merc, audi)));
     }
 
     @Test
     public void test_set_test_with_query() {
 	assertModelsEquals( //
 		conditions(new SetTestModel(prop("model"), false, new EntSetFromQryModel(entSubQry(select(MODEL).model())))), //
-		conditions(base.prop("model").in().model(select(MODEL).model())));
+		conditions(where.prop("model").in().model(select(MODEL).model())));
     }
 
     @Test
@@ -114,7 +123,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	final EntityResultQueryModel<TgVehicleModel> vehModels = select(MODEL).model();
 	assertModelsEquals( //
 		conditions(new QuantifiedTestModel(prop("model"), _eq, Quantifier.ANY, entSubQry(vehModels))), //
-		conditions(base.prop("model").eq().any(vehModels)));
+		conditions(where.prop("model").eq().any(vehModels)));
     }
 
     @Test
@@ -122,7 +131,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	assertModelsEquals( //
 		conditions(new NullTestModel(prop("model"), true), //
 			compound(_and, new NullTestModel(prop("station"), false))), //
-		conditions(base.prop("model").isNotNull().and().prop("station").isNull()));
+		conditions(where.prop("model").isNotNull().and().prop("station").isNull()));
     }
 
     @Test
@@ -130,7 +139,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	assertModelsEquals(//
 		conditions(new ComparisonTestModel(prop("price"), _gt, val(100)), //
 			compound(_and, new ComparisonTestModel(prop("purchasePrice"), _lt, prop("price")))), //
-		conditions(base.prop("price").gt().val(100).and().prop("purchasePrice").lt().prop("price")));
+		conditions(where.prop("price").gt().val(100).and().prop("purchasePrice").lt().prop("price")));
     }
 
     @Test
@@ -141,7 +150,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	assertModelsEquals(//
 		conditions(new NullTestModel(prop("model"), true), //
 			compound(_and, new NullTestModel(val("CL1"), false))), //
-		conditions(base.prop("model").isNotNull().and().param("eqclass").isNull(), paramValues));
+		conditions(where.prop("model").isNotNull().and().param("eqclass").isNull(), paramValues));
     }
 
     @Test
@@ -150,7 +159,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 		conditions(group(false, //
 			new NullTestModel(prop("model"), true), //
 			compound(_and, new NullTestModel(prop("station"), false)))), //
-		conditions(base.begin().prop("model").isNotNull().and().prop("station").isNull().end()));
+		conditions(where.begin().prop("model").isNotNull().and().prop("station").isNull().end()));
     }
 
     @Test
@@ -160,75 +169,44 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 		new NullTestModel(prop("model"), true), //
 		compound(_and, new NullTestModel(prop("station"), false))), //
 		compound(_and, new NullTestModel(prop("price"), true))), //
-		conditions(base.begin().prop("model").isNotNull().and().prop("station").isNull().end().and().prop("price").isNotNull()));
+		conditions(where.begin().prop("model").isNotNull().and().prop("station").isNull().end().and().prop("price").isNotNull()));
     }
 
     @Test
     public void test_simple_query_model_06() {
-	final EntityResultQueryModel<TgVehicle> subQry = select(VEHICLE).model();
-	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
-	others.add(new CompoundConditionModel(_and, new ExistenceTestModel(false, entSubQry(subQry))));
-	final ConditionsModel exp = new ConditionsModel(new NullTestModel(prop("model"), true), others);
 	assertModelsEquals(//
-	exp, //
-		conditions(base.prop("model").isNotNull().and().exists(subQry)));
+	conditions(new NullTestModel(prop("model"), true), //
+		compound(_and, new ExistenceTestModel(false, entSubQry(select(VEHICLE).model())))), //
+		conditions(where.prop("model").isNotNull().and().exists(select(VEHICLE).model())));
     }
 
     @Test
     public void test_simple_query_model_07() {
-	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
-	others.add(new CompoundConditionModel(LogicalOperator.OR, new NullTestModel(prop("station"), true)));
-	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new NullTestModel(prop("model"), true), others);
-	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
-	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
 	assertModelsEquals(//
-	exp2, //
-		conditions(base.anyOfProps("model", "station").isNotNull()));
+	conditions(group(false, new NullTestModel(prop("model"), true), //
+		compound(_or, new NullTestModel(prop("station"), true)))), //
+		conditions(where.anyOfProps("model", "station").isNotNull()));
     }
 
     @Test
     public void test_simple_query_model_08() {
-	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
-	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
-	compSingleOperands.add(new CompoundSingleOperand(prop("purchasePrice"), ArithmeticalOperator.ADD));
-	final Expression expression = new Expression(prop("price"), compSingleOperands);
-	final ConditionsModel exp = new ConditionsModel(new NullTestModel(expression, false), others);
 	assertModelsEquals(//
-	exp, //
-		conditions(base.beginExpr().prop("price").add().prop("purchasePrice").endExpr().isNull()));
+	conditions(new NullTestModel(expression(prop("price"), compound(prop("purchasePrice"), _add)), false)), //
+		conditions(where.beginExpr().prop("price").add().prop("purchasePrice").endExpr().isNull()));
     }
 
     @Test
     public void test_simple_query_model_09() {
-	final ExpressionModel expr = expr().prop("price.amount").add().prop("purchasePrice.amount").model();
-	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
-	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
-	compSingleOperands.add(new CompoundSingleOperand(prop("purchasePrice.amount"), ArithmeticalOperator.ADD));
-	final Expression expression = new Expression(prop("price.amount"), compSingleOperands);
-	final ConditionsModel exp = new ConditionsModel(new NullTestModel(expression, false), others);
 	assertModelsEquals(//
-	exp, //
-		conditions(base.expr(expr).isNull()));
+	conditions(new NullTestModel(expression(prop("price.amount"), compound(prop("purchasePrice.amount"), ArithmeticalOperator.ADD)), false)), //
+		conditions(where.expr(expr().prop("price.amount").add().prop("purchasePrice.amount").model()).isNull()));
     }
 
     @Test
     public void test_simple_query_model_10() {
-	final ExpressionModel expr0 = expr().prop("model").mult().prop("station").model();
-	final ExpressionModel expr = expr().prop("model").add().expr(expr0).model();
-
-	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
-
-	final List<CompoundSingleOperand> compSingleOperands0 = new ArrayList<CompoundSingleOperand>();
-	compSingleOperands0.add(new CompoundSingleOperand(prop("station"), _mult));
-	final Expression expression0 = new Expression(prop("model"), compSingleOperands0);
-
-	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
-	compSingleOperands.add(new CompoundSingleOperand(expression0, ArithmeticalOperator.ADD));
-	final Expression expression = new Expression(prop("model"), compSingleOperands);
-	final ConditionsModel exp = new ConditionsModel(new NullTestModel(expression, false), others);
 	assertModelsEquals(//
-	exp, //
-		conditions(base.expr(expr).isNull()));
+	conditions(new NullTestModel(expression(prop("model"), compound(expression(prop("model"), compound(prop("station"), _mult)), _add)), false)), //
+		conditions(where.expr(expr().prop("model").add().expr(expr().prop("model").mult().prop("station").model()).model()).isNull()));
     }
 
     @Test
@@ -339,11 +317,11 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	final ConditionsModel condition2 = new ConditionsModel(new ComparisonTestModel(prop("v"), _eq, prop("wo2.vehicle")), new ArrayList<CompoundConditionModel>());
 
 	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
-	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo"), JoinType.IJ, condition1));
-	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceAsEntity(TgWorkOrder.class, "wo2"), JoinType.LJ, condition2));
+	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(TgWorkOrder.class, "wo"), JoinType.IJ, condition1));
+	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(TgWorkOrder.class, "wo2"), JoinType.LJ, condition2));
 
 	final EntQuery act = entQry(qry);
-	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceAsEntity(VEHICLE, "v"), others);
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v"), others);
 	assertEquals("models are different", exp, act.getSources());
 
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();

@@ -676,7 +676,7 @@ public class EntityUtils {
      */
     public static boolean isPropertyPartOfKey(final Class entityType, final String firstLevelPropName) {
 	if (firstLevelPropName.contains(".")) {
-	    throw new IllegalArgumentException("First level prop name expected, but was [" + firstLevelPropName + "]");
+	    throw new IllegalArgumentException("Determining whether property [" + firstLevelPropName + "] constitutes key of entity type [" + entityType.getSimpleName() + "]. First level prop name expected, but was [" + firstLevelPropName + "]");
 	}
 	return Finder.getFieldNames(Finder.getKeyMembers(entityType)).contains(firstLevelPropName);
     }
@@ -689,7 +689,7 @@ public class EntityUtils {
      */
     public static boolean isPropertyRequired(final Class entityType, final String firstLevelPropName) {
 	if (firstLevelPropName.contains(".")) {
-	    throw new IllegalArgumentException("First level prop name expected, but was [" + firstLevelPropName + "]");
+	    throw new IllegalArgumentException("Determining whether property [" + firstLevelPropName + "] is marked as 'required' for entity type [" + entityType.getSimpleName() + "]. First level prop name expected, but was [" + firstLevelPropName + "]");
 	}
 	return Finder.getFieldNames(Finder.findProperties(entityType, Required.class)).contains(firstLevelPropName);
     }

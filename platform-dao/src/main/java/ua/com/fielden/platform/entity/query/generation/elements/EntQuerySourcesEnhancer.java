@@ -34,10 +34,11 @@ public class EntQuerySourcesEnhancer {
 	return predecessorAlias == null ? propAlias : predecessorAlias + "." + propAlias;
     }
 
-    public SortedSet<PropTree> produceSourcesTree(final IEntQuerySource entQrySource, final boolean parentLeftJoinLegacy, final Set<String> props, final EntQuery holder) {
+    public SortedSet<PropTree> produceSourcesTree(final IEntQuerySource entQrySource, final boolean parentLeftJoinLegacy, final Map<String, Set<String>> propGroups/*final Set<String> props*/, final EntQuery holder) {
 	final SortedSet<PropTree> result = new TreeSet<PropTree>();
 
-	for (final Map.Entry<String, Set<String>> entry : determinePropGroups(props).entrySet()) {
+//	for (final Map.Entry<String, Set<String>> entry : determinePropGroups(props).entrySet()) {
+	for (final Map.Entry<String, Set<String>> entry : propGroups.entrySet()) {
 	    if (entry.getValue().size() > 0) {
 		final Class propType = entQrySource.propType(entry.getKey());
 
@@ -45,7 +46,7 @@ public class EntQuerySourcesEnhancer {
 			|| !(EntityUtils.isPropertyPartOfKey(entQrySource.sourceType(), entry.getKey()) || EntityUtils.isPropertyRequired(entQrySource.sourceType(), entry.getKey()));
 
 		if (EntityUtils.isPersistedEntityType(propType)) {
-		    result.add(new PropTree(new EntQuerySourceAsEntity(propType, composeAlias(entQrySource.getAlias(), entry.getKey()), true), propLeftJoin, produceSourcesTree(new EntQuerySourceAsEntity(propType, composeAlias(entQrySource.getAlias(), entry.getKey()), true), propLeftJoin, entry.getValue(), holder), holder));
+		    result.add(new PropTree(new EntQuerySourceFromEntityType(propType, composeAlias(entQrySource.getAlias(), entry.getKey()), true), propLeftJoin, produceSourcesTree(new EntQuerySourceFromEntityType(propType, composeAlias(entQrySource.getAlias(), entry.getKey()), true), propLeftJoin, determinePropGroups(entry.getValue()), holder), holder));
 		}
 	    }
 	}

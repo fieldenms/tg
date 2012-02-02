@@ -10,10 +10,10 @@ import java.util.Set;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourceAsEntity;
+import ua.com.fielden.platform.entity.query.generation.elements.EntQuery.PropTree;
+import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourceFromEntityType;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourcesEnhancer;
 import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuery.PropTree;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
@@ -30,8 +30,8 @@ public class EntQuerySourceEnhancerTest {
 
     protected final Set<PropTree> emptyPropTreeSet = Collections.emptySet();
 
-    protected EntQuerySourceAsEntity source(final String alias, final Class<? extends AbstractEntity> entityType) {
-	return new EntQuerySourceAsEntity(entityType, alias, true);
+    protected EntQuerySourceFromEntityType source(final String alias, final Class<? extends AbstractEntity> entityType) {
+	return new EntQuerySourceFromEntityType(entityType, alias, true);
     }
 
     protected Set<String> set(final String ... strings) {
@@ -43,7 +43,7 @@ public class EntQuerySourceEnhancerTest {
     }
 
     protected IEntQuerySource getProvider(final Class entityType, final String alias) {
-	return new EntQuerySourceAsEntity(entityType, alias);
+	return new EntQuerySourceFromEntityType(entityType, alias);
     }
 
     @Test
@@ -67,7 +67,7 @@ public class EntQuerySourceEnhancerTest {
 	exp.add(new PropTree(source("model", TgVehicleModel.class), false, set(new PropTree(source("model.make", TgVehicleMake.class), true, emptyPropTreeSet, null)), null));
 	exp.add(new PropTree(source("station", TgOrgUnit5.class), true, set(new PropTree(source("station.parent", TgOrgUnit4.class), true, set(new PropTree(source("station.parent.parent", TgOrgUnit3.class), true, emptyPropTreeSet, null)), null)), null));
 
-	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, set(props), null));
+	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, qse.determinePropGroups(set(props)), null));
     }
 
     @Test
@@ -78,7 +78,7 @@ public class EntQuerySourceEnhancerTest {
 	exp.add(new PropTree(source("v.model", TgVehicleModel.class), true, set(new PropTree(source("v.model.make", TgVehicleMake.class), true, emptyPropTreeSet, null)), null));
 	exp.add(new PropTree(source("v.station", TgOrgUnit5.class), true, set(new PropTree(source("v.station.parent", TgOrgUnit4.class), true, set(new PropTree(source("v.station.parent.parent", TgOrgUnit3.class), true, emptyPropTreeSet, null)), null)), null));
 
-	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, "v"), true, set(props), null));
+	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, "v"), true, qse.determinePropGroups(set(props)), null));
     }
 
     @Test
@@ -89,7 +89,7 @@ public class EntQuerySourceEnhancerTest {
 	exp.add(new PropTree(source("model", TgVehicleModel.class), false, set(new PropTree(source("model.make", TgVehicleMake.class), true, emptyPropTreeSet, null)), null));
 	exp.add(new PropTree(source("station", TgOrgUnit5.class), true, set(new PropTree(source("station.parent", TgOrgUnit4.class), true, emptyPropTreeSet, null)), null));
 
-	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, set(props), null));
+	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, qse.determinePropGroups(set(props)), null));
     }
 
     @Test
@@ -100,6 +100,6 @@ public class EntQuerySourceEnhancerTest {
 	exp.add(new PropTree(source("model", TgVehicleModel.class), false, set(new PropTree(source("model.make", TgVehicleMake.class), true, emptyPropTreeSet, null)), null));
 	exp.add(new PropTree(source("station", TgOrgUnit5.class), true, set(new PropTree(source("station.parent", TgOrgUnit4.class), true, emptyPropTreeSet, null)), null));
 
-	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, set(props), null));
+	assertEquals("Incorrect set", exp, qse.produceSourcesTree(getProvider(TgVehicle.class, null), false, qse.determinePropGroups(set(props)), null));
     }
 }

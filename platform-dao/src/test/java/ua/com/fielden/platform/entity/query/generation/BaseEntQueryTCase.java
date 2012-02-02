@@ -66,8 +66,8 @@ public class BaseEntQueryTCase {
 	return new EntSet(Arrays.asList(operands));
     }
 
-    protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final String propPart, final boolean implicitId, final Class propType) {
-	return new PropResolutionInfo(prop(propName), aliasPart, propPart, implicitId, propType);
+    protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final String propPart, final boolean implicitId, final Class propType, final String explicitPropPart) {
+	return new PropResolutionInfo(prop(propName), aliasPart, propPart, implicitId, propType, explicitPropPart);
     }
 
     protected final ComparisonTestModel alwaysTrueCondition = new ComparisonTestModel(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
