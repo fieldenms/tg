@@ -39,7 +39,15 @@
   For example, such important activities as debugging and profiling are performed in a familiar environment of the preferred IDE, where developers think in terms of their primary programming language instead of handling the complexity of context switching between several languages\footnote{E.g. Java for the server applicaiton and Java Script for the client application.}.
   At the same time, the end-users of business applications benefit from the power of the fully fledged JVM utilised by the client-side application to provide high performance and excellent usability experience.
   
-  The server-side 
+  The server-side represents a set of loosely coupled Web resources that adhere to principles of the Resource Oriented Architecture.
+  This architectural style lends itself very well to develop scalable business applications, which can leverage different deployment infrastructures -- from a single server machine to a cluster of multiple machines and the clould.
+  The provided development model hides the technical complexity of developing Web resources\footnote{Platform supports the development of custom Web resources if requried, but such need is unlikely due to rich sematics of the provided domain level abstractions.} by treating all domain entities as such.
+  The platfrom understands the application execution context automatically choosing the appropriate handling mechanism of domain entities either as ordinary Java objects in the local memory or as Web resources residing at the server side.
+  
+  For example, if the business application attempts to save a domain enity\footnote{It could either persistent or synthetic entity, which is possible due to the platform's uniform development model.}, the underlying platform mechanism would determine the origin of the request, resulting in either a call to the database for the server-side application or a corresponding Web resource for the client-side application.
+  This all is acompanied by automatic transaction demarcation ensuring referential integrity of the data.
+
+  
 
   \subsection{Entity Query Language}
   
