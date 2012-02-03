@@ -13,18 +13,18 @@ abstract class SingleOperandFunctionModel implements ISingleOperand {
     }
 
     @Override
-    public List<EntQuery> getSubqueries() {
-	return operand.getSubqueries();
+    public List<EntQuery> getLocalSubQueries() {
+	return operand.getLocalSubQueries();
     }
 
     @Override
-    public List<EntProp> getProps() {
-	return operand.getProps();
+    public List<EntProp> getLocalProps() {
+	return operand.getLocalProps();
     }
 
     @Override
-    public List<EntValue> getValues() {
-	return operand.getValues();
+    public List<EntValue> getAllValues() {
+	return operand.getAllValues();
     }
 
     @Override

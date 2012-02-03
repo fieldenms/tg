@@ -26,17 +26,17 @@ public class EntValue implements ISingleOperand {
     }
 
     @Override
-    public List<EntProp> getProps() {
+    public List<EntProp> getLocalProps() {
 	return Collections.emptyList();
     }
 
     @Override
-    public List<EntQuery> getSubqueries() {
+    public List<EntQuery> getLocalSubQueries() {
 	return Collections.emptyList();
     }
 
     @Override
-    public List<EntValue> getValues() {
+    public List<EntValue> getAllValues() {
 	return Arrays.asList(new EntValue[]{this});
     }
 

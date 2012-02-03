@@ -26,7 +26,7 @@ public class QueryModelCompositionTest extends BaseEntQueryTCase {
 		.prop("wo.insuranceAmount").isNotNull()
 		.end()
 		.modelAsAggregate();
-	entQry(a);//.getPropNames();
+	entResultQry(a);//.getPropNames();
 
 	select(WORK_ORDER).where()
 		.upperCase()

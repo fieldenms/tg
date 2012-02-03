@@ -40,40 +40,40 @@ public class ConditionsModel implements IPropertyCollector {
     }
 
     @Override
-    public List<EntQuery> getSubqueries() {
+    public List<EntQuery> getLocalSubQueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	if (firstCondition != null) {
-	    result.addAll(getFirstCondition().getSubqueries());
+	    result.addAll(getFirstCondition().getLocalSubQueries());
 	}
 
 	for (final CompoundConditionModel compCondModel : getOtherConditions()) {
-	    result.addAll(compCondModel.getCondition().getSubqueries());
+	    result.addAll(compCondModel.getCondition().getLocalSubQueries());
 	}
 	return result;
     }
 
     @Override
-    public List<EntProp> getProps() {
+    public List<EntProp> getLocalProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
 	if (firstCondition != null) {
-		result.addAll(getFirstCondition().getProps());
+		result.addAll(getFirstCondition().getLocalProps());
 	}
 
 	for (final CompoundConditionModel compCondModel : getOtherConditions()) {
-	    result.addAll(compCondModel.getCondition().getProps());
+	    result.addAll(compCondModel.getCondition().getLocalProps());
 	}
 	return result;
     }
 
     @Override
-    public List<EntValue> getValues() {
+    public List<EntValue> getAllValues() {
 	final List<EntValue> result = new ArrayList<EntValue>();
 	if (firstCondition != null) {
-	    result.addAll(getFirstCondition().getValues());
+	    result.addAll(getFirstCondition().getAllValues());
 	}
 
 	for (final CompoundConditionModel compCondModel : getOtherConditions()) {
-	    result.addAll(compCondModel.getCondition().getValues());
+	    result.addAll(compCondModel.getCondition().getAllValues());
 	}
 	return result;
     }

@@ -1,12 +1,44 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.SortedMap;
 
 
-public class YieldsModel {
+public class YieldsModel implements IPropertyCollector {
     private final SortedMap<String, YieldModel> yields;
 
+    public YieldsModel(final SortedMap<String, YieldModel> yields) {
+	this.yields = yields;
+    }
+
+    @Override
+    public List<EntValue> getAllValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	for (final YieldModel yield : yields.values()) {
+	    result.addAll(yield.getOperand().getAllValues());
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntQuery> getLocalSubQueries() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	for (final YieldModel yield : yields.values()) {
+	    result.addAll(yield.getOperand().getLocalSubQueries());
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntProp> getLocalProps() {
+	final List<EntProp> result = new ArrayList<EntProp>();
+	for (final YieldModel yield : yields.values()) {
+	    result.addAll(yield.getOperand().getLocalProps());
+	}
+	return result;
+    }
 
     public String sql() {
 	final StringBuffer sb = new StringBuffer();
@@ -21,7 +53,6 @@ public class YieldsModel {
 	return sb.toString();
     }
 
-
     @Override
     public String toString() {
 	return yields.toString();
@@ -33,10 +64,6 @@ public class YieldsModel {
 	    yieldIndex = yieldIndex + 1;
 	    yield.assignSqlAlias("C" + yieldIndex);
 	}
-    }
-
-    public YieldsModel(final SortedMap<String, YieldModel> yields) {
-	this.yields = yields;
     }
 
     public SortedMap<String, YieldModel> getYields() {

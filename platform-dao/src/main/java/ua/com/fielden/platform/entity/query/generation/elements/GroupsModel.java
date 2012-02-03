@@ -1,11 +1,43 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 
-public class GroupsModel {
+public class GroupsModel implements IPropertyCollector {
     private final List<GroupModel> groups;
+
+    public GroupsModel(final List<GroupModel> groups) {
+	this.groups = groups;
+    }
+
+    @Override
+    public List<EntValue> getAllValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	for (final GroupModel group : groups) {
+	    result.addAll(group.getOperand().getAllValues());
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntQuery> getLocalSubQueries() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	for (final GroupModel group : groups) {
+	    result.addAll(group.getOperand().getLocalSubQueries());
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntProp> getLocalProps() {
+	final List<EntProp> result = new ArrayList<EntProp>();
+	for (final GroupModel group : groups) {
+	    result.addAll(group.getOperand().getLocalProps());
+	}
+	return result;
+    }
 
     public String sql() {
 	final StringBuffer sb = new StringBuffer();
@@ -20,10 +52,6 @@ public class GroupsModel {
 	}
 
 	return sb.toString();
-    }
-
-    public GroupsModel(final List<GroupModel> groups) {
-	this.groups = groups;
     }
 
     public List<GroupModel> getGroups() {

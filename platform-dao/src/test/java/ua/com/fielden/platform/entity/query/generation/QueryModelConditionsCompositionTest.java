@@ -67,7 +67,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
     }
 
     private static ConditionsModel conditions(final ICompoundCondition0 condition) {
-	return entQry(condition.model()).getConditions();
+	return entResultQry(condition.model()).getConditions();
     }
 
     private static void assertModelsEquals(final ConditionsModel exp, final ConditionsModel act) {
@@ -75,7 +75,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
     }
 
     private static ConditionsModel conditions(final ICompoundCondition0 condition, final Map<String, Object> paramValues) {
-	return entQry(condition.model(), paramValues).getConditions();
+	return entResultQry(condition.model(), paramValues).getConditions();
     }
 
     private static ConditionsModel conditions(final ICondition firstCondition, final CompoundConditionModel... otherConditions) {
@@ -215,7 +215,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(_and, new ComparisonTestModel(prop("price"), _lt, prop("purchasePrice"))));
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(new DayOfModel(prop("initDate")), _gt, val(15)), others);
-	assertEquals(message, exp, entQry(qry).getConditions());
+	assertEquals(message, exp, entResultQry(qry).getConditions());
     }
 
     @Test
@@ -224,21 +224,21 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	final List<CompoundConditionModel> others = new ArrayList<CompoundConditionModel>();
 	others.add(new CompoundConditionModel(_and, new ComparisonTestModel(prop("price"), _lt, prop("purchasePrice"))));
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(new MonthOfModel(prop("initDate")), _gt, val(3)), others);
-	assertEquals(message, exp, entQry(qry).getConditions());
+	assertEquals(message, exp, entResultQry(qry).getConditions());
     }
 
     @Test
     public void test_ignore_of_null_value_in_condition1() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().prop("model.desc").like().iVal(mercLike).model();
 	final ConditionsModel exp = new ConditionsModel(new LikeTestModel(prop("model.desc"), val(mercLike), false, false), new ArrayList<CompoundConditionModel>());
-	assertEquals(message, exp, entQry(qry).getConditions());
+	assertEquals(message, exp, entResultQry(qry).getConditions());
     }
 
     @Test
     public void test_ignore_of_null_value_in_condition2() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().prop("model.desc").like().iVal(null).model();
 	final ConditionsModel exp = new ConditionsModel(alwaysTrueCondition, new ArrayList<CompoundConditionModel>());
-	assertEquals(message, exp, entQry(qry).getConditions());
+	assertEquals(message, exp, entResultQry(qry).getConditions());
     }
 
     @Test
@@ -247,7 +247,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	final ConditionsModel exp = new ConditionsModel(new LikeTestModel(prop("model.desc"), val("MERC%"), false, false), new ArrayList<CompoundConditionModel>());
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("param", "MERC%");
-	assertEquals(message, exp, entQry(qry, paramValues).getConditions());
+	assertEquals(message, exp, entResultQry(qry, paramValues).getConditions());
     }
 
     @Test
@@ -256,14 +256,14 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	final ConditionsModel exp = new ConditionsModel(alwaysTrueCondition, new ArrayList<CompoundConditionModel>());
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("param", null);
-	assertEquals(message, exp, entQry(qry, paramValues).getConditions());
+	assertEquals(message, exp, entResultQry(qry, paramValues).getConditions());
     }
 
     @Test
     public void test_ignore_of_null_value_in_condition5() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().prop("model.desc").like().anyOfValues().model();
 	final ConditionsModel exp = new ConditionsModel(new GroupedConditionsModel(false, alwaysTrueCondition, new ArrayList<CompoundConditionModel>()), new ArrayList<CompoundConditionModel>());
-	assertEquals(message, exp, entQry(qry).getConditions());
+	assertEquals(message, exp, entResultQry(qry).getConditions());
     }
 
     @Test
@@ -276,7 +276,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ExistenceTestModel(false, entSubQry(subQry1)), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals(message, exp2, entQry(qry).getConditions());
+	assertEquals(message, exp2, entResultQry(qry).getConditions());
     }
 
     @Test
@@ -305,7 +305,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	final Expression expressionModel = new Expression(expressionModel3, Arrays.asList(new CompoundSingleOperand[] { new CompoundSingleOperand(val(12), ArithmeticalOperator.DIV) }));
 
 	final ConditionsModel exp = new ConditionsModel(new ComparisonTestModel(expressionModel, _gt, val(1000)), new ArrayList<CompoundConditionModel>());
-	assertEquals(message, exp, entQry(qry, paramValues).getConditions());
+	assertEquals(message, exp, entResultQry(qry, paramValues).getConditions());
     }
 
     @Test
@@ -320,7 +320,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryTCase {
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(TgWorkOrder.class, "wo"), JoinType.IJ, condition1));
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(TgWorkOrder.class, "wo2"), JoinType.LJ, condition2));
 
-	final EntQuery act = entQry(qry);
+	final EntQuery act = entResultQry(qry);
 	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v"), others);
 	assertEquals("models are different", exp, act.getSources());
 

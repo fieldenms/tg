@@ -23,7 +23,7 @@ public class QuerySourcesFinalPropertiesAssociationTest extends BaseEntQueryTCas
     @Test
     public void test0() {
 	final EntityResultQueryModel<TgOrgUnit5> shortcutQry  = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").yield().prop("station").modelAsEntity(ORG5);
-	final EntQuery entQry = entQry(shortcutQry);
+	final EntQuery entQry = entResultQry(shortcutQry);
 
 	final List<PropResolutionInfo> src1FinProps = prepare( //
 		propResInf("v.station", "v", "station", false, ORG5, "station"), //
@@ -45,7 +45,25 @@ public class QuerySourcesFinalPropertiesAssociationTest extends BaseEntQueryTCas
 		yield().prop("model.key").as("model.key"). //
 		modelAsEntity(VEHICLE);
 	final PrimitiveResultQueryModel qry = select(sourceQry).where().prop("model.key").eq().val("AA").yield().prop("model.key").modelAsPrimitive();
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
+
+	final List<PropResolutionInfo> src1FinProps = prepare( //
+		propResInf("model.key", null, "model.key", false, STRING, "model.key"),
+		propResInf("model.key", null, "model.key", false, STRING, "model.key")
+		);
+
+	assertEquals(incP2S, compose(src1FinProps), getSourcesFinalReferencingProps(entQry));
+    }
+
+    @Test
+    @Ignore
+    public void test3() {
+	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).where().prop("station.key").eq().val("AA").yield().prop("model").modelAsEntity(VEHICLE);
+	final PrimitiveResultQueryModel qry = select(sourceQry).where().prop("key").eq().val("AA").yield().prop("key").modelAsPrimitive();
+	final EntQuery entQry = entResultQry(qry);
+
+//	final PrimitiveResultQueryModel explicitQry = select(sourceQry).join(MODEL).on().prop("id").eq().prop("").where().prop("key").eq().val("AA").yield().prop("key").modelAsPrimitive();
+	System.out.println(entQry.sql());
 
 	final List<PropResolutionInfo> src1FinProps = prepare( //
 		propResInf("model.key", null, "model.key", false, STRING, "model.key"),
@@ -66,7 +84,7 @@ public class QuerySourcesFinalPropertiesAssociationTest extends BaseEntQueryTCas
 		yield().prop("model.key").as("model.key"). //
 		modelAsEntity(VEHICLE);
 	final PrimitiveResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("AA").yield().prop("model.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 
 	final List<PropResolutionInfo> src1FinProps = prepare( //
 		propResInf("model.make", null, "model.make", false, MAKE, "model.make")

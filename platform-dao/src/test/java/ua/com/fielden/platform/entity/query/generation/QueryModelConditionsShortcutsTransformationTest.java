@@ -36,7 +36,7 @@ public class QueryModelConditionsShortcutsTransformationTest extends BaseEntQuer
     public void test_multiple_vs_single_comparison_test_using_equivalent_model() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().anyOfProps("key", "desc").eq().val("MERC").model();
 	final EntityResultQueryModel<TgVehicle> qry2 = select(VEHICLE).where().begin().prop("key").eq().val("MERC").or().prop("desc").eq().val("MERC").end().model();
-	assertEquals("models are different", entQry(qry2), entQry(qry));
+	assertEquals("models are different", entResultQry(qry2), entResultQry(qry));
     }
 
     @Test
@@ -46,7 +46,7 @@ public class QueryModelConditionsShortcutsTransformationTest extends BaseEntQuer
 		begin().prop("model.key").like().val("MERC%").or().prop("model.key").like().val("AUDI%").or().prop("model.key").like().val("BMW%").end().and().
 		begin().prop("model.make.key").like().val("MERC%").or().prop("model.make.key").like().val("AUDI%").or().prop("model.make.key").like().val("BMW%").end().
 		end().model();
-	assertEquals("models are different", entQry(qry2), entQry(qry));
+	assertEquals("models are different", entResultQry(qry2), entResultQry(qry));
     }
 
     @Ignore
@@ -59,7 +59,7 @@ public class QueryModelConditionsShortcutsTransformationTest extends BaseEntQuer
 		begin().val(0).eq().val(0).or().val(0).eq().val(0).or().val(0).eq().val(0).end().and().
 		begin().val(0).eq().val(0).or().val(0).eq().val(0).or().val(0).eq().val(0).end().
 		end().model();
-	assertEquals("models are different", entQry(qry2), entQry(qry));
+	assertEquals("models are different", entResultQry(qry2), entResultQry(qry));
     }
 
     @Test
@@ -70,7 +70,7 @@ public class QueryModelConditionsShortcutsTransformationTest extends BaseEntQuer
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ComparisonTestModel(new EntProp("key"), ComparisonOperator.EQ, mercValue), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals(message, exp2, entQry(qry).getConditions());
+	assertEquals(message, exp2, entResultQry(qry).getConditions());
     }
 
     @Test
@@ -80,7 +80,7 @@ public class QueryModelConditionsShortcutsTransformationTest extends BaseEntQuer
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ComparisonTestModel(new EntProp("model"), ComparisonOperator.EQ, mercValue), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals(message, exp2, entQry(qry).getConditions());
+	assertEquals(message, exp2, entResultQry(qry).getConditions());
     }
 
     @Test
@@ -91,7 +91,7 @@ public class QueryModelConditionsShortcutsTransformationTest extends BaseEntQuer
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ComparisonTestModel(new EntProp("model"), ComparisonOperator.EQ, mercValue), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals(message, exp2, entQry(qry).getConditions());
+	assertEquals(message, exp2, entResultQry(qry).getConditions());
     }
 
     @Test
@@ -101,7 +101,7 @@ public class QueryModelConditionsShortcutsTransformationTest extends BaseEntQuer
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new ComparisonTestModel(new EntProp("model"), ComparisonOperator.EQ, mercValue), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals(message, exp2, entQry(qry).getConditions());
+	assertEquals(message, exp2, entResultQry(qry).getConditions());
     }
 
     @Test
@@ -113,7 +113,7 @@ public class QueryModelConditionsShortcutsTransformationTest extends BaseEntQuer
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new SetTestModel(new EntProp("key"), false, new EntSet(Arrays.asList(new ISingleOperand[]{new EntValue("sta1"), new EntValue("sta2")}))), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals(message, exp2, entQry(qry).getConditions());
+	assertEquals(message, exp2, entResultQry(qry).getConditions());
     }
 
     @Test
@@ -125,6 +125,6 @@ public class QueryModelConditionsShortcutsTransformationTest extends BaseEntQuer
 	final GroupedConditionsModel exp = new GroupedConditionsModel(false, new QuantifiedTestModel(new EntProp("key"), ComparisonOperator.EQ, Quantifier.ANY, entSubQry(vehModels)), others);
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
 	final ConditionsModel exp2 = new ConditionsModel(exp, others2);
-	assertEquals(message, exp2, entQry(qry).getConditions());
+	assertEquals(message, exp2, entResultQry(qry).getConditions());
     }
 }

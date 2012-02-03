@@ -13,6 +13,10 @@ import ua.com.fielden.platform.utils.Pair;
 public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
     private final List<EntQuery> models;
 
+    private EntQuery model() {
+	return models.get(0);
+    }
+
     public EntQuerySourceFromQueryModel(final String alias, final EntQuery... models) {
 	super(alias);
 	this.models = Arrays.asList(models);
@@ -24,7 +28,7 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 
     @Override
     public Class sourceType() {
-	return models.get(0).getResultType();
+	return model().getResultType();
     }
 
     @Override
@@ -34,16 +38,6 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 
     @Override
     protected Pair<String, Class> lookForProp(final String dotNotatedPropName) {
-//	if (EntityUtils.isPersistedEntityType(sourceType())) {
-//	    return lookForPropOnPropTypeLevel(sourceType(), dotNotatedPropName);
-//	} else if (isEntityAggregates(sourceType())) {
-	    return lookForPropInEntAggregatesType(dotNotatedPropName);
-//	} else {
-//	    throw new RuntimeException("Not yet implemented the case of IQueryModelProvider");
-//	}
-    }
-
-    protected Pair<String, Class> lookForPropInEntAggregatesType(final String dotNotatedPropName) {
 	for (final Pair<String, String> candidate : prepareCandidates(dotNotatedPropName)) {
 	    final Pair<String, Class> candidateResult = test1(candidate.getKey(), candidate.getValue());
 	    //System.out.println("testing: " + candidate.getKey() + " and " + candidate.getValue());
@@ -54,11 +48,23 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	    }
 	}
 
+//	if (EntityUtils.isPersistedEntityType(sourceType())) {
+//	    return lookForPropOnPropTypeLevel("id", sourceType(), dotNotatedPropName);
+//	}
+//
 	return null;
+
+//	if (EntityUtils.isPersistedEntityType(sourceType())) {
+//	    return lookForPropOnPropTypeLevel(sourceType(), dotNotatedPropName);
+//	} else if (isEntityAggregates(sourceType())) {
+//	    return lookForPropInEntAggregatesType(dotNotatedPropName);
+//	} else {
+//	    throw new RuntimeException("Not yet implemented the case of IQueryModelProvider");
+//	}
     }
 
     private Pair<String, Class> test1(final String first, final String rest) {
-	final YieldModel firstLevelPropYield = models.get(0).getYield(first);
+	final YieldModel firstLevelPropYield = model().getYield(first);
 	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query yields
 	    return null;
 	} else if (firstLevelPropYield.getType()/*.getOperand().type()*/ == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
@@ -90,6 +96,31 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	}
 
 	return result;
+    }
+
+    @Override
+    public Class propType(final String propSimpleName) {
+	if (EntityUtils.isPersistedEntityType(sourceType())) {
+	    return super.propType(propSimpleName);
+	} else if (isEntityAggregates(sourceType())) {
+	    return model().getYield(propSimpleName).getType()/*.getOperand().type()*/;
+	} else {
+	    throw new RuntimeException("Not yet supported");
+	}
+    }
+
+    @Override
+    public List<EntValue> getValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	for (final EntQuery entQry : models) {
+	    result.addAll(entQry.getAllValues());
+	}
+	return result;
+    }
+
+    @Override
+    public String sql() {
+	return "(" + models.get(0).sql() + ") AS " + sqlAlias + "/*" + alias + "*/";
     }
 
     @Override
@@ -128,21 +159,5 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	    return false;
 	}
 	return true;
-    }
-
-    @Override
-    public Class propType(final String propSimpleName) {
-	if (EntityUtils.isPersistedEntityType(sourceType())) {
-	    return super.propType(propSimpleName);
-	} else if (isEntityAggregates(sourceType())) {
-	    return models.get(0).getYield(propSimpleName).getType()/*.getOperand().type()*/;
-	} else {
-	    throw new RuntimeException("Not yet supported");
-	}
-    }
-
-    @Override
-    public String sql() {
-	return "(" + models.get(0).sql() + ") AS " + sqlAlias + "/*" + alias + "*/";
     }
 }

@@ -19,18 +19,18 @@ public class ExistenceTestModel implements ICondition {
     }
 
     @Override
-    public List<EntProp> getProps() {
-	return subQuery.getProps();
+    public List<EntProp> getLocalProps() {
+	return subQuery.getLocalProps();
     }
 
     @Override
-    public List<EntQuery> getSubqueries() {
+    public List<EntQuery> getLocalSubQueries() {
 	return Arrays.asList(new EntQuery[]{subQuery});
     }
 
     @Override
-    public List<EntValue> getValues() {
-	return subQuery.getValues();
+    public List<EntValue> getAllValues() {
+	return subQuery.getAllValues();
     }
 
     @Override

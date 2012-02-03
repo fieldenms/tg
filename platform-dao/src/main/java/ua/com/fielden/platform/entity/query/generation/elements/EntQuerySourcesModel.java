@@ -7,9 +7,43 @@ import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.utils.Pair;
 
 
-public class EntQuerySourcesModel {
+public class EntQuerySourcesModel implements IPropertyCollector {
     private final IEntQuerySource main;
     private final List<EntQueryCompoundSourceModel> compounds;
+
+    public EntQuerySourcesModel(final IEntQuerySource main, final List<EntQueryCompoundSourceModel> compounds) {
+	super();
+	this.main = main;
+	this.compounds = compounds;
+    }
+
+    @Override
+    public List<EntValue> getAllValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	result.addAll(main.getValues());
+	for (final EntQueryCompoundSourceModel compSource : compounds) {
+	    result.addAll(compSource.getAllValues());
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntQuery> getLocalSubQueries() {
+	final List<EntQuery> result = new ArrayList<EntQuery>();
+	for (final EntQueryCompoundSourceModel compSource : compounds) {
+	    result.addAll(compSource.getJoinConditions().getLocalSubQueries());
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntProp> getLocalProps() {
+	final List<EntProp> result = new ArrayList<EntProp>();
+	for (final EntQueryCompoundSourceModel compSource : compounds) {
+	    result.addAll(compSource.getJoinConditions().getLocalProps());
+	}
+	return result;
+    }
 
     public String sql() {
 	final StringBuffer sb = new StringBuffer();
@@ -20,12 +54,6 @@ public class EntQuerySourcesModel {
 	}
 
 	return sb.toString();
-    }
-
-    public EntQuerySourcesModel(final IEntQuerySource main, final List<EntQueryCompoundSourceModel> compounds) {
-	super();
-	this.main = main;
-	this.compounds = compounds;
     }
 
     @Override

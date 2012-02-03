@@ -19,7 +19,7 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     public void test_vehicle_model_retrieval() {
 	final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
 	final EntityFetcher ef = new EntityFetcher(session, injector.getInstance(EntityFactory.class), injector.getInstance(MappingsGenerator.class), injector.getInstance(MappingExtractor.class), null);
-	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class). //
+	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("key").eq().val("316"). //
 		yield().prop("id").as("id").
 		yield().prop("version").as("version").
 		yield().prop("key").as("key").
@@ -34,6 +34,29 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
     }
+
+    public void test_vehicle_model_retrieval2() {
+	final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
+	final EntityFetcher ef = new EntityFetcher(session, injector.getInstance(EntityFactory.class), injector.getInstance(MappingsGenerator.class), injector.getInstance(MappingExtractor.class), null);
+
+
+
+	final EntityResultQueryModel<TgVehicleModel> model = select(select(TgVehicleModel.class).where().prop("make.key").eq().val("MERC").model()). //
+		yield().prop("id").as("id").
+		yield().prop("version").as("version").
+		yield().prop("key").as("key").
+		yield().prop("desc").as("desc").
+		yield().prop("make.id").as("make.id").
+		yield().prop("make.version").as("make.version").
+		yield().prop("make.key").as("make.key").
+		yield().prop("make.desc").as("make.desc").
+		modelAsEntity(TgVehicleModel.class);
+	final List<TgVehicleModel> models = ef.list(session, injector.getInstance(EntityFactory.class), new QueryExecutionModel(model, null/*new fetch(TgVehicleModel.class).with("make")*/), false);
+    	final TgVehicleModel vehModel = models.get(0);
+	assertEquals("Incorrect key", "316", vehModel.getKey());
+	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
+    }
+
 
 //    @Test
 //    @Ignore

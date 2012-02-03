@@ -24,7 +24,7 @@ public class QueryModelGroupingCompositionTest extends BaseEntQueryTCase {
     @Test
     public void test_query_with_one_group() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
-	final EntQuery act = entQry(qry);
+	final EntQuery act = entResultQry(qry);
 
 	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("id", new YieldModel(new EntProp("model"), "id"));
@@ -41,7 +41,7 @@ public class QueryModelGroupingCompositionTest extends BaseEntQueryTCase {
     @Test
     public void test_query_with_several_groups() {
 	final AggregatedResultQueryModel qry = select(VEHICLE).groupBy().prop("model").groupBy().yearOf().prop("initDate").yield().prop("model").as("model").yield().yearOf().prop("initDate").as("initYear").modelAsAggregate();
-	final EntQuery act = entQry(qry);
+	final EntQuery act = entResultQry(qry);
 	final YearOfModel yearOfModel = new YearOfModel(new EntProp("initDate"));
 	final EntProp eqClassProp = new EntProp("model");
 

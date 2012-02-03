@@ -29,11 +29,11 @@ public class Expression implements ISingleOperand {
     }
 
     @Override
-    public List<EntProp> getProps() {
+    public List<EntProp> getLocalProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
-	result.addAll(first.getProps());
+	result.addAll(first.getLocalProps());
 	for (final CompoundSingleOperand compSingleOperand : items) {
-	    result.addAll(compSingleOperand.getOperand().getProps());
+	    result.addAll(compSingleOperand.getOperand().getLocalProps());
 	}
 	return result;
     }
@@ -44,21 +44,21 @@ public class Expression implements ISingleOperand {
     }
 
     @Override
-    public List<EntQuery> getSubqueries() {
+    public List<EntQuery> getLocalSubQueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
-	result.addAll(first.getSubqueries());
+	result.addAll(first.getLocalSubQueries());
 	for (final CompoundSingleOperand compSingleOperand : items) {
-	    result.addAll(compSingleOperand.getOperand().getSubqueries());
+	    result.addAll(compSingleOperand.getOperand().getLocalSubQueries());
 	}
 	return result;
     }
 
     @Override
-    public List<EntValue> getValues() {
+    public List<EntValue> getAllValues() {
 	final List<EntValue> result = new ArrayList<EntValue>();
-	result.addAll(first.getValues());
+	result.addAll(first.getAllValues());
 	for (final CompoundSingleOperand compSingleOperand : items) {
-	    result.addAll(compSingleOperand.getOperand().getValues());
+	    result.addAll(compSingleOperand.getOperand().getAllValues());
 	}
 	return result;
     }

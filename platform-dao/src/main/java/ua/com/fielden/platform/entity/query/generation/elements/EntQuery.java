@@ -28,10 +28,22 @@ public class EntQuery implements ISingleOperand {
     private final YieldsModel yields;
     private final GroupsModel groups;
     private final Class resultType;
-    private final boolean subquery;
+    private final QueryCategory category;
 
     private EntQuery master;
     private final EntQuerySourcesEnhancer entQrySourcesEnhancer = new EntQuerySourcesEnhancer();
+
+    private boolean isSubQuery() {
+	return QueryCategory.SUB_QUERY.equals(category);
+    }
+
+    private boolean isSourceQuery() {
+	return QueryCategory.SOURCE_QUERY.equals(category);
+    }
+
+    private boolean isResultQuery() {
+	return QueryCategory.RESULT_QUERY.equals(category);
+    }
 
     // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
 
@@ -43,6 +55,7 @@ public class EntQuery implements ISingleOperand {
 
     public String sql() {
 	final StringBuffer sb = new StringBuffer();
+	sb.append(isSubQuery() ? "(" : "");
 	sb.append("SELECT ");
 	sb.append(yields.sql());
 	sb.append("\nFROM ");
@@ -52,11 +65,8 @@ public class EntQuery implements ISingleOperand {
 	    sb.append(conditions.sql());
 	}
 	sb.append(groups.sql());
-
-	if (!subquery) {
-	    System.out.println(sb.toString());
-	}
-        return subquery ? "(" + sb.toString() + ")" : sb.toString();
+	sb.append(isSubQuery() ? ")" : "");
+        return sb.toString();
     }
 
     private int getMasterIndex() {
@@ -82,11 +92,11 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean allPropsYieldEnhancementRequired() {
-	return yields.getYields().size() == 0 && EntityUtils.isPersistedEntityType(resultType) && !subquery;
+	return yields.getYields().size() == 0 && EntityUtils.isPersistedEntityType(resultType) && !isSubQuery();
     }
 
     private boolean idPropYieldEnhancementRequired() {
-	return yields.getYields().size() == 0 && EntityUtils.isPersistedEntityType(resultType) && subquery;
+	return yields.getYields().size() == 0 && EntityUtils.isPersistedEntityType(resultType) && isSubQuery();
     }
 
     private void enhanceYieldsModel() {
@@ -129,7 +139,7 @@ public class EntQuery implements ISingleOperand {
 
     private void assignSqlParamNames() {
 	int paramCount = 0;
-	for (final EntValue value : getValues()) {
+	for (final EntValue value : getAllValues()) {
 	    paramCount = paramCount + 1;
 	    value.setParamName("P" + paramCount);
 	}
@@ -137,15 +147,15 @@ public class EntQuery implements ISingleOperand {
 
     public Map<String, Object> getValuesForSqlParams() {
 	final Map<String, Object> result = new HashMap<String, Object>();
-	for (final EntValue value : getValues()) {
+	for (final EntValue value : getAllValues()) {
 	    result.put(value.getParamName(), value.getValue());
 	}
 	return result;
     }
 
-    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType, final boolean subquery) {
+    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType, final QueryCategory category) {
 	super();
-	this.subquery = subquery;
+	this.category = category;
 	this.sources = sources;
 	this.conditions = conditions;
 	this.yields = yields;
@@ -166,7 +176,7 @@ public class EntQuery implements ISingleOperand {
 
 	unresolvedProps = resolveProps(propsToBeResolved);
 
-	if (!subquery) {
+	if (!isSubQuery()) {
 	    validate();
 	}
 
@@ -185,7 +195,7 @@ public class EntQuery implements ISingleOperand {
 
 	final List<EntProp> unresolvedFinalProps = resolvePropsFinally(propsToBeResolvedFinally);
 
-	if (!subquery && unresolvedFinalProps.size() > 0) {
+	if (!isSubQuery() && unresolvedFinalProps.size() > 0) {
 	    throw new RuntimeException("Couldn't finally resolve the following props: " + unresolvedFinalProps);
 	}
 
@@ -408,119 +418,45 @@ public class EntQuery implements ISingleOperand {
      */
     public List<EntProp> getImmediateProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
-	result.addAll(getPropsFromSources());
+	result.addAll(sources.getLocalProps());
 	if (conditions != null) {
-	    result.addAll(conditions.getProps());
+	    result.addAll(conditions.getLocalProps());
 	}
-	result.addAll(getPropsFromGroups());
-	result.addAll(getPropsFromYields());
+	result.addAll(groups.getLocalProps());
+	result.addAll(yields.getLocalProps());
 	return result;
     }
 
     public List<EntQuery> getImmediateSubqueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
-	result.addAll(getSubqueriesFromYields());
-	result.addAll(getSubqueriesFromGroups());
+	result.addAll(yields.getLocalSubQueries());
+	result.addAll(groups.getLocalSubQueries());
 	if (conditions != null) {
-	    result.addAll(conditions.getSubqueries());
+	    result.addAll(conditions.getLocalSubQueries());
 	}
-	result.addAll(getSubqueriesFromSources());
+	result.addAll(sources.getLocalSubQueries());
 	return result;
     }
 
     @Override
-    public List<EntProp> getProps() {
+    public List<EntProp> getLocalProps() {
 	return Collections.emptyList();
     }
 
     @Override
-    public List<EntQuery> getSubqueries() {
+    public List<EntQuery> getLocalSubQueries() {
 	return Arrays.asList(new EntQuery[] { this });
     }
 
     @Override
-    public List<EntValue> getValues() {
+    public List<EntValue> getAllValues() {
 	final List<EntValue> result = new ArrayList<EntValue>();
-	result.addAll(getValuesFromSources());
+	result.addAll(sources.getAllValues());
 	if (conditions != null) {
-	    result.addAll(conditions.getValues());
+	    result.addAll(conditions.getAllValues());
 	}
-	result.addAll(getValuesFromGroups());
-	result.addAll(getValuesFromYields());
-	return result;
-
-	//return Collections.emptyList();
-    }
-
-    private List<EntValue> getValuesFromYields() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	for (final YieldModel yield : yields.getYields().values()) {
-	    result.addAll(yield.getOperand().getValues());
-	}
-	return result;
-    }
-
-    private List<EntValue> getValuesFromGroups() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	for (final GroupModel group : groups.getGroups()) {
-	    result.addAll(group.getOperand().getValues());
-	}
-	return result;
-    }
-
-    private List<EntValue> getValuesFromSources() {
-	final List<EntValue> result = new ArrayList<EntValue>();
-	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
-	    result.addAll(compSource.getJoinConditions().getValues());
-	}
-	return result;
-    }
-
-    private List<EntProp> getPropsFromYields() {
-	final List<EntProp> result = new ArrayList<EntProp>();
-	for (final YieldModel yield : yields.getYields().values()) {
-	    result.addAll(yield.getOperand().getProps());
-	}
-	return result;
-    }
-
-    private List<EntProp> getPropsFromGroups() {
-	final List<EntProp> result = new ArrayList<EntProp>();
-	for (final GroupModel group : groups.getGroups()) {
-	    result.addAll(group.getOperand().getProps());
-	}
-	return result;
-    }
-
-    private List<EntProp> getPropsFromSources() {
-	final List<EntProp> result = new ArrayList<EntProp>();
-	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
-	    result.addAll(compSource.getJoinConditions().getProps());
-	}
-	return result;
-    }
-
-    private List<EntQuery> getSubqueriesFromYields() {
-	final List<EntQuery> result = new ArrayList<EntQuery>();
-	for (final YieldModel yield : yields.getYields().values()) {
-	    result.addAll(yield.getOperand().getSubqueries());
-	}
-	return result;
-    }
-
-    private List<EntQuery> getSubqueriesFromGroups() {
-	final List<EntQuery> result = new ArrayList<EntQuery>();
-	for (final GroupModel group : groups.getGroups()) {
-	    result.addAll(group.getOperand().getSubqueries());
-	}
-	return result;
-    }
-
-    private List<EntQuery> getSubqueriesFromSources() {
-	final List<EntQuery> result = new ArrayList<EntQuery>();
-	for (final EntQueryCompoundSourceModel compSource : sources.getCompounds()) {
-	    result.addAll(compSource.getJoinConditions().getSubqueries());
-	}
+	result.addAll(groups.getAllValues());
+	result.addAll(yields.getAllValues());
 	return result;
     }
 
@@ -578,9 +514,9 @@ public class EntQuery implements ISingleOperand {
 	int result = 1;
 	result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
 	result = prime * result + ((groups == null) ? 0 : groups.hashCode());
+	result = prime * result + ((category == null) ? 0 : category.hashCode());
 	result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
 	result = prime * result + ((sources == null) ? 0 : sources.hashCode());
-	result = prime * result + (subquery ? 1231 : 1237);
 	result = prime * result + ((yields == null) ? 0 : yields.hashCode());
 	return result;
     }
@@ -611,6 +547,9 @@ public class EntQuery implements ISingleOperand {
 	} else if (!groups.equals(other.groups)) {
 	    return false;
 	}
+	if (category != other.category) {
+	    return false;
+	}
 	if (resultType == null) {
 	    if (other.resultType != null) {
 		return false;
@@ -623,9 +562,6 @@ public class EntQuery implements ISingleOperand {
 		return false;
 	    }
 	} else if (!sources.equals(other.sources)) {
-	    return false;
-	}
-	if (subquery != other.subquery) {
 	    return false;
 	}
 	if (yields == null) {

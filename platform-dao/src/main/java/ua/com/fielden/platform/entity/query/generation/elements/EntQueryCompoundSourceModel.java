@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
@@ -18,7 +19,7 @@ public class EntQueryCompoundSourceModel implements IPropertyCollector {
     }
 
     public String sql() {
-	return (joinType.equals(JoinType.IJ) ? "INNER JOIN " : "LEFT JOIN ") + source.sql() + " ON " + joinConditions.sql();
+	return joinType + " " + source.sql() + " ON " + joinConditions.sql();
     }
 
     @Override
@@ -39,20 +40,22 @@ public class EntQueryCompoundSourceModel implements IPropertyCollector {
     }
 
     @Override
-    public List<EntProp> getProps() {
-	return joinConditions.getProps();
+    public List<EntProp> getLocalProps() {
+	return joinConditions.getLocalProps();
     }
 
     @Override
-    public List<EntValue> getValues() {
-	return joinConditions.getValues();
+    public List<EntValue> getAllValues() {
+	final List<EntValue> result = new ArrayList<EntValue>();
+	result.addAll(source.getValues());
+	result.addAll(joinConditions.getAllValues());
+	return result;
     }
 
     @Override
-    public List<EntQuery> getSubqueries() {
-	return joinConditions.getSubqueries();
+    public List<EntQuery> getLocalSubQueries() {
+	return joinConditions.getLocalSubQueries();
     }
-
 
     @Override
     public int hashCode() {

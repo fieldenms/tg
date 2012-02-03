@@ -18,10 +18,19 @@ import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
 public abstract class AbstractEntQuerySource implements IEntQuerySource {
-    protected final String alias; // can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end)
+    /**
+     * Business name for query source. Can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end).
+     */
+    protected final String alias;
     private final List<PropResolutionInfo> referencingProps = new ArrayList<PropResolutionInfo>();
     private final List<PropResolutionInfo> finalReferencingProps = new ArrayList<PropResolutionInfo>();
+    /**
+     * Sql alias for query source table/query
+     */
     protected String sqlAlias;
+    /**
+     * Map between business name and sql column name.
+     */
     protected Map<String, String> sourceColumns = new HashMap<String, String>();
 
     public void assignSqlAlias(final String sqlAlias) {
@@ -114,7 +123,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     @Override
     public Class propType(final String propSimpleName) {
-	System.out.println("sourceType = " + sourceType().getSimpleName() + " prop = " + propSimpleName);
+	//System.out.println("sourceType = " + sourceType().getSimpleName() + " prop = " + propSimpleName);
 	return PropertyTypeDeterminator.determinePropertyType(sourceType(), propSimpleName);
     }
 
@@ -163,6 +172,28 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	} else {
 	    throw new RuntimeException("Unforeseen branch!");
 	}
+    }
+
+    public Map<String, Set<String>> determinePropGroups() {
+	final Set<PropResolutionInfo> dotNotatedPropNames = new HashSet<PropResolutionInfo>(getReferencingProps());
+
+	final Map<String, Set<String>> result = new HashMap<String, Set<String>>();
+	for (final PropResolutionInfo dotNotatedPropName : dotNotatedPropNames) {
+	    //final Pair<String, String> splitOfProperty = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
+	    final String first = dotNotatedPropName.isImplicitId() ? "id" : dotNotatedPropName.explicitPropPart;
+	    final String rest = (dotNotatedPropName.isImplicitId() || dotNotatedPropName.allExplicit()) ? "" : dotNotatedPropName.propPart.substring(dotNotatedPropName.explicitPropPart.length() + 1);
+
+	    Set<String> propGroup = result.get(first);
+	    if (propGroup == null) {
+		propGroup = new HashSet<String>();
+		result.put(first, propGroup);
+	    }
+	    if (!StringUtils.isEmpty(rest)) {
+		propGroup.add(rest);
+	    }
+	}
+
+	return result;
     }
 
     /**
@@ -218,8 +249,6 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	public Integer getPreferenceNumber() {
 	    return implicitId ? 2000 : propPart.length();
 	}
-
-
 
 	public EntProp getEntProp() {
 	    return entProp;
@@ -290,28 +319,5 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    }
 	    return true;
 	}
-    }
-
-    public Map<String, Set<String>> determinePropGroups() {
-	final Set<PropResolutionInfo> dotNotatedPropNames = new HashSet<PropResolutionInfo>(getReferencingProps());
-
-	final Map<String, Set<String>> result = new HashMap<String, Set<String>>();
-	for (final PropResolutionInfo dotNotatedPropName : dotNotatedPropNames) {
-	    //final Pair<String, String> splitOfProperty = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
-	    final String first = dotNotatedPropName.isImplicitId() ? "id" : dotNotatedPropName.explicitPropPart;
-	    final String rest = (dotNotatedPropName.isImplicitId() || dotNotatedPropName.allExplicit()) ? "" : dotNotatedPropName.propPart.substring(dotNotatedPropName.explicitPropPart.length() + 1);
-
-	    //System.out.println("first = " + first + " rest = " + rest + " for " + dotNotatedPropName);
-	    Set<String> propGroup = result.get(first);
-	    if (propGroup == null) {
-		propGroup = new HashSet<String>();
-		result.put(first, propGroup);
-	    }
-	    if (!StringUtils.isEmpty(rest)) {
-		propGroup.add(rest);
-	    }
-	}
-
-	return result;
     }
 }

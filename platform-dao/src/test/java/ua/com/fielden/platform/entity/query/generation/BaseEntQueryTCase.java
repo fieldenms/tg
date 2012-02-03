@@ -42,16 +42,24 @@ public class BaseEntQueryTCase {
 
     private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
 
-    protected static EntQuery entQry(final QueryModel qryModel) {
-	return qb.generateEntQuery(qryModel);
+    protected static EntQuery entSourceQry(final QueryModel qryModel) {
+	return qb.generateEntQueryAsSourceQuery(qryModel);
+    }
+
+    protected static EntQuery entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
+	return qb.generateEntQueryAsSourceQuery(qryModel, paramValues);
+    }
+
+    protected static EntQuery entResultQry(final QueryModel qryModel) {
+	return qb.generateEntQueryAsResultQuery(qryModel);
+    }
+
+    protected static EntQuery entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
+	return qb.generateEntQueryAsResultQuery(qryModel, paramValues);
     }
 
     protected static EntQuery entSubQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsSubquery(qryModel);
-    }
-
-    protected static EntQuery entQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
-	return qb.generateEntQuery(qryModel, paramValues);
     }
 
     protected static EntProp prop(final String propName) {

@@ -40,7 +40,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
 	yields.put("m", new YieldModel(expression, "m"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, entQry(qry, paramValues).getYields());
+	assertEquals("models are different", exp, entResultQry(qry, paramValues).getYields());
     }
 
     @Test
@@ -49,7 +49,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("id", new YieldModel(new EntProp("model"), "id"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, entQry(qry).getYields());
+	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 
     @Test
@@ -59,7 +59,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	yields.put("st", new YieldModel(new EntProp("station"), "st"));
 	yields.put("m", new YieldModel(new EntProp("model"), "m"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, entQry(qry).getYields());
+	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 
     @Test
@@ -68,7 +68,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("id", new YieldModel(new EntProp("v.model"), "id"));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, entQry(qry).getYields());
+	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 
     @Test
@@ -77,7 +77,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("", new YieldModel(new EntProp("v.model"), ""));
 	final YieldsModel exp = new YieldsModel(yields);
-	assertEquals("models are different", exp, entQry(qry).getYields());
+	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 
     @Test
@@ -92,7 +92,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	yield().prop("vehicle.model.make").as("vehicle.model.make"). //
 	modelAsAggregate();
 	try {
-	    entQry(sourceQry);
+	    entResultQry(sourceQry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	}
@@ -110,7 +110,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 	yield().prop("vehicle.model.make").as("vehicle.mordor"). //
 	modelAsAggregate();
 	try {
-	    entQry(sourceQry);
+	    entResultQry(sourceQry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	}

@@ -29,28 +29,28 @@ public class EntSet implements ISetOperand{
     }
 
     @Override
-    public List<EntProp> getProps() {
+    public List<EntProp> getLocalProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
 	for (final ISingleOperand operand : operands) {
-	    result.addAll(operand.getProps());
+	    result.addAll(operand.getLocalProps());
 	}
 	return result;
     }
 
     @Override
-    public List<EntQuery> getSubqueries() {
+    public List<EntQuery> getLocalSubQueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	for (final ISingleOperand operand : operands) {
-	    result.addAll(operand.getSubqueries());
+	    result.addAll(operand.getLocalSubQueries());
 	}
 	return result;
     }
 
     @Override
-    public List<EntValue> getValues() {
+    public List<EntValue> getAllValues() {
 	final List<EntValue> result = new ArrayList<EntValue>();
 	for (final ISingleOperand operand : operands) {
-	    result.addAll(operand.getValues());
+	    result.addAll(operand.getAllValues());
 	}
 	return result;
     }

@@ -17,7 +17,7 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 public class PropertyPresenceTest extends BaseEntQueryTCase {
 
     private IEntQuerySource getMainSource(final QueryModel qry) {
-	return entQry(qry).getSources().getMain();
+	return entResultQry(qry).getSources().getMain();
     }
 
     private PropResolutionInfo checkSrc1(final QueryModel model, final EntProp prop) {

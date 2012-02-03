@@ -45,6 +45,18 @@ public interface IEntQuerySource {
      */
     boolean generated();
 
+    /**
+     * Assigns sequential sql alias for the table/subquery corresponding to the query source.
+     * @param sqlAlias
+     */
+    void assignSqlAlias(String sqlAlias);
+
+    /**
+     * Produces sql clause for the query source.
+     * @return
+     */
+    String sql();
+
     void addReferencingProp(PropResolutionInfo prop);
 
     List<PropResolutionInfo> getReferencingProps();
@@ -53,9 +65,7 @@ public interface IEntQuerySource {
 
     List<PropResolutionInfo> getFinalReferencingProps();
 
-    void assignSqlAlias(String sqlAlias);
-
-    String sql();
-
     Map<String, Set<String>> determinePropGroups();
+
+    List<EntValue> getValues();
 }

@@ -24,7 +24,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
     @Test
     public void test0() {
 	final EntityResultQueryModel<TgOrgUnit5> shortcutQry  = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").yield().prop("station").modelAsEntity(ORG5);
-	final EntQuery entQry = entQry(shortcutQry);
+	final EntQuery entQry = entResultQry(shortcutQry);
 
 	final List<PropResolutionInfo> src1FinProps = prepare( //
 		propResInf("v.station", "v", "station", false, ORG5, "station"), //
@@ -41,7 +41,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").model();
 	final PrimitiveResultQueryModel shortcutQry = select(sourceQry). //
 	where().prop("model.make.key").eq().val("MERC").yield().prop("model.make.key").modelAsPrimitive(STRING);
-	final EntQuery entQry = entQry(shortcutQry);
+	final EntQuery entQry = entResultQry(shortcutQry);
 	final List<PropResolutionInfo> src1Props = prepare( //
 		propResInf("model.make.key", null, "model.make.key", false, STRING, "model"), //
 		propResInf("model.make.key", null, "model.make.key", false, STRING, "model"));
@@ -63,7 +63,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
     @Test
     public void test2() {
 	final PrimitiveResultQueryModel shortcutQry  = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").yield().prop("v.station.key").modelAsPrimitive(STRING);
-	final EntQuery entQry = entQry(shortcutQry);
+	final EntQuery entQry = entResultQry(shortcutQry);
 	final List<PropResolutionInfo> src1Props = prepare( //
 		propResInf("v.station.key", "v", "station.key", false, STRING, "station"), //
 		propResInf("v.station.key", "v", "station.key", false, STRING, "station"));
@@ -82,7 +82,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
     @Test
     public void test_prop_to_source_association1() {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).where().prop("model.make.key").eq().val("MERC").yield().maxOf().prop("model.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( //
 		propResInf("model.make.key", null, "model.make.key", false, STRING, "model"), //
 		propResInf("model.make.key", null, "model.make.key", false, STRING, "model"));
@@ -106,7 +106,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final PrimitiveResultQueryModel qry = select(VEHICLE). //
 	join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
 	where().prop("model.make.key").eq().val("MERC").yield().maxOf().prop("model.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", false, MODEL, "model"));
 	final List<PropResolutionInfo> src2Props = prepare( propResInf("model.id", "model", "id", false, LONG, "id"), //
 		propResInf("model.make.key", "model", "make.key", false, STRING, "make"), //
@@ -120,7 +120,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
 	join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").yield().maxOf().prop("model.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", false, MODEL, "model"));
 	final List<PropResolutionInfo> src2Props = prepare( propResInf("model.id", "model", "id", false, LONG, "id"), //
 		propResInf("model.make", "model", "make", false, MAKE, "make"));
@@ -135,7 +135,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v"). //
 	join(MODEL).as("m").on().prop("model").eq().prop("m.id"). //
 	where().prop("m.make.key").eq().val("MERC").and().prop("v.model.make.key").like().val("MERC%").yield().maxOf().prop("m.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", false, MODEL, "model"), //
 		propResInf("v.model.make.key", "v", "model.make.key", false, STRING, "model"));
 	final List<PropResolutionInfo> src2Props = prepare( propResInf("m.id", "m", "id", false, LONG, "id"), //
@@ -150,7 +150,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v"). //
 	join(MODEL).as("m").on().prop("model").eq().prop("m"). //
 	where().prop("m.make.key").eq().val("MERC").yield().maxOf().prop("m.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", false, MODEL, "model"));
 	final List<PropResolutionInfo> src2Props = prepare( propResInf("m", "m", null, true, LONG, ""), //
 		propResInf("m.make.key", "m", "make.key", false, STRING, "make"), //
@@ -163,7 +163,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v"). //
 	join(MODEL).as("m").on().prop("model").eq().prop("m.id"). //
 	where().prop("m.make.key").eq().val("MERC").yield().maxOf().prop("m.make.key").modelAsPrimitive();
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", false, MODEL, "model"));
 	final List<PropResolutionInfo> src2Props = prepare( propResInf("m.id", "m", "id", false, LONG, "id"), //
 		propResInf("m.make.key", "m", "make.key", false, STRING, "make"), //
@@ -178,7 +178,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 		yield().minOf().yearOf().prop("initDate").as("earliestInitYear"). //
 		modelAsAggregate();
 	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("earliestInitYear").ge().val(2000).modelAsAggregate();
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("model.make.key", null, "model.make.key", false, STRING, "model"), //
 		propResInf("earliestInitYear", null, "earliestInitYear", false, null, "earliestInitYear"));
 	assertEquals(incP2S, compose(src1Props), getSourcesReferencingProps(entQry));
@@ -193,7 +193,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	modelAsEntity(TgModelCount.class);
 
 	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("key.make.key").eq().val("MERC").and().prop("count").ge().val(2000).modelAsAggregate();
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("key.make.key", null, "key.make.key", false, STRING, "key"), //
 		propResInf("count", null, "count", false, BIG_INTEGER, "count"));
 	assertEquals(incP2S, compose(src1Props), getSourcesReferencingProps(entQry));
@@ -221,7 +221,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	prop("earliestInitYear").ge().val(2000).and(). //
 	prop("count").ge().val(25).modelAsAggregate();
 
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", false, MODEL, "model"), //
 		propResInf("model.make.key", null, "model.make.key", false, STRING, "model"), //
 		propResInf("earliestInitYear", null, "earliestInitYear", false, null, "earliestInitYear"));
@@ -288,7 +288,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	yield().prop("totalVehCount").as("a3"). //
 	modelAsAggregate();
 
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("totalVehCount", null, "totalVehCount", false, null, "totalVehCount"), //
 		propResInf("make.key", null, "make.key", false, STRING, "make"), //
 		propResInf("earliestInitYearPerMake", null, "earliestInitYearPerMake", false, null, "earliestInitYearPerMake"), //
@@ -305,7 +305,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	join(ORG2).as("parent.parent.parent").on().prop("parent.parent.parent").eq().prop("parent.parent.parent.id"). //
 	join(ORG1).as("parent.parent.parent.parent").on().prop("parent.parent.parent.parent").eq().prop("parent.parent.parent.parent.id"). //
 	where().prop("parent.parent.parent.parent.key").eq().val("NORTH").yield().prop("parent.parent.parent.parent.key").modelAsPrimitive();
-	final EntQuery entQry = entQry(qry);
+	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("parent", null, "parent", false, ORG4, "parent"));
 	final List<PropResolutionInfo> src2Props = prepare( propResInf("parent.id", "parent", "id", false, LONG, "id"), //
 		propResInf("parent.parent", "parent", "parent", false, ORG3, "parent"));
@@ -324,7 +324,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	final EntityResultQueryModel<TgOrgUnit5> qry = select(ORG5). //
 	join(ORG4).on().prop("parent.parent.parent.parent").eq().prop("parent.parent.parent").model();
 	try {
-	    entQry(qry);
+	    entResultQry(qry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	    assertEquals("Incorrect exception message", "Ambiguous property: parent.parent.parent", e.getMessage());
@@ -341,7 +341,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	join(ORG1).as("parent.parent.parent.parent").on().prop("parent.parent.parent.parent").eq().prop("parent.parent.parent.parent.id"). //
 	where().prop("parent.parent.parent.parent.key").eq().val("NORTH").model();
 	try {
-	    entQry(qry);
+	    entResultQry(qry);
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	    assertEquals("Incorrect exception message", "Ambiguous property: parent", e.getMessage());

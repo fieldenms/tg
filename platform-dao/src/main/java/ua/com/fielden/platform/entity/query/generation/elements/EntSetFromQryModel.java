@@ -18,17 +18,17 @@ public class EntSetFromQryModel implements ISetOperand {
     }
 
     @Override
-    public List<EntProp> getProps() {
-	return model.getProps();
+    public List<EntProp> getLocalProps() {
+	return model.getLocalProps();
     }
 
     @Override
-    public List<EntValue> getValues() {
-	return model.getValues();
+    public List<EntValue> getAllValues() {
+	return model.getAllValues();
     }
 
     @Override
-    public List<EntQuery> getSubqueries() {
+    public List<EntQuery> getLocalSubQueries() {
 	return Arrays.asList(new EntQuery[]{model});
     }
 

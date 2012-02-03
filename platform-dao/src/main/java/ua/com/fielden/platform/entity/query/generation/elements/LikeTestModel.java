@@ -23,26 +23,26 @@ public class LikeTestModel implements ICondition {
     }
 
     @Override
-    public List<EntProp> getProps() {
+    public List<EntProp> getLocalProps() {
 	final List<EntProp> result = new ArrayList<EntProp>();
-	result.addAll(leftOperand.getProps());
-	result.addAll(rightOperand.getProps());
+	result.addAll(leftOperand.getLocalProps());
+	result.addAll(rightOperand.getLocalProps());
 	return result;
     }
 
     @Override
-    public List<EntQuery> getSubqueries() {
+    public List<EntQuery> getLocalSubQueries() {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
-	result.addAll(leftOperand.getSubqueries());
-	result.addAll(rightOperand.getSubqueries());
+	result.addAll(leftOperand.getLocalSubQueries());
+	result.addAll(rightOperand.getLocalSubQueries());
 	return result;
     }
 
     @Override
-    public List<EntValue> getValues() {
+    public List<EntValue> getAllValues() {
 	final List<EntValue> result = new ArrayList<EntValue>();
-	result.addAll(leftOperand.getValues());
-	result.addAll(rightOperand.getValues());
+	result.addAll(leftOperand.getAllValues());
+	result.addAll(rightOperand.getAllValues());
 	return result;
     }
 

@@ -19,7 +19,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
     @Test
@@ -33,7 +33,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(ORG5).as("station").on().prop("station").eq().prop("station.id"). //
 	where().prop("station.key").like().val("AA%").and().prop("model.make.key").eq().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
     @Test
@@ -47,9 +47,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
-	System.out.println(entQry(shortcutQry).sql());
-	System.out.println(entQry(explicitQry).sql());
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
     @Test
@@ -65,9 +63,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 	where().prop("s.key").like().val("AA%").and().prop("model.make.key").eq().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
-	System.out.println(entQry(shortcutQry).sql());
-	System.out.println(entQry(explicitQry).sql());
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
     @Test
@@ -82,9 +78,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(ORG4).as("s.parent").on().prop("s.parent").eq().prop("s.parent.id"). //
 	where().prop("s.parent.key").like().val("AA%").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
-	System.out.println(entQry(shortcutQry).sql());
-	System.out.println(entQry(explicitQry).sql());
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
 
@@ -102,9 +96,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(ORG4).as("s.parent").on().prop("s.parent").eq().prop("s.parent.id"). //
 	where().prop("s.parent.key").like().val("AA%").and().prop("model.make.key").eq().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
-	System.out.println(entQry(shortcutQry).sql());
-	System.out.println(entQry(explicitQry).sql());
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
     @Test
@@ -118,7 +110,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
     @Test
@@ -133,7 +125,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
     @Test
@@ -148,7 +140,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
     @Test
@@ -163,7 +155,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
     @Test
@@ -180,7 +172,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(MAKE).as("rv.model.make").on().prop("rv.model.make").eq().prop("rv.model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").and().prop("rv.model.make.key").ne().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
     @Test
@@ -199,7 +191,7 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(MAKE).as("rv2.model.make").on().prop("rv2.model.make").eq().prop("rv2.model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").and().prop("rv2.model.make.key").ne().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 
     @Test
@@ -218,6 +210,6 @@ public class QuerySourcesEnhancementTest extends BaseEntQueryTCase {
 	leftJoin(MAKE).as("rv2.model.make").on().prop("rv2.model.make").eq().prop("rv2.model.make.id"). //
 	where().prop("model.make.key").eq().val("MERC").and().prop("rv2.model.make.key").ne().val("MERC").model();
 
-	assertEquals("Incorrect list of unresolved props", entQry(explicitQry), entQry(shortcutQry));
+	assertEquals("Incorrect list of unresolved props", entResultQry(explicitQry), entResultQry(shortcutQry));
     }
 }
