@@ -121,8 +121,24 @@
 
   \subsection{Entity Query Language}
   
+  The platform ensures an effective technological support of the object-oriented programming approach, which underpins the provided development model.
+  One of the principal solutions incorporated into the platform is \emph{Entity Query Language} -- a declarative query language based on SQL and provides a number of significant enhancements. 
+  The primary objective of these enhancements is the support for working with business entities in a natural for object-oriented programming way, which ensures effective and ergonomic means for implementing business solutions.
+  
+  One of the key benefits of the object-relational paradigm for data management is its clarity and simplicity for developing applications.
+  Object-orientation provides excellent readability of algorithms implementing the business logic, significantly reduces the number of programming errors and ensures data integrity at a high level.
+  
+  Entity Query Language (EQL) represents an internal Java DSL, which embraces the fluent interface concept and object composition to provide a type safe query language that matches the data processing power of SQL, but exceeds it in clarity and expressiveness.
+  This provides a natural way to express data processing instructions in terms of the business domain instead of the low level data structures.
+  The implementation of EQL as an internal DSL automatically takes advantage of modern Java IDEs, which provide code highlighting, code insight etc.
+  This favourably differentiates EQL from alternatives such as Hibernate Query Language where queries are expressed as strings without any semantics for an IDE or compiler to validate them at design time.
+  Thus, every EQL expression is fully validated at design/compile time naturally fitting into the Java's statically typed nature.
+  
+  An example of an EQL expression is provided as code listing~\ref{lst:eql}.  
+  It calculates the average yearly (over the period from 2009 to 2011) maintenance cost of vehicles manufactured by ``MERCEDES'' and their model names starting with ``315'', ``316'' or ``VITO'', for every sector of division ``NORTH''\footnote{This example is specific to a certain fleet domain and the full comprehension of the query implies good understanding of that domain.}.  
+
   \lstset{language=Java,morekeywords={val,select,where,prop,eq,and,begin,end,starts_with,any_of_values,values,or,yield_and_group,as,yield,begin_expr,sum_of,div,end_expr,model_as_aggregate,year_of,in},numbers=left, numberstyle=\tiny, basicstyle=\scriptsize, stepnumber=1, numbersep=5pt, keywordstyle=\color{dkgreen}, stringstyle=\color{blue}}
-  \begin{code}{Entity Query Example}{label1}
+  \begin{code}{Entity Query Example}{lst:eql}
   \begin{lstlisting}
     select(WorkOrder.class).
     where().
@@ -135,22 +151,34 @@
     prop("vehicle.station.zone.sector.division.key").eq().val("NORTH").
     yield_and_group().prop("vehicle.station.zone.sector").as("sector").
     yield().
-    begin_expr().
-      sum_of().prop("actualCost").div().val(3).
-    end_expr().as("averageYearlyMaintenanceCostPerSector").
+      begin_expr().
+	sum_of().prop("actualCost").div().val(3).
+      end_expr().as("averageYearlyMaintenanceCostPerSector").
     model_as_aggregate();
   \end{lstlisting}
   \end{code}
   
+  The demonstrated EQL query is interesting in many ways.
+  It shows proper support for working at the domain level referencing the nested structure of domain entities, multiple EQL constructs (aggregation, grouping, logical operations) and the capability of working with expressions\footnote{
+    Expressions in TG are implemented as an internal DSL for the use by developers as well as external DSL for the use directly from business applications by power users. 
+    All arithmetical operations, specially provided functions (e.g. year\_of(date)) and aggregations can be represented as type safe expressions.
+  }
+  (summation of property actualCost divided by 3).  
   
+  Less obvious, but very powerful feature demonstrated in this query, is the ability to produce dynamically composed results that do not necessarily match any of the pre-built domain entity types.
+  This capability is critical for many real-life business requirements where some business logic or analysis may require ad-hoc data retrieval without modifying the domain itself.
+  The declarative nature of EQL significantly simplifies creation of complex queries with nested sub-queries, grouping and aggregation, which is extremely important for implementing analytical solutions.  
 
-%  // calculates the average yearly maintenance cost (for the last 3 years) per sectors of NORTH division. Only vehicles of MERCEDES make and models starting from 315 or 316 or VITO model are taken into account.
-%         select(WorkOrder.class).
-%         where(). //
-%         prop("vehicle.model.make.key").eq().val("MERCEDES").and().
-%         begin().prop("vehicle.model.key").starts_with().any_of_values("315", "316" ).or().prop("vehicle.model.key").eq().val("VITO").end().and().
-%         year_of().prop("actualStart").in().values(2009, 2010, 2011).and().
-%         prop("vehicle.station.zone.sector.division.key").eq().val("NORTH").
-%         yield_and_group().prop("vehicle.station.zone.sector").as("sector").
-%         yield().begin_expr().sum_of().prop("actualCost").div().val(3).end_expr().as("averageYearlyMaintenanceCostPerSector").model_as_aggregate();
+  Entity Query Language fully reuses the metadata associated with domain entity types.
+  This facilitates dynamic optimisation of query execution at the databases level, which is possible due to semantic transition between metadata of the domain and SQL.
+  For example, if some property of a domain entity, which represents a reference to other domain entity, is declared as required, then the query execution mechanism would recognise such reference as SQL's \emph{INNER JOIN} instead of \emph{OUTER JOIN}, which significantly speeds up query execution.
 
+  Developers working directly with SQL always ensure that only the required data should be returned as the result of query execution.  
+  Unlike, many other existing object-relational technologies, the platform supports a concept of the \emph{explicit fetching strategy}.
+  This separates actual query expressions, which indicate how to find data, and the fetching models, which indicate what data exactly needs to be returned providing a full control over the initialisation of the resulting object graph.
+  So, depending on business requirements the same EQL query can be executed with different fetch models significantly reducing both the memory footprint and load time.  
+
+  As mentioned before, the development model hides many technical details including the data communication mechanism.
+  This completely removes the conceptual mismatch between the ways of querying the domain against databases and Web resources.
+  Any EQL query can be seamlessly executed as part of either client- or server-side applications.
+  Thus, EQL provides a uniform high-level domain oriented communication concept.
