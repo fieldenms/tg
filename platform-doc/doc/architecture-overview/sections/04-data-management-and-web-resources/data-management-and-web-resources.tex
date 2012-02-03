@@ -9,45 +9,115 @@
   
   There are several well accepted data processing paradigms currently in use for developing business applications.
   However, there is no single best solution that would satisfy all business requirements.
-  It can be observed that most if not all all availalbe solutions implement different combinations of data management paradigms, which represent compromises to improve certain specifically targeted characteristics.
+  It can be observed that most if not all all available solutions implement different combinations of data management paradigms, which represent compromises to improve certain specifically targeted characteristics.
 
-  With the increase of the role of the Internet as a communication mechanism for Enterprises as well as the maturity of many Internet technologies, business applications are required to process data not only by directly communicating with databases\footnote{Usually RDBMS.}, but also distibuted across the Web resources.
+  With the increase of the role of the Internet as a communication mechanism for Enterprises as well as the maturity of many Internet technologies, business applications are required to process data not only by directly communicating with databases\footnote{Usually RDBMS.}, but also distributed across the Web resources.
   This introduced an additional layer of complexity where in most cases developers need to switch between paradigms of working with relational databases and Web resources.
 
-  The Triden Genesis platform introduces its own data processing solution by reusing some of existing paradigms in its own unique way to provide a uniform programming model for data processing against both databases and web resources\footnote{Web resources developed using the Trident Genesis platform.}.
-  All data CRUD (create, request\footnote{Officially, ``R'' stands for \emph{read} or \emph{retrieve}, but here we'd like to emphasise a more rich functionality behind the ``R'' in TG as desctibed farther in the text.}, update, delete) operations utilise pure object-oriented approach combined with carefully design internal DSL called ``Entity Query Language''.
+  The Trident Genesis platform introduces its own data processing solution by reusing some of existing paradigms in its own unique way to provide a uniform programming model for data processing against both databases and web resources\footnote{Web resources developed using the Trident Genesis platform.}.
+  All data CRUD (create, request\footnote{Officially, ``R'' stands for \emph{read} or \emph{retrieve}, but here we'd like to emphasise a more rich functionality behind the ``R'' in TG as described farther in the text.}, update, delete) operations utilise pure object-oriented approach combined with carefully design internal DSL called ``Entity Query Language''.
   This means that developers do not operate on database records or web resources directly.
   Instead they are confined to the much higher conceptual level of business domain models and the query language that operates directly on these models.
   
   For example, in order to modify persisted data there is no need to write complex low level queries and translated their result into the business domain model.
   Persisted business entities are requested declaratively, modified by changing their properties at the object level and saved also declaratively.
-  The platform fully takes care of handling low technical details for translating decleratively expressed actions into corresponding Web or database related API calls.
-  Such development model provides a convenient way to implement business rules ralated to changes of domain entities such as validation, before and after save logic, which can lead to modification of additional entities if required etc.
+  The platform fully takes care of handling low technical details for translating declaratively expressed actions into corresponding Web or database related API calls.
+  Such development model provides a convenient way to implement business rules related to changes of domain entities such as validation, before and after save logic, which can lead to modification of additional entities if required etc.
   It also fully supports both \emph{remote} and \emph{local}\footnote{The \emph{remote} here means the server-side application, and \emph{local} -- the client-side application running on users' local machines.} data processing, which provides developers with a flexible way to leverage computational resources by controlling how ``thin'' should their business client and server applications be.
 
   \subsection{Client- \& Server-Side Applications}
-  With an advent of multi-tier software architecture, the three-tier architecture became a defacto standard for developing web-enabled applications.
+  With an advent of multi-tier software architecture, the three-tier architecture became a de-facto standard for developing web-enabled applications.
   The current state and trend in Web development technologies is twofold: on one side there is an ``in-browser HTML'' model, where client applications are served as a web page, on another -- rich client application model, where client applications are fully capable desktop applications.
   Both models have their strengths and weaknesses.
 
   As mentioned above, the enforces by the platform programming model strives for uniformity. 
   The platform follows the path of reducing the number of concepts and technologies needed for development of business applications.
-  One of the key aspects of this, is the use of Java as the only programming language required to develope business applications with TG.
-  This is achieved by utilising the RIA paradigm for developing both client and server applications using ony the Java programming language.
+  One of the key aspects of this, is the use of Java as the only programming language required to develop business applications with TG.
+  This is achieved by utilising the RIA paradigm for developing both client and server applications using only the Java programming language.
   
-  From a practical perspective of software development this has a siginificant advantage over the ``in-browser HTML'' model.  
-  For example, such important activities as debugging and profiling are performed in a familiar environment of the preferred IDE, where developers think in terms of their primary programming language instead of handling the complexity of context switching between several languages\footnote{E.g. Java for the server applicaiton and Java Script for the client application.}.
+  From a practical perspective of software development this has a significant advantage over the ``in-browser HTML'' model.  
+  For example, such important activities as debugging and profiling are performed in a familiar environment of the preferred IDE, where developers think in terms of their primary programming language instead of handling the complexity of context switching between several languages\footnote{E.g. Java for the server application and Java Script for the client application.}.
   At the same time, the end-users of business applications benefit from the power of the fully fledged JVM utilised by the client-side application to provide high performance and excellent usability experience.
   
   The server-side represents a set of loosely coupled Web resources that adhere to principles of the Resource Oriented Architecture.
-  This architectural style lends itself very well to develop scalable business applications, which can leverage different deployment infrastructures -- from a single server machine to a cluster of multiple machines and the clould.
-  The provided development model hides the technical complexity of developing Web resources\footnote{Platform supports the development of custom Web resources if requried, but such need is unlikely due to rich sematics of the provided domain level abstractions.} by treating all domain entities as such.
-  The platfrom understands the application execution context automatically choosing the appropriate handling mechanism of domain entities either as ordinary Java objects in the local memory or as Web resources residing at the server side.
+  This architectural style lends itself very well to develop scalable business applications, which can leverage different deployment infrastructures -- from a single server machine to a cluster of multiple machines and the cloud.
+  The provided development model hides the technical complexity of developing Web resources\footnote{Platform supports the development of custom Web resources if required, but such need is unlikely due to rich semantics of the provided domain level abstractions.} by treating all domain entities as such.
+  The platform understands the application execution context automatically choosing the appropriate handling mechanism of domain entities either as ordinary Java objects in the local memory or as Web resources residing at the server side.
   
-  For example, if the business application attempts to save a domain enity\footnote{It could either be persistent or synthetic entity, which is possible due to the platform's uniform development model.}, the underlying platform mechanism would determine the origin of the request, resulting in either a call to the database for the server-side application or a corresponding Web resource for the client-side application.
-  This all is acompanied by automatic transaction demarcation ensuring referential integrity of the data.
+  For example, if the business application attempts to save a domain entity\footnote{It could either be persistent or synthetic entity, which is possible due to the platform's uniform development model.}, the underlying platform mechanism would determine the origin of the request, resulting in either a call to the database for the server-side application or a corresponding Web resource for the client-side application.
+  All of this is accompanied by automatic transaction demarcation ensuring referential integrity of the data.
 
-  
+   \begin{figure}[!h]
+    \centering    
+    \begin{tikzpicture}[>=latex']
+      \tikzset{
+	  outercore/.style={circle, fill=blue!50!white, inner sep=0em, minimum size=0.6cm},
+	  core/.style={circle, shade, ball color=green!50!white, inner sep=0em, minimum size=0.3cm},
+	  score/.style={circle, fill=green!50!black, inner sep=0em, minimum size=0.3cm},
+	  outer/.style={circle, fill=blue!50!white, inner sep=0em, minimum size=2.3cm},
+	  inner/.style={circle, fill=green!50!white, inner sep=0em, minimum size=1.5cm},
+	  trans/.style={circle, fill=yellow!50!orange, inner sep=0em, minimum size=2.7cm}
+      }
+
+      %-----#1 height, #2 width, #3 aspect, #4 name of the node, #5
+      %-----coordinate, #6 label
+      \def\aboxl[#1,#2,#3,#4,#5]#6{%
+	\node[draw, cylinder, alias=cyl, shape border rotate=90, aspect=#3, %
+	minimum height=#1, minimum width=#2, outer sep=-0.5\pgflinewidth, %
+	color=orange!60!black, left color=yellow!80, right color=yellow!80!orange, middle
+	color=white] (#4) at #5 {};%
+	\node at #5 [orange!80!black] {#6};%
+	\fill [yellow!30] let \p1 = ($(cyl.before top)!0.5!(cyl.after top)$), \p2 =
+	(cyl.top), \p3 = (cyl.before top), \n1={veclen(\x3-\x1,\y3-\y1)},
+	\n2={veclen(\x2-\x1,\y2-\y1)} in (\p1) ellipse (\n1 and \n2); }
+      
+      \begin{scope}[pattern=dots]
+	\node (o) at (0, -0.25) [outer, opacity=0.8][postaction={pattern=north west lines,pattern color=blue!20}] {};      	
+	\node (i) at (0, -0.25) [inner, opacity=0.8,][postaction={pattern=north west lines,pattern color=green!20}] {} node [below,text=blue!50!black,yshift=-1.7cm] {Client-Side};
+
+	\begin{scope}[scale=0.3]
+	  \node (t) at (0,0) [outercore, opacity=0.8][postaction={pattern=north west lines,pattern color=green!20}] {};	
+	  \node at (0,0) [core, opacity=0.5][postaction={pattern=north west lines,pattern color=green!20}] {};
+
+	  \node (r) at (1,-1.2) [outercore, opacity=0.8][postaction={pattern=north west lines,pattern color=green!20}] {};	
+	  \node at (1,-1.2) [core, opacity=0.5][postaction={pattern=north west lines,pattern color=green!20}] {};
+
+	  \node (l) at (-1,-1.2) [outercore, opacity=0.8][postaction={pattern=north west lines,pattern color=green!20}] {};	
+	  \node at (-1,-1.2) [score][postaction={pattern=north west lines,pattern color=green!20}] {};
+	\end{scope}
+      \end{scope}
+
+      \begin{scope}[xshift=8cm]       
+	\node[trans] at (0, -0.25) {} node [above,text=orange!80!black, scale=0.7,yshift=1.7cm] {Transaction Demarcation};;
+	\node (o2) at (0, -0.25) [outer, opacity=0.8] {};
+	\node (i2) at (0, -0.25) [inner, opacity=0.8] {} node [below,text=blue!50!black,yshift=-1.7cm] {Server-Side};
+
+	\begin{scope}[scale=0.3]
+	  \node (t2) at (0,0) [outercore, opacity=0.8] {};	
+	  \node (t2c) at (0,0) [core, opacity=0.5] {};
+
+	  \node (r2) at (1,-1.2) [outercore, opacity=0.8] {};	
+	  \node (r2c) at (1,-1.2) [core, opacity=0.5] {};
+
+	  \node (l2) at (-1,-1.2) [outercore, opacity=0.8] {};	
+	  \node at (-1,-1.2) [score] {};
+	\end{scope}	
+      \end{scope}     
+      \begin{scope}[xshift=3.93cm,yshift=-0.3cm]
+	\node[shape=double arrow,draw,minimum height=9cm,scale=0.6] {CRUD Operations};
+      \end{scope}
+      \begin{scope}[xshift=12cm,yshift=-0.5cm]
+	\aboxl[2.0cm,1.5cm,1.6,a1,(0,0)] {DB};
+	\node [xshift=-0.6cm, yshift=0.5cm] (mark1) {};
+	\node [xshift=-0.6cm, yshift=-0.3cm] (mark2) {};
+      \end{scope}
+
+
+      \fill [very thick, green!50!black,->,out=30,in=160] (t2c.east) edge (mark1.west);      
+      \fill [very thick, green!50!black,->,out=-30,in=-160] (r2c.east) edge (mark2.west);
+    \end{tikzpicture}   
+  \end{figure}
+
 
   \subsection{Entity Query Language}
   
