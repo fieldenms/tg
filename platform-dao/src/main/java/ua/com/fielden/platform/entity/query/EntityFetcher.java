@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Query;
@@ -20,7 +19,6 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.QueryModelResult.ResultPropertyInfo;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -95,8 +93,7 @@ public class EntityFetcher<E extends AbstractEntity> {
      */
     @SessionRequired
     private List<EntityContainer<E>> listContainersAsIs(final QueryModelResult modelResult, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-	final SortedSet<ResultPropertyInfo> getYieldedPropsInfo = modelResult.getYieldedPropsInfo();
-	final EntityTree resultTree = new EntityResultTreeBuilder(mappingsGenerator).buildTree(modelResult.getResultType(), getYieldedPropsInfo);
+	final EntityTree resultTree = new EntityResultTreeBuilder(mappingsGenerator).buildTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
 
 	final Query query = produceHibernateQuery(modelResult.getSql(), getScalarInfo(resultTree), modelResult.getParamValues());
 	logger.info("query:\n   " + query.getQueryString() + "\n");

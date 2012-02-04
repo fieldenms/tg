@@ -15,7 +15,6 @@ import org.hibernate.usertype.CompositeUserType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -35,7 +34,7 @@ import com.google.inject.Injector;
  *
  */
 public class MappingsGenerator {
-    private static List<String> specialProps = Arrays.asList(new String[] { "id", "key", "desc", "version" });
+    private static List<String> specialProps = Arrays.asList(new String[] { "id", "key", "version" });
 
     private final Map<Class, Class> hibTypesDefaults = new HashMap<Class, Class>();
     private Injector hibTypesInjector;
@@ -119,10 +118,6 @@ public class MappingsGenerator {
 	return getPlainProperty("key", column, TypeFactory.basic(AnnotationReflector.getKeyType(entityType).getName()).getName());
     }
 
-    private String getSimpleDesc() {
-	return getPlainProperty("desc", ddlGenerator.desc, "string");
-    }
-
     /**
      *
      * @param propName
@@ -132,8 +127,7 @@ public class MappingsGenerator {
      */
     private String getPlainProperty(final String propName, final String propColumn, final String hibTypeName) {
 	final StringBuffer sb = new StringBuffer();
-	final String columnName = !StringUtils.isEmpty(propColumn) ? propColumn : propName.toUpperCase() + "_";
-	sb.append("\t<property name=\"" + propName + "\" column=\"" + columnName + "\"");
+	sb.append("\t<property name=\"" + propName + "\" column=\"" + propColumn + "\"");
 	if (!StringUtils.isEmpty(hibTypeName)) {
 		sb.append(" type=\"" + hibTypeName + "\"");
 	}
@@ -175,7 +169,7 @@ public class MappingsGenerator {
 	final String[] propNames = hibType.getPropertyNames();
 	final List<String> result = new ArrayList<String>();
 	for (final String propName : propNames) {
-	    final String mapToColumn = AnnotationReflector.getPropertyAnnotation(MapTo.class, rc, propName).value();
+	    final String mapToColumn = getMapTo(rc, propName).value();
 	    result.add(StringUtils.isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn);
 	}
 	return result;
@@ -212,7 +206,7 @@ public class MappingsGenerator {
 	    if (isOneToOne(entityType)) {
 		return getOneToOneProperty("key", AnnotationReflector.getKeyType(entityType));
 	    } else {
-		final String keyColumnOverride = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType).keyColumn();
+		final String keyColumnOverride = getMapEntityTo(entityType).keyColumn();
 		if (!StringUtils.isEmpty(keyColumnOverride)) {
 		    return getSimpleKeyWithColumn(keyColumnOverride, entityType);
 		} else {
@@ -234,9 +228,6 @@ public class MappingsGenerator {
 	    sb.append(keyMapping);
 	}
 
-	if (AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType)/* && !isOneToOne(entityType)*/) {
-	    sb.append(getSimpleDesc());
-	}
 	sb.append(getClassMappingPartForCommonProps(entityType));
 
 	sb.append("</class>\n");
@@ -248,12 +239,12 @@ public class MappingsGenerator {
 	final List<Field> properties = EntityUtils.getPersistedProperties(entityType);
 	for (final Field field : properties) {
 	    if (!specialProps.contains(field.getName())) {
-		final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, entityType, field.getName());
-		if (mapTo != null) {
+		final MapTo mapTo = getMapTo(entityType, field.getName());
+//		if (mapTo != null) {
 		    final String columnName = !StringUtils.isEmpty(mapTo.value()) ? mapTo.value(): field.getName().toUpperCase() + "_";
 
 		    if (Collection.class.isAssignableFrom(field.getType())) {
-			sb.append(getSet(field.getName(), columnName, PropertyTypeDeterminator.determinePropertyType(entityType, field.getName())));
+			sb.append(getSet(field.getName(), columnName, getPropType(entityType, field.getName())));
 		    } else if (EntityUtils.isPersistedEntityType(field.getType())) {
 			sb.append(getManyToOneProperty(field.getName(), columnName, field.getType()));
 		    } else if (!StringUtils.isEmpty(mapTo.typeName())) {
@@ -263,13 +254,29 @@ public class MappingsGenerator {
 		    } else {
 			sb.append(getPlainProperty(field, columnName, hibTypesDefaults.get(field.getType())));
 		    }
-		} else if (!Collection.class.isAssignableFrom(field.getType())) {
-		    System.out.println(" " + entityType.getSimpleName() + " :: " + field.getName() + " has no MapTo");
-		}
+//		} else if (!Collection.class.isAssignableFrom(field.getType())) {
+//		    System.out.println(" " + entityType.getSimpleName() + " :: " + field.getName() + " has no MapTo");
+//		}
 	    }
 	}
 
 	return sb.toString();
+    }
+
+    private MapEntityTo getMapEntityTo(final Class entityType) {
+	return AnnotationReflector.getAnnotation(MapEntityTo.class, entityType);
+    }
+
+    private MapTo getMapTo(final Class entityType, final String propName) {
+	return AnnotationReflector.getPropertyAnnotation(MapTo.class, entityType, propName);
+    }
+
+    private Class getPropType(final Class parentType, final String propName) {
+	return PropertyTypeDeterminator.determinePropertyType(parentType, propName);
+    }
+
+    private Class getDefaultHibType(final Class parentType, final String propName) {
+	return hibTypesDefaults.get(getPropType(parentType, propName));
     }
 
     public Type determinePropertyHibType(final Class<?> parentType, final String propName) throws Exception {
@@ -279,7 +286,7 @@ public class MappingsGenerator {
 	    final CompositeUserType hibTypeInstance = (CompositeUserType) hibTypesInjector.getInstance(parentType);
 	    return hibTypeInstance.getPropertyTypes()[Arrays.asList(hibTypeInstance.getPropertyNames()).indexOf(propName)];
 	} else {
-	    final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, parentType, propName);
+	    final MapTo mapTo = getMapTo(parentType, propName);
 	    if (!StringUtils.isEmpty(mapTo.typeName())) {
 		return TypeFactory.basic(mapTo.typeName());
 	    } else {
@@ -299,9 +306,9 @@ public class MappingsGenerator {
 	if (EntityAggregates.class.equals(parentType) || IUserTypeInstantiate.class.isAssignableFrom(parentType) || ICompositeUserTypeInstantiate.class.isAssignableFrom(parentType)) {
 	    return null;
 	} else {
-	    final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, parentType, propName);
+	    final MapTo mapTo = getMapTo(parentType, propName);
 	    if (StringUtils.isEmpty(mapTo.typeName())) {
-		final Class hibType = hibTypesDefaults.get(PropertyTypeDeterminator.determinePropertyType(parentType, propName));
+		final Class hibType = getDefaultHibType(parentType, propName);
 		final Object hibTypeInstance = hibType == null ? null : hibType.newInstance();
 		return hibTypeInstance instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibTypeInstance : null;
 	    } else {
@@ -315,9 +322,9 @@ public class MappingsGenerator {
 	if (EntityAggregates.class.equals(parentType)) {
 	    return null;
 	} else {
-	    final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, parentType, propName);
+	    final MapTo mapTo = getMapTo(parentType, propName);
 	    if (Class.class.equals(mapTo.userType())) {
-		final Class hibType = hibTypesDefaults.get(PropertyTypeDeterminator.determinePropertyType(parentType, propName));
+		final Class hibType = getDefaultHibType(parentType, propName);
 		final Object hibTypeInstance = hibType == null ? null : hibType.newInstance();
 		return hibTypeInstance instanceof ICompositeUserTypeInstantiate ? hibTypeInstance.getClass() : null;
 	    } else {

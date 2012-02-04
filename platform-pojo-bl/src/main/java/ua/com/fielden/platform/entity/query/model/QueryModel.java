@@ -5,7 +5,7 @@ import java.util.List;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
-public class QueryModel {
+public abstract class QueryModel {
     private final List<Pair<TokenCategory, Object>> tokens;
     private Class resultType;
 
