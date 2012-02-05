@@ -132,13 +132,13 @@
   This provides a natural way to express data processing instructions in terms of the business domain instead of the low level data structures.
   The implementation of EQL as an internal DSL automatically takes advantage of modern Java IDEs, which provide code highlighting, code insight etc.
   This favourably differentiates EQL from alternatives such as Hibernate Query Language where queries are expressed as strings without any semantics for an IDE or compiler to validate them at design time.
-  Thus, every EQL expression is fully validated at design/compile time naturally fitting into the Java's statically typed nature.
+  Thus, every EQL query is fully validated at design/compile time naturally fitting into the Java's statically typed nature.
   
-  An example of an EQL expression is provided as code listing~\ref{lst:eql}.  
+  An example of an EQL query is provided as code listing~\ref{lst:eql}.  
   It calculates the average yearly (over the period from 2009 to 2011) maintenance cost of vehicles manufactured by ``MERCEDES'' and their model names starting with ``315'', ``316'' or ``VITO'', for every sector of division ``NORTH''\footnote{This example is specific to a certain fleet domain and the full comprehension of the query implies good understanding of that domain.}.  
 
   \lstset{language=Java,morekeywords={val,select,where,prop,eq,and,begin,end,starts_with,any_of_values,values,or,yield_and_group,as,yield,begin_expr,sum_of,div,end_expr,model_as_aggregate,year_of,in},numbers=left, numberstyle=\tiny, basicstyle=\scriptsize, stepnumber=1, numbersep=5pt, keywordstyle=\color{dkgreen}, stringstyle=\color{blue}}
-  \begin{code}{Entity Query Example}{lst:eql}
+  \begin{code}{EQL Query Example}{lst:eql}
   \begin{lstlisting}
     select(WorkOrder.class).
     where().
@@ -173,10 +173,19 @@
   This facilitates dynamic optimisation of query execution at the databases level, which is possible due to semantic transition between metadata of the domain and SQL.
   For example, if some property of a domain entity, which represents a reference to other domain entity, is declared as required, then the query execution mechanism would recognise such reference as SQL's \emph{INNER JOIN} instead of \emph{OUTER JOIN}, which significantly speeds up query execution.
 
+  The EQL execution mechanism works equally well with small and large datasets by supporting partitioned data loading.
+  This does not require any additional work on part of developers -- they just need to provide the query and the system would automatically execute it with the necessary level of granularity.
+  It is important that the platform does not rely on any RDBMS vendor proprietary features such as cursors, which might require keeping resulting datasets open in memory.
+  Instead, the EQL execution mechanism automatically enhances queries to retrieve data sequentially.
+  This approach naturally fits into the stateless Resources Oriented Architecture of the platform to properly support scalability of TG-based applications.
+
   Developers working directly with SQL always ensure that only the required data should be returned as the result of query execution.  
-  Unlike, many other existing object-relational technologies, the platform supports a concept of the \emph{explicit fetching strategy}.
-  This separates actual query expressions, which indicate how to find data, and the fetching models, which indicate what data exactly needs to be returned providing a full control over the initialisation of the resulting object graph.
-  So, depending on business requirements the same EQL query can be executed with different fetch models significantly reducing both the memory footprint and load time.  
+  Trident Genesis supports fine-tuning of EQL queries that match flexibility of SQL.
+  Unlike, many other existing object-relational technologies that either follow the lazy-loading model\footnote{
+  This causes severe performance issues known as ``$n+1$ request'', which is especially dangerous when the technology is used by novice developers.}
+  or provide ways to specify fetching as part of queries\footnote{Or even more restrictively -- as part of the object-relational mapping.}, the platform supports a concept of the \emph{explicit fetching strategy}.
+  This separates EQL queries, which indicate how to find data, from the fetching models, which indicate what data exactly needs to be returned providing a full control over the resulting object graph initialisation.
+  So, depending on business requirements the same EQL query can be executed with different fetch models, which significantly reduces both the load time and memory footprint.
 
   As mentioned before, the development model hides many technical details including the data communication mechanism.
   This completely removes the conceptual mismatch between the ways of querying the domain against databases and Web resources.
