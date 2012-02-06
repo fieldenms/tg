@@ -34,19 +34,28 @@ public class EntQuerySourcesEnhancer {
 	return predecessorAlias == null ? propAlias : predecessorAlias + "." + propAlias;
     }
 
-    public SortedSet<PropTree> produceSourcesTree(final IEntQuerySource entQrySource, final boolean parentLeftJoinLegacy, final Map<String, Set<String>> propGroups/*final Set<String> props*/, final EntQuery holder) {
+    public SortedSet<PropTree> produceSourcesTree(final IEntQuerySource entQrySource, final boolean parentLeftJoinLegacy, final Map<String, Set<String>> propGroups, final EntQuery holder) {
 	final SortedSet<PropTree> result = new TreeSet<PropTree>();
 
-//	for (final Map.Entry<String, Set<String>> entry : determinePropGroups(props).entrySet()) {
 	for (final Map.Entry<String, Set<String>> entry : propGroups.entrySet()) {
 	    if (entry.getValue().size() > 0) {
 		final Class propType = entQrySource.propType(entry.getKey());
 
-		final boolean propLeftJoin = parentLeftJoinLegacy
-			|| !(EntityUtils.isPropertyPartOfKey(entQrySource.sourceType(), entry.getKey()) || EntityUtils.isPropertyRequired(entQrySource.sourceType(), entry.getKey()));
+		final boolean propLeftJoin = parentLeftJoinLegacy || //
+			!(EntityUtils.isPropertyPartOfKey(entQrySource.sourceType(), entry.getKey()) || EntityUtils.isPropertyRequired(entQrySource.sourceType(), entry.getKey()));
 
 		if (EntityUtils.isPersistedEntityType(propType)) {
-		    result.add(new PropTree(new EntQuerySourceFromEntityType(propType, composeAlias(entQrySource.getAlias(), entry.getKey()), true), propLeftJoin, produceSourcesTree(new EntQuerySourceFromEntityType(propType, composeAlias(entQrySource.getAlias(), entry.getKey()), true), propLeftJoin, determinePropGroups(entry.getValue()), holder), holder));
+		    final EntQuerySourceFromEntityType source = new EntQuerySourceFromEntityType(propType, composeAlias(entQrySource.getAlias(), entry.getKey()), true);
+
+		    result.add(new PropTree(//
+			    source, //
+			    propLeftJoin, //
+			    produceSourcesTree( //
+				    source, //
+				    propLeftJoin, //
+				    determinePropGroups(entry.getValue()), //
+				    holder), //
+			    holder));
 		}
 	    }
 	}

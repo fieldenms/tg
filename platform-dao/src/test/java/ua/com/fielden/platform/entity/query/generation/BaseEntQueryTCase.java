@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
@@ -25,12 +27,14 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import static org.junit.Assert.assertEquals;
 
 public class BaseEntQueryTCase {
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
     protected static final Class<TgVehicle> VEHICLE = TgVehicle.class;
     protected static final Class<TgVehicleModel> MODEL = TgVehicleModel.class;
     protected static final Class<TgVehicleMake> MAKE = TgVehicleMake.class;
+    protected static final Class<TgFuelUsage> FUEL_USAGE = TgFuelUsage.class;
     protected static final Class<TgOrgUnit5> ORG5 = TgOrgUnit5.class;
     protected static final Class<TgOrgUnit4> ORG4 = TgOrgUnit4.class;
     protected static final Class<TgOrgUnit3> ORG3 = TgOrgUnit3.class;
@@ -39,6 +43,7 @@ public class BaseEntQueryTCase {
     protected static final Class<String> STRING = String.class;
     protected static final Class<Long> LONG = Long.class;
     protected static final Class<BigInteger> BIG_INTEGER = BigInteger.class;
+    protected static final Class<BigDecimal> BIG_DECIMAL = BigDecimal.class;
 
     private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
 
@@ -107,4 +112,13 @@ public class BaseEntQueryTCase {
     protected final List<List<PropResolutionInfo>> compose(final List<PropResolutionInfo> ...srcLists) {
 	return Arrays.asList(srcLists);
     }
+
+    private static final String message = "Query models are different!";
+
+    public static void assertModelsEquals(final QueryModel shortcutModel, final QueryModel explicitModel) {
+	final EntQuery shortcutQry = entResultQry(shortcutModel);
+	final EntQuery explicitQry = entResultQry(explicitModel);
+	assertEquals((message + " exp: " + shortcutQry.toString() + " act: " + explicitQry.toString()), shortcutQry, explicitQry);
+    }
+
 }

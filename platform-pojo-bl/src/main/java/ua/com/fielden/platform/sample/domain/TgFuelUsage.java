@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -30,6 +31,23 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     @CompositeKeyMember(2)
     @MapTo("LAST_READING_DATE")
     private Date readingDate;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Fuel Qty", desc = "Fuel Qty")
+    private BigDecimal qty;
+
+    @Observable
+    public TgFuelUsage setQty(final BigDecimal qty) {
+	this.qty = qty;
+	return this;
+    }
+
+    public BigDecimal getQty() {
+	return qty;
+    }
+
+
 
 
     /////////////////////////////////////////////

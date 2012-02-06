@@ -232,9 +232,7 @@ public class EntQuery implements ISingleOperand {
 
     private List<EntQueryCompoundSourceModel> generateImplicitSources(final IEntQuerySource source, final boolean leftJoined) {
 	final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
-//	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, entQrySourcesEnhancer.determinePropGroups(extractNames(source.getReferencingProps())), this);
-	final Set<PropTree> propTrees = entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, source.determinePropGroups(), this);
-	for (final PropTree propTree : propTrees) {
+	for (final PropTree propTree : entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, source.determinePropGroups(), this)) {
 	    result.addAll(propTree.getSourceModels());
 	}
 	return result;

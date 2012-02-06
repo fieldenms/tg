@@ -9,6 +9,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
 public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
     private final List<EntQuery> models;
@@ -39,21 +40,18 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
     @Override
     protected Pair<String, Class> lookForProp(final String dotNotatedPropName) {
 	for (final Pair<String, String> candidate : prepareCandidates(dotNotatedPropName)) {
-	    final Pair<String, Class> candidateResult = test1(candidate.getKey(), candidate.getValue());
-	    //System.out.println("testing: " + candidate.getKey() + " and " + candidate.getValue());
+	    final Pair<String, Class> candidateResult = validateCandidate(candidate.getKey(), candidate.getValue());
 
 	    if (candidateResult != null) {
-		//System.out.println(candidateResult);
 		return candidateResult;
 	    }
 	}
+	return null;
 
 //	if (EntityUtils.isPersistedEntityType(sourceType())) {
 //	    return lookForPropOnPropTypeLevel("id", sourceType(), dotNotatedPropName);
 //	}
 //
-	return null;
-
 //	if (EntityUtils.isPersistedEntityType(sourceType())) {
 //	    return lookForPropOnPropTypeLevel(sourceType(), dotNotatedPropName);
 //	} else if (isEntityAggregates(sourceType())) {
@@ -63,19 +61,28 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 //	}
     }
 
-    private Pair<String, Class> test1(final String first, final String rest) {
+    private Pair<String, Class> validateCandidate(final String first, final String rest) {
 	final YieldModel firstLevelPropYield = model().getYield(first);
 	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query yields
 	    return null;
-	} else if (firstLevelPropYield.getType()/*.getOperand().type()*/ == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
+	} else if (firstLevelPropYield.getType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
 	    return StringUtils.isEmpty(rest) ? new Pair<String, Class>(first, null) : null;
 	} else if (!StringUtils.isEmpty(rest)) {
-	    return lookForPropOnPropTypeLevel(first, firstLevelPropYield.getType()/*.getOperand().type()*/, rest); //continue recursively to subproperties
+	    try {
+		return new Pair<String, Class>(first, determinePropertyType(firstLevelPropYield.getType(), rest));
+	    } catch (final Exception e) {
+		return null;
+	    }
 	} else {
-	    return new Pair<String, Class>(first, firstLevelPropYield.getType()/*.getOperand().type()*/);
+	    return new Pair<String, Class>(first, firstLevelPropYield.getType());
 	}
     }
 
+    /**
+     * Generates one dot.notated string from list of strings (subproperties).
+     * @param parts
+     * @return
+     */
     private static String joinWithDot(final List<String> parts) {
 	final StringBuffer sb = new StringBuffer();
 	for (final Iterator<String> iterator = parts.iterator(); iterator.hasNext();) {
@@ -103,7 +110,7 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	if (EntityUtils.isPersistedEntityType(sourceType())) {
 	    return super.propType(propSimpleName);
 	} else if (isEntityAggregates(sourceType())) {
-	    return model().getYield(propSimpleName).getType()/*.getOperand().type()*/;
+	    return model().getYield(propSimpleName).getType();
 	} else {
 	    throw new RuntimeException("Not yet supported");
 	}

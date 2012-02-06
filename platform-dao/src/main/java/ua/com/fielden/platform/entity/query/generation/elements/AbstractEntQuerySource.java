@@ -12,17 +12,24 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.equery.IQueryModelProvider;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 public abstract class AbstractEntQuerySource implements IEntQuerySource {
     /**
      * Business name for query source. Can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end).
      */
     protected final String alias;
+    /**
+     * List of props implicitly associated with given source (e.g. dot.notation is supported)
+     */
     private final List<PropResolutionInfo> referencingProps = new ArrayList<PropResolutionInfo>();
+
+    /**
+     * List of props explicitly associated with given source (e.g. each prop should have corresponding physically achievable item (sql column) within given source).
+     */
     private final List<PropResolutionInfo> finalReferencingProps = new ArrayList<PropResolutionInfo>();
     /**
      * Sql alias for query source table/query
@@ -33,6 +40,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
      */
     protected Map<String, String> sourceColumns = new HashMap<String, String>();
 
+    @Override
     public void assignSqlAlias(final String sqlAlias) {
 	this.sqlAlias = sqlAlias;
     }
@@ -49,6 +57,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	return AbstractEntity.class.isAssignableFrom(type) && IQueryModelProvider.class.isAssignableFrom(type);
     }
 
+    @Override
     public String getAlias() {
 	return alias;
     }
@@ -62,7 +71,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
     public void addFinalReferencingProp(final PropResolutionInfo prop) {
 	if (!prop.isImplicitId()) {
 	    	final Pair<String, String> propStructure = EntityUtils.splitPropByFirstDot(prop.getPropPart());
-		if (propStructure.getValue() != null && EntityUtils.isPersistedEntityType(PropertyTypeDeterminator.determinePropertyType(sourceType(), propStructure.getKey())) && !prop.allExplicit()) {
+		if (propStructure.getValue() != null && isPersistedEntityType(determinePropertyType(sourceType(), propStructure.getKey())) && !prop.allExplicit()) {
 	    	//if (!prop.allExplicit()) {
 		    throw new IllegalStateException("Property [" + prop.entProp + "] incorrectly resolved finally to source [" + this + "] as [" + prop + "]");
 		}
@@ -87,14 +96,6 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	return (sourceAlias != null && dotNotatedPropName.startsWith(sourceAlias + ".")) ? dotNotatedPropName.substring(sourceAlias.length() + 1) : null;
     }
 
-    protected Pair<String, Class> lookForPropOnPropTypeLevel(final String explicitPropPart, final Class parentType, final String dotNotatedPropName) {
-	try {
-	    return new Pair<String, Class>(explicitPropPart, determinePropertyType(parentType, dotNotatedPropName));
-	} catch (final Exception e) {
-	    return null;
-	}
-    }
-
     abstract Pair<String, Class> lookForProp(final String dotNotatedPropName);
 
     protected PropResolutionInfo propAsIs(final EntProp prop) {
@@ -114,7 +115,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
     }
 
     protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
-	if (EntityUtils.isPersistedEntityType(sourceType())) {
+	if (isPersistedEntityType(sourceType())) {
 	    return prop.getName().equalsIgnoreCase(getAlias()) ? new PropResolutionInfo(prop, getAlias(), null, true, Long.class, "") : null; // id property is meant here, but is it for all contexts?
 	} else {
 	    return null;
@@ -123,8 +124,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     @Override
     public Class propType(final String propSimpleName) {
-	//System.out.println("sourceType = " + sourceType().getSimpleName() + " prop = " + propSimpleName);
-	return PropertyTypeDeterminator.determinePropertyType(sourceType(), propSimpleName);
+	return determinePropertyType(sourceType(), propSimpleName);
     }
 
     @Override
@@ -153,35 +153,30 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	final PropResolutionInfo propAsIs = propAsIs(prop);
 	final PropResolutionInfo propAsAliased = propAsAliased(prop);
 	final PropResolutionInfo propAsImplicitId = propAsImplicitId(prop);
-//	System.out.println("propAsIs: " + propAsIs);
-//	System.out.println("propAsAliased: " + propAsAliased);
-//	System.out.println("propAsImplicitId: " + propAsImplicitId);
 
 	if (propAsIs == null && propAsAliased == null && propAsImplicitId == null) {
-//	    System.out.println("prop [" + prop.getName() + "] not found within type " + sourceType().getSimpleName());
 	    return null;
 	} else if (propAsIs != null && propAsAliased == null) {
-//	    System.out.println("prop [" + prop.getName() + "] found within type " + sourceType().getSimpleName() + " :AsIs: " + propAsIs);
 	    return propAsIs;
 	} else if (propAsAliased != null) {
-//	    System.out.println("prop [" + prop.getName() + "] found within type " + sourceType().getSimpleName() + " :AsAliased: " + propAsAliased);
 	    return propAsAliased;
 	} else if (propAsImplicitId != null) {
-//	    System.out.println("prop [" + prop.getName() + "] found within type " + sourceType().getSimpleName() + " :ImpId: " + propAsImplicitId);
 	    return propAsImplicitId;
 	} else {
 	    throw new RuntimeException("Unforeseen branch!");
 	}
     }
 
+    @Override
     public Map<String, Set<String>> determinePropGroups() {
 	final Set<PropResolutionInfo> dotNotatedPropNames = new HashSet<PropResolutionInfo>(getReferencingProps());
 
 	final Map<String, Set<String>> result = new HashMap<String, Set<String>>();
 	for (final PropResolutionInfo dotNotatedPropName : dotNotatedPropNames) {
-	    //final Pair<String, String> splitOfProperty = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
 	    final String first = dotNotatedPropName.isImplicitId() ? "id" : dotNotatedPropName.explicitPropPart;
-	    final String rest = (dotNotatedPropName.isImplicitId() || dotNotatedPropName.allExplicit()) ? "" : dotNotatedPropName.propPart.substring(dotNotatedPropName.explicitPropPart.length() + 1);
+	    final String rest = (dotNotatedPropName.isImplicitId() || dotNotatedPropName.allExplicit()) //
+		    ? "" : //
+		dotNotatedPropName.propPart.substring(dotNotatedPropName.explicitPropPart.length() + 1);
 
 	    Set<String> propGroup = result.get(first);
 	    if (propGroup == null) {

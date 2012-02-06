@@ -7,6 +7,7 @@ import java.util.List;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
 public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
     private final Class<? extends AbstractEntity> entityType;
@@ -51,7 +52,11 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
 
     @Override
     Pair<String, Class> lookForProp(final String dotNotatedPropName) {
-	return lookForPropOnPropTypeLevel(EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey(), sourceType(), dotNotatedPropName);
+	try {
+	    return new Pair<String, Class>(EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey(), determinePropertyType(sourceType(), dotNotatedPropName));
+	} catch (final Exception e) {
+	    return null;
+	}
     }
 
     @Override

@@ -57,6 +57,18 @@ public interface IEntQuerySource {
      */
     String sql();
 
+    /**
+     * Collects all values from given query source (assuming it is composed from query model(s))
+     * @return
+     */
+    List<EntValue> getValues();
+
+    /**
+     * Determines props and their subprops that require additional joined query source to become explicitly accessible.
+     * @return
+     */
+    Map<String, Set<String>> determinePropGroups();
+
     void addReferencingProp(PropResolutionInfo prop);
 
     List<PropResolutionInfo> getReferencingProps();
@@ -64,8 +76,4 @@ public interface IEntQuerySource {
     void addFinalReferencingProp(PropResolutionInfo prop);
 
     List<PropResolutionInfo> getFinalReferencingProps();
-
-    Map<String, Set<String>> determinePropGroups();
-
-    List<EntValue> getValues();
 }
