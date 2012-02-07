@@ -167,4 +167,10 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	}
 	return true;
     }
+
+    @Override
+    public List<EntQueryCompoundSourceModel> generateMissingSources(final boolean parentLeftJoinLegacy) {
+	// TODO Auto-generated method stub
+	return null;
+    }
 }

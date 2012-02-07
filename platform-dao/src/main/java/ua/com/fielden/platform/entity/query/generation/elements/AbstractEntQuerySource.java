@@ -100,8 +100,12 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     protected PropResolutionInfo propAsIs(final EntProp prop) {
 	final Pair<String, Class> propAsIsSearchResult = lookForProp(prop.getName());
-	return propAsIsSearchResult != null/* && alias == null*/ ? new PropResolutionInfo(prop, null, prop.getName(), false, propAsIsSearchResult.getValue(), propAsIsSearchResult.getKey()) : null;
-	// this condition will prevent usage of not-aliased properties if their source has alias
+	if (propAsIsSearchResult != null/* && alias == null*/) {	// this condition will prevent usage of not-aliased properties if their source has alias
+	    final String explicitPart = prop.getName().equals(propAsIsSearchResult.getKey() + ".id") ? prop.getName() : propAsIsSearchResult.getKey();
+	    return  new PropResolutionInfo(prop, null, prop.getName(), false, propAsIsSearchResult.getValue(),	explicitPart);
+	}
+	return null;
+
     }
 
     protected PropResolutionInfo propAsAliased(final EntProp prop) {
@@ -109,8 +113,12 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	if (dealisedProp == null) {
 	    return null;
 	} else {
-		final Pair<String, Class> propAsAliasedSearchResult = lookForProp(dealisedProp);
-		return propAsAliasedSearchResult != null ? new PropResolutionInfo(prop, getAlias(), dealisedProp, false, propAsAliasedSearchResult.getValue(), propAsAliasedSearchResult.getKey()) : null;
+	    final Pair<String, Class> propAsAliasedSearchResult = lookForProp(dealisedProp);
+	    if (propAsAliasedSearchResult != null) {
+		final String explicitPart = dealisedProp.equals(propAsAliasedSearchResult.getKey() + ".id") ? dealisedProp : propAsAliasedSearchResult.getKey();
+		return new PropResolutionInfo(prop, getAlias(), dealisedProp, false, propAsAliasedSearchResult.getValue(), explicitPart);
+	    }
+	    return null;
 	}
     }
 
@@ -169,14 +177,12 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     @Override
     public Map<String, Set<String>> determinePropGroups() {
-	final Set<PropResolutionInfo> dotNotatedPropNames = new HashSet<PropResolutionInfo>(getReferencingProps());
-
 	final Map<String, Set<String>> result = new HashMap<String, Set<String>>();
-	for (final PropResolutionInfo dotNotatedPropName : dotNotatedPropNames) {
-	    final String first = dotNotatedPropName.isImplicitId() ? "id" : dotNotatedPropName.explicitPropPart;
-	    final String rest = (dotNotatedPropName.isImplicitId() || dotNotatedPropName.allExplicit()) //
+	for (final PropResolutionInfo refPropInfo : new HashSet<PropResolutionInfo>(getReferencingProps())) {
+	    final String first = refPropInfo.isImplicitId() ? "id" : refPropInfo.explicitPropPart;
+	    final String rest = (refPropInfo.isImplicitId() || refPropInfo.allExplicit()) //
 		    ? "" : //
-		dotNotatedPropName.propPart.substring(dotNotatedPropName.explicitPropPart.length() + 1);
+		refPropInfo.propPart.substring(refPropInfo.explicitPropPart.length() + 1);
 
 	    Set<String> propGroup = result.get(first);
 	    if (propGroup == null) {

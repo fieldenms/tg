@@ -28,6 +28,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class BaseEntQueryTCase {
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
@@ -113,12 +114,26 @@ public class BaseEntQueryTCase {
 	return Arrays.asList(srcLists);
     }
 
-    private static final String message = "Query models are different!";
-
     public static void assertModelsEquals(final QueryModel shortcutModel, final QueryModel explicitModel) {
 	final EntQuery shortcutQry = entResultQry(shortcutModel);
 	final EntQuery explicitQry = entResultQry(explicitModel);
-	assertEquals((message + " exp: " + shortcutQry.toString() + " act: " + explicitQry.toString()), shortcutQry, explicitQry);
+	assertEquals(("Query models are different! exp: " + shortcutQry.toString() + " act: " + explicitQry.toString()), shortcutQry, explicitQry);
+    }
+
+    public static void assertModelsDifferent(final QueryModel shortcutModel, final QueryModel explicitModel) {
+	final EntQuery shortcutQry = entResultQry(shortcutModel);
+	final EntQuery explicitQry = entResultQry(explicitModel);
+	assertFalse(("Query models are equal! exp: " + shortcutQry.toString() + " act: " + explicitQry.toString()), shortcutQry.equals(explicitQry));
+    }
+
+    public static void assertPropInfoEquals(final QueryModel qryModel, final String propName, final PropResolutionInfo propResInfo) {
+	final PropResolutionInfo act = entResultQry(qryModel).getSources().getMain().containsProperty(prop(propName));
+	assertEquals(("Prop resolution infos are different! exp: " + propResInfo.toString() + " act: " + act.toString()), propResInfo, act);
+    }
+
+    public static void assertPropInfoDifferent(final QueryModel qryModel, final String propName, final PropResolutionInfo propResInfo) {
+	final PropResolutionInfo act = entResultQry(qryModel).getSources().getMain().containsProperty(prop(propName));
+	assertFalse(("Prop resolution infos are equal! exp: " + propResInfo.toString() + " act: " + act.toString()), propResInfo.equals(act));
     }
 
 }

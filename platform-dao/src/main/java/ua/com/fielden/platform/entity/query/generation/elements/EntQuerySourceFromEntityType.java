@@ -106,4 +106,16 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
 	}
 	return true;
     }
+
+    @Override
+    public List<EntQueryCompoundSourceModel> generateMissingSources(final boolean parentLeftJoinLegacy) {
+	// TODO Auto-generated method stub
+	for (final PropResolutionInfo propInfo : getReferencingProps()) {
+
+	}
+
+	//final EntQuerySourceFromEntityType source = new EntQuerySourceFromEntityType(propType, composeAlias(entQrySource.getAlias(), entry.getKey()), true);
+
+	return null;
+    }
 }

@@ -39,8 +39,6 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 	final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
 	final EntityFetcher ef = new EntityFetcher(session, injector.getInstance(EntityFactory.class), injector.getInstance(MappingsGenerator.class), injector.getInstance(MappingExtractor.class), null);
 
-
-
 	final EntityResultQueryModel<TgVehicleModel> model = select(select(TgVehicleModel.class).where().prop("make.key").eq().val("MERC").model()). //
 		yield().prop("id").as("id").
 		yield().prop("version").as("version").
@@ -55,6 +53,21 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
+    }
+
+    public void test_vehicle_model_retrieval3() {
+	final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
+	final EntityFetcher ef = new EntityFetcher(session, injector.getInstance(EntityFactory.class), injector.getInstance(MappingsGenerator.class), injector.getInstance(MappingExtractor.class), null);
+
+	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("make").eq().val(1). //
+		yield().prop("id").as("id").
+		yield().prop("version").as("version").
+		yield().prop("key").as("key").
+		yield().prop("desc").as("desc").
+		modelAsEntity(TgVehicleModel.class);
+	final List<TgVehicleModel> models = ef.list(session, injector.getInstance(EntityFactory.class), new QueryExecutionModel(model, null/*new fetch(TgVehicleModel.class).with("make")*/), false);
+    	final TgVehicleModel vehModel = models.get(0);
+	assertEquals("Incorrect key", "316", vehModel.getKey());
     }
 
 

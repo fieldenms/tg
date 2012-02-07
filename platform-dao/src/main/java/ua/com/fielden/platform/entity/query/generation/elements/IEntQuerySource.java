@@ -76,4 +76,6 @@ public interface IEntQuerySource {
     void addFinalReferencingProp(PropResolutionInfo prop);
 
     List<PropResolutionInfo> getFinalReferencingProps();
+
+    List<EntQueryCompoundSourceModel> generateMissingSources(final boolean parentLeftJoinLegacy);
 }

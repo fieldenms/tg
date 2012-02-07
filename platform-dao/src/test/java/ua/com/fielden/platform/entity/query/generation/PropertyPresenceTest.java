@@ -1,17 +1,16 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.sample.domain.TgModelCount;
 import ua.com.fielden.platform.sample.domain.TgModelYearCount;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 public class PropertyPresenceTest extends BaseEntQueryTCase {
@@ -20,254 +19,244 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 	return entResultQry(qry).getSources().getMain();
     }
 
-    private PropResolutionInfo checkSrc1(final QueryModel model, final EntProp prop) {
-	return getMainSource(model).containsProperty(prop);
+    private static PropResolutionInfo pri(final EntProp entProp, final String aliasPart, final String propPart, final boolean implicitId, final Class propType, final String explicitPropPart) {
+	return new PropResolutionInfo(entProp, aliasPart, propPart, implicitId, propType, explicitPropPart);
     }
 
-
     @Test
-    public void test_prop1() {
+    public void test1() {
 	final QueryModel qry = select(VEHICLE).model();
-	assertNotNull("Property should be present", checkSrc1(qry, prop("id")));
-	assertNotNull("Property should be present", checkSrc1(qry, prop("key")));
-	assertNotNull("Property should be present", checkSrc1(qry, prop("desc")));
-	assertNotNull("Property should be present", checkSrc1(qry, prop("model")));
-	assertNotNull("Property should be present", checkSrc1(qry, prop("model.desc")));
-	assertNotNull("Property should be present", checkSrc1(qry, prop("model.make.desc")));
+
+	assertPropInfoEquals(qry, "id", pri(prop("id"), null, "id", false, LONG, "id"));
+	assertPropInfoEquals(qry, "key", pri(prop("key"), null, "key", false, STRING, "key"));
+	assertPropInfoEquals(qry, "desc", pri(prop("desc"), null, "desc", false, STRING, "desc"));
+	assertPropInfoEquals(qry, "model", pri(prop("model"), null, "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "model.desc", pri(prop("model.desc"), null, "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "model.make.desc", pri(prop("model.make.desc"), null, "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop1a() {
-	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).model();
-	final IEntQuerySource mainSource = getMainSource(select(sourceQry).model());
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("id")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make.desc")));
+    public void test2() {
+	final QueryModel qry = select(select(VEHICLE).model()).model();
+	assertPropInfoEquals(qry, "id", pri(prop("id"), null, "id", false, LONG, "id"));
+	assertPropInfoEquals(qry, "key", pri(prop("key"), null, "key", false, STRING, "key"));
+	assertPropInfoEquals(qry, "desc", pri(prop("desc"), null, "desc", false, STRING, "desc"));
+	assertPropInfoEquals(qry, "model", pri(prop("model"), null, "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "model.desc", pri(prop("model.desc"), null, "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "model.make.desc", pri(prop("model.make.desc"), null, "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop2() {
-	final IEntQuerySource mainSource = getMainSource(select(VEHICLE).as("v").model());
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("id")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make.desc")));
+    public void test3() {
+	final QueryModel qry = select(VEHICLE).as("v").model();
+	assertPropInfoEquals(qry, "id", pri(prop("id"), null, "id", false, LONG, "id"));
+	assertPropInfoEquals(qry, "key", pri(prop("key"), null, "key", false, STRING, "key"));
+	assertPropInfoEquals(qry, "desc", pri(prop("desc"), null, "desc", false, STRING, "desc"));
+	assertPropInfoEquals(qry, "model", pri(prop("model"), null, "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "model.desc", pri(prop("model.desc"), null, "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "model.make.desc", pri(prop("model.make.desc"), null, "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop2a() {
-	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).model();
-	final IEntQuerySource mainSource = getMainSource(select(sourceQry).as("v").model());
+    public void test4() {
+	final QueryModel qry = select(select(VEHICLE).model()).as("v").model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("id")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make.desc")));
+	assertPropInfoEquals(qry, "id", pri(prop("id"), null, "id", false, LONG, "id"));
+	assertPropInfoEquals(qry, "key", pri(prop("key"), null, "key", false, STRING, "key"));
+	assertPropInfoEquals(qry, "desc", pri(prop("desc"), null, "desc", false, STRING, "desc"));
+	assertPropInfoEquals(qry, "model", pri(prop("model"), null, "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "model.desc", pri(prop("model.desc"), null, "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "model.make.desc", pri(prop("model.make.desc"), null, "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop3() {
-	final IEntQuerySource mainSource = getMainSource(select(VEHICLE).as("v").model());
+    public void test5() {
+	final QueryModel qry = select(VEHICLE).as("v").model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v.key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v.model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v.model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v.model.make.desc")));
+	assertPropInfoEquals(qry, "v", pri(prop("v"), "v", null, true, LONG, ""));
+	assertPropInfoEquals(qry, "v.key", pri(prop("v.key"), "v", "key", false, STRING, "key"));
+	assertPropInfoEquals(qry, "v.desc", pri(prop("v.desc"), "v", "desc", false, STRING, "desc"));
+	assertPropInfoEquals(qry, "v.model", pri(prop("v.model"), "v", "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "v.model.desc", pri(prop("v.model.desc"), "v", "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "v.model.make.desc", pri(prop("v.model.make.desc"), "v", "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop3a() {
-	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).model();
-	final IEntQuerySource mainSource = getMainSource(select(sourceQry).as("v").model());
+    public void test6() {
+	final QueryModel qry = select(select(VEHICLE).model()).as("v").model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v.key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v.model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v.model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("v.model.make.desc")));
+	assertPropInfoEquals(qry, "v", pri(prop("v"), "v", null, true, LONG, ""));
+	assertPropInfoEquals(qry, "v.key", pri(prop("v.key"), "v", "key", false, STRING, "key"));
+	assertPropInfoEquals(qry, "v.desc", pri(prop("v.desc"), "v", "desc", false, STRING, "desc"));
+	assertPropInfoEquals(qry, "v.model", pri(prop("v.model"), "v", "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "v.model.desc", pri(prop("v.model.desc"), "v", "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "v.model.make.desc", pri(prop("v.model.make.desc"), "v", "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop4() {
-	final IEntQuerySource mainSource = getMainSource(select(VEHICLE).as("model").model());
+    public void test7() {
+	final QueryModel qry = select(VEHICLE).as("model").model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.model.make.desc")));
+	try {
+	    assertPropInfoEquals(qry, "model", pri(prop("model"), "model", null, true, LONG, ""));
+	    fail("Should have failed!");
+	} catch (final AssertionError e) {
+	}
+	assertPropInfoEquals(qry, "model", pri(prop("model"), null, "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "model.key", pri(prop("model.key"), "model", "key", false, STRING, "key"));
+	assertPropInfoEquals(qry, "model.desc", pri(prop("model.desc"), "model", "desc", false, STRING, "desc"));
+	assertPropInfoEquals(qry, "model.model", pri(prop("model.model"), "model", "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "model.model.desc", pri(prop("model.model.desc"), "model", "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "model.model.make.desc", pri(prop("model.model.make.desc"), "model", "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop4a() {
-	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).model();
-	final IEntQuerySource mainSource = getMainSource(select(sourceQry).as("model").model());
+    public void test8() {
+	final QueryModel qry = select(select(VEHICLE).model()).as("model").model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.model.make.desc")));
+	assertPropInfoDifferent(qry, "model", pri(prop("model"), "model", null, true, LONG, ""));
+
+	assertPropInfoEquals(qry, "model", pri(prop("model"), null, "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "model.key", pri(prop("model.key"), "model", "key", false, STRING, "key"));
+	assertPropInfoEquals(qry, "model.desc", pri(prop("model.desc"), "model", "desc", false, STRING, "desc"));
+	assertPropInfoEquals(qry, "model.model", pri(prop("model.model"), "model", "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "model.model.desc", pri(prop("model.model.desc"), "model", "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "model.model.make.desc", pri(prop("model.model.make.desc"), "model", "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop5() {
-	final IEntQuerySource mainSource = getMainSource(select(TgModelCount.class).model());
+    public void test9() {
+	final QueryModel qry = select(TgModelCount.class).model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("count")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("key.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("key.make.desc")));
+	assertPropInfoEquals(qry, "key", pri(prop("key"), null, "key", false, MODEL, "key"));
+	assertPropInfoEquals(qry, "count", pri(prop("count"), null, "count", false, BIG_INTEGER, "count"));
+	assertPropInfoEquals(qry, "key.desc", pri(prop("key.desc"), null, "key.desc", false, STRING, "key"));
+	assertPropInfoEquals(qry, "key.make.desc", pri(prop("key.make.desc"), null, "key.make.desc", false, STRING, "key"));
     }
 
     @Test
-    public void test_prop5a() {
-	final EntityResultQueryModel<TgModelCount> sourceQry = select(TgModelCount.class).model();
-	final IEntQuerySource mainSource = getMainSource(select(sourceQry).model());
+    public void test10() {
+	final QueryModel qry = select(select(TgModelCount.class).model()).model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("count")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("key.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("key.make.desc")));
+	assertPropInfoEquals(qry, "key", pri(prop("key"), null, "key", false, MODEL, "key"));
+	assertPropInfoEquals(qry, "count", pri(prop("count"), null, "count", false, BIG_INTEGER, "count"));
+	assertPropInfoEquals(qry, "key.desc", pri(prop("key.desc"), null, "key.desc", false, STRING, "key"));
+	assertPropInfoEquals(qry, "key.make.desc", pri(prop("key.make.desc"), null, "key.make.desc", false, STRING, "key"));
     }
 
     @Test
-    public void test_prop6() {
-	final IEntQuerySource mainSource = getMainSource(select(TgModelCount.class).as("mc").model());
+    public void test11() {
+	final QueryModel qry = select(TgModelCount.class).as("mc").model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("mc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("mc.key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("mc.count")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("mc.key.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("mc.key.make.desc")));
+	assertPropInfoEquals(qry, "mc", pri(prop("mc"), "mc", null, true, LONG, ""));
+	assertPropInfoEquals(qry, "mc.key", pri(prop("mc.key"), "mc", "key", false, MODEL, "key"));
+	assertPropInfoEquals(qry, "mc.count", pri(prop("mc.count"), "mc", "count", false, BIG_INTEGER, "count"));
+	assertPropInfoEquals(qry, "mc.key.desc", pri(prop("mc.key.desc"), "mc", "key.desc", false, STRING, "key"));
+	assertPropInfoEquals(qry, "mc.key.make.desc", pri(prop("mc.key.make.desc"), "mc", "key.make.desc", false, STRING, "key"));
     }
 
     @Test
-    public void test_prop6a() {
-	final EntityResultQueryModel<TgModelCount> sourceQry = select(TgModelCount.class).model();
-	final IEntQuerySource mainSource = getMainSource(select(sourceQry).as("mc").model());
+    public void test12() {
+	final QueryModel qry = select(select(TgModelCount.class).model()).as("mc").model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("mc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("mc.key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("mc.count")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("mc.key.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("mc.key.make.desc")));
+	assertPropInfoEquals(qry, "mc", pri(prop("mc"), "mc", null, true, LONG, ""));
+	assertPropInfoEquals(qry, "mc.key", pri(prop("mc.key"), "mc", "key", false, MODEL, "key"));
+	assertPropInfoEquals(qry, "mc.count", pri(prop("mc.count"), "mc", "count", false, BIG_INTEGER, "count"));
+	assertPropInfoEquals(qry, "mc.key.desc", pri(prop("mc.key.desc"), "mc", "key.desc", false, STRING, "key"));
+	assertPropInfoEquals(qry, "mc.key.make.desc", pri(prop("mc.key.make.desc"), "mc", "key.make.desc", false, STRING, "key"));
     }
 
     @Test
-    public void test_prop7() {
-	final IEntQuerySource mainSource = getMainSource(select(TgModelYearCount.class).model());
+    public void test13() {
+	final QueryModel qry = select(TgModelYearCount.class).model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("year")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("count")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.id")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make.desc")));
+	assertPropInfoEquals(qry, "year", pri(prop("year"), null, "year", false, LONG, "year"));
+	assertPropInfoEquals(qry, "model", pri(prop("model"), null, "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "count", pri(prop("count"), null, "count", false, BIG_INTEGER, "count"));
+
+	assertPropInfoEquals(qry, "model.id", pri(prop("model.id"), null, "model.id", false, LONG, "model.id"));
+	assertPropInfoEquals(qry, "model.key", pri(prop("model.key"), null, "model.key", false, STRING, "model"));
+	assertPropInfoEquals(qry, "model.desc", pri(prop("model.desc"), null, "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "model.make.desc", pri(prop("model.make.desc"), null, "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop7a() {
-	final EntityResultQueryModel<TgModelCount> sourceQry = select(TgModelYearCount.class).model();
-	final IEntQuerySource mainSource = getMainSource(select(sourceQry).model());
+    public void test14() {
+	final QueryModel qry = select(select(TgModelYearCount.class).model()).model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("year")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("count")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.id")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make.desc")));
+	assertPropInfoEquals(qry, "year", pri(prop("year"), null, "year", false, LONG, "year"));
+	assertPropInfoEquals(qry, "model", pri(prop("model"), null, "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "count", pri(prop("count"), null, "count", false, BIG_INTEGER, "count"));
+
+	assertPropInfoEquals(qry, "model.id", pri(prop("model.id"), null, "model.id", false, LONG, "model.id"));
+	assertPropInfoEquals(qry, "model.key", pri(prop("model.key"), null, "model.key", false, STRING, "model"));
+	assertPropInfoEquals(qry, "model.desc", pri(prop("model.desc"), null, "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "model.make.desc", pri(prop("model.make.desc"), null, "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop8() {
-	final IEntQuerySource mainSource = getMainSource(select(TgModelYearCount.class).as("myc").model());
+    public void test15() {
+	final QueryModel qry = select(TgModelYearCount.class).as("myc").model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.year")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.count")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model.id")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model.key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model.make.desc")));
+	assertPropInfoEquals(qry, "myc.year", pri(prop("myc.year"), "myc", "year", false, LONG, "year"));
+	assertPropInfoEquals(qry, "myc.model", pri(prop("myc.model"), "myc", "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "myc.count", pri(prop("myc.count"), "myc", "count", false, BIG_INTEGER, "count"));
+
+	assertPropInfoEquals(qry, "myc.model.id", pri(prop("myc.model.id"), "myc", "model.id", false, LONG, "model.id"));
+	assertPropInfoEquals(qry, "myc.model.key", pri(prop("myc.model.key"), "myc", "model.key", false, STRING, "model"));
+	assertPropInfoEquals(qry, "myc.model.desc", pri(prop("myc.model.desc"), "myc", "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "myc.model.make.desc", pri(prop("myc.model.make.desc"), "myc", "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop8a() {
-	final EntityResultQueryModel<TgModelCount> sourceQry = select(TgModelYearCount.class).model();
-	final IEntQuerySource mainSource = getMainSource(select(sourceQry).as("myc").model());
+    public void test16() {
+	final QueryModel qry = select(select(TgModelYearCount.class).model()).as("myc").model();
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.year")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.count")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model.id")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model.key")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model.desc")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("myc.model.make.desc")));
+	assertPropInfoEquals(qry, "myc.year", pri(prop("myc.year"), "myc", "year", false, LONG, "year"));
+	assertPropInfoEquals(qry, "myc.model", pri(prop("myc.model"), "myc", "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "myc.count", pri(prop("myc.count"), "myc", "count", false, BIG_INTEGER, "count"));
+
+	assertPropInfoEquals(qry, "myc.model.id", pri(prop("myc.model.id"), "myc", "model.id", false, LONG, "model.id"));
+	assertPropInfoEquals(qry, "myc.model.key", pri(prop("myc.model.key"), "myc", "model.key", false, STRING, "model"));
+	assertPropInfoEquals(qry, "myc.model.desc", pri(prop("myc.model.desc"), "myc", "model.desc", false, STRING, "model"));
+	assertPropInfoEquals(qry, "myc.model.make.desc", pri(prop("myc.model.make.desc"), "myc", "model.make.desc", false, STRING, "model"));
     }
 
     @Test
-    public void test_prop9a() {
-	final AggregatedResultQueryModel sourceQry = select(VEHICLE).
-	groupBy().prop("model").
-	yield().prop("model").as("model"). //
-	yield().minOf().yearOf().prop("initDate").as("aka.earliestInitYear"). //
-	modelAsAggregate();
-	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("aka.earliestInitYear").ge().val(2000).modelAsAggregate();
-
-	//assertNotNull("Property should be present", checkSrc1(qry, prop("aka.earliestInitYear")));
-    }
-
-    @Test
-    public void test_prop9() {
+    public void test17() {
 	final AggregatedResultQueryModel sourceQry = select(VEHICLE).
 	groupBy().prop("model").
 	yield().prop("model").as("model"). //
 	yield().minOf().yearOf().prop("initDate").as("earliestInitYear"). //
 	modelAsAggregate();
 	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("earliestInitYear").ge().val(2000).modelAsAggregate();
-	final IEntQuerySource mainSource = getMainSource(qry);
 
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
-	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make")));
+	assertPropInfoEquals(qry, "model", pri(prop("model"), null, "model", false, MODEL, "model"));
+	assertPropInfoEquals(qry, "model.id", pri(prop("model.id"), null, "model.id", false, LONG, "model.id"));
+	assertPropInfoEquals(qry, "model.make", pri(prop("model.make"), null, "model.make", false, MAKE, "model"));
     }
 
-//    @Test
-//    public void test_prop10() {
-//	final AggregatedResultQueryModel sourceQry = select(VEHICLE).
-//	groupBy().prop("model").
-//	yield().prop("model").as("model"). //
-//	yield().minOf().yearOf().prop("initDate").as("aka.earliestInitYear"). //
-//	modelAsAggregate();
-//	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("aka.earliestInitYear").ge().val(2000).modelAsAggregate();
-//	final IEntQuerySource mainSource = getMainSource(qry);
-//
-//	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
-//	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make")));
-//    }
-//
-//
-//    @Test
-//    public void test_prop11() {
-//	final AggregatedResultQueryModel sourceQry = select(VEHICLE).
-//	groupBy().prop("model").
-//	yield().prop("model").as("my.model"). //
-//	yield().minOf().yearOf().prop("initDate").as("earliestInitYear"). //
-//	modelAsAggregate();
-//	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("my.model.make.key").eq().val("MERC").and().prop("earliestInitYear").ge().val(2000).modelAsAggregate();
-//	final IEntQuerySource mainSource = getMainSource(qry);
-//
-//	assertNotNull("Property should be present", mainSource.containsProperty(prop("model")));
-//	assertNotNull("Property should be present", mainSource.containsProperty(prop("model.make")));
-//    }
+    @Test
+    @Ignore
+    public void test18() {
+	final AggregatedResultQueryModel sourceQry = select(VEHICLE).
+		groupBy().prop("model").
+		yield().prop("model").as("model"). //
+		yield().minOf().yearOf().prop("initDate").as("aka.earliestInitYear"). //
+		modelAsAggregate();
+	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("aka.earliestInitYear").ge().val(2000).modelAsAggregate();
+	entResultQry(qry);
+    }
+
+    @Test
+    @Ignore
+    public void test19() {
+	final AggregatedResultQueryModel sourceQry = select(VEHICLE).
+	groupBy().prop("model").
+	yield().prop("model").as("my.model"). //
+	yield().minOf().yearOf().prop("initDate").as("earliestInitYear"). //
+	modelAsAggregate();
+	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("my.model.make.key").eq().val("MERC").and().prop("earliestInitYear").ge().val(2000).modelAsAggregate();
+	entResultQry(qry);
+    }
 }

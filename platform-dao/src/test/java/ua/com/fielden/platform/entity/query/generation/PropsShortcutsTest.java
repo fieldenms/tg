@@ -9,6 +9,17 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 public class PropsShortcutsTest extends BaseEntQueryTCase {
 
     @Test
+    public void test1() {
+	assertModelsDifferent(//
+		select(VEHICLE). //
+		where().prop("model.id").eq().val(100).model(),
+
+		select(VEHICLE). //
+		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
+		where().prop("model.id").eq().val(100).model());
+    }
+
+    @Test
     public void test_prop_to_source_association13() {
 	assertModelsEquals(//
 		select(VEHICLE). //
