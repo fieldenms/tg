@@ -4,22 +4,22 @@
   Data related activities is the most important and at the same time the most vulnerable part of business applications.
   Vulnerability can be explained by the lack of ``close to perfection'' solutions unlike for some other types of software systems such as word processing or digital painting software.
   Business applications are constantly under the pressure of contradicting requirements.
-  On the one hand, there is a need for processing large amounts data, while on the other hand business applications should demonstrate good performance and rich functionality.
+  On the one hand, there is a need for processing large datasets, while on the other hand business applications should demonstrate good performance and rich functionality.
   The amount of data to be processed always increases, requirements for more diverse functionality occur constantly and the need for high scalability of business applications is ever increasing.
   
   There are several well accepted data processing paradigms currently in use for developing business applications.
   However, there is no single best solution that would satisfy all business requirements.
-  It can be observed that most if not all all available solutions implement different combinations of data management paradigms, which represent compromises to improve certain specifically targeted characteristics.
+  It can be observed that most if not all available solutions implement different combinations of data management paradigms, which represent compromises to improve certain specifically targeted characteristics.
 
   With the increase of the role of the Internet as a communication mechanism for Enterprises as well as the maturity of many Internet technologies, business applications are required to process data not only by directly communicating with databases\footnote{Usually RDBMS.}, but also distributed across the Web resources.
   This introduced an additional layer of complexity where in most cases developers need to switch between paradigms of working with relational databases and Web resources.
 
   The Trident Genesis platform introduces its own data processing solution by reusing some of existing paradigms in its own unique way to provide a uniform programming model for data processing against both databases and web resources\footnote{Web resources developed using the Trident Genesis platform.}.
-  All data CRUD (create, request\footnote{Commonly, ``R'' stands for \emph{read} or \emph{retrieve}, but here we'd like to emphasise a more rich functionality behind the ``R'' in TG as described farther in the text.}, update, delete) operations utilise pure object-oriented approach combined with carefully design internal DSL called ``Entity Query Language''.
+  All data CRUD (create, request\footnote{Commonly, ``R'' stands for \emph{read} or \emph{retrieve}, but here we'd like to emphasise a more rich functionality behind the ``R'' in TG as described farther in the text.}, update, delete) operations utilise pure object-oriented approach combined with carefully designed internal DSL called ``Entity Query Language''.
   This means that developers do not operate on database records or web resources directly.
   Instead they are confined to the much higher conceptual level of business domain models and the query language that operates directly on these models.
   
-  For example, in order to modify persisted data there is no need to write complex low level queries and translated their result into the business domain model.
+  For example, in order to modify persisted data there is no need to write complex low level queries and translate their result into the business domain model.
   Persisted business entities are requested declaratively, modified by changing their properties at the object level and saved also declaratively.
   The platform fully takes care of handling low technical details for translating declaratively expressed actions into corresponding Web or database related API calls.
   Such development model provides a convenient way to implement business rules related to changes of domain entities such as validation, before and after save logic, which can lead to modification of additional entities if required etc.
@@ -30,7 +30,7 @@
   The current state and trend in Web development technologies is twofold: on one side there is an ``in-browser HTML'' model, where client applications are served as a web page, on another -- rich client application model, where client applications are fully capable desktop applications.
   Both models have their strengths and weaknesses.
 
-  As mentioned above, the enforces by the platform programming model strives for uniformity. 
+  As mentioned above, the enforced by the platform programming model strives for uniformity. 
   The platform follows the path of reducing the number of concepts and technologies needed for development of business applications.
   One of the key aspects of this, is the use of Java as the only programming language required to develop business applications with TG.
   This is achieved by utilising the RIA paradigm for developing both client and server applications using only the Java programming language.
@@ -122,7 +122,7 @@
   \subsection{Entity Query Language}
   
   The platform ensures an effective technological support of the object-oriented programming approach, which underpins the provided development model.
-  One of the principal solutions incorporated into the platform is \emph{Entity Query Language} -- a declarative query language based on SQL and provides a number of significant enhancements. 
+  One of the principal solutions incorporated into the platform is \emph{Entity Query Language} -- a declarative query language based on SQL that provides a number of significant enhancements. 
   The primary objective of these enhancements is the support for working with business entities in a natural for object-oriented programming way, which ensures effective and ergonomic means for implementing business solutions.
   
   One of the key benefits of the object-relational paradigm for data management is its clarity and simplicity for developing applications.
@@ -132,7 +132,7 @@
   This provides a natural way to express data processing instructions in terms of the business domain instead of the low level data structures.
   The implementation of EQL as an internal DSL automatically takes advantage of modern Java IDEs, which provide code highlighting, code insight etc.
   This favourably differentiates EQL from alternatives such as Hibernate Query Language where queries are expressed as strings without any semantics for an IDE or compiler to validate them at design time.
-  Thus, every EQL query is fully validated at design/compile time naturally fitting into the Java's statically typed nature.
+  Thus, every EQL query is validated at design/compile time naturally fitting into the Java's statically typed nature.
   
   An example of an EQL query is provided as code listing~\ref{lst:eql}.  
   It calculates the average yearly (over the period from 2009 to 2011) maintenance cost of vehicles manufactured by ``MERCEDES'' and their model names starting with ``315'', ``316'' or ``VITO'', for every sector of division ``NORTH''\footnote{This example is specific to a certain fleet domain and the full comprehension of the query implies good understanding of that domain.}.  
@@ -175,7 +175,7 @@
 
   The EQL execution mechanism works equally well with small and large datasets by supporting partitioned data loading.
   This does not require any additional work on part of developers -- they just need to provide the query and the system would automatically execute it with the necessary level of granularity.
-  It is important that the platform does not rely on any RDBMS vendor proprietary features such as cursors, which might require keeping resulting datasets open in memory.
+  It is important that the platform does not rely on any RDBMS vendor specific features such as cursors, which might require keeping resulting datasets open in memory.
   Instead, the EQL execution mechanism automatically enhances queries to retrieve data sequentially.
   This approach naturally fits into the stateless Resources Oriented Architecture of the platform to properly support scalability of TG-based applications.
 
@@ -185,7 +185,7 @@
   This causes severe performance issues known as ``$n+1$ request'', which is especially dangerous when the technology is used by novice developers.}
   or provide ways to specify fetching as part of queries\footnote{Or even more restrictively -- as part of the object-relational mapping.}, the platform supports a concept of the \emph{explicit fetching strategy}.
   This separates EQL queries, which indicate how to find data, from the fetching models, which indicate what data exactly needs to be returned providing a full control over the resulting object graph initialisation.
-  So, depending on business requirements the same EQL query can be executed with different fetch models, which significantly reduces both the load time and memory footprint.
+  So, depending on business requirements the same EQL query can be executed with different fetch models, which provides a way to optimise the load time and memory footprint.
 
   As mentioned before, the development model hides many technical details including the data communication mechanism.
   This completely removes the conceptual mismatch between the ways of querying the domain against databases and Web resources.
