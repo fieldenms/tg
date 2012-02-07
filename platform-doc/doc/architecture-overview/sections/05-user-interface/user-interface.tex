@@ -5,82 +5,58 @@
   \begin{itemize}
    \item For a large number of enterprise employees, a business application represents the main application used during the day. 
 	 These people work with the business application for a good portion of their working day, but at the same time they aren't necessarily the savvy computer users.
-   \item Usually, UI of business applications is of considerable size having multiple forms, tabsheets, menus etc.
+   \item Usually, UI of business applications constitutes a large part of the final solution having multiple forms, tabsheets, menus etc.
   \end{itemize}
   Unlike other types of software systems, business applications contain hundreds of forms, which may change over time as the result of application evolution and changes to business rules.
   This results in a considerable effort to develop and support UI of business applications.
   Acknowledging the above, Trident Genesis incorporates a full support for domain-driven UI development into the provided programming model.
-  It provides a number of mechanisms for rapid development of uniform user interfaces, which includes windowing model, a system of forms, type-oriented UI controls, messaging, implicit multi-threading model etc.
+  It provides a number of mechanisms for rapid development of uniform user interfaces, which includes windowing model, a system of forms, type-aware UI controls, user notification mechanism, implicit multi-threading model etc.
   
-  \subsection{UI Paradigms \& Controls}
-  The principle idea implemented in TG for building UI, is a full reuse of metadata, type information and business logic controllers in order to support a nearly automatic UI construction with little involvement of the developer.
-  As with any other aspect of TG-based development, the developers work at the domain level when building user interfaces instead of at the low-level UI controls while providing flexible ways to customise the layout of forms.
+  The principle idea behind building UI in TG, is a full reuse of metadata, type information and business logic controllers in order to support a nearly automatic UI construction with little involvement of the developer.
+  As with any other aspect of TG-based development, when building user interfaces the developers work at the domain level instead of the low-level of UI controls while being provided with flexible ways to customise the form layout.
   So, the same type system and metadata used to model domain entities is used throughout the application development process.
   
   For example, when constructing UI, the developer simply requests a set of UI controls for a given domain entity.
   The platform automatically determines what controls are suitable for the properties of the specified domain entity.
   The returned UI controls are fully initialised based on the metadata and bound to the specified entity instance.
   Thus, all changes done to that instance programmatically would be reflected in the UI controls and vice versa.
-  This mechanism adheres the domain model to the latter including execution of the specified validation business rules etc.
+  This mechanism adheres the domain model to the letter including execution of the specified validation business rules etc.
   A savvy reader should already notice that TG follows the Model-View-Controller architectural pattern when it comes to UI construction, which reuses all the platform's essential building blocks.
 
   One of the obvious advantages of this approach is the uniformity of UI -- properties of different domain entities with the same type are always represented by the same UI controls.
-  This greatly facilitates familiarisation of end-users with TG-based applications, which is especially noticeable in cases where there are several business applications used in the same organisation.
+  This greatly facilitates familiarisation of end-users with TG-based applications, which is especially noticeable in cases where several business applications are used in the same organisation.
   This way users do no need to learn new UI controls, paradigms or deal with unexpected behaviour over the period of application evolution.
-  Another less obvious advantage of such transparent approach to fully bind together UI controls with domain entities and corresponding business controllers is a natural predisposition to test-driven development.
+  Another less obvious advantage of such transparent approach, where UI controls are fully bound together with domain entities and corresponding business controllers, is a natural predisposition to the test-driven development.
   The developers need only to ensure correctness of business domain models and controllers while the views would uniformly reuse them.
 
-  The platform type system provides a clear definition of all possible combinations of properties used for modeling business domains.
+  The platform's type system provides a clear definition of all possible combinations of properties used for modeling business domains.
   As outlined earlier, the most complex type is a domain entity itself, which may contain properties of different predefined types such as Date, Money, String as well as other domain entities.
-  The well-defined type system and rules for its customisations served as the foundation for implementing a set of UI paradigms and controls providing a way for the platform to automatically determine both the visual representation and behaviour of the application user interface.
+  The well-defined type system and rules for its customisation served as the foundation for implementing a set of UI paradigms and controls providing a way for the platform to automatically determine both the visual representation and behaviour of the application user interface.
     
-  For example, a UI control provided for editing of a property that has a domain entity type is fully equipped with quick and advanced search capabilities.
-  Such control does not require any configuration provided by developer -- everything is automatically determined from the type and metadata of the property.
+  For example, a UI control provided for editing of a property that is of a domain entity type is fully equipped with quick and advanced search capabilities.
+  Such control does not require any configuration to be coded by the developer -- everything is automatically determined from the type and metadata of the property.
   Similar happens for properties of other types.
-  As a different example consider property of type Date.
-  The platform correctly recognises the type and automatically associates it with a specially design Date/Time Picker UI control.
-  In all cases developers do not need to provide any additional information -- just to layout controls on the form.
+  As another example consider a property of type Date.
+  The platform recognises the type and automatically associates it with a specially design Date/Time Picker UI control.
+  In all cases developers do not need to provide any additional information -- just to layout UI controls on the form.
   
   There are only two principle high-level UI concepts for organising application User Interface:
   \begin{itemize}
    \item Entity Master -- a view for a single domain entity used specifically for review of its details, editing and creation of new ones.
-	 There can be entity masters of varying complexity, which fully depends on the complexity of the underlying domain entity it represents.
-    \item Entity Centre -- a view for representing arrays of domain entities of the same type. 
-	  It is used for review of practically unlimited number of domain entity instances without loading all of them into memory, which is possible by reusing of the EQL functionality as outline earlier.
-	  This view supports sophisticated configuration and filtering capabilities, ordering, export to different file formats and more.
+	 There can be entity masters of varying complexity, which fully depends on the complexity of the underlying domain entity.
+    \item Entity Centre -- a view for representing sets of domain entities of the same type. 
+	  It is used for review of practically unlimited number of domain entity instances without loading all of them into memory, which is possible by reusing the EQL functionality outline earlier.
+	  This view supports sophisticated configuration and filtering capabilities, ordering, data export functionality and more.
   \end{itemize}
   
   The platform provides a mechanism that orchestrates seamless integration of masters and centres into a cohesive system, where views are linked together based on domain entity type information allowing natural navigation between the views.
   For example, the mechanism of Entity Masters implements a strategy for semantic identification by making a correspondence between view and domain entities.
-  This way a previously open for a specific entity Entity Master gets activated instead of creating a new instance.
+  This way a previously opened for a specific entity Entity Master gets activated instead of creating a new instance.
   Effectively, the platform offers developers a ready-to-use strategy for organising application user interface, which covers practically all scenarios required by the business domain.
 
-  Platform modularity ensures that UI controls and related logic cannot be be mixed into domain models and implementation of business logic.
-  
-  \subsection{Analytical \& Reporting Capabilities}
-  The 90s of the last century have established relational database model as the de-facto standard for managing data at enterprises usually associated with two-tear application architecture also known as Client/Server Architecture\footnote{The modern definition of three-tear model is also associated with the notion of Client/Server Architecture}.
-  This had an effect where modeling of business domain at the software level was thought of in terms of relational algebra, which served as the theoretical foundation for relational databases.
-  At about the same time, object-oriented paradigms and programming languages were gaining their ground ultimately leading to creation of multi-tear architecture with the majority of business related modeling moved out of the databases into the middle tear implemented in some object-oriented language.
-  The relational databases started to be used more as an efficient storage mechanism.
-  The object-oriented and relational models have a naturally occurring impedance mismatch, which is being resolved in various ways, including the programming model provided as part of the TG platform.
-  
-  Despite the fact that the core of modern business applications (domain model and business logic) is usually implemented in an object-oriented language, all current reporting and analytical tools operate directly on the database where the data is stored while completely disregarding the domain model present in the application middle tear.  
-  The reason for this is well understood as there is no easy way for external tools to tap into the application middle tear.
-  At the same time relational database management systems support a number of standards (e.g. database language such as SQL, JDBC, ODBC) providing well-defined means to interact with databases produced by different vendors.
-  However, working strictly at the database level leads to a large number of disadvantages including the need to work at the low-level technical details of database structures that object-relational mechanism works so hard to hide, the ability to produce reports based on SQL queries that do not correspond to the underlying domain model (e.g. join database tables in a way that the domain model at the middle tear prohibits) etc.
-  Also, it is often the case where the business analyst who works with a third-party tool to produce required reports/analyses does not belong to the business application development team who worked closely together with domain experts to devise the system in the first place.
-  This requires additional investment to familiarise the analyst with the business domain as well as the underlying database structures.
-  Mixing object-oriented and relational approaches to work with the system in such a way brings back the object-relational impedance mismatch carefully handled by the platform, which leads to situations where modification of business applications invalidates reports and analyses produced using third-party tools.
-
-  The Trident Genesis Platform emphasises its domain orientation by proliferating the underlying business model throughout the application architecture.
-  Not only it provides developers with object-oriented means to model and interact with the business domain, but also makes the domain explicitly visible to the application end-users.
-  This platform's trait is known as \emph{semantic transparency} of the business domain, which is perceived equally by both software developers and application end-users.
-  Such approach raises user's level of awareness of the implemented business model, which greatly facilitates communication between application developers, users and domain experts\footnote{Who may or may not be application users.} ultimately resulting in the improved business application.
-
-  structural search
-
-  
-  
-  
-
-  
+  The above highlights only some UI solutions provided as part of the platform and there are more UI related features that could not all be described in this document.
+  Platform's modularity ensures that UI controls and related logic cannot be mixed into domain models and implementation of the business logic.
+  The most important aspect of the provided UI development model is that it represents a high-level solution, which fully reuses the business domain model.
+  Such standard UI construction mechanism ensures the uniform user interface across all TG-based business applications.
+  This allows efficient reuse of user experience.
+  Users who understand principles and approaches of one TG-based application would easily start working with any other.
