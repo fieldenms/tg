@@ -1,41 +1,44 @@
 \section{Analytical \& Reporting Capabilities}\label{sec:06}
   Every business application has two main functions directly experienced by users through the application user interface:
   \begin{itemize}
-   \item Data entry -- the mechanism new facts from the real world get populated into the system\footnote{There could also be some means of automatic batch data imports, but these do not requrie any direct interaction with application users.}.
+   \item Data entry -- the mechanism by which new facts from the real world get populated into the system\footnote{There could also be some means of automatic batch data imports, but these do not require any direct interaction with application users.}.
    \item Data analysis and reporting -- the mechanism with the main purpose to support business decision making processes.
   \end{itemize}
-  Historically, these two functions had two different groups of users -- data operators and business analysts.
+  Historically, these two functions had two different groups of users~-- data operators and business analysts.
   Often, the data analysis and reporting functionality was facilitated by a different application than the application used for data entry.
   Here is a brief retrospective analysis suggesting the cause of such separation.
   
   The 90's of the last century have established the relational database model as the de-facto standard for managing data at enterprises.
   This model is usually associated with two-tier application architecture also known as Client/Server Architecture\footnote{The modern definition of three-tier model is also associated with the notion of Client/Server Architecture.}.
-  This had an effect where modeling of business domain at the software level was thought of in terms of relational algebra, which served as the theoretical foundation for relational databases.
-  At about the same time, object-oriented paradigms and programming languages were gaining their ground ultimately leading to creation of multitier architecture with the majority of business related modeling moved out of the databases into the middle tier implemented in some object-oriented language.
-  The relational databases started to be used more as an efficient storage mechanism.
+  This had an effect where modelling of business domains at the software level was thought in terms of relational algebra, which served as the theoretical foundation for relational databases.
+  At about the same time, object-oriented paradigms and programming languages were gaining their ground ultimately leading to creation of the multi-tier architecture with the majority of business related modelling moved out of the databases into the middle tier implemented in some object-oriented language.
+  The relational databases started to be used more as an efficient storage mechanism rather than a modelling paradigm.
   The object-oriented and relational models have a naturally occurring impedance mismatch, which is being resolved in various ways, including the programming model provided as part of the TG platform.
   
-  Despite the fact that the core of modern business applications (domain model and business logic) is usually implemented in an object-oriented language, all current reporting and analytical tools operate directly on the database where the data is stored while completely disregarding the domain model present in the application middle tier.  
-  The reason for this is well understood as there is no easy way for external tools to tap into the application middle tier.
+  Despite the fact that the core of modern business applications (domain model and business logic) is usually implemented in an object-oriented language, all current reporting and analytical tools operate directly on the database where the data is stored while completely disregarding the domain model present at the application middle tier.  
+  The reason for this is well understood -- there is no easy way for external tools to tap into the application middle tier.
   At the same time relational database management systems support a number of standards (e.g. database language such as SQL, JDBC, ODBC) providing well-defined means to interact with databases produced by different vendors.
   However, working strictly at the database level leads to a large number of disadvantages including the need to work at the low-level technical details of database structures that object-relational mechanism works so hard to hide, the ability to produce reports based on SQL queries that do not correspond to the underlying domain model (e.g. join database tables in a way that the domain model at the middle tier prohibits) etc.
-  Also, it is often the case where the business analyst who works with a third-party tool to produce required reports/analyses does not belong to the business application development team who worked closely together with domain experts to devise the system in the first place.
+  Also, it is often the case that the business analyst who works with a third-party tool to produce required reports/analyses does not belong to the business application development team who worked closely together with domain experts to devise the system in the first place.
   This requires additional investment to familiarise the analyst with the business domain as well as the underlying database structures.
-  Mixing object-oriented and relational approaches to work with the system in such a way brings back the object-relational impedance mismatch carefully handled by underlying frameworks, which leads to situations where modification of business applications invalidates reports and analyses produced using third-party tools.
+  Mixing object-oriented and relational approaches to work with the system in such a way brings back the object-relational impedance mismatch carefully handled by underlying frameworks.
+  This leads to situations where modifications of business applications invalidate reports and analyses produced using third-party tools.
 
   The provided by TG reporting technology is unique from many perspectives.
-  First of all, the patform does not have any special notion of a ``report building'' facility.
-  The developer is provided with a whole range of platform mechanisms such as type system (especially synthetic types), power of EQL and domain-driven UI model, which can be used in different combinations to implement highly configurable and complex reports.
+  First of all, the platform does not have any special notion of a ``report building'' facility.
+  The developer is provided with a whole range of platform mechanisms such as type system (especially synthetic types), the power of EQL and domain-driven UI model, which can be used in different combinations to implement highly configurable and complex reports.
   Due to this fact, reports naturally fit into the application user interface.
   Effectively, users do not differentiate between the reporting mechanism and other parts of general-purpose application user interface.
-  We strongly believe that seamless integration of reporting and entry functionality is requried for modern business application due to criticality of the analytical information to different groups of users -- those making business decisions, and those entering data into the system.
-  This approach organically shifts the reporting functionality away from  the ``paper'' paradigm towards the interactive ``online'' and ``realtime'' processing.
+  We strongly believe that seamless integration of reporting and entry functionalities is required for modern business application due to criticality of the analytical information to different groups of users~-- those making business decisions, and those entering data into the system\footnote{This is especially relevant for the modern fast changing world where cross-skilled personnel is of the utmost importance to the business success.}.
+  This approach organically shifts the reporting functionality away from  the ``paper'' paradigm towards the interactive ``online'' and ``real-time'' processing.
+  
+  One of the most interesting platform mechanisms to support interactivity is the ability for users to directly operate on domain entities from UI.
+  This provides an easy-to-use ad-hoc reporting functionality with multiple features such as aggregation, filtering, ordering, grouping and even dynamic enhancement of existing domain entities with new calculated properties\footnote{This change has a local nature and is confined to that specific report configuration not affecting other parts of the system.} without any knowledge of programming or even a query language.
+  Report results can be represented not only in a tabular manner, but also as chars and pivot tables with drill-down capabilities.
+  There can be multiple configurations of the same report, which can be saved and shared between application users.
+  Power users can take such reporting facility to its true potential in creating really complex and sophisticated reports.
 
   The Trident Genesis Platform emphasises its domain orientation by proliferating the underlying business model throughout the application architecture.
   Not only it provides developers with object-oriented means to model and interact with the business domain, but it also makes the domain explicitly visible to the application end-users.
   This platform's trait is known as \emph{semantic transparency} of the business domain, which is perceived equally by both software developers and the application end-users.
-  Such approach raises user's level of awareness of the implemented business model, which greatly facilitates communication between application developers, users and domain experts\footnote{Who may or may not be application users.}, ultimately resulting in the increased value for the business.
- 
-
-
-structural search
+  Such approach purposefully raises user's level of awareness of the implemented business model to facilitate communication between application developers, users and domain experts\footnote{Who may or may not be application users.}, ultimately resulting in the increased value for the business.
