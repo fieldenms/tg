@@ -23,17 +23,18 @@
   \end{wrapfigure}
   
   From this perspective Trident Genesis is not different providing a necessary abstraction for using lower level technologies without changing the source code of a business application.
-  For example, it provides the developers with its own model for working with data, which abstracts out the specifics of a particular database, which allows using different databases without modifying the business application source code.
-  This way a small-scale application can happily use H2 or MySQL, while a large-scale application would work with Oracle Database or MS SQL Server.
+  For example, it provides the developers with its own model for working with data, which abstracts out the specifics of a particular database.
+  This facilitates using different databases without modifying the business application source code.
+  A small-scale application can happily use H2 or MySQL, while a large-scale application would work with Oracle Database or MS SQL Server.
 
   At the very beginning the TG platform was targeted at inhouse purposes for migrating existing and developing new business applications.
   Such practical-driven approach allowed capturing the existing experience building business application in a way that made TG not just a set of reusable components and libraries, but a complete application platform covering every aspect of the application development and deployment life-cycle.
-  This in turn positioned TG as a standalone product, which does not mix in any specifics of a particular business application providing a generic way for building diverse business-oriented information systems.
+  This in turn positioned TG as a standalone product, which does not mix in any specifics of a particular business application and provides a generic way for building diverse business-oriented information systems.
 
-  The TG platform provides well thought out set of features sufficient for providing solutions to a large variety of business tasks/problems.
+  The TG platform incorporates well thought out set of features sufficient for providing solutions to a large variety of business tasks/problems.
   This results in reliable and controlled interoperability between underlying technologies governed by the platform without the need for introducing external dependencies resulting in ``stitches'', which often become the cause of many software defects.
   An excellent example of such interoperability is the developed \emph{type system}.
-  When building applications on top of TG, developers use the provided systems of types for interacting with web-resources, databases and for implementing business logic as well as the user interface.
+  When building applications on top of TG, developers use the provided system of types for interacting with web-resources, databases and for implementing business logic as well as the user interface.
   This removes the need for developers to work on type transformations when implementing different layers of the information system.
   
   As has been outlined earlier, the majority of software applications are not created from scratch, but enhanced and modified as business demands.

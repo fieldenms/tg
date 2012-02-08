@@ -1,6 +1,6 @@
 \section{DSL + Types + Metadata == Business Modeling}\label{sec:03}
 
-  There three principle compounds that are at the foundation of every business application based on the Trident Genesis platform: Domain Specific Languages, Type System and Metadata.
+  There are three principle compounds that are at the foundation of every business application based on the Trident Genesis platform: Domain Specific Languages, Type System and Metadata.
   Together they provide a uniform way of modeling the business domain.
 
 \subsection{Domain Specific Languages}
@@ -8,14 +8,14 @@
   In recent years there was a spike in popularity of the Domain-Specific Languages (DSL) concept, which can be explained by the programming issues outlined in section \ref{sec:01}, which affect not only the business oriented information systems, but also other domains dependent on various information systems.
 
   The concept of DSL is not new.
-  In fact, there are well established solutions for business software what exist for a long time and explicitly utilise this concept.
+  In fact, there are well established solutions for business software that exist for a long time and explicitly utilise this concept.
   For example, SAP Business Suite offers a specialised language ABAP and Microsoft Dynamics Axapta provides X++.
   These are examples of so called \emph{external DSL}, which are separate or external to the programming language used natively for creation of the mentioned products.
   The main disadvantage with external DSLs is this: if there is a need to express a complex algorithm the expressive power of a DSL should be adequate to implement such algorithm, which in turn makes that DSL yet another general purpose programming language\footnote{External DSLs, which have the expressive power of general purpose languages have the disadvantage of being a lot less popular, making difficult to find experienced software developers to support existing systems.}.
   If the external DSL is not expressive enough then developers would have to anyway resort to some general purpose programming language.
 
-  An opposite to external DSL is the concept of \emph{internal DSL} -- a specialised language, which utilises the capabilities of a specific general purpose programming language (host language) of expressing language-like constructs that can be used together with the general purpose programming language.
-  Internal DSLs share the development and execution infrastructure of the corresponding general purpose programming language taking a significant advantage of reusing debugging, profiling tools, code editors, existing programming libraries etc.
+  An opposite to external DSL is the concept of \emph{internal DSL} -- a specialised language, which utilises the capabilities of a specific general purpose programming language (host language) to express language-like constructs that can be used together with the general purpose programming language.
+  Internal DSLs share the development and execution infrastructure of the corresponding general purpose programming language taking a significant advantage of existing debugging, profiling tools, code editors, programming libraries etc.
 
   \begin{wrapfigure}{l}{90mm}
     \centering    
@@ -45,13 +45,13 @@
   However, in our strong opinion statically typed languages are of essential importance for constructing complex business oriented information systems.
   
   From the very beginning the Trident Genesis Platform was envisaged as an application platform founded on concepts of the internal DSL and domain-driven development (inspired by Eric Evans's ``Domain-Driven Design: Tackling Complexity in the Heart of Software'').
-  In order to ensure wider acceptance by the software development community\footnote{Popularisation of the platform among developers and the existence of multiple business applications built on top of it forms a community, which provides an invaluable resource for new developers and helps identifying additional features that should be incorporated into the platform leading to further improvement of its abstraction mechanism.}, the platform taps into the power of modern IDEs and existing programming skills of software developers using the Java programming language\footnote{Java is not the best host language for developing internal DSLs (e.g. Scala is a lot more adequate), but the maturity of the existing Java infrastructure and the development experience played a critical part in this decision.}.
-  The internal DSLs are used for expressing the application's behaviour in a declarative way addressing key areas of any software solution such as web, database communication and the user interface design.
+  In order to ensure wider acceptance by the software development community\footnote{Popularisation of the platform among developers and the existence of multiple business applications built on top of it forms a community, which provides an invaluable resource for new developers and helps identifying additional features that should be incorporated into the platform leading to further improvement of its abstraction mechanism.}, the platform taps into the power of modern IDEs and existing programming skills of software developers by using the Java programming language\footnote{Java is not the best host language for developing internal DSLs (e.g. Scala is a lot more adequate), but the maturity of the existing Java infrastructure and the development experience played a critical part in this decision.}.
+  The internal DSLs are used for expressing applications' behaviour in a declarative way addressing key areas of any software solution such as web, database communication and the user interface design.
 
 \subsection{Type System and Metadata}
   The concept of \emph{metadata driven} software development is well accepted and rapidly gaining its popularity among practitioners, affecting all modern software platforms and frameworks.
   The TG platform provides its unique type system and metadata support specifically targeted at the development of business applications.
-  The core of any TG-based applications is formed out of types modeling the business entities and the metadata, which complements the types.
+  The core of any TG-based application is formed out of types modeling the business entities and the metadata, which complements the types.
   Together types and metadata define the object hierarchy used for building all main parts of the business application as well as for determining all aspect of its behaviour.
   Basically, the execution of such business applications effectively interprets the developed types and metadata, which provides all necessary application functionality.
 
@@ -82,7 +82,7 @@
   \end{wrapfigure}
 
   By describing the application in terms of types and metadata, the developer informs the platform of a lot of useful information, which can be used by the platform in many different ways.
-  Based on this information, the platform automatically constructs a large part of the application internals, which provides the support for a complete application life-cycle.
+  Based on this information, the platform automatically constructs a large part of the application internals that provides support for a complete application life-cycle.
   For instance, provided metadata and types are sufficient for automatic construction of the application user interface that leverages the declared validation rules and dependencies between domain entities.
   Even more, the platform utilises this information for providing experienced end-users (i.e. without programming skills) of the business application with facilities to build comprehensive reports and analyses.
   
@@ -134,7 +134,7 @@
   
   \subsection{Model Driven Architecture}
   Trident Genesis enforces a strict orientation on model-driven development of business applications.
-  The notion of \emph{model} here means not only the business model as outline previously, but the a complete programming model supported by the platform.
+  The notion of \emph{model} here means not only the business model as outline previously, but a complete \emph{programming} model provided by the platform.
   This includes approaches for constructing data structures, implementation of the business logic, the ways of binding domain entities and user interface components, layouting application functionality at different layers and more.
 
   The major advantage of the enforced model is that all TG-based applications follow exactly the same development model, which ensures structural and behavioural uniformity.
@@ -146,7 +146,8 @@
   Data manipulation is also performed at the high-level programming model, which is interpreted by the platform in accordance with the specified database engine.
   
   Having a unified well-defined programming model significantly simplifies and improves comprehensibility of TG-based business applications, which further contributes to ease of application development and support.
-  Application development is completely done in the same system of concepts, which establishes a ubiquitous language carried out through all stages of development and support for all applications.
+  The software development is performed in the unified system of concepts.
+  This establishes a ubiquitous language carried out through all stages of development and support for all applications.
   Developers do not need to learn new concepts when supporting different TG-based applications and loose time otherwise required for switching between non-uniformly developed applications\footnote{This platform's singularity provides a way for establishing a Software Product Line for business solutions targeted at a specific problem domain.}.
   
   For example, the business entities modeled with platform's type system and metadata mechanism uniformly determine respective data structures in the underlying database.
@@ -157,8 +158,8 @@
 
 \subsection{Domain Model Reuse}
   One of the questions that is frequently raised when developing business solutions is the ability to reuse certain functionality between two or more applications.
-  This is especially critical if there are several business applications developed for the same or similar business domain, but different customers, as it would greatly simplify and improve application support (common enhancements, bug fixes etc.).
-  There are two distinct building blocks of any business application, which might need to be reused.
+  This is especially critical if there are several business applications developed for the same or similar business domain, but different customers, as it greatly simplifies and improves application support (common enhancements, bug fixes etc.).
+  There are two distinct building blocks of any business application that can be reused.
   \begin{itemize}
    \item \emph{Technical infrastructure} -- this is everything that has to do with technical aspects of software development and execution; it is critical to software applications, but brings the business value indirectly by making things possible.
     \item \emph{Business domain model} --  this is the part of business applications, which has a direct correspondence to the actual business practices benefiting from software automation; thus representing the most valuable software asset to the business.
@@ -167,7 +168,7 @@
   The Trident Genesis platform incorporates the \emph{technical infrastructure} reused by all TG-based business applications.
   This completely eliminates any work on part of application developers otherwise required to ensure reuse of this building block across multiple applications.
   The platform takes care of updates such as improvements to the underlying algorithms, handles API enhancements, backward compatibility and more.
-  Of course, there is no such thing as a free lunch -- all the complexity of supporting the technical infrastructure that enables natural reuse by all TG-based business solutions is hidden into the platform itself, shifting full responsibility to the platform developers\footnote{This is only natural and ensures clear responsibility separation. Such practices correspond to world-class software developments such as the Oracle Java Virtual Machine. 
+  Of course, there is no such thing as a free lunch -- all the complexity of supporting the technical infrastructure that enables natural reuse by all TG-based business solutions is hidden into the platform itself, shifting full responsibility for its support to the platform developers\footnote{This is only natural and ensures clear responsibility separation. Such practices correspond to world-class software developments such as the Oracle Java Virtual Machine. 
   Applications written for JVM are not concerned with the reuse of JMV as it occurs intrinsically. Similarly happens with TG-based applications, but at the higher level of abstraction.}.
 
   \begin{wrapfigure}{r}{90mm}
