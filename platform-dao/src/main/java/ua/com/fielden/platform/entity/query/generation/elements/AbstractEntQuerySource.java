@@ -2,20 +2,19 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.equery.IQueryModelProvider;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
 
 public abstract class AbstractEntQuerySource implements IEntQuerySource {
     /**
@@ -69,12 +68,8 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     @Override
     public void addFinalReferencingProp(final PropResolutionInfo prop) {
-	if (!prop.isImplicitId()) {
-	    	final Pair<String, String> propStructure = EntityUtils.splitPropByFirstDot(prop.getPropPart());
-		if (propStructure.getValue() != null && isPersistedEntityType(determinePropertyType(sourceType(), propStructure.getKey())) && !prop.allExplicit()) {
-	    	//if (!prop.allExplicit()) {
-		    throw new IllegalStateException("Property [" + prop.entProp + "] incorrectly resolved finally to source [" + this + "] as [" + prop + "]");
-		}
+	if (!prop.isImplicitId() && !prop.allExplicit()) {
+	    throw new IllegalStateException("Property [" + prop.entProp + "] incorrectly resolved finally to source [" + this + "] as [" + prop + "]");
 	}
 
 	finalReferencingProps.add(prop);
@@ -96,13 +91,13 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	return (sourceAlias != null && dotNotatedPropName.startsWith(sourceAlias + ".")) ? dotNotatedPropName.substring(sourceAlias.length() + 1) : null;
     }
 
-    abstract Pair<String, Class> lookForProp(final String dotNotatedPropName);
+    abstract Pair<Pair<String, Class>, Class> lookForProp(final String dotNotatedPropName);
 
     protected PropResolutionInfo propAsIs(final EntProp prop) {
-	final Pair<String, Class> propAsIsSearchResult = lookForProp(prop.getName());
+	final Pair<Pair<String, Class>, Class> propAsIsSearchResult = lookForProp(prop.getName());
 	if (propAsIsSearchResult != null/* && alias == null*/) {	// this condition will prevent usage of not-aliased properties if their source has alias
-	    final String explicitPart = prop.getName().equals(propAsIsSearchResult.getKey() + ".id") ? prop.getName() : propAsIsSearchResult.getKey();
-	    return  new PropResolutionInfo(prop, null, prop.getName(), false, propAsIsSearchResult.getValue(),	explicitPart);
+	    final String explicitPart = prop.getName().equals(propAsIsSearchResult.getKey().getKey() + ".id") ? prop.getName() : propAsIsSearchResult.getKey().getKey();
+	    return  new PropResolutionInfo(prop, null, prop.getName(), propAsIsSearchResult.getValue(),	explicitPart, propAsIsSearchResult.getKey().getValue());
 	}
 	return null;
 
@@ -113,10 +108,10 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	if (dealisedProp == null) {
 	    return null;
 	} else {
-	    final Pair<String, Class> propAsAliasedSearchResult = lookForProp(dealisedProp);
+	    final Pair<Pair<String, Class>, Class> propAsAliasedSearchResult = lookForProp(dealisedProp);
 	    if (propAsAliasedSearchResult != null) {
-		final String explicitPart = dealisedProp.equals(propAsAliasedSearchResult.getKey() + ".id") ? dealisedProp : propAsAliasedSearchResult.getKey();
-		return new PropResolutionInfo(prop, getAlias(), dealisedProp, false, propAsAliasedSearchResult.getValue(), explicitPart);
+		final String explicitPart = dealisedProp.equals(propAsAliasedSearchResult.getKey().getKey() + ".id") ? dealisedProp : propAsAliasedSearchResult.getKey().getKey();
+		return new PropResolutionInfo(prop, getAlias(), dealisedProp, propAsAliasedSearchResult.getValue(), explicitPart, propAsAliasedSearchResult.getKey().getValue());
 	    }
 	    return null;
 	}
@@ -124,15 +119,10 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
 	if (isPersistedEntityType(sourceType())) {
-	    return prop.getName().equalsIgnoreCase(getAlias()) ? new PropResolutionInfo(prop, getAlias(), null, true, Long.class, "") : null; // id property is meant here, but is it for all contexts?
+	    return prop.getName().equalsIgnoreCase(getAlias()) ? new PropResolutionInfo(prop, getAlias(), null, Long.class, "", null) : null; // id property is meant here, but is it for all contexts?
 	} else {
 	    return null;
 	}
-    }
-
-    @Override
-    public Class propType(final String propSimpleName) {
-	return determinePropertyType(sourceType(), propSimpleName);
     }
 
     @Override
@@ -175,26 +165,97 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	}
     }
 
-    @Override
-    public Map<String, Set<String>> determinePropGroups() {
-	final Map<String, Set<String>> result = new HashMap<String, Set<String>>();
-	for (final PropResolutionInfo refPropInfo : new HashSet<PropResolutionInfo>(getReferencingProps())) {
-	    final String first = refPropInfo.isImplicitId() ? "id" : refPropInfo.explicitPropPart;
-	    final String rest = (refPropInfo.isImplicitId() || refPropInfo.allExplicit()) //
-		    ? "" : //
-		refPropInfo.propPart.substring(refPropInfo.explicitPropPart.length() + 1);
+//    @Override
+//    public Map<String, Set<String>> determinePropGroups() {
+//	final Map<String, Set<String>> result = new HashMap<String, Set<String>>();
+//	for (final PropResolutionInfo refPropInfo : new HashSet<PropResolutionInfo>(getReferencingProps())) {
+//	    if (!refPropInfo.isImplicitId() && !refPropInfo.allExplicit()) {
+//		    final String first = refPropInfo.explicitPropPart;//refPropInfo.isImplicitId() ? "id" : refPropInfo.explicitPropPart;
+//		    final String rest = refPropInfo.propPart.substring(refPropInfo.explicitPropPart.length() + 1);
+////			    (refPropInfo.isImplicitId() || refPropInfo.allExplicit()) //
+////			    ? "" : //
+////			refPropInfo.propPart.substring(refPropInfo.explicitPropPart.length() + 1);
+//
+//		    Set<String> propGroup = result.get(first);
+//		    if (propGroup == null) {
+//			propGroup = new HashSet<String>();
+//			result.put(first, propGroup);
+//		    }
+//
+//		    propGroup.add(rest);
+////		    if (!StringUtils.isEmpty(rest)) {
+////			propGroup.add(rest);
+////		    }
+//	    }
+//	}
+//
+//	return result;
+//    }
 
-	    Set<String> propGroup = result.get(first);
-	    if (propGroup == null) {
-		propGroup = new HashSet<String>();
-		result.put(first, propGroup);
+    protected String composeAlias(final String propAlias) {
+	return alias == null ? propAlias : alias + "." + propAlias;
+    }
+
+    protected Map<String, Pair<Class, List<EntProp>>> determineGroups(final List<PropResolutionInfo> refProps) {
+	final Map<String, Pair<Class, List<EntProp>>> result = new HashMap<String, Pair<Class, List<EntProp>>>();
+
+	for (final PropResolutionInfo propResolutionInfo : refProps) {
+	    if (!propResolutionInfo.allExplicit() && !propResolutionInfo.isImplicitId() && EntityUtils.isPersistedEntityType(propResolutionInfo.explicitPropPartType)) {
+
+		if (!result.containsKey(propResolutionInfo.explicitPropPart)) {
+		    result.put(propResolutionInfo.explicitPropPart, new Pair<Class, List<EntProp>>(propResolutionInfo.explicitPropPartType, new ArrayList<EntProp>()));
+		}
+
+		result.get(propResolutionInfo.explicitPropPart).getValue().add(propResolutionInfo.entProp);
 	    }
-	    if (!StringUtils.isEmpty(rest)) {
-		propGroup.add(rest);
-	    }
+//	    else {
+//		System.out.println("Is all explicit: " + propResolutionInfo);
+//	    }
 	}
 
 	return result;
+    }
+
+    protected ConditionsModel joinCondition(final String leftProp, final String rightProp) {
+	return new ConditionsModel(new ComparisonTestModel(new EntProp(leftProp, Long.class, null/*TEMP*/), ComparisonOperator.EQ, new EntProp(rightProp, Long.class, null/*TEMP*/)));
+    }
+
+    protected JoinType joinType(final boolean leftJoin) {
+	return leftJoin ? JoinType.LJ : JoinType.IJ;
+    }
+
+    protected List<PropResolutionInfo> resolvePropsInternally(final List<EntProp> props) {
+	final List<PropResolutionInfo> result = new ArrayList<PropResolutionInfo>();
+	for (final EntProp prop : props) {
+	    result.add(containsProperty(prop));
+	}
+	return result;
+    }
+
+    @Override
+    public List<EntQueryCompoundSourceModel> generateMissingSources(final boolean parentLeftJoinLegacy, final List<PropResolutionInfo> refProps) {
+	final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
+	final Map<String, Pair<Class, List<EntProp>>> groups = determineGroups(refProps);
+
+	for (final Map.Entry<String, Pair<Class, List<EntProp>>> groupEntry : groups.entrySet()) {
+//	    System.out.println("  group name = " + groupEntry.getKey());
+//	    System.out.println("  group type = " + groupEntry.getValue().getKey());
+//	    System.out.println("  group props = " + groupEntry.getValue().getValue());
+	    final EntQuerySourceFromEntityType qrySource = new EntQuerySourceFromEntityType(groupEntry.getValue().getKey(), composeAlias(groupEntry.getKey()), true);
+
+	    /*TEMP*/final boolean propLeftJoin = parentLeftJoinLegacy || //
+			!isRequired(groupEntry.getKey());
+
+
+	    result.add(new EntQueryCompoundSourceModel(qrySource, joinType(propLeftJoin), joinCondition(qrySource.getAlias(), qrySource.getAlias() + ".id")));
+	    result.addAll(qrySource.generateMissingSources(propLeftJoin, qrySource.resolvePropsInternally(groupEntry.getValue().getValue())));
+	}
+
+	return result;
+    }
+
+    protected boolean isRequired(final String propName) {
+	return isPropertyPartOfKey(sourceType(), propName) || isPropertyRequired(sourceType(), propName);
     }
 
     /**
@@ -203,32 +264,50 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
      *
      */
     public static class PropResolutionInfo {
+	/**
+	 * Reference to prop being resolved within some query source
+	 */
 	private EntProp entProp;
+	/**
+	 * Part of the property dot.notation, that has been recognised as source alias. Is null if property name doesn't start with source alias prefix.
+	 */
 	private String aliasPart;
-	private String explicitPropPart;
+	/**
+	 * Part of the property dot.notation, that has been recognised as purely prop (dot.notated) name (without source alias prefix).
+	 */
 	private String propPart;
-	private boolean implicitId;
+	/**
+	 * Actual java type of the property.
+	 */
 	private Class propType;
+	/**
+	 * Part of property part, that is explicitly present in given query source. For case of source-from-type it will always be just one-part property, which is equal to propPart; in case of source-from-model it can be several parts property, depending on actual yields of the source model behind.
+	 */
+	private String explicitPropPart;
+	/**
+	 * Java type of the explicit property
+	 */
+	private Class explicitPropPartType;
 
 	public boolean allExplicit() {
-	    return explicitPropPart.equals(propPart);
+	    return explicitPropPart.equals(propPart) || !isPersistedEntityType(explicitPropPartType);
 	}
 
 	@Override
 	public String toString() {
-	    return "PropResolutionInfo: aliasPart = " + aliasPart + " : propPart = " + propPart + " : impId = " + implicitId + " : type = " + (propType != null ? propType.getSimpleName() : null) + " : explicitPropPart = " + explicitPropPart;
+	    return "\n\nPropResolutionInfo:\n aliasPart = " + aliasPart + "\n propPart = " + propPart + "\n type = " + (propType != null ? propType.getSimpleName() : null) + "\n explicitPropPart = " + explicitPropPart + "\n explicitPropPartType = " + (explicitPropPartType != null ? explicitPropPartType.getSimpleName() : null);
 	}
 
-	public PropResolutionInfo(final EntProp entProp, final String aliasPart, final String propPart, final boolean implicitId, final Class propType, final String explicitPropPart) {
+	public PropResolutionInfo(final EntProp entProp, final String aliasPart, final String propPart, final Class propType, final String explicitPropPart, final Class explicitPropPartType) {
 	    this.entProp = entProp;
 	    if(entProp.getPropType() == null && propType != null) {
 		entProp.setPropType(propType);
 	    }
 	    this.aliasPart = aliasPart;
 	    this.propPart = propPart;
-	    this.implicitId = implicitId;
 	    this.propType = propType;
 	    this.explicitPropPart = explicitPropPart;
+	    this.explicitPropPartType = explicitPropPartType;
 	}
 
 	public String getAliasPart() {
@@ -240,7 +319,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	}
 
 	public boolean isImplicitId() {
-	    return implicitId;
+	    return propPart == null && aliasPart != null;
 	}
 
 	public Class getPropType() {
@@ -248,7 +327,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	}
 
 	public Integer getPreferenceNumber() {
-	    return implicitId ? 2000 : propPart.length();
+	    return isImplicitId() ? 2000 : propPart.length();
 	}
 
 	public EntProp getEntProp() {
@@ -262,7 +341,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    result = prime * result + ((aliasPart == null) ? 0 : aliasPart.hashCode());
 	    result = prime * result + ((entProp == null) ? 0 : entProp.hashCode());
 	    result = prime * result + ((explicitPropPart == null) ? 0 : explicitPropPart.hashCode());
-	    result = prime * result + (implicitId ? 1231 : 1237);
+	    result = prime * result + ((explicitPropPartType == null) ? 0 : explicitPropPartType.hashCode());
 	    result = prime * result + ((propPart == null) ? 0 : propPart.hashCode());
 	    result = prime * result + ((propType == null) ? 0 : propType.hashCode());
 	    return result;
@@ -301,7 +380,11 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    } else if (!explicitPropPart.equals(other.explicitPropPart)) {
 		return false;
 	    }
-	    if (implicitId != other.implicitId) {
+	    if (explicitPropPartType == null) {
+		if (other.explicitPropPartType != null) {
+		    return false;
+		}
+	    } else if (!explicitPropPartType.equals(other.explicitPropPartType)) {
 		return false;
 	    }
 	    if (propPart == null) {
@@ -320,5 +403,5 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    }
 	    return true;
 	}
-    }
+   }
 }

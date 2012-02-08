@@ -47,13 +47,14 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
 
     @Override
     public String sql() {
-	return sourceType().getSimpleName().toUpperCase() + "_ AS " + sqlAlias + "/*" + alias + "*/";
+	return sourceType().getSimpleName().toUpperCase() + "_ AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
     }
 
     @Override
-    Pair<String, Class> lookForProp(final String dotNotatedPropName) {
+    Pair<Pair<String, Class>, Class> lookForProp(final String dotNotatedPropName) {
 	try {
-	    return new Pair<String, Class>(EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey(), determinePropertyType(sourceType(), dotNotatedPropName));
+	    final String explicitPropPart = EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey();
+	    return new Pair<Pair<String, Class>, Class>(new Pair<String, Class>(explicitPropPart, determinePropertyType(sourceType(), explicitPropPart)), determinePropertyType(sourceType(), dotNotatedPropName));
 	} catch (final Exception e) {
 	    return null;
 	}
@@ -66,7 +67,7 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
 
     @Override
     public String toString() {
-        return entityType.getSimpleName() + "-table AS " + getAlias() + " /*GEN*/";
+        return entityType.getSimpleName() + "-table AS " + getAlias() + " /*" + (generated ? " GEN " : "") + "*/";
     }
 
     @Override
@@ -107,15 +108,4 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
 	return true;
     }
 
-    @Override
-    public List<EntQueryCompoundSourceModel> generateMissingSources(final boolean parentLeftJoinLegacy) {
-	// TODO Auto-generated method stub
-	for (final PropResolutionInfo propInfo : getReferencingProps()) {
-
-	}
-
-	//final EntQuerySourceFromEntityType source = new EntQuerySourceFromEntityType(propType, composeAlias(entQrySource.getAlias(), entry.getKey()), true);
-
-	return null;
-    }
 }

@@ -26,12 +26,12 @@ public class QuerySourcesFinalPropertiesAssociationTest extends BaseEntQueryTCas
 	final EntQuery entQry = entResultQry(shortcutQry);
 
 	final List<PropResolutionInfo> src1FinProps = prepare( //
-		propResInf("v.station", "v", "station", false, ORG5, "station"), //
-		propResInf("station", null, "station", false, ORG5, "station"));
+		propResInf("v.station", "v", "station", ORG5, "station", ORG5), //
+		propResInf("station", null, "station", ORG5, "station", ORG5));
 
 	final List<PropResolutionInfo> src2FinProps = prepare( //
-		propResInf("v.station.id", "v.station", "id", false, LONG, "id"), //
-		propResInf("v.station.key", "v.station", "key", false, STRING, "key"));
+		propResInf("v.station.id", "v.station", "id", LONG, "id", LONG), //
+		propResInf("v.station.key", "v.station", "key", STRING, "key", STRING));
 	assertEquals(incP2S, compose(src1FinProps, src2FinProps), getSourcesFinalReferencingProps(entQry));
     }
 
@@ -48,26 +48,8 @@ public class QuerySourcesFinalPropertiesAssociationTest extends BaseEntQueryTCas
 	final EntQuery entQry = entResultQry(qry);
 
 	final List<PropResolutionInfo> src1FinProps = prepare( //
-		propResInf("model.key", null, "model.key", false, STRING, "model.key"),
-		propResInf("model.key", null, "model.key", false, STRING, "model.key")
-		);
-
-	assertEquals(incP2S, compose(src1FinProps), getSourcesFinalReferencingProps(entQry));
-    }
-
-    @Test
-    @Ignore
-    public void test3() {
-	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).where().prop("station.key").eq().val("AA").yield().prop("model").modelAsEntity(VEHICLE);
-	final PrimitiveResultQueryModel qry = select(sourceQry).where().prop("key").eq().val("AA").yield().prop("key").modelAsPrimitive();
-	final EntQuery entQry = entResultQry(qry);
-
-//	final PrimitiveResultQueryModel explicitQry = select(sourceQry).join(MODEL).on().prop("id").eq().prop("").where().prop("key").eq().val("AA").yield().prop("key").modelAsPrimitive();
-	System.out.println(entQry.sql());
-
-	final List<PropResolutionInfo> src1FinProps = prepare( //
-		propResInf("model.key", null, "model.key", false, STRING, "model.key"),
-		propResInf("model.key", null, "model.key", false, STRING, "model.key")
+		propResInf("model.key", null, "model.key", STRING, "model.key", STRING),
+		propResInf("model.key", null, "model.key", STRING, "model.key", STRING)
 		);
 
 	assertEquals(incP2S, compose(src1FinProps), getSourcesFinalReferencingProps(entQry));
@@ -76,6 +58,24 @@ public class QuerySourcesFinalPropertiesAssociationTest extends BaseEntQueryTCas
     @Test
     @Ignore
     public void test2() {
+	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).where().prop("station.key").eq().val("AA").yield().prop("model").modelAsEntity(VEHICLE);
+	final PrimitiveResultQueryModel qry = select(sourceQry).where().prop("key").eq().val("AA").yield().prop("key").modelAsPrimitive();
+	final EntQuery entQry = entResultQry(qry);
+
+//	final PrimitiveResultQueryModel explicitQry = select(sourceQry).join(MODEL).on().prop("id").eq().prop("").where().prop("key").eq().val("AA").yield().prop("key").modelAsPrimitive();
+	System.out.println(entQry.sql());
+
+	final List<PropResolutionInfo> src1FinProps = prepare( //
+		propResInf("model.key", null, "model.key", STRING, "model.key", STRING),
+		propResInf("model.key", null, "model.key", STRING, "model.key", STRING)
+		);
+
+	assertEquals(incP2S, compose(src1FinProps), getSourcesFinalReferencingProps(entQry));
+    }
+
+    @Test
+    @Ignore
+    public void test3() {
 	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).where().prop("station.key").eq().val("AA"). //
 		yield().prop("id").as("id"). //
 		yield().prop("key").as("key"). //
@@ -87,13 +87,13 @@ public class QuerySourcesFinalPropertiesAssociationTest extends BaseEntQueryTCas
 	final EntQuery entQry = entResultQry(qry);
 
 	final List<PropResolutionInfo> src1FinProps = prepare( //
-		propResInf("model.make", null, "model.make", false, MAKE, "model.make")
+		propResInf("model.make", null, "model.make", MAKE, "model.make", MAKE)
 		);
 
 	final List<PropResolutionInfo> src2FinProps = prepare( //
-		propResInf("model.make.id", "model.make", "id", false, LONG, "id"), //
-		propResInf("model.make.key", "model.make", "key", false, STRING, "key"), //
-		propResInf("model.make.key", "model.make", "key", false, STRING, "key"));
+		propResInf("model.make.id", "model.make", "id", LONG, "id", LONG), //
+		propResInf("model.make.key", "model.make", "key", STRING, "key", STRING), //
+		propResInf("model.make.key", "model.make", "key", STRING, "key", STRING));
 	assertEquals(incP2S, compose(src1FinProps, src2FinProps), getSourcesFinalReferencingProps(entQry));
     }
 }

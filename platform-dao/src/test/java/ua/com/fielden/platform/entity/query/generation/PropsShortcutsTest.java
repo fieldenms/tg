@@ -20,7 +20,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association13() {
+    public void test2() {
 	assertModelsEquals(//
 		select(VEHICLE). //
 		where().prop("model.make.key").eq().val("MERC").model(),
@@ -32,7 +32,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association14() {
+    public void test3() {
 	assertModelsEquals(//
 		select(VEHICLE). //
 		where().prop("station.key").like().val("AA%").and().prop("model.make.key").eq().val("MERC").model(),
@@ -46,7 +46,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association15() {
+    public void test4() {
 	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").model();
 
 	assertModelsEquals(//
@@ -60,7 +60,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association16() {
+    public void test5() {
 	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").model();
 
 	assertModelsEquals(//
@@ -76,7 +76,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association17() {
+    public void test6() {
 	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").model();
 
 	assertModelsEquals(//
@@ -92,7 +92,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association18() {
+    public void test7() {
 	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").model();
 
 	assertModelsEquals(//
@@ -109,7 +109,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association19() {
+    public void test8() {
 	assertModelsEquals(//
 		select(VEHICLE). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
@@ -122,7 +122,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association20() {
+    public void test9() {
 	// demonstrate how user can misuse explicit joining and get incorrect result (used leftJoin instead of innerJoin) in case of vice-verse the result will be even worse - incomplete result set
 	assertModelsEquals(//
 		select(VEHICLE). //
@@ -136,7 +136,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association21() {
+    public void test10() {
 	assertModelsEquals(//
 		select(VEHICLE). //
 		leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv"). //
@@ -150,7 +150,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association22() {
+    public void test11() {
 	assertModelsEquals(//
 		select(VEHICLE). //
 		leftJoin(VEHICLE).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
@@ -164,7 +164,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association23() {
+    public void test12() {
 	assertModelsEquals(//
 		select(VEHICLE). //
 		leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv"). //
@@ -180,7 +180,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association24() {
+    public void test13() {
 	// this illustrates the case of records being ate by explicit IJ after explicit LJ and how implicit joins are generated for (sub)properties of explicit IJ (aliased as rv2)
 	assertModelsEquals(//
 		select(VEHICLE). //
@@ -199,7 +199,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_prop_to_source_association25_prev_but_with_explicit_id() {
+    public void test14() {
 	// this illustrates the case of records being ate by explicit IJ after explicit LJ and how implicit joins are generated for (sub)properties of explicit IJ (aliased as rv2)
 	assertModelsEquals(//
 		select(VEHICLE). //

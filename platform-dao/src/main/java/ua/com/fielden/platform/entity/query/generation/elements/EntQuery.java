@@ -8,12 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -31,7 +28,7 @@ public class EntQuery implements ISingleOperand {
     private final QueryCategory category;
 
     private EntQuery master;
-    private final EntQuerySourcesEnhancer entQrySourcesEnhancer = new EntQuerySourcesEnhancer();
+    //private final EntQuerySourcesEnhancer entQrySourcesEnhancer = new EntQuerySourcesEnhancer();
 
     private boolean isSubQuery() {
 	return QueryCategory.SUB_QUERY.equals(category);
@@ -181,7 +178,7 @@ public class EntQuery implements ISingleOperand {
 	}
 
 	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : sources.getAllSourcesAndTheirJoinType()) {
-	    sources.getCompounds().addAll(generateImplicitSources(sourceAndItsJoinType.getKey(), sourceAndItsJoinType.getValue()));
+	    sources.getCompounds().addAll(generateImplicitSources2(sourceAndItsJoinType.getKey(), sourceAndItsJoinType.getValue()));
 	}
 
 	final List<EntProp> immediatePropertiesFinally = getImmediateProps();
@@ -230,12 +227,8 @@ public class EntQuery implements ISingleOperand {
 	return unresolvedPropsFromSubqueries;
     }
 
-    private List<EntQueryCompoundSourceModel> generateImplicitSources(final IEntQuerySource source, final boolean leftJoined) {
-	final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
-	for (final PropTree propTree : entQrySourcesEnhancer.produceSourcesTree(source, leftJoined, source.determinePropGroups(), this)) {
-	    result.addAll(propTree.getSourceModels());
-	}
-	return result;
+    private List<EntQueryCompoundSourceModel> generateImplicitSources2(final IEntQuerySource source, final boolean leftJoined) {
+	return source.generateMissingSources(leftJoined, source.getReferencingProps());
     }
 
     private List<EntProp> resolveProps(final List<EntProp> propsToBeResolved) {
@@ -326,88 +319,88 @@ public class EntQuery implements ISingleOperand {
 	}
     }
 
-    public static class PropTree implements Comparable<PropTree>{
-	boolean leftJoin;
-	EntQuerySourceFromEntityType qrySource;
-	Set<PropTree> subprops;
-	EntQuery owner;
-
-	public PropTree(final EntQuerySourceFromEntityType qrySource, final boolean leftJoin, final Set<PropTree> subprops, final EntQuery owner) {
-	    this.qrySource = qrySource;
-	    this.subprops = subprops;
-	    this.leftJoin = leftJoin;
-	    this.owner = owner;
-	}
-
-	private ConditionsModel joinCondition(final String leftProp, final String rightProp) {
-	    return new ConditionsModel(new ComparisonTestModel(new EntProp(leftProp, Long.class, owner), ComparisonOperator.EQ, new EntProp(rightProp, Long.class, owner)));
-	}
-
-	private JoinType joinType(final boolean leftJoin) {
-	    return leftJoin ? JoinType.LJ : JoinType.IJ;
-	}
-
-	public List<EntQueryCompoundSourceModel> getSourceModels() {
-	    final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
-	    result.add(new EntQueryCompoundSourceModel(qrySource, joinType(leftJoin), joinCondition(qrySource.getAlias(), qrySource.getAlias() + ".id")));
-	    for (final PropTree subPropTree : subprops) {
-		result.addAll(subPropTree.getSourceModels());
-	    }
-	    return result;
-	}
-
-	@Override
-	public String toString() {
-	    return qrySource + " _ " + subprops + " _ " + leftJoin;
-	}
-
-	@Override
-	public int compareTo(final PropTree o) {
-	    return this.qrySource.getAlias().compareTo(o.qrySource.getAlias());
-	}
-
-	@Override
-	public int hashCode() {
-	    final int prime = 31;
-	    int result = 1;
-	    result = prime * result + (leftJoin ? 1231 : 1237);
-	    result = prime * result + ((qrySource == null) ? 0 : qrySource.hashCode());
-	    result = prime * result + ((subprops == null) ? 0 : subprops.hashCode());
-	    return result;
-	}
-
-	@Override
-	public boolean equals(final Object obj) {
-	    if (this == obj) {
-		return true;
-	    }
-	    if (obj == null) {
-		return false;
-	    }
-	    if (!(obj instanceof PropTree)) {
-		return false;
-	    }
-	    final PropTree other = (PropTree) obj;
-	    if (leftJoin != other.leftJoin) {
-		return false;
-	    }
-	    if (qrySource == null) {
-		if (other.qrySource != null) {
-		    return false;
-		}
-	    } else if (!qrySource.equals(other.qrySource)) {
-		return false;
-	    }
-	    if (subprops == null) {
-		if (other.subprops != null) {
-		    return false;
-		}
-	    } else if (!subprops.equals(other.subprops)) {
-		return false;
-	    }
-	    return true;
-	}
-    }
+//    public static class PropTree implements Comparable<PropTree>{
+//	boolean leftJoin;
+//	EntQuerySourceFromEntityType qrySource;
+//	Set<PropTree> subprops;
+//	EntQuery owner;
+//
+//	public PropTree(final EntQuerySourceFromEntityType qrySource, final boolean leftJoin, final Set<PropTree> subprops, final EntQuery owner) {
+//	    this.qrySource = qrySource;
+//	    this.subprops = subprops;
+//	    this.leftJoin = leftJoin;
+//	    this.owner = owner;
+//	}
+//
+//	private ConditionsModel joinCondition(final String leftProp, final String rightProp) {
+//	    return new ConditionsModel(new ComparisonTestModel(new EntProp(leftProp, Long.class, owner), ComparisonOperator.EQ, new EntProp(rightProp, Long.class, owner)));
+//	}
+//
+//	private JoinType joinType(final boolean leftJoin) {
+//	    return leftJoin ? JoinType.LJ : JoinType.IJ;
+//	}
+//
+//	public List<EntQueryCompoundSourceModel> getSourceModels() {
+//	    final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
+//	    result.add(new EntQueryCompoundSourceModel(qrySource, joinType(leftJoin), joinCondition(qrySource.getAlias(), qrySource.getAlias() + ".id")));
+//	    for (final PropTree subPropTree : subprops) {
+//		result.addAll(subPropTree.getSourceModels());
+//	    }
+//	    return result;
+//	}
+//
+//	@Override
+//	public String toString() {
+//	    return qrySource + " _ " + subprops + " _ " + leftJoin;
+//	}
+//
+//	@Override
+//	public int compareTo(final PropTree o) {
+//	    return this.qrySource.getAlias().compareTo(o.qrySource.getAlias());
+//	}
+//
+//	@Override
+//	public int hashCode() {
+//	    final int prime = 31;
+//	    int result = 1;
+//	    result = prime * result + (leftJoin ? 1231 : 1237);
+//	    result = prime * result + ((qrySource == null) ? 0 : qrySource.hashCode());
+//	    result = prime * result + ((subprops == null) ? 0 : subprops.hashCode());
+//	    return result;
+//	}
+//
+//	@Override
+//	public boolean equals(final Object obj) {
+//	    if (this == obj) {
+//		return true;
+//	    }
+//	    if (obj == null) {
+//		return false;
+//	    }
+//	    if (!(obj instanceof PropTree)) {
+//		return false;
+//	    }
+//	    final PropTree other = (PropTree) obj;
+//	    if (leftJoin != other.leftJoin) {
+//		return false;
+//	    }
+//	    if (qrySource == null) {
+//		if (other.qrySource != null) {
+//		    return false;
+//		}
+//	    } else if (!qrySource.equals(other.qrySource)) {
+//		return false;
+//	    }
+//	    if (subprops == null) {
+//		if (other.subprops != null) {
+//		    return false;
+//		}
+//	    } else if (!subprops.equals(other.subprops)) {
+//		return false;
+//	    }
+//	    return true;
+//	}
+//    }
 
     /**
      * By immediate props here are meant props used within this query and not within it's (nested) subqueries.

@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
 
@@ -22,13 +20,13 @@ public interface IEntQuerySource {
      */
     Class sourceType();
 
-    /**
-     * Determines Java type of the property within given query source (can be entity type or query)
-     *
-     * @param propSimpleName
-     * @return
-     */
-    Class propType(String propSimpleName);
+//    /**
+//     * Determines Java type of the property within given query source (can be entity type or query)
+//     *
+//     * @param propSimpleName
+//     * @return
+//     */
+//    Class propType(String propSimpleName);
 
     /**
      * Attempts to resolve given prop as prop of this query source. Returns null in case of attempt failure.
@@ -63,11 +61,11 @@ public interface IEntQuerySource {
      */
     List<EntValue> getValues();
 
-    /**
-     * Determines props and their subprops that require additional joined query source to become explicitly accessible.
-     * @return
-     */
-    Map<String, Set<String>> determinePropGroups();
+//    /**
+//     * Determines props and their subprops that require additional joined query source to become explicitly accessible.
+//     * @return
+//     */
+//    Map<String, Set<String>> determinePropGroups();
 
     void addReferencingProp(PropResolutionInfo prop);
 
@@ -77,5 +75,5 @@ public interface IEntQuerySource {
 
     List<PropResolutionInfo> getFinalReferencingProps();
 
-    List<EntQueryCompoundSourceModel> generateMissingSources(final boolean parentLeftJoinLegacy);
+    List<EntQueryCompoundSourceModel> generateMissingSources(final boolean parentLeftJoinLegacy, List<PropResolutionInfo> refProps);
 }
