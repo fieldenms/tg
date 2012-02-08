@@ -3,8 +3,7 @@
   The platform provides other essential functionality that cannot be described in details as part of this document.
   In this section, we would like only to highlight some of it.
 
-\paragraph{Application Security.}
-
+  \paragraph{Application Security.}
   The platform incorporates both authentication and authorisation mechanisms that govern application security.
   The authentication mechanism is heavily influenced by Amazon S3 token-based security schema in combination with RSA encryption.
   It works automatically out of the box and may require developers only to plug-in the server-side user identification model.
@@ -13,7 +12,7 @@
   
   Unlike authentication, the authorisation mechanism is used more explicitly during application development, which is required to support fine-grained access control.
   The platform provides a unique declarative authorisation mechanism that ergonomically fits into the development model using the object-oriented paradigm.
-  A concept of \emph{security token} represents a security demarcation mechanism, which can be applied to the smallest execution artefact such as accessors to domain entity properties or any other method in the domain model.
+  A concept of \emph{security token} represents a security demarcation mechanism, which can be applied to the smallest execution artifacts such as accessors to domain entity properties or any other method in the domain model.
   As opposite to many other existing technologies where the authorisation mechanism is often associated with UI controls, the platform unifies the authorisation mechanism with the business domain model.
   This way, no matter where in the application logic (including UI and other client- or server-side modules) a certain business functionality is accessed it is always protected.
   
@@ -26,7 +25,8 @@
   Application developers and administrators, who control user permissions, perceive security tokens in exactly the same semantic context.
   For example, this facilitates cooperation of these stakeholders to devise the most appropriate structure and scope for security tokens.
 
-  All application users are based on the provided by the platform user-model.
+  \paragraph{Users \& Roles.} 
+  All application users are based on the provided by the platform user model.
   Each TG-based application maintains identity of the currently logged in user, which covers both client- and server-sides\footnote{
     In order to support stateless server-side implementation, the platform does not maintain any user sessions at the server. 
     In order to identify requests from different users, an individual security token, associated with each logged in user, is transmitted with every HTTP request.}.
@@ -45,7 +45,14 @@
   Developers only need to implement the filtering rules (e.g. specify the filtering criteria) and the platform fully automates their execution.
   For example, any EQL query, either manually implemented by developers as part of some business logic or automatically composed by means of UI configuration tools, gets automatically transformed to incorporate filtering conditions.
 
-\paragraph{Deployment \& Versioning.}
-
-
-\paragraph{Development Tools.}
+  \paragraph{Deployment \& Versioning.}
+  Application deployment and update facilities have a special place for business applications.
+  Unlike many other kinds of software, business applications belong to the most frequently modified systems, which reflects the real-life situation of fast changing business processes.
+  As shown in previous sections, the provided development model unifies all aspects of application development around the concept of business domain specifically to speedup the development life-cycle.
+  In order to deliver implemented changes to application users, the platform provides a deployment mechanism that orchestrates the delivery of applications and their incremental updates.
+  
+  This mechanism implements a strict versioning model where only the client- and server-side applications of the same version can interact.
+  For example, if the server-side application was updated and there are running client-side application instances of an older version, then all requests from these clients to the server would be rejected with the requirement to restart the application in order to be updated.
+  At the same time not all application modifications warrant a version change.
+  With this approach, developers can leverage both backward compatible and breaking changes where backward compatible modifications would not force an update for already running applications.
+  
