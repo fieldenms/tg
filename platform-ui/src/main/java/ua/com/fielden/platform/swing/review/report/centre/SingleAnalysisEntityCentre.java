@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 
@@ -18,22 +23,58 @@ public class SingleAnalysisEntityCentre<T extends AbstractEntity> extends Abstra
     }
 
     @Override
+    public EntityCentreModel<T> getModel() {
+	return (EntityCentreModel<T>)super.getModel();
+    }
+
+    @Override
     public JComponent getReviewPanel() {
 	return getReviewProgressLayer();
     }
 
     @Override
-    protected Action createSaveAsDefaultAction() {
-	return null;
+    protected List<Action> createCustomActionList() {
+	final List<Action> customActions = new ArrayList<Action>();
+	customActions.add(getConfigureAction());
+	customActions.add(createSaveAction());
+	customActions.add(createSaveAsAction());
+	customActions.add(createRemoveAction());
+	return customActions;
     }
 
-    @Override
-    protected Action createLoadDefaultAction() {
-	return null;
+    private Action createSaveAction() {
+	return new AbstractAction() {
+
+	    private static final long serialVersionUID = 8474884103209307717L;
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		getModel().getConfigurationModel().save();
+	    }
+	};
     }
 
-    @Override
-    protected Action createRemoveAction() {
-	return getModel().getName() == null ? null : super.createRemoveAction();
+    private Action createSaveAsAction() {
+	return new AbstractAction() {
+
+	    private static final long serialVersionUID = 6870686264834331196L;
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		getModel().getConfigurationModel().saveAs();
+	    }
+	};
+    }
+
+    private Action createRemoveAction() {
+	return getModel().getName() == null ? null : new AbstractAction() {
+
+	    private static final long serialVersionUID = 8474884103209307717L;
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		getModel().getConfigurationModel().remove();
+	    }
+	};
     }
 }

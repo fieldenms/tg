@@ -55,8 +55,7 @@ public class RangePropertyEditor implements IPropertyEditor {
 	label.setToolTipText(fromEditor.getLabel().getToolTipText());
 
 	final Class<?> propertyType = fromEditor.getEntity().getPropertyType(fromEditor.getPropertyName());
-	final Class<?> boolType = boolean.class;
-	bool = (Boolean.class == propertyType) || (boolType == propertyType);
+	bool = (Boolean.class == propertyType) || (boolean.class == propertyType);
 	date = (Date.class.isAssignableFrom(propertyType));
 	editor = createEditor(bool, conventionalPropertyName);
     }
@@ -164,15 +163,15 @@ public class RangePropertyEditor implements IPropertyEditor {
     @Override
     public boolean isIgnored() {
 	// if both editors are ignored - range editor will be ignored:
-        return fromEditor.isIgnored() && toEditor.isIgnored() || (isBool() && !fromEditor.isIgnored() && !toEditor.isIgnored());
+	return fromEditor.isIgnored() && toEditor.isIgnored() || (isBool() && !fromEditor.isIgnored() && !toEditor.isIgnored());
     }
 
     public IPropertyEditor getFromEditor() {
-        return fromEditor;
+	return fromEditor;
     }
 
     public IPropertyEditor getToEditor() {
-        return toEditor;
+	return toEditor;
     }
 
 }

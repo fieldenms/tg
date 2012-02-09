@@ -16,7 +16,7 @@ public abstract class AbstractConfigurationModel {
     /**
      * Holds all registered {@link EventListener}s.
      */
-    private final EventListenerList listenerList;
+    protected final EventListenerList listenerList;
 
     /**
      * Determines the current report's mode. There are two possible report modes: WIZARD, REPORT.

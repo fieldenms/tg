@@ -9,12 +9,11 @@ import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisModel;
 
-public class GridConfigurationModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractAnalysisConfigurationModel {
+public class GridConfigurationModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractAnalysisConfigurationModel<T, DTM> {
 
-    private final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria;
 
     public GridConfigurationModel(final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria){
-	this.criteria = criteria;
+	super(criteria, null);
     }
 
     @Override
@@ -26,12 +25,8 @@ public class GridConfigurationModel<T extends AbstractEntity, DTM extends ICentr
 	return Result.successful(this);
     }
 
-    public EntityQueryCriteria<DTM, T, IEntityDao<T>> getCriteria() {
-	return criteria;
-    }
-
     public GridAnalysisModel<T, DTM> createGridAnalysisModel() {
-	return new GridAnalysisModel<T, DTM>(getCriteria(), getPageHolder());
+	return new GridAnalysisModel<T, DTM>(this, getCriteria(), getPageHolder());
     }
 
 }

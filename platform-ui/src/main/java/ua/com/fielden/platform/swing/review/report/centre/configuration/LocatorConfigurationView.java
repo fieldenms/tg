@@ -7,20 +7,21 @@ import ua.com.fielden.platform.swing.review.report.centre.SingleAnalysisEntityLo
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorEventListener;
 
-public class LocatorConfigurationView<T extends AbstractEntity> extends AbstractCentreConfigurationView<T, ILocatorDomainTreeManager, SingleAnalysisEntityLocator<T>> {
+public class LocatorConfigurationView<T extends AbstractEntity, R extends AbstractEntity> extends AbstractCentreConfigurationView<T, ILocatorDomainTreeManager, SingleAnalysisEntityLocator<T>> {
 
     private static final long serialVersionUID = 7422543091832971730L;
 
     private final boolean isMultipleSelection;
 
-    public LocatorConfigurationView(final LocatorConfigurationModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final boolean isMultipleSelection) {
+    public LocatorConfigurationView(final LocatorConfigurationModel<T, R> model, final BlockingIndefiniteProgressLayer progressLayer, final boolean isMultipleSelection) {
 	super(model, progressLayer);
 	this.isMultipleSelection = isMultipleSelection;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public LocatorConfigurationModel<T> getModel() {
-	return (LocatorConfigurationModel<T>)super.getModel();
+    public LocatorConfigurationModel<T, R> getModel() {
+	return (LocatorConfigurationModel<T, R>)super.getModel();
     }
 
     public void addLocatorEventListener(final ILocatorEventListener l){

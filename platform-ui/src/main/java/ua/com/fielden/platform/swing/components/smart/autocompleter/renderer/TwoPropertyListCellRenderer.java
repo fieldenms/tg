@@ -45,7 +45,7 @@ public class TwoPropertyListCellRenderer<T> extends JPanel implements ListCellRe
     private final Color hoverColour = new Color(201, 227, 251, 150);
     private final Color hoverSelectedColour = new Color(hoverColour.getRed(), hoverColour.getGreen(), hoverColour.getBlue(), 255);
 
-    //Determines whether highlight first property or not. 
+    //Determines whether highlight first property or not.
     private boolean highlightFirstValue = true;
     //Determines whether highlight second property or not.
     private boolean highlightSecondValue = false;
@@ -198,7 +198,7 @@ public class TwoPropertyListCellRenderer<T> extends JPanel implements ListCellRe
 	this.auto = auto;
     }
 
-    private boolean isHighlightFirstValue() {
+    public boolean isHighlightFirstValue() {
 	return highlightFirstValue;
     }
 
@@ -206,7 +206,7 @@ public class TwoPropertyListCellRenderer<T> extends JPanel implements ListCellRe
 	this.highlightFirstValue = highlightFirstValue;
     }
 
-    private boolean isHighlightSecondValue() {
+    public boolean isHighlightSecondValue() {
 	return highlightSecondValue;
     }
 

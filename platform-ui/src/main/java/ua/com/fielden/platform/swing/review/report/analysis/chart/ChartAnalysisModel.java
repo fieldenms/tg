@@ -18,6 +18,7 @@ import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedLi
 import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.types.Money;
 
@@ -25,8 +26,8 @@ public class ChartAnalysisModel<T extends AbstractEntity> extends AbstractAnalys
 
     private final ChartAnalysisDataProvider chartAnalysisDataProvider = new ChartAnalysisDataProvider();
 
-    public ChartAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final AnalysisDomainTreeManager adtm, final PageHolder pageHolder) {
-	super(criteria, adtm, pageHolder);
+    public ChartAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManager> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final AnalysisDomainTreeManager adtm, final PageHolder pageHolder) {
+	super(configurationModel, criteria, adtm, pageHolder);
 	getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
 	    @SuppressWarnings("unchecked")
@@ -36,6 +37,9 @@ public class ChartAnalysisModel<T extends AbstractEntity> extends AbstractAnalys
 	    }
 	});
     }
+
+    //TODO Provide getConfigurationModel() that returns the specific configuration model for this analysis.
+
 
     public ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage<EntityAggregates>> getChartAnalysisDataProvider() {
 	return chartAnalysisDataProvider;

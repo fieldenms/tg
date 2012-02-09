@@ -2,7 +2,6 @@ package ua.com.fielden.platform.swing.review.report.events;
 
 import java.util.EventObject;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.report.centre.SingleAnalysisEntityLocator;
 
 /**
@@ -27,15 +26,14 @@ public class LocatorEvent extends EventObject {
 	SELECT, CLOSE;
     }
 
-    public LocatorEvent(final SingleAnalysisEntityLocator<? extends AbstractEntity> locator, final LocatorAction locatorAction) {
+    public LocatorEvent(final SingleAnalysisEntityLocator<?> locator, final LocatorAction locatorAction) {
 	super(locator);
 	this.locatorAction = locatorAction;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public SingleAnalysisEntityLocator<? extends AbstractEntity<?>> getSource() {
-	return (SingleAnalysisEntityLocator<? extends AbstractEntity<?>>)super.getSource();
+    public SingleAnalysisEntityLocator<?> getSource() {
+	return (SingleAnalysisEntityLocator<?>)super.getSource();
     }
 
     public LocatorAction getLocatorAction() {

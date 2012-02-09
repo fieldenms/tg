@@ -6,15 +6,22 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.AbstractCentreConfigurationModel;
 
 public class AbstractEntityCentreModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractEntityReviewModel<T, DTM> {
 
     private final String name;
 
-    public AbstractEntityCentreModel(final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria, final String name) {
-	super(criteria);
+    public AbstractEntityCentreModel(final AbstractCentreConfigurationModel<T, DTM> configurationModel, final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria, final String name) {
+	super(configurationModel, criteria);
 	this.name = name;
 	// TODO Auto-generated constructor stub
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public AbstractCentreConfigurationModel<T, DTM> getConfigurationModel() {
+	return (AbstractCentreConfigurationModel<T, DTM>)super.getConfigurationModel();
     }
 
     /**

@@ -27,16 +27,20 @@ import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
  */
 public class CriteriaModificationLayer extends JXLayer<JComponent> implements ItemListener {
 
+    private static final long serialVersionUID = -9123603131112707930L;
+
+    //TODO remove code below except the commented one.
     public CriteriaModificationLayer(final IPropertyEditor propertyEditor) {
-	// TODO Remove after the code below will be uncommented
+	// TODO Auto-generated constructor stub
     }
 
+    //TODO remove code below except the commented one.
     @Override
     public void itemStateChanged(final ItemEvent e) {
-	// TODO Remove after the code below will be uncommented.
+	// TODO Auto-generated method stub
+
     }
-    //    private static final long serialVersionUID = -9123603131112707930L;
-    //
+
     //    private final static String MISSING_VALUE = "Missing value", NOT = "Not", EXCLUSIVE = "Exclusive", ALL = "All";
     //
     //    private final BoundedValidationLayer<?> leftValidationLayer, rightValidationLayer;
@@ -163,7 +167,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     //     *
     //     * @param propertyEditor
     //     */
-    //    //@SuppressWarnings({ "unchecked", "rawtypes" })
+    //    @SuppressWarnings("unchecked")
     //    public CriteriaModificationLayer(final IPropertyEditor propertyEditor) {
     //	super(propertyEditor.getEditor());
     //	setUI(new CriteriaModificationUi());
@@ -369,7 +373,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     //		public void postNotSuccessfulCommitAction() {
     //		}
     //	    });
-    //	    deqc.getChangeSupport().addPropertyChangeListener(DynamicEntityQueryCriteria.DEFAULT + editor.getPropertyName(), new PropertyChangeListener() {
+    //	    eqc.getChangeSupport().addPropertyChangeListener(DynamicEntityQueryCriteria.DEFAULT + editor.getPropertyName(), new PropertyChangeListener() {
     //		@Override
     //		public void propertyChange(final PropertyChangeEvent evt) {
     //		    // "default" crit-modif state, after the value has been defaulted:
@@ -381,19 +385,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     //		}
     //	    });
     //
-    //	    if (bvl.getIncapsulatedComponent() instanceof JSpinner) {
-    //		final JSpinner spinner = (JSpinner) bvl.getIncapsulatedComponent();
-    //		// get the actual text field and assign popup shower:
-    //		if (spinner.getEditor() instanceof DefaultEditor) {
-    //		    ((DefaultEditor) spinner.getEditor()).getTextField().addMouseListener(popupShower);
-    //		}
-    //		// get actual arrow buttons and assign popup shower:
-    //		for (final Component c : spinner.getComponents()) {
-    //		    c.addMouseListener(popupShower);
-    //		}
-    //	    } else {
-    //		bvl.getIncapsulatedComponent().addMouseListener(popupShower);
-    //	    }
+    //	    bvl.addIncapsulatedMouseListener(popupShower);
     //	}
     //    }
     //
@@ -715,8 +707,8 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     //     * Updates a {@link DynamicProperty}s corresponding to high-level criteria modification layer with emptiness/negation/exclusiveness/dateValue.
     //     */
     //    private void updateDynamicPropertiesState() {
-    //	final Pair<String, String> propertyNames = deqc.getPropertyNames(propertyName);
-    //	final DynamicProperty mainProperty = deqc.getEditableProperty(propertyNames.getKey());
+    //	final Pair<String, String> propertyNames = eqc.getPropertyNames(conventionalPropertyName);
+    //	final DynamicProperty mainProperty = eqc.getEditableProperty(propertyNames.getKey());
     //	mainProperty.setNot(not); // update Not state
     //	mainProperty.setOrNull(orNull); // update "or null" parameter
     //	mainProperty.setExclusive(fromExclusive); // update exclusiveness
@@ -724,8 +716,8 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     //	mainProperty.setDateMnemonic(dateState.getDateMnemonic()); // update date mnemonic
     //	mainProperty.setAndBefore(dateState.getAndBefore()); // update andBefore
     //	mainProperty.setAll(all); // update ALL parameter
-    //	if (!StringUtils.isEmpty(propertyNames.getValue()) && deqc.getEditableProperty(propertyNames.getValue()) != null) {
-    //	    final DynamicProperty secondaryProperty = deqc.getEditableProperty(propertyNames.getValue());
+    //	if (!StringUtils.isEmpty(propertyNames.getValue()) && eqc.getEditableProperty(propertyNames.getValue()) != null) {
+    //	    final DynamicProperty secondaryProperty = eqc.getEditableProperty(propertyNames.getValue());
     //	    secondaryProperty.setNot(not); // update state
     //	    secondaryProperty.setOrNull(orNull); // update "or null" parameter
     //	    secondaryProperty.setExclusive(toExclusive); // update exclusiveness
@@ -781,21 +773,9 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     //	    final JComponent component = layer.getView();
     //	    paintColour(g2, backgroundColor, component);
     //
-    //	    // JSpinner is a special case of incapsulated component, so it should be handled specially...
-    //	    final JComponent incapsulatedComponent;
-    //	    if (leftValidationLayer.getIncapsulatedComponent() instanceof JSpinner) {
-    //		final JSpinner spinner = (JSpinner) leftValidationLayer.getIncapsulatedComponent();
-    //		if (spinner.getEditor() instanceof DefaultEditor) {
-    //		    incapsulatedComponent = ((DefaultEditor) spinner.getEditor()).getTextField();
-    //		} else {
-    //		    incapsulatedComponent = leftValidationLayer.getIncapsulatedComponent();
-    //		}
-    //	    } else {
-    //		incapsulatedComponent = leftValidationLayer.getIncapsulatedComponent();
-    //	    }
-    //
+    //	    final int leftInset = leftValidationLayer.getIncapsulatedInsets().left;
     //	    // define how many characters in the caption can be drawn
-    //	    final int actualInsets = incapsulatedComponent.getInsets().left - component.getInsets().left;
+    //	    final int actualInsets = leftInset - component.getInsets().left;
     //
     //	    //	    // define how many characters in the caption can be drawn
     //	    //	    final FontMetrics fm = g2.getFontMetrics();
@@ -812,7 +792,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     //	    g2.setColor(new Color(0f, 0f, 0f, 1.0f));
     //	    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
     //
-    //	    final double xPos = incapsulatedComponent.getInsets().left;
+    //	    final double xPos = leftInset;
     //	    final Rectangle2D textBounds = g2.getFontMetrics().getStringBounds(textToDisplay, g2);
     //	    final int h = component.getSize().height;
     //	    final double yPos = (h - textBounds.getHeight()) / 2. + g2.getFontMetrics().getAscent();

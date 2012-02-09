@@ -4,6 +4,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationModel;
 
 //TODO consider necessity of the entity centre model existence.
 public class EntityCentreModel<T extends AbstractEntity> extends AbstractEntityCentreModel<T, ICentreDomainTreeManager> {
@@ -12,8 +13,13 @@ public class EntityCentreModel<T extends AbstractEntity> extends AbstractEntityC
     //private AbstractAnalysisConfigurationModel resultViewModel;
 
 
-    public EntityCentreModel(final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final String name){
-	super(criteria, name);
+    public EntityCentreModel(final CentreConfigurationModel<T> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final String name){
+	super(configurationModel, criteria, name);
+    }
+
+    @Override
+    public CentreConfigurationModel<T> getConfigurationModel() {
+	return (CentreConfigurationModel<T>)super.getConfigurationModel();
     }
 
     //    private final AbstractConfigurationModel getResultViewModel(){

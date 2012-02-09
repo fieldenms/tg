@@ -39,7 +39,7 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
     private final AbstractEntityCentre<T, DTM> owner;
 
 
-    public AbstractAnalysisConfigurationView(final String analysisName, final AbstractAnalysisConfigurationModel model, final AbstractEntityCentre<T, DTM> owner, final BlockingIndefiniteProgressLayer progressLayer) {
+    public AbstractAnalysisConfigurationView(final String analysisName, final AbstractAnalysisConfigurationModel<T, DTM> model, final AbstractEntityCentre<T, DTM> owner, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	this.analysisName = analysisName;
 	this.owner = owner;
@@ -79,8 +79,9 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 	return analysisName;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public AbstractAnalysisConfigurationModel getModel() {
-	return (AbstractAnalysisConfigurationModel)super.getModel();
+    public AbstractAnalysisConfigurationModel<T, DTM> getModel() {
+	return (AbstractAnalysisConfigurationModel<T, DTM>)super.getModel();
     }
 }

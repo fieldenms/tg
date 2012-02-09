@@ -2,6 +2,8 @@ package ua.com.fielden.platform.swing.review.report.centre;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -40,18 +42,18 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
     }
 
     @Override
-    protected Action createSaveAsDefaultAction() {
-	return null;
+    public EntityCentreModel<T> getModel() {
+	return (EntityCentreModel<T>)super.getModel();
     }
 
     @Override
-    protected Action createLoadDefaultAction() {
-	return null;
-    }
-
-    @Override
-    protected Action createRemoveAction() {
-	return getModel().getName() == null ? null : super.createRemoveAction();
+    protected List<Action> createCustomActionList() {
+	final List<Action> customActions = new ArrayList<Action>();
+	customActions.add(getConfigureAction());
+	customActions.add(createSaveAction());
+	customActions.add(createSaveAsAction());
+	customActions.add(createRemoveAction());
+	return customActions;
     }
 
     private JideTabbedPane createReview() {
@@ -113,5 +115,41 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
 	final GridConfigurationPanel<T, ICentreDomainTreeManager> gridConfigView = new GridConfigurationPanel<T, ICentreDomainTreeManager>("Main details", configModel, this, getReviewProgressLayer());
 	gridConfigView.open();
 	return gridConfigView;
+    }
+
+    private Action createSaveAction() {
+	return new AbstractAction() {
+
+	    private static final long serialVersionUID = 8474884103209307717L;
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		getModel().getConfigurationModel().save();
+	    }
+	};
+    }
+
+    private Action createSaveAsAction() {
+	return new AbstractAction() {
+
+	    private static final long serialVersionUID = 6870686264834331196L;
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		getModel().getConfigurationModel().saveAs();
+	    }
+	};
+    }
+
+    private Action createRemoveAction() {
+	return getModel().getName() == null ? null : new AbstractAction() {
+
+	    private static final long serialVersionUID = 8474884103209307717L;
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		getModel().getConfigurationModel().remove();
+	    }
+	};
     }
 }

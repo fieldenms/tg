@@ -8,6 +8,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 
 public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager, ADTM extends IAbstractAnalysisDomainTreeManager, LDT> extends AbstractEntityReviewModel<T, DTM> {
 
@@ -15,10 +16,16 @@ public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity, DTM 
 
     private final PageHolder pageHolder;
 
-    public AbstractAnalysisReviewModel(final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria, final ADTM adtm, final PageHolder pageHolder) {
-	super(criteria);
+    public AbstractAnalysisReviewModel(final AbstractAnalysisConfigurationModel<T, DTM> configurationModel, final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria, final ADTM adtm, final PageHolder pageHolder) {
+	super(configurationModel, criteria);
 	this.adtm = adtm;
 	this.pageHolder = pageHolder;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public AbstractAnalysisConfigurationModel<T, DTM> getConfigurationModel() {
+	return (AbstractAnalysisConfigurationModel<T, DTM>)super.getConfigurationModel();
     }
 
     //    /**

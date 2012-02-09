@@ -21,6 +21,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
@@ -29,10 +30,12 @@ public class PivotAnalysisModel<T extends AbstractEntity> extends AbstractAnalys
 
     private final PivotTreeTableModel pivotModel;
 
-    public PivotAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final IPivotDomainTreeManager adtm, final PageHolder pageHolder) {
-	super(criteria, adtm, pageHolder);
+    public PivotAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManager> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final IPivotDomainTreeManager adtm, final PageHolder pageHolder) {
+	super(configurationModel, criteria, adtm, pageHolder);
 	pivotModel = new PivotTreeTableModelEx();
     }
+
+    //TODO Provide getConfigurationModel() that returns the specific configuration model for this analysis.T
 
     @Override
     protected Void executeAnalysisQuery() {

@@ -73,6 +73,33 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
     }
 
     @Override
+    public EntityLocatorModel<T> getModel() {
+	return (EntityLocatorModel<T>)super.getModel();
+    }
+
+    public List<T> getSelectedEntities() {
+	return Collections.unmodifiableList(selectedEntities);
+    }
+
+    public void addLocatorEventListener(final ILocatorEventListener l){
+	listenerList.add(ILocatorEventListener.class, l);
+    }
+
+    public void removeLocatorEventListener(final ILocatorEventListener l){
+	listenerList.remove(ILocatorEventListener.class, l);
+    }
+
+    @Override
+    protected List<Action> createCustomActionList() {
+	final List<Action> customActions = new ArrayList<Action>();
+	customActions.add(getConfigureAction());
+	customActions.add(createSaveAction());
+	customActions.add(createSaveAsDefaultAction());
+	customActions.add(createLoadDefaultAction());
+	return customActions;
+    }
+
+    @Override
     protected void layoutComponents(){
 	final List<JComponent> components = new ArrayList<JComponent>();
 	final StringBuffer rowConstraints = new StringBuffer("");
@@ -103,10 +130,6 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
 	    add(components.get(componentIndex), "wrap");
 	}
 	add(components.get(components.size()-1));
-    }
-
-    public List<T> getSelectedEntities() {
-	return Collections.unmodifiableList(selectedEntities);
     }
 
     private JPanel getLocatorPanel() {
@@ -175,19 +198,6 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
 	    }
 
 	};
-    }
-
-    @Override
-    public EntityLocatorModel<T> getModel() {
-	return (EntityLocatorModel<T>)super.getModel();
-    }
-
-    public void addLocatorEventListener(final ILocatorEventListener l){
-	listenerList.add(ILocatorEventListener.class, l);
-    }
-
-    public void removeLocatorEventListener(final ILocatorEventListener l){
-	listenerList.remove(ILocatorEventListener.class, l);
     }
 
     @SuppressWarnings("unchecked")
@@ -261,6 +271,42 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
 	return null;
     }
 
+    private Action createSaveAction() {
+	return new AbstractAction() {
+
+	    private static final long serialVersionUID = 8474884103209307717L;
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		getModel().getConfigurationModel().save();
+	    }
+	};
+    }
+
+    private Action createSaveAsDefaultAction() {
+	return new AbstractAction() {
+
+	    private static final long serialVersionUID = 6870686264834331196L;
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		getModel().getConfigurationModel().saveAsDefault();
+	    }
+	};
+    }
+
+    private Action createLoadDefaultAction() {
+	return getModel().getName() == null ? null : new AbstractAction() {
+
+	    private static final long serialVersionUID = 8474884103209307717L;
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		getModel().getConfigurationModel().loadDefault();
+	    }
+	};
+    }
+
     private Action createCloseAction() {
 	return new AbstractAction("Close") {
 
@@ -268,6 +314,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
 
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
+		selectedEntities.clear();
 		fireLocatorEvent(new LocatorEvent(SingleAnalysisEntityLocator.this, LocatorAction.CLOSE));
 	    }
 	};

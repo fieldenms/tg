@@ -93,7 +93,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
 	this.defaultAction = createDefaultAction();
 	this.exportAction = createExportAction();
 	this.runAction = createRunAction();
-	this.customActionChanger = createCustomActionButton();
+	this.customActionChanger = createCustomActionButton(createCustomActionList());
 	//Initiates the main parts of the entity centre.
 	this.toolBar = createToolBar();
 	this.criteriaPanel = createCriteriaPanel();
@@ -228,6 +228,15 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
      * @return
      */
     protected StubCriteriaPanel createCriteriaPanel() {
+	return null;
+    }
+
+    /**
+     * Creates list of actions for action change button.
+     * 
+     * @return
+     */
+    protected List<Action> createCustomActionList() {
 	return null;
     }
 
@@ -435,19 +444,16 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
 
     /**
      * Returns the button that may contain custom actions: configure, save, save as, remove and other actions)
+     * @param customActionList
      * 
      * @return
      */
-    private JComponent createCustomActionButton() {
+    private JComponent createCustomActionButton(final List<Action> customActionList) {
 	//Initiates the list of all review actions (i.e. configure, save, save as, save as default, and remove actions)
-	//TODO don't forget to add load default action.
 	final List<Action> actionList = new ArrayList<Action>();
-	addActionIfNotNull(actionList, getConfigureAction());
-	addActionIfNotNull(actionList, getSaveAction());
-	addActionIfNotNull(actionList, getSaveAsAction());
-	addActionIfNotNull(actionList, getSaveAsDefaultAction());
-	addActionIfNotNull(actionList, getLoadDefaultAction());
-	addActionIfNotNull(actionList, getRemoveAction());
+	for(final Action action : (customActionList == null ? new ArrayList<Action>() : customActionList)){
+	    addActionIfNotNull(actionList, action);
+	}
 
 	if(actionList.size() == 1){
 	    return newButton(actionList.get(0));

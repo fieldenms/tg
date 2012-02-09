@@ -15,14 +15,15 @@ import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedLi
 import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 
 public class GridAnalysisModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractAnalysisReviewModel<T, DTM, IAbstractAnalysisDomainTreeManager, IPage<T>> {
 
     private final PropertyTableModel<T> gridModel;
 
-    public GridAnalysisModel(final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria, final PageHolder pageHolder) {
-	super(criteria, null, pageHolder);
+    public GridAnalysisModel(final GridConfigurationModel<T, DTM> configurationModel, final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria, final PageHolder pageHolder) {
+	super(configurationModel, criteria, null, pageHolder);
 	this.gridModel = createTableModel();
 	getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
@@ -33,6 +34,12 @@ public class GridAnalysisModel<T extends AbstractEntity, DTM extends ICentreDoma
 	    }
 	});
 	getPageHolder().newPage(null);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public GridConfigurationModel<T, DTM> getConfigurationModel() {
+	return (GridConfigurationModel<T, DTM>)super.getConfigurationModel();
     }
 
     private PropertyTableModel<T> createTableModel() {

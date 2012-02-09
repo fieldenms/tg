@@ -14,7 +14,6 @@ import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigu
  *
  * @param <T>
  */
-//TODO parametrise AbstractConfigurationPanel.
 public abstract class AbstractCentreConfigurationView<T extends AbstractEntity, DTM extends ICentreDomainTreeManager, C extends AbstractEntityCentre<T, DTM>> extends AbstractConfigurationView<C, EntityCentreWizard<T>> {
 
     private static final long serialVersionUID = -5187097528373828177L;

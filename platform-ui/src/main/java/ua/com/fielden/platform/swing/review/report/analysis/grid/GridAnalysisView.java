@@ -44,26 +44,6 @@ public class GridAnalysisView<T extends AbstractEntity, DTM extends ICentreDomai
     }
 
     @Override
-    protected Action createRemoveAction() {
-	return null;
-    }
-
-    @Override
-    protected Action createSaveAction() {
-	return null;
-    }
-
-    @Override
-    protected Action createSaveAsAction() {
-	return null;
-    }
-
-    @Override
-    protected Action createSaveAsDefaultAction() {
-	return null;
-    }
-
-    @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
 	// TODO Auto-generated method stub
 
