@@ -42,12 +42,11 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
 		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		leftJoin(ORG5).as("station").on().prop("station").eq().prop("station.id"). //
 		where().prop("station.key").like().val("AA%").and().prop("model.make.key").eq().val("MERC").model());
-
     }
 
     @Test
     public void test4() {
-	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").model();
+	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).where().prop("station.key").eq().val("AA").model();
 
 	assertModelsEquals(//
 		select(sourceQry). //
@@ -61,7 +60,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
 
     @Test
     public void test5() {
-	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").model();
+	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).where().prop("station.key").eq().val("AA").model();
 
 	assertModelsEquals(//
 		select(sourceQry). //

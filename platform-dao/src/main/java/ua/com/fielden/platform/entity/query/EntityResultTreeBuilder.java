@@ -9,6 +9,7 @@ import java.util.Map;
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.entity.query.QueryModelResult.ResultPropertyInfo;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 final class EntityResultTreeBuilder {
     private MappingsGenerator mappingsGenerator;
@@ -50,7 +51,7 @@ final class EntityResultTreeBuilder {
 	final List<ResultPropertyInfo> result = new ArrayList<ResultPropertyInfo>();
 
 	for (final ResultPropertyInfo prop : allProps) {
-	    if (!prop.getName().contains(".")) {
+	    if ((prop.getType() == null || !EntityUtils.isPersistedEntityType(prop.getType())) && !prop.getName().contains(".")) {
 		result.add(prop);
 	    }
 	}
@@ -69,7 +70,11 @@ final class EntityResultTreeBuilder {
 		if (!result.containsKey(group)) {
 		    result.put(group, new ArrayList<ResultPropertyInfo>());
 		}
-		result.get(group).add(new ResultPropertyInfo(prop.getName().substring(firstDotIndex + 1), prop.getSqlAlias()/*, prop.getType()*/));
+		result.get(group).add(new ResultPropertyInfo(prop.getName().substring(firstDotIndex + 1), prop.getSqlAlias(), prop.getType()));
+	    } else if (prop.getType() != null && EntityUtils.isPersistedEntityType(prop.getType())) {
+		final List<ResultPropertyInfo> subprops = new ArrayList<ResultPropertyInfo>();
+		subprops.add(new ResultPropertyInfo("id", prop.getSqlAlias(), Long.class));
+		result.put(prop.getName(), subprops);
 	    }
 	}
 

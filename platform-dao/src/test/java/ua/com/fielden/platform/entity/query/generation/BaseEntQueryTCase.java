@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +43,7 @@ public class BaseEntQueryTCase {
     protected static final Class<TgOrgUnit2> ORG2 = TgOrgUnit2.class;
     protected static final Class<TgOrgUnit1> ORG1 = TgOrgUnit1.class;
     protected static final Class<String> STRING = String.class;
+    protected static final Class<Date> DATE = Date.class;
     protected static final Class<Long> LONG = Long.class;
     protected static final Class<BigInteger> BIG_INTEGER = BigInteger.class;
     protected static final Class<BigDecimal> BIG_DECIMAL = BigDecimal.class;

@@ -36,7 +36,7 @@ public class EntityContainer<R extends AbstractEntity> {
 	}
 
 	public boolean notYetInitialised() {
-	    return primitives.size() + entities.size() + collections.size() == 0;
+	    return primitives.size() + entities.size() + collections.size() == 1 && getId() != null;
 	}
 
 	public boolean isInstantiated() {

@@ -2,8 +2,6 @@ package ua.com.fielden.platform.entity.query;
 
 import org.hibernate.type.Type;
 
-import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
-
 public class PropColumn implements Comparable<PropColumn> {
     private String name;
     private String sqlAlias;
@@ -19,7 +17,7 @@ public class PropColumn implements Comparable<PropColumn> {
 
     @Override
     public String toString() {
-        return "propCol: name = " + name + "; sqlAlias = " + sqlAlias + "; hibType = " + hibType + "; hibUserType = " + hibUserType;
+        return "\nPROP_COLUMN:\n name = " + name + "\n sqlAlias = " + sqlAlias + "\n hibType = " + hibType + "\n hibUserType = " + hibUserType + ";\n";
     }
 
     @Override
@@ -85,5 +83,4 @@ public class PropColumn implements Comparable<PropColumn> {
     public IUserTypeInstantiate getHibUserType() {
         return hibUserType;
     }
-
 }

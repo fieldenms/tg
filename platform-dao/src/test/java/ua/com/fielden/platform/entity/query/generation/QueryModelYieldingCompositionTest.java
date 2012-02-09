@@ -29,7 +29,7 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 
     @Test
-    public void test_simple_query_model_20() {
+    public void test1() {
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("param", 20);
 	final AggregatedResultQueryModel qry = select(VEHICLE).yield().prop("station").as("st").yield().beginExpr().prop("model").add().param("param").endExpr().as("m").modelAsAggregate();
@@ -44,7 +44,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_simple_query_model_18() {
+    public void test2() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).yield().prop("model").modelAsEntity(MODEL);
 	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("id", new YieldModel(new EntProp("model"), "id"));
@@ -53,7 +53,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_simple_query_model_19() {
+    public void test3() {
 	final AggregatedResultQueryModel qry = select(VEHICLE).yield().prop("station").as("st").yield().prop("model").as("m").modelAsAggregate();
 	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("st", new YieldModel(new EntProp("station"), "st"));
@@ -63,7 +63,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_query_1() {
+    public void test4() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsEntity(MODEL);
 	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("id", new YieldModel(new EntProp("v.model"), "id"));
@@ -72,7 +72,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_query_2() {
+    public void test5() {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsPrimitive(Long.class);
 	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("", new YieldModel(new EntProp("v.model"), ""));

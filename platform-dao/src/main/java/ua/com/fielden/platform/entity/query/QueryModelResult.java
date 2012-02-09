@@ -35,10 +35,18 @@ public class QueryModelResult {
     public static class ResultPropertyInfo implements Comparable<ResultPropertyInfo> {
 	private String name;
 	private String sqlAlias;
+	private Class type;
 
-	public ResultPropertyInfo(final String name, final String sqlAlias) {
+	@Override
+	public String toString() {
+	    // TODO Auto-generated method stub
+	    return "RPI\n name = " + name + "\n sqlAlias = " + sqlAlias + "\n type = " + (type != null ? type.getSimpleName() : " --- ");
+	}
+
+	public ResultPropertyInfo(final String name, final String sqlAlias, final Class type) {
 	    this.name = name;
 	    this.sqlAlias = sqlAlias;
+	    this.type = type;
 	}
 
 	public String getSqlAlias() {
@@ -49,12 +57,22 @@ public class QueryModelResult {
 	    return name;
 	}
 
+	public Class getType() {
+	    return type;
+	}
+
+	@Override
+	public int compareTo(final ResultPropertyInfo o) {
+	    return name.compareTo(o.name);
+	}
+
 	@Override
 	public int hashCode() {
 	    final int prime = 31;
 	    int result = 1;
 	    result = prime * result + ((name == null) ? 0 : name.hashCode());
 	    result = prime * result + ((sqlAlias == null) ? 0 : sqlAlias.hashCode());
+	    result = prime * result + ((type == null) ? 0 : type.hashCode());
 	    return result;
 	}
 
@@ -84,12 +102,14 @@ public class QueryModelResult {
 	    } else if (!sqlAlias.equals(other.sqlAlias)) {
 		return false;
 	    }
+	    if (type == null) {
+		if (other.type != null) {
+		    return false;
+		}
+	    } else if (!type.equals(other.type)) {
+		return false;
+	    }
 	    return true;
-	}
-
-	@Override
-	public int compareTo(final ResultPropertyInfo o) {
-	    return name.compareTo(o.name);
 	}
     }
 }

@@ -64,7 +64,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
      * @return
      * @throws Exception
      */
-    protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final fetch<E> fetchModel, final Class<E> entitiesType) throws Exception {
+    protected List<EntityContainer<E>> enhance(final Session session/*TMP*/, final List<EntityContainer<E>> entities, final fetch<E> fetchModel, final Class<E> entitiesType) throws Exception {
 	if (fetchModel != null) {
 	    final Map<String, fetch<?>> propertiesFetchModels = fetchModel.getFetchModels();
 
@@ -78,7 +78,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
 			mappingExtractor.isOneToOneDetails(entitiesType, propName) //
 		) {
 		    logger.debug("enhancing property [" + propName + "]");
-		    enhanceProperty(entities, propName, propFetchModel);
+		    enhanceProperty(session/*TMP*/, entities, propName, propFetchModel);
 		} else if (mappingExtractor.isSimpleValue(entitiesType, propName)) {
 		    logger.debug("enhancing property [" + propName + "]: no enhancing is required because it is SimpleValue.");
 		    // e.g. properties that getting here usually has hibernate custom user type and are not classic "entities", and doesn't require enhancing
@@ -151,7 +151,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
      * @return
      * @throws Exception
      */
-    private List<EntityContainer<E>> enhanceProperty(final List<EntityContainer<E>> entities, final String propertyName, final fetch fetchModel) throws Exception {
+    private List<EntityContainer<E>> enhanceProperty(final Session session/*TMP*/, final List<EntityContainer<E>> entities, final String propertyName, final fetch fetchModel) throws Exception {
 	// Obtaining map between property id and list of entities where this property occurs
 	final Map<Long, List<EntityContainer<E>>> propertyValuesIds = getEntityPropertyIds(entities, propertyName);
 	logger.info("got ids count: " + propertyValuesIds.size());
@@ -162,9 +162,9 @@ public class EntityEnhancer<E extends AbstractEntity> {
 	    logger.info("got retrievedPropertyInstances count: " + retrievedPropertyInstances.size());
 	    final List<EntityContainer> enhancedPropInstances;
 	    if (retrievedPropertyInstances.size() == 0) {
-		enhancedPropInstances = getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel);
+		enhancedPropInstances = getDataInBatches(session/*TMP*/, new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel);
 	    } else {
-		enhancedPropInstances = new EntityEnhancer(session, entityFactory, mappingsGenerator, mappingExtractor, dbVersion).enhance(retrievedPropertyInstances, fetchModel, fetchModel.getEntityType());
+		enhancedPropInstances = new EntityEnhancer(session, entityFactory, mappingsGenerator, mappingExtractor, dbVersion).enhance(session/*TMP*/, retrievedPropertyInstances, fetchModel, fetchModel.getEntityType());
 	    }
 
 	    // Replacing in entities the proxies of properties with properly enhanced property instances.
@@ -179,7 +179,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
 	return entities;
     }
 
-    private List<EntityContainer> getDataInBatches(final List<Long> ids, final fetch<E> fetchModel) throws Exception {
+    private List<EntityContainer> getDataInBatches(final Session session/*TMP*/, final List<Long> ids, final fetch<E> fetchModel) throws Exception {
 	final List<EntityContainer> result = new ArrayList<EntityContainer>();
 	final Long[] allParentIds = new ArrayList<Long>(ids).toArray(new Long[] {});
 
