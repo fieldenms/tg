@@ -51,10 +51,10 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
     }
 
     @Override
-    Pair<Pair<String, Class>, Class> lookForProp(final String dotNotatedPropName) {
+    Pair<PurePropInfo, Class> lookForProp(final String dotNotatedPropName) {
 	try {
 	    final String explicitPropPart = EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey();
-	    return new Pair<Pair<String, Class>, Class>(new Pair<String, Class>(explicitPropPart, determinePropertyType(sourceType(), explicitPropPart)), determinePropertyType(sourceType(), dotNotatedPropName));
+	    return new Pair<PurePropInfo, Class>(new PurePropInfo(explicitPropPart, determinePropertyType(sourceType(), explicitPropPart)), determinePropertyType(sourceType(), dotNotatedPropName));
 	} catch (final Exception e) {
 	    return null;
 	}

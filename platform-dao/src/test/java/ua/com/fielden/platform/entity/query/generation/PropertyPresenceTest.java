@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.generation;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
+import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PurePropInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -19,7 +20,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
     }
 
     private static PropResolutionInfo pri(final EntProp entProp, final String aliasPart, final String propPart, final Class propType, final String explicitPropPart, final Class explicitPropPartType) {
-	return new PropResolutionInfo(entProp, aliasPart, propPart, propType, explicitPropPart, explicitPropPartType);
+	return new PropResolutionInfo(entProp, aliasPart, new PurePropInfo(propPart, propType), new PurePropInfo(explicitPropPart, explicitPropPartType));
     }
 
     @Test

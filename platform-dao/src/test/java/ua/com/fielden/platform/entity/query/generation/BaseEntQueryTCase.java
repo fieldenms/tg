@@ -10,6 +10,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
+import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PurePropInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTestModel;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
@@ -83,7 +84,7 @@ public class BaseEntQueryTCase {
     }
 
     protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final String propPart, final Class propType, final String explicitPropPart, final Class explicitPropPartType) {
-	return new PropResolutionInfo(prop(propName), aliasPart, propPart, propType, explicitPropPart, explicitPropPartType);
+	return new PropResolutionInfo(prop(propName), aliasPart, new PurePropInfo(propPart, propType), new PurePropInfo(explicitPropPart, explicitPropPartType));
     }
 
     protected final ComparisonTestModel alwaysTrueCondition = new ComparisonTestModel(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
