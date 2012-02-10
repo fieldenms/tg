@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Session;
 
@@ -11,6 +13,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
@@ -68,12 +71,19 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     public void test_vehicle_model_retrieval3() {
 	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("make").eq().val(1). //
 		modelAsEntity(TgVehicleModel.class);
-	System.out.println("***************************** A A A *******************************");
-
 	final List<TgVehicleModel> models = ef.list(session(), factory, new QueryExecutionModel(model, new fetch(TgVehicleModel.class).with("make")), false);
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
+    }
+
+    public void test_vehicle_model_retrieval4() {
+	final EntityResultQueryModel<TgVehicleMake> model = select(TgVehicleMake.class).where().prop("key").in().params("param1", "param2").model();
+	final Map<String, Object> params = new HashMap<String, Object>();
+	params.put("param1", "MERC");//new String[]{"MERC", "BMW"});
+	params.put("param2", "BMW");
+	final List<TgVehicleModel> models = ef.list(session(), factory, new QueryExecutionModel(model, null, null, params), false);
+    	assertEquals("Incorrect count", 2, models.size());
     }
 
     @Override

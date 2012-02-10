@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.Functions;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
@@ -15,6 +17,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.ISetOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -203,9 +206,34 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
     protected Object getParamValue(final String paramName) {
 	if (getParamValues().containsKey(paramName)) {
-	    return getParamValues().get(paramName);
+	    return processParamValue(getParamValues().get(paramName));
 	} else {
 	    throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
+	}
+    }
+
+    private Object processParamValue (final Object paramValue) {
+	if (paramValue != null && paramValue.getClass().isArray()) {
+	    final List<Object> values = new ArrayList<Object>();
+	    for (final Object object : (Object[]) paramValue) {
+		values.add(convertParamValue(object));
+	    }
+	    return values.toArray();
+	} else {
+	    return convertParamValue(paramValue);
+	}
+    }
+
+    /** Ensures that values of special types such as {@link Class} or {@link PropertyDescriptor} are converted to String. */
+    private Object convertParamValue(final Object paramValue) {
+	if (paramValue instanceof PropertyDescriptor || paramValue instanceof Class) {
+	    return paramValue.toString();
+	} else if (paramValue instanceof AbstractEntity) {
+	    return ((AbstractEntity) paramValue).getId();
+	} else if (paramValue instanceof Money) {
+	    return ((Money) paramValue).getAmount();
+	} else {
+	    return paramValue;
 	}
     }
 
