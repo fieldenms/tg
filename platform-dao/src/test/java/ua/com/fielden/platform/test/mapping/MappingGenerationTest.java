@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.test.mapping;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +9,7 @@ import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import static org.junit.Assert.assertEquals;
 
 
 public class MappingGenerationTest {
@@ -47,10 +46,10 @@ public class MappingGenerationTest {
                         "		<column name=\"_VERSION\" default=\"0\" />\n" +
                         "	</version>\n" +
                         "	<many-to-one name=\"owner\" class=\"ua.com.fielden.platform.security.user.User\" column=\"ID_CRAFT\"/>\n" +
-                        "	<property name=\"title\" column=\"TITLE\"  />\n" +
+                        "	<property name=\"title\" column=\"TITLE\"/>\n" +
                         "	<many-to-one name=\"menuItem\" class=\"ua.com.fielden.platform.ui.config.MainMenuItem\" column=\"ID_MAIN_MENU\"/>\n" +
-                        "	<property name=\"principal\" column=\"IS_PRINCIPAL\"  />\n" +
-                        "	<property name=\"configBody\" column=\"BODY\"  length=\"1073741824\"/>\n" +
+                        "	<property name=\"principal\" column=\"IS_PRINCIPAL\"/>\n" +
+                        "	<property name=\"configBody\" column=\"BODY\" length=\"1073741824\"/>\n" +
                         "</class>\n\n"+
                         "</hibernate-mapping>";
 	assertEquals("Incorrect mapping.", expectedMapping, tgModelMapping);

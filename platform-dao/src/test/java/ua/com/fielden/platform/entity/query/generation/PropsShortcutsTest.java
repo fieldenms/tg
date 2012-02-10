@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -32,6 +33,7 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
+    @Ignore
     public void test3() {
 	assertModelsEquals(//
 		select(VEHICLE). //

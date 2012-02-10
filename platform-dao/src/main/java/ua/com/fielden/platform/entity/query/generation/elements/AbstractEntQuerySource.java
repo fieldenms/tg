@@ -5,11 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
-import ua.com.fielden.platform.equery.IQueryModelProvider;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -46,14 +43,6 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     public AbstractEntQuerySource(final String alias) {
 	this.alias = alias;
-    }
-
-    protected boolean isEntityAggregates(final Class type) {
-	return EntityAggregates.class.isAssignableFrom(type);
-    }
-
-    protected boolean isSyntheticEntity(final Class type) {
-	return AbstractEntity.class.isAssignableFrom(type) && IQueryModelProvider.class.isAssignableFrom(type);
     }
 
     @Override
