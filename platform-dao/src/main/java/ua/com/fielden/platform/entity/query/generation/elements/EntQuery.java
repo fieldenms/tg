@@ -49,6 +49,11 @@ public class EntQuery implements ISingleOperand {
      */
     private final List<EntProp> unresolvedProps;
 
+    @Override
+    public String toString() {
+        return sql();
+    }
+
     public String sql() {
 	final StringBuffer sb = new StringBuffer();
 	sb.append(isSubQuery() ? "(" : "");
@@ -177,7 +182,8 @@ public class EntQuery implements ISingleOperand {
 	}
 
 	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : sources.getAllSourcesAndTheirJoinType()) {
-	    sources.getCompounds().addAll(generateImplicitSources2(sourceAndItsJoinType.getKey(), sourceAndItsJoinType.getValue()));
+	    final IEntQuerySource source = sourceAndItsJoinType.getKey();
+	    sources.getCompounds().addAll(source.generateMissingSources(sourceAndItsJoinType.getValue(), source.getReferencingProps()));
 	}
 
 	final List<EntProp> immediatePropertiesFinally = getImmediateProps();
@@ -224,10 +230,6 @@ public class EntQuery implements ISingleOperand {
 	    entQuery.unresolvedProps.clear();
 	}
 	return unresolvedPropsFromSubqueries;
-    }
-
-    private List<EntQueryCompoundSourceModel> generateImplicitSources2(final IEntQuerySource source, final boolean leftJoined) {
-	return source.generateMissingSources(leftJoined, source.getReferencingProps());
     }
 
     private List<EntProp> resolveProps(final List<EntProp> propsToBeResolved) {

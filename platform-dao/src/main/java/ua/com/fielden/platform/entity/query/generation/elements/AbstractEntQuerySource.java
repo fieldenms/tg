@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
@@ -157,9 +159,9 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	return alias == null ? propAlias : alias + "." + propAlias;
     }
 
-    public static class PurePropInfo {
-	String name;
-	Class type;
+    public static class PurePropInfo implements Comparable<PurePropInfo> {
+	private String name;
+	private Class type;
 	boolean nullable = false;
 
 	public PurePropInfo(final String name, final Class type) {
@@ -210,11 +212,28 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    return true;
 	}
 
+	@Override
+	public int compareTo(final PurePropInfo o) {
+	    return name.compareTo(o.getName());
+	}
+
+	public String getName() {
+	    return name;
+	}
+
+	public Class getType() {
+	    return type;
+	}
+
+	public boolean isNullable() {
+	    return nullable;
+	}
+
 
     }
 
-    protected Map<PurePropInfo, List<EntProp>> determineGroups(final List<PropResolutionInfo> refProps) {
-	final Map<PurePropInfo, List<EntProp>> result = new HashMap<PurePropInfo, List<EntProp>>();
+    protected SortedMap<PurePropInfo, List<EntProp>> determineGroups(final List<PropResolutionInfo> refProps) {
+	final SortedMap<PurePropInfo, List<EntProp>> result = new TreeMap<PurePropInfo, List<EntProp>>();
 
 	for (final PropResolutionInfo propResolutionInfo : refProps) {
 	    if (!propResolutionInfo.allExplicit() && !propResolutionInfo.isImplicitId() && EntityUtils.isPersistedEntityType(propResolutionInfo.explicitProp.type)) {
@@ -249,7 +268,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
     @Override
     public List<EntQueryCompoundSourceModel> generateMissingSources(final boolean parentLeftJoinLegacy, final List<PropResolutionInfo> refProps) {
 	final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
-	final Map<PurePropInfo, List<EntProp>> groups = determineGroups(refProps);
+	final SortedMap<PurePropInfo, List<EntProp>> groups = determineGroups(refProps);
 
 	for (final Map.Entry<PurePropInfo, List<EntProp>> groupEntry : groups.entrySet()) {
 	    final EntQuerySourceFromEntityType qrySource = new EntQuerySourceFromEntityType(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true);
