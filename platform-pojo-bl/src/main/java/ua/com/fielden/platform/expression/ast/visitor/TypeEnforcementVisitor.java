@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.expression.ast.visitor;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collection;
 import java.util.Date;
 
 import org.joda.time.DateTime;
@@ -302,7 +304,8 @@ public class TypeEnforcementVisitor implements IAstVisitor {
      * @throws UnsupportedTypeException
      */
     private Class<?> identifyPropertyType(final AstNode node) throws UnsupportedTypeException {
-	final Class<?> type = Finder.findFieldByName(context, node.getToken().text).getType();
+	final Field field = Finder.findFieldByName(context, node.getToken().text);
+	final Class<?> type = field.getType();
 	if (Money.class.isAssignableFrom(type)) {
 	    return Money.class;
 	} else if (BigDecimal.class.isAssignableFrom(type) || double.class.isAssignableFrom(type)) {
@@ -315,7 +318,12 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    return DateTime.class;
 	} else if (Date.class.isAssignableFrom(type)) {
 	    return Date.class;
+	} else if (Collection.class.isAssignableFrom(type)) {
+	    return type;
+	} else if (AbstractEntity.class.isAssignableFrom(type)) {
+	    return type;
 	}
+
 	throw new UnsupportedTypeException(type, node.getToken());
     }
 
@@ -356,15 +364,41 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	node.setValue(evaluateOperation(node));
     }
 
+    /**
+     * Provides the rules for identifying types of operation operands and the resultant operation type.
+     *
+     * @param node
+     * @param leftOperandType
+     * @param rightOperandType
+     * @param cat
+     * @return
+     * @throws SemanticException
+     */
     private Class<?> operationType(final AstNode node, final Class<?> leftOperandType, final Class<?> rightOperandType, final EgTokenCategory cat) throws SemanticException {
+	// Date is not supported
+	if (isDate(leftOperandType)) {
+	    throw new UnsupportedTypeException("Left operand of date type is not applicable to operation " + cat, leftOperandType, node.getToken());
+	}
+	if (isDate(rightOperandType)) {
+	    throw new UnsupportedTypeException("Right operand of date type are not applicable to operation " + cat, rightOperandType, node.getToken());
+	}
+
+	// collectional and entity types are not supported
+	if (Collection.class.isAssignableFrom(leftOperandType)) {
+	    throw new UnsupportedTypeException("Left operand of collectional type is not applicable to operation " + cat, leftOperandType, node.getToken());
+	}
+	if (Collection.class.isAssignableFrom(rightOperandType)) {
+	    throw new UnsupportedTypeException("Right operand of collectional type is not  applicable to operation " + cat, leftOperandType, node.getToken());
+	}
+	if (AbstractEntity.class.isAssignableFrom(leftOperandType)) {
+	    throw new UnsupportedTypeException("Left operand of entity type is not applicable to operation " + cat, leftOperandType, node.getToken());
+	}
+	if (AbstractEntity.class.isAssignableFrom(rightOperandType)) {
+	    throw new UnsupportedTypeException("Right operand of entity type is not applicable to operation " + cat, leftOperandType, node.getToken());
+	}
+
 	switch (cat) {
 	case PLUS:
-	    if (isDate(leftOperandType)) {
-		throw new UnsupportedTypeException("Left operand of date type is not applicable to operation " + cat, leftOperandType, node.getToken());
-	    }
-	    if (isDate(rightOperandType)) {
-		throw new UnsupportedTypeException("Right operand of date type are not applicable to operation " + cat, rightOperandType, node.getToken());
-	    }
 	    // is String?
 	    if (String.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) {
 		return String.class;
@@ -406,15 +440,6 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 		return Year.class;
 	    }
 	case MINUS:
-	    if (isDate(leftOperandType)) {
-		throw new UnsupportedTypeException("Left operand of date type is not applicable to operation " + cat + ".\nPlease consider using " + EgTokenCategory.DAY_DIFF
-			+ " function.", leftOperandType, node.getToken());
-	    }
-	    if (isDate(rightOperandType)) {
-		throw new UnsupportedTypeException("Right operand of date type is not applicable to operation " + cat + ".\nPlease consider using " + EgTokenCategory.DAY_DIFF
-			+ " function.", rightOperandType, node.getToken());
-	    }
-
 	    if (String.class.isAssignableFrom(leftOperandType) || String.class.isAssignableFrom(rightOperandType)) {
 		throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, String.class, node.getToken());
 	    }
@@ -457,13 +482,6 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    }
 	    break;
 	case MULT:
-	    if (isDate(leftOperandType)) {
-		throw new UnsupportedTypeException("Left operand of date type is not applicable to operation " + cat, leftOperandType, node.getToken());
-	    }
-	    if (isDate(rightOperandType)) {
-		throw new UnsupportedTypeException("Right operand of date type is not applicable to operation " + cat, rightOperandType, node.getToken());
-	    }
-
 	    if (String.class.isAssignableFrom(leftOperandType) || String.class.isAssignableFrom(rightOperandType)) {
 		throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, String.class, node.getToken());
 	    }
@@ -501,13 +519,6 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    }
 	    break;
 	case DIV:
-	    if (isDate(leftOperandType)) {
-		throw new UnsupportedTypeException("Left operand of date type is not applicable to operation " + cat, leftOperandType, node.getToken());
-	    }
-	    if (isDate(rightOperandType)) {
-		throw new UnsupportedTypeException("Right operand of date type is not applicable to operation " + cat, rightOperandType, node.getToken());
-	    }
-
 	    if (String.class.isAssignableFrom(leftOperandType) || String.class.isAssignableFrom(rightOperandType)) {
 		throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, String.class, node.getToken());
 	    }
@@ -542,7 +553,6 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 		}
 	    }
 	    break;
-
 	}
 
 	return null;

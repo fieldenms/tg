@@ -308,7 +308,7 @@ public class TypeEnforcementForMinusOperationTest {
 	try {
 	    new AstWalker(ast, visitor).walk();
 	} catch (final UnsupportedTypeException ex) {
-	    assertEquals("Incorrect error message.", "Left operand of date type is not applicable to operation " + EgTokenCategory.MINUS + ".\nPlease consider using " + EgTokenCategory.DAY_DIFF + " function.", ex.getMessage());
+	    assertEquals("Incorrect error message.", "Left operand of date type is not applicable to operation " + EgTokenCategory.MINUS, ex.getMessage());
 	}
     }
 
