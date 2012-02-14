@@ -22,33 +22,33 @@ public @interface Calculated {
      *
      * @return
      */
-    String contextualExpression() default ""; // TODO this should be required
+    String contextualExpression();
 
     /**
      * Returns a path that defines the context of the calculated property. The path should be fully defined in context of root type.
      *
      * @return
      */
-    String contextPath() default ""; // TODO this should be required
+    String contextPath();
 
     /**
      * The attribute of calculated property.
      *
      * @return
      */
-    CalculatedPropertyAttribute attribute() default CalculatedPropertyAttribute.NO_ATTR; // TODO this should be required
+    CalculatedPropertyAttribute attribute();
 
     /**
      * The name of property in context type, from which this calculated property has been originated.
      *
      * @return
      */
-    String origination() default ""; // TODO this should be required
+    String origination();
 
     /**
      * The category of calculated property.
      *
      * @return
      */
-    CalculatedPropertyCategory category() default CalculatedPropertyCategory.EXPRESSION; // TODO this should be inferred from "contextualExpression" and "contextPath"
+    CalculatedPropertyCategory category();
 }

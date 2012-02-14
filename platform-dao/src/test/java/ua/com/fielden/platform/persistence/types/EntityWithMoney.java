@@ -3,6 +3,8 @@ package ua.com.fielden.platform.persistence.types;
 import java.util.Date;
 
 import ua.com.fielden.platform.basic.autocompleter.HibernateValueMatcher;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -33,7 +35,7 @@ public class EntityWithMoney extends AbstractEntity<String> {
     @IsProperty
     @MapTo("DATE_TIME")
     private Date dateTimeProperty;
-    @IsProperty @Calculated
+    @IsProperty @Calculated(contextPath = "", contextualExpression = "", attribute = CalculatedPropertyAttribute.NO_ATTR, origination = "", category = CalculatedPropertyCategory.EXPRESSION)
     private String calculatedProperty;
 
     @IsProperty @TransactionDate
