@@ -1,62 +1,62 @@
 \section{Domain-Driven UI Model}\label{sec:05}
 
-  User interface (UI) serves an important role for business applications.
+  The user interface (UI) serves an important role in business applications.
   There are two reason for this:
   \begin{itemize}
    \item For a large number of enterprise employees, a business application represents the main application used during the day. 
-	 These people work with the business application for a good portion of their working day, but at the same time they aren't necessarily the savvy computer users.
-   \item Usually, UI of business applications constitutes a large part of the final solution having multiple forms, tabsheets, menus etc.
+	 Such people work with the business application for a good portion of their working day, but at the same time they aren't necessarily savvy computer users.
+   \item Usually, the UI of business applications constitutes a large part of the final solution, having multiple forms, tabsheets, menus etc.
   \end{itemize}
   Unlike other types of software systems, business applications contain hundreds of forms, which may change over time as the result of application evolution and changes to business rules.
-  This results in a considerable effort to develop and support UI of business applications.
-  Acknowledging the above, Trident Genesis incorporates a full support for domain-driven UI development into the provided programming model.
-  It provides a number of mechanisms for rapid development of uniform user interfaces, which includes windowing model, a system of forms, type-aware UI controls, user notification mechanism, implicit multi-threading model etc.
+  This results in a considerable effort to develop and support the UI of business applications.
+  Acknowledging the above, Trident Genesis incorporates full support for domain-driven UI development into the provided programming model.
+  It provides a number of mechanisms for rapid development of uniform user interfaces, which include a windowing model, a system of forms, type-aware UI controls, user notification mechanism, and implicit multi-threading model.
   
-  The principle idea behind building UI in TG, is a full reuse of metadata, type information and business logic controllers in order to support a nearly automatic UI construction with little involvement of the developer.
-  As with any other aspect of TG-based development, when building user interfaces the developers work at the domain level instead of the low-level of UI controls while being provided with flexible ways to customise the form layout.
-  So, the same type system and metadata used to model domain entities is used throughout the application development process.
+  The principle idea behind building a UI in TG is the full reuse of metadata, type information and business logic controllers in order to support nearly automatic UI construction with little involvement in the part of the developer.
+  As with any other aspect of TG-based development, when building user interfaces the developers work at the domain level instead of the low-level of UI controls, while being provided with flexible ways to customise the form layout.
+  So the same type system and metadata used to model domain entities is used throughout the application development process.
   
-  For example, when constructing UI, the developer simply requests a set of UI controls for a given domain entity.
+  For example, when constructing a UI, the developer simply requests a set of UI controls for a given domain entity.
   The platform automatically determines what controls are suitable for the properties of the specified domain entity.
-  The returned UI controls are fully initialised based on the metadata and bound to the specified entity instance.
+  The returned UI controls are fully initialised based on the metadata, and are bound to the specified entity instance.
   Thus, all changes done to that instance programmatically would be reflected in the UI controls and vice versa.
-  This mechanism adheres the domain model to the letter including execution of the specified validation business rules etc.
-  A savvy reader should already notice that TG follows the Model-View-Controller architectural pattern when it comes to UI construction, which reuses all the platform's essential building blocks.
+  This mechanism adheres to the domain model to the letter, including execution of the specified validation business rules.
+  A savvy reader would already have noticed that TG follows the Model-View-Controller architectural pattern when it comes to UI construction, which reuses all of the platform's essential building blocks.
 
-  One of the obvious advantages of this approach is the uniformity of UI -- properties of different domain entities with the same type are always represented by the same UI controls.
-  This greatly facilitates familiarisation of end-users with TG-based applications, which is especially noticeable in cases where several business applications are used in the same organisation.
-  This way users do no need to learn new UI controls, paradigms or deal with unexpected behaviour over the period of application evolution.
-  Another less obvious advantage of such transparent approach, where UI controls are fully bound together with domain entities and corresponding business controllers, is a natural predisposition to the test-driven development.
+  One of the obvious advantages to this approach is the uniformity of the UI -- the properties of different domain entities with the same type are always represented by the same UI controls.
+  This greatly facilitates the familiarisation of end-users with TG-based applications, which is especially noticeable in cases where several different business applications are used in the same organisation.
+  This way users do not need to learn new UI controls or paradigms, or deal with unexpected behaviour over the period of application evolution.
+  Another less obvious advantage of such a transparent approach, where UI controls are fully bound together with domain entities and corresponding business controllers, is a natural predisposition to use a test-driven development methodology.
   The developers need only to ensure correctness of business domain models and controllers while the views would uniformly reuse them.
 
   The platform's type system provides a clear definition of all possible combinations of properties used for modelling business domains.
   As outlined earlier, the most complex type is a domain entity itself, which may contain properties of different predefined types such as Date, Money, String as well as other domain entities.
-  The well-defined type system and rules for its customisation served as the foundation for implementing a set of UI paradigms and controls providing a way for the platform to automatically determine both the visual representation and behaviour of the application user interface.
+  The well-defined type system and rules for its customisation served as the foundation for implementing a set of UI paradigms and controls, providing a way for the platform to automatically determine both the visual representation and the behaviour of the application's user interface.
     
-  For example, a UI control provided for editing of a property that is of a domain entity type is fully equipped with quick and advanced search capabilities.
-  Such control does not require any configuration to be coded by the developer -- everything is automatically determined from the type and metadata of the property.
-  Similar happens for properties of other types.
+  For example, a UI control provided for editing a property that is of a domain entity type is fully equipped with both quick and advanced search capabilities.
+  Such a control does not require any configuration to be coded by the developer -- everything is automatically determined from the type and metadata of the property.
+  A similar thing happens for properties of other types.
   As another example consider a property of type Date.
-  The platform recognises the type and automatically associates it with a specially design Date/Time Picker UI control.
+  The platform recognises the type and automatically associates it with a specially designed Date/Time Picker UI control.
   In all cases developers do not need to provide any additional information -- just to layout UI controls on the form.
   
-  There are only two principle high-level UI concepts for organising application User Interface:
+  There are only two principle high-level UI concepts for organising an application's User Interface:
   \begin{itemize}
-   \item Entity Master -- a view for a single domain entity used specifically for review of its details, editing and creation of new ones.
+   \item Entity Master -- a view for a single domain entity used specifically for the review and editing of its details, and for creation of new entities.
 	 There can be entity masters of varying complexity, which fully depends on the complexity of the underlying domain entity.
     \item Entity Centre -- a view for representing sets of domain entities of the same type. 
-	  It is used for review of practically unlimited number of domain entity instances without loading all of them into memory, which is possible by reusing the EQL functionality outline earlier.
+	  It is used for review of a practically unlimited number of domain entity instances without loading all of them into memory, which is possible by reusing the EQL functionality outlined earlier.
 	  This view supports sophisticated configuration and filtering capabilities, ordering, data export functionality and more.
   \end{itemize}
   
-  The platform provides a mechanism that orchestrates seamless integration of masters and centres into a cohesive system, where views are linked together based on domain entity type information allowing natural navigation between the views.
+  The platform provides a mechanism that orchestrates the seamless integration of masters and centres into a single cohesive system, where views are linked together based on domain entity type information, allowing natural navigation between the views.
   For example, the mechanism of Entity Masters implements a strategy for semantic identification by making a correspondence between view and domain entities.
-  This way a previously opened for a specific entity Entity Master gets activated instead of creating a new instance.
-  Effectively, the platform offers developers a ready-to-use strategy for organising application user interface, which covers practically all scenarios required by the business domain.
+  This way an Entity Master that was previously opened for a specific entity gets activated instead of creating a new instance.
+  Effectively, the platform offers developers a ready-to-use strategy for organising the application user interface, which covers practically all scenarios required by the business domain.
 
-  The above highlights only some UI solutions provided as part of the platform and there are more UI related features that could not all be described in this document.
-  Platform's modularity ensures that UI controls and related logic cannot be mixed into domain models and implementation of the business logic.
-  The most important aspect of the provided UI development model is that it represents a high-level solution, which fully reuses the business domain model.
-  Such standard UI construction mechanism ensures the uniform user interface across all TG-based business applications.
-  This allows efficient reuse of user experience.
-  Users who understand principles and approaches of one TG-based application would easily start working with any other.
+  The above highlights only some of the UI solutions that are provided as part of the platform, and there are many more UI-related features over and above those described in this document.
+  The platform's modularity ensures that UI controls and related logic cannot be mixed into the domain models and the implementation of the business logic.
+  The most important aspect of the UI development model is that it represents a high-level solution, which fully reuses the business domain model.
+  Such a standard UI construction mechanism ensures a uniform user interface across all TG-based business applications.
+  This promotes a consistent and intuitive user experience.
+  Users who understand the principles and approaches of one TG-based application would easily start working with any other.
