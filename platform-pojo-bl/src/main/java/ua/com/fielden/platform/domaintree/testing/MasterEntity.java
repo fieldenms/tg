@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.Ignore;
@@ -46,9 +45,10 @@ public class MasterEntity extends AbstractEntity<String> {
     private Integer integerProp = null;
     @IsProperty
     private Integer propWithFunctions = null;
-    @IsProperty
-    @Calculated
-    private Integer calcIntegerProp = null;
+//    @IsProperty
+//    @Title(value = "Calc integer prop", desc = "Desc")
+//    @Calculated(contextualExpression = "1 * integerProp", contextPath = "", attribute = CalculatedPropertyAttribute.NO_ATTR, origination = "integerProp", category = CalculatedPropertyCategory.EXPRESSION)
+//    private Integer calcIntegerProp = null;
     @IsProperty
     private Double doubleProp = 0.0;
     @IsProperty
@@ -366,13 +366,13 @@ public class MasterEntity extends AbstractEntity<String> {
 	this.checkedManuallyProp = checkedManuallyProp;
     }
 
-    public Integer getCalcIntegerProp() {
-	return calcIntegerProp;
-    }
-    @Observable
-    public void setCalcIntegerProp(final Integer calcIntegerProp) {
-	this.calcIntegerProp = calcIntegerProp;
-    }
+//    public Integer getCalcIntegerProp() {
+//	return calcIntegerProp;
+//    }
+//    @Observable
+//    public void setCalcIntegerProp(final Integer calcIntegerProp) {
+//	this.calcIntegerProp = calcIntegerProp;
+//    }
 
     public Integer getPropWithFunctions() {
 	return propWithFunctions;

@@ -5,11 +5,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 
 /**
- * Should be used to indicate whether property is calculated and thus is not persisted.
+ * An annotation to be used to indicate that property is calculated.
  *
  * @author TG Team
  *
@@ -18,23 +18,37 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 @Target({ ElementType.FIELD })
 public @interface Calculated {
     /**
-     * Returns an expression string in <b>eQuery manner</b> that defines a calculated property. The expression should be fully defined in context of root type. <br><br>
-     *
-     * Concrete parts of expression (simple or other calculated properties) should be incorporated into this expression using dot-notation.
-     */
-    String expression() default "";
-
-    /**
-     * The name of property in root type, from which this calculated property has been originated.
+     * Returns an expression string that defines the calculated property. The expression should be fully defined in context of "context type".
      *
      * @return
      */
-    String origination() default "";
+    String contextualExpression() default ""; // TODO this should be required
 
     /**
-     * The category of calculated property (see {@link ICalculatedProperty.CalculatedPropertyCategory} for more details).
+     * Returns a path that defines the context of the calculated property. The path should be fully defined in context of root type.
      *
      * @return
      */
-    CalculatedPropertyCategory category() default CalculatedPropertyCategory.EXPRESSION;
+    String contextPath() default ""; // TODO this should be required
+
+    /**
+     * The attribute of calculated property.
+     *
+     * @return
+     */
+    CalculatedPropertyAttribute attribute() default CalculatedPropertyAttribute.NO_ATTR; // TODO this should be required
+
+    /**
+     * The name of property in context type, from which this calculated property has been originated.
+     *
+     * @return
+     */
+    String origination() default ""; // TODO this should be required
+
+    /**
+     * The category of calculated property.
+     *
+     * @return
+     */
+    CalculatedPropertyCategory category() default CalculatedPropertyCategory.EXPRESSION; // TODO this should be inferred from "contextualExpression" and "contextPath"
 }

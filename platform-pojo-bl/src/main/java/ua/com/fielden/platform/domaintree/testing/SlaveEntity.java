@@ -8,7 +8,6 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity.EnumType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -51,9 +50,6 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     private Integer integerProp = null;
     @IsProperty
     private Integer propWithFunctions = null;
-    @IsProperty
-    @Calculated
-    private Integer calcIntegerProp = null;
     @IsProperty
     private Double doubleProp = 0.0;
     @IsProperty
@@ -376,14 +372,6 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     @Observable
     public void setCheckedManuallyProp(final Integer checkedManuallyProp) {
         this.checkedManuallyProp = checkedManuallyProp;
-    }
-
-    public Integer getCalcIntegerProp() {
-        return calcIntegerProp;
-    }
-    @Observable
-    public void setCalcIntegerProp(final Integer calcIntegerProp) {
-        this.calcIntegerProp = calcIntegerProp;
     }
 
     public Integer getPropWithFunctions() {

@@ -24,7 +24,7 @@ public class NewPropertyTest {
 
     @Test
     public void test_annotation_description_presence() {
-	final Calculated calculated = new CalculatedAnnotation().expression("some expression").newInstance();
+	final Calculated calculated = new CalculatedAnnotation().contextualExpression("some expression").newInstance();
 	final IsProperty isProperty = new IsPropertyAnnotation(Money.class).newInstance();
 
 	final NewProperty pd = new NewProperty("prop_name", List.class, false, "title", "desc", calculated, isProperty);

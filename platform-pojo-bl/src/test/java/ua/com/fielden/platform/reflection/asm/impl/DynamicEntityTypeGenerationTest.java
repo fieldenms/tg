@@ -66,7 +66,7 @@ public class DynamicEntityTypeGenerationTest {
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private DynamicEntityClassLoader cl;
 
-    private final Calculated calculated = new CalculatedAnnotation().expression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
+    private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
 
     private final NewProperty pd1 = new NewProperty(NEW_PROPERTY_1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
     private final NewProperty pd2 = new NewProperty(NEW_PROPERTY_2, Money.class, false,  NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
@@ -164,7 +164,7 @@ public class DynamicEntityTypeGenerationTest {
 	assertNotNull("The field should exist.", field);
 	final Calculated calcAnno = field.getAnnotation(Calculated.class);
 	assertNotNull("The annotation Calculated should exist.", calcAnno);
-	assertEquals("Incorrect expression.", "2 * 3 - [integerProp]", calcAnno.expression());
+	assertEquals("Incorrect expression.", "2 * 3 - [integerProp]", calcAnno.contextualExpression());
 	assertEquals("Incorrect origination property.", "integerProp", calcAnno.origination());
 
 	final AbstractEntity entity = factory.newByKey(newType, "key");
@@ -251,7 +251,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_addition_of_collectional_property() throws Exception {
 	// create
-	final Calculated calculated = new CalculatedAnnotation().expression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
+	final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
 	final IsProperty isProperty = new IsPropertyAnnotation(String.class).newInstance();
 
 	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description",	calculated, isProperty);

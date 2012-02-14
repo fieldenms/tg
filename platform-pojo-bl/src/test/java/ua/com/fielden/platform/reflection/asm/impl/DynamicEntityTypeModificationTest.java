@@ -58,7 +58,7 @@ public class DynamicEntityTypeModificationTest {
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private DynamicEntityClassLoader cl;
 
-    private final Calculated calculated = new CalculatedAnnotation().expression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
+    private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
 
     private final NewProperty pd = new NewProperty(NEW_PROPERTY, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
 

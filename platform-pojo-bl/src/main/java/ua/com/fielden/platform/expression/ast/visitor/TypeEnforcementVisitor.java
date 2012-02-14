@@ -318,6 +318,8 @@ public class TypeEnforcementVisitor implements IAstVisitor {
 	    return DateTime.class;
 	} else if (Date.class.isAssignableFrom(type)) {
 	    return Date.class;
+	} else if (boolean.class.isAssignableFrom(type) || Boolean.class.isAssignableFrom(type)) {
+	    return type;
 	} else if (Collection.class.isAssignableFrom(type)) {
 	    return type;
 	} else if (AbstractEntity.class.isAssignableFrom(type)) {

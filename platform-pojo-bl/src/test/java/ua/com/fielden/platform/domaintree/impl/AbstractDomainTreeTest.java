@@ -16,14 +16,9 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
@@ -215,7 +210,6 @@ public abstract class AbstractDomainTreeTest {
 	}
     }
 
-
     /**
      * Runs simply an action for all appropriate levels of properties :
      *
@@ -251,8 +245,8 @@ public abstract class AbstractDomainTreeTest {
     public static void allLevelsWithoutCollections(final IAction action, final String ... atomicNames) {
 	for (final String atomicName : atomicNames) {
 	    action.action(atomicName);
-	    action.action("entityProp." + atomicName);
-	    action.action("entityProp.entityProp." + atomicName);
+	    action.action("".equals(atomicName) ? "entityProp" : ("entityProp" + "." + atomicName));
+	    action.action("".equals(atomicName) ? "entityProp.entityProp" : ("entityProp.entityProp" + "." + atomicName));
 	}
     }
 
@@ -270,9 +264,9 @@ public abstract class AbstractDomainTreeTest {
      */
     public static void allLevelsWithCollections(final IAction action, final String ... atomicNames) {
 	for (final String atomicName : atomicNames) {
-	    action.action("collection." + atomicName);
-	    action.action("entityProp.collection." + atomicName);
-	    action.action("entityProp.collection.slaveEntityProp." + atomicName);
+	    action.action("".equals(atomicName) ? "collection" : ("collection" + "." + atomicName));
+	    action.action("".equals(atomicName) ? "entityProp.collection" : ("entityProp.collection" + "." + atomicName));
+	    action.action("".equals(atomicName) ? "entityProp.collection.slaveEntityProp" : ("entityProp.collection.slaveEntityProp" + "." + atomicName));
 	}
     }
 
@@ -416,24 +410,24 @@ public abstract class AbstractDomainTreeTest {
     protected static final IDomainTreeManagerAndEnhancer enhanceDomainWithCalculatedPropertiesOfDifferentTypes(final IDomainTreeManagerAndEnhancer managerAndEnhancer) {
 	// enhance domain to 1) check whether the inherited representation logic will be ok 2) check calculated properties representation
 	// EXPRESSION
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "exprProp", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "expr", "title", "desc"));
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.exprProp", CalculatedPropertyCategory.EXPRESSION, "entityProp.integerProp", Integer.class, "expr", "title", "desc"));
+	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "2 * integerProp", "Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp", "2 * integerProp", "Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
 	// AGGREGATED_EXPRESSION
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "aggrExprProp", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "expr", "title", "desc"));
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.aggrExprProp", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "entityProp.integerProp", Integer.class, "expr", "title", "desc"));
+	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "SUM(integerProp)", "Aggr Expr Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp", "SUM(integerProp)", "Aggr Expr Prop2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
 	// COLLECTIONAL_EXPRESSION
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection.collExprProp", CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION, "entityProp.collection.integerProp", Integer.class, "expr", "title", "desc"));
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp.collExprProp", CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION, "entityProp.collection.simpleEntityProp.integerProp", Integer.class, "expr", "title", "desc"));
+	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Coll Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Coll Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
 	// AGGREGATED_COLLECTIONAL_EXPRESSION
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.aggrCollExprProp1", CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, "entityProp.collection.integerProp", Integer.class, "expr", "title", "desc"));
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.aggrCollExprProp2", CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, "entityProp.collection.simpleEntityProp.integerProp", Integer.class, "expr", "title", "desc"));
+	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection", "SUM(integerProp)", "Aggr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "SUM(integerProp)", "Aggr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
 	// ATTRIBUTED_COLLECTIONAL_EXPRESSION
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.attrCollExprProp1", CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION, "entityProp.collection.integerProp", Integer.class, "expr", "title", "desc"));
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.attrCollExprProp2", CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION, "entityProp.collection.simpleEntityProp.integerProp", Integer.class, "expr", "title", "desc"));
+	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Attr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.ALL, "integerProp"));
+	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Attr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.ANY, "integerProp"));
 	managerAndEnhancer.getEnhancer().apply();
 
 	managerAndEnhancer.getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "entityProp.exprProp");
-	managerAndEnhancer.getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "entityProp.aggrExprProp");
+	managerAndEnhancer.getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "aggrExprProp1");
 	managerAndEnhancer.getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, "entityProp.collection.collExprProp");
 	managerAndEnhancer.getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, "entityProp.collection.simpleEntityProp.collExprProp");
 	return managerAndEnhancer;
@@ -443,8 +437,8 @@ public abstract class AbstractDomainTreeTest {
 	checkAccessabilityOfCalculatedProperty(dtm, "exprProp");
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.exprProp");
 
-	checkAccessabilityOfCalculatedProperty(dtm, "aggrExprProp");
-	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.aggrExprProp");
+	checkAccessabilityOfCalculatedProperty(dtm, "aggrExprProp1");
+	checkAccessabilityOfCalculatedProperty(dtm, "aggrExprProp2");
 
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.collection.collExprProp");
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.collection.simpleEntityProp.collExprProp");
@@ -456,7 +450,7 @@ public abstract class AbstractDomainTreeTest {
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.attrCollExprProp2");
 
 	assertTrue("The calculated property [entityProp.exprProp] should be excluded. The path towards calculated property should be properly resolved.", dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.exprProp"));
-	assertTrue("The calculated property [entityProp.aggrExprProp] should be disabled. The path towards calculated property should be properly resolved.", dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.aggrExprProp"));
+	assertTrue("The calculated property [aggrExprProp1] should be disabled. The path towards calculated property should be properly resolved.", dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "aggrExprProp1"));
 	assertTrue("The calculated property [entityProp.collection.collExprProp] should be disabled. The path towards calculated property should be properly resolved.", dtm.getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.collExprProp"));
 	assertTrue("The calculated property [entityProp.collection.simpleEntityProp.collExprProp] should be excluded. The path towards calculated property should be properly resolved.", dtm.getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.simpleEntityProp.collExprProp"));
     }
@@ -488,5 +482,9 @@ public abstract class AbstractDomainTreeTest {
 	    final IDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
 	    checkAccessabilityOfCalculatedPropertiesAndTheirState(copy);
 	}
+    }
+
+    protected static String name(final String path, final String name) {
+        return "".equals(path) ? name : path + "." + name;
     }
 }

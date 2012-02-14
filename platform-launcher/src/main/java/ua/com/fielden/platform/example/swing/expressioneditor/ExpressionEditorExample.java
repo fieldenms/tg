@@ -10,8 +10,8 @@ import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.example.entities.Vehicle;
 import ua.com.fielden.platform.example.ioc.ExampleRmaHibernateModule;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
@@ -47,9 +47,11 @@ public class ExpressionEditorExample extends AbstractUiApplication {
     @Override
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
-	rootTypes.add(Vehicle.class);
+	// rootTypes.add(Vehicle.class);
+	rootTypes.add(MasterEntity.class);
 	final CentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(new ClientSerialiser(entityFactory), rootTypes);
-	final DomainTreeEditorView<Vehicle> wizard = new DomainTreeEditorView<Vehicle>(new DomainTreeEditorModel<Vehicle>(entityFactory, cdtme, Vehicle.class));
+	// final DomainTreeEditorView<Vehicle> wizard = new DomainTreeEditorView<Vehicle>(new DomainTreeEditorModel<Vehicle>(entityFactory, cdtme, Vehicle.class));
+	final DomainTreeEditorView<MasterEntity> wizard = new DomainTreeEditorView<MasterEntity>(new DomainTreeEditorModel<MasterEntity>(entityFactory, cdtme, MasterEntity.class));
 	wizard.setPreferredSize(new Dimension(640,800));
 	SimpleLauncher.show("Expression editor example", wizard);
     }

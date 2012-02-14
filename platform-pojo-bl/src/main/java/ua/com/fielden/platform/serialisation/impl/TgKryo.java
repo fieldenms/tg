@@ -30,40 +30,42 @@ import org.joda.time.Interval;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager.AnalysisDomainTreeManagerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManagerAndEnhancer.AnalysisDomainTreeManagerAndEnhancerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisDomainTreeRepresentationSerialiser;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager.LifecycleDomainTreeManagerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManagerAndEnhancer.LifecycleDomainTreeManagerAndEnhancerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation.LifecycleDomainTreeRepresentationSerialiser;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager.PivotDomainTreeManagerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManagerAndEnhancer.PivotDomainTreeManagerAndEnhancerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRepresentation.PivotDomainTreeRepresentationSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToCriteriaTickManager;
-import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.CentreDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToCriteriaTickManager.AddToCriteriaTickManagerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.CentreDomainTreeManagerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer.CentreDomainTreeManagerAndEnhancerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeRepresentation.CentreDomainTreeRepresentationSerialiser;
+import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManager.AddToCriteriaTickManagerForLocator;
-import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManager.LocatorDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManager.AddToCriteriaTickManagerForLocator.AddToCriteriaTickManagerForLocatorSerialiser;
+import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManager.LocatorDomainTreeManagerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer.LocatorDomainTreeManagerAndEnhancerSerialiser;
+import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation.LocatorDomainTreeRepresentationSerialiser;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
+import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
+import ua.com.fielden.platform.domaintree.impl.CalculatedProperty.CalculatedPropertySerialiser;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.DomainTreeEnhancerSerialiser;
 import ua.com.fielden.platform.domaintree.impl.LocatorManager;
@@ -203,6 +205,7 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer colorSerializer;
     private final Serializer sortKeySerialiser;
     // "domain trees" serialisers
+    private final Serializer calculatedPropertySerialiser;
     private final Serializer locatorManagerSerialiser;
     private final Serializer domainTreeEnhancerSerialiser;
     private final Serializer criteriaDomainTreeRepresentationSerialiser;
@@ -247,6 +250,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	colorSerializer = new ColorSerializer();
 	sortKeySerialiser = new SortKeySerialiser(this);
 	// "domain trees" serialisers
+	calculatedPropertySerialiser = new CalculatedPropertySerialiser(this);
 	locatorManagerSerialiser = new LocatorManagerSerialiser(this);
 	domainTreeEnhancerSerialiser = new DomainTreeEnhancerSerialiser(this);
 	criteriaDomainTreeRepresentationSerialiser = new CentreDomainTreeRepresentationSerialiser(this);
@@ -469,7 +473,9 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return colorSerializer;
 	} else if (SortKey.class.isAssignableFrom(type)) {
 	    return sortKeySerialiser;
-	} else if (DomainTreeEnhancer.class.isAssignableFrom(type)) { // "domain tree" serialisers
+	} else if (CalculatedProperty.class.isAssignableFrom(type)) { // "domain tree" serialisers
+	    return calculatedPropertySerialiser;
+	} else if (DomainTreeEnhancer.class.isAssignableFrom(type)) {
 	    return domainTreeEnhancerSerialiser;
 	} else if (LocatorManager.class.isAssignableFrom(type)) {
 	    return locatorManagerSerialiser;

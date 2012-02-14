@@ -4,7 +4,8 @@ import java.util.HashSet;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
@@ -735,7 +736,8 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	// discard action which should do nothing with current instance of master manager, due to lack of connection with base configuration
 	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").isRunAutomatically());
 	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").setRunAutomatically(false);
-	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().addCalculatedProperty(new CalculatedProperty(EntityWithStringKeyType.class, "newCalcProp", CalculatedPropertyCategory.EXPRESSION, null, Integer.class, "2 * [integerProp]", "Double integer prop", "Double integer prop"));
+
+	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().addCalculatedProperty(new CalculatedProperty(EntityWithStringKeyType.class, "", "2 * integerProp", "New calc prop", "Double integer prop", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
 	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().apply();
 	assertNotNull("Should be not null.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp"));
 	assertFalse("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").isRunAutomatically());
@@ -744,7 +746,11 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp"));
 	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertNull("Should be null after discard operation.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp"));
+	try {
+	    newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp");
+	    fail("The calc prop should not be acceptable after discard operation.");
+	} catch (final IncorrectCalcPropertyKeyException e) {
+	}
 	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").isRunAutomatically());
     }
 

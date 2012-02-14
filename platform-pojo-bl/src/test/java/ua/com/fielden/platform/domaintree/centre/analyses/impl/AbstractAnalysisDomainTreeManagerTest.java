@@ -5,24 +5,21 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Set;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
 
@@ -63,21 +60,21 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);
 	dtm.getSecondTick().checkedProperties(MasterEntity.class);
 
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "intAggExprProp", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "expr", "title", "desc"));
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "bigDecimalAggExprProp", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "bigDecimalProp", BigDecimal.class, "expr", "title", "desc"));
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "moneyAggExprProp", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "moneyProp", Money.class, "expr", "title", "desc"));
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "dateExprProp", CalculatedPropertyCategory.EXPRESSION, "dateProp", Integer.class, "expr", "title", "desc"));
-	allLevelsWithoutCollections(new IAction() {
-	    public void action(final String name) {
-		dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "moneyProp", Money.class, "expr", "title", "desc"));
-	    }
-	}, "uncheckedAggExprProp");
-	allLevelsWithoutCollections(new IAction() {
-	    public void action(final String name) {
-		dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "dateExprProp", CalculatedPropertyCategory.EXPRESSION, "dateProp", Integer.class, "expr", "title", "desc"));
-	    }
-	}, "uncheckedDateExprProp");
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "MAX(integerProp)", "Int agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "MAX(bigDecimalProp)", "Big decimal agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp"));
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Money agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp"));
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp"));
+
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Unchecked agg expr prop 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp"));
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp"));
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp"));
+
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp"));
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp"));
+	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp"));
+
 	dtm.getEnhancer().apply();
+
 	dtm.getSecondTick().check(MasterEntity.class, "intAggExprProp", true);
 	dtm.getSecondTick().check(MasterEntity.class, "bigDecimalAggExprProp", true);
 	dtm.getSecondTick().check(MasterEntity.class, "moneyAggExprProp", true);
@@ -149,7 +146,7 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 		}
 	    }
 	}, "uncheckedDateExprProp");
-	allLevelsWithoutCollections(new IAction() {
+	oneLevel(new IAction() {
 	    public void action(final String name) {
 		// SECOND TICK
 		//usage manager
@@ -170,7 +167,7 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 		} catch (final IllegalArgumentException e) {
 		}
 	    }
-	}, "uncheckedAggExprProp");
+	}, "uncheckedAggExprProp1", "uncheckedAggExprProp2", "uncheckedAggExprProp3");
     }
 
     @Test

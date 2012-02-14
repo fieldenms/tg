@@ -7,6 +7,7 @@ import java.util.List;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
@@ -42,6 +43,7 @@ public class EntityCentreExampleSerialisationClassProvider extends DefaultSerial
 	add(Ordering.class); //
 	add(Function.class); //
 	add(CalculatedPropertyCategory.class); //
+	add(CalculatedPropertyAttribute.class); //
 	add(ICalculatedProperty.class); //
 	add(IMasterDomainTreeManager.class); //
 	add(IDomainTreeEnhancer.class); //

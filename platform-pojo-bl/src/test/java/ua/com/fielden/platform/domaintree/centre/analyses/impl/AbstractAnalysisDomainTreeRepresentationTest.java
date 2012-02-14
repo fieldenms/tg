@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,7 +14,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.Function;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentationTest;
@@ -29,7 +28,6 @@ import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterSyntheticEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -190,12 +188,12 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_first_tick_for_integer_EXPR_calculated_properties_originated_from_date_property_are_enabled() {
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
-		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, CalculatedPropertyCategory.EXPRESSION, "dateProp", Integer.class, "expr", "title", "desc"));
+		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Calc date prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp"));
 		dtm().getEnhancer().apply();
 
-		assertFalse("EXPRESSION calculated properties of integer type based on date property should be enabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
+		assertFalse("EXPRESSION calculated properties of integer type based on date property should be enabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, name(name, "calcDateProp")));
 	    }
-	}, "dateExprProp");
+	}, ""); // calcDateProp
     }
 
     ////////////////////////////////////////////////////////////////
@@ -236,53 +234,34 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 	}, "integerProp", "doubleProp", "bigDecimalProp", "moneyProp", "stringProp", "simpleEntityProp", "entityPropWithAEKeyType", "entityWithCompositeKeyProp", "dateProp", "booleanProp");
     }
 
+    protected void checkSecTickEnablementForAGGR_EXPRessions(final String originationProperty, final int i, final String contextPath) {
+	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, contextPath, "MAX(" + originationProperty + ")", originationProperty + " aggr expr " + i, "Desc", CalculatedPropertyAttribute.NO_ATTR, originationProperty));
+	dtm().getEnhancer().apply();
+	assertFalse("AGGREGATED_EXPRESSION calculated properties should be enabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, originationProperty + "AggrExpr" + i));
+    }
+
     @Test
     public void test_that_second_tick_for_calculated_properties_of_AGGREGATED_EXPRESSION_type_are_NOT_disabled() {
 	// TODO check whether it's correct
-	allLevelsWithoutCollections(new IAction() {
-	    public void action(final String name) {
-		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "expr", "title", "desc"));
-		dtm().getEnhancer().apply();
+	checkSecTickEnablementForAGGR_EXPRessions("integerProp", 1, "");
+	checkSecTickEnablementForAGGR_EXPRessions("integerProp", 2, "entityProp");
+	checkSecTickEnablementForAGGR_EXPRessions("integerProp", 3, "entityProp.entityProp");
 
-		assertFalse("AGGREGATED_EXPRESSION calculated properties should be enabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
-	    }
-	}, "intAggExprProp");
+	checkSecTickEnablementForAGGR_EXPRessions("bigDecimalProp", 1, "");
+	checkSecTickEnablementForAGGR_EXPRessions("bigDecimalProp", 2, "entityProp");
+	checkSecTickEnablementForAGGR_EXPRessions("bigDecimalProp", 3, "entityProp.entityProp");
 
-	allLevelsWithoutCollections(new IAction() {
-	    public void action(final String name) {
-		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "bigDecimalProp", BigDecimal.class, "expr", "title", "desc"));
-		dtm().getEnhancer().apply();
+	checkSecTickEnablementForAGGR_EXPRessions("moneyProp", 1, "");
+	checkSecTickEnablementForAGGR_EXPRessions("moneyProp", 2, "entityProp");
+	checkSecTickEnablementForAGGR_EXPRessions("moneyProp", 3, "entityProp.entityProp");
 
-		assertFalse("AGGREGATED_EXPRESSION calculated properties should be enabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
-	    }
-	}, "bigDecimalAggExprProp");
+	// checkSecTickEnablementForAGGR_EXPRessions("doubleProp", 1, ""); // Double properties is not supported at all, BigDecimal should be used instead
+	// checkSecTickEnablementForAGGR_EXPRessions("doubleProp", 2, "entityProp"); // Double properties is not supported at all, BigDecimal should be used instead
+	// checkSecTickEnablementForAGGR_EXPRessions("doubleProp", 3, "entityProp.entityProp"); // Double properties is not supported at all, BigDecimal should be used instead
 
-	allLevelsWithoutCollections(new IAction() {
-	    public void action(final String name) {
-		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "moneyProp", Money.class, "expr", "title", "desc"));
-		dtm().getEnhancer().apply();
-
-		assertFalse("AGGREGATED_EXPRESSION calculated properties should be enabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
-	    }
-	}, "moneyAggExprProp");
-
-	allLevelsWithoutCollections(new IAction() {
-	    public void action(final String name) {
-		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "doubleProp", BigDecimal.class, "expr", "title", "desc"));
-		dtm().getEnhancer().apply();
-
-		assertFalse("AGGREGATED_EXPRESSION calculated properties should be enabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
-	    }
-	}, "doubleAggExprProp");
-
-	allLevelsWithoutCollections(new IAction() {
-	    public void action(final String name) {
-		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "stringProp", String.class, "expr", "title", "desc"));
-		dtm().getEnhancer().apply();
-
-		assertFalse("AGGREGATED_EXPRESSION calculated properties should be enabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
-	    }
-	}, "stringAggExprProp");
+	checkSecTickEnablementForAGGR_EXPRessions("stringProp", 1, "");
+	checkSecTickEnablementForAGGR_EXPRessions("stringProp", 2, "entityProp");
+	checkSecTickEnablementForAGGR_EXPRessions("stringProp", 3, "entityProp.entityProp");
     }
 
     ////////////////////// 3.3. Type related logic //////////////////////

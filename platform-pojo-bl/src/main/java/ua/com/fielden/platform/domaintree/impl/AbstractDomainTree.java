@@ -8,11 +8,12 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -47,6 +48,7 @@ public abstract class AbstractDomainTree {
 	add(Ordering.class); //
 	add(Function.class); //
 	add(CalculatedPropertyCategory.class); //
+	add(CalculatedPropertyAttribute.class); //
 	add(ICalculatedProperty.class); //
 	add(IMasterDomainTreeManager.class); //
 	add(IDomainTreeEnhancer.class); //

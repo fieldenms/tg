@@ -219,6 +219,20 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     }
 
     /**
+     * Returns parent collection for specified property.
+     *
+     * @param root
+     * @param property
+     * @return
+     */
+    public static String parentCollection(final Class<?> root, final String property) {
+	if (!isCollectionOrInCollectionHierarchy(root, property)) {
+	    throw new IllegalArgumentException("The property [" + property + "] is not in collection hierarchy.");
+	}
+        return isCollection(root, property) ? property : parentCollection(root, PropertyTypeDeterminator.penultAndLast(property).getKey());
+    }
+
+    /**
      * Returns <code>true</code> if property is in collectional hierarchy.
      *
      * @param root
@@ -631,6 +645,17 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    availableFunctions.remove(Function.COUNT_DISTINCT);
 	}
 	return availableFunctions;
+    }
+
+    /**
+     * Returns <code>true</code> if the property is calculated.
+     *
+     * @param root
+     * @param property
+     * @return
+     */
+    protected static boolean isCalculated(final Class<?> root, final String property) {
+	return AnnotationReflector.getPropertyAnnotation(Calculated.class, root, property) != null;
     }
 
     /**

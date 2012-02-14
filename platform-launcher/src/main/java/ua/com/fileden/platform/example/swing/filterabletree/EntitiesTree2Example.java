@@ -1,14 +1,13 @@
 package ua.com.fileden.platform.example.swing.filterabletree;
 
 import java.awt.Dimension;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.branding.SplashController;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
@@ -47,7 +46,8 @@ public class EntitiesTree2Example extends AbstractUiApplication{
 	manager.getRepresentation().getFirstTick().disableImmutably(Vehicle.class, "eqClass");
 	manager.getFirstTick().check(Vehicle.class, "replacing", true);
 	manager.getFirstTick().move(Vehicle.class, "replacing", "desc");
-	manager.getEnhancer().addCalculatedProperty(new CalculatedProperty(Vehicle.class, "replacing.replacing.calculated", CalculatedPropertyCategory.EXPRESSION, "replacing.replacing.numValue", BigDecimal.class, "2 * [replacing.replacing.numValue]", "Double Num Value", "Double Num Value description")); // excludeImmutably(Vehicle.class, "commonProperty");
+
+	manager.getEnhancer().addCalculatedProperty(new CalculatedProperty(Vehicle.class, "replacing.replacing", "2 * numValue", "Calculated", "Double Num Value description", CalculatedPropertyAttribute.NO_ATTR, "numValue")); // excludeImmutably(Vehicle.class, "commonProperty");
 	manager.getEnhancer().apply();
 
 	final EntitiesTreeModel2 model = new EntitiesTreeModel2(manager, "selection criteria", "result set");
@@ -59,7 +59,8 @@ public class EntitiesTree2Example extends AbstractUiApplication{
 	manager.getSecondTick().check(Vehicle.class, "replacing", true);
 	manager.getSecondTick().move(Vehicle.class, "replacing", "desc");
 	manager.getSecondTick().check(Vehicle.class, "replacing", false);
-	manager.getEnhancer().addCalculatedProperty(new CalculatedProperty(Vehicle.class, "replacedBy.replacedBy.calculated", CalculatedPropertyCategory.EXPRESSION, "replacedBy.replacedBy.numValue", BigDecimal.class, "2 * [replacedBy.replacedBy.numValue]", "Double Num Value", "Double Num Value description")); // excludeImmutably(Vehicle.class, "commonProperty");
+
+	manager.getEnhancer().addCalculatedProperty(new CalculatedProperty(Vehicle.class, "replacedBy.replacedBy", "2 * numValue", "Calculated", "Double Num Value description", CalculatedPropertyAttribute.NO_ATTR, "numValue")); // excludeImmutably(Vehicle.class, "commonProperty");
 	manager.getEnhancer().apply();
 
 	final EntitiesTreePanel treePanel = new EntitiesTreePanel(entitiesTree);

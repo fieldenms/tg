@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.domaintree;
 
+import ua.com.fielden.platform.error.Result;
+
 
 
 /**
@@ -43,10 +45,10 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
     Class<?> getManagedType(final Class<?> type);
 
     /**
-     * Adds the <code>calculatedProperty</code> to root type's {@link ICalculatedProperty#getRootType()} hierarchy into path {@link ICalculatedProperty#getPath()}.
-     * Throws {@link IncorrectPlaceException} when the place (the hierarchy branch) for calculated property is incorrect (for e.g. does not exist).<br><br>
+     * Adds the <code>calculatedProperty</code> to root type's {@link ICalculatedProperty#root()} hierarchy.
+     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property name is incorrect.<br><br>
      *
-     * <i>Important</i> : the <code>calculatedProperty</code> should strictly be expressed in context of {@link ICalculatedProperty#getParentType()} hierarchy.
+     * <i>Important</i> : the <code>calculatedProperty</code> should strictly be expressed in context of {@link ICalculatedProperty#contextType()} hierarchy.
      *
      * @param calculatedProperty -- fully defined calculated property to be added.
      */
@@ -54,7 +56,7 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
 
     /**
      * Removes the calculated property with a name <code>calculatedPropertyName</code>(dot-notation expression) from <code>rootType</code> hierarchy.
-     * Throws {@link IncorrectPlaceException} when the place (the hierarchy branch) for calculated property is incorrect (for e.g. does not exist).<br><br>
+     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property name is incorrect.<br><br>
      *
      * @param rootType -- type of <b>root</b> entity, from which the calculated property should be removed (not derived type)
      * @param calculatedPropertyName -- the dot-notation expression name of calculated property to be removed
@@ -62,16 +64,8 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
     void removeCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName);
 
     /**
-     * Removes the calculated property from {@link ICalculatedProperty#getRootType()} hierarchy.
-     * Throws {@link IncorrectPlaceException} when the place (the hierarchy branch) for calculated property is incorrect (for e.g. does not exist).<br><br>
-     *
-     * @param calculatedProperty -- the calculated property to be removed
-     */
-    void removeCalculatedProperty(final ICalculatedProperty calculatedProperty);
-
-    /**
      * Gets the calculated property with a name <code>calculatedPropertyName</code>(dot-notation expression) from <code>rootType</code> hierarchy.
-     * Throws {@link IncorrectPlaceException} when the place (the hierarchy branch) for calculated property is incorrect (for e.g. does not exist).<br><br>
+     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property name is incorrect.<br><br>
      *
      * @param rootType -- type of <b>root</b> entity, from which the calculated property should be removed (not derived type)
      * @param calculatedPropertyName -- the dot-notation expression name of calculated property to be obtained
@@ -79,20 +73,16 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
     ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName);
 
     /**
-     * Indicates a situation when the place (the hierarchy branch) for calculated property is incorrect (for e.g. does not exist).
+     * Indicates a situation when the name of calculated property is incorrect (for e.g. the place does not exist or name is not unique in the hierarchy).
      *
      * @author TG Team
      *
      */
-    public class IncorrectPlaceException extends RuntimeException {
+    public class IncorrectCalcPropertyKeyException extends Result {
 	private static final long serialVersionUID = 435410515344805056L;
 
-	public IncorrectPlaceException(final Exception e) {
-	    super(e);
-	}
-
-	public IncorrectPlaceException(final String s) {
-	    super(s);
+	public IncorrectCalcPropertyKeyException(final String s) {
+	    super(null, s, new Exception(s));
 	}
     }
 

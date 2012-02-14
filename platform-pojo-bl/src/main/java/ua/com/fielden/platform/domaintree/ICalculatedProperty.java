@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.domaintree;
 
-
-
 /**
  * The <b>calculated property</b> represents an abstraction for an expression which could be used in queries
  * and their results exactly as simple property. <br><br>
@@ -17,7 +15,128 @@ package ua.com.fielden.platform.domaintree;
  * @author TG Team
  *
  */
-public interface ICalculatedProperty /* extends Serializable */ {
+public interface ICalculatedProperty {
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////// Required and immutable stuff ////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * The root type of calculated property. The calculated property exists in strict place with path {@link #getPath()} in root type {@link #root()}. <br><br>
+     *
+     * For e.g. :<br>
+     * root = WorkOrder.class, // the concrete place of calculated property (root)<br>
+     * path = vehicle.status, // the concrete place of calculated property (path)<br>
+     * name = operationalAndActive, // name of calc property<br>
+     * parentType = VehicleStatus.class, //<br>
+     * expr = [operational] and [active], // should be expressed in context of parentType<br>
+     *
+     * @return
+     */
+    Class<?> root();
+
+    /**
+     * The calculated property path. The calculated property exists in strict place with path {@link #getPath()} in root type {@link #root()}. <br><br>
+     *
+     * For e.g. :<br>
+     * root = WorkOrder.class, // the concrete place of calculated property (root)<br>
+     * path = vehicle.status, // the concrete place of calculated property (path)<br>
+     * name = operationalAndActive, // name of calc property<br>
+     * parentType = VehicleStatus.class, //<br>
+     * expr = [operational] and [active], // should be expressed in context of parentType<br>
+     *
+     * @return
+     */
+    String contextPath();
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////// Required and mutable stuff //////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Returns an expression string in <b>eQuery manner</b> that defines a calculated property. The expression should be fully defined in context of root type ({@link #root()}). <br><br>
+     *
+     * Concrete parts of expression (simple or other calculated properties) should be incorporated into this expression using dot-notation.
+     *
+     * @return
+     */
+    String contextualExpression();
+
+    /**
+     * Sets an expression string in <b>eQuery manner</b> that defines a calculated property. The expression should be fully defined in context of parent type ({@link #contextType()}). <br><br>
+     *
+     * Concrete parts of expression (simple or other calculated properties) should be incorporated into this expression using dot-notation.
+     *
+     * @param contextualExpression -- an expression string in <b>eQuery manner</b> that defines a calculated property.
+     */
+    ICalculatedProperty setContextualExpression(final String contextualExpression);
+
+    /**
+     * Returns the title of calculated property.
+     */
+    String title();
+
+    /**
+     * Sets the title of calculated property.
+     */
+    ICalculatedProperty setTitle(final String title);
+
+    /**
+     * Returns the description of calculated property.
+     */
+    String desc();
+
+    /**
+     * Sets the description of calculated property.
+     */
+    ICalculatedProperty setDesc(final String desc);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////// Required contextually and mutable stuff /////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * TODO
+     *
+     * @author TG Team
+     *
+     */
+    public enum CalculatedPropertyAttribute {
+	ALL, ANY, NO_ATTR
+    }
+
+    /**
+     * TODO
+     *
+     * @return
+     */
+    CalculatedPropertyAttribute attribute();
+
+    /**
+     * TODO
+     *
+     * @param attribute
+     * @return
+     */
+    ICalculatedProperty setAttribute(final CalculatedPropertyAttribute attribute);
+
+    /**
+     * The name of property in parent type ({@link #contextType()}), from which this calculated property has been originated.
+     *
+     * @return
+     */
+    String originationProperty();
+
+    /**
+     * Sets the name of property in parent type ({@link #contextType()}), from which this calculated property has been originated.
+     *
+     * @return
+     */
+    ICalculatedProperty setOriginationProperty(final String originationProperty);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////// Inferred stuff //////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
     /**
      * Represents a different categories (types) of <b>calculated properties</b>.<br><br>
      *
@@ -29,7 +148,7 @@ public interface ICalculatedProperty /* extends Serializable */ {
      * @author TG Team
      *
      */
-    public enum CalculatedPropertyCategory /* implements Serializable */ {
+    public enum CalculatedPropertyCategory {
         /**
          * The category of <b>calculated properties</b> only with simple hierarchy members -- no members of collectional hierarchy.
          * There are no restrictions for hierarchy levels to be used in this expression (higher or lower in the actual calculated property place).<br><br>
@@ -86,10 +205,10 @@ public interface ICalculatedProperty /* extends Serializable */ {
      *
      * @return
      */
-    CalculatedPropertyCategory getCategory();
+    CalculatedPropertyCategory category();
 
     /**
-     * The calculated property path and name. The calculated property exists in strict place with path {@link #getPath()} in root type {@link #getRootType()}. <br><br>
+     * The name of calculated property in context of parent type ({@link #contextType()}). <br><br>
      *
      * For e.g. :<br>
      * root = WorkOrder.class, // the concrete place of calculated property (root)<br>
@@ -100,10 +219,10 @@ public interface ICalculatedProperty /* extends Serializable */ {
      *
      * @return
      */
-    String getPathAndName();
+    String name();
 
     /**
-     * The calculated property path. The calculated property exists in strict place with path {@link #getPath()} in root type {@link #getRootType()}. <br><br>
+     * The calculated property path. The calculated property exists in strict place with path {@link #getPath()} in root type {@link #root()}. <br><br>
      *
      * For e.g. :<br>
      * root = WorkOrder.class, // the concrete place of calculated property (root)<br>
@@ -114,10 +233,10 @@ public interface ICalculatedProperty /* extends Serializable */ {
      *
      * @return
      */
-    String getPath();
+    String path();
 
     /**
-     * The root type of calculated property. The calculated property exists in strict place with path {@link #getPath()} in root type {@link #getRootType()}. <br><br>
+     * The calculated property path and name. The calculated property exists in strict place with path {@link #getPath()} in root type {@link #root()}. <br><br>
      *
      * For e.g. :<br>
      * root = WorkOrder.class, // the concrete place of calculated property (root)<br>
@@ -128,10 +247,10 @@ public interface ICalculatedProperty /* extends Serializable */ {
      *
      * @return
      */
-    Class<?> getRootType();
+    String pathAndName();
 
     /**
-     * The name of calculated property in context of parent type ({@link #getParentType()}). <br><br>
+     * The parent type of calculated property. The expression ({@link #contextualExpression()}) should be fully defined in context of this type. <br><br>
      *
      * For e.g. :<br>
      * root = WorkOrder.class, // the concrete place of calculated property (root)<br>
@@ -142,10 +261,10 @@ public interface ICalculatedProperty /* extends Serializable */ {
      *
      * @return
      */
-    String getName();
+    Class<?> contextType();
 
     /**
-     * The parent type of calculated property. The expression ({@link #getExpression()}) should be fully defined in context of this type. <br><br>
+     * The parent type of calculated property. The expression ({@link #contextualExpression()}) should be fully defined in context of this type. <br><br>
      *
      * For e.g. :<br>
      * root = WorkOrder.class, // the concrete place of calculated property (root)<br>
@@ -156,62 +275,12 @@ public interface ICalculatedProperty /* extends Serializable */ {
      *
      * @return
      */
-    Class<?> getParentType();
-
-    /**
-     * The name of property in parent type ({@link #getParentType()}), from which this calculated property has been originated.
-     *
-     * @return
-     */
-    String getOriginationPropertyName();
-
-    /**
-     * Returns an expression string in <b>eQuery manner</b> that defines a calculated property. The expression should be fully defined in context of root type ({@link #getRootType()}). <br><br>
-     *
-     * Concrete parts of expression (simple or other calculated properties) should be incorporated into this expression using dot-notation.
-     *
-     * @return
-     */
-    String getExpression();
-
-    /**
-     * Sets an expression string in <b>eQuery manner</b> that defines a calculated property. The expression should be fully defined in context of parent type ({@link #getParentType()}). <br><br>
-     *
-     * Concrete parts of expression (simple or other calculated properties) should be incorporated into this expression using dot-notation.
-     *
-     * @param expression -- an expression string in <b>eQuery manner</b> that defines a calculated property.
-     */
-    ICalculatedProperty setExpression(final String expression);
+    Class<?> parentType();
 
     /**
      * Returns a result type of calculated property.
      */
-    Class<?> getResultType();
-
-    /**
-     * Sets a result type of calculated property.
-     */
-    ICalculatedProperty setResultType(final Class<?> resultType);
-
-    /**
-     * Returns the title of calculated property.
-     */
-    String getTitle();
-
-    /**
-     * Sets the title of calculated property.
-     */
-    ICalculatedProperty setTitle(final String title);
-
-    /**
-     * Returns the description of calculated property.
-     */
-    String getDesc();
-
-    /**
-     * Sets the description of calculated property.
-     */
-    ICalculatedProperty setDesc(final String desc);
+    Class<?> resultType();
 
     @Override
     public boolean equals(Object obj);

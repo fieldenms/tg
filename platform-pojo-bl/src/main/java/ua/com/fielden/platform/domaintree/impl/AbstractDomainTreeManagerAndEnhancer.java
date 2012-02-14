@@ -97,17 +97,14 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	/**
 	 * Migrate <code>calcProps</code> from map form to a set form.
 	 *
-	 * @param calcProps
+	 * @param oldCalculatedProperties
 	 * @return
 	 */
-	private Set<Pair<Class<?>, String>> migrateToSet(final Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> calcProps) {
-	    final Set<Pair<Class<?>, String>> set = new HashSet<Pair<Class<?>,String>>();
-	    for (final Entry<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> entry : calcProps.entrySet()) {
-		final Class<?> type = entry.getKey().getKey();
-		final String path = entry.getKey().getValue();
-		for (final Entry<String, ICalculatedProperty> prop : entry.getValue().entrySet()) {
-		    final String propName = "".equals(path) ? prop.getKey() : (path + "." + prop.getKey());
-		    set.add(AbstractDomainTree.key(type, propName));
+	private Set<Pair<Class<?>, String>> migrateToSet(final Map<Class<?>, List<ICalculatedProperty>> oldCalculatedProperties) {
+	    final Set<Pair<Class<?>, String>> set = new HashSet<Pair<Class<?>, String>>();
+	    for (final Entry<Class<?>, List<ICalculatedProperty>> entry : oldCalculatedProperties.entrySet()) {
+		for (final ICalculatedProperty prop : entry.getValue()) {
+		    set.add(new Pair<Class<?>, String>(entry.getKey(), prop.pathAndName()));
 		}
 	    }
 	    return set;
@@ -115,9 +112,9 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
 	@Override
 	public void apply() {
-	    final Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer.getOriginalAndEnhancedRootTypes());
+	    final Map<Class<?>, List<ICalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer.getOriginalAndEnhancedRootTypes());
 	    baseEnhancer.apply();
-	    final Map<Pair<Class<?>, String>, Map<String, ICalculatedProperty>> newCalculatedProperties = new HashMap<Pair<Class<?>,String>, Map<String,ICalculatedProperty>>(baseEnhancer.calculatedProperties());
+	    final Map<Class<?>, List<ICalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<ICalculatedProperty>>(baseEnhancer.calculatedProperties());
 
 	    final Set<Pair<Class<?>, String>> was = migrateToSet(oldCalculatedProperties);
 	    final Set<Pair<Class<?>, String>> is = migrateToSet(newCalculatedProperties);
@@ -193,11 +190,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	@Override
 	public void removeCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
 	    baseEnhancer.removeCalculatedProperty(rootType, calculatedPropertyName);
-	}
-
-	@Override
-	public void removeCalculatedProperty(final ICalculatedProperty calculatedProperty) {
-	    baseEnhancer.removeCalculatedProperty(calculatedProperty);
 	}
 
 	@Override

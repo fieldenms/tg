@@ -14,11 +14,9 @@ import java.util.Set;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentationTest;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
@@ -62,7 +60,7 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
      *
      * @param dtm
      */
-    protected static void manageTestingDTM_for_CentreDomainTreeRepresentationTest(final ICentreDomainTreeManager dtm) {
+    protected static void manageTestingDTM_for_CentreDomainTreeRepresentationTest(final ICentreDomainTreeManagerAndEnhancer dtm) {
 	manageTestingDTM_for_AbstractDomainTreeRepresentationTest(dtm);
 
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);
@@ -237,26 +235,26 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     ////////////////////// 5. Calculated properties logic //////////////////////
     @Test
     public void test_that_first_tick_for_AGGR_EXPR_calculated_properties_are_disabled() {
-	allLevelsWithoutCollections(new IAction() {
-	    public void action(final String name) {
-		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "expr", "title", "desc"));
-		dtm().getEnhancer().apply();
+	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.entityProp", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dtm().getEnhancer().apply();
 
-		assertTrue("AGGREGATED EXPRESSION calculated properties should be disabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
-	    }
-	}, "aggrExprProp");
+	assertTrue("AGGREGATED EXPRESSION calculated property [" + "aggrExprProp1" + "] should be disabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "aggrExprProp1"));
+	assertTrue("AGGREGATED EXPRESSION calculated property [" + "aggrExprProp2" + "] should be disabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "aggrExprProp2"));
+	assertTrue("AGGREGATED EXPRESSION calculated property [" + "aggrExprProp3" + "] should be disabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "aggrExprProp3"));
     }
 
     @Test
     public void test_that_second_tick_for_ATTR_COLL_EXPR_calculated_properties_are_disabled() {
-	allLevelsWithoutCollections(new IAction() {
-	    public void action(final String name) {
-		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION, "collection.integerProp", Integer.class, "expr", "title", "desc"));
-		dtm().getEnhancer().apply();
+	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Attr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.ALL, "integerProp"));
+	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Attr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.ANY, "integerProp"));
+	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "collection", "2 * integerProp", "Attr Coll Expr Prop3", "desc", CalculatedPropertyAttribute.ALL, "integerProp"));
+	dtm().getEnhancer().apply();
 
-		assertTrue("ATTRIBUTED COLLECTIONAL EXPRESSION calculated properties should be disabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
-	    }
-	}, "attrCollExprProp");
+	assertTrue("ATTRIBUTED COLLECTIONAL EXPRESSION calculated properties should be disabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.attrCollExprProp1"));
+	assertTrue("ATTRIBUTED COLLECTIONAL EXPRESSION calculated properties should be disabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.attrCollExprProp2"));
+	assertTrue("ATTRIBUTED COLLECTIONAL EXPRESSION calculated properties should be disabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "attrCollExprProp3"));
     }
 
     ////////////////////// 6. Specific entity-centre logic //////////////////////

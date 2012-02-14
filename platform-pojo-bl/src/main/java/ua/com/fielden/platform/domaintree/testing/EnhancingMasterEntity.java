@@ -25,6 +25,8 @@ public class EnhancingMasterEntity extends AbstractEntity<String> {
     }
 
     @IsProperty
+    private Integer integerProp = null;
+    @IsProperty
     private EnhancingMasterEntity masterEntityProp;
     @IsProperty
     private EnhancingSlaveEntity slaveEntityProp;
@@ -80,5 +82,12 @@ public class EnhancingMasterEntity extends AbstractEntity<String> {
     @Observable
     public void setEvenSlaverEntityCollProp(final Collection<EnhancingEvenSlaverEntity> evenSlaverEntityCollProp) {
         this.evenSlaverEntityCollProp = evenSlaverEntityCollProp;
+    }
+    public Integer getIntegerProp() {
+        return integerProp;
+    }
+    @Observable
+    public void setIntegerProp(final Integer integerProp) {
+        this.integerProp = integerProp;
     }
 }

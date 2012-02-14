@@ -40,7 +40,7 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private DynamicEntityClassLoader cl;
 
-    private final Calculated calculated = new CalculatedAnnotation().expression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
+    private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
 
     private final NewProperty pd1 = new NewProperty(NEW_PROPERTY, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
     private final NewProperty pd2 = new NewProperty(NEW_PROPERTY + 1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);

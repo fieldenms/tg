@@ -4,9 +4,7 @@ import java.util.Set;
 
 import org.junit.BeforeClass;
 
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 
 /**
@@ -39,7 +37,7 @@ public class LocatorDomainTreeRepresentationTest extends CentreDomainTreeReprese
      *
      * @param dtm
      */
-    protected static void manageTestingDTM_for_LocatorDomainTreeRepresentationTest(final ILocatorDomainTreeManager dtm) {
+    protected static void manageTestingDTM_for_LocatorDomainTreeRepresentationTest(final ILocatorDomainTreeManagerAndEnhancer dtm) {
 	manageTestingDTM_for_CentreDomainTreeRepresentationTest(dtm);
 
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);
