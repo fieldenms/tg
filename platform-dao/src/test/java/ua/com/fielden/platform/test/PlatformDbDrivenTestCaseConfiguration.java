@@ -59,6 +59,7 @@ import com.google.inject.Provider;
  * @deprecated Use {@link PlatformDomainDrivenTestCaseConfiguration} instead.
  *
  */
+@Deprecated
 public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseConfiguration {
     protected final EntityFactory entityFactory;
     protected final Injector injector;
@@ -98,9 +99,9 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 	// instantiate all the factories and Hibernate utility
 	final ProxyInterceptor interceptor = new ProxyInterceptor();
 	try {
-	    final MappingsGenerator mappingsGenerator = new MappingsGenerator(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()));
+	    final MappingsGenerator mappingsGenerator = new MappingsGenerator(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain);
 	    final Configuration cfg = new Configuration();
-	    cfg.addXML(mappingsGenerator.generateMappings(testDomain));
+	    cfg.addXML(mappingsGenerator.generateMappings());
 
 	    hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
 	    hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()), mappingsGenerator);

@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 
 public class EntityFetcherTestCase extends BaseEntQueryTCase {
     final Injector injector = new ApplicationInjectorFactory().add(new HibernateUserTypesModule()).getInjector();
-    private EntityResultTreeBuilder ef = new EntityResultTreeBuilder(new MappingsGenerator(new HashMap<Class, Class>(), injector));
+    private EntityResultTreeBuilder ef = new EntityResultTreeBuilder(new MappingsGenerator(new HashMap<Class, Class>(), injector, null));
     private EntityFetcher entFetcher = new EntityFetcher() {};
 
     @Test

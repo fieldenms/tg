@@ -63,7 +63,7 @@ public class DynamicQueryBuilderSqlTest {
 	domainTypes.add(MasterEntity.class);
 	domainTypes.add(SlaveEntity.class);
 	domainTypes.add(EvenSlaverEntity.class);
-	hibConf.addXML((new MappingsGenerator(hibTypeMap, null)).generateMappings(domainTypes));
+	hibConf.addXML((new MappingsGenerator(hibTypeMap, null, domainTypes)).generateMappings());
 	mappingExtractor = new MappingExtractor(hibConf);
 	final List<String> propertyNames = Arrays.asList(new String [] {
 		"integerProp",

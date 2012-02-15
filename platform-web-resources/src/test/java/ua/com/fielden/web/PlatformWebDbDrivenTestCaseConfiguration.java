@@ -72,8 +72,8 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
 		domainTypes.add(SecurityRoleAssociation.class);
 		domainTypes.add(InspectedEntity.class);
 		domainTypes.add(Attachment.class);
-	    final MappingsGenerator mappingsGenerator = new MappingsGenerator(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()));
-	    cfg.addXML(mappingsGenerator.generateMappings(domainTypes));
+	    final MappingsGenerator mappingsGenerator = new MappingsGenerator(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes);
+	    cfg.addXML(mappingsGenerator.generateMappings());
 
 	    cfg.setProperty("hibernate.current_session_context_class", "thread");
 	    cfg.setProperty("hibernate.show_sql", "false");

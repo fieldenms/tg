@@ -42,9 +42,9 @@ public class HibernateConfigurationFactory {
 
     public HibernateConfigurationFactory(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity>> applicationEntityTypes) throws Exception {
 	this.props = props;
-	mappingsGenerator = new MappingsGenerator(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()));
+	mappingsGenerator = new MappingsGenerator(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()), applicationEntityTypes);
 	if (mappingsGenerator != null) {
-	    cfg.addXML(mappingsGenerator.generateMappings(applicationEntityTypes));
+	    cfg.addXML(mappingsGenerator.generateMappings());
 	}
     }
 

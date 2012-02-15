@@ -3,10 +3,10 @@ package ua.com.fielden.platform.dao;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
@@ -45,15 +45,49 @@ public class MappingsGenerator {
     private Injector hibTypesInjector;
     private final DdlGenerator ddlGenerator = new DdlGenerator();
 
-    public MappingsGenerator(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector) {
-	this.hibTypesDefaults.putAll(hibTypesDefaults);
+    private Map<Class, Map<String, HibTypeInfo>> hibTypeInfos = new HashMap<Class, Map<String, HibTypeInfo>>();
+    final List<Class<? extends AbstractEntity>> entityTypes;
+    class HibTypeInfo {
+	Type hibTypeInstance;
+	IUserTypeInstantiate hibUserTypeInstantiator;
+	ICompositeUserTypeInstantiate hibCompositeUserTypeInstantiator;
+	Class javaType;
+	List<String> columns;
+
+	protected HibTypeInfo(final Type hibTypeInstance, final IUserTypeInstantiate hibUserTypeInstantiator, final ICompositeUserTypeInstantiate hibCompositeUserTypeInstantiator) {
+	    this.hibTypeInstance = hibTypeInstance;
+	    this.hibCompositeUserTypeInstantiator = hibCompositeUserTypeInstantiator;
+	    this.hibUserTypeInstantiator = hibUserTypeInstantiator;
+	}
+
+	public HibTypeInfo(final Type hibTypeInstance) {
+	    this(hibTypeInstance, null, null);
+	}
+
+
+	public HibTypeInfo(final IUserTypeInstantiate hibUserTypeInstantiator) {
+	    this(null, hibUserTypeInstantiator, null);
+	}
+
+	public HibTypeInfo(final ICompositeUserTypeInstantiate hibCompositeUserTypeInstantiator) {
+	    this(null, null, hibCompositeUserTypeInstantiator);
+	}
+
+    }
+
+    public MappingsGenerator(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity>> entityTypes) {
+	if (hibTypesDefaults != null) {
+	    this.hibTypesDefaults.putAll(hibTypesDefaults);
+	}
 	this.hibTypesInjector = hibTypesInjector;
+	this.entityTypes = entityTypes;
     }
 
-    public MappingsGenerator() {
+    public MappingsGenerator(final List<Class<? extends AbstractEntity>> entityTypes) {
+	this(null, null, entityTypes);
     }
 
-    public String generateMappings(final List<Class<? extends AbstractEntity>> entityTypes) {
+    public String generateMappings() {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 	sb.append("<!DOCTYPE hibernate-mapping PUBLIC\n");
@@ -64,6 +98,8 @@ public class MappingsGenerator {
 	for (final Class<? extends AbstractEntity> entityType : entityTypes) {
 	    try {
 		sb.append(getClassMapping(entityType));
+		hibTypeInfos.put(entityType, getEntityTypeInfo(entityType));
+
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		throw new RuntimeException("Couldn't generate mapping for " + entityType.getName() + " due to: " + e.getMessage());
@@ -127,13 +163,9 @@ public class MappingsGenerator {
 
     private String getManyToOneProperty(final String propName, final String propColumn, final Class entityType) {
 	final StringBuffer sb = new StringBuffer();
-	if (isOneToOne(entityType)) {
-	    sb.append("\t<many-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" column=\"" + propColumn
-		    + "\" unique=\"true\" insert=\"false\" update=\"false\"/>\n");
-	} else {
-	    sb.append("\t<many-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" column=\"" + propColumn + "\"/>\n");
-	}
-
+	sb.append("\t<many-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" column=\"" + propColumn + "\"");
+	sb.append(isOneToOne(entityType) ? " unique=\"true\" insert=\"false\" update=\"false\"" : "");
+	sb.append("/>\n");
 	return sb.toString();
     }
 
@@ -232,7 +264,7 @@ public class MappingsGenerator {
 	final MapTo mapTo = getMapTo(entityType, field.getName());
 	final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
 
-	if (Collection.class.isAssignableFrom(field.getType())) {
+	if (Set.class.isAssignableFrom(field.getType())) {
 	    return getSet(field.getName(), columnName, determinePropertyType(entityType, field.getName()));
 	} else if (isPersistedEntityType(field.getType())) {
 	    return getManyToOneProperty(field.getName(), columnName, field.getType());
@@ -253,6 +285,40 @@ public class MappingsGenerator {
 	    }
 	}
     }
+
+    private String getCommonPropHibInfo(final Class entityType, final Field field) throws Exception {
+	final MapTo mapTo = getMapTo(entityType, field.getName());
+	final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
+
+	if (Set.class.isAssignableFrom(field.getType())) {
+	    return getSet(field.getName(), columnName, determinePropertyType(entityType, field.getName()));
+	} else if (isPersistedEntityType(field.getType())) {
+	    return getManyToOneProperty(field.getName(), columnName, field.getType());
+	} else if (isNotEmpty(mapTo.typeName())) {
+	    return getPropMappingString(field.getName(), columnName, mapTo.typeName());
+	} else {
+	    final String length = (field.getType().isArray() && field.getType().getComponentType().isAssignableFrom(byte.class)) ? "1073741824" : null;
+	    final Class hibType = hibTypesInjector != null && !mapTo.userType().equals(Class.class) ? hibTypesInjector.getInstance(mapTo.userType()).getClass() : //
+		    hibTypesDefaults.get(field.getType());
+	    if (hibType == null) {
+		return getPropMappingString(field.getName(), columnName, null, length);
+	    } else {
+		if (!ICompositeUserTypeInstantiate.class.isAssignableFrom(hibType)) {
+		    return getPropMappingString(field.getName(), columnName, hibType.getName(), length);
+		} else {
+		    return getPropMappingString(field.getName(), getCompositeUserTypeColumns(hibType, columnName), hibType.getName(), length);
+		}
+	    }
+	}
+    }
+
+
+
+    private Map<String, HibTypeInfo> getEntityTypeInfo(final Class<? extends AbstractEntity> entityType) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
 
     private MapEntityTo getMapEntityTo(final Class entityType) {
 	return getAnnotation(MapEntityTo.class, entityType);

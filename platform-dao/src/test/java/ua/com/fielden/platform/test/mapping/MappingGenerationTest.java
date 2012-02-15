@@ -15,19 +15,20 @@ import static org.junit.Assert.assertEquals;
 public class MappingGenerationTest {
     @Test
     public void test1() {
-	final MappingsGenerator mg = new MappingsGenerator();
+
 	final List<Class<? extends AbstractEntity>> domainTypes = new ArrayList<Class<? extends AbstractEntity>>();
 	domainTypes.add(TgVehicleModel.class);
-	final String tgModelMapping = mg.generateMappings(domainTypes);
+	final MappingsGenerator mg = new MappingsGenerator(domainTypes);
+	final String tgModelMapping = mg.generateMappings();
 	System.out.println(tgModelMapping);
     }
 
     @Test
     public void dump_mapping_for_type_wity_byte_array_property() {
-	final MappingsGenerator mg = new MappingsGenerator();
 	final List<Class<? extends AbstractEntity>> domainTypes = new ArrayList<Class<? extends AbstractEntity>>();
 	domainTypes.add(EntityCentreConfig.class);
-	final String tgModelMapping = mg.generateMappings(domainTypes);
+	final MappingsGenerator mg = new MappingsGenerator(domainTypes);
+	final String tgModelMapping = mg.generateMappings();
 	final String expectedMapping =
 			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                         "<!DOCTYPE hibernate-mapping PUBLIC\n" +
