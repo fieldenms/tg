@@ -86,6 +86,20 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
 	}
     }
 
+    /**
+     * Indicates a situation when the calculated property is correct but some warning exists.
+     *
+     * @author TG Team
+     *
+     */
+    public class CalcPropertyKeyWarning extends Result {
+	private static final long serialVersionUID = 435410515344805056L;
+
+	public CalcPropertyKeyWarning(final String s) {
+	    super(null, s);
+	}
+    }
+
     @Override
     public boolean equals(Object obj);
 

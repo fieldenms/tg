@@ -9,6 +9,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.CalcPropertyKeyWarning;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
@@ -57,7 +58,7 @@ public class CalculatedProperty implements ICalculatedProperty {
      * @param originationProperty
      */
     public CalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	DomainTreeEnhancer.validatePath(root, contextPath);
+	DomainTreeEnhancer.validatePath(root, contextPath, "The context path [" + contextPath + "] in type [" + root.getSimpleName() + "] of calculated property does not exist.");
 
 	this.root = root;
 	this.contextPath = contextPath;
@@ -176,21 +177,25 @@ public class CalculatedProperty implements ICalculatedProperty {
     @Override
     public ICalculatedProperty setTitle(final String title) {
 	if (StringUtils.isEmpty(title)) {
-	    throw new IncorrectCalcPropertyKeyException("The title of calculated property can not be empty.");
+	    throw new IncorrectCalcPropertyKeyException("A title of the calculated property cannot be empty.");
+	}
+	final String name = generateNameFrom(title);
+	if (StringUtils.isEmpty(name)) {
+	    throw new IncorrectCalcPropertyKeyException("Please specify more appropriate title with some characters (and perhaps digits).");
 	}
 	this.title = title;
-	this.name = generateNameFrom(this.title);
+	this.name = name;
 	return this;
     }
 
     /**
-     * Generates a name of new property from a title by removing all non-word characters and capitalising all words except first.
+     * Generates a name of new property from a title by removing all non-word characters, removing starting digits (if exist) and capitalising all words except first.
      *
      * @param title
      * @return
      */
     protected static String generateNameFrom(final String title) {
-	return StringUtils.uncapitalize(WordUtils.capitalize(title.trim()).replaceAll("\\W", ""));
+	return StringUtils.uncapitalize(WordUtils.capitalize(title.trim()).replaceAll("\\W", "").replaceFirst("\\d*", ""));
     }
 
     @Override
@@ -212,10 +217,10 @@ public class CalculatedProperty implements ICalculatedProperty {
     @Override
     public ICalculatedProperty setAttribute(final CalculatedPropertyAttribute attribute) {
 	if (attribute == null) {
-	    throw new IllegalArgumentException("The attribute can not be null.");
+	    throw new IncorrectCalcPropertyKeyException("The attribute cannot be null.");
 	}
 	if (!CalculatedPropertyAttribute.NO_ATTR.equals(attribute) && this.category != null && !CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION.equals(this.category)) {
-	    throw new Result(new IllegalArgumentException("ALL / ANY attribute can not be applied to non-collectional sub-property [" + this.contextualExpression + "]."));
+	    throw new IncorrectCalcPropertyKeyException("ALL / ANY attribute can not be applied to non-collectional sub-property [" + this.contextualExpression + "].");
 	}
 
 	this.attribute = attribute;
@@ -230,9 +235,17 @@ public class CalculatedProperty implements ICalculatedProperty {
 
     @Override
     public ICalculatedProperty setOriginationProperty(final String originationProperty) {
-	// TODO check if the "originationProperty" is correct in context of "contextType"
+	// check if the "originationProperty" is correct in context of "contextType":
+	if (StringUtils.isEmpty(originationProperty)) {
+	    throw new IncorrectCalcPropertyKeyException("The origination property cannot be empty.");
+	}
+	DomainTreeEnhancer.validatePath(contextType, originationProperty, "The origination property [" + originationProperty + "] does not exist in type [" + contextType + "].");
+
 	this.originationProperty = originationProperty;
 
+	if (!contextualExpression.contains(this.originationProperty)) {
+	    throw new CalcPropertyKeyWarning("The origination property does not take a part in the expression. Is that correct?");
+	}
         return this;
     }
 

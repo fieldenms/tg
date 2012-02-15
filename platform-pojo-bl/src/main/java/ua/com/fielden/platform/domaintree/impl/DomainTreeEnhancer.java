@@ -388,7 +388,7 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 
 	final Pair<String, String> pathAndName1 = PropertyTypeDeterminator.isDotNotation(pathAndName) ? PropertyTypeDeterminator.penultAndLast(pathAndName) : new Pair<String, String>("", pathAndName);
 	final String path = pathAndName1.getKey();
-	validatePath(root, path);
+	validatePath(root, path, "The place [" + path + "] in type [" + root.getSimpleName() + "] of calculated property does not exist.");
 
 	final ICalculatedProperty calculatedProperty = calculatedProperty(root, pathAndName, calculatedProperties);
 	if (correctIfExists) {
@@ -412,12 +412,13 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 	}
     }
 
-    protected static void validatePath(final Class<?> root, final String path) {
+    protected static void validatePath(final Class<?> root, final String path, final String message) {
 	if (!StringUtils.isEmpty(path)) { // validate path
 	    try {
 		PropertyTypeDeterminator.determinePropertyType(root, path); // throw exception when the place does not exist
 	    } catch (final Exception e) {
-		throw new IncorrectCalcPropertyKeyException("The place [" + path + "] of calculated property does not exist. Cause : " + e.getMessage());
+		e.printStackTrace();
+		throw new IncorrectCalcPropertyKeyException(message);
 	    }
 	}
     }

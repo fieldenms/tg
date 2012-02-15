@@ -613,7 +613,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     private static void checkDiscardOperation(final IDomainTreeEnhancer dm) {
 	checkOriginalDomain(dm);
 
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "", "6 * integerProp", "Smth prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "66 * integerProp"));
+	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "", "6 * integerProp", "Smth prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
 	dm.getCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble").setTitle("OlD DoUbLe").setDesc("dESC").setContextualExpression("22 * integerProp");
 	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
 	dm.discard();
