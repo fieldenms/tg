@@ -71,14 +71,6 @@ public class CalculatedProperty implements ICalculatedProperty {
 	this.setOriginationProperty(originationProperty);
     }
 
-//    protected CalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc) {
-//	this(root, contextPath, contextualExpression, title, desc, CalculatedPropertyAttribute.NO_ATTR, null);
-//    }
-//
-//    protected CalculatedProperty(final Class<?> root, final String contextPath) {
-//	this(root, contextPath, null, null, null);
-//    }
-
     protected Class<?> determineType(final String path) {
 	return StringUtils.isEmpty(path) ? this.root : PropertyTypeDeterminator.determinePropertyType(this.root, path);
     }
@@ -186,11 +178,6 @@ public class CalculatedProperty implements ICalculatedProperty {
 	if (StringUtils.isEmpty(title)) {
 	    throw new IncorrectCalcPropertyKeyException("The title of calculated property can not be empty.");
 	}
-
-	// TODO pre-process the uniqueness of the "title" within "parentType". It will (or not?) guarantee the uniqueness of a "name" within "parentType".
-
-	// TODO the uniqueness of the "title" within "parentType" depends on a "parentType" :) It means that it is necessary to regenerate "name" after property relocation.
-
 	this.title = title;
 	this.name = generateNameFrom(this.title);
 	return this;
