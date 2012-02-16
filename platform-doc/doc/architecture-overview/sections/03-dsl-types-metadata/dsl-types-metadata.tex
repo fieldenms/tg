@@ -54,11 +54,7 @@
   The core of any TG-based application is formed out of types modeling the business entities, and the metadata, which complements the types.
   Together types and metadata define the object hierarchy used for building all main parts of the business application as well as determining all aspects of its behaviour.
   Basically, the execution of such business applications effectively interprets the types and metadata, which have been developed to provide all necessary application functionality.
-
-  The business domain entities are modeled by reusing the type system provided in the platform, which supports well-defined patterns for modeling real-life interoperability between domain entities.  
-  Metadata provides a declarative way to associate various business rules (e.g. validation rules) with domain entities, define application security, control transaction demarcation, visual representation of domain entities and more.
-  It also assists in fine tuning of the business domain models with support for configuration-based behaviour achieved by means of dependency injection.
-  
+ 
   \begin{wrapfigure}{r}{50mm}
     \vspace{-20pt}
     \centering   
@@ -81,11 +77,10 @@
     \vspace{-10pt}
   \end{wrapfigure}
 
-  By describing the application in terms of types and metadata, the developer provides the platform with of a lot of useful information, which can be used by the platform in many different ways.
-  Based on this information, the platform automatically constructs a large part of the application internals that provides support for the complete application life-cycle.
-  For instance, provided metadata and types are sufficient for the automatic construction of the application user interface, leveraging the validation rules and dependencies between domain entities.
-  Even more, the platform utilises this information to provide experienced end-users of the business application (i.e. those without programming experience) with the facilities to build comprehensive reports and analysis.
-  
+  The business domain entities are modeled by reusing the type system provided in the platform, which supports well-defined patterns for modeling real-life interoperability between domain entities.  
+  Metadata provides a declarative way to associate various business rules (e.g. validation rules) with domain entities, define application security, control transaction demarcation, visual representation of domain entities and more.
+  It also assists in fine tuning of the business domain models with support for configuration-based behaviour achieved by means of dependency injection.
+
   \begin{wrapfigure}{l}{60mm}
     \vspace{-10pt}
     \centering    
@@ -123,13 +118,18 @@
     \vspace{-75pt}
   \end{wrapfigure}
 
+  By describing the application in terms of types and metadata, the developer provides the platform with of a lot of useful information, which can be used by the platform in many different ways.
+  Based on this information, the platform automatically constructs a large part of the application internals that provides support for the complete application life-cycle.
+  For instance, provided metadata and types are sufficient for the automatic construction of the application user interface, leveraging the validation rules and dependencies between domain entities.
+  Even more, the platform utilises this information to provide experienced end-users of the business application (i.e. those without programming experience) with the facilities to build comprehensive reports and analysis.
+  
   Most business applications require the majority of domain entities to be stored for future reference or analyses.
   Such domain entities are modeled with so-called \emph{persistent} entity types.
   However, not all domain entities need to be persisted.
   One of the unique domain modeling concepts in TG is that of \emph{synthetic entities}, which allows modeling of short-lived domain entities in exactly the same way as persistent entities.
   Synthetic entities can mix in both persistent and other synthetic entities, which is especially powerful when there is a need to combine loosely coupled domain entities as a single business concept.
   This provides a uniform way for implementing business processes involving both synthetic and persistent domain entities, with the capability to use them interchangeably\footnote{Synthetic entities can become persistent and the other way around.}.
-  
+
   So, the basic idea behind the type system and metadata driven approach to model the business domain is to depart from the old imperative paradigm towards the declarative way of defining the information system while remaining in the realm of the pure Java programming language\footnote{TG strives to confine the application development process to the use of Java only, without the need for XML or any other language external to Java for modeling the business domain.}.
   
   \subsection{Model Driven Architecture}
