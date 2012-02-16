@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.ei.editors;
+package ua.com.fielden.platform.swing.ei.editors.development;
 
 import java.util.Date;
 
@@ -9,13 +9,15 @@ import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.EntityDescriptor;
 import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
+import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Editor for ranges or boolean properties that consists of range-specific label and double-editor ("from" -> "to" or "is" -> "is not").
@@ -26,6 +28,7 @@ import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
 public class RangePropertyEditor implements IPropertyEditor {
 
     private AbstractEntity<?> entity;
+    private final Class<?> root;
     private final String propertyName;
 
     private final JLabel label;
@@ -36,15 +39,16 @@ public class RangePropertyEditor implements IPropertyEditor {
     private boolean singleSelection;
     private final boolean bool, date;
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public RangePropertyEditor(final IPropertyEditor fromEditor, final IPropertyEditor toEditor) {
 	final AbstractEntity<?> fe = fromEditor.getEntity(), te = toEditor.getEntity();
 	if (!fe.equals(te) || !fe.getPropertyType(fromEditor.getPropertyName()).equals(te.getPropertyType(toEditor.getPropertyName()))) {
 	    throw new RuntimeException("Entity or propertyType is not exactly the same for two editors that form Range/Boolean editor.");
 	}
+	final Pair<Class<?>, String> criteriaParameters = CriteriaReflector.getCriteriaProperty((Class<? extends EntityQueryCriteria>)entity.getClass(), fromEditor.getPropertyName());
 	this.entity = fromEditor.getEntity();
-	this.propertyName = EntityDescriptor.removeSuffixes(fromEditor.getPropertyName());
-
-	final String conventionalPropertyName = EntityDescriptor.getPropertyNameWithoutKeyPart(EntityDescriptor.enhanceDynamicCriteriaPropertyEditorKey(fromEditor.getPropertyName(), ((DynamicEntityQueryCriteria) entity).getEntityClass()));
+	this.root = criteriaParameters.getKey();
+	this.propertyName = CriteriaReflector.generateCriteriaPropertyName(root, criteriaParameters.getValue(), null);
 
 	this.fromEditor = fromEditor;
 	this.toEditor = toEditor;
@@ -55,19 +59,21 @@ public class RangePropertyEditor implements IPropertyEditor {
 	final Class<?> propertyType = fromEditor.getEntity().getPropertyType(fromEditor.getPropertyName());
 	bool = (Boolean.class == propertyType) || (boolean.class == propertyType);
 	date = (Date.class.isAssignableFrom(propertyType));
-	editor = createEditor(bool, conventionalPropertyName);
+	editor = createEditor(bool, root, criteriaParameters.getValue());
     }
 
-    private JComponent createEditor(final boolean bool, final String conventionalPropertyName) {
+    @SuppressWarnings("unchecked")
+    private JComponent createEditor(final boolean bool, final Class<?> root, final String propertyName) {
 	if (bool) {
 	    final JCheckBox yes = ((BoundedValidationLayer<JCheckBox>) fromEditor.getEditor()).getView(), no = ((BoundedValidationLayer<JCheckBox>) toEditor.getEditor()).getView();
 	    yes.setText("yes");
 	    no.setText("no");
 	    no.setMinimumSize(yes.getMinimumSize());
 	}
-	// constructs singleSelection editor or editor with both left and right criteria (FROM and TO).
-	final CritOnly critOnly = AnnotationReflector.getPropertyAnnotation(CritOnly.class, ((DynamicEntityQueryCriteria) entity).getEntityClass(), conventionalPropertyName);
-	this.singleSelection = !bool && critOnly != null && Type.SINGLE.equals(critOnly.value());
+
+	final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
+	final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName);
+	this.singleSelection = !bool && critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
 
 	final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[grow]" + (!singleSelection ? "5[]5[grow]" : ""), "[]"));
 	panel.add(fromEditor.getEditor(), "growx");

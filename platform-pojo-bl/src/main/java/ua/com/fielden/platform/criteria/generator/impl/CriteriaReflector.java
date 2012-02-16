@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
+import ua.com.fielden.platform.criteria.enhanced.FirstParam;
+import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -20,7 +22,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class CriteriaReflector {
-
 
     /**
      * Returns a pair of title and description for specified dot-notated property name and root type.
@@ -42,11 +43,12 @@ public class CriteriaReflector {
      * @return
      */
     public static String generateCriteriaPropertyName(final Class<?> root, final String propertyName, final String suffix){
-	return root.getSimpleName() + ("".equals(propertyName) ? "" : "_") + propertyName.replaceAll(Reflector.DOT_SPLITTER, "_") + suffix;
+	return root.getSimpleName() + ("".equals(propertyName) ? "" : "_") + propertyName.replaceAll(Reflector.DOT_SPLITTER, "_") + (suffix == null? "" : suffix);
     }
 
 
     /**
+     * Returns the list of criteria properties for specified {@link EntityQueryCriteria} class.
      * 
      * @param criteriaClass
      * @return
@@ -56,6 +58,69 @@ public class CriteriaReflector {
 	return Finder.findProperties(criteriaClass, IsProperty.class, CriteriaProperty.class);
     }
 
+    /**
+     * Returns true if the specified criteria property is annotated with {@link SecondParam}.
+     * 
+     * @param criteriaClass
+     * @param propertyName
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    public static boolean isSecondParam(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
+	return AnnotationReflector.isPropertyAnnotationPresent(SecondParam.class, criteriaClass, propertyName);
+    }
+
+    /**
+     * Returns true if the specified criteria property is annotated with {@link FirstParam}.
+     * 
+     * @param criteriaClass
+     * @param propertyName
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    public static boolean isFirstParam(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
+	return AnnotationReflector.isPropertyAnnotationPresent(SecondParam.class, criteriaClass, propertyName);
+    }
+
+    /**
+     * Returns the name of the second property related to the specified one.
+     * 
+     * @param criteriaClass
+     * @param propertyName
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    public static String getSecondParamFor(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
+	final FirstParam firstParam = AnnotationReflector.getPropertyAnnotation(FirstParam.class, criteriaClass, propertyName);
+	if(firstParam != null){
+	    return firstParam.secondParam();
+	}
+	return null;
+    }
+
+    /**
+     * Returns the name of the first property related to the specified one.
+     * 
+     * @param criteriaClass
+     * @param propertyName
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    public static String getFirstParamFor(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
+	final SecondParam secondParam = AnnotationReflector.getPropertyAnnotation(SecondParam.class, criteriaClass, propertyName);
+	if(secondParam != null){
+	    return secondParam.firstParam();
+	}
+	return null;
+    }
+
+    /**
+     * Returns the parameters of the {@link CriteriaProperty} annotation for the specified property of the {@link EntityQueryCriteria} class.
+     * 
+     * @param criteriaClass
+     * @param propertyName
+     * @return
+     */
     @SuppressWarnings("rawtypes")
     public static Pair<Class<?>, String> getCriteriaProperty(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
 	final CriteriaProperty annotation = AnnotationReflector.getPropertyAnnotation(CriteriaProperty.class, criteriaClass, propertyName);

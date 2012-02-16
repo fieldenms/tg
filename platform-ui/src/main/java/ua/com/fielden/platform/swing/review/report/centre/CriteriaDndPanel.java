@@ -12,7 +12,7 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.EventListener;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,32 +28,62 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.event.EventListenerList;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.EntityDescriptor;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2.DragFromSupport;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2.DragToSupport;
 import ua.com.fielden.platform.swing.dnd.DndPanel.ComponentCopy;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
-import ua.com.fielden.platform.swing.ei.editors.RangePropertyEditor;
-import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.DynamicProperty;
-import ua.com.fielden.platform.swing.review.PropertyPersistentObject;
+import ua.com.fielden.platform.swing.ei.editors.development.RangePropertyEditor;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Panel, which provides drag'n'drop support for label-editor pairs.
  * 
- * @author yura
+ * @author TG Team
  * 
  */
-public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T>> extends JPanel {
+public class CriteriaDndPanel extends StubCriteriaPanel {
 
     private static final long serialVersionUID = 586217758592148120L;
+
+    /**
+     * {@link EntityQueryCriteria} for which this {@link CriteriaDndPanel} is created.
+     */
+    private final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> eqc;
+
+    /**
+     * Contains editors those should be placed on this panel.
+     */
+    private final Map<String, IPropertyEditor> editors = new HashMap<String, IPropertyEditor>();
+
+    /**
+     * Identifies the number of columns filled with editors.
+     */
+    private final int columns;
+
+    /**
+     * Identifies the number of rows filled with editors.
+     */
+    private int rows;
+
+    /**
+     * Contains the actions those allows one to switch between design and review modes of selection criteria panel.
+     */
+    private final Action changeLayoutAction, backToNormalAction, toggleAction;
+
+    /**
+     * Contains the list of {@link CriteriaLayoutListener}s.
+     */
+    private final EventListenerList listeners = new EventListenerList();
 
     /**
      * Mapping between list always holding three values (label, editor and property editor) and related position.
@@ -62,52 +92,40 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 
     private final Map<IPropertyEditor, CriteriaModificationLayer> layers = new HashMap<IPropertyEditor, CriteriaModificationLayer>();
 
-    private int columns;
-
-    private final Action changeLayoutAction;
-
-    private final Action backToNormalAction;
-
-    private final Action toggleAction;
-
-    private List<CriteriaLayoutListener> layoutListeners = new ArrayList<CriteriaLayoutListener>();
-
-    public CriteriaDndPanel(final MigLayout layout) {
+    public CriteriaDndPanel(final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> eqc, final Map<String, IPropertyEditor> editors, final MigLayout layout) {
 	super(layout);
+	this.eqc = eqc;
+	this.editors.clear();
+	if(editors != null){
+	    this.editors.putAll(editors);
+	}
+	final IAddToCriteriaTickManager firstTick = eqc.getDomainTreeManger().getFirstTick();
+	final int elementsNumber = firstTick.checkedProperties(eqc.getEntityClass()).size();
+	this.columns = firstTick.getColumnsNumber();
+	if(elementsNumber % columns != 0){
+	    throw new IllegalStateException("The number of checked elements is not correct! elements: " + elementsNumber + ", columns: " + columns);
+	}
+	this.rows = elementsNumber / columns;
 	DnDSupport2.installDnDSupport(this, createDragFromSupport(), createDragToSupport(), true);
 	changeLayoutAction = createChangeLayoutAction();
 	backToNormalAction = createBackToNormalAction();
 	toggleAction = createToggleAction();
     }
 
-    public CriteriaDndPanel(final Map<String, PropertyPersistentObject> persistentCriteriaProperties, final DynamicEntityQueryCriteria<T, DAO> dynamicCriteria, final int columns, final Map<String, IPropertyEditor> editors) {
-	this(null);
+    public CriteriaDndPanel(final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> eqc, final Map<String, IPropertyEditor> editors) {
+	this(eqc, editors, (MigLayout)null);
 
-	this.columns = columns;
+	final int maxRow = getRows() - 1; // should return max row index occupied by some criteria
 
-	final int rows = getMaxRow(persistentCriteriaProperties); // should return max row index occupied by some criteria
-
-	final BoolMatrix posMatrix = rows > -1 ? new BoolMatrix(rows + 1, getColumns()) : new BoolMatrix(getColumns());
-	final Collection<PropertyPersistentObject> persistentObjects = persistentCriteriaProperties.values();
-	posMatrix.fillMatrix(persistentObjects);
-	posMatrix.removeEmptyRowsAndUpdate(persistentObjects);
-
-	final List<Pair<IPropertyEditor, IPropertyEditor>> rangeAndBoolEditorPairs = getNewTwoCellEditors(persistentCriteriaProperties, true, dynamicCriteria, editors);
-	rangeAndBoolEditorPairs.addAll(getNewTwoCellEditors(persistentCriteriaProperties, false, dynamicCriteria, editors));
-
-	final List<IPropertyEditor> rangeAndBoolEditors = createOneCellRangeAndBoolEditors(rangeAndBoolEditorPairs);
-	final List<CellPosition> rangeAndBoolPositions = posMatrix.findAndOccupy(1, rangeAndBoolEditors.size());
-
-	final List<IPropertyEditor> singleEditors = getNewSingleCellEditors(persistentCriteriaProperties, dynamicCriteria, editors);
-	final List<CellPosition> oneCellPositions = posMatrix.findAndOccupy(1, singleEditors.size());
+	final BoolMatrix posMatrix = maxRow > -1 ? new BoolMatrix(maxRow + 1, getColumns()) : new BoolMatrix(getColumns());
+	final List<String> checkedElements = eqc.getDomainTreeManger().getFirstTick().checkedProperties(eqc.getEntityClass());
+	posMatrix.fillMatrix(checkedElements);
 
 	setLayout(new MigLayout("fill, insets 5", createMigColumnsString(getColumns(), maxLabelWidth(editors.values()), getMaxFromMinPossibleEditorWidth()), "[align center, :"
 		+ getMaxFromMinPossibleEditorHeight() + ":]"));
 
 	// editors adding:
-	addAdjustedEditors(persistentCriteriaProperties, dynamicCriteria, editors); // adds persistent editors
-	addOneCellEditors(rangeAndBoolEditors, rangeAndBoolPositions);
-	addOneCellEditors(singleEditors, oneCellPositions);
+	layoutEditors(); // adds persistent editors
 	addPlaceholders(posMatrix);
     }
 
@@ -120,11 +138,26 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	return columns;
     }
 
+    /**
+     * Returns the number of rows.
+     * 
+     * @return
+     */
+    public int getRows() {
+	return rows;
+    }
+
+    /**
+     * Returns the maximum label width among specified collection of property editors.
+     * 
+     * @param editors
+     * @return
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private static int maxLabelWidth(final Collection<IPropertyEditor> editors) {
 	int maxLabelWidth = -1;
 	for (final IPropertyEditor editor : editors) {
-	    final boolean isNotSecondLabel = !editor.getPropertyName().endsWith(DynamicEntityQueryCriteria._TO)
-		    && !editor.getPropertyName().endsWith(DynamicEntityQueryCriteria._NOT);
+	    final boolean isNotSecondLabel = !CriteriaReflector.isSecondParam((Class<? extends EntityQueryCriteria>)editor.getEntity().getClass(), editor.getPropertyName());
 	    if (isNotSecondLabel && editor.getLabel().getPreferredSize().getWidth() > maxLabelWidth) {
 		maxLabelWidth = (int) editor.getLabel().getPreferredSize().getWidth();
 	    }
@@ -146,19 +179,6 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
      */
     private static int getMaxFromMinPossibleEditorHeight() {
 	return ((int) new JTextField().getMinimumSize().getHeight());
-    }
-
-    /**
-     * Merges pairs of editors for range or boolean properties into single <code>IPropertyEditor</code>s for corresponding ranges/booleans.
-     * 
-     * @return
-     */
-    private List<IPropertyEditor> createOneCellRangeAndBoolEditors(final List<Pair<IPropertyEditor, IPropertyEditor>> rangeOrBoolEditors) {
-	final List<IPropertyEditor> editors = new ArrayList<IPropertyEditor>();
-	for (final Pair<IPropertyEditor, IPropertyEditor> doubleEditor : rangeOrBoolEditors) {
-	    editors.add(createSinglePropertyEditor(doubleEditor.getKey(), doubleEditor.getValue()));
-	}
-	return editors;
     }
 
     /**
@@ -219,7 +239,8 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	return action;
     }
 
-    public Action getToggleAction() {
+    @Override
+    public Action getSwitchAction() {
 	return toggleAction;
     }
 
@@ -235,18 +256,18 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 		    //removing label component
 		    remove(entry.getKey().getLabel());
 		    //creating linked copies
-		    final LinkedComponentCopy<JLabel> labelCopy = new LinkedComponentCopy<JLabel>(entry.getKey(), entry.getKey().getLabel(), true);
-		    LinkedComponentCopy<JComponent> editorCopy = null;
+		    final LinkedComponentCopy labelCopy = new LinkedComponentCopy(entry.getKey(), entry.getKey().getLabel(), true);
+		    LinkedComponentCopy editorCopy = null;
 		    if (layer != null) {
 			//removing editor component
 			remove(layer);
 			//creating editor component visual copy for criteria modification layer
-			editorCopy = new LinkedComponentCopy<JComponent>(entry.getKey(), layer, false);
+			editorCopy = new LinkedComponentCopy(entry.getKey(), layer, false);
 		    } else {
 			//removing place holder
 			remove(entry.getKey().getEditor());
 			//creating linked copy for place holder component
-			editorCopy = new LinkedComponentCopy<JComponent>(entry.getKey(), entry.getKey().getEditor(), false);
+			editorCopy = new LinkedComponentCopy(entry.getKey(), entry.getKey().getEditor(), false);
 		    }
 		    //linking label copy with editor copy.
 		    labelCopy.linkWith(editorCopy);
@@ -304,8 +325,9 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	CriteriaDndPanel.this.setCursor(new Cursor(DEFAULT_CURSOR));
     }
 
+    //TODO This might be romoved later after the ICentreDomainTreeManager will be enhanced with listeners those listen the checked property layout changes.
     private void removeEmptyRows() {
-	final int rowNumber = getRowNumber();
+	final int rowNumber = getRows();
 	final List<Boolean> emptyRows = new ArrayList<Boolean>(rowNumber);
 	final List<IPropertyEditor> editorsToIncrement = new ArrayList<IPropertyEditor>();
 	final List<IPropertyEditor> editorsToRemove = new ArrayList<IPropertyEditor>();
@@ -335,16 +357,6 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	    final Position newPos = new Position(oldPos.getColumn(), oldPos.getRow() - 1, oldPos.getLabelConstr(), oldPos.getEditorConstr());
 	    positions.put(editor, newPos);
 	}
-    }
-
-    private int getRowNumber() {
-	int rowIndex = -1;
-	for (final Position position : positions.values()) {
-	    if (position.getRow() > rowIndex) {
-		rowIndex = position.getRow();
-	    }
-	}
-	return rowIndex + 1;
     }
 
     private DragToSupport createDragToSupport() {
@@ -392,7 +404,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 			// swapping component positions
 			swapCopies((LinkedComponentCopy) whereToDrop, (LinkedComponentCopy) what);
 
-			for (final CriteriaLayoutListener listener : layoutListeners) {
+			for (final CriteriaLayoutListener listener : listeners.getListeners(CriteriaLayoutListener.class)) {
 			    listener.layoutChanged();
 			}
 
@@ -408,27 +420,23 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     }
 
     /**
+     * Registers the listener that listens the "layout change" events.
+     * 
      * @see CriteriaLayoutListener
      * @param listener
      */
     public void addLayoutListener(final CriteriaLayoutListener listener) {
-	layoutListeners.add(listener);
+	listeners.add(CriteriaLayoutListener.class, listener);
     }
 
     /**
+     * Removes the specified {@link CriteriaLayoutListener} from the list of registered listeners.
+     * 
      * @see CriteriaLayoutListener
      * @param listener
      */
-    public List<CriteriaLayoutListener> getLayoutListeners() {
-	return Collections.unmodifiableList(layoutListeners);
-    }
-
-    /**
-     * @see CriteriaLayoutListener
-     * @param listener
-     */
-    public boolean removeLayoutListener(final CriteriaLayoutListener listener) {
-	return layoutListeners.remove(listener);
+    public void removeLayoutListener(final CriteriaLayoutListener listener) {
+	listeners.remove(CriteriaLayoutListener.class, listener);
     }
 
     private DragFromSupport createDragFromSupport() {
@@ -483,32 +491,15 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     }
 
     /**
-     * Returns position of editor with the specified propertyName. Key represents column, value - row.
-     * 
-     * @param propertyName
-     * @return
-     */
-    public Pair<Integer, Integer> getPositionOf(final String propertyName) {
-	// look for position for "_FROM"/"_TO" and single editors (conventional propertyName does not contain "from/to" suffixes):
-	final String conventionalPropertyName = EntityDescriptor.removeSuffixes(propertyName);
-	for (final Entry<IPropertyEditor, Position> entry : positions.entrySet()) {
-	    if (conventionalPropertyName.equals(entry.getKey().getPropertyName())) {
-		return new Pair<Integer, Integer>(entry.getValue().getColumn(), entry.getValue().getRow());
-	    }
-	}
-	return null;
-    }
-
-    /**
      * Swaps positions of the specified component copies.
      * 
      * @param compCopy1
      * @param compCopy2
      */
-    @SuppressWarnings("unchecked")
+    //TODO MUST CONCIDER WHEHTER THIS METHOD SHOULD BE REMOVED AFTER LISTENER WILL BE ADDED TO FIRST TICK THAT LISTENS THE PROPERTY SWAP ACTION.
     private void swapCopies(final LinkedComponentCopy compCopy1, final LinkedComponentCopy compCopy2) {
-	final Pair<LinkedComponentCopy<JLabel>, LinkedComponentCopy<JComponent>> copyPair1 = compCopy1.getCopyPair();
-	final Pair<LinkedComponentCopy<JLabel>, LinkedComponentCopy<JComponent>> copyPair2 = compCopy2.getCopyPair();
+	final Pair<LinkedComponentCopy, LinkedComponentCopy> copyPair1 = compCopy1.getCopyPair();
+	final Pair<LinkedComponentCopy, LinkedComponentCopy> copyPair2 = compCopy2.getCopyPair();
 	// removing label/editor copies
 	remove(copyPair1.getKey());
 	remove(copyPair1.getValue());
@@ -527,8 +518,21 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	add(copyPair2.getValue(), pos1.getEditorConstraints());
 	positions.put(compCopy2.getPropEditor(), pos1);
 
+	swapProperties(compCopy1, compCopy2);
+
 	// re-validating the container in order changes to take place
 	revalidate();
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void swapProperties(final LinkedComponentCopy compCopy1, final LinkedComponentCopy compCopy2) {
+	final IAddToCriteriaTickManager firstTick = eqc.getDomainTreeManger().getFirstTick();
+	final String propName1 = compCopy1.getPropEditor() instanceof RangePropertyEditor ? ((RangePropertyEditor)compCopy1.getPropEditor()).getFromEditor().getPropertyName() : compCopy1.getPropEditor().getPropertyName();
+	final String propName2 = compCopy2.getPropEditor() instanceof RangePropertyEditor ? ((RangePropertyEditor)compCopy2.getPropEditor()).getFromEditor().getPropertyName() : compCopy2.getPropEditor().getPropertyName();
+	final Class<? extends EntityQueryCriteria> entityType = eqc.getClass();
+	final Pair<Class<?>, String> firstProperty = CriteriaReflector.getCriteriaProperty(entityType, propName1);
+	final Pair<Class<?>, String> secondProperty = CriteriaReflector.getCriteriaProperty(entityType, propName2);
+	firstTick.swap(firstProperty.getKey(), firstProperty.getValue(), secondProperty.getValue());
     }
 
     /**
@@ -559,7 +563,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     /**
      * Class encapsulating positions of label and editor on the {@link CriteriaDndPanel}.
      * 
-     * @author yura
+     * @author TG Team
      * 
      */
     private static class Position extends CellPosition {
@@ -603,12 +607,10 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
      * Represents visual copy of {@link JComponent}, which contains link to another {@link LinkedComponentCopy} instance. This was done in order to keep references between label
      * and editor copies.
      * 
-     * @author yura
+     * @author TG Team
      * 
-     * @param <T>
      */
-    @SuppressWarnings("unchecked")
-    public static class LinkedComponentCopy<T extends JComponent> extends ComponentCopy {
+    public static class LinkedComponentCopy extends ComponentCopy {
 
 	private static final long serialVersionUID = 7138356064320181273L;
 
@@ -640,17 +642,17 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	}
 
 	public JComponent getOriginalComponent() {
-	    return getOriginal(); // isLabel ? propEditor.getLabel() : propEditor.getEditor();
+	    return getOriginal();
 	}
 
 	/**
 	 * @return pair of {@link LinkedComponentCopy}s, where key corresponds to label copy and value corresponds to editor copy.
 	 */
-	public Pair<LinkedComponentCopy<JLabel>, LinkedComponentCopy<JComponent>> getCopyPair() {
+	public Pair<LinkedComponentCopy, LinkedComponentCopy> getCopyPair() {
 	    if (getOriginalComponent() instanceof JLabel) {
-		return new Pair<LinkedComponentCopy<JLabel>, LinkedComponentCopy<JComponent>>((LinkedComponentCopy<JLabel>) this, linkedCopy);
+		return new Pair<LinkedComponentCopy, LinkedComponentCopy>(this, linkedCopy);
 	    } else {
-		return new Pair<LinkedComponentCopy<JLabel>, LinkedComponentCopy<JComponent>>(linkedCopy, (LinkedComponentCopy<JComponent>) this);
+		return new Pair<LinkedComponentCopy, LinkedComponentCopy>(linkedCopy, this);
 	    }
 	}
 
@@ -691,35 +693,18 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     /**
      * Listener which is notified whenever layout is changed (criteria order has been changed via drag-n-drop) on the {@link CriteriaDndPanel}, to which this listener is attached.
      * 
-     * @author yura
+     * @author TG Team
      * 
      */
-    public static interface CriteriaLayoutListener {
+    public static interface CriteriaLayoutListener extends EventListener{
 	void layoutChanged();
-    }
-
-    // Methods ported from DynamicEntityReview (to make CriteriaDndPanel more independent from dynamic criteria)
-    /**
-     * Returns max row which is met among editors.
-     * 
-     * @param criteria
-     * @return
-     */
-    private static int getMaxRow(final Map<String, PropertyPersistentObject> criteria) {
-	int maxRow = -1;
-	for (final Entry<String, PropertyPersistentObject> entry : criteria.entrySet()) {
-	    if (entry.getValue().positionIsInitialised()) {
-		maxRow = entry.getValue().getRow() > maxRow ? entry.getValue().getRow() : maxRow;
-	    }
-	}
-	return maxRow;
     }
 
     /**
      * Represents boolean matrix, which is used to represent positions on the {@link CriteriaDndPanel}. If cell at some row and column holds value of {@link Boolean#TRUE} it means
      * this cell is occupied.
      * 
-     * @author yura
+     * @author TG Team
      * 
      */
     private static class BoolMatrix {
@@ -763,112 +748,21 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	}
 
 	/**
-	 * Iterates over {@link PropertyPersistentObject}s and sets values of {@link Boolean#TRUE} for the occupied cells.
+	 * Iterates over the elements of this boolean matrix and sets value of {@link Boolean#TRUE} for the occupied value.
 	 * 
-	 * @param propertyPersistentObjects
+	 * @param checkedElements - the list of elements those identify the occupied cells.
 	 */
-	public void fillMatrix(final Collection<PropertyPersistentObject> propertyPersistentObjects) {
+	public void fillMatrix(final List<String> checkedElements) {
 	    if (matrix.isEmpty()) {
 		return;
 	    }
-	    for (final PropertyPersistentObject ppo : propertyPersistentObjects) {
-		if (ppo.positionIsInitialised()) {
-		    // PPO holds "real" columns (i.e. columns which may be occupied by label or editor), while this matrix holds columns, which are occupied both by label and
-		    // editor
-		    // that is why we should divide column by 2
-		    matrix.get(ppo.getRow()).set(ppo.getColumn() / 2, true);
-		}
-	    }
-	}
 
-	/**
-	 * Searches for a cells to place editorsCount number of editors, each of which has length of editorSize columns (this value usually is 1 or 2). It is assumed that there are
-	 * sufficient space in matrix to put these editors. When place is found, it is marked as occupied.
-	 * 
-	 * @param startFromRow
-	 * @param editorSize
-	 * @param editorsCount
-	 * @return
-	 */
-	private List<CellPosition> findAndOccupyFrom(final int startFromRow, final int editorSize, final int editorsCount) {
-	    final List<CellPosition> cellPositions = new ArrayList<CellPosition>();
-	    // different cases, when there are one column and several
-	    if (columns > 1) {
-		for (int i = startFromRow; i < matrix.size(); i++) {
-		    for (int j = 0; j < columns - editorSize + 1; j++) {
-			if (isCellsFree(i, j, editorSize)) {
-			    cellPositions.add(new CellPosition(j, i));
-			    markCells(i, j, editorSize, true);
-			    if (cellPositions.size() == editorsCount) {
-				return cellPositions;
-			    }
-			}
+	    for(int row = 0; row < rows(); row++){
+		for(int column = 0; column < columns(); column++){
+		    final int index = column * rows() + row;
+		    if(checkedElements.get(index) != null){
+			matrix.get(row).set(column, true);
 		    }
-		}
-	    } else {
-		for (int i = startFromRow; i < matrix.size() - editorSize + 1; i++) {
-		    if (isCellsFree(i, editorSize)) {
-			cellPositions.add(new CellPosition(0, i));
-			markCells(i, editorSize, true);
-			if (cellPositions.size() == editorsCount) {
-			    return cellPositions;
-			}
-		    }
-		}
-	    }
-	    return cellPositions;
-	}
-
-	/**
-	 * Searches for a cells to place editorsCount number of editors, each of which has length of editorSize columns (this value usually is 1 or 2). If there are insufficient
-	 * space in the matrix, this method may add new rows.
-	 * 
-	 * @param editorSize
-	 * @param editorsCount
-	 * @return
-	 */
-	public List<CellPosition> findAndOccupy(final int editorSize, final int editorsCount) {
-	    if (editorsCount == 0) {
-		return new ArrayList<CellPosition>();
-	    }
-	    final List<CellPosition> cellPositions = findAndOccupyFrom(0, editorSize, editorsCount);
-	    if (cellPositions.size() < editorsCount) {
-		cellPositions.addAll(addAndOccupyFromNewRow(editorSize, editorsCount - cellPositions.size()));
-	    }
-
-	    return cellPositions;
-	}
-
-	/**
-	 * This method adds new rows in order to place editorsCount number of editors, each of which occupies editorSize number of columns.
-	 * 
-	 * @param editorSize
-	 * @param editorsCount
-	 * @return
-	 */
-	public List<CellPosition> addAndOccupyFromNewRow(final int editorSize, final int editorsCount) {
-	    if (editorsCount == 0) {
-		return new ArrayList<CellPosition>();
-	    }
-	    final int editorsPerRow = (int) Math.floor(new Double(columns) / editorSize);
-	    final int rowsNeeded = columns > 1 ? (int) Math.ceil(new Double(editorsCount) / editorsPerRow) : editorsCount * editorSize;
-	    final int lastRowIndex = rows();
-	    addRows(rowsNeeded);
-	    return findAndOccupyFrom(lastRowIndex, editorSize, editorsCount);
-	}
-
-	/**
-	 * Adds specified number of rows filled with {@link Boolean#FALSE} value.
-	 * 
-	 * @param rowsToAdd
-	 */
-	private void addRows(final int rowsToAdd) {
-	    final int lastRowIndex = rows();
-	    for (int i = lastRowIndex; i < lastRowIndex + rowsToAdd; i++) {
-		final List<Boolean> row = new ArrayList<Boolean>();
-		matrix.add(row);
-		for (int j = 0; j < columns(); j++) {
-		    row.add(false);
 		}
 	    }
 	}
@@ -884,19 +778,6 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	private void markCells(final int row, final int column, final int editorSize, final boolean occupied) {
 	    for (int i = column; i < column + editorSize; i++) {
 		matrix.get(row).set(i, occupied);
-	    }
-	}
-
-	/**
-	 * Marks cells row-by-row in the 0 column with the specified value (occupied) starting from row till row + editorSize.
-	 * 
-	 * @param row
-	 * @param editorSize
-	 * @param occupied
-	 */
-	private void markCells(final int row, final int editorSize, final boolean occupied) {
-	    for (int i = row; i < row + editorSize; i++) {
-		matrix.get(i).set(0, occupied);
 	    }
 	}
 
@@ -918,60 +799,9 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
 	    }
 	    return free;
 	}
-
-	/**
-	 * Returns true if in the 0 column all cells between row inclusively and column + editorSize exclusively are free.
-	 * 
-	 * @param row
-	 * @param editorSize
-	 * @return
-	 */
-	private boolean isCellsFree(final int row, final int editorSize) {
-	    if (row + editorSize - 1 > rows()) {
-		return false;
-	    }
-	    boolean free = true;
-	    for (int i = row; i < row + editorSize; i++) {
-		free &= !matrix.get(i).get(0);
-	    }
-	    return free;
-	}
-
-	/**
-	 * Removes empty rows and updates (shifts up) already aligned editors.
-	 * 
-	 * @param persistentObjects
-	 */
-	public void removeEmptyRowsAndUpdate(final Collection<PropertyPersistentObject> persistentObjects) {
-	    final List<List<Boolean>> emptyRows = new ArrayList<List<Boolean>>();
-	    final List<PropertyPersistentObject> editorsToShift = new ArrayList<PropertyPersistentObject>();
-	    for (int i = 0; i < rows(); i++) {
-		boolean isEmpty = true;
-		for (int j = 0; j < columns; j++) {
-		    isEmpty &= !matrix.get(i).get(j);
-		}
-		if (isEmpty) {
-		    emptyRows.add(matrix.get(i));
-		    // shifting up each editor which is above the row to be removed
-		    for (final PropertyPersistentObject persistentObject : persistentObjects) {
-			if (persistentObject.positionIsInitialised() && persistentObject.getRow() > i) {
-			    editorsToShift.add(persistentObject);
-			}
-		    }
-		}
-	    }
-
-	    for (final PropertyPersistentObject persistentObject : editorsToShift) {
-		persistentObject.setPosition(new Pair<Integer, Integer>(persistentObject.getColumn(), persistentObject.getRow() - 1));
-	    }
-
-	    for (final List<Boolean> row : emptyRows) {
-		matrix.remove(row);
-	    }
-	}
     }
 
-    // adding editors:
+    // adding empty editors:
     /**
      * Fills unoccupied cells with place-holders.
      * 
@@ -990,100 +820,27 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     }
 
     /**
-     * Adds one cell editors.
-     * 
-     * @param panel
-     * @param collectionalEditors
-     * @param oneCellPositions
+     * Layouts components on this panel.
      */
-    private void addOneCellEditors(final List<IPropertyEditor> collectionalEditors, final List<CellPosition> oneCellPositions) {
-	for (final IPropertyEditor propEditor : collectionalEditors) {
-	    final CellPosition cellPosition = oneCellPositions.remove(0);
-
-	    addDraggable(propEditor, cellPosition.getColumn() * 2, cellPosition.getRow()); // false,
-	}
-    }
-
-    /**
-     * Adds editors, which positions were already adjusted.
-     * 
-     * @param panel
-     * @param criteria
-     */
-    private void addAdjustedEditors(final Map<String, PropertyPersistentObject> criteria, final DynamicEntityQueryCriteria<T, DAO> dynamicCriteria, final Map<String, IPropertyEditor> editors) {
-	for (final Entry<String, PropertyPersistentObject> entry : criteria.entrySet()) {
-	    final PropertyPersistentObject ppo = entry.getValue();
-
-	    final boolean isRangeFirstSubeditor = ppo.getPropertyName().endsWith(DynamicEntityQueryCriteria._FROM)
-		    || ppo.getPropertyName().endsWith(DynamicEntityQueryCriteria._IS);
-	    final boolean isRangeSecondSubeditor = ppo.getPropertyName().endsWith(DynamicEntityQueryCriteria._TO)
-		    || ppo.getPropertyName().endsWith(DynamicEntityQueryCriteria._NOT);
-	    if (!ppo.positionIsInitialised() || isRangeSecondSubeditor) {
-		continue;
-	    }
-	    final IPropertyEditor editor;
-	    if (isRangeFirstSubeditor) {
-		final String correspondingRangePropertyName = ppo.getPropertyName().endsWith(DynamicEntityQueryCriteria._FROM) //
-			? (EntityDescriptor.replaceLast(ppo.getPropertyName(), DynamicEntityQueryCriteria._FROM, "") + DynamicEntityQueryCriteria._TO)
-				: (EntityDescriptor.replaceLast(ppo.getPropertyName(), DynamicEntityQueryCriteria._IS, "") + DynamicEntityQueryCriteria._NOT);
-			editor = createSinglePropertyEditor(editors.get(ppo.getPropertyName()), editors.get(correspondingRangePropertyName));
-	    } else {
-		editor = editors.get(ppo.getPropertyName());
-	    }
-
-	    addDraggable(editor, ppo.getColumn(), ppo.getRow());
-	}
-    }
-
-    // //////////////////////////////////////////////
-    /**
-     * Returns list of collectional editors, which positions were not yet specified.
-     * 
-     * @param criteria
-     * @return
-     */
-    private List<IPropertyEditor> getNewSingleCellEditors(final Map<String, PropertyPersistentObject> criteria, final DynamicEntityQueryCriteria<T, DAO> dynamicCriteria, final Map<String, IPropertyEditor> editors) {
-	final List<IPropertyEditor> singleEditors = new ArrayList<IPropertyEditor>();
-	for (final Entry<String, PropertyPersistentObject> entry : criteria.entrySet()) {
-	    if (entry.getValue().positionIsInitialised()) {
-		continue;
-	    }
-	    final DynamicProperty dynamicProperty = dynamicCriteria.getEditableProperty(entry.getKey());
-	    if (dynamicProperty.isEntityProperty() || dynamicProperty.isStringProperty()) {
-		singleEditors.add(editors.get(entry.getKey()));
-	    }
-	}
-	return singleEditors;
-    }
-
-    /**
-     * Returns list of either range editors (if range parameter is true) or boolean editors (otherwise), which are new (i.e. they were just added in the property tree and their
-     * positions are not yet initialised).
-     * 
-     * @param criteria
-     * @param range
-     * @return
-     */
-    private List<Pair<IPropertyEditor, IPropertyEditor>> getNewTwoCellEditors(final Map<String, PropertyPersistentObject> criteria, final boolean range, final DynamicEntityQueryCriteria<T, DAO> dynamicCriteria, final Map<String, IPropertyEditor> editors) {
-	final String firstEditorKeyEnding = range ? DynamicEntityQueryCriteria._FROM : DynamicEntityQueryCriteria._IS;
-	final String secondEditorKeyEnding = range ? DynamicEntityQueryCriteria._TO : DynamicEntityQueryCriteria._NOT;
-	final List<Pair<IPropertyEditor, IPropertyEditor>> rangeEditors = new ArrayList<Pair<IPropertyEditor, IPropertyEditor>>();
-	for (final Entry<String, PropertyPersistentObject> entry : criteria.entrySet()) {
-	    if (entry.getValue().positionIsInitialised()) {
-		// if position of editor is initialised, then it is not new
-		continue;
-	    }
-	    final DynamicProperty dynamicProperty = dynamicCriteria.getEditableProperty(entry.getKey());
-	    final boolean propSatisfies = range ? dynamicProperty.isRangeProperty() : dynamicProperty.isBoolProperty();
-	    if (propSatisfies) {
-		if (entry.getKey().endsWith(secondEditorKeyEnding)) {
-		    continue;
+    @SuppressWarnings("rawtypes")
+    private void layoutEditors() {
+	final Class<? extends EntityQueryCriteria> criteriaClass = eqc.getClass();
+	final List<String> checkedProperties = eqc.getDomainTreeManger().getFirstTick().checkedProperties(eqc.getEntityClass());
+	for(final Entry<String, IPropertyEditor> entry : editors.entrySet()){
+	    final String propertyName = entry.getKey();
+	    if(!CriteriaReflector.isSecondParam(criteriaClass, propertyName)){
+		final IPropertyEditor editor;
+		if(CriteriaReflector.isFirstParam(criteriaClass, propertyName)){
+		    final String correspondingRangePropertyName = CriteriaReflector.getSecondParamFor(criteriaClass,propertyName);
+		    editor = createSinglePropertyEditor(entry.getValue(), editors.get(correspondingRangePropertyName));
+		}else{
+		    editor = entry.getValue();
 		}
-		final IPropertyEditor toEditor = editors.get(entry.getKey().substring(0, entry.getKey().lastIndexOf(firstEditorKeyEnding)) + secondEditorKeyEnding);
-		rangeEditors.add(new Pair<IPropertyEditor, IPropertyEditor>(editors.get(entry.getKey()), toEditor));
+		final Pair<Class<?>, String> criteriaParameters = CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
+		final int index = checkedProperties.indexOf(criteriaParameters.getValue());
+		addDraggable(editor, index / getRows(), index % getRows());
 	    }
 	}
-	return rangeEditors;
     }
 
     /**
@@ -1095,7 +852,7 @@ public class CriteriaDndPanel<T extends AbstractEntity, DAO extends IEntityDao<T
     private static String createMigColumnsString(final int columns, final int maxLabelWidth, final int maxFromMinPossibleEditorWidth) {
 	String migColumnsStr = "";
 	for (int i = 1; i <= columns; i++) {
-	    migColumnsStr += (i == 1 ? "" : "20") + "[align left, :" + maxLabelWidth + ":][grow,:" + maxFromMinPossibleEditorWidth + ":]"; //
+	    migColumnsStr += (i == 1 ? "" : "20") + "[align left, :" + maxLabelWidth + ":][grow, :" + maxFromMinPossibleEditorWidth + ":]"; //
 	}
 	return migColumnsStr;
     }

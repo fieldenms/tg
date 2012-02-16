@@ -85,22 +85,22 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
     @Override
     public ICentreDomainTreeRepresentation getRepresentation() {
-        return (ICentreDomainTreeRepresentation) super.getRepresentation();
+	return (ICentreDomainTreeRepresentation) super.getRepresentation();
     }
 
     @Override
     public IAddToCriteriaTickManager getFirstTick() {
-        return (IAddToCriteriaTickManager) super.getFirstTick();
+	return (IAddToCriteriaTickManager) super.getFirstTick();
     }
 
     @Override
     public IAddToResultTickManager getSecondTick() {
-        return (IAddToResultTickManager) super.getSecondTick();
+	return (IAddToResultTickManager) super.getSecondTick();
     }
 
     @Override
     protected ISerialiser getSerialiser() {
-        return super.getSerialiser();
+	return super.getSerialiser();
     }
 
     /**
@@ -110,7 +110,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      *
      */
     public static class AddToCriteriaTickManager extends TickManager implements IAddToCriteriaTickManager {
-	private static final long serialVersionUID = 2723287339828318955L;
 
 	private final transient ISerialiser serialiser;
 	private final EnhancementPropertiesMap<Object> propertiesValues1;
@@ -672,7 +671,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
     @Override
     public boolean isChangedAnalysisManager(final String name) {
-        return !EntityUtils.equalsEx(currentAnalyses.get(name), persistentAnalyses.get(name));
+	return !EntityUtils.equalsEx(currentAnalyses.get(name), persistentAnalyses.get(name));
     }
 
     @Override
@@ -756,10 +755,10 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     }
 
     protected Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses() {
-        return persistentAnalyses;
+	return persistentAnalyses;
     }
 
     protected Boolean runAutomatically() {
-        return runAutomatically;
+	return runAutomatically;
     }
 }

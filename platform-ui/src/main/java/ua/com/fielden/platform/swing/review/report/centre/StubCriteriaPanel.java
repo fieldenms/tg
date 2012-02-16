@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
@@ -10,6 +11,15 @@ import javax.swing.JToggleButton;
 public class StubCriteriaPanel extends JPanel implements ICriteriaPanel {
 
     private static final long serialVersionUID = -3545898148806495676L;
+
+    /**
+     * Initiates this {@link StubCriteriaPanel} with specified layoutManger
+     * 
+     * @param layoutManager
+     */
+    public StubCriteriaPanel(final LayoutManager layoutManager) {
+	super(layoutManager);
+    }
 
     @Override
     public boolean canConfigure() {
