@@ -17,7 +17,7 @@ public abstract class AbstractConfiguration<KEY extends Comparable<KEY>> extends
 
     @IsProperty
     @Title(value = "Configuration body", desc = "The binary representation of the configuration.")
-    @MapTo("BODY")
+    @MapTo(value = "BODY", length = 1073741824)
     private byte[] configBody = new byte[]{};
 
     public byte[] getConfigBody() {

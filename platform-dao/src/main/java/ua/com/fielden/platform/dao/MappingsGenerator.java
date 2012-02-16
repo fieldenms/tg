@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
@@ -41,39 +43,15 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 public class MappingsGenerator {
     private static List<String> specialProps = Arrays.asList(new String[] { "id", "key", "version" });
 
+    /**
+     * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
+     */
     private final Map<Class, Class> hibTypesDefaults = new HashMap<Class, Class>();
     private Injector hibTypesInjector;
     private final DdlGenerator ddlGenerator = new DdlGenerator();
 
-    private Map<Class, Map<String, HibTypeInfo>> hibTypeInfos = new HashMap<Class, Map<String, HibTypeInfo>>();
+    private Map<Class, SortedMap<String, PropertyPersistenceInfo>> hibTypeInfos = new HashMap<Class, SortedMap<String, PropertyPersistenceInfo>>();
     final List<Class<? extends AbstractEntity>> entityTypes;
-    class HibTypeInfo {
-	Type hibTypeInstance;
-	IUserTypeInstantiate hibUserTypeInstantiator;
-	ICompositeUserTypeInstantiate hibCompositeUserTypeInstantiator;
-	Class javaType;
-	List<String> columns;
-
-	protected HibTypeInfo(final Type hibTypeInstance, final IUserTypeInstantiate hibUserTypeInstantiator, final ICompositeUserTypeInstantiate hibCompositeUserTypeInstantiator) {
-	    this.hibTypeInstance = hibTypeInstance;
-	    this.hibCompositeUserTypeInstantiator = hibCompositeUserTypeInstantiator;
-	    this.hibUserTypeInstantiator = hibUserTypeInstantiator;
-	}
-
-	public HibTypeInfo(final Type hibTypeInstance) {
-	    this(hibTypeInstance, null, null);
-	}
-
-
-	public HibTypeInfo(final IUserTypeInstantiate hibUserTypeInstantiator) {
-	    this(null, hibUserTypeInstantiator, null);
-	}
-
-	public HibTypeInfo(final ICompositeUserTypeInstantiate hibCompositeUserTypeInstantiator) {
-	    this(null, null, hibCompositeUserTypeInstantiator);
-	}
-
-    }
 
     public MappingsGenerator(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity>> entityTypes) {
 	if (hibTypesDefaults != null) {
@@ -81,6 +59,13 @@ public class MappingsGenerator {
 	}
 	this.hibTypesInjector = hibTypesInjector;
 	this.entityTypes = entityTypes;
+	for (final Class<? extends AbstractEntity> entityType : entityTypes) {
+	    try {
+		hibTypeInfos.put(entityType, generateEntityPersistenceInfo(entityType));
+	    } catch (final Exception e) {
+		e.printStackTrace();
+	    }
+	}
     }
 
     public MappingsGenerator(final List<Class<? extends AbstractEntity>> entityTypes) {
@@ -98,8 +83,6 @@ public class MappingsGenerator {
 	for (final Class<? extends AbstractEntity> entityType : entityTypes) {
 	    try {
 		sb.append(getClassMapping(entityType));
-		hibTypeInfos.put(entityType, getEntityTypeInfo(entityType));
-
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		throw new RuntimeException("Couldn't generate mapping for " + entityType.getName() + " due to: " + e.getMessage());
@@ -173,7 +156,7 @@ public class MappingsGenerator {
 	return "\t<one-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" constrained=\"true\"/>\n";
     }
 
-    private String getPropMappingString(final String propName, final List<String> propColumns, final String hibTypeName, final String length) {
+    private String getPropMappingString(final String propName, final List<String> propColumns, final String hibTypeName, final Long length) {
 	final String propNameClause = "\t<property name=\"" + propName + "\"";
 	final String typeClause = hibTypeName == null ? "" : " type=\"" + hibTypeName + "\"";
 	final String lengthClause = length == null ? "" : " length=\"" + length + "\"";
@@ -190,14 +173,6 @@ public class MappingsGenerator {
 	    sb.append("\t</property>\n");
 	    return sb.toString();
 	}
-    }
-
-    private String getPropMappingString(final String propName, final List<String> propColumns, final String hibTypeName) {
-	return getPropMappingString(propName, propColumns, hibTypeName, null);
-    }
-
-    private String getPropMappingString(final String propName, final String propColumn, final String hibTypeName, final String length) {
-	return getPropMappingString(propName, Arrays.asList(new String[] { propColumn }), hibTypeName, length);
     }
 
     private String getPropMappingString(final String propName, final String propColumn, final String hibTypeName) {
@@ -239,6 +214,12 @@ public class MappingsGenerator {
 	}
     }
 
+    /**
+     * Generates mapping for entity type.
+     * @param entityType
+     * @return
+     * @throws Exception
+     */
     private String getClassMapping(final Class entityType) throws Exception {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + ddlGenerator.getTableClause(entityType) + "\">\n");
@@ -250,75 +231,143 @@ public class MappingsGenerator {
 	return sb.toString();
     }
 
+    /**
+     * Generates mappings for entity common props.
+     * @param entityType
+     * @return
+     * @throws Exception
+     */
     private String getClassMappingPartForCommonProps(final Class entityType) throws Exception {
 	final StringBuffer sb = new StringBuffer();
-	for (final Field field : getPersistedProperties(entityType)) {
-	    if (!specialProps.contains(field.getName())) {
-		sb.append(getCommonPropMappingString(entityType, field));
-	    }
+	for (final PropertyPersistenceInfo ppi : hibTypeInfos.get(entityType).values()) {
+		sb.append(getCommonPropMappingString(ppi));
 	}
 	return sb.toString();
     }
 
-    private String getCommonPropMappingString(final Class entityType, final Field field) throws Exception {
-	final MapTo mapTo = getMapTo(entityType, field.getName());
-	final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
+    /**
+     * Generates persistence info for common properties of provided entity type.
+     * @param entityType
+     * @return
+     * @throws Exception
+     */
+    private SortedMap<String, PropertyPersistenceInfo> generateEntityPersistenceInfo(final Class entityType) throws Exception {
+	final SortedMap<String, PropertyPersistenceInfo> result = new TreeMap<String, PropertyPersistenceInfo>();
+	for (final Field field : getPersistedProperties(entityType)) {
+	    if (!specialProps.contains(field.getName())) {
+		final PropertyPersistenceInfo ppi = getCommonPropHibInfo(entityType, field);
+		result.put(ppi.getName(), ppi);
+	    }
+	}
+	return result;
+    }
 
-	if (Set.class.isAssignableFrom(field.getType())) {
-	    return getSet(field.getName(), columnName, determinePropertyType(entityType, field.getName()));
-	} else if (isPersistedEntityType(field.getType())) {
-	    return getManyToOneProperty(field.getName(), columnName, field.getType());
-	} else if (isNotEmpty(mapTo.typeName())) {
-	    return getPropMappingString(field.getName(), columnName, mapTo.typeName());
+    /**
+     * Generates mapping string for common property based on it persistence info.
+     * @param info
+     * @return
+     * @throws Exception
+     */
+    private String getCommonPropMappingString(final PropertyPersistenceInfo info) throws Exception {
+	if (info.isCollection()) {
+	    return getSet(info.getName(), info.getColumn(), info.getJavaType());
+	}
+
+	if (info.isEntity()) {
+	    return getManyToOneProperty(info.getName(), info.getColumn(), info.getJavaType());
+	}
+
+	return getPropMappingString(info.getName(), info.getColumns(), info.getTypeString(), info.getLength());
+    }
+
+    /**
+     * Generates list of column names for mapping of CompositeUserType implementors.
+     * @param hibType
+     * @param parentColumn
+     * @return
+     * @throws Exception
+     */
+    private List<String> getCompositeUserTypeColumns(final ICompositeUserTypeInstantiate hibType, final String parentColumn) throws Exception {
+	final String[] propNames = hibType.getPropertyNames();
+	final List<String> result = new ArrayList<String>();
+	for (final String propName : propNames) {
+	    final String mapToColumn = getMapTo(hibType.returnedClass(), propName).value();
+	    final String columnName = propNames.length == 1 ? parentColumn
+		    : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn));
+	    result.add(columnName);
+	}
+	return result;
+    }
+
+    /**
+     * Determines hibernate type instance for entity property based on provided property's meta information.
+     * @param entityType
+     * @param field
+     * @return
+     * @throws Exception
+     * @throws
+     */
+    private Object getHibernateType(final Class javaType, final String hibernateTypeName, final Class hibernateUserTypeImplementor, final boolean collectional, final boolean entity) throws Exception {
+	if (collectional) {
+	    return null;
+	}
+
+	if (entity) {
+	    return TypeFactory.basic("long");
+	}
+
+	if (isNotEmpty(hibernateTypeName)) {
+	    return TypeFactory.basic(hibernateTypeName);
+	}
+
+	if (hibTypesInjector != null && !hibernateUserTypeImplementor.equals(Class.class)) { // Hibernate type is definitely either IUserTypeInstantiate or ICompositeUserTypeInstantiate
+	    return hibTypesInjector.getInstance(hibernateUserTypeImplementor);
 	} else {
-	    final String length = (field.getType().isArray() && field.getType().getComponentType().isAssignableFrom(byte.class)) ? "1073741824" : null;
-	    final Class hibType = hibTypesInjector != null && !mapTo.userType().equals(Class.class) ? hibTypesInjector.getInstance(mapTo.userType()).getClass() : //
-		    hibTypesDefaults.get(field.getType());
-	    if (hibType == null) {
-		return getPropMappingString(field.getName(), columnName, null, length);
-	    } else {
-		if (!ICompositeUserTypeInstantiate.class.isAssignableFrom(hibType)) {
-		    return getPropMappingString(field.getName(), columnName, hibType.getName(), length);
-		} else {
-		    return getPropMappingString(field.getName(), getCompositeUserTypeColumns(hibType, columnName), hibType.getName(), length);
-		}
+	    final Class defaultHibType = hibTypesDefaults.get(javaType);
+	    if (defaultHibType != null) { // default is provided for given property java type
+		return defaultHibType.newInstance();
+	    } else { // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults
+		return TypeFactory.basic(javaType.getName());
 	    }
 	}
     }
 
-    private String getCommonPropHibInfo(final Class entityType, final Field field) throws Exception {
+    /**
+     * Generates persistence info for entity property.
+     * @param entityType
+     * @param field
+     * @return
+     * @throws Exception
+     */
+    private PropertyPersistenceInfo getCommonPropHibInfo(final Class entityType, final Field field) throws Exception {
+	final boolean isCollectional = Set.class.isAssignableFrom(field.getType());
+	final boolean isEntity = isPersistedEntityType(field.getType());
 	final MapTo mapTo = getMapTo(entityType, field.getName());
+	final String propName = field.getName();
 	final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
+	final Class javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+	final long length = mapTo.length();
 
-	if (Set.class.isAssignableFrom(field.getType())) {
-	    return getSet(field.getName(), columnName, determinePropertyType(entityType, field.getName()));
-	} else if (isPersistedEntityType(field.getType())) {
-	    return getManyToOneProperty(field.getName(), columnName, field.getType());
-	} else if (isNotEmpty(mapTo.typeName())) {
-	    return getPropMappingString(field.getName(), columnName, mapTo.typeName());
-	} else {
-	    final String length = (field.getType().isArray() && field.getType().getComponentType().isAssignableFrom(byte.class)) ? "1073741824" : null;
-	    final Class hibType = hibTypesInjector != null && !mapTo.userType().equals(Class.class) ? hibTypesInjector.getInstance(mapTo.userType()).getClass() : //
-		    hibTypesDefaults.get(field.getType());
-	    if (hibType == null) {
-		return getPropMappingString(field.getName(), columnName, null, length);
-	    } else {
-		if (!ICompositeUserTypeInstantiate.class.isAssignableFrom(hibType)) {
-		    return getPropMappingString(field.getName(), columnName, hibType.getName(), length);
-		} else {
-		    return getPropMappingString(field.getName(), getCompositeUserTypeColumns(hibType, columnName), hibType.getName(), length);
+	final Object hibernateType = getHibernateType(javaType, mapTo.typeName(), mapTo.userType(), isCollectional, isEntity);
+	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType).collectional(isCollectional).length(length);
+
+	if (hibernateType != null) {
+	    if (hibernateType instanceof Type) {
+		builder.hibType((Type) hibernateType);
+	    } else if (hibernateType instanceof IUserTypeInstantiate) {
+		builder.hibUserType((IUserTypeInstantiate) hibernateType);
+	    } else if (hibernateType instanceof ICompositeUserTypeInstantiate) {
+		final ICompositeUserTypeInstantiate hibCompositeUSerType = (ICompositeUserTypeInstantiate) hibernateType;
+		builder.hibCompositeUserType(hibCompositeUSerType);
+		for(final String column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
+		    builder.column(column);
 		}
+		return builder.build();
 	    }
 	}
+
+	return builder.column(columnName).build();
     }
-
-
-
-    private Map<String, HibTypeInfo> getEntityTypeInfo(final Class<? extends AbstractEntity> entityType) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
 
     private MapEntityTo getMapEntityTo(final Class entityType) {
 	return getAnnotation(MapEntityTo.class, entityType);

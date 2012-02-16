@@ -9,6 +9,7 @@ import org.hibernate.type.Type;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.QueryModelResult.ResultPropertyInfo;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -26,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 
 public class EntityFetcherTestCase extends BaseEntQueryTCase {
     final Injector injector = new ApplicationInjectorFactory().add(new HibernateUserTypesModule()).getInjector();
-    private EntityResultTreeBuilder ef = new EntityResultTreeBuilder(new MappingsGenerator(new HashMap<Class, Class>(), injector, null));
+    private EntityResultTreeBuilder ef = new EntityResultTreeBuilder(new MappingsGenerator(new HashMap<Class, Class>(), injector, new ArrayList<Class<? extends AbstractEntity>>()));
     private EntityFetcher entFetcher = new EntityFetcher() {};
 
     @Test

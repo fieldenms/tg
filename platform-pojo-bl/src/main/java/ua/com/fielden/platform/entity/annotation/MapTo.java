@@ -16,9 +16,23 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({ FIELD })
 public @interface MapTo {
 
-    String value() default ""; // represents column name
+    /**
+     * Represents column name
+     * @return
+     */
+    String value() default "";
 
-    String typeName() default ""; // represents hibernate type class name
+    /**
+     * Represents result of getName() method on instances of hibernate Type interface implementing classes (e.g. LongType - "long", YesNoType - "yes_no", BigDecimalType - "big_decimal"
+     * @return
+     */
+    String typeName() default ""; //
 
+    /**
+     * Returns implementers of IUserTypeInstantiate or ICompositeUserTypeInstantiate (e.g. ISimpleMoneyType.class, ISimplyMoneyWithTaxAmountType.class). Class.class means that nothing has been specified (i.e. Null).
+     * @return
+     */
     Class userType() default Class.class; // represents hibernate type class
+
+    long length() default 0;
 }
