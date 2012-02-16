@@ -35,12 +35,12 @@ public class LevelAllocatingVisitor implements IAstVisitor {
     private final Class<? extends AbstractEntity> context;
 
     /**
-     * Context is a top level type for which all referenced by AST nodes properties should be its properties or subproperties.
+     * Higher-order type is a top level type for which all referenced by AST nodes properties should be its properties or subproperties.
      *
-     * @param context
+     * @param higherOrderType
      */
-    public LevelAllocatingVisitor(final Class<? extends AbstractEntity> context) {
-	this.context = context;
+    public LevelAllocatingVisitor(final Class<? extends AbstractEntity> higherOrderType) {
+	this.context = higherOrderType;
     }
 
     @Override
@@ -139,4 +139,8 @@ public class LevelAllocatingVisitor implements IAstVisitor {
 	return level != null ? level - 1 : null;
     }
 
+
+    public static void main(final String[] args) {
+	System.out.println('\u2190');
+    }
 }

@@ -17,7 +17,7 @@ public class NameTokenAutomataTest {
     @Test
     public void test_correctness_of_a_single_valid_transition() throws NoTransitionAvailable {
 	final AbstractState s = automata.start('a');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
+	assertEquals("Invalid next state.", automata.getState("S2"), s);
 	assertEquals("Invalid recognised sequence", "a", automata.getRecognisedSequence());
     }
 
@@ -41,13 +41,13 @@ public class NameTokenAutomataTest {
 	s = s.accept('\t');
 	assertEquals("Invalid next state.", automata.getState("S0"), s);
 	s = s.accept('a');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
+	assertEquals("Invalid next state.", automata.getState("S2"), s);
 	s = s.accept('b');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
+	assertEquals("Invalid next state.", automata.getState("S2"), s);
 	s = s.accept(' ');
-	assertEquals("Invalid next state.", automata.getState("S2"), s);
+	assertEquals("Invalid next state.", automata.getState("S4"), s);
 	s = s.accept('\n');
-	assertEquals("Invalid next state.", automata.getState("S2"), s);
+	assertEquals("Invalid next state.", automata.getState("S4"), s);
 	assertEquals("Invalid recognised sequence", " \tab \n", automata.getRecognisedSequence());
     }
 
@@ -56,19 +56,19 @@ public class NameTokenAutomataTest {
 	AbstractState s = automata.start(' ');
 	assertEquals("Invalid next state.", automata.getState("S0"), s);
 	s = s.accept('a');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
-	s = s.accept('b');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
-	s = s.accept(' ');
 	assertEquals("Invalid next state.", automata.getState("S2"), s);
+	s = s.accept('b');
+	assertEquals("Invalid next state.", automata.getState("S2"), s);
+	s = s.accept(' ');
+	assertEquals("Invalid next state.", automata.getState("S4"), s);
 	s = s.accept('.');
-	assertEquals("Invalid next state.", automata.getState("S0"), s);
+	assertEquals("Invalid next state.", automata.getState("S3"), s);
 	s = s.accept('\n');
-	assertEquals("Invalid next state.", automata.getState("S0"), s);
+	assertEquals("Invalid next state.", automata.getState("S3"), s);
 	s = s.accept('Z');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
+	assertEquals("Invalid next state.", automata.getState("S2"), s);
 	s = s.accept('A');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
+	assertEquals("Invalid next state.", automata.getState("S2"), s);
 
 	assertEquals("Invalid recognised sequence", " ab .\nZA", automata.getRecognisedSequence());
 	assertEquals("Invalid recognised sequence", "ab.ZA", " ab .\nZA".replace(" ", "").replace("\n", ""));
@@ -77,13 +77,13 @@ public class NameTokenAutomataTest {
     @Test
     public void test_recognition_of_incorrectly_formed_single_property() throws NoTransitionAvailable {
 	AbstractState s = automata.start('a');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
-	s = s.accept('a');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
-	s = s.accept('2');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
-	s = s.accept(' ');
 	assertEquals("Invalid next state.", automata.getState("S2"), s);
+	s = s.accept('a');
+	assertEquals("Invalid next state.", automata.getState("S2"), s);
+	s = s.accept('2');
+	assertEquals("Invalid next state.", automata.getState("S2"), s);
+	s = s.accept(' ');
+	assertEquals("Invalid next state.", automata.getState("S4"), s);
 	try {
 	    s = s.accept('b');
 	    fail("Exception is expected due to invalid transition symbol");
@@ -96,26 +96,26 @@ public class NameTokenAutomataTest {
     @Test
     public void test_recognition_of_incorrectly_formed_nested_property() throws NoTransitionAvailable {
 	AbstractState s = automata.start('a');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
-	s = s.accept('a');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
-	s = s.accept('2');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
-	s = s.accept(' ');
 	assertEquals("Invalid next state.", automata.getState("S2"), s);
+	s = s.accept('a');
+	assertEquals("Invalid next state.", automata.getState("S2"), s);
+	s = s.accept('2');
+	assertEquals("Invalid next state.", automata.getState("S2"), s);
+	s = s.accept(' ');
+	assertEquals("Invalid next state.", automata.getState("S4"), s);
 	s = s.accept('.');
-	assertEquals("Invalid next state.", automata.getState("S0"), s);
+	assertEquals("Invalid next state.", automata.getState("S3"), s);
 	s = s.accept('\t');
-	assertEquals("Invalid next state.", automata.getState("S0"), s);
+	assertEquals("Invalid next state.", automata.getState("S3"), s);
 	// test intermediate recognition and pretendant results
 	assertEquals("Invalid recognised sequence", "aa2 ", automata.getRecognisedSequence());
 	assertEquals("Invalid pretendant sequence", ".\t", automata.getPretendantSequence());
 	// let's keep recognising the input...
 	s = s.accept('b');
-	assertEquals("Invalid next state.", automata.getState("S1"), s);
+	assertEquals("Invalid next state.", automata.getState("S2"), s);
 	assertEquals("Invalid pretendant sequence", "", automata.getPretendantSequence());
 	s = s.accept(' ');
-	assertEquals("Invalid next state.", automata.getState("S2"), s);
+	assertEquals("Invalid next state.", automata.getState("S4"), s);
 	assertEquals("Invalid pretendant sequence", "", automata.getPretendantSequence());
 	try {
 	    s = s.accept('2');
@@ -157,6 +157,39 @@ public class NameTokenAutomataTest {
 	assertEquals("Incorrect recognition result", "property1", automata.recognisePartiallyFromStart("property1.1subProperty1", 0));
 	assertEquals("Incorrect recognition result", "property1.subProperty1", automata.recognisePartiallyFromStart("   property1    .    subProperty1  sd", 0));
 	assertEquals("Incorrect recognition result", "property1.sub2Property1", automata.recognisePartiallyFromStart("\t\nproperty1.    sub2Property1\tbn", 0));
+    }
+
+    @Test
+    public void test_full_recognition_of_correct_sequences_with_parent_paths() throws SequenceRecognitionFailed {
+	assertEquals("Incorrect recognition result", "←.←.property1.subProperty1", automata.recognisePartiallyFromStart("←.←.property1.subProperty1", 0));
+	assertEquals("Incorrect recognition result", "←.←.property1.subProperty1", automata.recognisePartiallyFromStart(" ← . ←. property1   .    subProperty1  ", 0));
+	assertEquals("Incorrect recognition result", "←.property1.sub2Property1", automata.recognisePartiallyFromStart("\t←\n .property1.    sub2Property1\t", 0));
+    }
+
+    @Test
+    public void test_recognition_result_of_patially_correct_sequences_with_parent_paths() throws SequenceRecognitionFailed {
+	assertEquals("Incorrect recognition result", "←.property1.subProperty1", automata.recognisePartiallyFromStart("←.property1.subProperty1+", 0));
+	assertEquals("Incorrect recognition result", "←.property1", automata.recognisePartiallyFromStart("← .property1.1subProperty1", 0));
+	assertEquals("Incorrect recognition result", "←.property1.subProperty1", automata.recognisePartiallyFromStart(" ←.  property1    .    subProperty1  sd", 0));
+	assertEquals("Incorrect recognition result", "←.property1.sub2Property1", automata.recognisePartiallyFromStart("\t←\n.property1.    sub2Property1\tbn", 0));
+	assertEquals("Incorrect recognition result", "←.property1", automata.recognisePartiallyFromStart("← .property1.←.1subProperty1", 0));
+    }
+
+    @Test
+    public void test_recognition_of_incorrect_sequences_with_parent_paths() throws SequenceRecognitionFailed {
+	try {
+	    automata.recognisePartiallyFromStart("←", 0);
+	    fail("The property name should not be recognised.");
+	} catch (final Exception ex) {
+	}
+	try {
+	    automata.recognisePartiallyFromStart("←.", 0);
+	    fail("The property name should not be recognised.");
+	} catch (final Exception ex) {	}
+	try {
+	    automata.recognisePartiallyFromStart("←.←", 0);
+	    fail("The property name should not be recognised.");
+	} catch (final Exception ex) {	}
     }
 
     @Test
