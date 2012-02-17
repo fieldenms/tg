@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
@@ -50,7 +48,7 @@ public class MappingsGenerator {
     private Injector hibTypesInjector;
     private final DdlGenerator ddlGenerator = new DdlGenerator();
 
-    private Map<Class, SortedMap<String, PropertyPersistenceInfo>> hibTypeInfos = new HashMap<Class, SortedMap<String, PropertyPersistenceInfo>>();
+    private Map<Class, List<PropertyPersistenceInfo>> hibTypeInfos = new HashMap<Class, List<PropertyPersistenceInfo>>();
     final List<Class<? extends AbstractEntity>> entityTypes;
 
     public MappingsGenerator(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity>> entityTypes) {
@@ -96,9 +94,9 @@ public class MappingsGenerator {
 	return result;
     }
 
-    private String getCommonEntityId() {
+    private String getCommonEntityId(final String name, final String column, final String hibTypeName) {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("\t<id name=\"id\" column=\"" + ddlGenerator.id + "\" type=\"long\" access=\"property\">\n");
+	sb.append("\t<id name=\"" + name + "\" column=\"" + column + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
 	sb.append("\t\t<generator class=\"hilo\">\n");
 	sb.append("\t\t\t<param name=\"table\">UNIQUE_ID</param>\n");
 	sb.append("\t\t\t<param name=\"column\">NEXT_VALUE</param>\n");
@@ -108,9 +106,9 @@ public class MappingsGenerator {
 	return sb.toString();
     }
 
-    private String getOneToOneEntityId() {
+    private String getOneToOneEntityId(final String name, final String column, final String hibTypeName) {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("\t<id name=\"id\" column=\"" + ddlGenerator.id + "\" type=\"long\" access=\"property\">\n");
+	sb.append("\t<id name=\"" + name + "\" column=\"" + column + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
 	sb.append("\t\t<generator class=\"foreign\">\n");
 	sb.append("\t\t\t<param name=\"property\">key</param>\n");
 	sb.append("\t\t</generator>\n");
@@ -128,20 +126,12 @@ public class MappingsGenerator {
 	return sb.toString();
     }
 
-    private String getCommonEntityVersion() {
+    private String getCommonEntityVersion(final String name, final String column, final String hibTypeName) {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("\t<version name=\"version\" type=\"long\" access=\"field\" insert=\"false\">\n");
-	sb.append("\t\t<column name=\"" + ddlGenerator.version + "\" default=\"0\" />\n");
+	sb.append("\t<version name=\"" + name + "\" type=\"" + hibTypeName + "\" access=\"field\" insert=\"false\">\n");
+	sb.append("\t\t<column name=\"" + column + "\" default=\"0\" />\n");
 	sb.append("\t</version>\n");
 	return sb.toString();
-    }
-
-    private String getSimpleKey(final Class entityType) {
-	return getSimpleKeyWithColumn(ddlGenerator.key, entityType);
-    }
-
-    private String getSimpleKeyWithColumn(final String column, final Class entityType) {
-	return getPropMappingString("key", column, TypeFactory.basic(getKeyType(entityType).getName()).getName());
     }
 
     private String getManyToOneProperty(final String propName, final String propColumn, final Class entityType) {
@@ -175,33 +165,13 @@ public class MappingsGenerator {
 	}
     }
 
-    private String getPropMappingString(final String propName, final String propColumn, final String hibTypeName) {
-	return getPropMappingString(propName, Arrays.asList(new String[] { propColumn }), hibTypeName, null);
-    }
-
     private boolean isOneToOne(final Class entityType) {
 	return AbstractEntity.class.isAssignableFrom(getKeyType(entityType));
     }
 
-    private String getKeyMappingString(final Class entityType) {
-	if (DynamicEntityKey.class.equals(getKeyType(entityType))) {
-	    return "";
-	} else {
-	    if (isOneToOne(entityType)) {
-		return getOneToOneProperty("key", getKeyType(entityType));
-	    } else {
-		final String keyColumnOverride = getMapEntityTo(entityType).keyColumn();
-		if (isNotEmpty(keyColumnOverride)) {
-		    return getSimpleKeyWithColumn(keyColumnOverride, entityType);
-		} else {
-		    return getSimpleKey(entityType);
-		}
-	    }
-	}
-    }
-
     /**
      * Generates mapping for entity type.
+     *
      * @param entityType
      * @return
      * @throws Exception
@@ -209,25 +179,10 @@ public class MappingsGenerator {
     private String getClassMapping(final Class entityType) throws Exception {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + ddlGenerator.getTableClause(entityType) + "\">\n");
-	sb.append(isOneToOne(entityType) ? getOneToOneEntityId() : getCommonEntityId());
-	sb.append(getCommonEntityVersion());
-	sb.append(getKeyMappingString(entityType));
-	sb.append(getClassMappingPartForCommonProps(entityType));
-	sb.append("</class>\n");
-	return sb.toString();
-    }
-
-    /**
-     * Generates mappings for entity common props.
-     * @param entityType
-     * @return
-     * @throws Exception
-     */
-    private String getClassMappingPartForCommonProps(final Class entityType) throws Exception {
-	final StringBuffer sb = new StringBuffer();
-	for (final PropertyPersistenceInfo ppi : hibTypeInfos.get(entityType).values()) {
-		sb.append(getCommonPropMappingString(ppi));
+	for (final PropertyPersistenceInfo ppi : hibTypeInfos.get(entityType)) {
+	    sb.append(getCommonPropMappingString(ppi));
 	}
+	sb.append("</class>\n");
 	return sb.toString();
     }
 
@@ -237,12 +192,24 @@ public class MappingsGenerator {
      * @return
      * @throws Exception
      */
-    private SortedMap<String, PropertyPersistenceInfo> generateEntityPersistenceInfo(final Class entityType) throws Exception {
-	final SortedMap<String, PropertyPersistenceInfo> result = new TreeMap<String, PropertyPersistenceInfo>();
+    private List<PropertyPersistenceInfo> generateEntityPersistenceInfo(final Class entityType) throws Exception {
+	final List<PropertyPersistenceInfo> result = new ArrayList<PropertyPersistenceInfo>();
+	result.add(new PropertyPersistenceInfo.Builder("id", Long.class).column(ddlGenerator.id).hibType(TypeFactory.basic("long")).type(isOneToOne(entityType) ? PropertyPersistenceType.ONE2ONE_ID : PropertyPersistenceType.ID).build());
+
+	result.add(new PropertyPersistenceInfo.Builder("version", Long.class).column(ddlGenerator.version).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.VERSION).build());
+
+
+	final String keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? getMapEntityTo(entityType).keyColumn() : ddlGenerator.key;
+	if (isOneToOne(entityType)) {
+	    result.add(new PropertyPersistenceInfo.Builder("key", getKeyType(entityType)).column(keyColumnOverride).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
+	} else if (!DynamicEntityKey.class.equals(getKeyType(entityType))){
+	    result.add(new PropertyPersistenceInfo.Builder("key", getKeyType(entityType)).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PropertyPersistenceType.PRIMITIVE_KEY).build());
+	}
+
 	for (final Field field : getPersistedProperties(entityType)) {
 	    if (!specialProps.contains(field.getName())) {
 		final PropertyPersistenceInfo ppi = getCommonPropHibInfo(entityType, field);
-		result.put(ppi.getName(), ppi);
+		result.add(ppi);
 	    }
 	}
 	return result;
@@ -255,15 +222,22 @@ public class MappingsGenerator {
      * @throws Exception
      */
     private String getCommonPropMappingString(final PropertyPersistenceInfo info) throws Exception {
-	if (info.isCollection()) {
+	switch (info.getType()) {
+	case ENTITY_KEY:
+	    return getOneToOneProperty(info.getName(), info.getJavaType());
+	case COLLECTIONAL:
 	    return getSet(info.getName(), info.getColumn(), info.getJavaType());
-	}
-
-	if (info.isEntity()) {
+	case ENTITY:
 	    return getManyToOneProperty(info.getName(), info.getColumn(), info.getJavaType());
+	case VERSION:
+	    return getCommonEntityVersion(info.getName(), info.getColumn(), info.getTypeString());
+	case ID:
+	    return getCommonEntityId(info.getName(), info.getColumn(), info.getTypeString());
+	case ONE2ONE_ID:
+	    return getOneToOneEntityId(info.getName(), info.getColumn(), info.getTypeString());
+	default:
+	    return getPropMappingString(info.getName(), info.getColumns(), info.getTypeString(), info.getLength());
 	}
-
-	return getPropMappingString(info.getName(), info.getColumns(), info.getTypeString(), info.getLength());
     }
 
     /**
@@ -335,21 +309,23 @@ public class MappingsGenerator {
 	final long length = mapTo.length();
 
 	final Object hibernateType = getHibernateType(javaType, mapTo.typeName(), mapTo.userType(), isCollectional, isEntity);
-	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType).collectional(isCollectional).length(length);
+	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType).length(length);
+	if (isCollectional) {
+	    builder.type(PropertyPersistenceType.COLLECTIONAL);
+	}
 
-	if (hibernateType != null) {
-	    if (hibernateType instanceof Type) {
-		builder.hibType((Type) hibernateType);
-	    } else if (hibernateType instanceof IUserTypeInstantiate) {
-		builder.hibUserType((IUserTypeInstantiate) hibernateType);
-	    } else if (hibernateType instanceof ICompositeUserTypeInstantiate) {
-		final ICompositeUserTypeInstantiate hibCompositeUSerType = (ICompositeUserTypeInstantiate) hibernateType;
-		builder.hibCompositeUserType(hibCompositeUSerType);
-		for(final String column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
-		    builder.column(column);
-		}
-		return builder.build();
+	if (isEntity) {
+	    builder.type(PropertyPersistenceType.ENTITY);
+	}
+
+	builder.hibType(hibernateType);
+
+	if (hibernateType instanceof ICompositeUserTypeInstantiate) {
+	    final ICompositeUserTypeInstantiate hibCompositeUSerType = (ICompositeUserTypeInstantiate) hibernateType;
+	    for (final String column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
+		builder.column(column);
 	    }
+	    return builder.build();
 	}
 
 	return builder.column(columnName).build();

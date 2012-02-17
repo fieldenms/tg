@@ -3,10 +3,6 @@ package ua.com.fielden.platform.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.type.Type;
-
-import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
-import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class PropertyPersistenceInfo {
@@ -14,11 +10,9 @@ public class PropertyPersistenceInfo {
 
     private final String name;
     private final Class javaType;
-    private final Type hibType;
-    private final IUserTypeInstantiate hibUserType;
-    private final ICompositeUserTypeInstantiate hibCompositeUserType;
+    private final Object hibType;
     private final List<String> columns;
-    private final boolean collection;
+    private final PropertyPersistenceType type;
     private final Long length;
 
     public boolean isEntity() {
@@ -26,31 +20,35 @@ public class PropertyPersistenceInfo {
     }
 
     public boolean isCollection() {
-	return collection;
+	return type.equals(PropertyPersistenceType.COLLECTIONAL);
+    }
+
+    public boolean isId() {
+	return type.equals(PropertyPersistenceType.ID);
+    }
+
+    public boolean isOne2OneId() {
+	return type.equals(PropertyPersistenceType.ONE2ONE_ID);
+    }
+
+    public boolean isVersion() {
+	return type.equals(PropertyPersistenceType.VERSION);
     }
 
     public String getTypeString() {
 	if (hibType != null) {
 	    return hibType.getClass().getName();
+	} else {
+	    return null;
 	}
-	if (hibUserType != null) {
-	    return hibUserType.getClass().getName();
-	}
-	if (hibCompositeUserType != null) {
-	    return hibCompositeUserType.getClass().getName();
-	}
-
-	return null;
     }
 
     private PropertyPersistenceInfo(final Builder builder) {
-	collection = builder.collection;
+	type = builder.type;
 	length = builder.length > 0 ? new Long(builder.length) : null;
 	name = builder.name;
 	javaType = builder.javaType;
 	hibType = builder.hibType;
-	hibUserType = builder.hibUserType;
-	hibCompositeUserType = builder.hibCompositeUserType;
 	columns = builder.columns;
     }
 
@@ -66,16 +64,12 @@ public class PropertyPersistenceInfo {
         return javaType;
     }
 
-    public Type getHibType() {
+    public Object getHibType() {
         return hibType;
     }
 
-    public IUserTypeInstantiate getHibUserType() {
-        return hibUserType;
-    }
-
-    public ICompositeUserTypeInstantiate getHibCompositeUserType() {
-        return hibCompositeUserType;
+    public PropertyPersistenceType getType() {
+	return type;
     }
 
     public List<String> getColumns() {
@@ -90,11 +84,9 @@ public class PropertyPersistenceInfo {
 	private final String name;
 	private final Class javaType;
 
-	private Type hibType;
-	private IUserTypeInstantiate hibUserType;
-	private ICompositeUserTypeInstantiate hibCompositeUserType;
+	private Object hibType;
 	private List<String> columns = new ArrayList<String>();
-	private boolean collection;
+	private PropertyPersistenceType type = PropertyPersistenceType.PROP;
 	private long length = 0;
 
 	public PropertyPersistenceInfo build() {
@@ -112,23 +104,13 @@ public class PropertyPersistenceInfo {
 	    return this;
 	}
 
-	public Builder hibType(final Type val) {
+	public Builder hibType(final Object val) {
 	    hibType = val;
 	    return this;
 	}
 
-	public Builder hibUserType(final IUserTypeInstantiate val) {
-	    hibUserType = val;
-	    return this;
-	}
-
-	public Builder hibCompositeUserType(final ICompositeUserTypeInstantiate val) {
-	    hibCompositeUserType = val;
-	    return this;
-	}
-
-	public Builder collectional(final boolean val) {
-	    collection = val;
+	public Builder type(final PropertyPersistenceType val) {
+	    type = val;
 	    return this;
 	}
 
