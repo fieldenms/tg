@@ -26,21 +26,40 @@ import ua.com.fielden.platform.reflection.Finder;
  * if both operands are level agnostic then the node becomes also level agnostic.
  * <li> If node represents aggregation functions such as AVG, SUM, MIN, MAX or COUNT then its level value is the level of its operand - 1 or <code>null</code> if the operand is level agnostic.
  * </ul>
+ * <p>
+ * A special care it taken for proper handling of parent annotated paths that contain symbol "←" to indicate the level of the property relative to the level of context property.
+ * For example, if there is an entity <code>WorkOrder</code>, which properties <code>cost: Money</code> and <code>veh: Vehicle</code>,
+ * and there is a need to use property <code>cost</code> as part of a calculated property in the context of property <code>veh</code>, then it needs to be prefixed with <code>←.</code>.
+ * In this case, <code>WorkOrder</code> is considered as a higher-order type, and its property <code>veh</code> -- a context property.
  *
  * @author TG Team
  *
  */
 public class LevelAllocatingVisitor implements IAstVisitor {
 
-    private final Class<? extends AbstractEntity> context;
+    private final Class<? extends AbstractEntity> higherOrderType;
+    private final String contextProperty;
 
     /**
-     * Higher-order type is a top level type for which all referenced by AST nodes properties should be its properties or subproperties.
+     * The <code>higherOrderType</code> argument should represent a top level type for which all referenced by the AST nodes properties should be its properties or subproperties.
+     * The <code>contextProperty</code> argument specifies the relative location in the type tree against which all other AST nodes' levels should be checked for compatibility.
+     * The value of the <code>contextProperty</code> argument should be null if the higher-order type represents a context.
+     *
+     * @param higherOrderType
+     * @param contextProperty
+     */
+    public LevelAllocatingVisitor(final Class<? extends AbstractEntity> higherOrderType, final String contextProperty) {
+	this.higherOrderType = higherOrderType;
+	this.contextProperty = contextProperty;
+    }
+
+    /**
+     * This constructor can be used as a mere convenience in cases context and the higher-order type match.
      *
      * @param higherOrderType
      */
     public LevelAllocatingVisitor(final Class<? extends AbstractEntity> higherOrderType) {
-	this.context = higherOrderType;
+	this(higherOrderType,  null);
     }
 
     @Override
@@ -96,7 +115,7 @@ public class LevelAllocatingVisitor implements IAstVisitor {
 	String property = "";
 	for (int index = 0; index < parts.length; index++) {
 	    property += parts[index];
-	    final Field field = Finder.findFieldByName(context, property);
+	    final Field field = Finder.findFieldByName(higherOrderType, property);
 	    if (Collection.class.isAssignableFrom(field.getType())) {
 		level++;
 	    }

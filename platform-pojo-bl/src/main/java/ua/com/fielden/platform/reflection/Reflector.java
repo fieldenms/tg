@@ -26,7 +26,13 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public final class Reflector {
+    /** A symbol that represents a separator between properties in property path expressions. */
     public static final String DOT_SPLITTER = "\\.";
+    /**
+     * A symbol used as the property name substitution in property path expressions representing the next level up in the context of nested properties. Should occur only at the
+     * beginning of the expression. There can be several sequentially linked ← separated by dot splitter.
+     */
+    public static final String UP_LEVEL = "←";
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -36,7 +42,6 @@ public final class Reflector {
 
     // ========================================================================================================
     /////////////////////////////// Getting methods ///////////////////////////////////////////////////////////
-
 
     /**
      * This is a helper method used to walk along class hierarchy in search of the specified method.
@@ -68,7 +73,8 @@ public final class Reflector {
 		return getMethodForClass(AbstractUnionEntity.unionProperties((Class<AbstractUnionEntity>) startWithClass).get(0).getType(), methodName, arguments);
 	    }
 	}
-	throw new NoSuchMethodException("There is no method [" + methodName + "] in class [" + startWithClass.getSimpleName() + "] with arguments [" + Arrays.asList(arguments) + "].");
+	throw new NoSuchMethodException("There is no method [" + methodName + "] in class [" + startWithClass.getSimpleName() + "] with arguments [" + Arrays.asList(arguments)
+		+ "].");
     }
 
     /**
@@ -150,12 +156,12 @@ public final class Reflector {
      * @throws Exception
      */
     public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) throws NoSuchMethodException {
-        final String propertyNameInGetter = propertyName.toUpperCase().charAt(0) + propertyName.substring(1);
-        try {
-            return Reflector.getMethod(entityClass, "get" + propertyNameInGetter);
-        } catch (final Exception e) {
-            return Reflector.getMethod(entityClass, "is" + propertyNameInGetter);
-        }
+	final String propertyNameInGetter = propertyName.toUpperCase().charAt(0) + propertyName.substring(1);
+	try {
+	    return Reflector.getMethod(entityClass, "get" + propertyNameInGetter);
+	} catch (final Exception e) {
+	    return Reflector.getMethod(entityClass, "is" + propertyNameInGetter);
+	}
     }
 
     /**
@@ -169,11 +175,11 @@ public final class Reflector {
      * @throws Exception
      */
     public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) throws NoSuchMethodException {
-        if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.contains("()")) {
-            throw new IllegalArgumentException("DotNotationExp could not be empty or could not define construction with methods.");
-        }
-        final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);
-        return Reflector.getMethod(transformed.getKey(), "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1), PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false));
+	if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.contains("()")) {
+	    throw new IllegalArgumentException("DotNotationExp could not be empty or could not define construction with methods.");
+	}
+	final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);
+	return Reflector.getMethod(transformed.getKey(), "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1), PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false));
     }
 
     // ========================================================================================================
@@ -187,8 +193,8 @@ public final class Reflector {
      * @return
      */
     public static boolean notSortable(final Class<?> propertyType) {
-        final KeyType keyType = propertyType.getAnnotation(KeyType.class);
-        return AbstractEntity.class.isAssignableFrom(propertyType) && keyType != null && DynamicEntityKey.class.isAssignableFrom(keyType.value());
+	final KeyType keyType = propertyType.getAnnotation(KeyType.class);
+	return AbstractEntity.class.isAssignableFrom(propertyType) && keyType != null && DynamicEntityKey.class.isAssignableFrom(keyType.value());
     }
 
     /**
@@ -199,27 +205,27 @@ public final class Reflector {
      * @return
      */
     public static Pair<Comparable, Comparable> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
-        final List<Field> fields = Finder.findProperties(entity.getType());
-        Comparable<?> min = null, max = null;
-        for (final Field field : fields) { // for each property field
-            if (field.getName().equals(propertyName)) { //
-        	final List<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
-        	for (final Annotation annotation : propertyValidationAnotations) {
-        	    if (annotation instanceof GreaterOrEqual) {
-        		min = ((GreaterOrEqual) annotation).value();
-        	    } else if (annotation instanceof Max) {
-        		max = ((Max) annotation).value();
-        	    }
-        	}
-            }
-        }
-        if (min == null) {
-            min = Integer.MIN_VALUE;
-        }
-        if (max == null) {
-            max = Integer.MAX_VALUE;
-        }
-        return new Pair<Comparable, Comparable>(min, max);
+	final List<Field> fields = Finder.findProperties(entity.getType());
+	Comparable<?> min = null, max = null;
+	for (final Field field : fields) { // for each property field
+	    if (field.getName().equals(propertyName)) { //
+		final List<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
+		for (final Annotation annotation : propertyValidationAnotations) {
+		    if (annotation instanceof GreaterOrEqual) {
+			min = ((GreaterOrEqual) annotation).value();
+		    } else if (annotation instanceof Max) {
+			max = ((Max) annotation).value();
+		    }
+		}
+	    }
+	}
+	if (min == null) {
+	    min = Integer.MIN_VALUE;
+	}
+	if (max == null) {
+	    max = Integer.MAX_VALUE;
+	}
+	return new Pair<Comparable, Comparable>(min, max);
     }
 
     /**
@@ -262,6 +268,111 @@ public final class Reflector {
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
+    }
+
+    /**
+     * Converts a relative property path to an absolute path with respect to the provided context.
+     *
+     * @param context -- the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+     * @param absolutePropertyPath -- relative property path, which may contain ←  and dots for separating individual properties.
+     * @return
+     */
+    public static String fromRelative2AbsotulePath(final String context, final String absolutePropertyPath) {
+	if (!absolutePropertyPath.startsWith("←") && StringUtils.isEmpty(context)) {
+	    return absolutePropertyPath;
+	}
+
+	if (!absolutePropertyPath.startsWith("←")) {
+	    throw new IllegalArgumentException("The relative path is incorrect with respect to the provided context.");
+	}
+
+	final int endOfLevelUp = absolutePropertyPath.lastIndexOf(UP_LEVEL);
+	final String returnPath = absolutePropertyPath.substring(0, endOfLevelUp + 1);
+	final String propertyPathWithoutLevelUp = absolutePropertyPath.substring(endOfLevelUp + 2);
+	final int returnPathLength = propertyLevel(returnPath);
+
+	final String missingPathFromRoot = pathFromRoot(context, returnPathLength);
+	final String absolutePath = StringUtils.isEmpty(missingPathFromRoot) ? propertyPathWithoutLevelUp : missingPathFromRoot + "." + propertyPathWithoutLevelUp;
+	if (absolutePath.contains("←")) {
+	    throw new IllegalArgumentException("Relative property path may contain symbol ← only at the beginning.");
+	}
+	return absolutePath;
+    }
+
+    /**
+     * A helper function, which recursively determines the depth of the context path in comparison to the relative property path provide.
+     *
+     * @return
+     */
+    private static String pathFromRoot(final String context, final int relativePathLength) {
+	// this basically means that either context was not specified correctly or the ← symbol in the relative path was included too many times
+	if (relativePathLength > propertyLevel(context)) {
+	    throw new IllegalArgumentException("Either the context or the relative property path is incorrect.");
+	}
+
+	String toReturn = context;
+	if (relativePathLength > 0) {
+	    final int lastDot = context.lastIndexOf('.');
+	    if (lastDot > 0) {
+		toReturn = pathFromRoot(context.substring(0, lastDot), relativePathLength - 1);
+	    } else {
+		toReturn = pathFromRoot("", relativePathLength - 1);
+	    }
+	}
+	return toReturn;
+    }
+
+    /**
+     * Converts an absolute property path to a relative one in respect to the provided context.
+     *
+     * @param context the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+     * @param absolutePropertyPath -- an absolute property path, which needs to be converted to a relative path with respect to the specified context.
+     * @return
+     */
+    public static String fromAbsotule2RelativePath(final String context, final String absolutePropertyPath) {
+	if (absolutePropertyPath.contains("←")) {
+	    throw new IllegalArgumentException("Both the context and the property path should be absolute.");
+	}
+
+	// calculate the matching path depth from the beginning
+	final String[] contextElements = context.split(DOT_SPLITTER);
+	final String[] propertyElements = absolutePropertyPath.split(DOT_SPLITTER);
+	final int length = Math.min(contextElements.length, propertyElements.length);
+	int longestPathUp = propertyLevel(context);
+	for (int index = 0; index < length; index++) {
+	    if (!contextElements[index].equals(propertyElements[index])) {
+		break;
+	    }
+	    longestPathUp--;
+	}
+
+	// construct the relative path portion
+	final StringBuilder sb = new StringBuilder();
+	for (int index = 0; index < longestPathUp; index ++) {
+	    sb.append("←.");
+	}
+	// append the remaining property path
+	for (int index = propertyLevel(context) - longestPathUp; index < propertyElements.length; index++) {
+	    sb.append(propertyElements[index]);
+	    if (index < propertyElements.length - 1) {
+		sb.append(".");
+	    }
+	}
+
+	return sb.toString();
+    }
+
+    /**
+     * A helper function to calculate the property level in the type tree.
+     *
+     * @param propertyPath
+     * @return
+     */
+    private static int propertyLevel(final String propertyPath) {
+	if (StringUtils.isEmpty(propertyPath)) {
+	    return 0;
+	}
+	return propertyPath.split(DOT_SPLITTER).length;
     }
 
 }

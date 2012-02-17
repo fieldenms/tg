@@ -218,6 +218,25 @@ public class ReflectorTest {
 	assertEquals("Incorrect parameter value.", "2011-12-01 00:00:00", param.value());
     }
 
+    @Test
+    public void test_conversion_of_relative_property_paths_to_absolute() {
+	assertEquals("originator.name", Reflector.fromRelative2AbsotulePath("", "originator.name"));
+	assertEquals("originator.name", Reflector.fromRelative2AbsotulePath("vehicle.driver", "←.←.originator.name"));
+	assertEquals("vehicle.owner.name", Reflector.fromRelative2AbsotulePath("vehicle.driver", "←.owner.name"));
+	try {
+	    Reflector.fromRelative2AbsotulePath("vehicle.driver", "←.←.←.originator.name");
+	    fail("Validation should have prevented successful conversion.");
+	} catch (final Exception ex) {
+	}
+    }
+
+    @Test
+    public void test_conversion_of_absolute_property_paths_to_relative() {
+	assertEquals("originator.name", Reflector.fromAbsotule2RelativePath("", "originator.name"));
+	assertEquals("←.←.originator.name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "originator.name"));
+	assertEquals("←.owner.name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.owner.name"));
+    }
+
     @KeyType(String.class)
     private static class C extends AbstractEntity<String> {
 	public C() {
