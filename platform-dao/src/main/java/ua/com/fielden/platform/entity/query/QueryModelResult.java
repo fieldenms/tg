@@ -39,7 +39,6 @@ public class QueryModelResult {
 
 	@Override
 	public String toString() {
-	    // TODO Auto-generated method stub
 	    return "RPI\n name = " + name + "\n sqlAlias = " + sqlAlias + "\n type = " + (type != null ? type.getSimpleName() : " --- ");
 	}
 

@@ -724,14 +724,4 @@ public class EntityUtils {
 
 	return result;
     }
-
-//    public static String getPropertyColumnName(final Field propField) {
-//	final MapTo mapTo = propField.getAnnotation(MapTo.class);
-//
-//    }
-//	final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, entityType, field.getName());
-//	if (mapTo != null) {
-//	    final String columnName = !StringUtils.isEmpty(mapTo.value()) ? mapTo.value(): field.getName().toUpperCase() + "_";
-//
-//    }
 }

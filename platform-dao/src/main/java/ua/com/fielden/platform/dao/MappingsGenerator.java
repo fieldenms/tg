@@ -179,20 +179,6 @@ public class MappingsGenerator {
 	return getPropMappingString(propName, Arrays.asList(new String[] { propColumn }), hibTypeName, null);
     }
 
-    private List<String> getCompositeUserTypeColumns(final Class<? extends ICompositeUserTypeInstantiate> hibTypeClass, final String parentColumn) throws Exception {
-	final CompositeUserType hibType = (CompositeUserType) hibTypeClass.newInstance();
-	final Class rc = hibType.returnedClass();
-	final String[] propNames = hibType.getPropertyNames();
-	final List<String> result = new ArrayList<String>();
-	for (final String propName : propNames) {
-	    final String mapToColumn = getMapTo(rc, propName).value();
-	    final String columnName = propNames.length == 1 ? parentColumn
-		    : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn));
-	    result.add(columnName);
-	}
-	return result;
-    }
-
     private boolean isOneToOne(final Class entityType) {
 	return AbstractEntity.class.isAssignableFrom(getKeyType(entityType));
     }
