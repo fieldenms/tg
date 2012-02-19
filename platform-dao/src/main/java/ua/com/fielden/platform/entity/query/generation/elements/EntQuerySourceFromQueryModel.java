@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
@@ -18,12 +19,13 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	return models.get(0);
     }
 
-    public EntQuerySourceFromQueryModel(final String alias, final EntQuery... models) {
-	super(alias);
+    public EntQuerySourceFromQueryModel(final String alias, final MappingsGenerator mappingsGenerator, final EntQuery... models) {
+	super(alias, mappingsGenerator);
 	this.models = Arrays.asList(models);
 
 	for (final YieldModel yield : this.models.get(0).getYields().getYields().values()) {
-	    sourceColumns.put(yield.getAlias(), yield.getSqlAlias());
+	    //sourceColumns.put(yield.getAlias(), yield.getSqlAlias());
+	    sourceColumns.put(yield.getAlias(), yield.getInfo());
 	}
     }
 
@@ -53,16 +55,16 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	final YieldModel firstLevelPropYield = model().getYield(first);
 	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query yields
 	    return null;
-	} else if (firstLevelPropYield.getType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
+	} else if (firstLevelPropYield.getInfo().getJavaType()/*getType()*/ == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
 	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, Class>(new PurePropInfo(first, null), null) : null;
 	} else if (!StringUtils.isEmpty(rest)) {
 	    try {
-		return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getType()), determinePropertyType(firstLevelPropYield.getType(), rest));
+		return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType()/*getType()*/), determinePropertyType(firstLevelPropYield.getInfo().getJavaType()/*getType()*/, rest));
 	    } catch (final Exception e) {
 		return null;
 	    }
 	} else {
-	    return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getType()), firstLevelPropYield.getType());
+	    return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType()/*getType()*/), firstLevelPropYield.getInfo().getJavaType()/*getType()*/);
 	}
     }
 

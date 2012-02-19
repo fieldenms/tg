@@ -6,8 +6,8 @@ import ua.com.fielden.platform.entity.query.generation.elements.DayOfModel;
 
 public class DayOfBuilder extends AbstractFunctionBuilder {
 
-    protected DayOfBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
-	super(parent, dbVersion, paramValues);
+    protected DayOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+	super(parent, queryBuilder, paramValues);
     }
 
     @Override

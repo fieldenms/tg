@@ -13,9 +13,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder extends AbstractTokensBuilder {
 
-    protected QrySourcesBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
-	super(parent, dbVersion, paramValues);
-	setChild(new QrySourceBuilder(this, dbVersion, paramValues));
+    protected QrySourcesBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+	super(parent, queryBuilder, paramValues);
+	setChild(new QrySourceBuilder(this, queryBuilder, paramValues));
     }
 
     @Override
@@ -24,7 +24,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
 	case INNER_JOIN: //eats token
 	case LEFT_JOIN: //eats token
 	    finaliseChild();
-	    setChild(new CompoundQrySourceBuilder(this, getDbVersion(), getParamValues(), cat, value));
+	    setChild(new CompoundQrySourceBuilder(this, getQueryBuilder(), getParamValues(), cat, value));
 	    break;
 	default:
 	    super.add(cat, value);

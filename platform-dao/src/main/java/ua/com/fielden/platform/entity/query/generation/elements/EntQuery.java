@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -117,9 +118,18 @@ public class EntQuery implements ISingleOperand {
 	}
     }
 
-    private void assignTypesToYields() {
+    private void assignPropertyPersistenceInfoToYields() {
+		int yieldIndex = 0;
+		for (final YieldModel yield : yields.getYields().values()) {
+		    yieldIndex = yieldIndex + 1;
+		    final PropertyPersistenceInfo ppi = new PropertyPersistenceInfo.Builder(yield.getAlias(), determineYieldJavaType(yield)).column("C" + yieldIndex).build();
+		    yield.setInfo(ppi);
+		}
+    }
+
+
+    private Class determineYieldJavaType(final YieldModel yield) {
 	if (EntityUtils.isPersistedEntityType(type())) {
-	    for (final YieldModel yield : yields.getYields().values()) {
 		final Class yieldTypeAccordingToQuerySources = yield.getOperand().type();
 		final Class yieldTypeAccordingToQueryResultType = PropertyTypeDeterminator.determinePropertyType(type(), yield.getAlias());
 
@@ -127,16 +137,36 @@ public class EntQuery implements ISingleOperand {
 		    if (!(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQuerySources) && Long.class.equals(yieldTypeAccordingToQueryResultType))) {
 			throw new IllegalStateException("Different types: from source = " + yieldTypeAccordingToQuerySources.getSimpleName() + " from result type = " + yieldTypeAccordingToQueryResultType.getSimpleName());
 		    }
+		    return yieldTypeAccordingToQueryResultType;
 		} else {
-		    yield.assignTypes(yieldTypeAccordingToQueryResultType);
+		    return yieldTypeAccordingToQueryResultType;
 		}
-	    }
 	} else {
-	    for (final YieldModel yield : yields.getYields().values()) {
-		yield.assignTypes(yield.getOperand().type());
-	    }
+	    return yield.getOperand().type();
 	}
     }
+
+
+//    private void assignTypesToYields() {
+//	if (EntityUtils.isPersistedEntityType(type())) {
+//	    for (final YieldModel yield : yields.getYields().values()) {
+//		final Class yieldTypeAccordingToQuerySources = yield.getOperand().type();
+//		final Class yieldTypeAccordingToQueryResultType = PropertyTypeDeterminator.determinePropertyType(type(), yield.getAlias());
+//
+//		if (yieldTypeAccordingToQuerySources != null && !yieldTypeAccordingToQuerySources.equals(yieldTypeAccordingToQueryResultType)) {
+//		    if (!(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQuerySources) && Long.class.equals(yieldTypeAccordingToQueryResultType))) {
+//			throw new IllegalStateException("Different types: from source = " + yieldTypeAccordingToQuerySources.getSimpleName() + " from result type = " + yieldTypeAccordingToQueryResultType.getSimpleName());
+//		    }
+//		} else {
+//		    yield.assignTypes(yieldTypeAccordingToQueryResultType);
+//		}
+//	    }
+//	} else {
+//	    for (final YieldModel yield : yields.getYields().values()) {
+//		yield.assignTypes(yield.getOperand().type());
+//	    }
+//	}
+//    }
 
     private void assignSqlParamNames() {
 	int paramCount = 0;
@@ -201,8 +231,9 @@ public class EntQuery implements ISingleOperand {
 	    throw new RuntimeException("Couldn't finally resolve the following props: " + unresolvedFinalProps);
 	}
 
-	assignTypesToYields();
-	yields.assignSqlAliases();
+	assignPropertyPersistenceInfoToYields();
+//	assignTypesToYields();
+//	yields.assignSqlAliases();
 
 	assignSqlParamNames();
     }

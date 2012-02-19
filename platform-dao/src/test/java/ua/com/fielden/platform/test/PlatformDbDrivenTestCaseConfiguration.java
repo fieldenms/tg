@@ -31,7 +31,14 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
+import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.test.domain.entities.Advice;
@@ -45,6 +52,7 @@ import ua.com.fielden.platform.test.entities.validators.AdviceCarrierValidator;
 import ua.com.fielden.platform.test.entities.validators.AdvicePositionRotableValidator;
 import ua.com.fielden.platform.test.entities.validators.AdviceRoadValidator;
 import ua.com.fielden.platform.test.ioc.DaoTestHibernateModule;
+import ua.com.fielden.platform.types.Money;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -76,6 +84,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 	hibTypeDefaults.put(boolean.class, YesNoType.class);
 	hibTypeDefaults.put(Boolean.class, YesNoType.class);
 	hibTypeDefaults.put(Date.class, DateTimeType.class);
+	hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
 	testDomain.addAll(PlatformDomainTypes.types);
 	testDomain.add(CompositeEntity.class);
 	testDomain.add(CompositeEntityKey.class);
@@ -89,6 +98,12 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 	testDomain.add(TgTimesheet.class);
 	testDomain.add(TgVehicleMake.class);
 	testDomain.add(TgVehicleModel.class);
+	testDomain.add(TgVehicle.class);
+	testDomain.add(TgOrgUnit1.class);
+	testDomain.add(TgOrgUnit2.class);
+	testDomain.add(TgOrgUnit3.class);
+	testDomain.add(TgOrgUnit4.class);
+	testDomain.add(TgOrgUnit5.class);
     }
 
 

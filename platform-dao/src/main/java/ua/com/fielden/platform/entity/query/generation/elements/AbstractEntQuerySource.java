@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -36,15 +38,18 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
     /**
      * Map between business name and sql column name.
      */
-    protected Map<String, String> sourceColumns = new HashMap<String, String>();
+    protected Map<String, PropertyPersistenceInfo> sourceColumns = new HashMap<String, PropertyPersistenceInfo>();
+
+    private final MappingsGenerator mappingsGenerator;
 
     @Override
     public void assignSqlAlias(final String sqlAlias) {
 	this.sqlAlias = sqlAlias;
     }
 
-    public AbstractEntQuerySource(final String alias) {
+    public AbstractEntQuerySource(final String alias, final MappingsGenerator mappingsGenerator) {
 	this.alias = alias;
+	this.mappingsGenerator = mappingsGenerator;
     }
 
     @Override
@@ -64,7 +69,8 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	}
 
 	finalReferencingProps.add(prop);
-	prop.entProp.setSql(sqlAlias + "." + sourceColumns.get(prop.prop.name));
+	// TODO implement more transparently
+	prop.entProp.setSql(sqlAlias + "." + sourceColumns.get(prop.prop.name != null ? (prop.prop.name.endsWith(".id") ? prop.prop.name.substring(0, prop.prop.name.length() - 3) : prop.prop.name) : "id").getColumn());
     }
 
     @Override
@@ -271,7 +277,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	final SortedMap<PurePropInfo, List<EntProp>> groups = determineGroups(refProps);
 
 	for (final Map.Entry<PurePropInfo, List<EntProp>> groupEntry : groups.entrySet()) {
-	    final EntQuerySourceFromEntityType qrySource = new EntQuerySourceFromEntityType(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true);
+	    final EntQuerySourceFromEntityType qrySource = new EntQuerySourceFromEntityType(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, mappingsGenerator);
 
 	    /*TEMP*/final boolean propLeftJoin = parentLeftJoinLegacy || //
 			!isRequired(groupEntry.getKey().name);
@@ -417,4 +423,8 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    return true;
 	}
   }
+
+    public MappingsGenerator getMappingsGenerator() {
+        return mappingsGenerator;
+    }
 }

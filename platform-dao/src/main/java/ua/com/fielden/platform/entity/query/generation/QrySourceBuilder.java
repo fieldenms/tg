@@ -13,8 +13,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourceBuilder extends AbstractTokensBuilder {
 
-    protected QrySourceBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
-	super(parent, dbVersion, paramValues);
+    protected QrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+	super(parent, queryBuilder, paramValues);
     }
 
     private boolean isEntityTypeAsSourceTest() {
@@ -44,7 +44,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     }
 
     private Pair<TokenCategory, Object> getResultForEntityTypeAsSource() {
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new EntQuerySourceFromEntityType((Class) firstValue(), (String) secondValue()));
+	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new EntQuerySourceFromEntityType((Class) firstValue(), (String) secondValue(), getQueryBuilder().getMappingsGenerator()));
     }
 
     private Pair<TokenCategory, Object> getResultForEntityModelAsSource() {
@@ -54,7 +54,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
 	    queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, getParamValues()));
 	}
 
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new EntQuerySourceFromQueryModel((String) secondValue(), queries.toArray(new EntQuery[]{})));
+	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new EntQuerySourceFromQueryModel((String) secondValue(), getQueryBuilder().getMappingsGenerator(), queries.toArray(new EntQuery[]{})));
     }
 
     @Override

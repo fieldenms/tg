@@ -5,9 +5,13 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.type.YesNoType;
+
+import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PurePropInfo;
@@ -19,6 +23,9 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
+import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
@@ -29,6 +36,11 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.types.Money;
+
+import com.google.inject.Guice;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -49,7 +61,18 @@ public class BaseEntQueryTCase {
     protected static final Class<BigInteger> BIG_INTEGER = BigInteger.class;
     protected static final Class<BigDecimal> BIG_DECIMAL = BigDecimal.class;
 
-    private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2);
+    public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
+
+    static {
+	hibTypeDefaults.put(boolean.class, YesNoType.class);
+	hibTypeDefaults.put(Boolean.class, YesNoType.class);
+	hibTypeDefaults.put(Date.class, DateTimeType.class);
+	hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+    }
+
+    protected static final MappingsGenerator MAPPINGS_GENERATOR = new MappingsGenerator(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes);
+
+    private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2, MAPPINGS_GENERATOR);
 
     protected static EntQuery entSourceQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsSourceQuery(qryModel);

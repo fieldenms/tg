@@ -15,10 +15,10 @@ public class GroupedConditionsBuilder extends AbstractTokensBuilder {
 
     private final boolean negated;
 
-    protected GroupedConditionsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues, final boolean negated) {
-	super(parent, dbVersion, paramValues);
+    protected GroupedConditionsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final boolean negated) {
+	super(parent, queryBuilder, paramValues);
 	this.negated = negated;
-	setChild(new ConditionBuilder(this, dbVersion, paramValues));
+	setChild(new ConditionBuilder(this, queryBuilder, paramValues));
     }
 
     @Override

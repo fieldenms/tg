@@ -44,8 +44,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	mutlipleOperands.addAll(mutlipleAnyOperands);
     }
 
-    protected ConditionBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
-	super(parent, dbVersion, paramValues);
+    protected ConditionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+	super(parent, queryBuilder, paramValues);
     }
 
     private boolean isPlainExistenceTest() {

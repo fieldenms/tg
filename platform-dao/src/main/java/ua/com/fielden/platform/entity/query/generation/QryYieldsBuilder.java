@@ -11,8 +11,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QryYieldsBuilder extends AbstractTokensBuilder {
 
-    protected QryYieldsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
-	super(parent, dbVersion, paramValues);
+    protected QryYieldsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+	super(parent, queryBuilder, paramValues);
     }
 
     @Override

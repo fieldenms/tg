@@ -58,13 +58,13 @@ public class YieldsModel implements IPropertyCollector {
 	return yields.toString();
     }
 
-    public void assignSqlAliases() {
-	int yieldIndex = 0;
-	for (final YieldModel yield : yields.values()) {
-	    yieldIndex = yieldIndex + 1;
-	    yield.assignSqlAlias("C" + yieldIndex);
-	}
-    }
+//    public void assignSqlAliases() {
+//	int yieldIndex = 0;
+//	for (final YieldModel yield : yields.values()) {
+//	    yieldIndex = yieldIndex + 1;
+//	    yield.assignSqlAlias("C" + yieldIndex);
+//	}
+//    }
 
     public SortedMap<String, YieldModel> getYields() {
         return yields;

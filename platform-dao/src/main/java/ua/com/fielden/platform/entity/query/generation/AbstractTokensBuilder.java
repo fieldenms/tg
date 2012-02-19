@@ -30,42 +30,40 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private final ITokensBuilder parent;
     private ITokensBuilder child;
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
-    private final DbVersion dbVersion;
     private final Map<String, Object> paramValues;
     private final EntQueryGenerator queryBuilder;
 
-    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
+    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
 	this.parent = parent;
-	this.dbVersion = dbVersion;
-	this.queryBuilder = new EntQueryGenerator(dbVersion);
+	this.queryBuilder = queryBuilder;
 	this.paramValues = paramValues;
     }
 
     private void add(final Functions function) {
 	switch (function) {
 	case SUM:
-	    setChild(new SumOfBuilder(this, dbVersion, getParamValues()));
+	    setChild(new SumOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
 	case COUNT:
-	    setChild(new CountOfBuilder(this, dbVersion, getParamValues()));
+	    setChild(new CountOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
 	case AVERAGE:
-	    setChild(new AverageOfBuilder(this, dbVersion, getParamValues()));
+	    setChild(new AverageOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
 	case MIN:
-	    setChild(new MinOfBuilder(this, dbVersion, getParamValues()));
+	    setChild(new MinOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
 	case MAX:
-	    setChild(new MaxOfBuilder(this, dbVersion, getParamValues()));
+	    setChild(new MaxOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
 	case DAY:
-	    setChild(new DayOfBuilder(this, dbVersion, getParamValues()));
+	    setChild(new DayOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
 	case MONTH:
-	    setChild(new MonthOfBuilder(this, dbVersion, getParamValues()));
+	    setChild(new MonthOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
 	case YEAR:
-	    setChild(new YearOfBuilder(this, dbVersion, getParamValues()));
+	    setChild(new YearOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
 	case COUNT_DAYS:
 	case CASE_WHEN:
@@ -94,17 +92,17 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	} else {
 	    switch (cat) {
 	    case BEGIN_EXPR: //eats token
-		setChild(new ExpressionBuilder(this, dbVersion, getParamValues()));
+		setChild(new ExpressionBuilder(this, queryBuilder, getParamValues()));
 		break;
 	    case FUNCTION: //eats token
 	    case COLLECTIONAL_FUNCTION: //eats token
 		add((Functions) value);
 		break;
 	    case BEGIN_COND: //eats token
-		setChild(new GroupedConditionsBuilder(this, dbVersion, getParamValues(), (Boolean) value));
+		setChild(new GroupedConditionsBuilder(this, queryBuilder, getParamValues(), (Boolean) value));
 		break;
 	    case LOGICAL_OPERATOR:
-		setChild(new CompoundConditionBuilder(this, dbVersion, getParamValues(), cat, value));
+		setChild(new CompoundConditionBuilder(this, queryBuilder, getParamValues(), cat, value));
 		break;
 	    default:
 		tokens.add(new Pair<TokenCategory, Object>(cat, value));
@@ -194,7 +192,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case FUNCTION_MODEL:
 	    return (ISingleOperand) value;
 	case EXPR_TOKENS:
-	    return (ISingleOperand) new StandAloneExpressionBuilder(dbVersion, getParamValues(), (ExpressionModel) value).getResult().getValue();
+	    return (ISingleOperand) new StandAloneExpressionBuilder(queryBuilder, getParamValues(), (ExpressionModel) value).getResult().getValue();
 	case EQUERY_TOKENS:
 	case ALL_OPERATOR:
 	case ANY_OPERATOR:
@@ -305,9 +303,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	return result;
     }
 
-    public DbVersion getDbVersion() {
-	return dbVersion;
-    }
+//    public DbVersion getDbVersion() {
+//	return queryBuilder.getDbVersion();
+//    }
 
     protected EntQueryGenerator getQueryBuilder() {
 	return queryBuilder;

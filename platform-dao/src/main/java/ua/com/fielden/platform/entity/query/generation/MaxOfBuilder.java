@@ -6,8 +6,8 @@ import ua.com.fielden.platform.entity.query.generation.elements.MonthOfModel;
 
 public class MaxOfBuilder extends AbstractFunctionBuilder {
 
-    protected MaxOfBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
-	super(parent, dbVersion, paramValues);
+    protected MaxOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+	super(parent, queryBuilder, paramValues);
     }
 
     @Override

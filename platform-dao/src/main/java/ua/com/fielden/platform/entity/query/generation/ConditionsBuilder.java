@@ -13,9 +13,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class ConditionsBuilder extends AbstractTokensBuilder {
 
-    protected ConditionsBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
-	super(parent, dbVersion, paramValues);
-	setChild(new ConditionBuilder(this, dbVersion, paramValues));
+    protected ConditionsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+	super(parent, queryBuilder, paramValues);
+	setChild(new ConditionBuilder(this, queryBuilder, paramValues));
     }
 
     @Override

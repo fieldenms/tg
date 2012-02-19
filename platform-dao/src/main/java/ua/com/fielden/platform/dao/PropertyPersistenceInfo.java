@@ -1,8 +1,12 @@
 package ua.com.fielden.platform.dao;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.type.Type;
+
+import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class PropertyPersistenceInfo {
@@ -41,6 +45,22 @@ public class PropertyPersistenceInfo {
 	} else {
 	    return null;
 	}
+    }
+
+    public List<PropertyPersistenceInfo> getCompositeTypeSubprops() {
+	final List<PropertyPersistenceInfo> result = new ArrayList<PropertyPersistenceInfo>();
+	if (hibType instanceof ICompositeUserTypeInstantiate) {
+	    final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
+	    final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
+	    int index = 0;
+	    for (final String subpropName : subprops) {
+		final String column = columns.get(index);
+		final Object hibType = subpropsTypes.get(index);
+		result.add(new PropertyPersistenceInfo.Builder(name + "." +subpropName, ((Type) hibType).getReturnedClass()).column(column).type(PropertyPersistenceType.COMPOSITE_DETAILS).hibType(hibType).build());
+		index = index + 1;
+	    }
+	}
+	return result;
     }
 
     private PropertyPersistenceInfo(final Builder builder) {

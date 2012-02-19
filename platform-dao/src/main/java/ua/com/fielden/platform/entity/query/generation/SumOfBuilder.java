@@ -6,8 +6,8 @@ import ua.com.fielden.platform.entity.query.generation.elements.MonthOfModel;
 
 public class SumOfBuilder extends AbstractFunctionBuilder {
 
-    protected SumOfBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
-	super(parent, dbVersion, paramValues);
+    protected SumOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+	super(parent, queryBuilder, paramValues);
     }
 
     @Override

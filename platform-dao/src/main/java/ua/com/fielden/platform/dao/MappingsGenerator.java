@@ -59,11 +59,19 @@ public class MappingsGenerator {
 	this.entityTypes = entityTypes;
 	for (final Class<? extends AbstractEntity> entityType : entityTypes) {
 	    try {
-		hibTypeInfos.put(entityType, generateEntityPersistenceInfo(entityType));
+		final List<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
+		final List<PropertyPersistenceInfo> result = new ArrayList<PropertyPersistenceInfo>();
+		result.addAll(ppis);
+		result.addAll(generatePPIsForCompositeTypeProps(ppis));
+		hibTypeInfos.put(entityType, result);
 	    } catch (final Exception e) {
 		e.printStackTrace();
 	    }
 	}
+    }
+
+    public List<PropertyPersistenceInfo> getEntityPPIs(final Class entityType) {
+	return hibTypeInfos.get(entityType);
     }
 
     public MappingsGenerator(final List<Class<? extends AbstractEntity>> entityTypes) {
@@ -180,7 +188,9 @@ public class MappingsGenerator {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + ddlGenerator.getTableClause(entityType) + "\">\n");
 	for (final PropertyPersistenceInfo ppi : hibTypeInfos.get(entityType)) {
-	    sb.append(getCommonPropMappingString(ppi));
+	    if (!ppi.getType().equals(PropertyPersistenceType.COMPOSITE_DETAILS)) {
+		sb.append(getCommonPropMappingString(ppi));
+	    }
 	}
 	sb.append("</class>\n");
 	return sb.toString();
@@ -211,6 +221,14 @@ public class MappingsGenerator {
 		final PropertyPersistenceInfo ppi = getCommonPropHibInfo(entityType, field);
 		result.add(ppi);
 	    }
+	}
+	return result;
+    }
+
+    private List<PropertyPersistenceInfo> generatePPIsForCompositeTypeProps(final List<PropertyPersistenceInfo> ppis) {
+	final List<PropertyPersistenceInfo> result = new ArrayList<PropertyPersistenceInfo>();
+	for (final PropertyPersistenceInfo ppi : ppis) {
+	    result.addAll(ppi.getCompositeTypeSubprops());
 	}
 	return result;
     }

@@ -10,10 +10,10 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
 
-    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues, final TokenCategory cat, final Object value) {
-	super(parent, dbVersion, paramValues);
+    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final TokenCategory cat, final Object value) {
+	super(parent, queryBuilder, paramValues);
 	getTokens().add(new Pair<TokenCategory, Object>(cat, value));
-	setChild(new QrySourceBuilder(this, dbVersion, paramValues));
+	setChild(new QrySourceBuilder(this, queryBuilder, paramValues));
     }
 
     @Override
@@ -21,7 +21,7 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
 	switch (cat) {
 	case ON: //eats token
 	    finaliseChild();
-	    setChild(new ConditionsBuilder(this, getDbVersion(), getParamValues()));
+	    setChild(new ConditionsBuilder(this, getQueryBuilder(), getParamValues()));
 	    break;
 	default:
 	    super.add(cat, value);

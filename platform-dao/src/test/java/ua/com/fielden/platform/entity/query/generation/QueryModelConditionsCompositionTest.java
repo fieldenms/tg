@@ -254,11 +254,11 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryComposition
 	final ConditionsModel condition2 = new ConditionsModel(new ComparisonTestModel(prop("v"), _eq, prop("wo2.vehicle")), new ArrayList<CompoundConditionModel>());
 
 	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
-	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(TgWorkOrder.class, "wo"), JoinType.IJ, condition1));
-	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(TgWorkOrder.class, "wo2"), JoinType.LJ, condition2));
+	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(TgWorkOrder.class, "wo", MAPPINGS_GENERATOR), JoinType.IJ, condition1));
+	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(TgWorkOrder.class, "wo2", MAPPINGS_GENERATOR), JoinType.LJ, condition2));
 
 	final EntQuery act = entResultQry(qry);
-	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v"), others);
+	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v", MAPPINGS_GENERATOR), others);
 	assertEquals("models are different", exp, act.getSources());
 
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();

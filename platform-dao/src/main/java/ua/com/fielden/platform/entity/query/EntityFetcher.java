@@ -173,7 +173,7 @@ public class EntityFetcher<E extends AbstractEntity> {
 
     @SessionRequired
     protected List<EntityContainer<E>> listContainers(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-	final QueryModelResult modelResult = new ModelResultProducer().getModelResult(queryModel, dbVersion);
+	final QueryModelResult modelResult = new ModelResultProducer().getModelResult(queryModel, dbVersion, mappingsGenerator);
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
 	return entityEnhancer.enhance(session/*TMP*/, result, entityEnhancer.enhanceFetchModelWithKeyProperties(queryModel.getFetchModel(), modelResult.getResultType()), modelResult.getResultType());
     }

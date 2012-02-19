@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 
+import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -13,27 +14,34 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
     private final Class<? extends AbstractEntity> entityType;
     private final boolean generated;
 
-    public EntQuerySourceFromEntityType(final Class<? extends AbstractEntity> entityType, final String alias) {
-    	this(entityType, alias, false);
+    public EntQuerySourceFromEntityType(final Class<? extends AbstractEntity> entityType, final String alias, final MappingsGenerator mappingsGenerator) {
+    	this(entityType, alias, false, mappingsGenerator);
     }
 
-    public EntQuerySourceFromEntityType(final Class<? extends AbstractEntity> entityType, final String alias, final boolean generated) {
-	super(alias);
+    public EntQuerySourceFromEntityType(final Class<? extends AbstractEntity> entityType, final String alias, final boolean generated, final MappingsGenerator mappingsGenerator) {
+	super(alias, mappingsGenerator);
 	this.entityType = entityType;
 	this.generated = generated;
+
 	generateSourceItems();
     }
 
     private void generateSourceItems() {
-	// TODO need to replace with fully-functional logic from DdlGenerator (extracted there from MappingsGenerator)
-	for (final Field propField : EntityUtils.getPersistedProperties(entityType)) {
-	    if (propField.getName().equals("id") || propField.getName().equals("version")) {
-		sourceColumns.put(propField.getName(), "_" + propField.getName());
-	    } else {
-		sourceColumns.put(propField.getName(), propField.getName() + "_");
-	    }
+	for (final PropertyPersistenceInfo ppi : getMappingsGenerator().getEntityPPIs(sourceType())) {
+	    sourceColumns.put(ppi.getName(), ppi);
 	}
     }
+
+//    private void generateSourceItems() {
+//	// TODO need to replace with fully-functional logic from DdlGenerator (extracted there from MappingsGenerator)
+//	for (final Field propField : EntityUtils.getPersistedProperties(entityType)) {
+//	    if (propField.getName().equals("id") || propField.getName().equals("version")) {
+//		sourceColumns.put(propField.getName(), "_" + propField.getName());
+//	    } else {
+//		sourceColumns.put(propField.getName(), propField.getName() + "_");
+//	    }
+//	}
+//    }
 
     @Override
     public boolean generated() {

@@ -6,8 +6,8 @@ import ua.com.fielden.platform.entity.query.generation.elements.YearOfModel;
 
 public class YearOfBuilder extends AbstractFunctionBuilder {
 
-    protected YearOfBuilder(final AbstractTokensBuilder parent, final DbVersion dbVersion, final Map<String, Object> paramValues) {
-	super(parent, dbVersion, paramValues);
+    protected YearOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+	super(parent, queryBuilder, paramValues);
     }
 
     @Override

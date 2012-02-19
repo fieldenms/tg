@@ -6,6 +6,8 @@ import java.util.List;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgModelCount;
+import ua.com.fielden.platform.sample.domain.TgModelYearCount;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
@@ -43,5 +45,7 @@ public class PlatformTestDomainTypes {
 	    add(TgOrgUnit5.class);
 	    add(TgWorkOrder.class);
 	    add(TgFuelUsage.class);
+	    add(TgModelCount.class);
+	    add(TgModelYearCount.class);
     }
 }
