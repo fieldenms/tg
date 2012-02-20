@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.expression.ast.visitor;
 
+import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
-import ua.com.fielden.platform.expression.ast.IAstVisitor;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 
 /**
@@ -11,7 +11,7 @@ import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
  * @author TG Team
  *
  */
-public class ExpressionToStringVisitor implements IAstVisitor {
+public class ExpressionToStringVisitor extends AbstractAstVisitor {
 
     private final StringBuilder expressionForm = new StringBuilder();
 

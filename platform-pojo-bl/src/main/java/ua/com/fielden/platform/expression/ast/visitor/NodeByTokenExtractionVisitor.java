@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.expression.EgTokenCategory;
+import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
-import ua.com.fielden.platform.expression.ast.IAstVisitor;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 
 /**
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
  * @author TG Team
  *
  */
-public class NodeByTokenExtractionVisitor implements IAstVisitor {
+public class NodeByTokenExtractionVisitor extends AbstractAstVisitor {
 
     private final List<AstNode> nodes = new ArrayList<AstNode>();
     private final EgTokenCategory category;

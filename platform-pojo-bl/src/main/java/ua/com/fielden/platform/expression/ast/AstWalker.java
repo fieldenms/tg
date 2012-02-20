@@ -33,7 +33,9 @@ public class AstWalker {
     public AstNode walk() throws SemanticException {
 	for (final IAstVisitor visitor : visitors) {
 	    visitTree(root, visitor);
+	    visitor.postVisit(root);
 	}
+
 	return root;
     }
 

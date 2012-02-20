@@ -10,8 +10,8 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.expression.EgTokenCategory;
+import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
-import ua.com.fielden.platform.expression.ast.IAstVisitor;
 import ua.com.fielden.platform.expression.exception.semantic.CouldNotDetermineTypeException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
@@ -31,7 +31,7 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  *
  */
-public class TypeEnforcementVisitor implements IAstVisitor {
+public class TypeEnforcementVisitor extends AbstractAstVisitor {
 
     private final Class<? extends AbstractEntity> context;
 

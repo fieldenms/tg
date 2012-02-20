@@ -16,4 +16,12 @@ public interface IAstVisitor {
      * @param node
      */
     void visit(final AstNode node) throws SemanticException;
+
+    /**
+     * This is a convenient method to implemented visitor specific post visitation logic.
+     *
+     * @param rootNode
+     * @throws SemanticException
+     */
+    void postVisit(final AstNode rootNode)  throws SemanticException;
 }

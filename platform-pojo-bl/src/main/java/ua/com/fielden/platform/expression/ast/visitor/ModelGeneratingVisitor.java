@@ -8,8 +8,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.EgTokenCategory;
+import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
-import ua.com.fielden.platform.expression.ast.IAstVisitor;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
 
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityEx
  * @author TG Team
  *
  */
-public class ModelGeneratingVisitor implements IAstVisitor {
+public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
     @Override
     public final void visit(final AstNode node) throws SemanticException {

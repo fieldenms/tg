@@ -7,8 +7,8 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.expression.EgTokenCategory;
+import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
-import ua.com.fielden.platform.expression.ast.IAstVisitor;
 import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperandException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
@@ -38,10 +38,11 @@ import ua.com.fielden.platform.reflection.Reflector;
  * @author TG Team
  *
  */
-public class LevelAllocatingVisitor implements IAstVisitor {
+public class LevelAllocatingVisitor extends AbstractAstVisitor {
 
     private final Class<? extends AbstractEntity> higherOrderType;
     private final String contextProperty;
+    private final int contextLevel;
 
     /**
      * The <code>higherOrderType</code> argument should represent a top level type for which all referenced by the AST nodes properties should be its properties or subproperties.
@@ -54,6 +55,7 @@ public class LevelAllocatingVisitor implements IAstVisitor {
     public LevelAllocatingVisitor(final Class<? extends AbstractEntity> higherOrderType, final String contextProperty) {
 	this.higherOrderType = higherOrderType;
 	this.contextProperty = contextProperty;
+	contextLevel = StringUtils.isEmpty(contextProperty) ? 1 : determineContextLevel(contextProperty);
     }
 
     /**
@@ -63,6 +65,14 @@ public class LevelAllocatingVisitor implements IAstVisitor {
      */
     public LevelAllocatingVisitor(final Class<? extends AbstractEntity> higherOrderType) {
 	this(higherOrderType,  null);
+    }
+
+    @Override
+    public void postVisit(final AstNode rootNode) throws SemanticException {
+        super.postVisit(rootNode);
+        if (rootNode.getLevel() != null && contextLevel < rootNode.getLevel()) {
+            throw new IncompatibleOperandException("Resultant expression level is incompatible with the context.", rootNode.getToken());
+        }
     }
 
     @Override
@@ -113,7 +123,14 @@ public class LevelAllocatingVisitor implements IAstVisitor {
      * @return
      */
     public final Integer determineLevelForProperty(final String text) {
-	final String[] parts = relative2Absolute(text).split(Reflector.DOT_SPLITTER);
+	return determineLevel(relative2Absolute(text).split(Reflector.DOT_SPLITTER));
+    }
+
+    private final Integer determineContextLevel(final String text) {
+	return determineLevel(text.split(Reflector.DOT_SPLITTER));
+    }
+
+    private int determineLevel(final String[] parts) {
 	int level = 1;
 	String property = "";
 	for (int index = 0; index < parts.length; index++) {
@@ -126,6 +143,7 @@ public class LevelAllocatingVisitor implements IAstVisitor {
 	}
 	return level;
     }
+
 
     private String relative2Absolute(final String property) {
 	return StringUtils.isEmpty(contextProperty) ? property : Reflector.fromRelative2AbsotulePath(contextProperty, property);
@@ -144,8 +162,10 @@ public class LevelAllocatingVisitor implements IAstVisitor {
 	for (final AstNode child: node.getChildren()) {
 	    level = child.getLevel() != null && level == null ? child.getLevel() : level;
 
-	    if (child.getLevel() != null && level != null && !level.equals(child.getLevel())) {
-		throw new IncompatibleOperandException("Incompatible operand nesting level.", node.getToken());
+	    if (child.getLevel() != null && level != null && level != child.getLevel()) {
+		if (contextLevel < level || contextLevel < child.getLevel()) {
+		    throw new IncompatibleOperandException("Incompatible operand nesting level.", node.getToken());
+		}
 	    }
 	}
 	return level;
@@ -163,8 +183,4 @@ public class LevelAllocatingVisitor implements IAstVisitor {
 	return level != null ? level - 1 : null;
     }
 
-
-    public static void main(final String[] args) {
-	System.out.println('\u2190');
-    }
 }

@@ -7,8 +7,8 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.expression.EgTokenCategory;
+import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
-import ua.com.fielden.platform.expression.ast.IAstVisitor;
 import ua.com.fielden.platform.expression.exception.semantic.InvalidPropertyException;
 import ua.com.fielden.platform.expression.exception.semantic.MissingPropertyException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
@@ -21,7 +21,7 @@ import ua.com.fielden.platform.reflection.Reflector;
  * @author TG Team
  *
  */
-public class EssentialPropertyValidationVisitor implements IAstVisitor {
+public class EssentialPropertyValidationVisitor extends AbstractAstVisitor {
 
 
     private final Class<? extends AbstractEntity> higherOrderType;

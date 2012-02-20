@@ -5,8 +5,8 @@ import java.util.Collection;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.expression.EgTokenCategory;
+import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
-import ua.com.fielden.platform.expression.ast.IAstVisitor;
 import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperandException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.reflection.Finder;
  * @author TG Team
  *
  */
-public class TaggingVisitor implements IAstVisitor {
+public class TaggingVisitor extends AbstractAstVisitor {
 
     public static final String ABOVE = "above";
     private static final String EMPTY = "";
