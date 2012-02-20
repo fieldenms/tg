@@ -5,8 +5,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
-import ua.com.fielden.platform.entity.query.QueryModelResult.ResultPropertyInfo;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
@@ -22,10 +22,14 @@ public class ModelResultProducer {
 	return new QueryModelResult(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
     }
 
-    private SortedSet<ResultPropertyInfo> getResultPropsInfos(final YieldsModel model) {
-	final SortedSet<ResultPropertyInfo> result = new TreeSet<ResultPropertyInfo>();
+    private SortedSet<PropertyPersistenceInfo> getResultPropsInfos(final YieldsModel model) {
+	final SortedSet<PropertyPersistenceInfo> result = new TreeSet<PropertyPersistenceInfo>();
 	for (final Map.Entry<String, YieldModel> yieldEntry : model.getYields().entrySet()) {
-	    result.add(new ResultPropertyInfo(yieldEntry.getKey(), yieldEntry.getValue().getInfo().getColumn(), yieldEntry.getValue().getInfo().getJavaType()));
+	    //result.add(new ResultPropertyInfo(yieldEntry.getKey(), yieldEntry.getValue().getInfo().getColumn(), yieldEntry.getValue().getInfo().getJavaType()));
+	    result.add(new PropertyPersistenceInfo.Builder(yieldEntry.getKey(), yieldEntry.getValue().getInfo().getJavaType()). //
+		    column(yieldEntry.getValue().getInfo().getColumn()). //
+		    hibType(yieldEntry.getValue().getInfo().getHibType()). //
+		    build());
 	}
 	return result;
     }

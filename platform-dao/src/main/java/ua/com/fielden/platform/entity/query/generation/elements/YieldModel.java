@@ -2,13 +2,9 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 
-
-
 public class YieldModel {
     private final ISingleOperand operand;
     private final String alias;
-//    private String sqlAlias;
-//    private Class type;
     private PropertyPersistenceInfo info;
 
     public YieldModel(final ISingleOperand operand, final String alias) {
@@ -17,29 +13,21 @@ public class YieldModel {
 	this.alias = alias;
     }
 
-//    public void assignSqlAlias(final String sqlAlias) {
-//	this.sqlAlias = sqlAlias;
-//    }
-//
-//    public void assignTypes(final Class type) {
-//	this.type = type;
-//    }
-
     @Override
     public String toString() {
-        return sql();
+	return sql();
     }
 
     public String sql() {
-	return operand.sql() + " AS " + info.getColumn() /*sqlAlias*/+ "/*" + alias + "*/";
+	return operand.sql() + " AS " + info.getColumn() + "/*" + alias + "*/";
     }
 
     public ISingleOperand getOperand() {
-        return operand;
+	return operand;
     }
 
     public String getAlias() {
-        return alias;
+	return alias;
     }
 
     @Override
@@ -80,19 +68,11 @@ public class YieldModel {
 	return true;
     }
 
-//    public String getSqlAlias() {
-//        return sqlAlias;
-//    }
-//
-//    public Class getType() {
-//        return type;
-//    }
-
     public PropertyPersistenceInfo getInfo() {
-        return info;
+	return info;
     }
 
     public void setInfo(final PropertyPersistenceInfo info) {
-        this.info = info;
+	this.info = info;
     }
 }

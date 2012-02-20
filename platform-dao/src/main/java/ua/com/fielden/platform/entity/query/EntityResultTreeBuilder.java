@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
-import ua.com.fielden.platform.entity.query.QueryModelResult.ResultPropertyInfo;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -20,17 +20,22 @@ final class EntityResultTreeBuilder {
     }
 
     /*DONE*/
-    protected EntityTree buildTree(final Class resultType, final Collection<ResultPropertyInfo> properties) throws Exception {
+    protected EntityTree buildTree(final Class resultType, final Collection<PropertyPersistenceInfo> properties) throws Exception {
 	final EntityTree result = new EntityTree(resultType);
 
-	final List<ResultPropertyInfo> singleProps = getFirstLevelSingleProps(properties);
-	final Map<String, Collection<ResultPropertyInfo>> compositeProps = getFirstLevelCompositeProps(properties);
+	final List<PropertyPersistenceInfo> singleProps = getFirstLevelSingleProps(properties);
+	final Map<String, Collection<PropertyPersistenceInfo>> compositeProps = getFirstLevelCompositeProps(properties);
 
-	for (final ResultPropertyInfo propInfo : singleProps) {
-	    result.getSingles().put(new PropColumn(propInfo.getName(), propInfo.getSqlAlias(), mappingsGenerator.determinePropertyHibType(resultType, propInfo.getName()), mappingsGenerator.determinePropertyHibUserType(resultType, propInfo.getName())), index.getNext());
+	for (final PropertyPersistenceInfo propInfo : singleProps) {
+	    result.getSingles().put(new PropertyPersistenceInfo.Builder(propInfo.getName(), propInfo.getJavaType()). //
+		    column(propInfo.getColumn()). //
+		    hibType(mappingsGenerator.determinePropertyHibType(resultType, propInfo.getName()) != null ? mappingsGenerator.determinePropertyHibType(resultType, propInfo.getName()) :
+			(mappingsGenerator.determinePropertyHibUserType(resultType, propInfo.getName()) != null ? mappingsGenerator.determinePropertyHibUserType(resultType, propInfo.getName()) : null)).
+		    build(), index.getNext());
+	    //result.getSingles().put(new PropColumn(propInfo.getName(), propInfo.getColumn()/*getSqlAlias()*/, mappingsGenerator.determinePropertyHibType(resultType, propInfo.getName()), mappingsGenerator.determinePropertyHibUserType(resultType, propInfo.getName())), index.getNext());
 	}
 
-	for (final Map.Entry<String, Collection<ResultPropertyInfo>> propEntry : compositeProps.entrySet()) {
+	for (final Map.Entry<String, Collection<PropertyPersistenceInfo>> propEntry : compositeProps.entrySet()) {
 	    final String subtreePropName = propEntry.getKey();
 	    final Class subtreeType = determinePropertyType(resultType, subtreePropName);
 	    final Class subtreeHibType = mappingsGenerator.determinePropertyHibCompositeUserType(resultType, subtreePropName);
@@ -47,11 +52,11 @@ final class EntityResultTreeBuilder {
      * @param allProps
      * @return
      */
-    private List<ResultPropertyInfo> getFirstLevelSingleProps(final Collection<ResultPropertyInfo> allProps) {
-	final List<ResultPropertyInfo> result = new ArrayList<ResultPropertyInfo>();
+    private List<PropertyPersistenceInfo> getFirstLevelSingleProps(final Collection<PropertyPersistenceInfo> allProps) {
+	final List<PropertyPersistenceInfo> result = new ArrayList<PropertyPersistenceInfo>();
 
-	for (final ResultPropertyInfo prop : allProps) {
-	    if ((prop.getType() == null || !EntityUtils.isPersistedEntityType(prop.getType())) && !prop.getName().contains(".")) {
+	for (final PropertyPersistenceInfo prop : allProps) {
+	    if ((prop.getType() == null || !EntityUtils.isPersistedEntityType(prop.getJavaType())) && !prop.getName().contains(".")) {
 		result.add(prop);
 	    }
 	}
@@ -60,20 +65,26 @@ final class EntityResultTreeBuilder {
     }
 
     /*DONE*/
-    private Map<String, Collection<ResultPropertyInfo>> getFirstLevelCompositeProps(final Collection<ResultPropertyInfo> allProps) {
-	final Map<String, Collection<ResultPropertyInfo>> result = new HashMap<String, Collection<ResultPropertyInfo>>();
+    private Map<String, Collection<PropertyPersistenceInfo>> getFirstLevelCompositeProps(final Collection<PropertyPersistenceInfo> allProps) {
+	final Map<String, Collection<PropertyPersistenceInfo>> result = new HashMap<String, Collection<PropertyPersistenceInfo>>();
 
-	for (final ResultPropertyInfo prop : allProps) {
+	for (final PropertyPersistenceInfo prop : allProps) {
 	    if (prop.getName().contains(".")) {
 		final int firstDotIndex = prop.getName().indexOf(".");
 		final String group = prop.getName().substring(0, firstDotIndex);
 		if (!result.containsKey(group)) {
-		    result.put(group, new ArrayList<ResultPropertyInfo>());
+		    result.put(group, new ArrayList<PropertyPersistenceInfo>());
 		}
-		result.get(group).add(new ResultPropertyInfo(prop.getName().substring(firstDotIndex + 1), prop.getSqlAlias(), prop.getType()));
-	    } else if (prop.getType() != null && EntityUtils.isPersistedEntityType(prop.getType())) {
-		final List<ResultPropertyInfo> subprops = new ArrayList<ResultPropertyInfo>();
-		subprops.add(new ResultPropertyInfo("id", prop.getSqlAlias(), Long.class));
+		result.get(group).add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType()). //
+			column(prop.getColumn()). //
+			hibType(prop.getHibType()). //
+			build());
+	    } else if (prop.getType() != null && EntityUtils.isPersistedEntityType(prop.getJavaType())) {
+		final List<PropertyPersistenceInfo> subprops = new ArrayList<PropertyPersistenceInfo>();
+		subprops.add(new PropertyPersistenceInfo.Builder("id", Long.class). //
+			column(prop.getColumn()). //
+			hibType(prop.getHibType()). //
+			build());
 		result.put(prop.getName(), subprops);
 	    }
 	}

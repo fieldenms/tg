@@ -47,14 +47,14 @@ public class EntQuery implements ISingleOperand {
     // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
 
     /**
-     * modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for unresolved only;
-     * if at some master the property of this subquery is resolved - it should be removed from here
+     * modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for
+     * unresolved only; if at some master the property of this subquery is resolved - it should be removed from here
      */
     private final List<EntProp> unresolvedProps;
 
     @Override
     public String toString() {
-        return sql();
+	return sql();
     }
 
     public String sql() {
@@ -70,7 +70,7 @@ public class EntQuery implements ISingleOperand {
 	}
 	sb.append(groups.sql());
 	sb.append(isSubQuery() ? ")" : "");
-        return sb.toString();
+	return sb.toString();
     }
 
     private int getMasterIndex() {
@@ -121,17 +121,20 @@ public class EntQuery implements ISingleOperand {
     }
 
     private void assignPropertyPersistenceInfoToYields() {
-		int yieldIndex = 0;
-		for (final YieldModel yield : yields.getYields().values()) {
-		    yieldIndex = yieldIndex + 1;
-		    final PropertyPersistenceInfo ppi = new PropertyPersistenceInfo.Builder(yield.getAlias(), determineYieldJavaType(yield)).column("C" + yieldIndex).build();
-		    yield.setInfo(ppi);
-		}
+	int yieldIndex = 0;
+	for (final YieldModel yield : yields.getYields().values()) {
+	    yieldIndex = yieldIndex + 1;
+	    final PropertyPersistenceInfo ppi = new PropertyPersistenceInfo.Builder(yield.getAlias(), determineYieldJavaType(yield)). //
+	    column("C" + yieldIndex). //
+	    hibType(determineYieldHibType(yield)). //
+	    build();
+	    yield.setInfo(ppi);
+	}
     }
 
     private Object determineYieldHibType(final YieldModel yield) {
 	if (EntityUtils.isPersistedEntityType(type())) {
-	    return null;//mappingsGenerator.ge
+	    return null;//mappingsGenerator.getInfoForProp(type(), yield.getAlias()).getHibType();
 	} else {
 	    //TODO implement
 	    return null;//yield.getOperand().type();
@@ -141,43 +144,22 @@ public class EntQuery implements ISingleOperand {
 
     private Class determineYieldJavaType(final YieldModel yield) {
 	if (EntityUtils.isPersistedEntityType(type())) {
-		final Class yieldTypeAccordingToQuerySources = yield.getOperand().type();
-		final Class yieldTypeAccordingToQueryResultType = PropertyTypeDeterminator.determinePropertyType(type(), yield.getAlias());
+	    final Class yieldTypeAccordingToQuerySources = yield.getOperand().type();
+	    final Class yieldTypeAccordingToQueryResultType = PropertyTypeDeterminator.determinePropertyType(type(), yield.getAlias());
 
-		if (yieldTypeAccordingToQuerySources != null && !yieldTypeAccordingToQuerySources.equals(yieldTypeAccordingToQueryResultType)) {
-		    if (!(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQuerySources) && Long.class.equals(yieldTypeAccordingToQueryResultType))) {
-			throw new IllegalStateException("Different types: from source = " + yieldTypeAccordingToQuerySources.getSimpleName() + " from result type = " + yieldTypeAccordingToQueryResultType.getSimpleName());
-		    }
-		    return yieldTypeAccordingToQueryResultType;
-		} else {
-		    return yieldTypeAccordingToQueryResultType;
+	    if (yieldTypeAccordingToQuerySources != null && !yieldTypeAccordingToQuerySources.equals(yieldTypeAccordingToQueryResultType)) {
+		if (!(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQuerySources) && Long.class.equals(yieldTypeAccordingToQueryResultType))) {
+		    throw new IllegalStateException("Different types: from source = " + yieldTypeAccordingToQuerySources.getSimpleName() + " from result type = "
+			    + yieldTypeAccordingToQueryResultType.getSimpleName());
 		}
+		return yieldTypeAccordingToQueryResultType;
+	    } else {
+		return yieldTypeAccordingToQueryResultType;
+	    }
 	} else {
 	    return yield.getOperand().type();
 	}
     }
-
-
-//    private void assignTypesToYields() {
-//	if (EntityUtils.isPersistedEntityType(type())) {
-//	    for (final YieldModel yield : yields.getYields().values()) {
-//		final Class yieldTypeAccordingToQuerySources = yield.getOperand().type();
-//		final Class yieldTypeAccordingToQueryResultType = PropertyTypeDeterminator.determinePropertyType(type(), yield.getAlias());
-//
-//		if (yieldTypeAccordingToQuerySources != null && !yieldTypeAccordingToQuerySources.equals(yieldTypeAccordingToQueryResultType)) {
-//		    if (!(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQuerySources) && Long.class.equals(yieldTypeAccordingToQueryResultType))) {
-//			throw new IllegalStateException("Different types: from source = " + yieldTypeAccordingToQuerySources.getSimpleName() + " from result type = " + yieldTypeAccordingToQueryResultType.getSimpleName());
-//		    }
-//		} else {
-//		    yield.assignTypes(yieldTypeAccordingToQueryResultType);
-//		}
-//	    }
-//	} else {
-//	    for (final YieldModel yield : yields.getYields().values()) {
-//		yield.assignTypes(yield.getOperand().type());
-//	    }
-//	}
-//    }
 
     private void assignSqlParamNames() {
 	int paramCount = 0;
@@ -244,8 +226,6 @@ public class EntQuery implements ISingleOperand {
 	}
 
 	assignPropertyPersistenceInfoToYields();
-//	assignTypesToYields();
-//	yields.assignSqlAliases();
 
 	assignSqlParamNames();
     }

@@ -15,6 +15,7 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -117,8 +118,8 @@ public class EntityFetcher<E extends AbstractEntity> {
     protected List<Pair<String, Type>> getScalarInfo(final EntityTree tree) {
 	final List<Pair<String, Type>> result = new ArrayList<Pair<String, Type>>();
 
-	for (final Map.Entry<PropColumn, Integer> single : tree.getSingles().entrySet()) {
-	    result.add(new Pair<String, Type>(single.getKey().getSqlAlias(), single.getKey().getHibType()));
+	for (final Map.Entry<PropertyPersistenceInfo, Integer> single : tree.getSingles().entrySet()) {
+	    result.add(new Pair<String, Type>(single.getKey().getColumn(), single.getKey().getHibTypeAsType()));
 	}
 
 	for (final Map.Entry<String, EntityTree> composite : tree.getComposites().entrySet()) {

@@ -6,9 +6,9 @@ import java.util.Map;
 
 import org.hibernate.type.Type;
 
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 
 public class EntityRawResultConverter<E extends AbstractEntity> {
     private EntityFactory entityFactory;
@@ -49,8 +49,8 @@ public class EntityRawResultConverter<E extends AbstractEntity> {
 
 	final EntityContainer<E> entCont = new EntityContainer<E>(resultTree.getResultType(), shouldBeFetched);
 
-	for (final Map.Entry<PropColumn, Integer> primEntry : resultTree.getSingles().entrySet()) {
-	    entCont.primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibType(), primEntry.getKey().getHibUserType()));
+	for (final Map.Entry<PropertyPersistenceInfo, Integer> primEntry : resultTree.getSingles().entrySet()) {
+	    entCont.primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsType(), primEntry.getKey().getHibTypeAsUserType()));
 	}
 
 	for (final Map.Entry<String, EntityTree> entityEntry : resultTree.getComposites().entrySet()) {

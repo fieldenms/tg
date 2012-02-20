@@ -3,11 +3,14 @@ package ua.com.fielden.platform.dao;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.hibernate.type.Type;
@@ -51,7 +54,15 @@ public class MappingsGenerator {
     private final DdlGenerator ddlGenerator = new DdlGenerator();
 
     private Map<Class, SortedSet<PropertyPersistenceInfo>> hibTypeInfos = new HashMap<Class, SortedSet<PropertyPersistenceInfo>>();
+    /**
+     * Just for convenience of search.
+     */
+    private Map<Class, SortedMap<String, PropertyPersistenceInfo>> hibTypeInfosMap = new HashMap<Class, SortedMap<String, PropertyPersistenceInfo>>();
     final List<Class<? extends AbstractEntity>> entityTypes;
+
+    public PropertyPersistenceInfo getInfoForProp(final Class entityType, final String propName) {
+	return hibTypeInfosMap.get(entityType).get(propName);
+    }
 
     public MappingsGenerator(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity>> entityTypes) {
 	if (hibTypesDefaults != null) {
@@ -66,10 +77,19 @@ public class MappingsGenerator {
 		result.addAll(ppis);
 		result.addAll(generatePPIsForCompositeTypeProps(ppis));
 		hibTypeInfos.put(entityType, result);
+		hibTypeInfosMap.put(entityType, getMap(result));
 	    } catch (final Exception e) {
 		e.printStackTrace();
 	    }
 	}
+    }
+
+    private SortedMap<String, PropertyPersistenceInfo> getMap(final Collection<PropertyPersistenceInfo> collection) {
+	final SortedMap<String, PropertyPersistenceInfo> result = new TreeMap<String, PropertyPersistenceInfo>();
+	for (final PropertyPersistenceInfo propertyPersistenceInfo : collection) {
+	    result.put(propertyPersistenceInfo.getName(), propertyPersistenceInfo);
+	}
+	return result;
     }
 
     public SortedSet<PropertyPersistenceInfo> getEntityPPIs(final Class entityType) {
@@ -189,8 +209,16 @@ public class MappingsGenerator {
     private String getClassMapping(final Class entityType) throws Exception {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + ddlGenerator.getTableClause(entityType) + "\">\n");
-	for (final PropertyPersistenceInfo ppi : hibTypeInfos.get(entityType)) {
-	    if (!ppi.getType().equals(PropertyPersistenceType.COMPOSITE_DETAILS)) {
+
+	final Map<String, PropertyPersistenceInfo> map = hibTypeInfosMap.get(entityType);
+	sb.append(getCommonPropMappingString(map.get("id")));
+	sb.append(getCommonPropMappingString(map.get("version")));
+	if (map.get("key") != null) {
+	    sb.append(getCommonPropMappingString(map.get("key")));
+	}
+
+	for (final PropertyPersistenceInfo ppi : map.values()) {
+	    if (!ppi.getType().equals(PropertyPersistenceType.COMPOSITE_DETAILS) && !specialProps.contains(ppi.getName())) {
 		sb.append(getCommonPropMappingString(ppi));
 	    }
 	}
