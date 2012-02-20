@@ -14,6 +14,7 @@ import ua.com.fielden.platform.expression.ast.AstWalker;
 import ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1;
 import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
+import ua.com.fielden.platform.expression.exception.semantic.InvalidPropertyException;
 import ua.com.fielden.platform.expression.exception.semantic.MissingPropertyException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 
@@ -48,11 +49,40 @@ public class EssentialPropertyValidationVisitorTest {
     }
 
     @Test
+    public void test_missing_property_in_expression_with_first_level_property_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("1 * (2 + ←.strProperty)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final EssentialPropertyValidationVisitor visitor = new EssentialPropertyValidationVisitor(EntityLevel1.class, "entityProperty");
+	final NodeByTokenExtractionVisitor extractor = new NodeByTokenExtractionVisitor(EgTokenCategory.NAME);
+	try {
+	    new AstWalker(ast, visitor, extractor).walk();
+	} catch (final Exception ex) {
+	    fail("There should have been no exceptions during AST walking.");
+	}
+	assertEquals("Incorrect number of property nodes", 1, extractor.getNodes().size());
+    }
+
+    @Test
     public void test_missing_property_in_expression_with_mistyped_first_level_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("1 * (2 + strPropert)").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 	final EssentialPropertyValidationVisitor visitor = new EssentialPropertyValidationVisitor(EntityLevel1.class);
+	try {
+	    new AstWalker(ast, visitor).walk();
+	    fail("There should have been no exceptions during AST walking.");
+	} catch (final MissingPropertyException ex) {
+	    assertEquals("Incorrect error message.", "Could not find property strPropert", ex.getMessage());
+	}
+    }
+
+    @Test
+    public void test_missing_property_in_expression_with_mistyped_first_level_property_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("1 * (2 + ←.strPropert)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final EssentialPropertyValidationVisitor visitor = new EssentialPropertyValidationVisitor(EntityLevel1.class, "entityProperty");
 	try {
 	    new AstWalker(ast, visitor).walk();
 	    fail("There should have been no exceptions during AST walking.");
@@ -90,6 +120,20 @@ public class EssentialPropertyValidationVisitorTest {
 	    fail("There should have been no exceptions during AST walking.");
 	} catch (final MissingPropertyException ex) {
 	    assertEquals("Incorrect error message.", "Could not find property selfProperty.selfProperty.entityProperty.itProperty", ex.getMessage());
+	}
+    }
+
+    @Test
+    public void calculated_properties_should_not_be_permitted_as_part_of_expressions_at_this_stage() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("←.entityProperty.intProperty * (2 + ←.strProperty) / selfProperty.entityProperty.intProperty * ←.calcuatedProperty").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final EssentialPropertyValidationVisitor visitor = new EssentialPropertyValidationVisitor(EntityLevel1.class, "selfProperty");
+	try {
+	    new AstWalker(ast, visitor).walk();
+	    fail("There should have been an exception during AST walking.");
+	} catch (final InvalidPropertyException ex) {
+	    assertEquals("Incorrect error message.", "Calculated properties cannot be used as part of expressions at this stage. Property calcuatedProperty is calculated.", ex.getMessage());
 	}
     }
 

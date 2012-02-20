@@ -17,7 +17,7 @@ import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperandException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 
-public class LevelAllocatingVisitorIntegralVisitationTest {
+public class LevelAllocatingVisitorIntegratedTest {
 
     @Test
     public void test_expression_level_calc_with_level_compatible_nodes_case_1() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
@@ -54,6 +54,18 @@ public class LevelAllocatingVisitorIntegralVisitationTest {
     }
 
     @Test
+    public void test_expression_level_calc_with_level_compatible_nodes_case_3_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("(2 + ←.entityProperty.intProperty) / (3 - entityProperty.intProperty)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty");
+
+	new AstWalker(ast, visitor).walk();
+
+	assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+    }
+
+    @Test
     public void test_expression_level_calc_with_level_compatible_nodes_case_4() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("AVG((2 + entityProperty.intProperty) / (3 - selfProperty.entityProperty.intProperty))").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
@@ -77,6 +89,20 @@ public class LevelAllocatingVisitorIntegralVisitationTest {
 	assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
     }
 
+
+    @Test
+    public void test_expression_level_calc_with_level_compatible_nodes_case_5_within_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("AVG(selfProperty.collectional.intProperty) / entityProperty.intProperty").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty");
+
+	new AstWalker(ast, visitor).walk();
+
+	assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+    }
+
+
     @Test
     public void test_expression_level_calc_with_level_compatible_nodes_case_6() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("AVG(selfProperty.selfProperty.collectional.intProperty) + SUM(selfProperty.selfProperty.collectional.intProperty)").tokenize();
@@ -88,6 +114,19 @@ public class LevelAllocatingVisitorIntegralVisitationTest {
 
 	assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
     }
+
+    @Test
+    public void test_expression_level_calc_with_level_compatible_nodes_case_6_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("AVG(←.←.collectional.intProperty) + SUM(collectional.intProperty)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty.selfProperty");
+
+	new AstWalker(ast, visitor).walk();
+
+	assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+    }
+
 
     @Test
     public void test_expression_level_calc_with_level_compatible_nodes_case_7() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
@@ -129,11 +168,40 @@ public class LevelAllocatingVisitorIntegralVisitationTest {
     }
 
     @Test
+    public void test_expression_level_calc_with_level_incompatible_nodes_case_1_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("←.←.collectional.intProperty + collectional.intProperty / ←.entityProperty.intProperty").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty.selfProperty");
+	try {
+	    new AstWalker(ast, visitor).walk();
+	    fail("Exception expected.");
+	} catch (final IncompatibleOperandException ex) {
+	    assertEquals("Incorrect message", "Incompatible operand nesting level.", ex.getMessage());
+	}
+    }
+
+    @Test
     public void test_expression_level_calc_with_level_incompatible_nodes_case_2() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("AVG(selfProperty.selfProperty.collectional.intProperty) + SUM(selfProperty.entityProperty.intProperty)").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class);
+
+	try {
+	    new AstWalker(ast, visitor).walk();
+	    fail("Exception expected.");
+	} catch (final IncompatibleOperandException ex) {
+	    assertEquals("Incorrect message", "Incompatible operand nesting level.", ex.getMessage());
+	}
+    }
+
+    @Test
+    public void test_expression_level_calc_with_level_incompatible_nodes_case_2_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("AVG(←.←.collectional.intProperty) + SUM(←.entityProperty.intProperty)").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty.selfProperty");
 
 	try {
 	    new AstWalker(ast, visitor).walk();

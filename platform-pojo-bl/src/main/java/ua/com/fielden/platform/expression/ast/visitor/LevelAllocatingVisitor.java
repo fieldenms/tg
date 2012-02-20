@@ -3,6 +3,8 @@ package ua.com.fielden.platform.expression.ast.visitor;
 import java.lang.reflect.Field;
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.expression.EgTokenCategory;
 import ua.com.fielden.platform.expression.ast.AstNode;
@@ -11,6 +13,7 @@ import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperand
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
 
 /**
  * Allocates expression level to each visited AST node. Some nodes such as literal representing nodes are level agnostic and thus have value of level equal <code>null</code>.
@@ -110,7 +113,7 @@ public class LevelAllocatingVisitor implements IAstVisitor {
      * @return
      */
     public final Integer determineLevelForProperty(final String text) {
-	final String[] parts = text.split("\\.");
+	final String[] parts = relative2Absolute(text).split(Reflector.DOT_SPLITTER);
 	int level = 1;
 	String property = "";
 	for (int index = 0; index < parts.length; index++) {
@@ -124,6 +127,10 @@ public class LevelAllocatingVisitor implements IAstVisitor {
 	return level;
     }
 
+    private String relative2Absolute(final String property) {
+	return StringUtils.isEmpty(contextProperty) ? property : Reflector.fromRelative2AbsotulePath(contextProperty, property);
+    }
+
     /**
      * Iterates over node's children in order to find the first one with level value assigned.
      * Compares the found value with levels of the rest of children to ensure that they're equal or level agnostic.
@@ -135,9 +142,7 @@ public class LevelAllocatingVisitor implements IAstVisitor {
     public final Integer determineLevelBasedOnOperands(final AstNode node) throws SemanticException {
 	Integer level = null;
 	for (final AstNode child: node.getChildren()) {
-	    if (child.getLevel() != null && level == null) {
-		level = child.getLevel();
-	    }
+	    level = child.getLevel() != null && level == null ? child.getLevel() : level;
 
 	    if (child.getLevel() != null && level != null && !level.equals(child.getLevel())) {
 		throw new IncompatibleOperandException("Incompatible operand nesting level.", node.getToken());

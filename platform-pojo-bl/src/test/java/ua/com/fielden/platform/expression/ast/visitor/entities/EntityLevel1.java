@@ -4,7 +4,10 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -12,6 +15,10 @@ import ua.com.fielden.platform.types.Money;
 
 @KeyType(String.class)
 public class EntityLevel1 extends AbstractEntity<String> {
+
+    @IsProperty
+    @Calculated(contextualExpression = "", contextPath = "", attribute = ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR, origination = "", category = CalculatedPropertyCategory.EXPRESSION)
+    private Money calcuatedProperty;
 
     @IsProperty
     private String strProperty;
@@ -99,5 +106,13 @@ public class EntityLevel1 extends AbstractEntity<String> {
     @Observable
     public void setDateProperty(final Date dateProperty) {
         this.dateProperty = dateProperty;
+    }
+
+    public Money getCalcuatedProperty() {
+        return calcuatedProperty;
+    }
+    @Observable
+    public void setCalcuatedProperty(final Money calcuatedProperty) {
+        this.calcuatedProperty = calcuatedProperty;
     }
 }
