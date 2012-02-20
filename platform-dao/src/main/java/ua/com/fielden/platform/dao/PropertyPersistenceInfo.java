@@ -2,7 +2,9 @@ package ua.com.fielden.platform.dao;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.type.Type;
 
@@ -65,8 +67,8 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	return name.compareTo(o.name);
     }
 
-    public List<PropertyPersistenceInfo> getCompositeTypeSubprops() {
-	final List<PropertyPersistenceInfo> result = new ArrayList<PropertyPersistenceInfo>();
+    public Set<PropertyPersistenceInfo> getCompositeTypeSubprops() {
+	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
 	if (hibType instanceof ICompositeUserTypeInstantiate) {
 	    final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
 	    final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());

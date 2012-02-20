@@ -5,13 +5,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
@@ -53,7 +52,6 @@ public class MappingsGenerator {
     private Injector hibTypesInjector;
     private final DdlGenerator ddlGenerator = new DdlGenerator();
 
-    private Map<Class, SortedSet<PropertyPersistenceInfo>> hibTypeInfos = new HashMap<Class, SortedSet<PropertyPersistenceInfo>>();
     /**
      * Just for convenience of search.
      */
@@ -72,11 +70,10 @@ public class MappingsGenerator {
 	this.entityTypes = entityTypes;
 	for (final Class<? extends AbstractEntity> entityType : entityTypes) {
 	    try {
-		final SortedSet<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
-		final SortedSet<PropertyPersistenceInfo> result = new TreeSet<PropertyPersistenceInfo>();
+		final Set<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
+		final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
 		result.addAll(ppis);
 		result.addAll(generatePPIsForCompositeTypeProps(ppis));
-		hibTypeInfos.put(entityType, result);
 		hibTypeInfosMap.put(entityType, getMap(result));
 	    } catch (final Exception e) {
 		e.printStackTrace();
@@ -84,7 +81,7 @@ public class MappingsGenerator {
 	}
     }
 
-    private SortedMap<String, PropertyPersistenceInfo> getMap(final Collection<PropertyPersistenceInfo> collection) {
+    private SortedMap<String, PropertyPersistenceInfo> getMap(final Set<PropertyPersistenceInfo> collection) {
 	final SortedMap<String, PropertyPersistenceInfo> result = new TreeMap<String, PropertyPersistenceInfo>();
 	for (final PropertyPersistenceInfo propertyPersistenceInfo : collection) {
 	    result.put(propertyPersistenceInfo.getName(), propertyPersistenceInfo);
@@ -92,8 +89,8 @@ public class MappingsGenerator {
 	return result;
     }
 
-    public SortedSet<PropertyPersistenceInfo> getEntityPPIs(final Class entityType) {
-	return hibTypeInfos.get(entityType);
+    public Collection<PropertyPersistenceInfo> getEntityPPIs(final Class entityType) {
+	return hibTypeInfosMap.get(entityType).values();
     }
 
     public MappingsGenerator(final List<Class<? extends AbstractEntity>> entityTypes) {
@@ -232,12 +229,10 @@ public class MappingsGenerator {
      * @return
      * @throws Exception
      */
-    private SortedSet<PropertyPersistenceInfo> generateEntityPersistenceInfo(final Class entityType) throws Exception {
-	final SortedSet<PropertyPersistenceInfo> result = new TreeSet<PropertyPersistenceInfo>();
+    private Set<PropertyPersistenceInfo> generateEntityPersistenceInfo(final Class entityType) throws Exception {
+	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
 	result.add(new PropertyPersistenceInfo.Builder("id", Long.class).column(ddlGenerator.id).hibType(TypeFactory.basic("long")).type(isOneToOne(entityType) ? PropertyPersistenceType.ONE2ONE_ID : PropertyPersistenceType.ID).build());
-
 	result.add(new PropertyPersistenceInfo.Builder("version", Long.class).column(ddlGenerator.version).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.VERSION).build());
-
 
 	final String keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? getMapEntityTo(entityType).keyColumn() : ddlGenerator.key;
 	if (isOneToOne(entityType)) {
@@ -255,8 +250,8 @@ public class MappingsGenerator {
 	return result;
     }
 
-    private SortedSet<PropertyPersistenceInfo> generatePPIsForCompositeTypeProps(final SortedSet<PropertyPersistenceInfo> ppis) {
-	final TreeSet<PropertyPersistenceInfo> result = new TreeSet<PropertyPersistenceInfo>();
+    private Set<PropertyPersistenceInfo> generatePPIsForCompositeTypeProps(final Set<PropertyPersistenceInfo> ppis) {
+	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
 	for (final PropertyPersistenceInfo ppi : ppis) {
 	    result.addAll(ppi.getCompositeTypeSubprops());
 	}
