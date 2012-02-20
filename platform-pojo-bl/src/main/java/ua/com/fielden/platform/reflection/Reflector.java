@@ -274,21 +274,18 @@ public final class Reflector {
      * Converts a relative property path to an absolute path with respect to the provided context.
      *
      * @param context -- the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
-     * @param absolutePropertyPath -- relative property path, which may contain ←  and dots for separating individual properties.
+     * @param relativePropertyPath -- relative property path, which may contain ←  and dots for separating individual properties.
      * @return
      */
-    public static String fromRelative2AbsotulePath(final String context, final String absolutePropertyPath) {
-	if (!absolutePropertyPath.startsWith("←") && StringUtils.isEmpty(context)) {
-	    return absolutePropertyPath;
+    public static String fromRelative2AbsotulePath(final String context, final String relativePropertyPath) {
+	// if the relativePropertyPath path does not start with ← then it is absolute already
+	if (!relativePropertyPath.startsWith("←")) {
+	    return StringUtils.isEmpty(context) ? relativePropertyPath : context + "." + relativePropertyPath;
 	}
 
-	if (!absolutePropertyPath.startsWith("←")) {
-	    throw new IllegalArgumentException("The relative path is incorrect with respect to the provided context.");
-	}
-
-	final int endOfLevelUp = absolutePropertyPath.lastIndexOf(UP_LEVEL);
-	final String returnPath = absolutePropertyPath.substring(0, endOfLevelUp + 1);
-	final String propertyPathWithoutLevelUp = absolutePropertyPath.substring(endOfLevelUp + 2);
+	final int endOfLevelUp = relativePropertyPath.lastIndexOf(UP_LEVEL);
+	final String returnPath = relativePropertyPath.substring(0, endOfLevelUp + 1);
+	final String propertyPathWithoutLevelUp = relativePropertyPath.substring(endOfLevelUp + 2);
 	final int returnPathLength = propertyLevel(returnPath);
 
 	final String missingPathFromRoot = pathFromRoot(context, returnPathLength);
