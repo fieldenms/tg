@@ -80,7 +80,7 @@ public class EntQueryGenerator {
 	    }
 	}
 
-	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), qryModel.getResultType(), category);
+	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), qryModel.getResultType(), category, mappingsGenerator);
     }
 
     public DbVersion getDbVersion() {

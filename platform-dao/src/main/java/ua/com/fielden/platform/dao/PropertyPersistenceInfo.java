@@ -2,15 +2,26 @@ package ua.com.fielden.platform.dao;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
+import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-public class PropertyPersistenceInfo {
+public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceInfo> {
     // TODO: when collectional - no information about hib types is provided
+
+    private static final Map<String, Integer> sortOrder = new HashMap<String, Integer>();
+
+    static {
+	sortOrder.put("id", 1);
+	sortOrder.put("version", 2);
+	sortOrder.put("key", 3);
+    }
 
     private final String name;
     private final Class javaType;
@@ -18,6 +29,19 @@ public class PropertyPersistenceInfo {
     private final List<String> columns;
     private final PropertyPersistenceType type;
     private final Long length;
+
+    public Type getHibTypeAsType() {
+	return hibType instanceof Type ? (Type) hibType : null;
+    }
+
+    public IUserTypeInstantiate getHibTypeAsUserType() {
+	return hibType instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibType : null;
+    }
+
+    @Override
+    public String toString() {
+        return "name = " + name + "\njavaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + "\nhibType = " + (hibType != null ? hibType.getClass().getSimpleName() : hibType) + "\ntype = " + type + "\ncolumn(s) = " + columns;
+    }
 
     public boolean isEntity() {
 	return EntityUtils.isPersistedEntityType(javaType);
@@ -45,6 +69,21 @@ public class PropertyPersistenceInfo {
 	} else {
 	    return null;
 	}
+    }
+
+    @Override
+    public int compareTo(final PropertyPersistenceInfo o) {
+	if (sortOrder.containsKey(name)) {
+	    if (sortOrder.containsKey(o.name)) {
+		return sortOrder.get(name).compareTo(sortOrder.get(o.name));
+	    } else {
+		return -1;
+	    }
+	} else if (sortOrder.containsKey(o.name)) {
+	    return 1;
+	}
+
+	return name.compareTo(o.name);
     }
 
     public List<PropertyPersistenceInfo> getCompositeTypeSubprops() {

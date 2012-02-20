@@ -25,7 +25,7 @@ public class ModelResultProducer {
     private SortedSet<ResultPropertyInfo> getResultPropsInfos(final YieldsModel model) {
 	final SortedSet<ResultPropertyInfo> result = new TreeSet<ResultPropertyInfo>();
 	for (final Map.Entry<String, YieldModel> yieldEntry : model.getYields().entrySet()) {
-	    result.add(new ResultPropertyInfo(yieldEntry.getKey(), yieldEntry.getValue().getInfo().getColumn()/*getSqlAlias()*/, yieldEntry.getValue().getInfo().getJavaType()/*getType()*/));
+	    result.add(new ResultPropertyInfo(yieldEntry.getKey(), yieldEntry.getValue().getInfo().getColumn(), yieldEntry.getValue().getInfo().getJavaType()));
 	}
 	return result;
     }

@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -27,6 +28,7 @@ public class EntQuery implements ISingleOperand {
     private final GroupsModel groups;
     private final Class resultType;
     private final QueryCategory category;
+    private final MappingsGenerator mappingsGenerator;
 
     private EntQuery master;
 
@@ -127,6 +129,15 @@ public class EntQuery implements ISingleOperand {
 		}
     }
 
+    private Object determineYieldHibType(final YieldModel yield) {
+	if (EntityUtils.isPersistedEntityType(type())) {
+	    return null;//mappingsGenerator.ge
+	} else {
+	    //TODO implement
+	    return null;//yield.getOperand().type();
+	}
+
+    }
 
     private Class determineYieldJavaType(final YieldModel yield) {
 	if (EntityUtils.isPersistedEntityType(type())) {
@@ -184,9 +195,10 @@ public class EntQuery implements ISingleOperand {
 	return result;
     }
 
-    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType, final QueryCategory category) {
+    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType, final QueryCategory category, final MappingsGenerator mappingsGenerator) {
 	super();
 	this.category = category;
+	this.mappingsGenerator = mappingsGenerator;
 	this.sources = sources;
 	this.conditions = conditions;
 	this.yields = yields;
