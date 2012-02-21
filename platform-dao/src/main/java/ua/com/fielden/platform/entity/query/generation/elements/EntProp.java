@@ -7,6 +7,8 @@ import java.util.List;
 public class EntProp implements ISingleOperand {
     private final String name;
     private Class propType;
+    private Object hibType;
+
     private EntQuery holder; // query, where given property resides (not to be mixed with the query, which source given property is resolved to - in case of correlated subqueries these two may be different queries (subquery and one of its master).
     private String sql;
 
@@ -25,10 +27,11 @@ public class EntProp implements ISingleOperand {
 	this.name = name;
     }
 
-    public EntProp(final String name, final Class propType, final EntQuery holder) {
+    public EntProp(final String name, final Class propType, final Object hibType, final EntQuery holder) {
 	this(name);
 	this.propType = propType;
 	this.holder = holder;
+	this.hibType = hibType;
     }
 
     @Override
@@ -48,6 +51,14 @@ public class EntProp implements ISingleOperand {
 
     public Class getPropType() {
         return propType;
+    }
+
+    public Object getHibType() {
+	return hibType;
+    }
+
+    public void setHibType(final Object hibType) {
+	this.hibType = hibType;
     }
 
     public void setPropType(final Class propType) {

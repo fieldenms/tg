@@ -167,7 +167,6 @@ public class EntityFetcher<E extends AbstractEntity> {
 	}
     }
 
-
     public List<E> list(final Session session, final EntityFactory entityFactory, final QueryExecutionModel queryModel, final boolean lightweight) {
 	return list(session, entityFactory, queryModel, null, null, lightweight);
     }

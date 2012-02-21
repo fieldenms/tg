@@ -23,9 +23,8 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	super(alias, mappingsGenerator);
 	this.models = Arrays.asList(models);
 
-	for (final YieldModel yield : this.models.get(0).getYields().getYields().values()) {
-	    //sourceColumns.put(yield.getAlias(), yield.getSqlAlias());
-	    sourceColumns.put(yield.getAlias(), yield.getInfo());
+	for (final YieldModel yield : model().getYields().getYields().values()) {
+	    sourceItems.put(yield.getAlias(), yield.getInfo());
 	}
     }
 
@@ -55,16 +54,16 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	final YieldModel firstLevelPropYield = model().getYield(first);
 	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query yields
 	    return null;
-	} else if (firstLevelPropYield.getInfo().getJavaType()/*getType()*/ == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
+	} else if (firstLevelPropYield.getInfo().getJavaType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
 	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, Class>(new PurePropInfo(first, null), null) : null;
 	} else if (!StringUtils.isEmpty(rest)) {
 	    try {
-		return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType()/*getType()*/), determinePropertyType(firstLevelPropYield.getInfo().getJavaType()/*getType()*/, rest));
+		return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType()), determinePropertyType(firstLevelPropYield.getInfo().getJavaType(), rest));
 	    } catch (final Exception e) {
 		return null;
 	    }
 	} else {
-	    return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType()/*getType()*/), firstLevelPropYield.getInfo().getJavaType()/*getType()*/);
+	    return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType()), firstLevelPropYield.getInfo().getJavaType());
 	}
     }
 
@@ -115,7 +114,14 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 
     @Override
     public String sql() {
-	return "(" + models.get(0).sql() + ") AS " + sqlAlias + "/*" + alias + "*/";
+	final StringBuffer sb = new StringBuffer();
+	sb.append("(");
+	for (final Iterator<EntQuery> iterator = models.iterator(); iterator.hasNext();) {
+	    sb.append(iterator.next().sql());
+	    sb.append(iterator.hasNext() ? "\nUNION ALL\n" : "");
+	}
+	sb.append(") AS " + sqlAlias + "/*" + alias + "*/");
+	return sb.toString();
     }
 
     @Override

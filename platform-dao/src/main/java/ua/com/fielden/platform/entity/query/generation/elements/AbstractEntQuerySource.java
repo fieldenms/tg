@@ -22,6 +22,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
      * Business name for query source. Can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end).
      */
     protected final String alias;
+
     /**
      * List of props implicitly associated with given source (e.g. dot.notation is supported)
      */
@@ -31,15 +32,20 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
      * List of props explicitly associated with given source (e.g. each prop should have corresponding physically achievable item (sql column) within given source).
      */
     private final List<PropResolutionInfo> finalReferencingProps = new ArrayList<PropResolutionInfo>();
+
     /**
      * Sql alias for query source table/query
      */
     protected String sqlAlias;
-    /**
-     * Map between business name and sql column name.
-     */
-    protected Map<String, PropertyPersistenceInfo> sourceColumns = new HashMap<String, PropertyPersistenceInfo>();
 
+    /**
+     * Map between source properties business names and persistence infos.
+     */
+    protected Map<String, PropertyPersistenceInfo> sourceItems = new HashMap<String, PropertyPersistenceInfo>();
+
+    /**
+     * Reference to mappings generator instance - used for acquiring properties persistence infos.
+     */
     private final MappingsGenerator mappingsGenerator;
 
     @Override
@@ -70,7 +76,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
 	finalReferencingProps.add(prop);
 	// TODO implement more transparently
-	prop.entProp.setSql(sqlAlias + "." + sourceColumns.get(prop.prop.name != null ? (prop.prop.name.endsWith(".id") ? prop.prop.name.substring(0, prop.prop.name.length() - 3) : prop.prop.name) : "id").getColumn());
+	prop.entProp.setSql(sqlAlias + "." + sourceItems.get(prop.prop.name != null ? (prop.prop.name.endsWith(".id") ? prop.prop.name.substring(0, prop.prop.name.length() - 3) : prop.prop.name) : "id").getColumn());
     }
 
     @Override
@@ -256,7 +262,8 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
     }
 
     protected ConditionsModel joinCondition(final String leftProp, final String rightProp) {
-	return new ConditionsModel(new ComparisonTestModel(new EntProp(leftProp, Long.class, null/*TEMP*/), ComparisonOperator.EQ, new EntProp(rightProp, Long.class, null/*TEMP*/)));
+	//TODO provide proper hibType and holder while instantiating EntProps.
+	return new ConditionsModel(new ComparisonTestModel(new EntProp(leftProp, Long.class, null, null/*TEMP*/), ComparisonOperator.EQ, new EntProp(rightProp, Long.class, null, null/*TEMP*/)));
     }
 
     protected JoinType joinType(final boolean leftJoin) {
@@ -294,6 +301,10 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	return isPropertyPartOfKey(sourceType(), propName) || isPropertyRequired(sourceType(), propName);
     }
 
+    public MappingsGenerator getMappingsGenerator() {
+        return mappingsGenerator;
+    }
+
     /**
      * Represent data structure to hold information about potential prop resolution against some query source.
      * @author TG Team
@@ -308,23 +319,14 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	 * Part of the property dot.notation, that has been recognised as source alias. Is null if property name doesn't start with source alias prefix.
 	 */
 	private String aliasPart;
-
-	private PurePropInfo prop;
-
-	private PurePropInfo explicitProp;
-
 	/**
 	 * Part of the property dot.notation, that has been recognised as purely prop (dot.notated) name (without source alias prefix).
 	 */
-	/**
-	 * Actual java type of the property.
-	 */
+	private PurePropInfo prop;
 	/**
 	 * Part of property part, that is explicitly present in given query source. For case of source-from-type it will always be just one-part property, which is equal to propPart; in case of source-from-model it can be several parts property, depending on actual yields of the source model behind.
 	 */
-	/**
-	 * Java type of the explicit property
-	 */
+	private PurePropInfo explicitProp;
 
 	public PropResolutionInfo(final EntProp entProp, final String aliasPart, final PurePropInfo prop, final PurePropInfo explicitProp) {
 	    this.entProp = entProp;
@@ -423,8 +425,4 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    return true;
 	}
   }
-
-    public MappingsGenerator getMappingsGenerator() {
-        return mappingsGenerator;
-    }
 }

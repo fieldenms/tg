@@ -7,22 +7,11 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import static org.junit.Assert.assertEquals;
 
 
 public class MappingGenerationTest {
-    @Test
-    public void test1() {
-
-	final List<Class<? extends AbstractEntity>> domainTypes = new ArrayList<Class<? extends AbstractEntity>>();
-	domainTypes.add(TgVehicleModel.class);
-	final MappingsGenerator mg = new MappingsGenerator(domainTypes);
-	final String tgModelMapping = mg.generateMappings();
-	System.out.println(tgModelMapping);
-    }
-
     @Test
     public void dump_mapping_for_type_wity_byte_array_property() {
 	final List<Class<? extends AbstractEntity>> domainTypes = new ArrayList<Class<? extends AbstractEntity>>();

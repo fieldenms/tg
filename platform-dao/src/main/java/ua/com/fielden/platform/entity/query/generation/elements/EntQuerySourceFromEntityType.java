@@ -28,20 +28,9 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
 
     private void generateSourceItems() {
 	for (final PropertyPersistenceInfo ppi : getMappingsGenerator().getEntityPPIs(sourceType())) {
-	    sourceColumns.put(ppi.getName(), ppi);
+	    sourceItems.put(ppi.getName(), ppi);
 	}
     }
-
-//    private void generateSourceItems() {
-//	// TODO need to replace with fully-functional logic from DdlGenerator (extracted there from MappingsGenerator)
-//	for (final Field propField : EntityUtils.getPersistedProperties(entityType)) {
-//	    if (propField.getName().equals("id") || propField.getName().equals("version")) {
-//		sourceColumns.put(propField.getName(), "_" + propField.getName());
-//	    } else {
-//		sourceColumns.put(propField.getName(), propField.getName() + "_");
-//	    }
-//	}
-//    }
 
     @Override
     public boolean generated() {
@@ -115,5 +104,4 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
 	}
 	return true;
     }
-
 }
