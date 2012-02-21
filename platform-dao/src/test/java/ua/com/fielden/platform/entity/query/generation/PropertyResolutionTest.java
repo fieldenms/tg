@@ -109,6 +109,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().prop("price.currency").eq().val("AUD").model();
 	final EntQuery entQry = entSubQry(qry);
 	final List<EntProp> exp = new ArrayList<EntProp>();
+	exp.add(prop("price.currency"));
 	assertEquals("Incorrect list of unresolved props", exp, entQry.getUnresolvedProps());
     }
 

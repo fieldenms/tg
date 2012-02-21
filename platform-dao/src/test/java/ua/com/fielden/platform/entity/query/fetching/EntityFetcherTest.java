@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,9 +11,12 @@ import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
@@ -85,6 +89,14 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 	final List<TgVehicleModel> models = ef.list(session(), factory, new QueryExecutionModel(model, null, null, params), false);
     	assertEquals("Incorrect count", 2, models.size());
     }
+
+    public void test_vehicle_model_retrieval5() {
+	final AggregatedResultQueryModel model = select(TgVehicle.class).where().prop("price.amount").ge().val(100).yield().prop("price.amount").as("aa").modelAsAggregate();
+	final List<EntityAggregates> values = ef.list(session(), factory, new QueryExecutionModel(model, null), false);
+    	assertEquals("Incorrect count", 1, values.size());
+    	assertEquals("Incorrect value", new BigDecimal("200.00"), values.get(0).get("aa"));
+    }
+
 
     @Override
     protected String[] getDataSetPathsForInsert() {

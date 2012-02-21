@@ -183,6 +183,11 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	}
 
 	@Override
+	public String toString() {
+	    return name + ":: " + (type != null ? type.getSimpleName() : type);
+	}
+
+	@Override
 	public int hashCode() {
 	    final int prime = 31;
 	    int result = 1;
@@ -348,7 +353,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
 	@Override
 	public String toString() {
-	    return "\n\nPropResolutionInfo:\n aliasPart = " + aliasPart + "\n prop = " + prop + "\n explicitProp = " + explicitProp;
+	    return "PRI: aliasPart = " + aliasPart + "; prop = " + prop + "; explicitProp = " + explicitProp;
 	}
 
 	public Integer getPreferenceNumber() {
