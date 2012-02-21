@@ -107,7 +107,11 @@ public class BaseEntQueryTCase {
     }
 
     protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final String propPart, final Class propType, final String explicitPropPart, final Class explicitPropPartType) {
-	return new PropResolutionInfo(prop(propName), aliasPart, new PurePropInfo(propPart, propType), new PurePropInfo(explicitPropPart, explicitPropPartType));
+	return new PropResolutionInfo(prop(propName), aliasPart, new PurePropInfo(propPart, propType, null), new PurePropInfo(explicitPropPart, explicitPropPartType, null));
+    }
+
+    protected static PropResolutionInfo impIdPropResInf(final String propName, final String aliasPart, final String propPart, final Class propType, final String explicitPropPart, final Class explicitPropPartType) {
+	return new PropResolutionInfo(prop(propName), aliasPart, new PurePropInfo(propPart, propType, null), new PurePropInfo(explicitPropPart, explicitPropPartType, null), true);
     }
 
     protected final ComparisonTestModel alwaysTrueCondition = new ComparisonTestModel(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));

@@ -201,8 +201,8 @@ public class EntQuery implements ISingleOperand {
 
 	unresolvedProps = resolveProps(propsToBeResolved);
 
-	if (!isSubQuery()) {
-	    validate();
+	if (!isSubQuery() && unresolvedProps.size() > 0) {
+	    throw new RuntimeException("Couldn't resolve the following props: " + unresolvedProps);
 	}
 
 	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : sources.getAllSourcesAndTheirJoinType()) {
@@ -216,12 +216,13 @@ public class EntQuery implements ISingleOperand {
 	final List<EntProp> propsToBeResolvedFinally = new ArrayList<EntProp>();
 	propsToBeResolvedFinally.addAll(immediatePropertiesFinally);
 	propsToBeResolvedFinally.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
+	propsToBeResolvedFinally.removeAll(unresolvedProps);
 
 	sources.assignSqlAliases(getMasterIndex());
 
 	final List<EntProp> unresolvedFinalProps = resolvePropsFinally(propsToBeResolvedFinally);
 
-	if (!isSubQuery() && unresolvedFinalProps.size() > 0) {
+	if (unresolvedFinalProps.size() > 0) {
 	    throw new RuntimeException("Couldn't finally resolve the following props: " + unresolvedFinalProps);
 	}
 
@@ -279,6 +280,8 @@ public class EntQuery implements ISingleOperand {
 	    if (sourceCandidates.size() > 0) {
 		final Pair<PropResolutionInfo, IEntQuerySource> propResolutionResult = performPropResolveAction(sourceCandidates);
 		propResolutionResult.getValue().addFinalReferencingProp(propResolutionResult.getKey());
+	    } else {
+		unresolvedProps.add(propToBeResolvedPair);
 	    }
 	}
 
@@ -423,16 +426,6 @@ public class EntQuery implements ISingleOperand {
     @Override
     public boolean ignore() {
 	return false;
-    }
-
-    private void validate() {
-	if (unresolvedProps.size() > 0) {
-	    final StringBuffer sb = new StringBuffer();
-	    for (final EntProp pair : unresolvedProps) {
-		sb.append(pair.getName() + "\n");
-	    }
-	    throw new RuntimeException("Couldn't resolve all properties: \n" + sb.toString());
-	}
     }
 
     @Override

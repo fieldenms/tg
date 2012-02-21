@@ -104,7 +104,6 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
     }
 
     @Test
-    @Ignore
     public void test10() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().prop("price.currency").eq().val("AUD").model();
 	final EntQuery entQry = entSubQry(qry);

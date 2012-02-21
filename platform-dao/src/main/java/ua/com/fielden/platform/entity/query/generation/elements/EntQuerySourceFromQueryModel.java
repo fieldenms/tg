@@ -39,12 +39,12 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
     }
 
     @Override
-    protected Pair<PurePropInfo, Class> lookForProp(final String dotNotatedPropName) {
+    protected Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName) {
 	for (final Pair<String, String> candidate : prepareCandidates(dotNotatedPropName)) {
 	    final Pair<PurePropInfo, Class> candidateResult = validateCandidate(candidate.getKey(), candidate.getValue());
 
 	    if (candidateResult != null) {
-		return candidateResult;
+		return new Pair<PurePropInfo, PurePropInfo>(candidateResult.getKey(), new PurePropInfo(dotNotatedPropName, candidateResult.getValue(), null)) ;
 	    }
 	}
 	return null;
@@ -55,15 +55,15 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query yields
 	    return null;
 	} else if (firstLevelPropYield.getInfo().getJavaType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
-	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, Class>(new PurePropInfo(first, null), null) : null;
+	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, Class>(new PurePropInfo(first, null, null), null) : null;
 	} else if (!StringUtils.isEmpty(rest)) {
 	    try {
-		return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType()), determinePropertyType(firstLevelPropYield.getInfo().getJavaType(), rest));
+		return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), null), determinePropertyType(firstLevelPropYield.getInfo().getJavaType(), rest));
 	    } catch (final Exception e) {
 		return null;
 	    }
 	} else {
-	    return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType()), firstLevelPropYield.getInfo().getJavaType());
+	    return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), null), firstLevelPropYield.getInfo().getJavaType());
 	}
     }
 

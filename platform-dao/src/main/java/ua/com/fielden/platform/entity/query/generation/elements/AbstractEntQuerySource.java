@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.hibernate.type.TypeFactory;
+
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
@@ -70,13 +72,14 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     @Override
     public void addFinalReferencingProp(final PropResolutionInfo prop) {
-	if (!prop.isImplicitId() && !prop.allExplicit()) {
+	if (!prop.allExplicit()) {
 	    throw new IllegalStateException("Property [" + prop.entProp + "] incorrectly resolved finally to source [" + this + "] as [" + prop + "]");
 	}
 
 	finalReferencingProps.add(prop);
 	// TODO implement more transparently
-	prop.entProp.setSql(sqlAlias + "." + sourceItems.get(prop.prop.name != null ? (prop.prop.name.endsWith(".id") ? prop.prop.name.substring(0, prop.prop.name.length() - 3) : prop.prop.name) : "id").getColumn());
+	prop.entProp.setSql(sqlAlias + "." + sourceItems.get(
+		(prop.prop.name.endsWith(".id") ? prop.prop.name.substring(0, prop.prop.name.length() - 3) : prop.prop.name)).getColumn());
     }
 
     @Override
@@ -94,13 +97,12 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	return (sourceAlias != null && dotNotatedPropName.startsWith(sourceAlias + ".")) ? dotNotatedPropName.substring(sourceAlias.length() + 1) : null;
     }
 
-    abstract Pair<PurePropInfo, Class> lookForProp(final String dotNotatedPropName);
+    abstract Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName);
 
     protected PropResolutionInfo propAsIs(final EntProp prop) {
-	final Pair<PurePropInfo, Class> propAsIsSearchResult = lookForProp(prop.getName());
+	final Pair<PurePropInfo, PurePropInfo> propAsIsSearchResult = lookForProp(prop.getName());
 	if (propAsIsSearchResult != null/* && alias == null*/) {	// this condition will prevent usage of not-aliased properties if their source has alias
-	    final String explicitPart = prop.getName().equals(propAsIsSearchResult.getKey().name + ".id") ? prop.getName() : propAsIsSearchResult.getKey().name;
-	    return new PropResolutionInfo(prop, null, new PurePropInfo(prop.getName(), propAsIsSearchResult.getValue()), new PurePropInfo(explicitPart, propAsIsSearchResult.getKey().type));
+	    return new PropResolutionInfo(prop, null, propAsIsSearchResult.getValue(), propAsIsSearchResult.getKey());
 	}
 	return null;
     }
@@ -110,18 +112,22 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	if (dealisedProp == null) {
 	    return null;
 	} else {
-	    final Pair<PurePropInfo, Class> propAsAliasedSearchResult = lookForProp(dealisedProp);
+	    final Pair<PurePropInfo, PurePropInfo> propAsAliasedSearchResult = lookForProp(dealisedProp);
 	    if (propAsAliasedSearchResult != null) {
-		final String explicitPart = dealisedProp.equals(propAsAliasedSearchResult.getKey().name + ".id") ? dealisedProp : propAsAliasedSearchResult.getKey().name;
-		return new PropResolutionInfo(prop, getAlias(), new PurePropInfo(dealisedProp, propAsAliasedSearchResult.getValue()), new PurePropInfo(explicitPart, propAsAliasedSearchResult.getKey().type));
+		return new PropResolutionInfo(prop, getAlias(), propAsAliasedSearchResult.getValue(), propAsAliasedSearchResult.getKey());
 	    }
 	    return null;
 	}
     }
 
     protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
-	if (isPersistedEntityType(sourceType())) {
-	    return prop.getName().equalsIgnoreCase(getAlias()) ? new PropResolutionInfo(prop, getAlias(), new PurePropInfo(null, Long.class), new PurePropInfo("", null)) : null; // id property is meant here, but is it for all contexts?
+	if (isPersistedEntityType(sourceType()) && prop.getName().equalsIgnoreCase(getAlias())) {
+	    return new PropResolutionInfo(prop, getAlias(), //
+//		    new PurePropInfo(null, Long.class, TypeFactory.basic("long")), //
+//		    new PurePropInfo("", null, null),
+		    new PurePropInfo("id", Long.class, TypeFactory.basic("long")), //
+		    new PurePropInfo("id", Long.class, TypeFactory.basic("long")),
+		    true); // id property is meant here, but is it for all contexts?
 	} else {
 	    return null;
 	}
@@ -174,17 +180,19 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
     public static class PurePropInfo implements Comparable<PurePropInfo> {
 	private String name;
 	private Class type;
+	private Object hibType;
 	boolean nullable = false;
 
-	public PurePropInfo(final String name, final Class type) {
+	public PurePropInfo(final String name, final Class type, final Object hibType) {
 	    super();
 	    this.name = name;
 	    this.type = type;
+	    this.hibType = hibType;
 	}
 
 	@Override
 	public String toString() {
-	    return name + ":: " + (type != null ? type.getSimpleName() : type);
+	    return name + ":: " + (type != null ? type.getSimpleName() : type) + " :: " + (hibType != null ? hibType.getClass().getSimpleName() : null);
 	}
 
 	@Override
@@ -253,7 +261,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	final SortedMap<PurePropInfo, List<EntProp>> result = new TreeMap<PurePropInfo, List<EntProp>>();
 
 	for (final PropResolutionInfo propResolutionInfo : refProps) {
-	    if (!propResolutionInfo.allExplicit() && !propResolutionInfo.isImplicitId() && EntityUtils.isPersistedEntityType(propResolutionInfo.explicitProp.type)) {
+	    if (!propResolutionInfo.allExplicit() && EntityUtils.isPersistedEntityType(propResolutionInfo.explicitProp.type)) {
 
 		if (!result.containsKey(propResolutionInfo.explicitProp)) {
 		    result.put(propResolutionInfo.explicitProp, new ArrayList<EntProp>());
@@ -316,6 +324,8 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
      *
      */
     public static class PropResolutionInfo {
+
+	private final boolean implicitId;
 	/**
 	 * Reference to prop being resolved within some query source
 	 */
@@ -333,7 +343,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	 */
 	private PurePropInfo explicitProp;
 
-	public PropResolutionInfo(final EntProp entProp, final String aliasPart, final PurePropInfo prop, final PurePropInfo explicitProp) {
+	public PropResolutionInfo(final EntProp entProp, final String aliasPart, final PurePropInfo prop, final PurePropInfo explicitProp, final boolean implicitId) {
 	    this.entProp = entProp;
 	    if(entProp.getPropType() == null && prop.type != null) {
 		entProp.setPropType(prop.type);
@@ -341,14 +351,25 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    this.aliasPart = aliasPart;
 	    this.prop = prop;
 	    this.explicitProp = explicitProp;
+	    this.implicitId = implicitId;
 	}
 
-	public boolean isImplicitId() {
-	    return prop.name == null && aliasPart != null;
+	public PropResolutionInfo(final EntProp entProp, final String aliasPart, final PurePropInfo prop, final PurePropInfo explicitProp) {
+	    this(entProp, aliasPart, prop, explicitProp, false);
 	}
+
+//	public boolean isImplicitId() {
+//	    return implicitId;//prop.name == null && aliasPart != null;
+//	}
 
 	public boolean allExplicit() {
-	    return explicitProp.name.equals(prop.name) || !isPersistedEntityType(explicitProp.type);
+	    return implicitId || //
+		    explicitProp.name.equals(prop.name) || //
+		    (explicitProp.name + ".id").equals(prop.name)
+		    //|| //
+		    // TODO need to implement properly case of CompositeUserType property (e.g. Vehicle.price(.amount)
+		    //!isPersistedEntityType(explicitProp.type)
+		    ;
 	}
 
 	@Override
@@ -357,7 +378,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	}
 
 	public Integer getPreferenceNumber() {
-	    return isImplicitId() ? 2000 : prop.name.length();
+	    return implicitId/*isImplicitId()*/ ? 2000 : prop.name.length();
 	}
 
 	public String getAliasPart() {
@@ -383,6 +404,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    result = prime * result + ((aliasPart == null) ? 0 : aliasPart.hashCode());
 	    result = prime * result + ((entProp == null) ? 0 : entProp.hashCode());
 	    result = prime * result + ((explicitProp == null) ? 0 : explicitProp.hashCode());
+	    result = prime * result + (implicitId ? 1231 : 1237);
 	    result = prime * result + ((prop == null) ? 0 : prop.hashCode());
 	    return result;
 	}
@@ -418,6 +440,9 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 		    return false;
 		}
 	    } else if (!explicitProp.equals(other.explicitProp)) {
+		return false;
+	    }
+	    if (implicitId != other.implicitId) {
 		return false;
 	    }
 	    if (prop == null) {

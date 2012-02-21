@@ -152,7 +152,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 	where().prop("m.make.key").eq().val("MERC").yield().maxOf().prop("m.make.key").modelAsPrimitive();
 	final EntQuery entQry = entResultQry(qry);
 	final List<PropResolutionInfo> src1Props = prepare( propResInf("model", null, "model", MODEL, "model", MODEL));
-	final List<PropResolutionInfo> src2Props = prepare( propResInf("m", "m", null, LONG, "", null), //
+	final List<PropResolutionInfo> src2Props = prepare( impIdPropResInf("m", "m", "id", LONG, "id", LONG), //
 		propResInf("m.make.key", "m", "make.key", STRING, "make", MAKE), //
 		propResInf("m.make.key", "m", "make.key", STRING, "make", MAKE));
 	assertEquals(incP2S, compose(src1Props, src2Props), getSourcesReferencingProps(entQry));

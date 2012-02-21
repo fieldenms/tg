@@ -44,11 +44,23 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
     }
 
     @Override
-    Pair<PurePropInfo, Class> lookForProp(final String dotNotatedPropName) {
+    Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName) {
 	try {
-	    final String explicitPropPart = EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey();
-	    return new Pair<PurePropInfo, Class>(new PurePropInfo(explicitPropPart, determinePropertyType(sourceType(), explicitPropPart)), //
-		    determinePropertyType(sourceType(), dotNotatedPropName));
+	    final PropertyPersistenceInfo explicitPropInfo = getMappingsGenerator().getInfoForProp(sourceType(), dotNotatedPropName);
+	    if (explicitPropInfo != null) {
+		final PurePropInfo ppi = new PurePropInfo(explicitPropInfo.getName(), explicitPropInfo.getJavaType(), explicitPropInfo.getHibType());
+		return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
+	    } else {
+		final String explicitPropPart = EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey();
+		final Class explicitPropPartType = determinePropertyType(sourceType(), explicitPropPart);
+		if (EntityUtils.isPersistedEntityType(explicitPropPartType)) {
+		    return new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(explicitPropPart, explicitPropPartType, null), //
+				new PurePropInfo(dotNotatedPropName, determinePropertyType(sourceType(), dotNotatedPropName), null));
+		} else {
+		    return null;
+		}
+
+	    }
 	} catch (final Exception e) {
 	    return null;
 	}
