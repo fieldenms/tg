@@ -58,6 +58,10 @@ public class MappingsGenerator {
     private Map<Class, SortedMap<String, PropertyPersistenceInfo>> hibTypeInfosMap = new HashMap<Class, SortedMap<String, PropertyPersistenceInfo>>();
     final List<Class<? extends AbstractEntity>> entityTypes;
 
+    public String getTableClause(final Class entityType) {
+	return ddlGenerator.getTableClause(entityType);
+    }
+
     public PropertyPersistenceInfo getInfoForProp(final Class entityType, final String propName) {
 	return hibTypeInfosMap.get(entityType).get(propName);
     }
@@ -205,7 +209,7 @@ public class MappingsGenerator {
      */
     private String getClassMapping(final Class entityType) throws Exception {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + ddlGenerator.getTableClause(entityType) + "\">\n");
+	sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + getTableClause(entityType) + "\">\n");
 
 	final Map<String, PropertyPersistenceInfo> map = hibTypeInfosMap.get(entityType);
 	sb.append(getCommonPropMappingString(map.get("id")));

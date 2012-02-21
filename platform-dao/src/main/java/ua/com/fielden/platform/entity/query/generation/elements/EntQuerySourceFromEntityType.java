@@ -23,10 +23,6 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
 	this.entityType = entityType;
 	this.generated = generated;
 
-	generateSourceItems();
-    }
-
-    private void generateSourceItems() {
 	for (final PropertyPersistenceInfo ppi : getMappingsGenerator().getEntityPPIs(sourceType())) {
 	    sourceItems.put(ppi.getName(), ppi);
 	}
@@ -44,7 +40,7 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
 
     @Override
     public String sql() {
-	return sourceType().getSimpleName().toUpperCase() + "_ AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
+	return getMappingsGenerator().getTableClause(sourceType()) + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
     }
 
     @Override
