@@ -166,5 +166,10 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    columns.add(column);
 	    return this;
 	}
+
+	public Builder columns(final List<String> columns) {
+	    columns.addAll(columns);
+	    return this;
+	}
     }
 }
