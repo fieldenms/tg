@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -111,8 +110,10 @@ public class EntQuery implements ISingleOperand {
 	    yields.getYields().put(idModel.getAlias(), idModel);
 	} else if (allPropsYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-	    for (final Field propField : EntityUtils.getPersistedProperties(type())) {
-		yields.getYields().put(propField.getName(), new YieldModel(new EntProp(yieldPropAliasPrefix + propField.getName()), propField.getName()));
+	    for (final PropertyPersistenceInfo ppi : mappingsGenerator.getEntityPPIs(type())) {
+		if (!ppi.isCompositeProperty()) {
+		    yields.getYields().put(ppi.getName(), new YieldModel(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName(), ppi));
+		}
 	    }
 	} else if (idPropYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
@@ -133,13 +134,12 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Object determineYieldHibType(final YieldModel yield) {
-	if (EntityUtils.isPersistedEntityType(type())) {
-	    return null;//mappingsGenerator.getInfoForProp(type(), yield.getAlias()).getHibType();
+	final PropertyPersistenceInfo finalPropInfo = mappingsGenerator.getPropPersistenceInfoExplicitly(type(), yield.getAlias());
+	if (finalPropInfo != null) {
+	    return finalPropInfo.getHibType();
 	} else {
-	    //TODO implement
-	    return null;//yield.getOperand().type();
+	    return yield.getOperand().hibType();
 	}
-
     }
 
     private Class determineYieldJavaType(final YieldModel yield) {
@@ -431,6 +431,14 @@ public class EntQuery implements ISingleOperand {
     @Override
     public Class type() {
 	return resultType;
+    }
+
+    @Override
+    public Object hibType() {
+	if (yields.getYields().size() == 1) {
+	  return yields.getYields().values().iterator().next().getInfo().getHibType();
+	}
+	return null;
     }
 
     @Override

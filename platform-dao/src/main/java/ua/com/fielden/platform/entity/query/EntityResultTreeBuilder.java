@@ -8,7 +8,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 final class EntityResultTreeBuilder {
@@ -20,8 +19,8 @@ final class EntityResultTreeBuilder {
     }
 
     /*DONE*/
-    protected EntityTree buildTree(final Class resultType, final Collection<PropertyPersistenceInfo> properties) throws Exception {
-	final EntityTree result = new EntityTree(resultType);
+    protected EntityTree buildTree(final Class resultType, final ICompositeUserTypeInstantiate hibType, final Collection<PropertyPersistenceInfo> properties) throws Exception {
+	final EntityTree result = new EntityTree(resultType, hibType);
 
 	final List<PropertyPersistenceInfo> singleProps = getFirstLevelSingleProps(properties);
 	final Map<String, Collection<PropertyPersistenceInfo>> compositeProps = getFirstLevelCompositeProps(properties);
@@ -29,17 +28,14 @@ final class EntityResultTreeBuilder {
 	for (final PropertyPersistenceInfo propInfo : singleProps) {
 	    result.getSingles().put(new PropertyPersistenceInfo.Builder(propInfo.getName(), propInfo.getJavaType()). //
 		    column(propInfo.getColumn()). //
-		    hibType(mappingsGenerator.determinePropertyHibType(resultType, propInfo.getName()) != null ? mappingsGenerator.determinePropertyHibType(resultType, propInfo.getName()) :
-			(mappingsGenerator.determinePropertyHibUserType(resultType, propInfo.getName()) != null ? mappingsGenerator.determinePropertyHibUserType(resultType, propInfo.getName()) : null)).
+		    hibType(propInfo.getHibType()). //
 		    build(), index.getNext());
-	    //result.getSingles().put(new PropColumn(propInfo.getName(), propInfo.getColumn()/*getSqlAlias()*/, mappingsGenerator.determinePropertyHibType(resultType, propInfo.getName()), mappingsGenerator.determinePropertyHibUserType(resultType, propInfo.getName())), index.getNext());
 	}
 
 	for (final Map.Entry<String, Collection<PropertyPersistenceInfo>> propEntry : compositeProps.entrySet()) {
 	    final String subtreePropName = propEntry.getKey();
-	    final Class subtreeType = determinePropertyType(resultType, subtreePropName);
-	    final Class subtreeHibType = mappingsGenerator.determinePropertyHibCompositeUserType(resultType, subtreePropName);
-	    result.getComposites().put(subtreePropName, buildTree((subtreeHibType == null ? subtreeType : subtreeHibType), propEntry.getValue()));
+	    final PropertyPersistenceInfo ppi = mappingsGenerator.getPropPersistenceInfoExplicitly(resultType, subtreePropName);
+	    result.getComposites().put(subtreePropName, buildTree(ppi.getJavaType(), ppi.getHibTypeAsCompositeUserType(), propEntry.getValue()));
 	}
 
 	return result;
@@ -90,15 +86,6 @@ final class EntityResultTreeBuilder {
 	}
 
 	return result;
-    }
-
-    /*DONE*/
-    private Class determinePropertyType(final Class<?> parentType, final String propName) {
-	if (EntityAggregates.class.equals(parentType)) {
-	    return null;
-	} else {
-	    return PropertyTypeDeterminator.determinePropertyType(parentType, propName);
-	}
     }
 
     /*DONE*/

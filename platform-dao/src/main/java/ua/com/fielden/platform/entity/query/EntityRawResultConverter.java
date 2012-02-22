@@ -47,7 +47,7 @@ public class EntityRawResultConverter<E extends AbstractEntity> {
     /*DONE*/
     private EntityContainer<E> transformTuple(final Object[] data, final EntityTree resultTree, final boolean shouldBeFetched) {
 
-	final EntityContainer<E> entCont = new EntityContainer<E>(resultTree.getResultType(), shouldBeFetched);
+	final EntityContainer<E> entCont = new EntityContainer<E>(resultTree.getResultType(), resultTree.getHibType(), shouldBeFetched);
 
 	for (final Map.Entry<PropertyPersistenceInfo, Integer> primEntry : resultTree.getSingles().entrySet()) {
 	    entCont.primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsType(), primEntry.getKey().getHibTypeAsUserType()));

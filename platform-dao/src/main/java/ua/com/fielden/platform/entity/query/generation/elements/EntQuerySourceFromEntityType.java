@@ -8,7 +8,6 @@ import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
 public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
     private final Class<? extends AbstractEntity> entityType;
@@ -29,6 +28,25 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
     }
 
     @Override
+    protected Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName) {
+	final PropertyPersistenceInfo finalPropInfo = getMappingsGenerator().getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
+	if (finalPropInfo != null) {
+	    final PurePropInfo ppi = new PurePropInfo(finalPropInfo.getName(), finalPropInfo.getJavaType(), finalPropInfo.getHibType());
+	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
+	} else {
+	    final PropertyPersistenceInfo propInfo = getMappingsGenerator().getInfoForDotNotatedProp(entityType, dotNotatedPropName);
+	    if (propInfo == null) {
+		return null;
+	    } else {
+		final PropertyPersistenceInfo explicitPartPropInfo = getMappingsGenerator().getPropPersistenceInfoExplicitly(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
+		return new Pair<PurePropInfo, PurePropInfo>( //
+		new PurePropInfo(explicitPartPropInfo.getName(), explicitPartPropInfo.getJavaType(), explicitPartPropInfo.getHibType()), //
+		new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType()));
+	    }
+	}
+    }
+
+    @Override
     public boolean generated() {
 	return generated;
     }
@@ -41,29 +59,6 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
     @Override
     public String sql() {
 	return getMappingsGenerator().getTableClause(sourceType()) + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
-    }
-
-    @Override
-    Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName) {
-	try {
-	    final PropertyPersistenceInfo explicitPropInfo = getMappingsGenerator().getInfoForProp(sourceType(), dotNotatedPropName);
-	    if (explicitPropInfo != null) {
-		final PurePropInfo ppi = new PurePropInfo(explicitPropInfo.getName(), explicitPropInfo.getJavaType(), explicitPropInfo.getHibType());
-		return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
-	    } else {
-		final String explicitPropPart = EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey();
-		final Class explicitPropPartType = determinePropertyType(sourceType(), explicitPropPart);
-		if (EntityUtils.isPersistedEntityType(explicitPropPartType)) {
-		    return new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(explicitPropPart, explicitPropPartType, null), //
-				new PurePropInfo(dotNotatedPropName, determinePropertyType(sourceType(), dotNotatedPropName), null));
-		} else {
-		    return null;
-		}
-
-	    }
-	} catch (final Exception e) {
-	    return null;
-	}
     }
 
     @Override

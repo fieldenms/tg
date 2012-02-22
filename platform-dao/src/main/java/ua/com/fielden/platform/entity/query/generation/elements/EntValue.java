@@ -91,4 +91,9 @@ public class EntValue implements ISingleOperand {
     public Object getValue() {
         return value;
     }
+
+    @Override
+    public Object hibType() {
+	return null;
+    }
 }

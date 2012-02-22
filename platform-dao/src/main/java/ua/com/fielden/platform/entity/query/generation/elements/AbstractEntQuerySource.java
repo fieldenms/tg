@@ -97,7 +97,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	return (sourceAlias != null && dotNotatedPropName.startsWith(sourceAlias + ".")) ? dotNotatedPropName.substring(sourceAlias.length() + 1) : null;
     }
 
-    abstract Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName);
+    protected abstract Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName);
 
     protected PropResolutionInfo propAsIs(final EntProp prop) {
 	final Pair<PurePropInfo, PurePropInfo> propAsIsSearchResult = lookForProp(prop.getName());
@@ -122,12 +122,8 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
 	if (isPersistedEntityType(sourceType()) && prop.getName().equalsIgnoreCase(getAlias())) {
-	    return new PropResolutionInfo(prop, getAlias(), //
-//		    new PurePropInfo(null, Long.class, TypeFactory.basic("long")), //
-//		    new PurePropInfo("", null, null),
-		    new PurePropInfo("id", Long.class, TypeFactory.basic("long")), //
-		    new PurePropInfo("id", Long.class, TypeFactory.basic("long")),
-		    true); // id property is meant here, but is it for all contexts?
+	    final PurePropInfo idProp = new PurePropInfo("id", Long.class, TypeFactory.basic("long"));
+	    return new PropResolutionInfo(prop, getAlias(), idProp, idProp, true); // id property is meant here, but is it for all contexts?
 	} else {
 	    return null;
 	}
@@ -348,6 +344,10 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    if(entProp.getPropType() == null && prop.type != null) {
 		entProp.setPropType(prop.type);
 	    }
+	    if(entProp.getHibType() == null && prop.hibType != null) {
+		entProp.setHibType(prop.hibType);
+	    }
+
 	    this.aliasPart = aliasPart;
 	    this.prop = prop;
 	    this.explicitProp = explicitProp;

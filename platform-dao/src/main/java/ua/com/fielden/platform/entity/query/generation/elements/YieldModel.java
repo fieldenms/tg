@@ -8,9 +8,14 @@ public class YieldModel {
     private PropertyPersistenceInfo info;
 
     public YieldModel(final ISingleOperand operand, final String alias) {
+	this(operand, alias, null);
+    }
+
+    public YieldModel(final ISingleOperand operand, final String alias, final PropertyPersistenceInfo info) {
 	super();
 	this.operand = operand;
 	this.alias = alias;
+	this.info = info;
     }
 
     @Override

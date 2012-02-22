@@ -15,7 +15,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public class EntityContainer<R extends AbstractEntity> {
     	private final static String ID_PROPERTY_NAME = "id";
 
-    	Class<R> resultType; // should also cover marker interfaces for TgCompositeUserType
+    	final Class<R> resultType; // should also cover marker interfaces for TgCompositeUserType
+    	final ICompositeUserTypeInstantiate hibType;
 	R entity;
 	//Long id;
 	boolean shouldBeFetched;
@@ -24,8 +25,9 @@ public class EntityContainer<R extends AbstractEntity> {
 	Map<String, Collection<EntityContainer>> collections = new HashMap<String, Collection<EntityContainer>>();
 	private Logger logger = Logger.getLogger(this.getClass());
 
-	public EntityContainer(final Class resultType, final boolean shouldBeFetched) {
+	public EntityContainer(final Class resultType, final ICompositeUserTypeInstantiate hibType, final boolean shouldBeFetched) {
 	    this.resultType = resultType;
+	    this.hibType = hibType;
 
 	// TODO inspect whether given resultType is not assigned from hibernate CompositeUserType - if it is - then treat accordingly
 
@@ -50,6 +52,9 @@ public class EntityContainer<R extends AbstractEntity> {
 
 	public R instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
 	    logger.info("instantiating: " + resultType.getName() + " for id = " + getId() + " lightWeight = " + userViewOnly);
+	    if (hibType != null) {
+		return (R) hibType.instantiate(primitives);
+	    }
 	    entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
 	    entity.setInitialising(true);
 	    for (final Map.Entry<String, Object> primPropEntry : primitives.entrySet()) {

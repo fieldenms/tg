@@ -12,18 +12,16 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
-import org.hibernate.usertype.CompositeUserType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
-import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.persistence.DdlGenerator;
+import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
 
@@ -62,8 +60,36 @@ public class MappingsGenerator {
 	return ddlGenerator.getTableClause(entityType);
     }
 
-    public PropertyPersistenceInfo getInfoForProp(final Class entityType, final String propName) {
-	return hibTypeInfosMap.get(entityType).get(propName);
+    /**
+     * Retrieves persistence info for entity property, which is explicitly persisted within this entity type.
+     * @param entityType
+     * @param propName
+     * @return
+     */
+    public PropertyPersistenceInfo getPropPersistenceInfoExplicitly(final Class entityType, final String propName) {
+	final SortedMap<String,PropertyPersistenceInfo> map = hibTypeInfosMap.get(entityType);
+	return map != null ? map.get(propName) : null;
+    }
+
+    /**
+     * Retrieves persistence info for entity property or its nested subproperty.
+     * @param entityType
+     * @param propName
+     * @return
+     */
+    public PropertyPersistenceInfo getInfoForDotNotatedProp(final Class entityType, final String dotNotatedPropName) {
+	final PropertyPersistenceInfo simplePropInfo = getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
+	if (simplePropInfo != null) {
+	    return simplePropInfo;
+	} else {
+	    final Pair<String, String> propSplit = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
+	    final PropertyPersistenceInfo firstPropInfo = getPropPersistenceInfoExplicitly(entityType, propSplit.getKey());
+	    if (firstPropInfo != null && firstPropInfo.getJavaType() != null) {
+		return getInfoForDotNotatedProp(firstPropInfo.getJavaType(), propSplit.getValue());
+	    } else {
+		return null;
+	    }
+	}
     }
 
     public MappingsGenerator(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity>> entityTypes) {
@@ -384,65 +410,5 @@ public class MappingsGenerator {
 
     private MapTo getMapTo(final Class entityType, final String propName) {
 	return getPropertyAnnotation(MapTo.class, entityType, propName);
-    }
-
-    private Class getDefaultHibType(final Class parentType, final String propName) {
-	return hibTypesDefaults.get(determinePropertyType(parentType, propName));
-    }
-
-    public Type determinePropertyHibType(final Class<?> parentType, final String propName) throws Exception {
-	if (EntityAggregates.class.equals(parentType) || IUserTypeInstantiate.class.isAssignableFrom(parentType)) {
-	    return null;
-	} else if (ICompositeUserTypeInstantiate.class.isAssignableFrom(parentType)) {
-	    final CompositeUserType hibTypeInstance = (CompositeUserType) hibTypesInjector.getInstance(parentType);
-	    return hibTypeInstance.getPropertyTypes()[Arrays.asList(hibTypeInstance.getPropertyNames()).indexOf(propName)];
-	} else {
-	    final MapTo mapTo = getMapTo(parentType, propName);
-	    if (isNotEmpty(mapTo.typeName())) {
-		return TypeFactory.basic(mapTo.typeName());
-	    } else {
-		final Class propType = determinePropertyType(parentType, propName);
-		final Class hibType = hibTypesDefaults.get(propType);
-		if (hibType != null) {
-		    final Object hibTypeInstance = hibType.newInstance();
-		    return hibTypeInstance instanceof Type ? (Type) hibTypeInstance : null;
-		} else {
-		    return TypeFactory.basic(propType.getName());
-		}
-	    }
-	}
-    }
-
-    public IUserTypeInstantiate determinePropertyHibUserType(final Class<?> parentType, final String propName) throws Exception {
-	if (EntityAggregates.class.equals(parentType) || IUserTypeInstantiate.class.isAssignableFrom(parentType)
-		|| ICompositeUserTypeInstantiate.class.isAssignableFrom(parentType)) {
-	    return null;
-	} else {
-	    final MapTo mapTo = getMapTo(parentType, propName);
-	    if (isEmpty(mapTo.typeName())) {
-		final Class hibType = getDefaultHibType(parentType, propName);
-		final Object hibTypeInstance = hibType == null ? null : hibType.newInstance();
-		return hibTypeInstance instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibTypeInstance : null;
-	    } else {
-		final Object hibTypeInstance = hibTypesInjector.getInstance(mapTo.userType());
-		return hibTypeInstance instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibTypeInstance : null;
-	    }
-	}
-    }
-
-    public Class determinePropertyHibCompositeUserType(final Class<?> parentType, final String propName) throws Exception {
-	if (EntityAggregates.class.equals(parentType)) {
-	    return null;
-	} else {
-	    final MapTo mapTo = getMapTo(parentType, propName);
-	    if (Class.class.equals(mapTo.userType())) {
-		final Class hibType = getDefaultHibType(parentType, propName);
-		final Object hibTypeInstance = hibType == null ? null : hibType.newInstance();
-		return hibTypeInstance instanceof ICompositeUserTypeInstantiate ? hibTypeInstance.getClass() : null;
-	    } else {
-		final Object hibTypeInstance = hibTypesInjector.getInstance(mapTo.userType());
-		return hibTypeInstance instanceof ICompositeUserTypeInstantiate ? hibTypeInstance.getClass() : null;
-	    }
-	}
     }
 }

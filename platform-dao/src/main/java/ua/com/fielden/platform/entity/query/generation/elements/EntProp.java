@@ -126,4 +126,9 @@ public class EntProp implements ISingleOperand {
     public void setSql(final String sql) {
         this.sql = sql;
     }
+
+    @Override
+    public Object hibType() {
+	return hibType;
+    }
 }

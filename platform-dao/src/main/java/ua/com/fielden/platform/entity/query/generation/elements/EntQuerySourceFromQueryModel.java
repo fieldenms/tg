@@ -8,9 +8,9 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
 public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
     private final List<EntQuery> models;
@@ -41,29 +41,32 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
     @Override
     protected Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName) {
 	for (final Pair<String, String> candidate : prepareCandidates(dotNotatedPropName)) {
-	    final Pair<PurePropInfo, Class> candidateResult = validateCandidate(candidate.getKey(), candidate.getValue());
-
+	    final Pair<PurePropInfo, PurePropInfo> candidateResult = validateCandidate(dotNotatedPropName, candidate.getKey(), candidate.getValue());
 	    if (candidateResult != null) {
-		return new Pair<PurePropInfo, PurePropInfo>(candidateResult.getKey(), new PurePropInfo(dotNotatedPropName, candidateResult.getValue(), null)) ;
+		return candidateResult;
 	    }
 	}
 	return null;
     }
 
-    private Pair<PurePropInfo, Class> validateCandidate(final String first, final String rest) {
+    private Pair<PurePropInfo, PurePropInfo> validateCandidate(final String dotNotatedPropName, final String first, final String rest) {
 	final YieldModel firstLevelPropYield = model().getYield(first);
 	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query yields
 	    return null;
 	} else if (firstLevelPropYield.getInfo().getJavaType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
-	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, Class>(new PurePropInfo(first, null, null), null) : null;
+	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null), new PurePropInfo(first, null, null)) : null;
 	} else if (!StringUtils.isEmpty(rest)) {
-	    try {
-		return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), null), determinePropertyType(firstLevelPropYield.getInfo().getJavaType(), rest));
-	    } catch (final Exception e) {
+	    final PropertyPersistenceInfo propInfo = getMappingsGenerator().getInfoForDotNotatedProp(firstLevelPropYield.getInfo().getJavaType(), rest);
+	    if (propInfo == null) {
 		return null;
+	    } else {
+		return new Pair<PurePropInfo, PurePropInfo>(
+			new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType()),
+			new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType()));
 	    }
 	} else {
-	    return new Pair<PurePropInfo, Class>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), null), firstLevelPropYield.getInfo().getJavaType());
+	    final PurePropInfo ppi = new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType());
+	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 	}
     }
 

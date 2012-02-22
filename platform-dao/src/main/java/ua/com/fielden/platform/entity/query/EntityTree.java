@@ -13,11 +13,13 @@ import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
  */
 public class EntityTree {
     private Class resultType; // e.g. Vehicle, ISimpleMoneyType
+    private final ICompositeUserTypeInstantiate hibType; //e.g. ISimpleMoneyType
     private SortedMap<PropertyPersistenceInfo, Integer/*position in raw result array*/> singles = new TreeMap<PropertyPersistenceInfo, Integer>();
     private SortedMap<String /*composite property name*/, EntityTree> composites = new TreeMap<String, EntityTree>();
 
-    protected EntityTree(final Class resultType) {
+    protected EntityTree(final Class resultType, final ICompositeUserTypeInstantiate hibType) {
 	this.resultType = resultType;
+	this.hibType = hibType;
     }
 
     @Override
@@ -72,5 +74,9 @@ public class EntityTree {
 
     public SortedMap<String, EntityTree> getComposites() {
         return composites;
+    }
+
+    public ICompositeUserTypeInstantiate getHibType() {
+        return hibType;
     }
 }

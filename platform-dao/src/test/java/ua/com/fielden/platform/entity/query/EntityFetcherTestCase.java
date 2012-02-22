@@ -41,14 +41,14 @@ public class EntityFetcherTestCase extends BaseEntQueryTCase {
 //	propInfos.add(new ResultPropertyInfo("desc", "C4", STRING));
 //	propInfos.add(new ResultPropertyInfo("initDate", "C5", DATE));
 
-	final EntityTree expEntTree = new EntityTree(TgVehicle.class);
+	final EntityTree expEntTree = new EntityTree(TgVehicle.class, null);
 //	expEntTree.getSingles().put(new PropColumn("id", "C1", Hibernate.LONG, null), 0);
 //	expEntTree.getSingles().put(new PropColumn("version", "C2", Hibernate.LONG, null), 1);
 //	expEntTree.getSingles().put(new PropColumn("key", "C3", Hibernate.STRING, null), 2);
 //	expEntTree.getSingles().put(new PropColumn("desc", "C4", Hibernate.STRING, null), 3);
 //	expEntTree.getSingles().put(new PropColumn("initDate", "C5", Hibernate.TIMESTAMP, null), 4);
 
-	final EntityTree actTree = ef.buildTree(TgVehicle.class, propInfos);
+	final EntityTree actTree = ef.buildTree(TgVehicle.class, null, propInfos);
 	assertEquals("Act entity tree differs from expected", expEntTree, actTree);
 
 	final List<Pair<String, Type>> expScalarInfo = new ArrayList<Pair<String, Type>>();
@@ -72,19 +72,19 @@ public class EntityFetcherTestCase extends BaseEntQueryTCase {
 //	propInfos.add(new ResultPropertyInfo("initDate", "C5", DATE));
 //	propInfos.add(new ResultPropertyInfo("model", "C6", MODEL));
 
-	final EntityTree expEntTree = new EntityTree(TgVehicle.class);
+	final EntityTree expEntTree = new EntityTree(TgVehicle.class, null);
 //	expEntTree.getSingles().put(new PropColumn("id", "C1", Hibernate.LONG, null), 0);
 //	expEntTree.getSingles().put(new PropColumn("version", "C2", Hibernate.LONG, null), 1);
 //	expEntTree.getSingles().put(new PropColumn("key", "C3", Hibernate.STRING, null), 2);
 //	expEntTree.getSingles().put(new PropColumn("desc", "C4", Hibernate.STRING, null), 3);
 //	expEntTree.getSingles().put(new PropColumn("initDate", "C5", Hibernate.TIMESTAMP, null), 4);
 
-	final EntityTree expVehModelTree = new EntityTree(MODEL);
+	final EntityTree expVehModelTree = new EntityTree(MODEL, null);
 //	expVehModelTree.getSingles().put(new PropColumn("id", "C6", Hibernate.LONG, null), 5);
 
 	expEntTree.getComposites().put("model", expVehModelTree);
 
-	final EntityTree actTree = ef.buildTree(TgVehicle.class, propInfos);
+	final EntityTree actTree = ef.buildTree(TgVehicle.class, null, propInfos);
 	assertEquals("Act entity tree differs from expected", expEntTree, actTree);
 
 	final List<Pair<String, Type>> expScalarInfo = new ArrayList<Pair<String, Type>>();
@@ -108,16 +108,16 @@ public class EntityFetcherTestCase extends BaseEntQueryTCase {
 //	propInfos.add(new ResultPropertyInfo("desc", "C4", STRING));
 //	propInfos.add(new ResultPropertyInfo("purchasePrice.amount", "C5", BIG_DECIMAL));
 
-	final EntityTree expMoneyTree = new EntityTree(SimpleMoneyType.class);
+	final EntityTree expMoneyTree = new EntityTree(SimpleMoneyType.class, SimpleMoneyType.class.newInstance());
 //	expMoneyTree.getSingles().put(new PropColumn("amount", "C5", Hibernate.BIG_DECIMAL, null), 4);
-	final EntityTree expEntTree = new EntityTree(TgVehicle.class);
+	final EntityTree expEntTree = new EntityTree(TgVehicle.class, null);
 //	expEntTree.getSingles().put(new PropColumn("id", "C1", Hibernate.LONG, null), 0);
 //	expEntTree.getSingles().put(new PropColumn("version", "C2", Hibernate.LONG, null), 1);
 //	expEntTree.getSingles().put(new PropColumn("key", "C3", Hibernate.STRING, null), 2);
 //	expEntTree.getSingles().put(new PropColumn("desc", "C4", Hibernate.STRING, null), 3);
 	expEntTree.getComposites().put("purchasePrice", expMoneyTree);
 
-	final EntityTree actTree = ef.buildTree(TgVehicle.class, propInfos);
+	final EntityTree actTree = ef.buildTree(TgVehicle.class, null, propInfos);
 	assertEquals("Act entity tree differs from expected", expEntTree, actTree);
 
 	final List<Pair<String, Type>> expScalarInfo = new ArrayList<Pair<String, Type>>();
@@ -144,20 +144,20 @@ public class EntityFetcherTestCase extends BaseEntQueryTCase {
 //	propInfos.add(new ResultPropertyInfo("key", "C8", STRING));
 //	propInfos.add(new ResultPropertyInfo("desc", "C9", STRING));
 
-	final EntityTree expVehTree = new EntityTree(TgVehicle.class);
+	final EntityTree expVehTree = new EntityTree(TgVehicle.class, null);
 //	expVehTree.getSingles().put(new PropColumn("id", "C1", Hibernate.LONG, null), 4);
 //	expVehTree.getSingles().put(new PropColumn("version", "C2", Hibernate.LONG, null), 5);
 //	expVehTree.getSingles().put(new PropColumn("key", "C3", Hibernate.STRING, null), 6);
 //	expVehTree.getSingles().put(new PropColumn("desc", "C4", Hibernate.STRING, null), 7);
 //	expVehTree.getSingles().put(new PropColumn("initDate", "C5", Hibernate.TIMESTAMP, null), 8);
 
-	final EntityTree expEntTree = new EntityTree(TgWorkOrder.class);
+	final EntityTree expEntTree = new EntityTree(TgWorkOrder.class, null);
 //	expEntTree.getSingles().put(new PropColumn("id", "C6", Hibernate.LONG, null), 0);
 //	expEntTree.getSingles().put(new PropColumn("version", "C7", Hibernate.LONG, null), 1);
 //	expEntTree.getSingles().put(new PropColumn("key", "C8", Hibernate.STRING, null), 2);
 //	expEntTree.getSingles().put(new PropColumn("desc", "C9", Hibernate.STRING, null), 3);
 	expEntTree.getComposites().put("vehicle", expVehTree);
-	final EntityTree actTree = ef.buildTree(TgWorkOrder.class, propInfos);
+	final EntityTree actTree = ef.buildTree(TgWorkOrder.class, null, propInfos);
 	assertEquals("Act entity tree differs from expected", expEntTree, actTree);
     }
 
@@ -181,14 +181,14 @@ public class EntityFetcherTestCase extends BaseEntQueryTCase {
 //	propInfos.add(new ResultPropertyInfo("key", "C13",  STRING));
 //	propInfos.add(new ResultPropertyInfo("desc", "C14", STRING));
 
-	final EntityTree expReplacedByVehTree = new EntityTree(TgVehicle.class);
+	final EntityTree expReplacedByVehTree = new EntityTree(TgVehicle.class, null);
 //	expReplacedByVehTree.getSingles().put(new PropColumn("id", "C6", Hibernate.LONG, null), 9);
 //	expReplacedByVehTree.getSingles().put(new PropColumn("version", "C7", Hibernate.LONG, null), 10);
 //	expReplacedByVehTree.getSingles().put(new PropColumn("key", "C8", Hibernate.STRING, null), 11);
 //	expReplacedByVehTree.getSingles().put(new PropColumn("desc", "C9", Hibernate.STRING, null), 12);
 //	expReplacedByVehTree.getSingles().put(new PropColumn("initDate", "C10", Hibernate.TIMESTAMP, null), 13);
 
-	final EntityTree expVehTree = new EntityTree(TgVehicle.class);
+	final EntityTree expVehTree = new EntityTree(TgVehicle.class, null);
 //	expVehTree.getSingles().put(new PropColumn("id", "C1", Hibernate.LONG, null), 4);
 //	expVehTree.getSingles().put(new PropColumn("version", "C2", Hibernate.LONG, null), 5);
 //	expVehTree.getSingles().put(new PropColumn("key", "C3", Hibernate.STRING, null), 6);
@@ -196,13 +196,13 @@ public class EntityFetcherTestCase extends BaseEntQueryTCase {
 //	expVehTree.getSingles().put(new PropColumn("initDate", "C5", Hibernate.TIMESTAMP, null), 8);
 	expVehTree.getComposites().put("replacedBy", expReplacedByVehTree);
 
-	final EntityTree expEntTree = new EntityTree(TgWorkOrder.class);
+	final EntityTree expEntTree = new EntityTree(TgWorkOrder.class, null);
 //	expEntTree.getSingles().put(new PropColumn("id", "C11", Hibernate.LONG, null), 0);
 //	expEntTree.getSingles().put(new PropColumn("version", "C12", Hibernate.LONG, null), 1);
 //	expEntTree.getSingles().put(new PropColumn("key", "C13", Hibernate.STRING, null), 2);
 //	expEntTree.getSingles().put(new PropColumn("desc", "C14", Hibernate.STRING, null), 3);
 	expEntTree.getComposites().put("vehicle", expVehTree);
-	final EntityTree actTree = ef.buildTree(TgWorkOrder.class, propInfos);
+	final EntityTree actTree = ef.buildTree(TgWorkOrder.class, null, propInfos);
 	assertEquals("Act entity tree differs from expected", expEntTree, actTree);
     }
 }

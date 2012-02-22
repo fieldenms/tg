@@ -97,6 +97,11 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     	assertEquals("Incorrect value", new BigDecimal("200.00"), values.get(0).get("aa"));
     }
 
+//    public void test_vehicle_model_retrieval6() {
+//	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).model();
+//	final List<TgVehicle> values = ef.list(session(), factory, new QueryExecutionModel(model, null), false);
+//    	assertEquals("Incorrect count", 2, values.size());
+//    }
 
     @Override
     protected String[] getDataSetPathsForInsert() {

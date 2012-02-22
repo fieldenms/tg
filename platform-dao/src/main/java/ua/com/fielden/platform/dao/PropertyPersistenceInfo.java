@@ -29,9 +29,17 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	return hibType instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibType : null;
     }
 
+    public ICompositeUserTypeInstantiate getHibTypeAsCompositeUserType() {
+	return hibType instanceof ICompositeUserTypeInstantiate ? (ICompositeUserTypeInstantiate) hibType : null;
+    }
+
     @Override
     public String toString() {
         return "\nname = " + name + "\njavaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + "\nhibType = " + (hibType != null ? hibType.getClass().getSimpleName() : hibType) + "\ntype = " + type + "\ncolumn(s) = " + columns;
+    }
+
+    public boolean isCompositeProperty() {
+	return getHibTypeAsCompositeUserType() != null;
     }
 
     public boolean isEntity() {
