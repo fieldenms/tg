@@ -13,7 +13,6 @@ import org.hibernate.type.Type;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -36,19 +35,17 @@ public class EntityFetcher<E extends AbstractEntity> {
     private EntityFactory entityFactory;
     private Logger logger = Logger.getLogger(this.getClass());
     private MappingsGenerator mappingsGenerator;
-    private MappingExtractor mappingExtractor;
     private EntityEnhancer<E> entityEnhancer;
     private DbVersion dbVersion;
 
     public EntityFetcher() {
     }
 
-    public EntityFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final MappingExtractor mappingExtractor, final DbVersion dbVersion) {
+    public EntityFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion) {
 	this.session = session;
 	this.entityFactory = entityFactory;
 	this.mappingsGenerator = mappingsGenerator;
-	this.mappingExtractor = mappingExtractor;
-	this.entityEnhancer = new EntityEnhancer<E>(session, entityFactory, mappingsGenerator, mappingExtractor, dbVersion);
+	this.entityEnhancer = new EntityEnhancer<E>(session, entityFactory, mappingsGenerator, dbVersion);
 	this.dbVersion = dbVersion;
     }
 

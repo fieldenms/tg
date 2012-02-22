@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.hibernate.Session;
 
-import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -25,7 +24,7 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 public class EntityFetcherTest extends DbDrivenTestCase {
 
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private final EntityFetcher ef = new EntityFetcher(session(), factory, injector.getInstance(MappingsGenerator.class), injector.getInstance(MappingExtractor.class), null);
+    private final EntityFetcher ef = new EntityFetcher(session(), factory, injector.getInstance(MappingsGenerator.class), null);
     private Session session() {
 	return hibernateUtil.getSessionFactory().getCurrentSession();
     }
