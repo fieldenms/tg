@@ -42,6 +42,17 @@ public class LevelAllocatingVisitorIntegratedTest {
     }
 
     @Test
+    public void test_expression_level_calc_with_level_compatible_nodes_case_10() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("COUNT(MONTH(collectional.dateProperty) + MONTH(selfProperty.collectional.dateProperty))").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+
+	new AstWalker(ast, new LevelAllocatingVisitor(EntityLevel1.class)).walk();
+
+	assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+    }
+
+    @Test
     public void test_expression_level_calc_with_level_compatible_nodes_case_3() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("(2 + entityProperty.intProperty) / (3 - selfProperty.entityProperty.intProperty)").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
@@ -171,7 +182,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 	    new AstWalker(ast, visitor).walk();
 	    fail("Exception expected.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand nesting level.", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand nesting level for operands of operation '/'.", ex.getMessage());
 	}
     }
 
@@ -185,7 +196,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 	    new AstWalker(ast, visitor).walk();
 	    fail("Exception expected.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand nesting level.", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand nesting level for operands of operation '/'.", ex.getMessage());
 	}
     }
 
@@ -223,7 +234,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 	    new AstWalker(ast, visitor).walk();
 	    fail("Exception expected.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand nesting level.", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand nesting level for operands of operation '+'.", ex.getMessage());
 	}
     }
 

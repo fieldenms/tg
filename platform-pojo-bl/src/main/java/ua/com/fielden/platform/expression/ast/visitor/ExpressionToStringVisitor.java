@@ -13,6 +13,13 @@ import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
  */
 public class ExpressionToStringVisitor extends AbstractAstVisitor {
 
+    /**
+     * {@inheritDoc}
+     */
+    public ExpressionToStringVisitor() {
+	super(null, null);
+    }
+
     private final StringBuilder expressionForm = new StringBuilder();
 
     @Override

@@ -59,7 +59,7 @@ public class ExpressionText2ModelConverter4DayDiffTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation 'DAY_DIFF'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation 'DAY_DIFF': 'selfProperty.collectional' is not compatible with 'collectional'.", ex.getMessage());
 	}
     }
 }

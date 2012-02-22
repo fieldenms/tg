@@ -33,15 +33,13 @@ import ua.com.fielden.platform.types.Money;
  */
 public class TypeEnforcementVisitor extends AbstractAstVisitor {
 
-    private final Class<? extends AbstractEntity> context;
 
-    /**
-     * Context is a top level type for which all referenced by AST nodes properties should be its properties or subproperties.
-     *
-     * @param context
-     */
-    public TypeEnforcementVisitor(final Class<? extends AbstractEntity> context) {
-	this.context = context;
+    public TypeEnforcementVisitor(final Class<? extends AbstractEntity> higherOrderType, final String contextProperty) {
+	super(higherOrderType, contextProperty);
+    }
+
+    public TypeEnforcementVisitor(final Class<? extends AbstractEntity> higherOrderType) {
+	super(higherOrderType, null);
     }
 
     @Override
@@ -304,7 +302,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
      * @throws UnsupportedTypeException
      */
     private Class<?> identifyPropertyType(final AstNode node) throws UnsupportedTypeException {
-	final Field field = Finder.findFieldByName(context, node.getToken().text);
+	final Field field = Finder.findFieldByName(getHigherOrderType(), relative2Absolute(node.getToken().text));
 	final Class<?> type = field.getType();
 	if (Money.class.isAssignableFrom(type)) {
 	    return Money.class;

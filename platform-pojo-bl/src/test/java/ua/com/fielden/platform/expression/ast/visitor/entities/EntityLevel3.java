@@ -18,6 +18,15 @@ public class EntityLevel3 extends AbstractEntity<String> {
     @Title(value = "String Property", desc = "Property to test string functions in expression language.")
     private String strProperty;
 
+    @IsProperty
+    private Money moneyProperty;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Date Property", desc = "Property to test date functions in expression language.")
+    private Date dateProperty;
+
+
     @Observable
     public EntityLevel3 setStrProperty(final String strProperty) {
 	this.strProperty = strProperty;
@@ -28,8 +37,6 @@ public class EntityLevel3 extends AbstractEntity<String> {
 	return strProperty;
     }
 
-    @IsProperty
-    private Money moneyProperty;
 
     public Money getMoneyProperty() {
 	return moneyProperty;
@@ -39,11 +46,6 @@ public class EntityLevel3 extends AbstractEntity<String> {
     public void setMoneyProperty(final Money moneyProperty) {
 	this.moneyProperty = moneyProperty;
     }
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Date Property", desc = "Property to test date functions in expression language.")
-    private Date dateProperty;
 
     @Observable
     public EntityLevel3 setDateProperty(final Date dateProperty) {

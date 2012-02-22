@@ -286,7 +286,7 @@ public final class Reflector {
 	final int endOfLevelUp = relativePropertyPath.lastIndexOf(UP_LEVEL);
 	final String returnPath = relativePropertyPath.substring(0, endOfLevelUp + 1);
 	final String propertyPathWithoutLevelUp = relativePropertyPath.substring(endOfLevelUp + 2);
-	final int returnPathLength = propertyLevel(returnPath);
+	final int returnPathLength = propertyDepth(returnPath);
 
 	final String missingPathFromRoot = pathFromRoot(context, returnPathLength);
 	final String absolutePath = StringUtils.isEmpty(missingPathFromRoot) ? propertyPathWithoutLevelUp : missingPathFromRoot + "." + propertyPathWithoutLevelUp;
@@ -303,7 +303,7 @@ public final class Reflector {
      */
     private static String pathFromRoot(final String context, final int relativePathLength) {
 	// this basically means that either context was not specified correctly or the ← symbol in the relative path was included too many times
-	if (relativePathLength > propertyLevel(context)) {
+	if (relativePathLength > propertyDepth(context)) {
 	    throw new IllegalArgumentException("Either the context or the relative property path is incorrect.");
 	}
 
@@ -335,7 +335,7 @@ public final class Reflector {
 	final String[] contextElements = context.split(DOT_SPLITTER);
 	final String[] propertyElements = absolutePropertyPath.split(DOT_SPLITTER);
 	final int length = Math.min(contextElements.length, propertyElements.length);
-	int longestPathUp = propertyLevel(context);
+	int longestPathUp = propertyDepth(context);
 	for (int index = 0; index < length; index++) {
 	    if (!contextElements[index].equals(propertyElements[index])) {
 		break;
@@ -349,7 +349,7 @@ public final class Reflector {
 	    sb.append("←.");
 	}
 	// append the remaining property path
-	for (int index = propertyLevel(context) - longestPathUp; index < propertyElements.length; index++) {
+	for (int index = propertyDepth(context) - longestPathUp; index < propertyElements.length; index++) {
 	    sb.append(propertyElements[index]);
 	    if (index < propertyElements.length - 1) {
 		sb.append(".");
@@ -360,12 +360,12 @@ public final class Reflector {
     }
 
     /**
-     * A helper function to calculate the property level in the type tree.
+     * Calculate the property depth in the type tree based on the number of "." separators.
      *
      * @param propertyPath
      * @return
      */
-    private static int propertyLevel(final String propertyPath) {
+    public static int propertyDepth(final String propertyPath) {
 	if (StringUtils.isEmpty(propertyPath)) {
 	    return 0;
 	}

@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.expression.ast.AstNode;
-import ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor;
+import ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
@@ -122,7 +122,7 @@ public class CalculatedProperty implements ICalculatedProperty {
 	    final String masterPath = collectionOrInCollectionHierarchy ? parentCollection(this.root, this.contextPath) : "";
 	    if (collectionOrInCollectionHierarchy) { // collectional hierarchy
 		// final String collectionPath = AbstractDomainTreeRepresentation.parentCollection(this.root, this.contextPath);
-		if (TaggingVisitor.THIS.equals(ast.getTag())) {
+		if (CollectionalContextVisitor.THIS.equals(ast.getTag())) {
 		    if (CalculatedPropertyAttribute.ALL.equals(this.attribute) || CalculatedPropertyAttribute.ANY.equals(this.attribute)) { // ALL / ANY -- above
 			this.category = CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION;
 			this.path = above(masterPath); // the level above except for root level -- ""
@@ -130,17 +130,17 @@ public class CalculatedProperty implements ICalculatedProperty {
 			this.category = CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION;
 			this.path = this.contextPath;
 		    }
-		} else if (TaggingVisitor.ABOVE.equals(ast.getTag())) {
+		} else if (CollectionalContextVisitor.SUPER.equals(ast.getTag())) {
 		    this.category = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION;
 		    this.path = above(masterPath); // the level above except for root level -- ""
 		    resetAttribute();
 		}
 	    } else { // simple hierarchy
 		// final String masterPath = ""; // simple hierarchy
-		if (TaggingVisitor.THIS.equals(ast.getTag())) {
+		if (CollectionalContextVisitor.THIS.equals(ast.getTag())) {
 		    this.category = CalculatedPropertyCategory.EXPRESSION;
 		    this.path = this.contextPath;
-		} else if (TaggingVisitor.ABOVE.equals(ast.getTag())) {
+		} else if (CollectionalContextVisitor.SUPER.equals(ast.getTag())) {
 		    this.category = CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
 		    this.path = above(masterPath); // the level above except for root level -- ""
 		}

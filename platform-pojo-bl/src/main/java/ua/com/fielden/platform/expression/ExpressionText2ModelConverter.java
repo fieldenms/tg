@@ -1,16 +1,14 @@
 package ua.com.fielden.platform.expression;
 
-import static ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor.ABOVE;
-import static ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor.THIS;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.ast.AstWalker;
+import ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor;
 import ua.com.fielden.platform.expression.ast.visitor.EssentialPropertyValidationVisitor;
+import ua.com.fielden.platform.expression.ast.visitor.LevelAllocatingVisitor;
 import ua.com.fielden.platform.expression.ast.visitor.ModelGeneratingVisitor;
-import ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor;
 import ua.com.fielden.platform.expression.ast.visitor.TypeEnforcementVisitor;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
-import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperandException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 
 /**
@@ -20,19 +18,37 @@ import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
  *
  */
 public class ExpressionText2ModelConverter {
-    private final String text;
-    private final Class<? extends AbstractEntity> context;
+    private final String expressionText;
+    private final Class<? extends AbstractEntity> higherOrderType;
+    private final String contextProperty;
 
     /**
-     * Primary constructor.
+     * The <code>higherOrderType</code> argument should represent a top level type for which all referenced by the AST nodes properties should be its properties or subproperties.
+     * The <code>contextProperty</code> argument specifies the relative location in the type tree against which all other AST nodes' levels should be checked for compatibility.
+     * The value of the <code>contextProperty</code> argument should be null if the higher-order type represents a context.
      *
-     * @param context -- an entity type serving as an expression contexts; this usually means an new calculated property is going to be added to this type.
+     * @param higherOrderType
+     * @param contextProperty
      * @param expressionText -- a textual representations of the expression, which gets parsed and validated.
      */
-    public ExpressionText2ModelConverter(final Class<? extends AbstractEntity> context, final String expressionText) {
-	this.context = context;
-	this.text = expressionText;
+
+    public ExpressionText2ModelConverter(final Class<? extends AbstractEntity> higherOrderType, final String contextProperty, final String expressionText) {
+	this.higherOrderType = higherOrderType;
+	this.contextProperty = contextProperty;
+	this.expressionText = expressionText;
     }
+
+    /**
+     * Convenient constructor where context matches the high-order type.
+     *
+     * @param higherOrderType
+     * @param expressionText
+     */
+
+    public ExpressionText2ModelConverter(final Class<? extends AbstractEntity> higherOrderType, final String expressionText) {
+	this(higherOrderType, null, expressionText);
+    }
+
 
     /**
      * Performs syntactic, semantic analysis and produces a computational model, which can be used for entity query API.
@@ -44,17 +60,15 @@ public class ExpressionText2ModelConverter {
      * @throws SemanticException
      */
     public AstNode convert() throws RecognitionException, SemanticException {
-	final Token[] tokens = new ExpressionLexer(text).tokenize();
+	final Token[] tokens = new ExpressionLexer(expressionText).tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
-	final EssentialPropertyValidationVisitor epvv = new EssentialPropertyValidationVisitor(context);
-	final TaggingVisitor tv = new TaggingVisitor(context);
-	final TypeEnforcementVisitor tev = new TypeEnforcementVisitor(context);
-	final ModelGeneratingVisitor mgv = new ModelGeneratingVisitor();
-	final AstNode node = new AstWalker(ast, epvv, tv, tev, mgv).walk();
-	if (!THIS.equals(node.getTag()) && !ABOVE.equals(node.getTag())) {
-	    throw new IncompatibleOperandException("Incompatible expression context (" + node.getTag() + ").", node.getToken());
-	}
+	final EssentialPropertyValidationVisitor epvv = new EssentialPropertyValidationVisitor(higherOrderType, contextProperty);
+	final LevelAllocatingVisitor lav = new LevelAllocatingVisitor(higherOrderType, contextProperty);
+	final CollectionalContextVisitor tv = new CollectionalContextVisitor(higherOrderType, contextProperty);
+	final TypeEnforcementVisitor tev = new TypeEnforcementVisitor(higherOrderType, contextProperty);
+	final ModelGeneratingVisitor mgv = new ModelGeneratingVisitor(higherOrderType, contextProperty);
+	final AstNode node = new AstWalker(ast, epvv, lav, tv, tev, mgv).walk();
 	return node;
     }
 }

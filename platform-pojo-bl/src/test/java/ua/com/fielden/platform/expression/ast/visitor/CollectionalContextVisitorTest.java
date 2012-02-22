@@ -3,8 +3,8 @@ package ua.com.fielden.platform.expression.ast.visitor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor.ABOVE;
-import static ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor.THIS;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.SUPER;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.THIS;
 
 import org.junit.Test;
 
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.IncompatibleOperandException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 
-public class TaggingVisitorTest {
+public class CollectionalContextVisitorTest {
 
     @Test
     public void test_expression_level_calc_with_tag_compatible_nodes_case_1() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
@@ -27,7 +27,7 @@ public class TaggingVisitorTest {
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
-	new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 
 	assertNull("Incorrect tag for expression", ast.getTag());
     }
@@ -38,7 +38,7 @@ public class TaggingVisitorTest {
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
-	new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 
 	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
     }
@@ -49,7 +49,7 @@ public class TaggingVisitorTest {
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
-	new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 
 	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
     }
@@ -60,9 +60,9 @@ public class TaggingVisitorTest {
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
-	new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 
-	assertEquals("Incorrect tag for expression", ABOVE, ast.getTag());
+	assertEquals("Incorrect tag for expression", SUPER, ast.getTag());
     }
 
     @Test
@@ -71,7 +71,7 @@ public class TaggingVisitorTest {
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
-	new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 
 	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
     }
@@ -82,7 +82,7 @@ public class TaggingVisitorTest {
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
-	new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 
 	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
     }
@@ -93,7 +93,7 @@ public class TaggingVisitorTest {
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
-	new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 
 	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
     }
@@ -104,9 +104,9 @@ public class TaggingVisitorTest {
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
-	new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 
-	assertEquals("Incorrect tag for expression", ABOVE, ast.getTag());
+	assertEquals("Incorrect tag for expression", SUPER, ast.getTag());
     }
 
     @Test
@@ -115,7 +115,7 @@ public class TaggingVisitorTest {
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
-	new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 
 	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
     }
@@ -126,9 +126,16 @@ public class TaggingVisitorTest {
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
-	new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 
 	assertEquals("Incorrect tag for expression", THIS, ast.getTag());
+    }
+
+    @Test
+    public void ensure_that_this_context_may_include_nodes_with_the_above_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("AVG(selfProperty.selfProperty.collectional.intProperty) + SUM(selfProperty.entityProperty.intProperty)").tokenize();
+	final AstNode root = new AstWalker(new ExpressionParser(tokens).parse(), new CollectionalContextVisitor(EntityLevel1.class)).walk();
+	assertEquals("Incorrect collectional context.", CollectionalContextVisitor.THIS, root.getTag());
     }
 
     @Test
@@ -137,40 +144,26 @@ public class TaggingVisitorTest {
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 	try {
-	    new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	    new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 	    fail("Exception expected.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '/'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation '/': 'this' is not compatible with 'selfProperty.selfProperty.collectional'.", ex.getMessage());
 	}
     }
+
 
     @Test
     public void test_expression_tag_calc_with_tag_incompatible_nodes_case_2() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("AVG(selfProperty.selfProperty.collectional.intProperty) + SUM(selfProperty.entityProperty.intProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-
-	try {
-	    new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
-	    fail("Exception expected.");
-	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
-	}
-    }
-
-    @Test
-    public void test_expression_tag_calc_with_tag_incompatible_nodes_case_3() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("AVG(collectional.intProperty + entityProperty.collectional.moneyProperty)").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
 
 	try {
-	    new AstWalker(ast, new TaggingVisitor(EntityLevel1.class)).walk();
+	    new AstWalker(ast, new CollectionalContextVisitor(EntityLevel1.class)).walk();
 	    fail("Exception expected.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation '+': 'entityProperty.collectional' is not compatible with 'collectional'.", ex.getMessage());
 	}
     }
-
 
 }

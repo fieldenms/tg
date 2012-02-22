@@ -40,22 +40,14 @@ import ua.com.fielden.platform.reflection.Reflector;
  */
 public class LevelAllocatingVisitor extends AbstractAstVisitor {
 
-    private final Class<? extends AbstractEntity> higherOrderType;
-    private final String contextProperty;
     private final int contextLevel;
 
     /**
-     * The <code>higherOrderType</code> argument should represent a top level type for which all referenced by the AST nodes properties should be its properties or subproperties.
-     * The <code>contextProperty</code> argument specifies the relative location in the type tree against which all other AST nodes' levels should be checked for compatibility.
-     * The value of the <code>contextProperty</code> argument should be null if the higher-order type represents a context.
-     *
-     * @param higherOrderType
-     * @param contextProperty
+     * {@inheritDoc}
      */
     public LevelAllocatingVisitor(final Class<? extends AbstractEntity> higherOrderType, final String contextProperty) {
-	this.higherOrderType = higherOrderType;
-	this.contextProperty = contextProperty;
-	contextLevel = StringUtils.isEmpty(contextProperty) ? 1 : determineContextLevel(contextProperty);
+	super(higherOrderType, contextProperty);
+	contextLevel = StringUtils.isEmpty(getContextProperty()) ? 1 : determineContextLevel(getContextProperty());
     }
 
     /**
@@ -69,7 +61,6 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
 
     @Override
     public void postVisit(final AstNode rootNode) throws SemanticException {
-        super.postVisit(rootNode);
         if (rootNode.getLevel() != null && contextLevel < rootNode.getLevel()) {
             throw new IncompatibleOperandException("Resultant expression level is incompatible with the context.", rootNode.getToken());
         }
@@ -135,18 +126,13 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
 	String property = "";
 	for (int index = 0; index < parts.length; index++) {
 	    property += parts[index];
-	    final Field field = Finder.findFieldByName(higherOrderType, property);
+	    final Field field = Finder.findFieldByName(getHigherOrderType(), property);
 	    if (Collection.class.isAssignableFrom(field.getType())) {
 		level++;
 	    }
 	    property += ".";
 	}
 	return level;
-    }
-
-
-    private String relative2Absolute(final String property) {
-	return StringUtils.isEmpty(contextProperty) ? property : Reflector.fromRelative2AbsotulePath(contextProperty, property);
     }
 
     /**
@@ -160,11 +146,12 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
     public final Integer determineLevelBasedOnOperands(final AstNode node) throws SemanticException {
 	Integer level = null;
 	for (final AstNode child: node.getChildren()) {
-	    level = child.getLevel() != null && level == null ? child.getLevel() : level;
+	    // this statement handles the very first assignment of the level variable based on the first non-null level value of this operation's operands
+	    level = child.getLevel() != null && level == null ? child.getLevel() : level; // i.e. level is assigned only if it was not assigned before
 
 	    if (child.getLevel() != null && level != null && level != child.getLevel()) {
 		if (contextLevel < level || contextLevel < child.getLevel()) {
-		    throw new IncompatibleOperandException("Incompatible operand nesting level.", node.getToken());
+		    throw new IncompatibleOperandException("Incompatible operand nesting level for operands of operation '" + node.getToken().text+ "'.", node.getToken());
 		}
 	    }
 	}

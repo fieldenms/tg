@@ -3,8 +3,8 @@ package ua.com.fielden.platform.expression;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.query.expr;
-import static ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor.ABOVE;
-import static ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor.THIS;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.SUPER;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.THIS;
 
 import java.math.BigDecimal;
 
@@ -153,7 +153,7 @@ public class ExpressionText2ModelConverter4YearTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation '+': 'selfProperty.collectional' is not compatible with 'collectional'.", ex.getMessage());
 	}
     }
 
@@ -162,7 +162,7 @@ public class ExpressionText2ModelConverter4YearTest {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "COUNT(YEAR(selfProperty.dateProperty) + YEAR(entityProperty.dateProperty))");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
-	assertEquals("Incorrect expression tag", ABOVE, root.getTag());
+	assertEquals("Incorrect expression tag", SUPER, root.getTag());
 
 	final ExpressionModel func1 = expr().yearOf().prop("selfProperty.dateProperty").model();
 	final ExpressionModel func2 = expr().yearOf().prop("entityProperty.dateProperty").model();

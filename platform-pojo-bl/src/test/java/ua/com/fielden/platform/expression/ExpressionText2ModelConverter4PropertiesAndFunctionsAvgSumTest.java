@@ -3,8 +3,8 @@ package ua.com.fielden.platform.expression;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.query.expr;
-import static ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor.ABOVE;
-import static ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor.THIS;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.SUPER;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.THIS;
 
 import java.math.BigDecimal;
 
@@ -155,7 +155,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible expression context (collectional).", ex.getMessage());
+	    assertEquals("Incorrect message", "Resultant expression level is incompatible with the context.", ex.getMessage());
 	}
     }
 
@@ -166,7 +166,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible expression context (collectional.collectional).", ex.getMessage());
+	    assertEquals("Incorrect message", "Resultant expression level is incompatible with the context.", ex.getMessage());
 	}
     }
 
@@ -189,7 +189,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand nesting level for operands of operation '+'.", ex.getMessage());
 	}
     }
 
@@ -200,7 +200,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation '+': 'selfProperty.collectional' is not compatible with 'collectional'.", ex.getMessage());
 	}
     }
 
@@ -209,7 +209,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "SUM(selfProperty.intProperty) + AVG(entityProperty.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
-	assertEquals("Incorrect expression tag", ABOVE, root.getTag());
+	assertEquals("Incorrect expression tag", SUPER, root.getTag());
 
 	final ExpressionModel sum = expr().sumOf().prop("selfProperty.intProperty").model();
 	final ExpressionModel avg = expr().avgOf().prop("entityProperty.intProperty").model();
@@ -266,7 +266,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand nesting level for operands of operation '+'.", ex.getMessage());
 	}
     }
 
@@ -294,7 +294,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation '+': 'entityProperty.collectional' is not compatible with 'collectional'.", ex.getMessage());
 	}
     }
 
@@ -322,7 +322,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand nesting level for operands of operation '+'.", ex.getMessage());
 	}
     }
 
@@ -333,7 +333,7 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation '+': 'entityProperty.collectional' is not compatible with 'collectional'.", ex.getMessage());
 	}
     }
 
@@ -345,8 +345,8 @@ public class ExpressionText2ModelConverter4PropertiesAndFunctionsAvgSumTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
-	    assertEquals("Incorrect operand in error.", "entityProperty.collectional.moneyProperty", expressionText.substring(ex.token().beginIndex, ex.token().endIndex));
+	    assertEquals("Incorrect message", "Resultant expression level is incompatible with the context.", ex.getMessage());
+	    assertEquals("Incorrect operand in error.", "+", expressionText.substring(ex.token().beginIndex, ex.token().endIndex).trim());
 	}
     }
 

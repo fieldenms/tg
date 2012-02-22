@@ -3,12 +3,11 @@ package ua.com.fielden.platform.expression;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.query.expr;
-import static ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor.ABOVE;
-import static ua.com.fielden.platform.expression.ast.visitor.TaggingVisitor.THIS;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.SUPER;
+import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.THIS;
 
 import java.math.BigDecimal;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -46,18 +45,6 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	final ExpressionModel plus2 = expr().prop("intProperty").add().expr(plus3).model();
 	final ExpressionModel plus1 = expr().expr(min).add().expr(plus2).model();
 	final ExpressionModel model = expr().expr(plus1).mult().val(2).model();
-	assertEquals("Incorrect model.", model, root.getModel());
-    }
-
-    @Test
-    @Ignore
-    public void test_case_056() throws RecognitionException, SemanticException {
-	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(collectional.intProperty - intProperty)"); // "MIN(collectional.intProperty) - intProperty"
-	final AstNode root = ev.convert();
-	assertEquals("Incorrect expression type", Money.class, root.getType());
-
-	final ExpressionModel minus = expr().prop("collectional.intProperty").sub().prop("intProperty").model();
-	final ExpressionModel model = expr().minOf().expr(minus).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
 
@@ -224,7 +211,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand nesting level for operands of operation '+'.", ex.getMessage());
 	}
     }
 
@@ -235,7 +222,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand nesting level for operands of operation '+'.", ex.getMessage());
 	}
     }
 
@@ -246,7 +233,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation '+': 'selfProperty.collectional' is not compatible with 'collectional'.", ex.getMessage());
 	}
     }
 
@@ -257,7 +244,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation '+': 'selfProperty.collectional' is not compatible with 'collectional'.", ex.getMessage());
 	}
     }
 
@@ -266,7 +253,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "MIN(selfProperty.intProperty) + MAX(entityProperty.intProperty)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Integer.class, root.getType());
-	assertEquals("Incorrect expression tag", ABOVE, root.getTag());
+	assertEquals("Incorrect expression tag", SUPER, root.getTag());
 
 	final ExpressionModel min = expr().minOf().prop("selfProperty.intProperty").model();
 	final ExpressionModel max = expr().maxOf().prop("entityProperty.intProperty").model();
@@ -321,7 +308,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand nesting level for operands of operation '+'.", ex.getMessage());
 	}
     }
 
@@ -349,7 +336,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation '+': 'entityProperty.collectional' is not compatible with 'collectional'.", ex.getMessage());
 	}
     }
 
@@ -377,7 +364,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation '+': 'entityProperty.collectional' is not compatible with 'collectional'.", ex.getMessage());
 	}
     }
 
@@ -388,7 +375,7 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
+	    assertEquals("Incorrect message", "Incompatible operand context for operation '+': 'entityProperty.collectional' is not compatible with 'collectional'.", ex.getMessage());
 	}
     }
 
@@ -400,8 +387,8 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
-	    assertEquals("Incorrect operand in error.", "entityProperty.collectional.moneyProperty", expressionText.substring(ex.token().beginIndex, ex.token().endIndex));
+	    assertEquals("Incorrect message", "Resultant expression level is incompatible with the context.", ex.getMessage());
+	    assertEquals("Incorrect operand in error.", "+", expressionText.substring(ex.token().beginIndex, ex.token().endIndex).trim());
 	}
     }
 
@@ -413,8 +400,8 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	    ev.convert();
 	    fail("Should have failed due to incorrect tag.");
 	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand context for operation '+'", ex.getMessage());
-	    assertEquals("Incorrect operand in error.", "entityProperty.collectional.moneyProperty", expressionText.substring(ex.token().beginIndex, ex.token().endIndex));
+	    assertEquals("Incorrect message", "Resultant expression level is incompatible with the context.", ex.getMessage());
+	    assertEquals("Incorrect operand in error.", "+", expressionText.substring(ex.token().beginIndex, ex.token().endIndex).trim());
 	}
     }
 
@@ -444,6 +431,49 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	final ExpressionModel avg = expr().avgOf().prop("entityProperty.collectional.moneyProperty").model();
 	final ExpressionModel model = expr().expr(max).add().expr(avg).model();
 	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void test_case_34() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "collectional", "MIN(intProperty - ←.intProperty)");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", Integer.class, root.getType());
+	assertEquals("Incorrect expression collectional context", "collectional", root.getTag());
+
+	final ExpressionModel minus = expr().prop("collectional.intProperty").sub().prop("intProperty").model();
+	final ExpressionModel model = expr().minOf().expr(minus).model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void test_case_35() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter( //
+		EntityLevel1.class, // higher-order type
+		"collectional", // expression context
+		"MIN(intProperty - ←.intProperty) + MAX(selfProperty.collectional.moneyProperty)");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", Money.class, root.getType());
+	assertEquals("Incorrect expression collectional context", "collectional", root.getTag());
+
+	final ExpressionModel minus = expr().prop("collectional.intProperty").sub().prop("intProperty").model();
+	final ExpressionModel min = expr().minOf().expr(minus).model();
+	final ExpressionModel max = expr().maxOf().prop("collectional.selfProperty.collectional.moneyProperty").model();
+	final ExpressionModel plus = expr().expr(min).add().expr(max).model();
+	assertEquals("Incorrect model.", plus, root.getModel());
+    }
+
+    @Test
+    public void test_case_36() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter( //
+		EntityLevel1.class, // higher-order type
+		"collectional", // expression context
+		"MIN(intProperty - ←.intProperty) + selfProperty.collectional.moneyProperty");
+	try {
+	    ev.convert();
+	    fail("Conversion should have failed.");
+	} catch (final IncompatibleOperandException ex) {
+	    assertEquals("Incorrect error message.", "Incompatible operand nesting level for operands of operation '+'.", ex.getMessage());
+	}
     }
 
 

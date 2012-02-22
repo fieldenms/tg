@@ -18,6 +18,33 @@ public class EntityLevel2 extends AbstractEntity<String> {
     @Title(value = "String Property", desc = "Property to test string functions in expression language")
     private String strProperty;
 
+    @IsProperty
+    private Integer intProperty;
+
+    @IsProperty(EntityLevel3.class)
+    private List<EntityLevel3> collectional;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Self", desc = "Self")
+    private EntityLevel2 selfProperty;
+
+    @Observable
+    public EntityLevel2 setSelfProperty(final EntityLevel2 selfProperty) {
+	this.selfProperty = selfProperty;
+	return this;
+    }
+
+    public EntityLevel2 getSelfProperty() {
+	return selfProperty;
+    }
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Date Property", desc = "Property to test date functions in expression language.")
+    private Date dateProperty;
+
+
     @Observable
     public EntityLevel2 setStrProperty(final String strProperty) {
 	this.strProperty = strProperty;
@@ -28,12 +55,6 @@ public class EntityLevel2 extends AbstractEntity<String> {
 	return strProperty;
     }
 
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Date Property", desc = "Property to test date functions in expression language.")
-    private Date dateProperty;
-
     @Observable
     public EntityLevel2 setDateProperty(final Date dateProperty) {
 	this.dateProperty = dateProperty;
@@ -43,12 +64,6 @@ public class EntityLevel2 extends AbstractEntity<String> {
     public Date getDateProperty() {
 	return dateProperty;
     }
-
-    @IsProperty
-    private Integer intProperty;
-
-    @IsProperty(EntityLevel3.class)
-    private List<EntityLevel3> collectional;
 
     public Integer getIntProperty() {
 	return intProperty;
