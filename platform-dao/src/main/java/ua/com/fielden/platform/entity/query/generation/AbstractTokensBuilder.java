@@ -42,13 +42,13 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private void add(final Functions function) {
 	switch (function) {
 	case SUM:
-	    setChild(new SumOfBuilder(this, queryBuilder, getParamValues()));
+	    setChild(new SumOfBuilder(this, queryBuilder, getParamValues(), false));
 	    break;
 	case COUNT:
-	    setChild(new CountOfBuilder(this, queryBuilder, getParamValues()));
+	    setChild(new CountOfBuilder(this, queryBuilder, getParamValues(), false));
 	    break;
 	case AVERAGE:
-	    setChild(new AverageOfBuilder(this, queryBuilder, getParamValues()));
+	    setChild(new AverageOfBuilder(this, queryBuilder, getParamValues(), false));
 	    break;
 	case MIN:
 	    setChild(new MinOfBuilder(this, queryBuilder, getParamValues()));
@@ -65,6 +65,16 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case YEAR:
 	    setChild(new YearOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
+	case SUM_DISTINCT:
+	    setChild(new SumOfBuilder(this, queryBuilder, getParamValues(), true));
+	    break;
+	case COUNT_DISTINCT:
+	    setChild(new CountOfBuilder(this, queryBuilder, getParamValues(), true));
+	    break;
+	case AVERAGE_DISTINCT:
+	    setChild(new AverageOfBuilder(this, queryBuilder, getParamValues(), true));
+	case COUNT_ALL:
+	    break;
 	case COUNT_DAYS:
 	case CASE_WHEN:
 	case ROUND:
@@ -75,10 +85,6 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case SECOND:
 	case MINUTE:
 	case HOUR:
-	case SUM_DISTINCT:
-	case COUNT_DISTINCT:
-	case AVERAGE_DISTINCT:
-	case COUNT_ALL:
 	    // TODO implement the rest
 	    throw new RuntimeException("Not yet implemented: " + function);
 	default:
@@ -302,10 +308,6 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
 	return result;
     }
-
-//    public DbVersion getDbVersion() {
-//	return queryBuilder.getDbVersion();
-//    }
 
     protected EntQueryGenerator getQueryBuilder() {
 	return queryBuilder;

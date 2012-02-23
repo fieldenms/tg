@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.MonthOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.MinOfModel;
 
 public class MinOfBuilder extends AbstractFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class MinOfBuilder extends AbstractFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new MonthOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new MinOfModel(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

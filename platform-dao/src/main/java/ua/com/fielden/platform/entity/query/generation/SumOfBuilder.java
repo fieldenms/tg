@@ -2,16 +2,17 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.MonthOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.SumOfModel;
 
 public class SumOfBuilder extends AbstractFunctionBuilder {
-
-    protected SumOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    private final boolean distinct;
+    protected SumOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final boolean distinct) {
 	super(parent, queryBuilder, paramValues);
+	this.distinct = distinct;
     }
 
     @Override
     Object getModel() {
-	return new MonthOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new SumOfModel(getModelForSingleOperand(firstCat(), firstValue()), distinct);
     }
 }

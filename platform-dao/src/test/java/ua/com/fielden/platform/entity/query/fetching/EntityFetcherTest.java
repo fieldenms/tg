@@ -102,6 +102,31 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     	assertEquals("Incorrect count", new Money("100.00"), values.get(0).getPurchasePrice());
     }
 
+    public void test_vehicle_model_retrieval7() {
+	final AggregatedResultQueryModel model = select(TgVehicle.class).yield(). //
+		avgOf().beginExpr().prop("price.amount").add().prop("purchasePrice.amount").endExpr().as("aa").modelAsAggregate();
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(model, null), false);
+    	assertEquals("Incorrect count", 1, values.size());
+    	assertEquals("Incorrect value", new BigDecimal("165"), values.get(0).get("aa"));
+    }
+
+    public void test_vehicle_model_retrieval8() {
+	final AggregatedResultQueryModel model = select(TgVehicle.class).yield(). //
+		beginExpr().avgOf().prop("price.amount").add().avgOf().prop("purchasePrice.amount").endExpr().as("aa").modelAsAggregate();
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(model, null), false);
+    	assertEquals("Incorrect count", 1, values.size());
+    	assertEquals("Incorrect value", new BigDecimal("165"), values.get(0).get("aa"));
+    }
+
+
+    public void test_vehicle_model_retrieval9() {
+	final AggregatedResultQueryModel model = select(TgVehicleModel.class).yield().countOfDistinct().prop("make").as("aa").modelAsAggregate();
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(model, null), false);
+    	assertEquals("Incorrect count", 1, values.size());
+    	System.out.println(values.get(0).get("aa").getClass());
+    	assertEquals("Incorrect value", "3", values.get(0).get("aa").toString());
+    }
+
     @Override
     protected String[] getDataSetPathsForInsert() {
 	return new String[] { "src/test/resources/data-files/hibernate-query-test-case.flat.xml" };

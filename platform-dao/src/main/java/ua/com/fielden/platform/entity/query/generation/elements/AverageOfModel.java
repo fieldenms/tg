@@ -2,13 +2,14 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 
 
 public class AverageOfModel extends SingleOperandFunctionModel {
-
-    public AverageOfModel(final ISingleOperand operand) {
+    private final boolean distinct;
+    public AverageOfModel(final ISingleOperand operand, final boolean distinct) {
 	super(operand);
+	this.distinct = distinct;
     }
 
     @Override
     public String sql() {
-	return "AVG(" + getOperand().sql() + ")";
+	return "AVG(" + (distinct ? "DISTINCT " : "") + getOperand().sql() + ")";
     }
 }

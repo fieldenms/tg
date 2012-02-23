@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.MonthOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.MaxOfModel;
 
 public class MaxOfBuilder extends AbstractFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class MaxOfBuilder extends AbstractFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new MonthOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new MaxOfModel(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }
