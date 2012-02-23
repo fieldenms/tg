@@ -12,7 +12,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jdesktop.jxlayer.JXLayer;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.TwoPropertyListCellRenderer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
 
 /**
  * This an autocompleter component, which is a JTextField wrapped into JXLayer. It utilises an instance of ValueMatcher to search for matching values.

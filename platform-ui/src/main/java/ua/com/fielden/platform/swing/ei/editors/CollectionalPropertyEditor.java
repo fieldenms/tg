@@ -26,7 +26,6 @@ import ua.com.fielden.platform.utils.Pair;
  * 
  */
 public class CollectionalPropertyEditor implements IPropertyEditor {
-    private static final long serialVersionUID = 1L;
 
     private AbstractEntity<?> entity;
     private final String propertyName;

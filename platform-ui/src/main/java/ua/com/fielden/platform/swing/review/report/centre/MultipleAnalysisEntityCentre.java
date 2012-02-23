@@ -118,7 +118,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
     }
 
     private Action createSaveAction() {
-	return new AbstractAction() {
+	return new AbstractAction("Save") {
 
 	    private static final long serialVersionUID = 8474884103209307717L;
 
@@ -130,7 +130,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
     }
 
     private Action createSaveAsAction() {
-	return new AbstractAction() {
+	return new AbstractAction("Save As") {
 
 	    private static final long serialVersionUID = 6870686264834331196L;
 
@@ -142,7 +142,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
     }
 
     private Action createRemoveAction() {
-	return getModel().getName() == null ? null : new AbstractAction() {
+	return getModel().getName() == null ? null : new AbstractAction("Delete") {
 
 	    private static final long serialVersionUID = 8474884103209307717L;
 
