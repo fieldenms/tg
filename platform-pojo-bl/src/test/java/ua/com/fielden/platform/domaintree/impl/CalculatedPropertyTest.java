@@ -14,7 +14,10 @@ import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedP
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION;
 
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
@@ -22,8 +25,13 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.CalcPropertyKeyWarning;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
+import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
+import ua.com.fielden.platform.domaintree.testing.MasterEntityWithUnionForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -34,6 +42,43 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *
  */
 public class CalculatedPropertyTest extends AbstractDomainTreeTest {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// Test initialisation ///////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Creates root types.
+     *
+     * @return
+     */
+    protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeManagerTest() {
+	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeTest();
+	rootTypes.add(MasterEntityForIncludedPropertiesLogic.class);
+	rootTypes.add(MasterEntityWithUnionForIncludedPropertiesLogic.class);
+	return rootTypes;
+    }
+
+    /**
+     * Provides a testing configuration for the manager.
+     *
+     * @param dtm
+     */
+    protected static void manageTestingDTM_for_AbstractDomainTreeManagerTest(final IDomainTreeManager dtm) {
+	manageTestingDTM_for_AbstractDomainTreeTest(dtm);
+
+	dtm.getFirstTick().checkedProperties(MasterEntity.class);
+	dtm.getSecondTick().checkedProperties(MasterEntity.class);
+    }
+
+    @BeforeClass
+    public static void initDomainTreeTest() {
+	final IDomainTreeManagerAndEnhancer dtm = new DomainTreeManagerAndEnhancer1(serialiser(), createRootTypes_for_AbstractDomainTreeManagerTest());
+	manageTestingDTM_for_AbstractDomainTreeManagerTest(dtm);
+	setDtmArray(serialiser().serialise(dtm));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////// End of Test initialisation ////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected ICalculatedProperty checkTrivialParams(final ICalculatedProperty calc, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
 	assertEquals("The root is incorrect.", root, calc.getRoot());
@@ -58,14 +103,14 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     }
 
     protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	final CalculatedProperty calc = CalculatedProperty.create(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, null /* TODO dtm().getEnhancer() */);
+	final CalculatedProperty calc = CalculatedProperty.create(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm().getEnhancer());
 	checkTrivialParams(calc, root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
 	return calc;
     }
 
     @Test
     public void test_serialisation() {
-	final CalculatedProperty calc = CalculatedProperty.create(factory(), MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", null);
+	final CalculatedProperty calc = CalculatedProperty.create(factory(), MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
 	checkTrivialParams(calc, MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp");
 	assertCalculatedProperty(calc, EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
 	final CalculatedProperty copy = EntityUtils.deepCopy(calc, getSerialiser());
@@ -97,6 +142,45 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * integerProp", "Calculated property", "desc", ALL, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
     }
 
+    @Test
+    public void test_Attribute_property_enablement_for_different_categories() {
+	// EXPRESSION
+	final CalculatedProperty cp1 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp"), EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
+	assertFalse("Should be disabled (non-editable).", cp1.getProperty("attribute").isEditable());
+	// AGGREGATED_EXPRESSION
+	final CalculatedProperty cp2 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * MAX(2 * integerProp)", "Calculated property", "desc", NO_ATTR, "integerProp"), AGGREGATED_EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
+	assertFalse("Should be disabled (non-editable).", cp2.getProperty("attribute").isEditable());
+	// COLLECTIONAL_EXPRESSION
+	final CalculatedProperty cp3 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp"), COLLECTIONAL_EXPRESSION, "calculatedProperty", "collection", "collection.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+	assertTrue("Should be enabled (editable).", cp3.getProperty("attribute").isEditable());
+	// AGGREGATED_COLLECTIONAL_EXPRESSION
+	final CalculatedProperty cp4 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * MAX(2 * integerProp)", "Calculated property", "desc", NO_ATTR, "integerProp"), AGGREGATED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "", "calculatedProperty", SlaveEntity.class, MasterEntity.class, Integer.class);
+	assertFalse("Should be disabled (non-editable).", cp4.getProperty("attribute").isEditable());
+	// ATTRIBUTED_COLLECTIONAL_EXPRESSION
+	final CalculatedProperty cp5 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * integerProp", "Calculated property", "desc", ALL, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "", "calculatedProperty", SlaveEntity.class, MasterEntity.class, Integer.class);
+	assertTrue("Should be enabled (editable).", cp5.getProperty("attribute").isEditable());
+    }
+
+    @Test
+    public void test_that_Title_is_revalidated_after_parentType_has_been_changed() {
+	// COLLECTIONAL_EXPRESSION
+	final CalculatedProperty cp = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * integerProp", "Placeholder prop", "desc", NO_ATTR, "integerProp"), COLLECTIONAL_EXPRESSION, "placeholderProp", "collection", "collection.placeholderProp", SlaveEntity.class, SlaveEntity.class, Integer.class);
+
+	final String message = "The title [" + "Placeholder prop" + "] should be correct in context [" + "collection" + "] => parentType [" + cp.parentType().getSimpleName() + "].";
+	assertNotNull(message, cp.isValid());
+	assertNull(message, cp.getProperty("title").getFirstFailure());
+	// assertFalse(message, cp.getProperty("title").getFirstFailure().isSuccessful());
+	// assertTrue(message, cp.getProperty("title").getFirstFailure() instanceof IncorrectCalcPropertyKeyException);
+
+	cp.setContextualExpression("MAX(" + cp.getContextualExpression() + ")");
+
+	final String message2 = "The title [" + "Placeholder prop" + "] should become incorrect in context [" + "" + "] => parentType [" + cp.parentType().getSimpleName() + "].";
+	assertNotNull(message2, cp.isValid());
+	assertNotNull(message2, cp.getProperty("title").getFirstFailure());
+	assertFalse(message2, cp.getProperty("title").getFirstFailure().isSuccessful());
+	assertTrue(message2, cp.getProperty("title").getFirstFailure() instanceof IncorrectCalcPropertyKeyException);
+    }
+
     protected void assertCalculatedPropertyName(final ICalculatedProperty calc, final String name) {
 	assertEquals("The name is incorrect.", name, calc.name());
     }
@@ -106,7 +190,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     }
 
     protected void incorrectCalculatedPropertyCreationWithName(final String title) {
-	final CalculatedProperty cp = CalculatedProperty.create(factory(), MasterEntity.class, "", "2 * integerProp", title, "desc", NO_ATTR, "integerProp", null /* TODO dtm().getEnhancer() */);
+	final CalculatedProperty cp = CalculatedProperty.create(factory(), MasterEntity.class, "", "2 * integerProp", title, "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
 	checkTrivialParams(cp, MasterEntity.class, "", "2 * integerProp", null, "desc", NO_ATTR, "integerProp");
 
 	assertNotNull("The creation of calc prop with title [" + title + "] should be failed.", cp.isValid());
@@ -118,7 +202,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     }
 
     protected void incorrectCalculatedPropertyCreationWithAttribute(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	final CalculatedProperty cp = CalculatedProperty.create(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, null /* TODO dtm().getEnhancer() */);
+	final CalculatedProperty cp = CalculatedProperty.create(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm().getEnhancer());
 	checkTrivialParams(cp, root, contextPath, contextualExpression, title, desc, CalculatedPropertyAttribute.NO_ATTR, originationProperty);
 
 	final String message = "The creation of calc prop with attribute [" + attribute + "] should be failed.";
@@ -181,7 +265,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     }
 
     protected void incorrectCalculatedPropertyCreationWithOriginationProperty(final String originationProperty, final String contextualExpression) {
-	final CalculatedProperty cp = CalculatedProperty.create(factory(), MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, originationProperty, null /* TODO dtm().getEnhancer() */);
+	final CalculatedProperty cp = CalculatedProperty.create(factory(), MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, originationProperty, dtm().getEnhancer());
 	checkTrivialParams(cp, MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, null);
 
 	final String message = "The creation of calc prop with originationProperty [" + originationProperty + "] should be failed.";

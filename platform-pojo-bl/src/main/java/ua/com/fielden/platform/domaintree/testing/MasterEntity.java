@@ -164,6 +164,9 @@ public class MasterEntity extends AbstractEntity<String> {
     @IsProperty
     private EntityWithCompositeKey entityWithCompositeKeyProp;
 
+    @IsProperty
+    private Integer placeholderProp;
+
     public Integer getIntegerProp() {
 	return integerProp;
     }
@@ -444,5 +447,13 @@ public class MasterEntity extends AbstractEntity<String> {
     @Observable
     public void setCheckedManuallyProp2(final Integer checkedManuallyProp2) {
         this.checkedManuallyProp2 = checkedManuallyProp2;
+    }
+
+    public Integer getPlaceholderProp() {
+	return placeholderProp;
+    }
+    @Observable
+    public void setPlaceholderProp(final Integer placeholderProp) {
+	this.placeholderProp = placeholderProp;
     }
 }

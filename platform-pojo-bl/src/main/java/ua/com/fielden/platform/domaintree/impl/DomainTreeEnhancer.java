@@ -328,7 +328,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param dte TODO
      * @return
      */
-    protected static Map<Class<?>, List<ICalculatedProperty>> extractAll(final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes, final IDomainTreeEnhancer dte, final EntityFactory factory) {
+    protected static Map<Class<?>, List<ICalculatedProperty>> extractAll(final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes, final DomainTreeEnhancer dte, final EntityFactory factory) {
 	final Map<Class<?>, List<ICalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<ICalculatedProperty>>();
 	for (final Entry<Class<?>, Class<?>> originalAndEnhanced : originalAndEnhancedRootTypes.entrySet()) {
 	    final List<ICalculatedProperty> calc = reload(originalAndEnhanced.getValue(), originalAndEnhanced.getKey(), "", dte, factory);
@@ -347,7 +347,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param path -- the path to loaded calculated props
      * @param dte TODO
      */
-    private static List<ICalculatedProperty> reload(final Class<?> type, final Class<?> root, final String path, final IDomainTreeEnhancer dte, final EntityFactory factory) {
+    private static List<ICalculatedProperty> reload(final Class<?> type, final Class<?> root, final String path, final DomainTreeEnhancer dte, final EntityFactory factory) {
 	final List<ICalculatedProperty> newCalcProperties = new ArrayList<ICalculatedProperty>();
 	if (!DynamicEntityClassLoader.isEnhanced(type)) {
 	    return newCalcProperties;
@@ -372,20 +372,10 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 	}
     }
 
-    /**
-     * Validates the calculated property by its key [root + pathAndName]. Validation depends on current state of enhanced domain.
-     *
-     * @param root
-     * @param pathAndName
-     * @param correctIfExists -- specify <code>true</code> for "correct" key if the calc property exists (when property getting/removing), <code>false</code> for "incorrect" key if the calc property exists (when property adding).
-     * @param calculatedProperties
-     * @param originalAndEnhancedRootTypes
-     * @return
-     */
+    @Override
     public ICalculatedProperty validateCalculatedPropertyKey(final Class<?> root, final String pathAndName, final boolean correctIfExists) {
 	return validateCalculatedPropertyKey1(root, pathAndName, correctIfExists, calculatedProperties, originalAndEnhancedRootTypes);
     }
-
 
     /**
      * Validates the calculated property by its key [root + pathAndName]. Validation depends on current state of enhanced domain.

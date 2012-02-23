@@ -26,6 +26,16 @@ public class BceTitleValidation implements IBeforeChangeEventHandler<String> {
 	if (StringUtils.isEmpty(name)) {
 	    return new IncorrectCalcPropertyKeyException("Please specify more appropriate title with some characters (and perhaps digits).");
 	}
+
+	final CalculatedProperty cp = (CalculatedProperty) property.getEntity();
+	if (cp.getEnhancer() != null) {
+	    // validate if calculated property is correct in context of other calculated properties inside Domain Tree Enhancer
+	    try {
+		cp.getEnhancer().validateCalculatedPropertyKey(cp.getRoot(), cp.pathWith(name), false);
+	    } catch (final IncorrectCalcPropertyKeyException e) {
+		return e;
+	    }
+	}
 	return Result.successful(newTitle);
     }
 }

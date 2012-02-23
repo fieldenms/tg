@@ -8,9 +8,11 @@ import org.apache.commons.lang.WordUtils;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.Invisible;
@@ -64,6 +66,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     @IsProperty
     @CompositeKeyMember(3)
     @Title(value = "Expression", desc = "Property evaluation formula")
+    @Dependent("title") // revalidates "title" to ensure that title / name of property is unique in potentially another parentType (after "contextualExpression" has been changed)
     @BeforeChange(@Handler(BceContextualExpressionValidation.class))
     @AfterChange(AceCalculatedPropertyMetaInformationPopulation.class)
     private String contextualExpression;
@@ -79,6 +82,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     @IsProperty
     @CompositeKeyMember(5)
     @Title(value = "Attribute", desc = "Calculated property attribute (ALL or ANY for collectional expressions)")
+    @Dependent("title") // revalidates "title" to ensure that title / name of property is unique in potentially another parentType (after "attribute" has been changed)
     @BeforeChange(@Handler(BceAttributeValidation.class))
     @AfterChange(AceCalculatedPropertyMetaInformationPopulation.class)
     private CalculatedPropertyAttribute attribute = CalculatedPropertyAttribute.NO_ATTR; // enabled only for COLLECTIONAL_EXPRESSION category of property and mutates category to ATTRIBUTED_COLLECTIONAL_EXPRESSION
@@ -174,6 +178,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 		this.category = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION;
 		this.path = above(masterPath); // the level above except for root level -- ""
 	    } else {
+		// TODO
 		throw new Result(new Exception("Currently raising to level > 1 not supported!!! levelsToRaiseTheProperty == " + levelsToRaiseTheProperty + " level == " + level + " contextPathLevel == " + contextPathLevel));
 	    }
 	} else { // simple hierarchy
@@ -184,20 +189,20 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 		this.category = CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
 		this.path = above(masterPath); // the level above except for root level -- ""
 	    } else {
+		// TODO
 		throw new Result(new Exception("The level above root does not exist!!! levelsToRaiseTheProperty == " + levelsToRaiseTheProperty + " level == " + level + " contextPathLevel == " + contextPathLevel));
 	    }
 	}
 	this.parentType = determineType(this.path);
 
-	// reset attribute non-ATTRIBUTED_COLLECTIONAL_EXPRESSIONs
-	if (!CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION.equals(this.category)) {
+	// reset attribute for non-ATTRIBUTED_COLLECTIONAL_EXPRESSIONs
+	final boolean isAttributedCategory = CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION.equals(this.category);
+	if (!isAttributedCategory) {
 	    resetAttribute();
 	}
-	// make attribute enabled for COLLECTIONAL_EXPRESSIONs and ATTRIBUTED_COLLECTIONAL_EXPRESSIONs (TODO make a test)
-	getProperty("attribute").setEditable(CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION.equals(this.category) || CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION.equals(this.category));
+	// make attribute enabled for COLLECTIONAL_EXPRESSIONs and ATTRIBUTED_COLLECTIONAL_EXPRESSIONs
+	getProperty("attribute").setEditable(CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION.equals(this.category) || isAttributedCategory);
 
-	// resets title to ensure that title / name of property is unique in potentially another parentType
-	setTitle(getTitle()); // TODO re-implement through "dependent properties"
 	// make originationProperty required for AGGREGATION_EXPRESSIONs
 	getProperty("originationProperty").setRequired(CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(this.category));
     }
@@ -288,7 +293,11 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 
     @Override
     public String pathAndName() {
-	return "".equals(path()) ? name() : path() + "." + name();
+	return pathWith(name());
+    }
+
+    public String pathWith(final String name) {
+	return "".equals(path()) ? name : path() + "." + name;
     }
 
     @Override
@@ -306,100 +315,6 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	return resultType;
     }
 
-//
-//    @Override
-//    public int hashCode() {
-//	final int prime = 31;
-//	int result = 1;
-//	result = prime * result + ((attribute == null) ? 0 : attribute.hashCode());
-//	result = prime * result + ((contextPath == null) ? 0 : contextPath.hashCode());
-//	result = prime * result + ((contextualExpression == null) ? 0 : contextualExpression.hashCode());
-//	result = prime * result + ((desc == null) ? 0 : desc.hashCode());
-//	result = prime * result + ((originationProperty == null) ? 0 : originationProperty.hashCode());
-//	result = prime * result + ((root == null) ? 0 : root.hashCode());
-//	result = prime * result + ((title == null) ? 0 : title.hashCode());
-//	return result;
-//    }
-//
-//    @Override
-//    public boolean equals(final Object obj) {
-//	if (this == obj)
-//	    return true;
-//	if (obj == null)
-//	    return false;
-//	if (getClass() != obj.getClass())
-//	    return false;
-//	final CalculatedProperty other = (CalculatedProperty) obj;
-//	if (attribute != other.attribute)
-//	    return false;
-//	if (contextPath == null) {
-//	    if (other.contextPath != null)
-//		return false;
-//	} else if (!contextPath.equals(other.contextPath))
-//	    return false;
-//	if (contextualExpression == null) {
-//	    if (other.contextualExpression != null)
-//		return false;
-//	} else if (!contextualExpression.equals(other.contextualExpression))
-//	    return false;
-//	if (desc == null) {
-//	    if (other.desc != null)
-//		return false;
-//	} else if (!desc.equals(other.desc))
-//	    return false;
-//	if (originationProperty == null) {
-//	    if (other.originationProperty != null)
-//		return false;
-//	} else if (!originationProperty.equals(other.originationProperty))
-//	    return false;
-//	if (root == null) {
-//	    if (other.root != null)
-//		return false;
-//	} else if (!root.equals(other.root))
-//	    return false;
-//	if (title == null) {
-//	    if (other.title != null)
-//		return false;
-//	} else if (!title.equals(other.title))
-//	    return false;
-//	return true;
-//    }
-
-//    /**
-//     * A specific Kryo serialiser for {@link CalculatedProperty}.
-//     *
-//     * @author TG Team
-//     *
-//     */
-//    public static class CalculatedPropertySerialiser extends TgSimpleSerializer<CalculatedProperty> {
-//	public CalculatedPropertySerialiser(final TgKryo kryo) {
-//	    super(kryo);
-//	}
-//
-//	@Override
-//	public CalculatedProperty read(final ByteBuffer buffer) {
-//	    final Class<?> root = readValue(buffer, Class.class);
-//	    final String contextPath = readValue(buffer, String.class);
-//	    final String contextualExpression = readValue(buffer, String.class);
-//	    final String title = readValue(buffer, String.class);
-//	    final String desc = readValue(buffer, String.class);
-//	    final CalculatedPropertyAttribute attribute = readValue(buffer, CalculatedPropertyAttribute.class);
-//	    final String originationProperty = readValue(buffer, String.class);
-//	    return new CalculatedProperty(root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm().getEnhancer());
-//	}
-//
-//	@Override
-//	public void write(final ByteBuffer buffer, final CalculatedProperty calculatedProperty) {
-//	    writeValue(buffer, calculatedProperty.root);
-//	    writeValue(buffer, calculatedProperty.contextPath);
-//	    writeValue(buffer, calculatedProperty.contextualExpression);
-//	    writeValue(buffer, calculatedProperty.title);
-//	    writeValue(buffer, calculatedProperty.getDesc());
-//	    writeValue(buffer, calculatedProperty.attribute);
-//	    writeValue(buffer, calculatedProperty.originationProperty);
-//	}
-//    }
-
     // Fictive setters for actually "immutable" root and contextPath
     @Observable
     public void setRoot(final Class<?> root) {
@@ -409,7 +324,6 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     @Observable
     public void setContextPath(final String contextPath) {
         this.contextPath = contextPath;
-        // moved to definer => this.contextType = determineType(this.contextPath);
     }
 
     public static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
@@ -417,6 +331,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
         final CalculatedProperty calc = factory.newByKey(CalculatedProperty.class, root, contextPath, contextualExpression, title, attribute, originationProperty);
         calc.setDesc(desc);
         calc.setEnhancer(domainTreeEnhancer);
+        calc.setTitle(title);
         return calc;
     }
 
@@ -425,6 +340,9 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     }
 
     public void setEnhancer(final IDomainTreeEnhancer enhancer) {
+	if (enhancer == null) {
+	    throw new IncorrectCalcPropertyKeyException("An enhancer of the calculated property cannot be 'null'.");
+	}
         this.enhancer = enhancer;
     }
 
