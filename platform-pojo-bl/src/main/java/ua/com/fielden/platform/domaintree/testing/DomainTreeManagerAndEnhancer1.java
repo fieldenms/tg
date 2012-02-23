@@ -17,7 +17,7 @@ public class DomainTreeManagerAndEnhancer1 extends AbstractDomainTreeManagerAndE
      * A <i>manager with enhancer</i> constructor for the first time instantiation.
      */
     public DomainTreeManagerAndEnhancer1(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new DomainTreeManager1(serialiser, rootTypes), new DomainTreeEnhancer(rootTypes));
+	this(new DomainTreeManager1(serialiser, rootTypes), new DomainTreeEnhancer(serialiser, rootTypes));
     }
 
     protected DomainTreeManagerAndEnhancer1(final AbstractDomainTreeManager base, final IDomainTreeEnhancer enhancer) {

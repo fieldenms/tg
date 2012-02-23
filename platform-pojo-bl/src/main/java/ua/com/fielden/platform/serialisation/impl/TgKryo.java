@@ -64,8 +64,6 @@ import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAn
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation.LocatorDomainTreeRepresentationSerialiser;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty.CalculatedPropertySerialiser;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.DomainTreeEnhancerSerialiser;
 import ua.com.fielden.platform.domaintree.impl.LocatorManager;
@@ -205,7 +203,7 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer colorSerializer;
     private final Serializer sortKeySerialiser;
     // "domain trees" serialisers
-    private final Serializer calculatedPropertySerialiser;
+//    private final Serializer calculatedPropertySerialiser;
     private final Serializer locatorManagerSerialiser;
     private final Serializer domainTreeEnhancerSerialiser;
     private final Serializer criteriaDomainTreeRepresentationSerialiser;
@@ -250,7 +248,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	colorSerializer = new ColorSerializer();
 	sortKeySerialiser = new SortKeySerialiser(this);
 	// "domain trees" serialisers
-	calculatedPropertySerialiser = new CalculatedPropertySerialiser(this);
+//	calculatedPropertySerialiser = new CalculatedPropertySerialiser(this);
 	locatorManagerSerialiser = new LocatorManagerSerialiser(this);
 	domainTreeEnhancerSerialiser = new DomainTreeEnhancerSerialiser(this);
 	criteriaDomainTreeRepresentationSerialiser = new CentreDomainTreeRepresentationSerialiser(this);
@@ -473,9 +471,9 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return colorSerializer;
 	} else if (SortKey.class.isAssignableFrom(type)) {
 	    return sortKeySerialiser;
-	} else if (CalculatedProperty.class.isAssignableFrom(type)) { // "domain tree" serialisers
-	    return calculatedPropertySerialiser;
-	} else if (DomainTreeEnhancer.class.isAssignableFrom(type)) {
+//	} else if (CalculatedProperty.class.isAssignableFrom(type)) {
+//	    return calculatedPropertySerialiser;
+	} else if (DomainTreeEnhancer.class.isAssignableFrom(type)) { // "domain tree" serialisers
 	    return domainTreeEnhancerSerialiser;
 	} else if (LocatorManager.class.isAssignableFrom(type)) {
 	    return locatorManagerSerialiser;
@@ -674,5 +672,10 @@ public class TgKryo extends Kryo implements ISerialiser {
 	// 	throw new IllegalStateException("Retrieval of the [" + ITickManager.class.getSimpleName() + "] descendants from [" + path + "; " + packageName
 	//	+ "] has been failed.");
 	// }
+    }
+
+    @Override
+    public EntityFactory factory() {
+        return factory;
     }
 }

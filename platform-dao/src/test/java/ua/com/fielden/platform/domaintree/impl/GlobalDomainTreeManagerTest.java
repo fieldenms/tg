@@ -737,7 +737,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").isRunAutomatically());
 	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").setRunAutomatically(false);
 
-	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().addCalculatedProperty(new CalculatedProperty(EntityWithStringKeyType.class, "", "2 * integerProp", "New calc prop", "Double integer prop", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().addCalculatedProperty(EntityWithStringKeyType.class, "", "2 * integerProp", "New calc prop", "Double integer prop", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().apply();
 	assertNotNull("Should be not null.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp"));
 	assertFalse("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").isRunAutomatically());

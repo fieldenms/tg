@@ -5,8 +5,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -21,7 +21,7 @@ import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer
  */
 public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManagerAndEnhancer implements ILocatorDomainTreeManagerAndEnhancer {
     public LocatorDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new LocatorDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(rootTypes));
+	this(new LocatorDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(serialiser, rootTypes));
     }
 
     protected LocatorDomainTreeManagerAndEnhancer(final LocatorDomainTreeManager base, final IDomainTreeEnhancer enhancer) {

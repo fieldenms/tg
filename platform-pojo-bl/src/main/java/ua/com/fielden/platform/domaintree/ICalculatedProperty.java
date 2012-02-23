@@ -24,13 +24,13 @@ public interface ICalculatedProperty {
      * A root type of the calculated property. <br><br>
      *
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -41,19 +41,19 @@ public interface ICalculatedProperty {
      *
      * @return
      */
-    Class<?> root();
+    Class<?> getRoot();
 
     /**
-     * The calculated property path. The calculated property exists in strict place with path {@link #getPath()} in root type {@link #root()}. <br><br>
+     * The calculated property path. The calculated property exists in strict place with path {@link #getPath()} in root type {@link #getRoot()}. <br><br>
      *
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -64,7 +64,7 @@ public interface ICalculatedProperty {
      *
      * @return
      */
-    String contextPath();
+    String getContextPath();
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////// Required and mutable stuff //////////////////////////////////////
@@ -76,13 +76,13 @@ public interface ICalculatedProperty {
      * Concrete parts of expression (simple or other calculated properties) should be incorporated into this expression using dot-notation. <br><br>
      * 
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -93,7 +93,7 @@ public interface ICalculatedProperty {
      *
      * @return
      */
-    String contextualExpression();
+    String getContextualExpression();
 
     /**
      * Sets an expression string in <b>eQuery manner</b> that defines a calculated property. 
@@ -101,13 +101,13 @@ public interface ICalculatedProperty {
      * Concrete parts of expression (simple or other calculated properties) should be incorporated into this expression using dot-notation. <br><br>
      * 
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -124,13 +124,13 @@ public interface ICalculatedProperty {
      * Returns the title of calculated property.
      * 
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -141,19 +141,19 @@ public interface ICalculatedProperty {
      *
      * @return 
      */
-    String title();
+    String getTitle();
 
     /**
      * Sets the title of calculated property.
      * 
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -168,13 +168,13 @@ public interface ICalculatedProperty {
      * Returns the description of calculated property.
      * 
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -185,19 +185,19 @@ public interface ICalculatedProperty {
      *
      * @return 
      */
-    String desc();
+    String getDesc();
 
     /**
      * Sets the description of calculated property.
      * 
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -232,13 +232,13 @@ public interface ICalculatedProperty {
      * An attribute for a calculated property. Can be ALL or ANY (or NO_ATTR) in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR.
      *
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -249,19 +249,19 @@ public interface ICalculatedProperty {
      *
      * @return
      */
-    CalculatedPropertyAttribute attribute();
+    CalculatedPropertyAttribute getAttribute();
 
     /**
      * Sets an attribute for a calculated property. Can be ALL or ANY (or NO_ATTR) in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR.
      *
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -278,13 +278,13 @@ public interface ICalculatedProperty {
      * A name of property in context type ({@link #contextType()}), from which this calculated property has been originated.
      * 
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -295,19 +295,19 @@ public interface ICalculatedProperty {
      *
      * @return
      */
-    String originationProperty();
+    String getOriginationProperty();
 
     /**
      * Sets a name of property in context type ({@link #contextType()}), from which this calculated property has been originated.
      * 
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -402,13 +402,13 @@ public interface ICalculatedProperty {
      * Returns a category (type, class -- see {@link CalculatedPropertyCategory}) of calculated property.
      * 
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -425,13 +425,13 @@ public interface ICalculatedProperty {
      * A name of calculated property in context of parent type ({@link #parentType()}). <br><br>
      *
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -445,16 +445,16 @@ public interface ICalculatedProperty {
     String name();
 
     /**
-     * A path where the calculated property exists in root type {@link #root()}. It could be different from a {@link #contextPath()}. <br><br>
+     * A path where the calculated property exists in root type {@link #getRoot()}. It could be different from a {@link #getContextPath()}. <br><br>
      *
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -471,13 +471,13 @@ public interface ICalculatedProperty {
      * The calculated property {@link #path()} combined with a {@link #name()}.<br><br>
      *
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -491,16 +491,16 @@ public interface ICalculatedProperty {
     String pathAndName();
 
     /**
-     * The type of context path for the calculated property. {@link #contextualExpression()} should be fully defined in context of this type. <br><br>
+     * The type of context path for the calculated property. {@link #getContextualExpression()} should be fully defined in context of this type. <br><br>
      *
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -517,13 +517,13 @@ public interface ICalculatedProperty {
      * The parent type of calculated property (the type of {@link #path()}, where the property actually exists).<br><br>
      *
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>
@@ -537,16 +537,16 @@ public interface ICalculatedProperty {
     Class<?> parentType();
 
     /**
-     * A result type of calculated property (the type of resultant {@link #contextualExpression()}).
+     * A result type of calculated property (the type of resultant {@link #getContextualExpression()}).
      * 
      * For e.g. :<br>
-     * {@link #root()} = WorkOrder.class, // a root of a calculated property<br>
-     * {@link #contextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
-     * {@link #contextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
-     * {@link #title()} = Average of purchase price, // a title that form a unique name<br>
-     * {@link #desc()} = The average of purchase price, // description<br>
-     * {@link #attribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
-     * {@link #originationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
+     * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
+     * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
+     * {@link #getContextualExpression()} = AVG(purchasePrice), // should be expressed in context of contextPath type<br>
+     * {@link #getTitle()} = Average of purchase price, // a title that form a unique name<br>
+     * {@link #getDesc()} = The average of purchase price, // description<br>
+     * {@link #getAttribute()} = CalculatedPropertyAttribute.NO_ATTR, // can be ALL or ANY in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR <br> 
+     * {@link #getOriginationProperty()} = purchasePrice, // the property (in context of contextPath type), on which calc property is based. This is required for AGGREGATED_EXPRESSION (aka Totals) <br> 
      * {@link #category()} = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, // a category for calculated property (inferred) <br> 
      * {@link #name()} = averageOfPurchasePrice, // name of calc property (inferred) <br>
      * {@link #path()} = vehicle.replacing, // path of calc property (inferred) <br>

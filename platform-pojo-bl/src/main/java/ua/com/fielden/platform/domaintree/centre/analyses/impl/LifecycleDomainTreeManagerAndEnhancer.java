@@ -7,13 +7,13 @@ import java.util.Set;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager.ILifecycleDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager.LifecycleAddToCategoriesTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager.LifecycleAddToDistributionTickManager;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
@@ -21,7 +21,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class LifecycleDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTreeManagerAndEnhancer implements ILifecycleDomainTreeManagerAndEnhancer {
     public LifecycleDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new LifecycleDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(rootTypes));
+	this(new LifecycleDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(serialiser, rootTypes));
     }
 
     protected LifecycleDomainTreeManagerAndEnhancer(final LifecycleDomainTreeManager base, final IDomainTreeEnhancer enhancer) {

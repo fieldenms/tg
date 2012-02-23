@@ -15,7 +15,6 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
@@ -60,18 +59,18 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);
 	dtm.getSecondTick().checkedProperties(MasterEntity.class);
 
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "MAX(integerProp)", "Int agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "MAX(bigDecimalProp)", "Big decimal agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp"));
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Money agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp"));
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp"));
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(integerProp)", "Int agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(bigDecimalProp)", "Big decimal agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Money agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
 
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Unchecked agg expr prop 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp"));
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp"));
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp"));
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Unchecked agg expr prop 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
 
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp"));
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp"));
-	dtm.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp"));
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
 
 	dtm.getEnhancer().apply();
 

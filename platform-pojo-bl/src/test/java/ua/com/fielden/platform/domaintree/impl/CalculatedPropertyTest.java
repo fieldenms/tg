@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.ALL;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.ANY;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
@@ -11,6 +14,7 @@ import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedP
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
@@ -21,6 +25,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPrope
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * A test for {@link CalculatedProperty}.
@@ -31,17 +36,17 @@ import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected ICalculatedProperty checkTrivialParams(final ICalculatedProperty calc, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	assertEquals("The root is incorrect.", root, calc.root());
-	assertEquals("The contextPath is incorrect.", contextPath, calc.contextPath());
-	assertEquals("The contextualExpression is incorrect.", contextualExpression, calc.contextualExpression());
-	assertEquals("The title is incorrect.", title, calc.title());
-	assertEquals("The desc is incorrect.", desc, calc.desc());
-	assertEquals("The attribute is incorrect.", attribute, calc.attribute());
-	assertEquals("The originationProperty is incorrect.", originationProperty, calc.originationProperty());
+	assertEquals("The root is incorrect.", root, calc.getRoot());
+	assertEquals("The contextPath is incorrect.", contextPath, calc.getContextPath());
+	assertEquals("The contextualExpression is incorrect.", contextualExpression, calc.getContextualExpression());
+	assertEquals("The title is incorrect.", title, calc.getTitle());
+	assertEquals("The desc is incorrect.", desc, calc.getDesc());
+	assertEquals("The attribute is incorrect.", attribute, calc.getAttribute());
+	assertEquals("The originationProperty is incorrect.", originationProperty, calc.getOriginationProperty());
 	return calc;
     }
 
-    protected void assertCalculatedProperty(final ICalculatedProperty calc, final CalculatedPropertyCategory category, final String name, final String path, final String pathAndName, final Class<?> contextType, final Class<?> parentType, final Class<?> resultType) {
+    protected CalculatedProperty assertCalculatedProperty(final CalculatedProperty calc, final CalculatedPropertyCategory category, final String name, final String path, final String pathAndName, final Class<?> contextType, final Class<?> parentType, final Class<?> resultType) {
 	assertEquals("The category is incorrect.", category, calc.category());
 	assertEquals("The name is incorrect.", name, calc.name());
 	assertEquals("The path is incorrect.", path, calc.path());
@@ -49,12 +54,23 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertEquals("The contextType is incorrect.", contextType, calc.contextType());
 	assertEquals("The parentType is incorrect.", parentType, calc.parentType());
 	assertEquals("The resultType is incorrect.", resultType, calc.resultType());
+	return calc;
     }
 
-    protected ICalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	final ICalculatedProperty calc = new CalculatedProperty(root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
+    protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
+	final CalculatedProperty calc = CalculatedProperty.create(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, null /* TODO dtm().getEnhancer() */);
 	checkTrivialParams(calc, root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
 	return calc;
+    }
+
+    @Test
+    public void test_serialisation() {
+	final CalculatedProperty calc = CalculatedProperty.create(factory(), MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", null);
+	checkTrivialParams(calc, MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp");
+	assertCalculatedProperty(calc, EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+	final CalculatedProperty copy = EntityUtils.deepCopy(calc, getSerialiser());
+	checkTrivialParams(copy, MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp");
+	assertCalculatedProperty(copy, EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
     }
 
     @Test
@@ -85,16 +101,31 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertEquals("The name is incorrect.", name, calc.name());
     }
 
-    protected ICalculatedProperty correctCalculatedPropertyCreationWithName(final String title) {
+    protected CalculatedProperty correctCalculatedPropertyCreationWithName(final String title) {
 	return correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * integerProp", title, "desc", NO_ATTR, "integerProp");
     }
 
     protected void incorrectCalculatedPropertyCreationWithName(final String title) {
-	try {
-	    correctCalculatedPropertyCreationWithName(title);
-	    fail("The creation of calc prop with title [" + title + "] should be failed.");
-	} catch (final IncorrectCalcPropertyKeyException e) {
+	final CalculatedProperty cp = CalculatedProperty.create(factory(), MasterEntity.class, "", "2 * integerProp", title, "desc", NO_ATTR, "integerProp", null /* TODO dtm().getEnhancer() */);
+	checkTrivialParams(cp, MasterEntity.class, "", "2 * integerProp", null, "desc", NO_ATTR, "integerProp");
+
+	assertNotNull("The creation of calc prop with title [" + title + "] should be failed.", cp.isValid());
+	assertNotNull("The creation of calc prop with title [" + title + "] should be failed.", cp.getProperty("title").getFirstFailure());
+	assertFalse("The creation of calc prop with title [" + title + "] should be failed.", cp.getProperty("title").getFirstFailure().isSuccessful());
+	if (!StringUtils.isEmpty(title)) {
+	    assertTrue("The creation of calc prop with title [" + title + "] should be failed.", cp.getProperty("title").getFirstFailure() instanceof IncorrectCalcPropertyKeyException);
 	}
+    }
+
+    protected void incorrectCalculatedPropertyCreationWithAttribute(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
+	final CalculatedProperty cp = CalculatedProperty.create(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, null /* TODO dtm().getEnhancer() */);
+	checkTrivialParams(cp, root, contextPath, contextualExpression, title, desc, CalculatedPropertyAttribute.NO_ATTR, originationProperty);
+
+	final String message = "The creation of calc prop with attribute [" + attribute + "] should be failed.";
+	assertNotNull(message, cp.isValid());
+	assertNotNull(message, cp.getProperty("attribute").getFirstFailure());
+	assertFalse(message, cp.getProperty("attribute").getFirstFailure().isSuccessful());
+	assertTrue(message, cp.getProperty("attribute").getFirstFailure() instanceof IncorrectCalcPropertyKeyException);
     }
 
     @Test
@@ -108,63 +139,84 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertCalculatedPropertyName(correctCalculatedPropertyCreationWithName("-  % ^% &^ %&   87 87Calc$^&^$%&^ulated pro&^%^&perty 56 bum 71 -% ^% &^ %&% "), "calculatedProperty56Bum71");
     }
 
-    protected void incorrectCalculatedPropertyCreation(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	try {
-	    correctCalculatedPropertyCreation(root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
-	    fail("The creation of calc prop with expr [" + contextualExpression + "] and attribute [" + attribute + "] should be failed.");
-	} catch (final IncorrectCalcPropertyKeyException e) {
-	}
-    }
-
     @Test
     public void test_incorrect_attributes_application() {
 	// the attributes ALL / ANY cannot be applied to the following types of calc props:
 	// EXPRESSION
-	incorrectCalculatedPropertyCreation(MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", ALL, "integerProp");
-	incorrectCalculatedPropertyCreation(MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", ANY, "integerProp");
-	incorrectCalculatedPropertyCreation(MasterEntity.class, "entityProp.entityProp", "2 * integerProp", "Calculated property", "desc", ALL, "integerProp");
+	incorrectCalculatedPropertyCreationWithAttribute(MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", ALL, "integerProp");
+	incorrectCalculatedPropertyCreationWithAttribute(MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", ANY, "integerProp");
+	incorrectCalculatedPropertyCreationWithAttribute(MasterEntity.class, "entityProp.entityProp", "2 * integerProp", "Calculated property", "desc", ALL, "integerProp");
 	// AGGREGATED_EXPRESSION
-	incorrectCalculatedPropertyCreation(MasterEntity.class, "", "2 * MAX(2 * integerProp)", "Calculated property", "desc", ANY, "integerProp");
-	incorrectCalculatedPropertyCreation(MasterEntity.class, "entityProp", "2 * MAX(2 * integerProp)", "Calculated prope/rty", "desc", ALL, "integerProp");
-	incorrectCalculatedPropertyCreation(MasterEntity.class, "entityProp.entityProp", "2 * MAX(2 * integerProp)", "Calculated property", "desc", ANY, "integerProp");
+	incorrectCalculatedPropertyCreationWithAttribute(MasterEntity.class, "", "2 * MAX(2 * integerProp)", "Calculated property", "desc", ANY, "integerProp");
+	incorrectCalculatedPropertyCreationWithAttribute(MasterEntity.class, "entityProp", "2 * MAX(2 * integerProp)", "Calculated prope/rty", "desc", ALL, "integerProp");
+	incorrectCalculatedPropertyCreationWithAttribute(MasterEntity.class, "entityProp.entityProp", "2 * MAX(2 * integerProp)", "Calculated property", "desc", ANY, "integerProp");
 	// AGGREGATED_COLLECTIONAL_EXPRESSION
-	incorrectCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * MAX(2 * integerProp)", "Calculated property", "desc", ALL, "integerProp");
-	incorrectCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection", "2 * MAX(2 * integerProp)", "Calculated property", "desc", ANY, "integerProp");
-	incorrectCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * MAX(2 * integerProp)", "Calculated property", "desc", ALL, "integerProp");
+	incorrectCalculatedPropertyCreationWithAttribute(MasterEntity.class, "collection", "2 * MAX(2 * integerProp)", "Calculated property", "desc", ALL, "integerProp");
+	incorrectCalculatedPropertyCreationWithAttribute(MasterEntity.class, "entityProp.collection", "2 * MAX(2 * integerProp)", "Calculated property", "desc", ANY, "integerProp");
+	incorrectCalculatedPropertyCreationWithAttribute(MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * MAX(2 * integerProp)", "Calculated property", "desc", ALL, "integerProp");
     }
 
-    protected void assertCalculatedPropertyOrigination(final ICalculatedProperty calc, final String originationProperty) {
-	assertEquals("The originationProperty is incorrect.", originationProperty, calc.originationProperty());
+    @Test
+    public void test_attributes_resetting_after_property_became_NON_ATTRIBUTED() {
+	// the attributes ALL / ANY can be applied only to the following type of calc props:
+	// ATTRIBUTED_COLLECTIONAL_EXPRESSION
+	final CalculatedProperty cp1 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * integerProp", "Calculated property", "desc", ALL, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "", "calculatedProperty", SlaveEntity.class, MasterEntity.class, Integer.class);
+	cp1.setContextualExpression("MAX(" + cp1.getContextualExpression() + ")");
+	assertEquals("The attribute resetting has not been executed.", CalculatedPropertyAttribute.NO_ATTR, cp1.getAttribute());
+	final CalculatedProperty cp2 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Calculated property", "desc", ANY, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", EvenSlaverEntity.class, SlaveEntity.class, Integer.class);
+	cp2.setAttribute(CalculatedPropertyAttribute.NO_ATTR);
+	assertEquals("The attribute resetting has not been executed.", CalculatedPropertyAttribute.NO_ATTR, cp2.getAttribute());
+	final CalculatedProperty cp3 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * integerProp", "Calculated property", "desc", ALL, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+	cp3.setContextualExpression("MAX(" + cp3.getContextualExpression() + ")");
+	assertEquals("The attribute resetting has not been executed.", CalculatedPropertyAttribute.NO_ATTR, cp3.getAttribute());
     }
 
-    protected ICalculatedProperty correctCalculatedPropertyCreationWithOriginationProperty(final String originationProperty, final String contextualExpression) {
+    protected CalculatedProperty assertCalculatedPropertyOrigination(final CalculatedProperty calc, final String originationProperty) {
+	assertEquals("The originationProperty is incorrect.", originationProperty, calc.getOriginationProperty());
+	return calc;
+    }
+
+    protected CalculatedProperty correctCalculatedPropertyCreationWithOriginationProperty(final String originationProperty, final String contextualExpression) {
 	return correctCalculatedPropertyCreation(MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, originationProperty);
     }
 
     protected void incorrectCalculatedPropertyCreationWithOriginationProperty(final String originationProperty, final String contextualExpression) {
-	try {
-	    correctCalculatedPropertyCreationWithOriginationProperty(originationProperty, contextualExpression);
-	    fail("The creation of calc prop with originationProperty [" + originationProperty + "] should be failed.");
-	} catch (final IncorrectCalcPropertyKeyException e) {
+	final CalculatedProperty cp = CalculatedProperty.create(factory(), MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, originationProperty, null /* TODO dtm().getEnhancer() */);
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, null);
+
+	final String message = "The creation of calc prop with originationProperty [" + originationProperty + "] should be failed.";
+	assertNotNull(message, cp.isValid());
+	assertNotNull(message, cp.getProperty("originationProperty").getFirstFailure());
+	assertFalse(message, cp.getProperty("originationProperty").getFirstFailure().isSuccessful());
+	if (!StringUtils.isEmpty(originationProperty)) {
+	    assertTrue(message, cp.getProperty("originationProperty").getFirstFailure() instanceof IncorrectCalcPropertyKeyException);
 	}
     }
 
     protected void correctCalculatedPropertyCreationWithOriginationPropertyWithWarning(final String originationProperty, final String contextualExpression) {
-	try {
-	    assertCalculatedPropertyOrigination(correctCalculatedPropertyCreationWithOriginationProperty(originationProperty, contextualExpression), originationProperty);
-	    fail("The creation of calc prop with originationProperty [" + originationProperty + "] should be warned.");
-	} catch (final CalcPropertyKeyWarning e) {
-	}
+	final CalculatedProperty cp = assertCalculatedPropertyOrigination(correctCalculatedPropertyCreationWithOriginationProperty(originationProperty, contextualExpression), originationProperty);
+
+	final String message = "The creation of calc prop with originationProperty [" + originationProperty + "] should be warned.";
+	assertNotNull(message, cp.isValid());
+	assertTrue(message, cp.isValid().isSuccessful());
+	assertNull(message, cp.getProperty("originationProperty").getFirstFailure());
+	assertNotNull(message, cp.getProperty("originationProperty").getFirstWarning());
+	assertTrue(message, cp.getProperty("originationProperty").getFirstWarning().isSuccessful());
+	assertTrue(message, cp.getProperty("originationProperty").getFirstWarning() instanceof CalcPropertyKeyWarning);
     }
 
     @Test
     public void test_origination_property_application() {
-	incorrectCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp");
-	incorrectCalculatedPropertyCreationWithOriginationProperty("", "2 * integerProp");
+	correctCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp");
+	correctCalculatedPropertyCreationWithOriginationProperty("", "2 * integerProp");
+	incorrectCalculatedPropertyCreationWithOriginationProperty(null, "MAX(2 * integerProp)");
+	incorrectCalculatedPropertyCreationWithOriginationProperty("", "MAX(2 * integerProp)");
 	incorrectCalculatedPropertyCreationWithOriginationProperty("nonExistentProp", "2 * integerProp");
-	correctCalculatedPropertyCreationWithOriginationProperty("integerProp", "2 * integerProp");
-	correctCalculatedPropertyCreationWithOriginationProperty("entityProp.integerProp", "2 * integerProp * entityProp.integerProp");
-	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("integerProp", "2 * moneyProp");
-	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("entityProp.integerProp", "2 * integerProp * entityProp.moneyProp");
+	incorrectCalculatedPropertyCreationWithOriginationProperty("nonExistentProp", "MAX(2 * integerProp)");
+	correctCalculatedPropertyCreationWithOriginationProperty("integerProp", "MAX(2 * integerProp)");
+	correctCalculatedPropertyCreationWithOriginationProperty("entityProp.integerProp", "MAX(2 * integerProp * entityProp.integerProp)");
+	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("integerProp", "MAX(2 * moneyProp)");
+	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("entityProp.integerProp", "MAX(2 * integerProp * entityProp.moneyProp)");
+	correctCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp * entityProp.moneyProp");
     }
 }

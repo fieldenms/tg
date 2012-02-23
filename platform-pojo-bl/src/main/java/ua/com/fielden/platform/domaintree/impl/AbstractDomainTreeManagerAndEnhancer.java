@@ -9,6 +9,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
@@ -112,7 +113,19 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
 	@Override
 	public void apply() {
-	    final Map<Class<?>, List<ICalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer.getOriginalAndEnhancedRootTypes());
+	    final Map<Class<?>, List<ICalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer.getOriginalAndEnhancedRootTypes(), baseEnhancer, baseEnhancer.getFactory()); // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
+	    // TODO this or baseEnhancer?!!!
 	    baseEnhancer.apply();
 	    final Map<Class<?>, List<ICalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<ICalculatedProperty>>(baseEnhancer.calculatedProperties());
 
@@ -185,6 +198,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	@Override
 	public void addCalculatedProperty(final ICalculatedProperty calculatedProperty) {
 	    baseEnhancer.addCalculatedProperty(calculatedProperty);
+	}
+
+	@Override
+	public void addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
+	    baseEnhancer.addCalculatedProperty(root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
 	}
 
 	@Override

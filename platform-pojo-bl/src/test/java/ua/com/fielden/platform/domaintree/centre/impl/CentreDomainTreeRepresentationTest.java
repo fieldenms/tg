@@ -18,7 +18,6 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentationTest;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
@@ -235,9 +234,9 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     ////////////////////// 5. Calculated properties logic //////////////////////
     @Test
     public void test_that_first_tick_for_AGGR_EXPR_calculated_properties_are_disabled() {
-	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.entityProp", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "2 * MAX(1 * 2 * integerProp)", "Aggr expr prop 3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dtm().getEnhancer().apply();
 
 	assertTrue("AGGREGATED EXPRESSION calculated property [" + "aggrExprProp1" + "] should be disabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "aggrExprProp1"));
@@ -247,9 +246,9 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
 
     @Test
     public void test_that_second_tick_for_ATTR_COLL_EXPR_calculated_properties_are_disabled() {
-	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Attr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.ALL, "integerProp"));
-	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Attr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.ANY, "integerProp"));
-	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "collection", "2 * integerProp", "Attr Coll Expr Prop3", "desc", CalculatedPropertyAttribute.ALL, "integerProp"));
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Attr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.ALL, "integerProp");
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Attr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.ANY, "integerProp");
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "collection", "2 * integerProp", "Attr Coll Expr Prop3", "desc", CalculatedPropertyAttribute.ALL, "integerProp");
 	dtm().getEnhancer().apply();
 
 	assertTrue("ATTRIBUTED COLLECTIONAL EXPRESSION calculated properties should be disabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.attrCollExprProp1"));

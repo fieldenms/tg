@@ -18,7 +18,6 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentationTest;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
@@ -188,7 +187,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_first_tick_for_integer_EXPR_calculated_properties_originated_from_date_property_are_enabled() {
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
-		dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Calc date prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp"));
+		dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Calc date prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
 		dtm().getEnhancer().apply();
 
 		assertFalse("EXPRESSION calculated properties of integer type based on date property should be enabled for first tick.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, name(name, "calcDateProp")));
@@ -235,7 +234,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     }
 
     protected void checkSecTickEnablementForAGGR_EXPRessions(final String originationProperty, final int i, final String contextPath) {
-	dtm().getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, contextPath, "MAX(" + originationProperty + ")", originationProperty + " aggr expr " + i, "Desc", CalculatedPropertyAttribute.NO_ATTR, originationProperty));
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, contextPath, "MAX(" + originationProperty + ")", originationProperty + " aggr expr " + i, "Desc", CalculatedPropertyAttribute.NO_ATTR, originationProperty);
 	dtm().getEnhancer().apply();
 	assertFalse("AGGREGATED_EXPRESSION calculated properties should be enabled for second tick.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, originationProperty + "AggrExpr" + i));
     }

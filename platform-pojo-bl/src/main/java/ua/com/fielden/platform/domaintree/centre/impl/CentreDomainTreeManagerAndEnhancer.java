@@ -6,17 +6,17 @@ import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToResultTickManager;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
@@ -37,7 +37,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
      * A <i>manager with enhancer</i> constructor for the first time instantiation.
      */
     public CentreDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new CentreDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(rootTypes));
+	this(new CentreDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(serialiser, rootTypes));
     }
 
     /**

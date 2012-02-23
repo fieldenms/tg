@@ -12,14 +12,21 @@ import com.google.inject.Inject;
  *
  */
 public class ClientSerialiser extends XStreamSerialiser {
+    private final EntityFactory factory;
 
     public ClientSerialiser(final EntityFactory factory, final boolean compact) {
 	super(compact);
-	registerConverter(new ClientEntityConverter(factory));
+	this.factory = factory;
+	registerConverter(new ClientEntityConverter(this.factory));
     }
 
     @Inject
     public ClientSerialiser(final EntityFactory factory) {
 	this(factory, true);
+    }
+
+    @Override
+    public EntityFactory factory() {
+        return factory;
     }
 }

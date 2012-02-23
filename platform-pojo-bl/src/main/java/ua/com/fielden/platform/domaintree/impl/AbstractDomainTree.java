@@ -21,6 +21,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -66,9 +67,10 @@ public abstract class AbstractDomainTree {
     }
 
     /**
-     * Constructs base domain tree with a <code>serialiser</copy> instance.
+     * Constructs base domain tree with a <code>serialiser</code> and <code>factory</code> instances.
      *
      * @param serialiser
+     * @param factory
      */
     protected AbstractDomainTree(final ISerialiser serialiser) {
 	this.serialiser = serialiser;
@@ -81,6 +83,15 @@ public abstract class AbstractDomainTree {
      */
     protected ISerialiser getSerialiser() {
 	return serialiser;
+    }
+
+    /**
+     * Returns an entity factory that is essential for inner {@link AbstractEntity} instances (e.g. calculated properties) creation.
+     *
+     * @return
+     */
+    protected EntityFactory getFactory() {
+	return serialiser.factory();
     }
 
     /**
@@ -231,15 +242,20 @@ public abstract class AbstractDomainTree {
      */
     protected abstract static class AbstractDomainTreeSerialiser<T> extends TgSimpleSerializer<T> {
 	private final TgKryo kryo;
+	private final EntityFactory factory;
 
 	public AbstractDomainTreeSerialiser(final TgKryo kryo) {
 	    super(kryo);
 	    this.kryo = kryo;
+	    this.factory = kryo.factory();
 	}
 
 	protected TgKryo kryo() {
 	    return kryo;
 	}
-    }
 
+	protected EntityFactory factory() {
+	    return factory;
+	}
+    }
 }

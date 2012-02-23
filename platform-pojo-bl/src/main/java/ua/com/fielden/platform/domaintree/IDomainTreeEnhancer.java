@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.domaintree;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.Warning;
 
 
 
@@ -45,8 +47,8 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
     Class<?> getManagedType(final Class<?> type);
 
     /**
-     * Adds the <code>calculatedProperty</code> to root type's {@link ICalculatedProperty#root()} hierarchy.
-     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property name is incorrect.<br><br>
+     * Adds the <code>calculatedProperty</code> to root type's {@link ICalculatedProperty#getRoot()} hierarchy.
+     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property is incorrect.<br><br>
      *
      * <i>Important</i> : the <code>calculatedProperty</code> should strictly be expressed in context of {@link ICalculatedProperty#contextType()} hierarchy.
      *
@@ -55,8 +57,22 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
     void addCalculatedProperty(final ICalculatedProperty calculatedProperty);
 
     /**
+     * Creates a new calculated property based on provided meta-information and adds it to the root type's {@link ICalculatedProperty#getRoot()} hierarchy.
+     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property is incorrect.<br><br>
+     *
+     * @param root
+     * @param contextPath
+     * @param contextualExpression
+     * @param title
+     * @param desc
+     * @param attribute
+     * @param originationProperty
+     */
+    void addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty);
+
+    /**
      * Removes the calculated property with a name <code>calculatedPropertyName</code>(dot-notation expression) from <code>rootType</code> hierarchy.
-     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property name is incorrect.<br><br>
+     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property is incorrect.<br><br>
      *
      * @param rootType -- type of <b>root</b> entity, from which the calculated property should be removed (not derived type)
      * @param calculatedPropertyName -- the dot-notation expression name of calculated property to be removed
@@ -92,11 +108,11 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
      * @author TG Team
      *
      */
-    public class CalcPropertyKeyWarning extends Result {
+    public class CalcPropertyKeyWarning extends Warning {
 	private static final long serialVersionUID = 435410515344805056L;
 
 	public CalcPropertyKeyWarning(final String s) {
-	    super(null, s);
+	    super(s);
 	}
     }
 

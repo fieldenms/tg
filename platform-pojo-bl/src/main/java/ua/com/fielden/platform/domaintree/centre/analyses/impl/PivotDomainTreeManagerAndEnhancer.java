@@ -4,21 +4,21 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager.PivotAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager.PivotAddToDistributionTickManager;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
 
 public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTreeManagerAndEnhancer implements IPivotDomainTreeManagerAndEnhancer {
     public PivotDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new PivotDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(rootTypes));
+	this(new PivotDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(serialiser, rootTypes));
     }
 
     protected PivotDomainTreeManagerAndEnhancer(final AbstractAnalysisDomainTreeManager base, final IDomainTreeEnhancer enhancer) {

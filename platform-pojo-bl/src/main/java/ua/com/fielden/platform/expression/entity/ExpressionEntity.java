@@ -31,7 +31,7 @@ import ua.com.fielden.platform.utils.ClassComparator;
  * <dt> <i>Expression</i>
  * <dd> represents the expression that is used to evaluate value for calculated property.
  * </dl>
- * 
+ *
  * @author TG Team
  *
  */
@@ -57,7 +57,8 @@ public class ExpressionEntity extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     @Title(value = "Title", desc = "Property title")
-    @Required
+    //@Required
+    @CompositeKeyMember(3)
     private String title;
 
     @IsProperty

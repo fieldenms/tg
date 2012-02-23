@@ -10,7 +10,6 @@ import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.example.entities.Vehicle;
 import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeModel2;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTree2;
@@ -39,29 +38,29 @@ public class EntitiesTree2Example extends AbstractUiApplication{
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
 	final List<Class<?>> classes = new ArrayList<Class<?>>();
 	classes.add(Vehicle.class);
-	final IDomainTreeManagerAndEnhancer manager = new CentreDomainTreeManagerAndEnhancer(null, new HashSet<Class<?>>(classes));
+	final IDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(null, new HashSet<Class<?>>(classes));
 
-	manager.getRepresentation().excludeImmutably(Vehicle.class, "commonProperty");
-	manager.getRepresentation().getFirstTick().checkImmutably(Vehicle.class, "desc");
-	manager.getRepresentation().getFirstTick().disableImmutably(Vehicle.class, "eqClass");
-	manager.getFirstTick().check(Vehicle.class, "replacing", true);
-	manager.getFirstTick().move(Vehicle.class, "replacing", "desc");
+	dtm.getRepresentation().excludeImmutably(Vehicle.class, "commonProperty");
+	dtm.getRepresentation().getFirstTick().checkImmutably(Vehicle.class, "desc");
+	dtm.getRepresentation().getFirstTick().disableImmutably(Vehicle.class, "eqClass");
+	dtm.getFirstTick().check(Vehicle.class, "replacing", true);
+	dtm.getFirstTick().move(Vehicle.class, "replacing", "desc");
 
-	manager.getEnhancer().addCalculatedProperty(new CalculatedProperty(Vehicle.class, "replacing.replacing", "2 * numValue", "Calculated", "Double Num Value description", CalculatedPropertyAttribute.NO_ATTR, "numValue")); // excludeImmutably(Vehicle.class, "commonProperty");
-	manager.getEnhancer().apply();
+	dtm.getEnhancer().addCalculatedProperty(Vehicle.class, "replacing.replacing", "2 * numValue", "Calculated", "Double Num Value description", CalculatedPropertyAttribute.NO_ATTR, "numValue"); // excludeImmutably(Vehicle.class, "commonProperty");
+	dtm.getEnhancer().apply();
 
-	final EntitiesTreeModel2 model = new EntitiesTreeModel2(manager, "selection criteria", "result set");
+	final EntitiesTreeModel2 model = new EntitiesTreeModel2(dtm, "selection criteria", "result set");
 	final EntitiesTree2 entitiesTree = new EntitiesTree2(model);
 
-	manager.getRepresentation().excludeImmutably(Vehicle.class, "replacing.commonProperty");
-	manager.getRepresentation().getSecondTick().checkImmutably(Vehicle.class, "desc");
-	manager.getRepresentation().getSecondTick().disableImmutably(Vehicle.class, "eqClass");
-	manager.getSecondTick().check(Vehicle.class, "replacing", true);
-	manager.getSecondTick().move(Vehicle.class, "replacing", "desc");
-	manager.getSecondTick().check(Vehicle.class, "replacing", false);
+	dtm.getRepresentation().excludeImmutably(Vehicle.class, "replacing.commonProperty");
+	dtm.getRepresentation().getSecondTick().checkImmutably(Vehicle.class, "desc");
+	dtm.getRepresentation().getSecondTick().disableImmutably(Vehicle.class, "eqClass");
+	dtm.getSecondTick().check(Vehicle.class, "replacing", true);
+	dtm.getSecondTick().move(Vehicle.class, "replacing", "desc");
+	dtm.getSecondTick().check(Vehicle.class, "replacing", false);
 
-	manager.getEnhancer().addCalculatedProperty(new CalculatedProperty(Vehicle.class, "replacedBy.replacedBy", "2 * numValue", "Calculated", "Double Num Value description", CalculatedPropertyAttribute.NO_ATTR, "numValue")); // excludeImmutably(Vehicle.class, "commonProperty");
-	manager.getEnhancer().apply();
+	dtm.getEnhancer().addCalculatedProperty(Vehicle.class, "replacedBy.replacedBy", "2 * numValue", "Calculated", "Double Num Value description", CalculatedPropertyAttribute.NO_ATTR, "numValue"); // excludeImmutably(Vehicle.class, "commonProperty");
+	dtm.getEnhancer().apply();
 
 	final EntitiesTreePanel treePanel = new EntitiesTreePanel(entitiesTree);
 	treePanel.setPreferredSize(new Dimension(640, 480));

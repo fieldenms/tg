@@ -67,6 +67,15 @@ public abstract class AbstractDomainTreeTest {
 	return serialiser;
     }
 
+    /**
+     * Returns a factory instance for all tests.
+     *
+     * @return
+     */
+    protected static EntityFactory factory() {
+	return serialiser.factory();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -407,30 +416,30 @@ public abstract class AbstractDomainTreeTest {
 	}
     }
 
-    protected static final IDomainTreeManagerAndEnhancer enhanceDomainWithCalculatedPropertiesOfDifferentTypes(final IDomainTreeManagerAndEnhancer managerAndEnhancer) {
+    protected static final IDomainTreeManagerAndEnhancer enhanceDomainWithCalculatedPropertiesOfDifferentTypes(final IDomainTreeManagerAndEnhancer dtm) {
 	// enhance domain to 1) check whether the inherited representation logic will be ok 2) check calculated properties representation
 	// EXPRESSION
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "2 * integerProp", "Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp", "2 * integerProp", "Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "2 * integerProp", "Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "2 * integerProp", "Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	// AGGREGATED_EXPRESSION
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "", "SUM(integerProp)", "Aggr Expr Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp", "SUM(integerProp)", "Aggr Expr Prop2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "SUM(integerProp)", "Aggr Expr Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "SUM(integerProp)", "Aggr Expr Prop2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	// COLLECTIONAL_EXPRESSION
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Coll Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Coll Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Coll Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Coll Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	// AGGREGATED_COLLECTIONAL_EXPRESSION
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection", "SUM(integerProp)", "Aggr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "SUM(integerProp)", "Aggr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "SUM(integerProp)", "Aggr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "SUM(integerProp)", "Aggr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	// ATTRIBUTED_COLLECTIONAL_EXPRESSION
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Attr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.ALL, "integerProp"));
-	managerAndEnhancer.getEnhancer().addCalculatedProperty(new CalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Attr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.ANY, "integerProp"));
-	managerAndEnhancer.getEnhancer().apply();
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Attr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.ALL, "integerProp");
+	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Attr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.ANY, "integerProp");
+	dtm.getEnhancer().apply();
 
-	managerAndEnhancer.getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "entityProp.exprProp");
-	managerAndEnhancer.getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "aggrExprProp1");
-	managerAndEnhancer.getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, "entityProp.collection.collExprProp");
-	managerAndEnhancer.getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, "entityProp.collection.simpleEntityProp.collExprProp");
-	return managerAndEnhancer;
+	dtm.getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "entityProp.exprProp");
+	dtm.getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "aggrExprProp1");
+	dtm.getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, "entityProp.collection.collExprProp");
+	dtm.getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, "entityProp.collection.simpleEntityProp.collExprProp");
+	return dtm;
     }
 
     private void checkAccessabilityOfCalculatedPropertiesAndTheirState(final IDomainTreeManagerAndEnhancer dtm) {
@@ -477,10 +486,15 @@ public abstract class AbstractDomainTreeTest {
 	    // to perform such a test it is enough to ask if the added calc properties can be asked for "excludement / disablement" (and the state is appropriate), after manual "disabling / excluding".
 	    // It will process the domain tree to the needed level of enhanced hierarchy.
 	    final IDomainTreeManagerAndEnhancer dtm = dtm();
+
+	    dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "7 * integerProp", "Calculated Property", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+
 	    checkAccessabilityOfCalculatedPropertiesAndTheirState(dtm);
 
 	    final IDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
 	    checkAccessabilityOfCalculatedPropertiesAndTheirState(copy);
+
+	    copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calculatedProperty").contextType();
 	}
     }
 

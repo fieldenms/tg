@@ -4,21 +4,21 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
 
 public class AbstractAnalysisDomainTreeManagerAndEnhancer1 extends AbstractAnalysisDomainTreeManagerAndEnhancer implements IAbstractAnalysisDomainTreeManagerAndEnhancer {
     public AbstractAnalysisDomainTreeManagerAndEnhancer1(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new AbstractAnalysisDomainTreeManager1(serialiser, rootTypes), new DomainTreeEnhancer(rootTypes));
+	this(new AbstractAnalysisDomainTreeManager1(serialiser, rootTypes), new DomainTreeEnhancer(serialiser, rootTypes));
     }
 
     protected AbstractAnalysisDomainTreeManagerAndEnhancer1(final AbstractAnalysisDomainTreeManager base, final IDomainTreeEnhancer enhancer) {

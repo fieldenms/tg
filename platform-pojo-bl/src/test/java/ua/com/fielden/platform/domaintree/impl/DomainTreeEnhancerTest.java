@@ -460,7 +460,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	    classLoader.startModification(name).endModification();
 	    originalAndEnhancedRootTypes.get(EnhancingMasterEntity.class).add(new ByteArray(classLoader.getCachedByteArray(name)));
 	}
-	dm = new DomainTreeEnhancer(rootTypes, originalAndEnhancedRootTypes);
+	dm = new DomainTreeEnhancer(serialiser(), rootTypes, originalAndEnhancedRootTypes);
     }
 
     private static void fieldDoesNotExist(final Class<?> type, final String prop) {
@@ -613,7 +613,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     private static void checkDiscardOperation(final IDomainTreeEnhancer dm) {
 	checkOriginalDomain(dm);
 
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "", "6 * integerProp", "Smth prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "", "6 * integerProp", "Smth prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dm.getCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble").setTitle("OlD DoUbLe").setDesc("dESC").setContextualExpression("22 * integerProp");
 	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
 	dm.discard();
@@ -624,7 +624,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 
     private static void checkFirstLevelEnhancements(final IDomainTreeEnhancer dm) {
 	// modify domain
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "", "1 * 1 * integerProp", "Title Bad", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "", "1 * 1 * integerProp", "Title Bad", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dm.getCalculatedProperty(EnhancingMasterEntity.class, "titleBad").setTitle("Single").setContextualExpression("1 * integerProp");
 	dm.getCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple").setDesc("New Desc").setContextualExpression("4 * 1 * integerProp");
 	dm.apply();
@@ -666,9 +666,9 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	// modify domain
 	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
 
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp", "2 * integerProp", "Double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "3 * integerProp", "Triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp", "4 * integerProp", "Quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp", "2 * integerProp", "Double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "3 * integerProp", "Triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp", "4 * integerProp", "Quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dm.apply();
 
 	// check the snapshot of domain
@@ -708,10 +708,10 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 
 	// modify domain
 	dm.getCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.newTitle").setContextualExpression("2 * integerProp").setTitle("Old double").setDesc("Desc");
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "5 * integerProp", "Quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "6 * integerProp", "Sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.masterEntityProp", "7 * integerProp", "Septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.masterEntityProp", "8 * integerProp", "Octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "5 * integerProp", "Quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "6 * integerProp", "Sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.masterEntityProp", "7 * integerProp", "Septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.masterEntityProp", "8 * integerProp", "Octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dm.apply();
 
 	// check the snapshot of domain
@@ -811,7 +811,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     public void test_that_self_type_properties_will_not_be_adapted() {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
 	rootTypes.add(EnhancingMasterEntity.class);
-	final IDomainTreeEnhancer dm = new DomainTreeEnhancer(rootTypes);
+	final IDomainTreeEnhancer dm = new DomainTreeEnhancer(serialiser(), rootTypes);
 
 	// check the snapshot of domain
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "oldSingle");
@@ -822,7 +822,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 
 	// modify domain
 
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "6 * integerProp", "Sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "6 * integerProp", "Sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dm.apply();
 
 	// check the snapshot of domain
@@ -842,7 +842,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 
     private void failAddition(final IDomainTreeEnhancer dm, final Class<?> rootType, final String contextPath, final String title) {
 	try {
-	    dm.addCalculatedProperty(new CalculatedProperty(rootType, contextPath, "5 * integerProp", title, "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	    dm.addCalculatedProperty(rootType, contextPath, "5 * integerProp", title, "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	    fail("The calculated property key is incorrect. The action should be failed. Context path = [" + contextPath + "], title = " + title);
 	} catch (final IncorrectCalcPropertyKeyException e) {
 	}
@@ -920,19 +920,19 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	checkEmptyDomain(dm);
 
 	// modify domain
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "1 * integerProp", "Single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "2 * integerProp", "Double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "3 * integerProp", "Triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "1 * integerProp", "Single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "2 * integerProp", "Double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "3 * integerProp", "Triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "4 * integerProp", "Quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "5 * integerProp", "Quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "6 * integerProp", "Sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "4 * integerProp", "Quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "5 * integerProp", "Quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "6 * integerProp", "Sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
 	// this is very important test due to JVM's lazy class loading!
 	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
 
-	copy.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "Septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	copy.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	copy.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "Septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	copy.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
 	copy.apply();
 
@@ -964,19 +964,19 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	checkEmptyDomain(dm);
 
 	// modify domain
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "1 * integerProp", "All of single", "Desc", CalculatedPropertyAttribute.ALL, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "2 * integerProp", "Any of double", "Desc", CalculatedPropertyAttribute.ANY, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "3 * integerProp", "All of triple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "1 * integerProp", "All of single", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "2 * integerProp", "Any of double", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "3 * integerProp", "All of triple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
 
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "4 * integerProp", "Any of quadruple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "5 * integerProp", "All of quintuple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "6 * integerProp", "Any of sextuple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "4 * integerProp", "Any of quadruple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "5 * integerProp", "All of quintuple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "6 * integerProp", "Any of sextuple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
 
 	// this is very important test due to JVM's lazy class loading!
 	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
 
-	copy.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "All of septuple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp"));
-	copy.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Any of octuple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp"));
+	copy.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "All of septuple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
+	copy.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Any of octuple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
 
 	copy.apply();
 
@@ -1008,19 +1008,19 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	checkEmptyDomain(dm);
 
 	// modify domain
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "SUM(1 * integerProp)", "Sum of single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "AVG(2 * integerProp)", "Avg of double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "MIN(3 * integerProp) + MAX(4 * integerProp)", "Min of triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityCollProp", "SUM(1 * integerProp)", "Sum of single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp", "AVG(2 * integerProp)", "Avg of double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp", "MIN(3 * integerProp) + MAX(4 * integerProp)", "Min of triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "MAX(4 * integerProp) * MIN(3 * integerProp)", "Max of quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "SUM(5 * integerProp + masterEntityProp.slaveEntityProp.integerProp)", "Sum of quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "SUM(6 * integerProp)", "Sum of sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "MAX(4 * integerProp) * MIN(3 * integerProp)", "Max of quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "SUM(5 * integerProp + masterEntityProp.slaveEntityProp.integerProp)", "Sum of quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "SUM(6 * integerProp)", "Sum of sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
 	// this is very important test due to JVM's lazy class loading!
 	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
 
-	copy.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "SUM(7 * integerProp)", "Sum of septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	copy.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "SUM(8 * integerProp)", "Sum of octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	copy.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "SUM(7 * integerProp)", "Sum of septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	copy.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "SUM(8 * integerProp)", "Sum of octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
 	copy.apply();
 
@@ -1052,19 +1052,19 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	checkEmptyDomain(dm);
 
 	// modify domain
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp", "SUM(1 * integerProp)", "Sum of single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "AVG(2 * integerProp)", "Avg of double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp", "MIN(3 * integerProp) + MAX(4 * integerProp)", "Min of triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp", "SUM(1 * integerProp)", "Sum of single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "AVG(2 * integerProp)", "Avg of double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp", "MIN(3 * integerProp) + MAX(4 * integerProp)", "Min of triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "MAX(4 * integerProp) * MIN(3 * integerProp)", "Max of quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp", "SUM(5 * integerProp + masterEntityProp.slaveEntityProp.integerProp)", "Sum of quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	dm.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.evenSlaverEntityProp", "SUM(6 * integerProp)", "Sum of sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "MAX(4 * integerProp) * MIN(3 * integerProp)", "Max of quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp", "SUM(5 * integerProp + masterEntityProp.slaveEntityProp.integerProp)", "Sum of quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.evenSlaverEntityProp", "SUM(6 * integerProp)", "Sum of sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
 	// this is very important test due to JVM's lazy class loading!
 	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
 
-	copy.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.slaveEntityProp", "SUM(7 * integerProp)", "Sum of septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
-	copy.addCalculatedProperty(new CalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp.masterEntityProp", "SUM(8 * integerProp)", "Sum of octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp"));
+	copy.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.slaveEntityProp", "SUM(7 * integerProp)", "Sum of septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	copy.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp.masterEntityProp", "SUM(8 * integerProp)", "Sum of octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
 	copy.apply();
 

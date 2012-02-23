@@ -17,16 +17,18 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
-import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -42,7 +44,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
+public final class DomainTreeEnhancer extends AbstractDomainTree implements IDomainTreeEnhancer {
     private static final long serialVersionUID = -7996646149855822266L;
     private static final Logger logger = Logger.getLogger(DomainTreeEnhancer.class);
 
@@ -102,8 +104,8 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      *
      * @param rootTypes -- root types
      */
-    public DomainTreeEnhancer(final Set<Class<?>> rootTypes) {
-	this(rootTypes, new HashMap<Class<?>, List<ByteArray>>(), null);
+    public DomainTreeEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+	this(serialiser, rootTypes, new HashMap<Class<?>, List<ByteArray>>(), null);
     }
 
     /**
@@ -113,8 +115,8 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      * @param originalAndEnhancedRootTypesArrays -- a map of pair [original => enhanced class byte array] root types
      *
      */
-    public DomainTreeEnhancer(final Set<Class<?>> rootTypes, final Map<Class<?>, List<ByteArray>> originalAndEnhancedRootTypesArrays) {
-	this(rootTypes, originalAndEnhancedRootTypesArrays, null);
+    public DomainTreeEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Class<?>, List<ByteArray>> originalAndEnhancedRootTypesArrays) {
+	this(serialiser, rootTypes, originalAndEnhancedRootTypesArrays, null);
     }
 
     /**
@@ -124,7 +126,8 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      * @param originalAndEnhancedRootTypesArrays -- a map of pair [original => enhanced class byte array] root types
      * @param calculatedProperties -- current version of calculated properties
      */
-    public DomainTreeEnhancer(final Set<Class<?>> rootTypes, final Map<Class<?>, List<ByteArray>> originalAndEnhancedRootTypesArrays, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties) {
+    public DomainTreeEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Class<?>, List<ByteArray>> originalAndEnhancedRootTypesArrays, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties) {
+	super(serialiser);
 	this.rootTypes = new HashSet<Class<?>>();
 	this.rootTypes.addAll(rootTypes);
 
@@ -149,7 +152,7 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 	}
 
 	this.calculatedProperties = new HashMap<Class<?>, List<ICalculatedProperty>>();
-	this.calculatedProperties.putAll(calculatedProperties == null ? extractAll(originalAndEnhancedRootTypes) : calculatedProperties);
+	this.calculatedProperties.putAll(calculatedProperties == null ? extractAll(originalAndEnhancedRootTypes, this, getFactory()) : calculatedProperties);
     }
 
     private static Map<Class<?>, Pair<Class<?>, List<byte[]>>> createOriginalAndEnhancedRootTypesFromRootTypes(final Set<Class<?>> rootTypes) {
@@ -210,8 +213,8 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 		int i = 0;
 		for (final Entry<String, ICalculatedProperty> nameWithProp : props.entrySet()) {
 		    final ICalculatedProperty prop = nameWithProp.getValue();
-		    final Annotation calcAnnotation = new CalculatedAnnotation().contextualExpression(prop.contextualExpression()).contextPath(prop.contextPath()).origination(prop.originationProperty()).attribute(prop.attribute()).category(prop.category()).newInstance();
-		    newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.title(), prop.desc(), calcAnnotation);
+		    final Annotation calcAnnotation = new CalculatedAnnotation().contextualExpression(prop.getContextualExpression()).contextPath(prop.getContextPath()).origination(prop.getOriginationProperty()).attribute(prop.getAttribute()).category(prop.category()).newInstance();
+		    newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.getTitle(), prop.getDesc(), calcAnnotation);
 		}
 		// determine a "real" parent type:
 		final Class<?> realParentToBeEnhanced = StringUtils.isEmpty(path) ? realRoot : PropertyTypeDeterminator.determinePropertyType(realRoot, path);
@@ -315,19 +318,20 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
     public void discard() {
 	//////////// Performs migration [originalAndEnhancedRootTypes => calculatedProperties] ////////////
 	calculatedProperties.clear();
-	calculatedProperties.putAll(extractAll(originalAndEnhancedRootTypes));
+	calculatedProperties.putAll(extractAll(originalAndEnhancedRootTypes, this, getFactory()));
     }
 
     /**
      * Extracts all calculated properties from enhanced root types.
      *
      * @param originalAndEnhancedRootTypes
+     * @param dte TODO
      * @return
      */
-    protected static Map<Class<?>, List<ICalculatedProperty>> extractAll(final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
+    protected static Map<Class<?>, List<ICalculatedProperty>> extractAll(final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes, final IDomainTreeEnhancer dte, final EntityFactory factory) {
 	final Map<Class<?>, List<ICalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<ICalculatedProperty>>();
 	for (final Entry<Class<?>, Class<?>> originalAndEnhanced : originalAndEnhancedRootTypes.entrySet()) {
-	    final List<ICalculatedProperty> calc = reload(originalAndEnhanced.getValue(), originalAndEnhanced.getKey(), "");
+	    final List<ICalculatedProperty> calc = reload(originalAndEnhanced.getValue(), originalAndEnhanced.getKey(), "", dte, factory);
 	    for (final ICalculatedProperty calculatedProperty : calc) {
 		addCalculatedProperty(calculatedProperty, newCalculatedProperties, originalAndEnhancedRootTypes);
 	    }
@@ -341,8 +345,9 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      * @param type -- enhanced type to load properties
      * @param root -- not enhanced root type
      * @param path -- the path to loaded calculated props
+     * @param dte TODO
      */
-    private static List<ICalculatedProperty> reload(final Class<?> type, final Class<?> root, final String path) {
+    private static List<ICalculatedProperty> reload(final Class<?> type, final Class<?> root, final String path, final IDomainTreeEnhancer dte, final EntityFactory factory) {
 	final List<ICalculatedProperty> newCalcProperties = new ArrayList<ICalculatedProperty>();
 	if (!DynamicEntityClassLoader.isEnhanced(type)) {
 	    return newCalcProperties;
@@ -354,14 +359,14 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 		    final Title titleAnnotation = calculatedField.getAnnotation(Title.class);
 		    final String title = titleAnnotation == null ? "" : titleAnnotation.value();
 		    final String desc = titleAnnotation == null ? "" : titleAnnotation.desc();
-		    final ICalculatedProperty calculatedProperty = new CalculatedProperty(root, calcAnnotation.contextPath(), calcAnnotation.contextualExpression(), title, desc, calcAnnotation.attribute(), calcAnnotation.origination());
+		    final ICalculatedProperty calculatedProperty = CalculatedProperty.create(factory, root, calcAnnotation.contextPath(), calcAnnotation.contextualExpression(), title, desc, calcAnnotation.attribute(), calcAnnotation.origination(), dte);
 		    newCalcProperties.add(calculatedProperty);
 		}
 	    }
 	    // reload all "entity-typed" sub-properties if they are enhanced
 	    for (final Field entityProp : Finder.findPropertiesThatAreEntities(type)) {
 		final String newPath = StringUtils.isEmpty(path) ? entityProp.getName() : (path + "." + entityProp.getName());
-		newCalcProperties.addAll(reload(entityProp.getType(), root, newPath));
+		newCalcProperties.addAll(reload(entityProp.getType(), root, newPath, dte, factory));
 	    }
 	    return newCalcProperties;
 	}
@@ -377,7 +382,22 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      * @param originalAndEnhancedRootTypes
      * @return
      */
-    private static ICalculatedProperty validateCalculatedPropertyKey(final Class<?> root, final String pathAndName, final boolean correctIfExists, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
+    public ICalculatedProperty validateCalculatedPropertyKey(final Class<?> root, final String pathAndName, final boolean correctIfExists) {
+	return validateCalculatedPropertyKey1(root, pathAndName, correctIfExists, calculatedProperties, originalAndEnhancedRootTypes);
+    }
+
+
+    /**
+     * Validates the calculated property by its key [root + pathAndName]. Validation depends on current state of enhanced domain.
+     *
+     * @param root
+     * @param pathAndName
+     * @param correctIfExists -- specify <code>true</code> for "correct" key if the calc property exists (when property getting/removing), <code>false</code> for "incorrect" key if the calc property exists (when property adding).
+     * @param calculatedProperties
+     * @param originalAndEnhancedRootTypes
+     * @return
+     */
+    private static ICalculatedProperty validateCalculatedPropertyKey1(final Class<?> root, final String pathAndName, final boolean correctIfExists, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
 	if (StringUtils.isEmpty(pathAndName)) {
 	    throw new IncorrectCalcPropertyKeyException("The calculated property name cannot be empty.");
 	}
@@ -451,15 +471,15 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      * @param originalAndEnhancedRootTypes
      */
     private static void addCalculatedProperty(final ICalculatedProperty calculatedProperty, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
-	final Class<?> root = calculatedProperty.root();
-	validateCalculatedPropertyKey(root, calculatedProperty.pathAndName(), false, calculatedProperties, originalAndEnhancedRootTypes);
+	final Class<?> root = calculatedProperty.getRoot();
+	validateCalculatedPropertyKey1(root, calculatedProperty.pathAndName(), false, calculatedProperties, originalAndEnhancedRootTypes);
 
 	if (!calculatedProperties.containsKey(root)) {
 	    calculatedProperties.put(root, new ArrayList<ICalculatedProperty>());
 	}
 	final boolean added = calculatedProperties.get(root).add(calculatedProperty);
 	if (!added) {
-	    logger.warn("The calculated property [" + calculatedProperty.title() + "] with name [" + calculatedProperty.pathAndName() + "] is already present and is trying to be added again.");
+	    logger.warn("The calculated property [" + calculatedProperty.getTitle() + "] with name [" + calculatedProperty.pathAndName() + "] is already present and is trying to be added again.");
 	}
     }
 
@@ -469,13 +489,18 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
     }
 
     @Override
+    public void addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
+	addCalculatedProperty(CalculatedProperty.create(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, this));
+    }
+
+    @Override
     public ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
-	return validateCalculatedPropertyKey(rootType, calculatedPropertyName, true, calculatedProperties, originalAndEnhancedRootTypes);
+	return validateCalculatedPropertyKey1(rootType, calculatedPropertyName, true, calculatedProperties, originalAndEnhancedRootTypes);
     }
 
     @Override
     public void removeCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
-	final ICalculatedProperty calculatedProperty = validateCalculatedPropertyKey(rootType, calculatedPropertyName, true, calculatedProperties, originalAndEnhancedRootTypes);
+	final ICalculatedProperty calculatedProperty = validateCalculatedPropertyKey1(rootType, calculatedPropertyName, true, calculatedProperties, originalAndEnhancedRootTypes);
 	final boolean removed = calculatedProperties.get(rootType).remove(calculatedProperty);
 
 	if (!removed) {
@@ -492,7 +517,7 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
      * @author TG Team
      *
      */
-    public static class DomainTreeEnhancerSerialiser extends TgSimpleSerializer<DomainTreeEnhancer> {
+    public static class DomainTreeEnhancerSerialiser extends AbstractDomainTreeSerialiser<DomainTreeEnhancer> {
 	public DomainTreeEnhancerSerialiser(final TgKryo kryo) {
 	    super(kryo);
 	}
@@ -502,7 +527,7 @@ public final class DomainTreeEnhancer implements IDomainTreeEnhancer {
 	    final Set<Class<?>> rootTypes = readValue(buffer, HashSet.class);
 	    final Map<Class<?>, List<ByteArray>> originalAndEnhancedRootTypesArrays = readValue(buffer, HashMap.class);
 	    final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties = readValue(buffer, HashMap.class);
-	    return new DomainTreeEnhancer(rootTypes, originalAndEnhancedRootTypesArrays, calculatedProperties);
+	    return new DomainTreeEnhancer(kryo(), rootTypes, originalAndEnhancedRootTypesArrays, calculatedProperties);
 	}
 
 	@Override
