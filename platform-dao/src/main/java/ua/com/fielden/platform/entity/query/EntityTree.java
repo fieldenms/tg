@@ -12,56 +12,18 @@ import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
  *
  */
 public class EntityTree {
-    private Class resultType; // e.g. Vehicle, ISimpleMoneyType
-    private final ICompositeUserTypeInstantiate hibType; //e.g. ISimpleMoneyType
+    private Class resultType; // e.g. Vehicle
     private SortedMap<PropertyPersistenceInfo, Integer/*position in raw result array*/> singles = new TreeMap<PropertyPersistenceInfo, Integer>();
+    private SortedMap<String /*composite value property name*/, ValueTree> compositeValues = new TreeMap<String, ValueTree>();
     private SortedMap<String /*composite property name*/, EntityTree> composites = new TreeMap<String, EntityTree>();
 
-    protected EntityTree(final Class resultType, final ICompositeUserTypeInstantiate hibType) {
+    protected EntityTree(final Class resultType) {
 	this.resultType = resultType;
-	this.hibType = hibType;
     }
 
     @Override
     public String toString() {
 	return "\n\tResult type: " + resultType.getName() + "\n\tsingles: " + singles + "\n\tcomposites:" + composites;
-    }
-
-    @Override
-    public int hashCode() {
-	final int prime = 31;
-	int result = 1;
-	result = prime * result + ((composites == null) ? 0 : composites.hashCode());
-	result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-	result = prime * result + ((singles == null) ? 0 : singles.hashCode());
-	return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-	if (this == obj)
-	    return true;
-	if (obj == null)
-	    return false;
-	if (!(obj instanceof EntityTree))
-	    return false;
-	final EntityTree other = (EntityTree) obj;
-	if (composites == null) {
-	    if (other.composites != null)
-		return false;
-	} else if (!composites.equals(other.composites))
-	    return false;
-	if (resultType == null) {
-	    if (other.resultType != null)
-		return false;
-	} else if (!resultType.equals(other.resultType))
-	    return false;
-	if (singles == null) {
-	    if (other.singles != null)
-		return false;
-	} else if (!singles.equals(other.singles))
-	    return false;
-	return true;
     }
 
     public Class getResultType() {
@@ -76,7 +38,61 @@ public class EntityTree {
         return composites;
     }
 
-    public ICompositeUserTypeInstantiate getHibType() {
-        return hibType;
+    public SortedMap<String, ValueTree> getCompositeValues() {
+        return compositeValues;
+    }
+
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + ((compositeValues == null) ? 0 : compositeValues.hashCode());
+	result = prime * result + ((composites == null) ? 0 : composites.hashCode());
+	result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
+	result = prime * result + ((singles == null) ? 0 : singles.hashCode());
+	return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	if (this == obj) {
+	    return true;
+	}
+	if (obj == null) {
+	    return false;
+	}
+	if (!(obj instanceof EntityTree)) {
+	    return false;
+	}
+	final EntityTree other = (EntityTree) obj;
+	if (compositeValues == null) {
+	    if (other.compositeValues != null) {
+		return false;
+	    }
+	} else if (!compositeValues.equals(other.compositeValues)) {
+	    return false;
+	}
+	if (composites == null) {
+	    if (other.composites != null) {
+		return false;
+	    }
+	} else if (!composites.equals(other.composites)) {
+	    return false;
+	}
+	if (resultType == null) {
+	    if (other.resultType != null) {
+		return false;
+	    }
+	} else if (!resultType.equals(other.resultType)) {
+	    return false;
+	}
+	if (singles == null) {
+	    if (other.singles != null) {
+		return false;
+	    }
+	} else if (!singles.equals(other.singles)) {
+	    return false;
+	}
+	return true;
     }
 }

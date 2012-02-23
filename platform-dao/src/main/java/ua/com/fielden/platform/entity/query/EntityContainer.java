@@ -13,111 +13,128 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityContainer<R extends AbstractEntity> {
-    	private final static String ID_PROPERTY_NAME = "id";
+    private final static String ID_PROPERTY_NAME = "id";
 
-    	final Class<R> resultType; // should also cover marker interfaces for TgCompositeUserType
-    	final ICompositeUserTypeInstantiate hibType;
-	R entity;
-	//Long id;
-	boolean shouldBeFetched;
-	Map<String, Object> primitives = new HashMap<String, Object>();
-	Map<String, EntityContainer> entities = new HashMap<String, EntityContainer>();
-	Map<String, Collection<EntityContainer>> collections = new HashMap<String, Collection<EntityContainer>>();
-	private Logger logger = Logger.getLogger(this.getClass());
+    private final Class<R> resultType; // should also cover marker interfaces for TgCompositeUserType
+    private R entity;
+    private boolean shouldBeFetched;
+    private final Map<String, Object> primitives = new HashMap<String, Object>();
+    private final Map<String, ValueContainer> composites = new HashMap<String, ValueContainer>();
+    private final Map<String, EntityContainer> entities = new HashMap<String, EntityContainer>();
+    private final Map<String, Collection<EntityContainer>> collections = new HashMap<String, Collection<EntityContainer>>();
+    private final Logger logger = Logger.getLogger(this.getClass());
 
-	public EntityContainer(final Class resultType, final ICompositeUserTypeInstantiate hibType, final boolean shouldBeFetched) {
-	    this.resultType = resultType;
-	    this.hibType = hibType;
+    public EntityContainer(final Class resultType, final boolean shouldBeFetched) {
+	this.resultType = resultType;
+	this.shouldBeFetched = shouldBeFetched;
+    }
 
-	// TODO inspect whether given resultType is not assigned from hibernate CompositeUserType - if it is - then treat accordingly
+    public boolean notYetInitialised() {
+	return primitives.size() + entities.size() + collections.size() == 1 && getId() != null;
+    }
 
-//	    if (id != null) {
-//		this.id = ((Number) id).longValue();
-//	    }
-	    this.shouldBeFetched = shouldBeFetched;
+    public boolean isInstantiated() {
+	return entity != null;
+    }
+
+    public Long getId() {
+	final Object idObject = primitives.get(ID_PROPERTY_NAME);
+	return idObject != null ? ((Number) idObject).longValue() : null;//id;
+    }
+
+    public R instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
+	logger.info("instantiating: " + resultType.getName() + " for id = " + getId() + " lightWeight = " + userViewOnly);
+	entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
+	entity.setInitialising(true);
+	for (final Map.Entry<String, Object> primPropEntry : primitives.entrySet()) {
+	    try {
+		setPropertyValue(entity, primPropEntry.getKey(), primPropEntry.getValue(), userViewOnly);
+		//entity.set(primPropEntry.getKey(), primPropEntry.getValue());
+	    } catch (final Exception e) {
+		throw new IllegalStateException("Can't set value [" + primPropEntry.getValue() + "] of type ["
+			+ (primPropEntry.getValue() != null ? primPropEntry.getValue().getClass().getName() : " unknown") + "] for property [" + primPropEntry.getKey()
+			+ "] due to:" + e);
+	    }
 	}
 
-	public boolean notYetInitialised() {
-	    return primitives.size() + entities.size() + collections.size() == 1 && getId() != null;
+	for (final Map.Entry<String, ValueContainer> compositePropEntry : composites.entrySet()) {
+	    try {
+		setPropertyValue(entity, compositePropEntry.getKey(), compositePropEntry.getValue().instantiate(), userViewOnly);
+	    } catch (final Exception e) {
+		throw new IllegalStateException("Can't set value [" + compositePropEntry.getValue() + "] of type [" + compositePropEntry.getValue().hibType + "] for property ["
+	    + compositePropEntry.getKey() + "] due to:" + e);
+	    }
 	}
-
-	public boolean isInstantiated() {
-	    return entity != null;
-	}
-
-	public Long getId() {
-	    final Object idObject = primitives.get(ID_PROPERTY_NAME);
-	    return idObject != null ? ((Number) idObject).longValue() : null;//id;
-	}
-
-	public R instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
-	    logger.info("instantiating: " + resultType.getName() + " for id = " + getId() + " lightWeight = " + userViewOnly);
-	    if (hibType != null) {
-		return (R) hibType.instantiate(primitives);
-	    }
-	    entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
-	    entity.setInitialising(true);
-	    for (final Map.Entry<String, Object> primPropEntry : primitives.entrySet()) {
-		try {
-		    setPropertyValue(entity, primPropEntry.getKey(), primPropEntry.getValue(), userViewOnly);
-		    //entity.set(primPropEntry.getKey(), primPropEntry.getValue());
-		} catch (final Exception e) {
-		    throw new IllegalStateException("Can't set value [" + primPropEntry.getValue() + "] of type ["
-			    + (primPropEntry.getValue() != null ? primPropEntry.getValue().getClass().getName() : " unknown") + "] for property [" + primPropEntry.getKey()
-			    + "] due to:" + e);
-		}
-	    }
-
-	    for (final Map.Entry<String, EntityContainer> entityEntry : entities.entrySet()) {
-		if (entityEntry.getValue() == null || entityEntry.getValue().notYetInitialised() || !entityEntry.getValue().shouldBeFetched) {
-		    setPropertyValue(entity, entityEntry.getKey(), null,  userViewOnly);
-		} else if (entityEntry.getValue().isInstantiated()) {
-		    setPropertyValue(entity, entityEntry.getKey(), entityEntry.getValue().entity, userViewOnly);
-		} else {
-		    setPropertyValue(entity, entityEntry.getKey(), entityEntry.getValue().instantiate(entFactory, userViewOnly), userViewOnly);
-		}
-	    }
-
-	    for (final Map.Entry<String, Collection<EntityContainer>> entityEntry : collections.entrySet()) {
-		Collection collectionalProp = null;
-		try {
-		    collectionalProp = entityEntry.getValue().getClass().newInstance();
-		} catch (final Exception e) {
-		    throw new RuntimeException("COULD NOT EXECUTE [collectionalProp = entityEntry.getValue().getClass().newInstance();] due to: " + e);
-		}
-		for (final EntityContainer container : entityEntry.getValue()) {
-		    if (!container.notYetInitialised()) {
-			collectionalProp.add(container.instantiate(entFactory, userViewOnly));
-		    }
-		}
-		setPropertyValue(entity, entityEntry.getKey(), collectionalProp, userViewOnly);
-	    }
-
-	    if (!userViewOnly) {
-		EntityUtils.handleMetaProperties(entity);
-	    }
-
-	    entity.setInitialising(false);
-
-	    return entity;
-	}
-
-	private void setPropertyValue(final AbstractEntity entity, final String propName, final Object propValue, final boolean userViewOnly) {
-	    if (!userViewOnly || EntityAggregates.class.isAssignableFrom(resultType)) {
-		entity.set(propName, propValue);
+	for (final Map.Entry<String, EntityContainer> entityEntry : entities.entrySet()) {
+	    if (entityEntry.getValue() == null || entityEntry.getValue().notYetInitialised() || !entityEntry.getValue().shouldBeFetched) {
+		setPropertyValue(entity, entityEntry.getKey(), null, userViewOnly);
+	    } else if (entityEntry.getValue().isInstantiated()) {
+		setPropertyValue(entity, entityEntry.getKey(), entityEntry.getValue().entity, userViewOnly);
 	    } else {
-		try {
-		    final Field field = Finder.findFieldByName(resultType, propName);
-		    field.setAccessible(true);
-//		    if (propValue == null && Money.class.isAssignableFrom(field.getType())) {
-//			field.set(entity, new Money("0"));
-//		    } else {
-			field.set(entity, propValue);
-//		    }
-		    field.setAccessible(false);
-		} catch (final Exception e) {
-		    throw new RuntimeException("Can't set value for property " + propName + " due to:" + e.getMessage());
-		}
+		setPropertyValue(entity, entityEntry.getKey(), entityEntry.getValue().instantiate(entFactory, userViewOnly), userViewOnly);
 	    }
 	}
+
+	for (final Map.Entry<String, Collection<EntityContainer>> entityEntry : collections.entrySet()) {
+	    Collection collectionalProp = null;
+	    try {
+		collectionalProp = entityEntry.getValue().getClass().newInstance();
+	    } catch (final Exception e) {
+		throw new RuntimeException("COULD NOT EXECUTE [collectionalProp = entityEntry.getValue().getClass().newInstance();] due to: " + e);
+	    }
+	    for (final EntityContainer container : entityEntry.getValue()) {
+		if (!container.notYetInitialised()) {
+		    collectionalProp.add(container.instantiate(entFactory, userViewOnly));
+		}
+	    }
+	    setPropertyValue(entity, entityEntry.getKey(), collectionalProp, userViewOnly);
+	}
+
+	if (!userViewOnly) {
+	    EntityUtils.handleMetaProperties(entity);
+	}
+
+	entity.setInitialising(false);
+
+	return entity;
+    }
+
+    private void setPropertyValue(final AbstractEntity entity, final String propName, final Object propValue, final boolean userViewOnly) {
+	if (!userViewOnly || EntityAggregates.class.isAssignableFrom(resultType)) {
+	    entity.set(propName, propValue);
+	} else {
+	    try {
+		final Field field = Finder.findFieldByName(resultType, propName);
+		field.setAccessible(true);
+		field.set(entity, propValue);
+		field.setAccessible(false);
+	    } catch (final Exception e) {
+		throw new RuntimeException("Can't set value for property " + propName + " due to:" + e.getMessage());
+	    }
+	}
+    }
+
+    public Class<R> getResultType() {
+        return resultType;
+    }
+
+    public Map<String, Object> getPrimitives() {
+        return primitives;
+    }
+
+    public Map<String, ValueContainer> getComposites() {
+        return composites;
+    }
+
+    public Map<String, EntityContainer> getEntities() {
+        return entities;
+    }
+
+    public Map<String, Collection<EntityContainer>> getCollections() {
+        return collections;
+    }
+
+    public void setShouldBeFetched(final boolean shouldBeFetched) {
+        this.shouldBeFetched = shouldBeFetched;
+    }
 }

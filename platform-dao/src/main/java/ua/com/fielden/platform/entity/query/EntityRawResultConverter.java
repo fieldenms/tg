@@ -47,14 +47,30 @@ public class EntityRawResultConverter<E extends AbstractEntity> {
     /*DONE*/
     private EntityContainer<E> transformTuple(final Object[] data, final EntityTree resultTree, final boolean shouldBeFetched) {
 
-	final EntityContainer<E> entCont = new EntityContainer<E>(resultTree.getResultType(), resultTree.getHibType(), shouldBeFetched);
+	final EntityContainer<E> entCont = new EntityContainer<E>(resultTree.getResultType(), shouldBeFetched);
 
 	for (final Map.Entry<PropertyPersistenceInfo, Integer> primEntry : resultTree.getSingles().entrySet()) {
-	    entCont.primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsType(), primEntry.getKey().getHibTypeAsUserType()));
+	    entCont.getPrimitives().put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsType(), primEntry.getKey().getHibTypeAsUserType()));
+	}
+
+	for (final Map.Entry<String, ValueTree> compositeEntry : resultTree.getCompositeValues().entrySet()) {
+	    entCont.getComposites().put(compositeEntry.getKey(), transformTuple(data, compositeEntry.getValue(), shouldBeFetched));
 	}
 
 	for (final Map.Entry<String, EntityTree> entityEntry : resultTree.getComposites().entrySet()) {
-	    entCont.entities.put(entityEntry.getKey(), transformTuple(data, entityEntry.getValue(), shouldBeFetched));
+	    entCont.getEntities().put(entityEntry.getKey(), transformTuple(data, entityEntry.getValue(), shouldBeFetched));
+	}
+
+	return entCont;
+    }
+
+    /*DONE*/
+    private ValueContainer transformTuple(final Object[] data, final ValueTree resultTree, final boolean shouldBeFetched) {
+
+	final ValueContainer entCont = new ValueContainer(resultTree.getHibType());
+
+	for (final Map.Entry<PropertyPersistenceInfo, Integer> primEntry : resultTree.getSingles().entrySet()) {
+	    entCont.primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsType(), primEntry.getKey().getHibTypeAsUserType()));
 	}
 
 	return entCont;
