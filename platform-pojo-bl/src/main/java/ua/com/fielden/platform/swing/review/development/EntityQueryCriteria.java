@@ -9,7 +9,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
 
 import com.google.inject.Inject;
 
@@ -75,5 +75,13 @@ public abstract class EntityQueryCriteria<C extends IDomainTreeManager, T extend
     public boolean isDefaultEnabled(){
 	//TODO implement is default enable method
 	return false;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public IValueMatcher<?> getValueMatcher(final String propertyName) {
+	if (valueMatchers.get(propertyName) == null) {
+	    valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher((Class<? extends EntityQueryCriteria>)getType(), propertyName));
+	}
+	return valueMatchers.get(propertyName);
     }
 }
