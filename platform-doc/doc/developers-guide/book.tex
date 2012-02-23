@@ -6,6 +6,8 @@
 %\documentclass[b5paper,oneside,12pt]{svmono}
 \documentclass[a4paper,oneside,12pt]{svmono} %
 
+%\usepackage{standalone}
+
 \usepackage{makeidx}         % allows index generation
 \usepackage{multicol}        % used for the two-column index
 \usepackage[bottom]{footmisc}% places footnotes at page bottom
@@ -63,6 +65,58 @@
 
 %\usepackage{color}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%% program code formattin environment %%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{listings}
+\usepackage{float}
+\usepackage{caption}
+%allows use of "@" before \begin{document}
+\makeatletter
+% this creates a custom and simpler ruled box style
+\newcommand{\floatc@simplerule}[2]{{\@fs@cfont #1 #2}\par}
+\newcommand\fs@simplerule{\def\@fs@cfont{\bfseries}\let\@fs@capt\floatc@simplerule
+  \def\@fs@pre{}%\hrule height.4pt depth0pt \kern4pt
+  \def\@fs@post{}% \kern4pt\hrule height.4pt depth0pt \kern4pt \relax
+  \def\@fs@mid{}% \kern4pt
+  \let\@fs@iftopcapt\iftrue}
+
+% this code block defines the new and custom floatbox float environment
+\floatstyle{simplerule}
+\newfloat{program}{thp}{lop}
+\floatname{program}{Listing}
+
+\definecolor{codebgcolor}{HTML}{6E84D6}  
+\definecolor{codefgcolor}{HTML}{071D70}
+\definecolor{basiccolor}{HTML}{1435AD}%\definecolor{basiccolor}{HTML}{ACBB2F}
+\definecolor{stringcolor}{HTML}{2C3E82}
+\definecolor{highlight}{HTML}{FFB100}%{FFB100}
+\definecolor{annotationbgcolor}{HTML}{FFD473}
+
+\definecolor{dkgreen}{HTML}{A68100}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\newenvironment{code}[2]
+{\begin{program}
+  \vspace*{5pt}
+  \captionsetup{format=plain,justification=centering,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}
+  \caption{#1}\label{#2}  
+  \begin{center}
+    \begin{tikzpicture}
+      \node [fill=codebgcolor!20!white,rounded corners=5pt]
+      \bgroup
+      \bgroup
+      \begin{tabular}{l}}
+      {\end{tabular}
+      \egroup
+      \egroup;
+    \end{tikzpicture}
+  \end{center}
+\end{program}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 % TikZ
 \usepackage[version=0.96]{pgf}
 \usepackage{tikz}
@@ -101,9 +155,31 @@
 % Інформація про використані пакети тощо.
 % Може знадобитися для відлагодження класу документа
 %\listfiles
-
-% custom commands
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%% custom commands %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \def\argmin{\mathop{\rm arg\,min}} %define \argmin command
+
+\newcommand{\tikzref}[3]{\tikz[xshift=#2, yshift=#3, remember picture, overlay] \node[coordinate] (#1) {};}
+
+\newcommand{\tikzhighlight}[2]{
+  \begin{tikzpicture}[remember picture,overlay,rounded corners=2pt]
+    \fill[highlight,opacity=0.2] (#1) rectangle (#2);
+  \end{tikzpicture}
+}
+
+\newcommand{\tikznote}[7]{
+\begin{tikzpicture}[remember picture, overlay, >=latex']    
+    \node[fill=annotationbgcolor, xshift=#3, yshift=#4] (#1) at (#2) 
+    {\begin{minipage}{#5}
+      \tiny
+      \textbf{#6}\newline
+      #7
+    \end{minipage}};
+    \fill [highlight,thick,->,out=180,in=0] (#1.west) edge (#2.east);
+  \end{tikzpicture}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 \selectlanguage{english}
@@ -217,28 +293,28 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%% PART II %%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\include{parts/01-part/01-part}
-\include{parts/01-part/chapters/01-platform-architecture/platform-architecture}
-\include{parts/01-part/chapters/02-the-model/the-model}
-\include{parts/01-part/chapters/03-ui-construction/ui-construction}
-\include{parts/01-part/chapters/04-roa/roa}
-\include{parts/01-part/chapters/05-entity-query/entity-query}
-\include{parts/01-part/chapters/06-built-in-analytics/built-in-analytics}
-\include{parts/01-part/chapters/07-visualisation-and-interactivity/visualisation-and-interactivity}
-\include{parts/01-part/chapters/08-putting-all-together/putting-all-together}
+% \include{parts/01-part/01-part}
+% \include{parts/01-part/chapters/01-platform-architecture/platform-architecture}
+% \include{parts/01-part/chapters/02-the-model/the-model}
+% \include{parts/01-part/chapters/03-ui-construction/ui-construction}
+% \include{parts/01-part/chapters/04-roa/roa}
+% \include{parts/01-part/chapters/05-entity-query/entity-query}
+% \include{parts/01-part/chapters/06-built-in-analytics/built-in-analytics}
+% \include{parts/01-part/chapters/07-visualisation-and-interactivity/visualisation-and-interactivity}
+% \include{parts/01-part/chapters/08-putting-all-together/putting-all-together}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%% PART III %%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\include{parts/02-part/02-part}
-\include{parts/02-part/chapters/01-entity-models/entity-models}
-\include{parts/02-part/chapters/02-mapping-strategies/mapping-strategies}
-\include{parts/02-part/chapters/03-ui-patterns/ui-patterns}
-\include{parts/02-part/chapters/04-creation-of-web-resources/creation-of-web-resources}
-\include{parts/02-part/chapters/05-entity-query-patterns/entity-query-patterns}
-\include{parts/02-part/chapters/06-security-patterns/security-patterns}
+% \include{parts/02-part/02-part}
+% \include{parts/02-part/chapters/01-entity-models/entity-models}
+% \include{parts/02-part/chapters/02-mapping-strategies/mapping-strategies}
+% \include{parts/02-part/chapters/03-ui-patterns/ui-patterns}
+% \include{parts/02-part/chapters/04-creation-of-web-resources/creation-of-web-resources}
+% \include{parts/02-part/chapters/05-entity-query-patterns/entity-query-patterns}
+% \include{parts/02-part/chapters/06-security-patterns/security-patterns}
 
-\include{parts/03-bibliography/bibliography}%   Список використаних джерел
+% \include{parts/03-bibliography/bibliography}%   Список використаних джерел
 
 \backmatter%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\include{glossary}

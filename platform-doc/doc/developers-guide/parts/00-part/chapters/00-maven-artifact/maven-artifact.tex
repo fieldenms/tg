@@ -1,2 +1,40 @@
 \chapter{Maven to Rule'em All or Project Comprehension with Maven}\label{ch00:01}
 
+\section{A Short Introduction to Apache Maven}
+  
+  Apache Maven is a software project management and comprehension tool. 
+  It is based on the concept of a \emph{project object model} or simpy POM. 
+  Maven can manage a project's dependencies and build from a central piece of information declared in its POM file.
+
+  \lstset{language=XML,
+	  escapechar=\%,
+	  morekeywords={project, modelVersion, groupId, artifactId, packaging, packaging, version, name, description},
+	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
+  \begin{code}{Project Object Model (POM)}{lst:pom}
+    \begin{lstlisting}
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project xmlns="..."
+	  xsi:schemaLocation="...">
+	  <modelVersion>4.0.0</modelVersion>
+	  %\tikzref{lst_pom_n1}{-1ex}{2ex}%<groupId>fielden</groupId>%\tikzref{lst_pom_n2}{1ex}{-0.8ex}\tikzref{lst_pom_n2_1}{1ex}{0.5ex}%
+	   %\tikzref{lst_pom_n3}{-1ex}{2ex}%<artifactId>platform-parent</artifactId>%\tikzref{lst_pom_n4}{1ex}{-0.8ex}\tikzref{lst_pom_n4_1}{1ex}{0.5ex}%
+	  <packaging>pom</packaging>
+	  <version>1.1-SNAPSHOT</version>
+	  <name>Trident Genesis Platform Parent</name>
+	  <description>
+		  Trident Genesis is an application platform designed for
+		  development of ERP type applications supporting Client/Server
+		  and
+		  RIA/ROA architectures.
+		  Its main goal is to provide simple integrated solution for 
+		  development of information system with domain oriented approach. 
+	  </description>
+    </project> 
+    \end{lstlisting}
+  \end{code}
+
+  \tikzhighlight{lst_pom_n1}{lst_pom_n2}  
+  \tikznote{lst_pom_a1}{lst_pom_n2_1}{6cm}{0.5cm}{5cm}{Project Group}{This tag indicates project's group, which usually referes to the company or development group responsible for implementing the project.}
+
+  \tikzhighlight{lst_pom_n3}{lst_pom_n4}
+  \tikznote{lst_pom_a2}{lst_pom_n4_1}{4cm}{-0.5cm}{5cm}{Project Artifact}{There can be several notes for the same highlighted area.}
