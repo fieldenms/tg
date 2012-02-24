@@ -3,8 +3,8 @@ package ua.com.fielden.platform.criteria.generator.impl;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
-import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.development.ValueMatcherFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
 import com.google.inject.Scopes;
