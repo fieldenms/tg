@@ -20,6 +20,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     private final List<String> columns;
     private final PropertyPersistenceType type;
     private final Long length;
+    private final boolean nullable;
 
     public Type getHibTypeAsType() {
 	return hibType instanceof Type ? (Type) hibType : null;
@@ -84,7 +85,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    for (final String subpropName : subprops) {
 		final String column = columns.get(index);
 		final Object hibType = subpropsTypes.get(index);
-		result.add(new PropertyPersistenceInfo.Builder(name + "." +subpropName, ((Type) hibType).getReturnedClass()).column(column).type(PropertyPersistenceType.COMPOSITE_DETAILS).hibType(hibType).build());
+		result.add(new PropertyPersistenceInfo.Builder(name + "." +subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(PropertyPersistenceType.COMPOSITE_DETAILS).hibType(hibType).build());
 		index = index + 1;
 	    }
 	}
@@ -98,6 +99,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	javaType = builder.javaType;
 	hibType = builder.hibType;
 	columns = builder.columns;
+	nullable = builder.nullable;
     }
 
     public Long getLength() {
@@ -131,6 +133,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     public static class Builder {
 	private final String name;
 	private final Class javaType;
+	private final boolean nullable;
 
 	private Object hibType;
 	private List<String> columns = new ArrayList<String>();
@@ -142,9 +145,10 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
 	}
 
-	public Builder(final String name, final Class javaType) {
+	public Builder(final String name, final Class javaType, final boolean nullable) {
 	    this.name = name;
 	    this.javaType = javaType;
+	    this.nullable = nullable;
 	}
 
 	public Builder length(final long val) {
@@ -171,5 +175,9 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    columns.addAll(columns);
 	    return this;
 	}
+    }
+    
+    public boolean isNullable() {
+        return nullable;
     }
 }

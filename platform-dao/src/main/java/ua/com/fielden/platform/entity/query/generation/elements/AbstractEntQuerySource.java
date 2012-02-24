@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.hibernate.Hibernate;
 import org.hibernate.type.TypeFactory;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
@@ -16,8 +17,6 @@ import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
 
 public abstract class AbstractEntQuerySource implements IEntQuerySource {
     /**
@@ -122,7 +121,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
 	if (isPersistedEntityType(sourceType()) && prop.getName().equalsIgnoreCase(getAlias())) {
-	    final PurePropInfo idProp = new PurePropInfo("id", Long.class, TypeFactory.basic("long"));
+	    final PurePropInfo idProp = new PurePropInfo("id", Long.class, Hibernate.LONG, false);
 	    return new PropResolutionInfo(prop, getAlias(), idProp, idProp, true); // id property is meant here, but is it for all contexts?
 	} else {
 	    return null;
@@ -179,16 +178,17 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	private Object hibType;
 	boolean nullable = false;
 
-	public PurePropInfo(final String name, final Class type, final Object hibType) {
+	public PurePropInfo(final String name, final Class type, final Object hibType, final boolean nullable) {
 	    super();
 	    this.name = name;
 	    this.type = type;
 	    this.hibType = hibType;
+	    this.nullable = nullable;
 	}
 
 	@Override
 	public String toString() {
-	    return name + ":: " + (type != null ? type.getSimpleName() : type) + " :: " + (hibType != null ? hibType.getClass().getSimpleName() : null);
+	    return name + ":: " + (type != null ? type.getSimpleName() : type) + " :: " + (hibType != null ? hibType.getClass().getSimpleName() : null) + " :: " + nullable;
 	}
 
 	@Override
@@ -250,6 +250,10 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    return nullable;
 	}
 
+	public Object getHibType() {
+	    return hibType;
+	}
+
 
     }
 
@@ -295,19 +299,13 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	for (final Map.Entry<PurePropInfo, List<EntProp>> groupEntry : groups.entrySet()) {
 	    final EntQuerySourceFromEntityType qrySource = new EntQuerySourceFromEntityType(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, mappingsGenerator);
 
-	    /*TEMP*/final boolean propLeftJoin = parentLeftJoinLegacy || //
-			!isRequired(groupEntry.getKey().name);
-
+	    final boolean propLeftJoin = parentLeftJoinLegacy || groupEntry.getKey().nullable;
 
 	    result.add(new EntQueryCompoundSourceModel(qrySource, joinType(propLeftJoin), joinCondition(qrySource.getAlias(), qrySource.getAlias() + ".id")));
 	    result.addAll(qrySource.generateMissingSources(propLeftJoin, qrySource.resolvePropsInternally(groupEntry.getValue())));
 	}
 
 	return result;
-    }
-
-    protected boolean isRequired(final String propName) {
-	return isPropertyPartOfKey(sourceType(), propName) || isPropertyRequired(sourceType(), propName);
     }
 
     public MappingsGenerator getMappingsGenerator() {
@@ -374,7 +372,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
 	@Override
 	public String toString() {
-	    return "PRI: aliasPart = " + aliasPart + "; prop = " + prop + "; explicitProp = " + explicitProp;
+	    return "PRI: entProp = " + entProp + "; aliasPart = " + aliasPart + "; prop = " + prop + "; explicitProp = " + explicitProp + "; implicitId = " + implicitId;
 	}
 
 	public Integer getPreferenceNumber() {

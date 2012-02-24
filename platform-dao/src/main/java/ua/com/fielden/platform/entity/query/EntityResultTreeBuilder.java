@@ -25,7 +25,7 @@ final class EntityResultTreeBuilder {
 	final Map<String, Collection<PropertyPersistenceInfo>> compositeValueProps = getFirstLevelCompositeValueProps(resultType, properties);
 
 	for (final PropertyPersistenceInfo propInfo : singleProps) {
-	    result.getSingles().put(new PropertyPersistenceInfo.Builder(propInfo.getName(), propInfo.getJavaType()). //
+	    result.getSingles().put(new PropertyPersistenceInfo.Builder(propInfo.getName(), propInfo.getJavaType(), propInfo.isNullable()). //
 		    column(propInfo.getColumn()). //
 		    hibType(propInfo.getHibType()). //
 		    build(), index.getNext());
@@ -52,7 +52,7 @@ final class EntityResultTreeBuilder {
 	final List<PropertyPersistenceInfo> singleProps = getFirstLevelSingleProps(null, properties);
 
 	for (final PropertyPersistenceInfo propInfo : singleProps) {
-	    result.getSingles().put(new PropertyPersistenceInfo.Builder(propInfo.getName(), propInfo.getJavaType()). //
+	    result.getSingles().put(new PropertyPersistenceInfo.Builder(propInfo.getName(), propInfo.getJavaType(), propInfo.isNullable()). //
 		    column(propInfo.getColumn()). //
 		    hibType(propInfo.getHibType()). //
 		    build(), index.getNext());
@@ -93,7 +93,7 @@ final class EntityResultTreeBuilder {
 			if (!result.containsKey(group)) {
 			    result.put(group, new ArrayList<PropertyPersistenceInfo>());
 			}
-			result.get(group).add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType()). //
+			result.get(group).add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), false/*?*/). //
 				column(prop.getColumn()). //
 				hibType(prop.getHibType()). //
 				build());
@@ -102,7 +102,7 @@ final class EntityResultTreeBuilder {
 
 	    } else if (prop.isEntity()) { //prop.getType() != null && EntityUtils.isPersistedEntityType(prop.getJavaType())) {
 		final List<PropertyPersistenceInfo> subprops = new ArrayList<PropertyPersistenceInfo>();
-		subprops.add(new PropertyPersistenceInfo.Builder("id", Long.class). //
+		subprops.add(new PropertyPersistenceInfo.Builder("id", Long.class, false). //
 			column(prop.getColumn()). //
 			hibType(prop.getHibType()). //
 			build());
@@ -126,7 +126,7 @@ final class EntityResultTreeBuilder {
 			if (!result.containsKey(group)) {
 			    result.put(group, new ArrayList<PropertyPersistenceInfo>());
 			}
-			result.get(group).add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType()). //
+			result.get(group).add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), false /*?*/). //
 				column(prop.getColumn()). //
 				hibType(prop.getHibType()). //
 				build());

@@ -9,7 +9,6 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
@@ -54,18 +53,18 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query yields
 	    return null;
 	} else if (firstLevelPropYield.getInfo().getJavaType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
-	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null), new PurePropInfo(first, null, null)) : null;
+	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true)) : null;
 	} else if (!StringUtils.isEmpty(rest)) {
 	    final PropertyPersistenceInfo propInfo = getMappingsGenerator().getInfoForDotNotatedProp(firstLevelPropYield.getInfo().getJavaType(), rest);
 	    if (propInfo == null) {
 		return null;
 	    } else {
 		return new Pair<PurePropInfo, PurePropInfo>(
-			new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType()),
-			new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType()));
+			new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), firstLevelPropYield.getInfo().isNullable()),
+			new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propInfo.isNullable()));
 	    }
 	} else {
-	    final PurePropInfo ppi = new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType());
+	    final PurePropInfo ppi = new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), firstLevelPropYield.getInfo().isNullable());
 	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 	}
     }
@@ -95,15 +94,6 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	}
 
 	return result;
-    }
-
-    @Override
-    protected boolean isRequired(final String propName) {
-	if (sourceType().equals(EntityAggregates.class)) {
-	    return false;
-	} else {
-	    return super.isRequired(propName);
-	}
     }
 
     @Override

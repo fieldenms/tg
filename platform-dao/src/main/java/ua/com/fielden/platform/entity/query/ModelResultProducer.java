@@ -26,7 +26,7 @@ public class ModelResultProducer {
 	final SortedSet<PropertyPersistenceInfo> result = new TreeSet<PropertyPersistenceInfo>();
 	for (final Map.Entry<String, YieldModel> yieldEntry : model.getYields().entrySet()) {
 	    //result.add(new ResultPropertyInfo(yieldEntry.getKey(), yieldEntry.getValue().getInfo().getColumn(), yieldEntry.getValue().getInfo().getJavaType()));
-	    result.add(new PropertyPersistenceInfo.Builder(yieldEntry.getKey(), yieldEntry.getValue().getInfo().getJavaType()). //
+	    result.add(new PropertyPersistenceInfo.Builder(yieldEntry.getKey(), yieldEntry.getValue().getInfo().getJavaType(), false/*?*/). //
 		    column(yieldEntry.getValue().getInfo().getColumn()). //
 		    hibType(yieldEntry.getValue().getInfo().getHibType()). //
 		    build());

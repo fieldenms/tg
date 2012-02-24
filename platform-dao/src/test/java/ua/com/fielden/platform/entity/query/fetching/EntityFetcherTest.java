@@ -138,6 +138,17 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     	assertEquals("Incorrect value", "3", values.get(0).get("bb").toString());
     }
 
+    public void test_vehicle_model_retrieval11() {
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("model.make.key").eq().anyOfValues("BMW", "MERC").model();
+	final AggregatedResultQueryModel countModel = select(model). //
+		yield().countAll().as("aa"). //
+		modelAsAggregate();
+
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(countModel, null), false);
+    	assertEquals("Incorrect count", 1, values.size());
+    	assertEquals("Incorrect value", "1", values.get(0).get("aa").toString());
+    }
+
     @Override
     protected String[] getDataSetPathsForInsert() {
 	return new String[] { "src/test/resources/data-files/hibernate-query-test-case.flat.xml" };

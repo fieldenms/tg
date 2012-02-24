@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.type.Type;
+import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
@@ -70,6 +72,10 @@ public class BaseEntQueryTCase {
 	hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
     }
 
+    protected static Type hibtype(final String name) {
+	return TypeFactory.basic(name);
+    }
+
     protected static final MappingsGenerator MAPPINGS_GENERATOR = new MappingsGenerator(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes);
 
     private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2, MAPPINGS_GENERATOR);
@@ -106,12 +112,16 @@ public class BaseEntQueryTCase {
 	return new EntSet(Arrays.asList(operands));
     }
 
-    protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final String propPart, final Class propType, final String explicitPropPart, final Class explicitPropPartType) {
-	return new PropResolutionInfo(prop(propName), aliasPart, new PurePropInfo(propPart, propType, null), new PurePropInfo(explicitPropPart, explicitPropPartType, null));
+    protected static PurePropInfo ppi(final String name, final Class type, final Object hibType, final boolean nullable) {
+	return new PurePropInfo(name, type, hibType, nullable);
     }
 
-    protected static PropResolutionInfo impIdPropResInf(final String propName, final String aliasPart, final String propPart, final Class propType, final String explicitPropPart, final Class explicitPropPartType) {
-	return new PropResolutionInfo(prop(propName), aliasPart, new PurePropInfo(propPart, propType, null), new PurePropInfo(explicitPropPart, explicitPropPartType, null), true);
+    protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final PurePropInfo propPart, final PurePropInfo explicitPropPart) {
+	return new PropResolutionInfo(prop(propName), aliasPart, propPart, explicitPropPart);
+    }
+
+    protected static PropResolutionInfo impIdPropResInf(final String propName, final String aliasPart, final String propPart, final Class propType, final boolean propNullability, final String explicitPropPart, final Class explicitPropPartType, final boolean explicitPropNullability) {
+	return new PropResolutionInfo(prop(propName), aliasPart, new PurePropInfo(propPart, propType, null, propNullability), new PurePropInfo(explicitPropPart, explicitPropPartType, null, explicitPropNullability), true);
     }
 
     protected final ComparisonTestModel alwaysTrueCondition = new ComparisonTestModel(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));

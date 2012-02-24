@@ -33,6 +33,8 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getProperty
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
 
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.
@@ -88,6 +90,21 @@ public class MappingsGenerator {
 		return getInfoForDotNotatedProp(firstPropInfo.getJavaType(), propSplit.getValue());
 	    } else {
 		return null;
+	    }
+	}
+    }
+
+    public boolean isNullable (final Class entityType, final String dotNotatedPropName) {
+	final PropertyPersistenceInfo simplePropInfo = getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
+	if (simplePropInfo != null) {
+	    return simplePropInfo.isNullable();
+	} else {
+	    final Pair<String, String> propSplit = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
+	    final PropertyPersistenceInfo firstPropInfo = getPropPersistenceInfoExplicitly(entityType, propSplit.getKey());
+	    if (firstPropInfo != null && firstPropInfo.getJavaType() != null) {
+		return isNullable(firstPropInfo.getJavaType(), propSplit.getValue()) || firstPropInfo.isNullable();
+	    } else {
+		throw new IllegalArgumentException("Couldn't determine nullability for prop [" + dotNotatedPropName + "] in type [" + entityType + "]" );
 	    }
 	}
     }
@@ -261,14 +278,14 @@ public class MappingsGenerator {
      */
     private Set<PropertyPersistenceInfo> generateEntityPersistenceInfo(final Class entityType) throws Exception {
 	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
-	result.add(new PropertyPersistenceInfo.Builder("id", Long.class).column(ddlGenerator.id).hibType(TypeFactory.basic("long")).type(isOneToOne(entityType) ? PropertyPersistenceType.ONE2ONE_ID : PropertyPersistenceType.ID).build());
-	result.add(new PropertyPersistenceInfo.Builder("version", Long.class).column(ddlGenerator.version).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.VERSION).build());
+	result.add(new PropertyPersistenceInfo.Builder("id", Long.class, false).column(ddlGenerator.id).hibType(TypeFactory.basic("long")).type(isOneToOne(entityType) ? PropertyPersistenceType.ONE2ONE_ID : PropertyPersistenceType.ID).build());
+	result.add(new PropertyPersistenceInfo.Builder("version", Long.class, false).column(ddlGenerator.version).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.VERSION).build());
 
 	final String keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? getMapEntityTo(entityType).keyColumn() : ddlGenerator.key;
 	if (isOneToOne(entityType)) {
-	    result.add(new PropertyPersistenceInfo.Builder("key", getKeyType(entityType)).column(keyColumnOverride).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
+	    result.add(new PropertyPersistenceInfo.Builder("key", getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
 	} else if (!DynamicEntityKey.class.equals(getKeyType(entityType))){
-	    result.add(new PropertyPersistenceInfo.Builder("key", getKeyType(entityType)).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PropertyPersistenceType.PRIMITIVE_KEY).build());
+	    result.add(new PropertyPersistenceInfo.Builder("key", getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PropertyPersistenceType.PRIMITIVE_KEY).build());
 	}
 
 	for (final Field field : getPersistedProperties(entityType)) {
@@ -365,6 +382,10 @@ public class MappingsGenerator {
 	}
     }
 
+    protected boolean isRequired(final Class entityType, final String propName) {
+	return isPropertyPartOfKey(entityType, propName) || isPropertyRequired(entityType, propName);
+    }
+
     /**
      * Generates persistence info for entity property.
      * @param entityType
@@ -380,9 +401,10 @@ public class MappingsGenerator {
 	final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
 	final Class javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	final long length = mapTo.length();
+	final boolean nullable = !isRequired(entityType, propName);
 
 	final Object hibernateType = getHibernateType(javaType, mapTo.typeName(), mapTo.userType(), isCollectional, isEntity);
-	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType).length(length);
+	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, nullable).length(length);
 	if (isCollectional) {
 	    builder.type(PropertyPersistenceType.COLLECTIONAL);
 	}

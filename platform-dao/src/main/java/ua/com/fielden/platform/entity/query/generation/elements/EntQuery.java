@@ -43,8 +43,6 @@ public class EntQuery implements ISingleOperand {
 	return QueryCategory.RESULT_QUERY.equals(category);
     }
 
-    // need some calculated properties level and position in order to be taken into account in equals(..) and hashCode() methods to be able to handle correctly the same query used as subquery in different places (can be on the same level or different levels - e.g. ..(exists(sq).and.prop("a").gt.val(0)).or.notExist(sq)
-
     /**
      * modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for
      * unresolved only; if at some master the property of this subquery is resolved - it should be removed from here
@@ -125,7 +123,7 @@ public class EntQuery implements ISingleOperand {
 	int yieldIndex = 0;
 	for (final YieldModel yield : yields.getYields().values()) {
 	    yieldIndex = yieldIndex + 1;
-	    final PropertyPersistenceInfo ppi = new PropertyPersistenceInfo.Builder(yield.getAlias(), determineYieldJavaType(yield)). //
+	    final PropertyPersistenceInfo ppi = new PropertyPersistenceInfo.Builder(yield.getAlias(), determineYieldJavaType(yield), determineYieldNullability(yield)). //
 	    column("C" + yieldIndex). //
 	    hibType(determineYieldHibType(yield)). //
 	    build();
@@ -134,11 +132,20 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Object determineYieldHibType(final YieldModel yield) {
-	final PropertyPersistenceInfo finalPropInfo = mappingsGenerator.getPropPersistenceInfoExplicitly(type(), yield.getAlias());
+	final PropertyPersistenceInfo finalPropInfo = mappingsGenerator.getInfoForDotNotatedProp(type(), yield.getAlias());
 	if (finalPropInfo != null) {
 	    return finalPropInfo.getHibType();
 	} else {
 	    return yield.getOperand().hibType();
+	}
+    }
+
+    private boolean determineYieldNullability(final YieldModel yield) {
+	final PropertyPersistenceInfo finalPropInfo = mappingsGenerator.getInfoForDotNotatedProp(type(), yield.getAlias());
+	if (finalPropInfo != null) {
+	    return mappingsGenerator.isNullable(type(), yield.getAlias());
+	} else {
+	    return true; //TODO implement properly
 	}
     }
 

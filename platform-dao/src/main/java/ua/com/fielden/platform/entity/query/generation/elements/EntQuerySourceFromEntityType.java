@@ -31,7 +31,7 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
     protected Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName) {
 	final PropertyPersistenceInfo finalPropInfo = getMappingsGenerator().getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
 	if (finalPropInfo != null) {
-	    final PurePropInfo ppi = new PurePropInfo(finalPropInfo.getName(), finalPropInfo.getJavaType(), finalPropInfo.getHibType());
+	    final PurePropInfo ppi = new PurePropInfo(finalPropInfo.getName(), finalPropInfo.getJavaType(), finalPropInfo.getHibType(), finalPropInfo.isNullable());
 	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 	} else {
 	    final PropertyPersistenceInfo propInfo = getMappingsGenerator().getInfoForDotNotatedProp(entityType, dotNotatedPropName);
@@ -40,8 +40,8 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
 	    } else {
 		final PropertyPersistenceInfo explicitPartPropInfo = getMappingsGenerator().getPropPersistenceInfoExplicitly(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
 		return new Pair<PurePropInfo, PurePropInfo>( //
-		new PurePropInfo(explicitPartPropInfo.getName(), explicitPartPropInfo.getJavaType(), explicitPartPropInfo.getHibType()), //
-		new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType()));
+		new PurePropInfo(explicitPartPropInfo.getName(), explicitPartPropInfo.getJavaType(), explicitPartPropInfo.getHibType(), explicitPartPropInfo.isNullable()), //
+		new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propInfo.isNullable()));
 	    }
 	}
     }
