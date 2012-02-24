@@ -1,14 +1,134 @@
 \chapter{Maven to Rule'em All or Project Comprehension with Maven}\label{ch00:01}
 
+\myepigraph{One must learn by doing the thing; for though you think you know it, you have no certainty, until you try.}{Sophocles}                                                   
+
+%\myepigraph{In our profession, precision and perfection are not a dispensable luxury, but a simple necessity.}{Niklaus Wirth}
+
 \section{A Short Introduction to Apache Maven}
   
   Apache Maven is a software project management and comprehension tool. 
-  It is based on the concept of a \emph{project object model} or simpy POM. 
-  Maven can manage a project's dependencies and build from a central piece of information declared in its POM file.
+  It is based on the concept of a \emph{project object model} or simpy POM to understand the structure of the project. 
+  Maven can manage a project's dependencies and build it from a central piece of information declared in its POM file.
+  POM files are maintained by developers and changed as project demands.
+
+  The major feature of Maven we would like to emphasise specifically is the dependency management.
+  Every Java project relies on programming libraries that are provided as part of Java Runtime Environment (JRE) as well as the ones external to JRE.
+  These external libraries, which could be inhouse or provided by 3rd parties, represent the dependencies projects depend upon.
+  All Java libraries are packaged into jar files, which are effectively zip archives containing all library related resources such as compiled class files, image files and more.
+  Thus, \emph{project dependency} is always a jar file.
+
+  There are two main question about dependencies: 
+  \begin{itemize}
+    \item Where the dependency is located?
+    \item What dependency version should be use?
+  \end{itemize}
+
+  In the old days all dependecies would be stored in a source version control systems together with the project's srouce.
+  This way, any developer would always be able to get all project dependencies from one location.
+  However, this approach has numerous issues.
+  For example, several projects that depend on the same set or subset of libraries would keep duplicate copies in their respective version control repositories.
+
+  As any project, programming libraries change over time and new versions may not neceserraly be backward compatible.
+  This requires projects to know what dependency version should be used.
+  So how should developers know what library version is used by their project and where to get, for example, the latest right version for a new project.
+
+  These questions are amongst the main concerns addressed by Apache Maven.
+  It is a very comprehensive tool that manges libraries, version resolution, localisation, and even handles transitive dependencies (i.e. libraries that depend on other libraries, which are not directly referenced by the project itself), which truly makes complex project possible.
+
+  All dependencies that are managed by Maven, the version is encoded into the file name.
+  For exaple, if the file name is \texttt{platform-pojobl-\tikzinline{1.1}.jar} then the highlighted portion \texttt{\tikzinline{1.1}} indicates the version.
+
+  \subsection*{Download and Configure} 
+  Maven can be downloaded from the official \href{http://maven.apache.org/download.html}{Apache Maven web site}.
+  The recommended at this time verion for TG-based applications is 2.2.1.
+  Once downloaded follow the \href{http://maven.apache.org/download.html#Installation}{installation instructions}.
+  
+  \begin{notebox}{JDK Version}{mb:java}
+    It is important to note that Oracle JDK 6.x should be used for developing applications with TG, and it should be installed before downloading and installing Maven. 
+  \end{notebox}
+  
+  One of the key 
 
   \lstset{language=XML,
 	  escapechar=\%,
-	  morekeywords={project, modelVersion, groupId, artifactId, packaging, packaging, version, name, description},
+	  morekeywords={settings, encoding, mirrorOf, mirrors, mirror, id, profiles, profile, repositories, repository, url, releases, snapshots, version,
+			pluginRepositories, pluginRepository, activeProfiles, activeProfile, servers, server, username, password, 
+			directoryPermissions, filePermissions},
+	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
+  \begin{code}{Maven Settings}{lst:settings}
+    \begin{lstlisting}
+      <?xml version="1.0" encoding="UTF-8"?>
+      <settings>
+	<mirrors>
+	  <mirror>
+	    <id>nexus</id>
+	    <mirrorOf>*</mirrorOf>
+	    <url>http://www.fielden.com.ua:8090/nexus/content/groups/public</url>
+	  </mirror>
+	</mirrors>
+	<profiles>
+	  <profile>
+	    <id>nexus</id>
+	    <repositories>
+	      <repository>
+		<id>central</id>
+		<url>http://central</url>
+		<releases><enabled>true</enabled></releases>
+		<snapshots><enabled>true</enabled></snapshots>
+	      </repository>
+	    </repositories>
+	    <pluginRepositories>
+	      <pluginRepository>
+		<id>central</id>
+		<url>http://central</url>
+		<releases><enabled>true</enabled></releases>
+		<snapshots><enabled>true</enabled></snapshots>
+	      </pluginRepository>
+	    </pluginRepositories>
+	  </profile>
+	</profiles>
+
+	<activeProfiles>
+	  <activeProfile>nexus</activeProfile>
+	</activeProfiles>
+
+	<servers>
+	  <server>
+	    <id>nexus</id>
+	    <username>your username</username>
+	    <password>your password</password>
+	    <directoryPermissions>0775</directoryPermissions>
+	    <filePermissions>0664</filePermissions>
+	  </server>
+	  <server>
+	    <id>Releases</id>
+	    <username>your username</username>
+	    <password>your password</password>
+	    <directoryPermissions>0775</directoryPermissions>
+	    <filePermissions>0664</filePermissions>
+	  </server>
+	  <server>
+	    <id>Snapshots</id>
+	    <username>your username</username>
+	    <password>your password</password>
+	    <directoryPermissions>0775</directoryPermissions>
+	    <filePermissions>0664</filePermissions>
+	  </server>
+	</servers>
+      </settings>
+    \end{lstlisting}
+  \end{code}
+
+
+  \subsection*{POM Esseintials}  
+
+  \hyperref[lst:pom]{Listing \ref{lst:pom}} illustrates an fragment of a POM file with relevant comments for each of the key tags relevant to the project.
+
+
+  \clearpage
+  \lstset{language=XML,
+	  escapechar=\%,
+	  morekeywords={project, modelVersion, groupId, artifactId, packaging, packaging, version, encoding, name, description},
 	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
   \begin{code}{Project Object Model (POM)}{lst:pom}
     \begin{lstlisting}

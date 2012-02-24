@@ -34,7 +34,18 @@
 \usepackage[table]{xcolor}
 \usepackage{tabularx}
 \usepackage{wrapfig}% використаний замість пакету floatflt, який був вилучений із texlive що посмачається із ubuntu 10.04.
-\usepackage{url}
+\usepackage{epigraph}
+%\usepackage{url}
+\usepackage[breaklinks]{hyperref}
+\definecolor{hyperlinkcolor}{HTML}{071D70}
+\hypersetup{
+    colorlinks,%
+    citecolor=hyperlinkcolor,%
+    filecolor=hyperlinkcolor,%
+    linkcolor=hyperlinkcolor,%
+    urlcolor=hyperlinkcolor
+}
+\usepackage[all]{hypcap} % needed for float environments; special treatment is requried for wrapfigure, where \capstart should be used at the beginning of the envorinment; read more on this at http://en.wikibooks.org/wiki/LaTeX/Hyperlinks
 \usepackage{array}
 \usepackage{booktabs}
 % Підключення необхідних пакетів. Наприклад,
@@ -83,22 +94,23 @@
 
 % this code block defines the new and custom floatbox float environment
 \floatstyle{simplerule}
-\newfloat{program}{thp}{lop}
+\newfloat{program}{htp}{lop}
 \floatname{program}{Listing}
 
 \definecolor{codebgcolor}{HTML}{6E84D6}  
 \definecolor{codefgcolor}{HTML}{071D70}
-\definecolor{basiccolor}{HTML}{1435AD}%\definecolor{basiccolor}{HTML}{ACBB2F}
+\definecolor{basiccolor}{HTML}{1435AD}
 \definecolor{stringcolor}{HTML}{2C3E82}
-\definecolor{highlight}{HTML}{FFB100}%{FFB100}
+\definecolor{highlight}{HTML}{FFB100}
 \definecolor{annotationbgcolor}{HTML}{FFD473}
 
-\definecolor{dkgreen}{HTML}{A68100}
+\definecolor{bggreen}{HTML}{AEF26D}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
 \newenvironment{code}[2]
 {\begin{program}
   \vspace*{5pt}
+  \capstart
   \captionsetup{format=plain,justification=centering,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}
   \caption{#1}\label{#2}  
   \begin{center}
@@ -113,6 +125,40 @@
     \end{tikzpicture}
   \end{center}
 \end{program}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%% notebox environment %%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\floatstyle{simplerule}
+\newfloat{notethis}{htp}{lop}
+\floatname{notethis}{Note}
+
+\newenvironment{notebox}[2]
+{\begin{notethis}
+  \vspace*{-8pt}  
+  \capstart
+  \captionsetup{font=footnotesize,justification=justified,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}  
+  \begin{center}
+    \begin{tikzpicture}    
+    \node[fill=bggreen!50!white, rounded corners=5pt]
+      \bgroup
+      \bgroup
+      \begin{minipage}{\textwidth}
+      \vspace*{-8pt}
+      \caption{#1}\label{#2}  
+      \vspace*{2pt}
+      \centering
+      \begin{minipage}{0.9\textwidth}
+      \footnotesize}
+      {\end{minipage}\vspace*{5pt}\end{minipage}
+      \egroup
+      \egroup;
+    \end{tikzpicture}
+  \end{center}
+  \vspace*{-20pt}
+\end{notethis}
 }
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -162,6 +208,8 @@
 
 \newcommand{\tikzref}[3]{\tikz[xshift=#2, yshift=#3, remember picture, overlay] \node[coordinate] (#1) {};}
 
+\newcommand{\tikzinline}[1]{\tikz[baseline=(V.base)]\node[fill=highlight!50,rounded corners=2pt] (V) {#1};}
+
 \newcommand{\tikzhighlight}[2]{
   \begin{tikzpicture}[remember picture,overlay,rounded corners=2pt]
     \fill[highlight,opacity=0.2] (#1) rectangle (#2);
@@ -179,6 +227,17 @@
     \fill [highlight,thick,->,out=180,in=0] (#1.west) edge (#2.east);
   \end{tikzpicture}
 }
+
+\newenvironment{myparastyle}{\setlength{\parindent}{1em}}{}
+\renewcommand{\textflush}{myparastyle}
+\renewcommand{\epigraphsize}{\footnotesize}
+\renewcommand{\epigraphrule}{0pt}
+\newcommand{\myepigraph}[2]{
+  \vspace*{-50pt}
+  \epigraph{\textit{#1}}{\textsc{#2}}
+}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
