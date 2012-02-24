@@ -272,7 +272,7 @@ final class Tokens {
     }
 
     public Tokens now() {
-	return add(TokenCategory.FUNCTION, Functions.NOW);
+	return add(TokenCategory.ZERO_ARG_FUNCTION, Functions.NOW);
     }
 
     public Tokens secondOf() {
@@ -332,7 +332,7 @@ final class Tokens {
     }
 
     public Tokens countAll() {
-	return add(TokenCategory.COLLECTIONAL_FUNCTION, Functions.COUNT_ALL);
+	return add(TokenCategory.ZERO_ARG_FUNCTION, Functions.COUNT_ALL);
     }
 
     public Tokens add() {

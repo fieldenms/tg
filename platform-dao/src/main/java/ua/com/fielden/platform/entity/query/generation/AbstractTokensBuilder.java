@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.Functions;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.EntSet;
@@ -15,6 +16,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntSetFromQryMod
 import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.ISetOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
+import ua.com.fielden.platform.entity.query.generation.elements.Now;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.types.Money;
@@ -73,7 +75,6 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	    break;
 	case AVERAGE_DISTINCT:
 	    setChild(new AverageOfBuilder(this, queryBuilder, getParamValues(), true));
-	case COUNT_ALL:
 	    break;
 	case COUNT_DAYS:
 	case CASE_WHEN:
@@ -81,7 +82,6 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case IF_NULL:
 	case UPPERCASE:
 	case LOWERCASE:
-	case NOW:
 	case SECOND:
 	case MINUTE:
 	case HOUR:
@@ -182,6 +182,18 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	this.child = child;
     }
 
+    protected ISingleOperand getZeroArgFunctionModel(final Functions function) {
+	switch (function) {
+	case COUNT_ALL:
+	    return new CountAll();
+	case NOW:
+	    return new Now();
+
+	default:
+	    throw new RuntimeException("Unrecognised zero agrument function: " + function);
+	}
+    }
+
     protected ISingleOperand getModelForSingleOperand(final TokenCategory cat, final Object value) {
 	switch (cat) {
 	case PROP:
@@ -194,6 +206,8 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	    return new EntValue(value);
 	case IVAL:
 	    return new EntValue(value, true);
+	case ZERO_ARG_FUNCTION:
+	    return getZeroArgFunctionModel((Functions) value);
 	case EXPR:
 	case FUNCTION_MODEL:
 	    return (ISingleOperand) value;

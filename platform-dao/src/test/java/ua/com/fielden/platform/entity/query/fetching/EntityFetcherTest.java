@@ -123,8 +123,19 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 	final AggregatedResultQueryModel model = select(TgVehicleModel.class).yield().countOfDistinct().prop("make").as("aa").modelAsAggregate();
 	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(model, null), false);
     	assertEquals("Incorrect count", 1, values.size());
-    	System.out.println(values.get(0).get("aa").getClass());
     	assertEquals("Incorrect value", "3", values.get(0).get("aa").toString());
+    }
+
+    public void test_vehicle_model_retrieval10() {
+	final AggregatedResultQueryModel model = select(TgVehicleModel.class). //
+		yield().countAll().as("aa"). //
+		yield().countOfDistinct().prop("make").as("bb"). //
+		yield().now().as("cc"). //
+		modelAsAggregate();
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(model, null), false);
+    	assertEquals("Incorrect count", 1, values.size());
+    	assertEquals("Incorrect value", "7", values.get(0).get("aa").toString());
+    	assertEquals("Incorrect value", "3", values.get(0).get("bb").toString());
     }
 
     @Override
