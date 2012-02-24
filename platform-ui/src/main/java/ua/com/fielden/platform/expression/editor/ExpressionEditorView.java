@@ -26,7 +26,8 @@ public class ExpressionEditorView extends BaseNotifPanel<ExpressionEditorModel> 
 	final JPanel componentsPanel = new JPanel(new MigLayout("insets 5", "[:50:][fill,:200:]20[:50:][grow,fill,:200:]", "[c]"));
 
 	// row 1
-	addWithParamsForEditor(componentsPanel, editors, "expression", "span");
+	addWithParamsForEditor(componentsPanel, editors, "contextualExpression", "span");
+	addWithParamsForEditor(componentsPanel, editors, "originationProperty", "span");
 
 	// row 2
 	componentsPanel.add(new JLabel("Functions"), "gapbottom 5, gaptop 5, span, split 2, aligny center");
@@ -36,6 +37,8 @@ public class ExpressionEditorView extends BaseNotifPanel<ExpressionEditorModel> 
 	//row 3
 	add(componentsPanel, editors, "title");
 	addAndWrap(componentsPanel, editors, "desc");
+
+	//TODO add attribute editor
 
 	//////////////////action panel ///////////////////
 	final JPanel actionPanel = new JPanel(new MigLayout("fill, insets 5", "push[fill,:100:][fill,:100:]", "[c]"));

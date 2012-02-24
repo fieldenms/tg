@@ -5,13 +5,14 @@ import javax.swing.event.EventListenerList;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorModel;
 import ua.com.fielden.platform.expression.editor.IPropertySelectionListener;
-import ua.com.fielden.platform.expression.entity.ExpressionEntity;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.ei.LightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
@@ -33,11 +34,12 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
     private final IDomainTreeManagerAndEnhancer dtme;
 
     public DomainTreeEditorModel(final EntityFactory factory, final IDomainTreeManagerAndEnhancer dtme, final Class<T> rootType){
-	final ExpressionEntity entity = factory.newEntity(ExpressionEntity.class, 0L);
-	entity.setEntityClass(rootType);
+	final CalculatedProperty entity = CalculatedProperty.create(factory, rootType, null, null, null, null, CalculatedPropertyAttribute.NO_ATTR, null, dtme.getEnhancer()); // factory.newEntity(ExpressionEntity.class, 0L);
+	// entity.setEntityClass(rootType);
 	//entity.setName(generateNextPropertyName());
+
 	this.dtme = dtme;
-	this.expressionModel = new ExpressionEditorModelForWizard(entity, new LightweightPropertyBinder<ExpressionEntity>(null, null, "key", "name"));
+	this.expressionModel = new ExpressionEditorModelForWizard(entity, new LightweightPropertyBinder<CalculatedProperty>(null, null, "key", "name"));
 	this.listenerList = new EventListenerList();
 	this.propertySelectionModel = new CalculatedPropertySelectModel();
 	this.propertySelectionModel.addPropertySelectionListener(createPropertySelectedListener());
@@ -107,7 +109,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
     }
 
     public Class<? extends AbstractEntity> getEntityClass() {
-	return expressionModel.getEntity().getEntityClass();
+	return (Class<? extends AbstractEntity>) expressionModel.getEntity().getRoot();
     }
 
     //    protected IPropertySelectionListener getCalculatedPropertySelectListener() {
@@ -164,7 +166,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
      */
     private class ExpressionEditorModelForWizard extends ExpressionEditorModel{
 
-	public ExpressionEditorModelForWizard(final ExpressionEntity entity, final ILightweightPropertyBinder<ExpressionEntity> propertyBinder) {
+	public ExpressionEditorModelForWizard(final CalculatedProperty entity, final ILightweightPropertyBinder<CalculatedProperty> propertyBinder) {
 	    super(entity, propertyBinder);
 	}
 
@@ -173,11 +175,10 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	    super.notifyActionStageChange(actionState);
 	    switch(actionState){
 	    case NEW_ACTION:
-		final Class<? extends AbstractEntity> rootType = getEntity().getEntityClass();
 		getEntity().restoreToOriginal();
 		getEntity().setInitialising(true);
-		getEntity().setName(generateNextPropertyName());
-		getEntity().setEntityClass(rootType);
+		getEntity().setContextPath(""); // TODO the context path should be taken from the property witha a New... button
+
 		getEntity().setInitialising(false);
 		break;
 	    case EDIT_ACTION:

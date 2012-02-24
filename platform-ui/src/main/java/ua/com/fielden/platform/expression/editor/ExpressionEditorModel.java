@@ -18,10 +18,10 @@ import javax.swing.KeyStroke;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.expression.IExpressionErrorPosition;
-import ua.com.fielden.platform.expression.entity.ExpressionEntity;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
@@ -39,34 +39,34 @@ import com.jgoodies.binding.value.Trigger;
 
 /**
  * Model for expression editor.
- * 
+ *
  * @author TG Team
  *
  */
-public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEntity, Object> {
+public class ExpressionEditorModel extends UModel<CalculatedProperty, CalculatedProperty, Object> {
 
     private final ExpressionPropertyEditor expressionEditor;
     private final IPropertyProvider propertySelectionModel;
 
     /**
      * Initiates expression editor with specific {@link ExpressionEntity} instance and appropriate {@link ILightweightPropertyBinder}.
-     * 
+     *
      * @param entity - specific expression entity.
      * @param propertyBinder - appropriate property binder that binds entity.
      */
-    public ExpressionEditorModel(final ExpressionEntity entity, final ILightweightPropertyBinder<ExpressionEntity> propertyBinder) {
+    public ExpressionEditorModel(final CalculatedProperty entity, final ILightweightPropertyBinder<CalculatedProperty> propertyBinder) {
 	super(entity, null, propertyBinder, false);
 	this.expressionEditor = new ExpressionPropertyEditor(entity);
 	this.propertySelectionModel = new PropertyProvider();
 	this.propertySelectionModel.addPropertySelectionListener(getPropertySelectionListener());
 	final Map<String, IPropertyEditor> editors = new HashMap<String, IPropertyEditor>(getEditors());
-	editors.put("expression", expressionEditor);
+	editors.put("contextualExpression", expressionEditor);
 	setEditors(editors);
     }
 
     /**
      * Returns the associated property selection model.
-     * 
+     *
      * @return
      */
     public final IPropertyProvider getPropertySelectionModel() {
@@ -80,12 +80,12 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
     }
 
     @Override
-    protected Map<String, IPropertyEditor> buildEditors(final ExpressionEntity entity, final Object controller, final ILightweightPropertyBinder<ExpressionEntity> propertyBinder) {
+    protected Map<String, IPropertyEditor> buildEditors(final CalculatedProperty entity, final Object controller, final ILightweightPropertyBinder<CalculatedProperty> propertyBinder) {
 	return propertyBinder.bind(entity);
     }
 
     @Override
-    protected ExpressionEntity getManagedEntity() {
+    protected CalculatedProperty getManagedEntity() {
 	return getEntity();
     }
 
@@ -280,7 +280,7 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 
     /**
      * Creates {@link Action} for function buttons.
-     * 
+     *
      * @param function
      * @return
      */
@@ -300,7 +300,7 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 
     /**
      * Creates {@link IPropertySelectionListener} that listens property selection event and adds property name to expression.
-     * 
+     *
      * @return
      */
     private IPropertySelectionListener getPropertySelectionListener(){
@@ -321,7 +321,7 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	private final BoundedValidationLayer<JTextField> editor;
 	private final Trigger commitTrigger;
 
-	private ExpressionEntity entity;
+	private CalculatedProperty entity;
 
 	private FocusGainedOperation focusGainedOperation = FocusGainedOperation.NONE;
 
@@ -345,17 +345,17 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	 */
 	private int relativeCaretPosition;
 
-	public ExpressionPropertyEditor(final ExpressionEntity entity){
+	public ExpressionPropertyEditor(final CalculatedProperty entity){
 	    this.entity = entity;
 	    entity.getProperty(getPropertyName()).addValidationResultsChangeListener(createExpressionValidationListener());
 	    this.commitTrigger = new Trigger();
-	    final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract("expression", entity.getType());
+	    final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract("contextualExpression", entity.getType());
 
 	    label = DummyBuilder.label(titleAndDesc.getKey());
 	    label.setToolTipText(titleAndDesc.getValue());
 
 
-	    final BoundedValidationLayer<JTextField> component = ComponentFactory.createTriggeredStringTextField(entity, "expression", commitTrigger, false, entity.getProperty("expression").getDesc());
+	    final BoundedValidationLayer<JTextField> component = ComponentFactory.createTriggeredStringTextField(entity, "contextualExpression", commitTrigger, false, entity.getProperty("contextualExpression").getDesc());
 	    editor = component;
 	    final JTextField field = editor.getView();
 	    field.addFocusListener(createExpressionFocusListener(editor.getView()));
@@ -391,7 +391,7 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 
 	/**
 	 * Returns action that commits this property value.
-	 * 
+	 *
 	 * @return
 	 */
 	private Action createCommiteAction() {
@@ -408,7 +408,7 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 
 	/**
 	 * Set the specified text in to the editor.
-	 * 
+	 *
 	 * @param text
 	 * @param select
 	 * @param relativeCaretPosition
@@ -421,7 +421,7 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 
 	/**
 	 * Inserts specified text at the caret position or replaces selected text.
-	 * 
+	 *
 	 * @param textToInsert - specified text to insert.
 	 * @param insertionType
 	 * @param select - indicates whether select inserted text or not.
@@ -465,18 +465,18 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	}
 
 	@Override
-	public ExpressionEntity getEntity() {
+	public CalculatedProperty getEntity() {
 	    return entity;
 	}
 
 	@Override
 	public String getPropertyName() {
-	    return "expression";
+	    return "contextualExpression";
 	}
 
 	@Override
 	public void bind(final AbstractEntity<?> entity) {
-	    this.entity = (ExpressionEntity)entity;
+	    this.entity = (CalculatedProperty)entity;
 	    this.editor.rebindTo(entity);
 	}
 
@@ -518,7 +518,7 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
 	/**
 	 * Determines the operation that should be performed after the text field gained the focus. There are three type of operation:
 	 * text insertion, caret position controlling or there was no operation to perform.
-	 * 
+	 *
 	 * @author TG Team
 	 *
 	 */
@@ -562,7 +562,7 @@ public class ExpressionEditorModel extends UModel<ExpressionEntity, ExpressionEn
      * Determines the way the text will be inserted in to the editor. There are three ways: Apply, Append and Replace.
      * The first type - Apply is used for functions like: YEAR(), SUM(). The second type: Append is used for operators like: +, /.
      * The Third type - Replace is used to replace selected text in the editor.
-     * 
+     *
      * @author TG Team
      *
      */
