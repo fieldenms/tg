@@ -96,4 +96,9 @@ public class EntValue implements ISingleOperand {
     public Object hibType() {
 	return null;
     }
+
+    @Override
+    public boolean isNullable() {
+	return true;
+    }
 }

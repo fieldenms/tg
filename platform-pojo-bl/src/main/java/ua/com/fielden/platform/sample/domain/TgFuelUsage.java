@@ -24,48 +24,30 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     @Title("Vehicle")
     @CompositeKeyMember(1)
-    @MapTo("ID_EQDET")
+    @MapTo
     private TgVehicle vehicle;
     @IsProperty
-    @Title(value = "Reading Date", desc = "Reading Date")
+    @Title("Purchase Date")
     @CompositeKeyMember(2)
-    @MapTo("LAST_READING_DATE")
-    private Date readingDate;
+    @MapTo
+    private Date date;
 
     @IsProperty
     @MapTo
     @Title(value = "Fuel Qty", desc = "Fuel Qty")
     private BigDecimal qty;
 
-    @Observable
-    public TgFuelUsage setQty(final BigDecimal qty) {
-	this.qty = qty;
-	return this;
-    }
-
     public BigDecimal getQty() {
 	return qty;
     }
-
-
-
-
-    /////////////////////////////////////////////
-    //////////////// GETTERS ////////////////////
-    /////////////////////////////////////////////
 
     public TgVehicle getVehicle() {
         return vehicle;
     }
 
-    public Date getReadingDate() {
-        return readingDate;
+    public Date getDate() {
+        return date;
     }
-
-
-    /////////////////////////////////////////////
-    //////////////// SETTERS ////////////////////
-    /////////////////////////////////////////////
 
     @Observable
     @EntityExists(TgVehicle.class)
@@ -74,8 +56,13 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public void setReadingDate(final Date readingDate) {
-        this.readingDate = readingDate;
+    public void setDate(final Date date) {
+        this.date = date;
     }
 
+    @Observable
+    public TgFuelUsage setQty(final BigDecimal qty) {
+	this.qty = qty;
+	return this;
+    }
 }

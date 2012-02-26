@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Hibernate;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
@@ -45,6 +46,7 @@ import com.google.inject.Guice;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class BaseEntQueryTCase {
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
@@ -62,6 +64,10 @@ public class BaseEntQueryTCase {
     protected static final Class<Long> LONG = Long.class;
     protected static final Class<BigInteger> BIG_INTEGER = BigInteger.class;
     protected static final Class<BigDecimal> BIG_DECIMAL = BigDecimal.class;
+    protected static final Type H_LONG = Hibernate.LONG;
+    protected static final Type H_STRING = Hibernate.STRING;
+    protected static final Type H_BIG_DECIMAL = Hibernate.BIG_DECIMAL;
+    protected static final Type H_BIG_INTEGER = Hibernate.BIG_INTEGER;
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
 
@@ -120,8 +126,16 @@ public class BaseEntQueryTCase {
 	return new PropResolutionInfo(prop(propName), aliasPart, propPart, explicitPropPart);
     }
 
-    protected static PropResolutionInfo impIdPropResInf(final String propName, final String aliasPart, final String propPart, final Class propType, final boolean propNullability, final String explicitPropPart, final Class explicitPropPartType, final boolean explicitPropNullability) {
-	return new PropResolutionInfo(prop(propName), aliasPart, new PurePropInfo(propPart, propType, null, propNullability), new PurePropInfo(explicitPropPart, explicitPropPartType, null, explicitPropNullability), true);
+    protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final PurePropInfo propPart) {
+	return new PropResolutionInfo(prop(propName), aliasPart, propPart, propPart);
+    }
+
+    protected static PropResolutionInfo impIdPropResInf(final String propName, final String aliasPart, final PurePropInfo propPart, final PurePropInfo explicitPropPart) {
+	return new PropResolutionInfo(prop(propName), aliasPart, propPart, explicitPropPart, true);
+    }
+
+    protected static PropResolutionInfo impIdPropResInf(final String propName, final String aliasPart, final PurePropInfo propPart) {
+	return new PropResolutionInfo(prop(propName), aliasPart, propPart, propPart, true);
     }
 
     protected final ComparisonTestModel alwaysTrueCondition = new ComparisonTestModel(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
@@ -157,7 +171,8 @@ public class BaseEntQueryTCase {
     public static void assertModelsEquals(final QueryModel shortcutModel, final QueryModel explicitModel) {
 	final EntQuery shortcutQry = entResultQry(shortcutModel);
 	final EntQuery explicitQry = entResultQry(explicitModel);
-	assertEquals(("Query models are different! exp: " + shortcutQry.toString() + " act: " + explicitQry.toString()), shortcutQry, explicitQry);
+	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
+
     }
 
     public static void assertModelsDifferent(final QueryModel shortcutModel, final QueryModel explicitModel) {

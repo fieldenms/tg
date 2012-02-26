@@ -21,27 +21,36 @@ public class EntQuerySourceFromEntityType extends AbstractEntQuerySource {
 	super(alias, mappingsGenerator);
 	this.entityType = entityType;
 	this.generated = generated;
+    }
 
+    @Override
+    public void populateSourceItems(final boolean parentLeftJoinLegacy) {
 	for (final PropertyPersistenceInfo ppi : getMappingsGenerator().getEntityPPIs(sourceType())) {
-	    sourceItems.put(ppi.getName(), ppi);
+		// if parent nullability = false then take the one from ppi, else true
+	    sourceItems.put(ppi.getName(), new PropertyPersistenceInfo.Builder(ppi.getName(), ppi.getJavaType(), ppi.isNullable() || parentLeftJoinLegacy). //
+		    hibType(ppi.getHibType()).column(ppi.getColumn()).build());
 	}
     }
 
     @Override
     protected Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName) {
 	final PropertyPersistenceInfo finalPropInfo = getMappingsGenerator().getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
+
 	if (finalPropInfo != null) {
-	    final PurePropInfo ppi = new PurePropInfo(finalPropInfo.getName(), finalPropInfo.getJavaType(), finalPropInfo.getHibType(), finalPropInfo.isNullable());
+	    final boolean finalPropNullability = getMappingsGenerator().isNullable(entityType, dotNotatedPropName);
+	    final PurePropInfo ppi = new PurePropInfo(finalPropInfo.getName(), finalPropInfo.getJavaType(), finalPropInfo.getHibType(), finalPropNullability || isNullable());
 	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 	} else {
 	    final PropertyPersistenceInfo propInfo = getMappingsGenerator().getInfoForDotNotatedProp(entityType, dotNotatedPropName);
 	    if (propInfo == null) {
 		return null;
 	    } else {
+		final boolean propNullability = getMappingsGenerator().isNullable(entityType, dotNotatedPropName);
 		final PropertyPersistenceInfo explicitPartPropInfo = getMappingsGenerator().getPropPersistenceInfoExplicitly(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
+		final boolean explicitPropNullability = getMappingsGenerator().isNullable(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
 		return new Pair<PurePropInfo, PurePropInfo>( //
-		new PurePropInfo(explicitPartPropInfo.getName(), explicitPartPropInfo.getJavaType(), explicitPartPropInfo.getHibType(), explicitPartPropInfo.isNullable()), //
-		new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propInfo.isNullable()));
+		new PurePropInfo(explicitPartPropInfo.getName(), explicitPartPropInfo.getJavaType(), explicitPartPropInfo.getHibType(), explicitPropNullability || isNullable()), //
+		new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable()));
 	    }
 	}
     }

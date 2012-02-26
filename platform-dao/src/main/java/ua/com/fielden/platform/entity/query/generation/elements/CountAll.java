@@ -43,4 +43,9 @@ public class CountAll implements ISingleOperand {
     public Object hibType() {
 	return null;
     }
+
+    @Override
+    public boolean isNullable() {
+	return true;
+    }
 }

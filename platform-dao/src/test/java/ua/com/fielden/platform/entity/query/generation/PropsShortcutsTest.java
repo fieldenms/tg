@@ -163,6 +163,33 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
+    public void test12a() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv"). //
+		where().prop("rv.model.make.key").ne().val("MERC").model(), //
+
+		select(VEHICLE). //
+		leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv"). //
+		leftJoin(MODEL).as("rv.model").on().prop("rv.model").eq().prop("rv.model.id"). //
+		leftJoin(MAKE).as("rv.model.make").on().prop("rv.model.make").eq().prop("rv.model.make.id"). //
+		where().prop("rv.model.make.key").ne().val("MERC").model());
+    }
+
+    @Test
+    public void test12b() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		where().prop("replacedBy.model.make.key").ne().val("MERC").model(), //
+
+		select(VEHICLE). //
+		leftJoin(VEHICLE).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		leftJoin(MODEL).as("replacedBy.model").on().prop("replacedBy.model").eq().prop("replacedBy.model.id"). //
+		leftJoin(MAKE).as("replacedBy.model.make").on().prop("replacedBy.model.make").eq().prop("replacedBy.model.make.id"). //
+		where().prop("replacedBy.model.make.key").ne().val("MERC").model());
+    }
+
+    @Test
     public void test12() {
 	assertModelsEquals(//
 		select(VEHICLE). //

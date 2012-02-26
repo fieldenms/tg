@@ -8,6 +8,7 @@ public class EntProp implements ISingleOperand {
     private final String name;
     private Class propType;
     private Object hibType;
+    private boolean nullable;
 
     private EntQuery holder; // query, where given property resides (not to be mixed with the query, which source given property is resolved to - in case of correlated subqueries these two may be different queries (subquery and one of its master).
     private String sql;
@@ -130,5 +131,13 @@ public class EntProp implements ISingleOperand {
     @Override
     public Object hibType() {
 	return hibType;
+    }
+
+    public boolean isNullable() {
+        return nullable;
+    }
+
+    public void setNullable(final boolean nullable) {
+        this.nullable = nullable;
     }
 }

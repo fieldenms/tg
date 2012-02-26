@@ -21,11 +21,16 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
     public EntQuerySourceFromQueryModel(final String alias, final MappingsGenerator mappingsGenerator, final EntQuery... models) {
 	super(alias, mappingsGenerator);
 	this.models = Arrays.asList(models);
+    }
 
+    @Override
+    public void populateSourceItems(final boolean parentLeftJoinLegacy) {
 	for (final YieldModel yield : model().getYields().getYields().values()) {
-	    sourceItems.put(yield.getAlias(), yield.getInfo());
+	    sourceItems.put(yield.getAlias(), new PropertyPersistenceInfo.Builder(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().isNullable() || parentLeftJoinLegacy). //
+		    hibType(yield.getInfo().getHibType()).column(yield.getInfo().getColumn()).build());
 	}
     }
+
 
     @Override
     public Class sourceType() {
@@ -59,12 +64,15 @@ public class EntQuerySourceFromQueryModel extends AbstractEntQuerySource {
 	    if (propInfo == null) {
 		return null;
 	    } else {
+		final boolean propNullability = getMappingsGenerator().isNullable(firstLevelPropYield.getInfo().getJavaType(), rest);
+		final boolean explicitPartNullability = firstLevelPropYield.getInfo().isNullable() || isNullable();
 		return new Pair<PurePropInfo, PurePropInfo>(
-			new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), firstLevelPropYield.getInfo().isNullable()),
-			new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propInfo.isNullable()));
+			new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), explicitPartNullability),
+			new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || explicitPartNullability));
 	    }
 	} else {
-	    final PurePropInfo ppi = new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), firstLevelPropYield.getInfo().isNullable());
+	    final PurePropInfo ppi = new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), firstLevelPropYield.getInfo().isNullable() || isNullable());
+
 	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 	}
     }

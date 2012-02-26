@@ -18,5 +18,7 @@ public interface ISingleOperand extends IPropertyCollector {
 
     Object hibType();
 
+    boolean isNullable();
+
     String sql();
 }

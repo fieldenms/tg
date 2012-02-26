@@ -145,7 +145,7 @@ public class EntQuery implements ISingleOperand {
 	if (finalPropInfo != null) {
 	    return mappingsGenerator.isNullable(type(), yield.getAlias());
 	} else {
-	    return true; //TODO implement properly
+	    return yield.getOperand().isNullable();//true; //TODO implement properly
 	}
     }
 
@@ -194,6 +194,12 @@ public class EntQuery implements ISingleOperand {
 	this.groups = groups;
 	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? sources.getMain().sourceType() : null);
 
+	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : sources.getAllSourcesAndTheirJoinType()) {
+	    final IEntQuerySource source = sourceAndItsJoinType.getKey();
+	    source.assignNullability(sourceAndItsJoinType.getValue());
+	    source.populateSourceItems(sourceAndItsJoinType.getValue());
+	}
+
 	enhanceYieldsModel(); //!! adds new properties in yield section
 
 	final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
@@ -214,7 +220,7 @@ public class EntQuery implements ISingleOperand {
 
 	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : sources.getAllSourcesAndTheirJoinType()) {
 	    final IEntQuerySource source = sourceAndItsJoinType.getKey();
-	    sources.getCompounds().addAll(source.generateMissingSources(sourceAndItsJoinType.getValue(), source.getReferencingProps()));
+	    sources.getCompounds().addAll(source.generateMissingSources(source.getReferencingProps()));
 	}
 
 	final List<EntProp> immediatePropertiesFinally = getImmediateProps();
@@ -446,6 +452,14 @@ public class EntQuery implements ISingleOperand {
 	  return yields.getYields().values().iterator().next().getInfo().getHibType();
 	}
 	return null;
+    }
+
+    @Override
+    public boolean isNullable() {
+	if (yields.getYields().size() == 1) {
+		  return yields.getYields().values().iterator().next().getInfo().isNullable();
+		}
+	return true;
     }
 
     @Override

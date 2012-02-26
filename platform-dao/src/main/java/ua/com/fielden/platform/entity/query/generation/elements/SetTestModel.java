@@ -12,7 +12,6 @@ public class SetTestModel implements ICondition {
 
     @Override
     public String sql() {
-	// TODO Auto-generated method stub
 	return leftOperand.sql() + (negated ? " NOT IN " : " IN ") + rightOperand.sql();
     }
 

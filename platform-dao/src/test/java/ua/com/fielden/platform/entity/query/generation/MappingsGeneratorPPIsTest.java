@@ -11,6 +11,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao.PropertyPersistenceType;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -55,11 +56,17 @@ public class MappingsGeneratorPPIsTest extends BaseEntQueryTCase {
 	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
 	actual.addAll(MAPPINGS_GENERATOR.getEntityPPIs(VEHICLE));
 	assertTrue(actual.containsAll(expected));
-	System.out.println(MAPPINGS_GENERATOR.getEntityPPIs(VEHICLE));
     }
 
     @Test
     public void test3() {
+	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "station"));
+	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "station.key"));
+
+	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model"));
+	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.id"));
+	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.key"));
+	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.desc"));
 	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make"));
 	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make.id"));
 	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make.key"));

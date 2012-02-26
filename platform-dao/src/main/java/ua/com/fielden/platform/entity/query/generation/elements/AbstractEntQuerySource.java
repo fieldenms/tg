@@ -8,7 +8,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.hibernate.Hibernate;
-import org.hibernate.type.TypeFactory;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
@@ -48,6 +47,12 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
      * Reference to mappings generator instance - used for acquiring properties persistence infos.
      */
     private final MappingsGenerator mappingsGenerator;
+
+    private boolean nullable;
+
+    public void assignNullability(final boolean nullable) {
+	this.nullable = nullable;
+    }
 
     @Override
     public void assignSqlAlias(final String sqlAlias) {
@@ -121,7 +126,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
 	if (isPersistedEntityType(sourceType()) && prop.getName().equalsIgnoreCase(getAlias())) {
-	    final PurePropInfo idProp = new PurePropInfo("id", Long.class, Hibernate.LONG, false);
+	    final PurePropInfo idProp = new PurePropInfo("id", Long.class, Hibernate.LONG, false || isNullable());
 	    return new PropResolutionInfo(prop, getAlias(), idProp, idProp, true); // id property is meant here, but is it for all contexts?
 	} else {
 	    return null;
@@ -192,48 +197,6 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	}
 
 	@Override
-	public int hashCode() {
-	    final int prime = 31;
-	    int result = 1;
-	    result = prime * result + ((name == null) ? 0 : name.hashCode());
-	    result = prime * result + (nullable ? 1231 : 1237);
-	    result = prime * result + ((type == null) ? 0 : type.hashCode());
-	    return result;
-	}
-
-	@Override
-	public boolean equals(final Object obj) {
-	    if (this == obj) {
-		return true;
-	    }
-	    if (obj == null) {
-		return false;
-	    }
-	    if (!(obj instanceof PurePropInfo)) {
-		return false;
-	    }
-	    final PurePropInfo other = (PurePropInfo) obj;
-	    if (name == null) {
-		if (other.name != null) {
-		    return false;
-		}
-	    } else if (!name.equals(other.name)) {
-		return false;
-	    }
-	    if (nullable != other.nullable) {
-		return false;
-	    }
-	    if (type == null) {
-		if (other.type != null) {
-		    return false;
-		}
-	    } else if (!type.equals(other.type)) {
-		return false;
-	    }
-	    return true;
-	}
-
-	@Override
 	public int compareTo(final PurePropInfo o) {
 	    return name.compareTo(o.getName());
 	}
@@ -254,7 +217,55 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    return hibType;
 	}
 
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = 1;
+	    result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
+	    result = prime * result + ((name == null) ? 0 : name.hashCode());
+	    result = prime * result + (nullable ? 1231 : 1237);
+	    result = prime * result + ((type == null) ? 0 : type.hashCode());
+	    return result;
+	}
 
+	@Override
+	public boolean equals(final Object obj) {
+	    if (this == obj) {
+		return true;
+	    }
+	    if (obj == null) {
+		return false;
+	    }
+	    if (!(obj instanceof PurePropInfo)) {
+		return false;
+	    }
+	    final PurePropInfo other = (PurePropInfo) obj;
+	    if (hibType == null) {
+		if (other.hibType != null) {
+		    return false;
+		}
+	    } else if (!hibType.equals(other.hibType)) {
+		return false;
+	    }
+	    if (name == null) {
+		if (other.name != null) {
+		    return false;
+		}
+	    } else if (!name.equals(other.name)) {
+		return false;
+	    }
+	    if (nullable != other.nullable) {
+		return false;
+	    }
+	    if (type == null) {
+		if (other.type != null) {
+		    return false;
+		}
+	    } else if (!type.equals(other.type)) {
+		return false;
+	    }
+	    return true;
+	}
     }
 
     protected SortedMap<PurePropInfo, List<EntProp>> determineGroups(final List<PropResolutionInfo> refProps) {
@@ -292,17 +303,17 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
     }
 
     @Override
-    public List<EntQueryCompoundSourceModel> generateMissingSources(final boolean parentLeftJoinLegacy, final List<PropResolutionInfo> refProps) {
+    public List<EntQueryCompoundSourceModel> generateMissingSources(final List<PropResolutionInfo> refProps) {
 	final List<EntQueryCompoundSourceModel> result = new ArrayList<EntQueryCompoundSourceModel>();
+
 	final SortedMap<PurePropInfo, List<EntProp>> groups = determineGroups(refProps);
 
 	for (final Map.Entry<PurePropInfo, List<EntProp>> groupEntry : groups.entrySet()) {
 	    final EntQuerySourceFromEntityType qrySource = new EntQuerySourceFromEntityType(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, mappingsGenerator);
-
-	    final boolean propLeftJoin = parentLeftJoinLegacy || groupEntry.getKey().nullable;
-
-	    result.add(new EntQueryCompoundSourceModel(qrySource, joinType(propLeftJoin), joinCondition(qrySource.getAlias(), qrySource.getAlias() + ".id")));
-	    result.addAll(qrySource.generateMissingSources(propLeftJoin, qrySource.resolvePropsInternally(groupEntry.getValue())));
+	    qrySource.populateSourceItems(groupEntry.getKey().nullable);
+	    qrySource.assignNullability(groupEntry.getKey().nullable);
+	    result.add(new EntQueryCompoundSourceModel(qrySource, joinType(groupEntry.getKey().nullable), joinCondition(qrySource.getAlias(), qrySource.getAlias() + ".id")));
+	    result.addAll(qrySource.generateMissingSources(qrySource.resolvePropsInternally(groupEntry.getValue())));
 	}
 
 	return result;
@@ -346,6 +357,8 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 		entProp.setHibType(prop.hibType);
 	    }
 
+	    entProp.setNullable(prop.isNullable());
+
 	    this.aliasPart = aliasPart;
 	    this.prop = prop;
 	    this.explicitProp = explicitProp;
@@ -356,18 +369,10 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    this(entProp, aliasPart, prop, explicitProp, false);
 	}
 
-//	public boolean isImplicitId() {
-//	    return implicitId;//prop.name == null && aliasPart != null;
-//	}
-
 	public boolean allExplicit() {
 	    return implicitId || //
 		    explicitProp.name.equals(prop.name) || //
-		    (explicitProp.name + ".id").equals(prop.name)
-		    //|| //
-		    // TODO need to implement properly case of CompositeUserType property (e.g. Vehicle.price(.amount)
-		    //!isPersistedEntityType(explicitProp.type)
-		    ;
+		    (explicitProp.name + ".id").equals(prop.name);
 	}
 
 	@Override
@@ -376,7 +381,7 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	}
 
 	public Integer getPreferenceNumber() {
-	    return implicitId/*isImplicitId()*/ ? 2000 : prop.name.length();
+	    return implicitId ? 2000 : prop.name.length();
 	}
 
 	public String getAliasPart() {
@@ -453,4 +458,8 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 	    return true;
 	}
   }
+
+    public boolean isNullable() {
+        return nullable;
+    }
 }
