@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.Session;
 
@@ -30,7 +28,7 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 
     public void test_vehicle_model_retrieval0() {
 	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("key").eq().val("316").model();
-	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel(model, null), false);
+	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel.Builder(model).build());
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", null, vehModel.getMake());
@@ -47,7 +45,7 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 		yield().prop("make.key").as("make.key").
 		yield().prop("make.desc").as("make.desc").
 		modelAsEntity(TgVehicleModel.class);
-	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel(model, null), false);
+	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel.Builder(model).build());
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
@@ -64,7 +62,7 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 		yield().prop("make.key").as("make.key").
 		yield().prop("make.desc").as("make.desc").
 		modelAsEntity(TgVehicleModel.class);
-	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel(model, null), false);
+	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel.Builder(model).build());
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
@@ -73,7 +71,7 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     public void test_vehicle_model_retrieval3() {
 	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("make").eq().val(1). //
 		modelAsEntity(TgVehicleModel.class);
-	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel(model, new fetch(TgVehicleModel.class).with("make")), false);
+	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel.Builder(model).fetchModel(new fetch(TgVehicleModel.class).with("make")).build());
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
@@ -81,23 +79,20 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 
     public void test_vehicle_model_retrieval4() {
 	final EntityResultQueryModel<TgVehicleMake> model = select(TgVehicleMake.class).where().prop("key").in().params("param1", "param2").model();
-	final Map<String, Object> params = new HashMap<String, Object>();
-	params.put("param1", "MERC");
-	params.put("param2", "BMW");
-	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel(model, null, null, params), false);
+	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel.Builder(model).paramValue("param1", "MERC").paramValue("param2", "BMW").build());
     	assertEquals("Incorrect count", 2, models.size());
     }
 
     public void test_vehicle_model_retrieval5() {
 	final AggregatedResultQueryModel model = select(TgVehicle.class).as("v").where().prop("v").in().values(1, 2).and().prop("v.price.amount").ge().val(100).yield().prop("v.price.amount").as("aa").modelAsAggregate();
-	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(model, null), false);
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(model).build());
     	assertEquals("Incorrect count", 1, values.size());
     	assertEquals("Incorrect value", new BigDecimal("200.00"), values.get(0).get("aa"));
     }
 
     public void test_vehicle_model_retrieval6() {
 	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("price.amount").ge().val(100).model();
-	final List<TgVehicle> values = fetcher().list(new QueryExecutionModel(model, null), false);
+	final List<TgVehicle> values = fetcher().list(new QueryExecutionModel.Builder(model).build());
     	assertEquals("Incorrect count", 1, values.size());
     	assertEquals("Incorrect count", new Money("100.00"), values.get(0).getPurchasePrice());
     }
@@ -105,7 +100,7 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     public void test_vehicle_model_retrieval7() {
 	final AggregatedResultQueryModel model = select(TgVehicle.class).yield(). //
 		avgOf().beginExpr().prop("price.amount").add().prop("purchasePrice.amount").endExpr().as("aa").modelAsAggregate();
-	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(model, null), false);
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(model).build());
     	assertEquals("Incorrect count", 1, values.size());
     	assertEquals("Incorrect value", new BigDecimal("165"), values.get(0).get("aa"));
     }
@@ -113,7 +108,7 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     public void test_vehicle_model_retrieval8() {
 	final AggregatedResultQueryModel model = select(TgVehicle.class).yield(). //
 		beginExpr().avgOf().prop("price.amount").add().avgOf().prop("purchasePrice.amount").endExpr().as("aa").modelAsAggregate();
-	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(model, null), false);
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(model).build());
     	assertEquals("Incorrect count", 1, values.size());
     	assertEquals("Incorrect value", new BigDecimal("165"), values.get(0).get("aa"));
     }
@@ -121,7 +116,7 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 
     public void test_vehicle_model_retrieval9() {
 	final AggregatedResultQueryModel model = select(TgVehicleModel.class).yield().countOfDistinct().prop("make").as("aa").modelAsAggregate();
-	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(model, null), false);
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(model).build());
     	assertEquals("Incorrect count", 1, values.size());
     	assertEquals("Incorrect value", "3", values.get(0).get("aa").toString());
     }
@@ -132,7 +127,7 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 		yield().countOfDistinct().prop("make").as("bb"). //
 		yield().now().as("cc"). //
 		modelAsAggregate();
-	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(model, null), false);
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(model).build());
     	assertEquals("Incorrect count", 1, values.size());
     	assertEquals("Incorrect value", "7", values.get(0).get("aa").toString());
     	assertEquals("Incorrect value", "3", values.get(0).get("bb").toString());
@@ -144,7 +139,7 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 		yield().countAll().as("aa"). //
 		modelAsAggregate();
 
-	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel(countModel, null), false);
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(countModel).build());
     	assertEquals("Incorrect count", 1, values.size());
     	assertEquals("Incorrect value", "1", values.get(0).get("aa").toString());
     }

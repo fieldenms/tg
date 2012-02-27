@@ -194,7 +194,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
 	    @SuppressWarnings("unchecked")
 	    final QueryModel currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(ID_PROPERTY_NAME).in().values(batch).model()/*.getModelWithAbstractEntities()*/;
 	    @SuppressWarnings("unchecked")
-	    final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion).listContainers(new QueryExecutionModel(currTypePropertyModel, fetchModel), null, null);
+	    final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion).listContainers(new QueryExecutionModel.Builder(currTypePropertyModel).fetchModel(fetchModel).build(), null, null);
 	    result.addAll(properties);
 	    from = to;
 	    to = to + batchSize;
@@ -277,7 +277,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
 		    : base.orderBy().prop(parentPropName).asc()).modelAsEntity(fetchModel.getEntityType())/*.getModelWithAbstractEntities()*/;
 	    @SuppressWarnings("unchecked")
 	    // final List<EntityContainer> properties = new Fetcher().listContainersWithoutKeyEnhanced(currTypePropertyModel, null, null);
-	    final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion).listContainers(new QueryExecutionModel(currTypePropertyModel, fetchModel), null, null);
+	    final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion).listContainers(new QueryExecutionModel.Builder(currTypePropertyModel).fetchModel(fetchModel).build(), null, null);
 	    result.addAll(properties);
 	    // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
 	    from = to;

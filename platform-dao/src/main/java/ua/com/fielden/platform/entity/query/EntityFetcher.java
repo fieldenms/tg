@@ -110,17 +110,17 @@ public class EntityFetcher<E extends AbstractEntity> extends AbstractFetcher<E> 
      * @return
      */
     @SessionRequired
-    public List<E> list(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity, final boolean lightweight) {
+    public List<E> list(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) {
 	try {
-	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), lightweight);
+	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight());
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw new IllegalStateException(e);
 	}
     }
 
-    public List<E> list(final QueryExecutionModel queryModel, final boolean lightweight) {
-	return list(queryModel, null, null, lightweight);
+    public List<E> list(final QueryExecutionModel queryModel) {
+	return list(queryModel, null, null);
     }
 
     @SessionRequired

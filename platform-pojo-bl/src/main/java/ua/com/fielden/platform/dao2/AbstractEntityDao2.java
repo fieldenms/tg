@@ -65,7 +65,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity> implements IE
 
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
 	try {
-	    return getEntity(new QueryExecutionModel<T>(select(getEntityType()).where().prop(ID_PROPERTY_NAME).eq().val(id).model(), null, fetchModel, null));
+	    return getEntity(new QueryExecutionModel.Builder(select(getEntityType()).where().prop(ID_PROPERTY_NAME).eq().val(id).model()).fetchModel(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
@@ -93,7 +93,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity> implements IE
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
 	final UnorderedQueryModel model = createQueryByKey(keyValues);
 	try {
-	    return getEntity(new QueryExecutionModel<T>(model, null, fetchModel, null));
+	    return getEntity(new QueryExecutionModel.Builder(model).fetchModel(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
@@ -103,7 +103,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity> implements IE
     public T findByKey(final Object... keyValues) {
 	final UnorderedQueryModel model = createQueryByKey(keyValues);
 	try {
-	    return getEntity(new QueryExecutionModel<T>(model, null, null, null));
+	    return getEntity(new QueryExecutionModel.Builder(model).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
