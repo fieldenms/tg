@@ -35,15 +35,78 @@
   These questions are amongst the main concerns addressed by Apache Maven.
   It is a very comprehensive tool that manges libraries, version resolution, localisation, and even handles transitive dependencies (i.e. libraries that depend on other libraries, which are not directly referenced by the project itself), which truly makes complex project possible.
 
-  All dependencies that are managed by Maven, the version is encoded into the file name.
-  For exaple, if the file name is \texttt{platform-pojobl-\tikzinline{1.1}.jar} then the highlighted portion \texttt{\tikzinline{1.1}} indicates the version.
+  \subsection*{Repositories and Artifacts}
+  All dependencies that are managed by Maven are identified by three parameters: group ID, artifact ID and version.
+  Artifact ID and version information are encoded into the jar file names.
+  For exaple, if the file name of some dependency is \texttt{platform-pojobl-\tikzinline{1.1}.jar} then the highlighted portion \texttt{\tikzinline{1.1}} indicates the version, and the preceeding part \texttt{platform-pojobl} is the artifact ID.
+  The group ID corresponds to a directory structure of the repository where dependencies are stored.
+
+  Maven repositories represent physical locations where dependencies are stored.
+  Roughly speaking, there are two types of repositories -- local and remote.
+  
+
+  \paragraph*{Local Repository}
+  The local repository is represented by a specially designated directory \texttt{$\sim$/.m2} on every development workstation where symbol \tikzinline{$\sim$} indicates a user home directory.
+  Figure \ref{img:ch00:01:local_repository_strucutre} depicts a fragment of the local repository structure.
+  The top level of the local repository (indicated as left most node \texttt{$\sim$/.m2}) consist of subdirectory \texttt{repository} and a configuraton file \texttt{.settings}, which is discussed in more details lated in this section.
+  The \texttt{repository} directory consists of multiple subdirectories that represent group IDs of different dependencies.
+  The next level corresponds to artifact IDs, which may contain multiple subdirectories indicating various versions of the same artifact.
+  The lowest level of the directory tree corresponds to artifact files of a specific version.
+  In this example, three files are presented:
+  \begin{enumerate}
+    \item \texttt{platform-pojo-bl-1.1.jar} -- the actual dependency with all the necessary resources such as compiled class files and images.
+    \item \texttt{platform-pojo-bl-1.1-javadoc.jar} -- oprional Javadoc archive that contains API documentatino of the dependency, which is very useful during development process.
+    \item \texttt{platform-pojo-bl-1.1.pom} -- POM of the dependency required to indentify all transitive dependecies.
+  \end{enumerate}
+  There could be some additional files associated with the dependency, which can be safely ignored at this stage.
+
+  
+  \begin{image}{A fragment of the local repository structure}{\label{img:ch00:01:local_repository_strucutre}}    
+    \begin{tikzpicture}	[scale=0.9,
+			  edge from parent fork right,grow=right,rounded corners=1pt,
+			  every node/.style={scale=0.6,fill=white!10,rounded corners, level distance = 40mm},
+			  edge from parent/.style={black,thick,draw},			  
+			  level 1/.style={level distance=20mm,nodes={fill=white!10}, minimum width=20mm, minimum height=5mm},
+			  level 2/.style={level distance=20mm,nodes={fill=white!10}, minimum width=20mm, minimum height=5mm},
+			  level 3/.style={level distance=25mm,sibling distance=10mm, nodes={fill=white!10}, minimum width=30mm, minimum height=5mm},
+			  level 4/.style={level distance=25mm,sibling distance=10mm, nodes={fill=white!10}, minimum width=20mm, minimum height=5mm},
+			  level 5/.style={level distance=40mm,sibling distance=10mm, nodes={fill=white!10}, minimum width=50mm, minimum height=5mm}
+			  ]      
+      \node{$\sim$/.m2}
+	child {node[fill=codebgcolor!30] {.settings}}
+	child {node[fill=highlight] {repository}
+	  child {node {group ID $N_1$}}	  
+	  child {node {\ldots}}	  
+	  child {node[fill=highlight] {fielden}
+	    child {node {artifact ID $N_2$}}	    
+	    child {node {\ldots}}	    
+	    child {node[fill=highlight] {platfrom-pojobl}
+	      child {node {version $N_3$}}
+	      child {node {\ldots}}	      
+	      child {node[fill=highlight] {1.1}
+		child {node {\ldots}}
+		child {node[fill=highlight] {platform-pojo-bl-1.1.pom}}
+		child {node[fill=highlight] {platform-pojo-bl-1.1-javadoc.jar}}		
+		child {node[fill=highlight] {platform-pojo-bl-1.1.jar}}
+	      }
+	      child {node {version 1}}
+	    }
+	    child {node {artifact ID 1}}	    
+	  }	 
+	  child {node {group ID 1}}	  
+	};    
+    \end{tikzpicture}
+  \end{image}
+
+
+  \paragraph*{Remote Repository}
 
   \subsection*{Download and Configure} 
-  Maven can be downloaded from the official \href{http://maven.apache.org/download.html}{Apache Maven web site}.
+  Maven can be downloaded from the official \href{http://maven.apache.org/download.html}{Apache Maven web site}\footnote{\url{http://maven.apache.org/download.html}}.
   The recommended at this time verion for TG-based applications is 2.2.1.
-  Once downloaded follow the \href{http://maven.apache.org/download.html#Installation}{installation instructions}.
+  Once downloaded please follow the \href{http://maven.apache.org/download.html#Installation}{installation instructions} also awailable on the official site\footnote{\url{http://maven.apache.org/download.html\#Installation}}.
   
-  \begin{notebox}{JDK Version}{mb:java}
+  \begin{notebox}{JDK Version}{\label{mb:java}}
     It is important to note that Oracle JDK 6.x should be used for developing applications with TG, and it should be installed before downloading and installing Maven. 
   \end{notebox}
   
@@ -55,7 +118,7 @@
 			pluginRepositories, pluginRepository, activeProfiles, activeProfile, servers, server, username, password, 
 			directoryPermissions, filePermissions},
 	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
-  \begin{code}{Maven Settings}{lst:settings}
+  \begin{code}{Maven Settings}{\label{lst:settings}}
     \begin{lstlisting}
       <?xml version="1.0" encoding="UTF-8"?>
       <settings>
@@ -130,7 +193,7 @@
 	  escapechar=\%,
 	  morekeywords={project, modelVersion, groupId, artifactId, packaging, packaging, version, encoding, name, description},
 	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
-  \begin{code}{Project Object Model (POM)}{lst:pom}
+  \begin{code}{Project Object Model (POM)}{\label{lst:pom}}
     \begin{lstlisting}
     <?xml version="1.0" encoding="UTF-8"?>
     <project xmlns="..."

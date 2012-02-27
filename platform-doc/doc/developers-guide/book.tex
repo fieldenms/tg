@@ -112,7 +112,7 @@
   \vspace*{5pt}
   \capstart
   \captionsetup{format=plain,justification=centering,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}
-  \caption{#1}\label{#2}  
+  \caption{#2#1}
   \begin{center}
     \begin{tikzpicture}
       \node [fill=codebgcolor!20!white,rounded corners=5pt]
@@ -147,7 +147,7 @@
       \bgroup
       \begin{minipage}{\textwidth}
       \vspace*{-8pt}
-      \caption{#1}\label{#2}  
+      \caption{#2#1}
       \vspace*{2pt}
       \centering
       \begin{minipage}{0.9\textwidth}
@@ -160,13 +160,26 @@
   \vspace*{-20pt}
 \end{notethis}
 }
+
+%% #1 -- caption text
+%% #2 -- label, which should include the \label{} tag
+\newenvironment{image}[2]
+{\begin{figure}[!htp]
+    \capstart  
+    \captionsetup{font=footnotesize,justification=centering,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}  
+    \caption{#2#1}
+    \vspace*{10pt}
+    \begin{center}}
+    {\end{center}
+  \end{figure}
+}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 % TikZ
 \usepackage[version=0.96]{pgf}
 \usepackage{tikz}
-\usetikzlibrary{arrows,shapes,shapes.arrows,shapes.misc,snakes,automata,backgrounds,petri,patterns,positioning,scopes,chains,matrix,decorations.pathmorphing,shadows,calc}
+\usetikzlibrary{mindmap,arrows,shapes,shapes.arrows,shapes.misc,snakes,automata,backgrounds,petri,patterns,positioning,scopes,chains,matrix,decorations.pathmorphing,shadows,calc}
 
 % Пакет crop дає змогу забрати весь текст або графіку з проекту
 
@@ -208,7 +221,7 @@
 
 \newcommand{\tikzref}[3]{\tikz[xshift=#2, yshift=#3, remember picture, overlay] \node[coordinate] (#1) {};}
 
-\newcommand{\tikzinline}[1]{\tikz[baseline=(V.base)]\node[fill=highlight!50,rounded corners=2pt] (V) {#1};}
+\newcommand{\tikzinline}[1]{\tikz[baseline=(V.base)]\node[fill=highlight!30,rounded corners=2pt] (V) {#1};}
 
 \newcommand{\tikzhighlight}[2]{
   \begin{tikzpicture}[remember picture,overlay,rounded corners=2pt]
