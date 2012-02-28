@@ -10,6 +10,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPrope
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.Reflector;
 
 /**
  * {@link CalculatedProperty} validation for its expression in a provided context.
@@ -26,7 +27,7 @@ public class BceOriginationPropertyValidation implements IBeforeChangeEventHandl
 	    return new IncorrectCalcPropertyKeyException("The origination property cannot be empty for Aggregated Expressions. It is required to ");
 	}
 	try {
-	    DomainTreeEnhancer.validatePath(cp.contextType(), newOriginationProperty, "The origination property [" + newOriginationProperty + "] does not exist in type [" + cp.contextType() + "].");
+	    DomainTreeEnhancer.validatePath(cp.getRoot(), Reflector.fromRelative2AbsotulePath(cp.getContextPath(), newOriginationProperty), "The origination property [" + newOriginationProperty + "] does not exist in type [" + cp.contextType() + "].");
 	} catch (final IncorrectCalcPropertyKeyException e) {
 	    return e;
 	}

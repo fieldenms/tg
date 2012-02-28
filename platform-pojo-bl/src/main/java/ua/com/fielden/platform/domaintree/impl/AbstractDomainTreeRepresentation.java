@@ -213,6 +213,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     protected static boolean isCollection(final Class<?> root, final String property) {
 	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	if (isEntityItself) {
+	    return false;
+	}
 	final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
 	final Class<?> realType = isEntityItself ? null : PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
 	return (!isEntityItself && realType != null && Collection.class.isAssignableFrom(realType)); // or collections itself
@@ -239,7 +242,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param property
      * @return
      */
-    protected static boolean isInCollectionHierarchy(final Class<?> root, final String property) {
+    public static boolean isInCollectionHierarchy(final Class<?> root, final String property) {
 	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	return (!isEntityItself && typesInHierarchy(root, property, false).contains(Collection.class)); // properties in collectional hierarchy
     }
@@ -251,7 +254,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param property
      * @return
      */
-    protected static boolean isCollectionOrInCollectionHierarchy(final Class<?> root, final String property) {
+    public static boolean isCollectionOrInCollectionHierarchy(final Class<?> root, final String property) {
 	return isCollection(root, property) || isInCollectionHierarchy(root, property);
     }
 

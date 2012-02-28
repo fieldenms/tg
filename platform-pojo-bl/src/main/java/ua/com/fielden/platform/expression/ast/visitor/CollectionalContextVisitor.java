@@ -122,11 +122,9 @@ public class CollectionalContextVisitor extends AbstractAstVisitor {
 	    return THIS;
 	}
 	// first validate the cases where the passed in property is not in dot notation, but is itself collectional
-	if (!context.contains(PROPERTY_SEPARATOR)) {
-	    final Field field = Finder.findFieldByName(getHigherOrderType(), context);
-	    if (Collection.class.isAssignableFrom(field.getType())) {
-		return context;
-	    }
+	final Field field = Finder.findFieldByName(getHigherOrderType(), context);
+	if (Collection.class.isAssignableFrom(field.getType())) {
+	    return context;
 	}
 	// if the property is in dot notation then need to analyse the full path bit by bit
 	return determineTag(context);

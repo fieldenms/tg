@@ -143,6 +143,30 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     }
 
     @Test
+    public void test_inferred_category_context_and_place_for_Outsider_Context_expressions() {
+	// EXPRESSION
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * integerProp + MAX(integerProp)", "Calculated property", "desc", NO_ATTR, "integerProp"), EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp", "2 * integerProp + MAX(←.integerProp) + ←.integerProp", "Calculated property", "desc", NO_ATTR, "integerProp"), EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.entityProp", "2 * integerProp + MAX(←.←.integerProp) + ←.←.integerProp + MAX(←.integerProp) + ←.integerProp", "Calculated property", "desc", NO_ATTR, "integerProp"), EXPRESSION, "calculatedProperty", "entityProp.entityProp", "entityProp.entityProp.calculatedProperty", EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
+	// AGGREGATED_EXPRESSION
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * MAX(2 * integerProp + MAX(integerProp))", "Calculated property", "desc", NO_ATTR, "integerProp"), AGGREGATED_EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp", "2 * MAX(2 * integerProp + MAX(←.integerProp) + ←.integerProp)", "Calculated property", "desc", NO_ATTR, "integerProp"), AGGREGATED_EXPRESSION, "calculatedProperty", "", "calculatedProperty", SlaveEntity.class, MasterEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.entityProp", "2 * MAX(2 * integerProp + MAX(←.←.integerProp) + ←.←.integerProp + MAX(←.integerProp) + ←.integerProp)", "Calculated property", "desc", NO_ATTR, "integerProp"), AGGREGATED_EXPRESSION, "calculatedProperty", "", "calculatedProperty", EvenSlaverEntity.class, MasterEntity.class, Integer.class);
+	// COLLECTIONAL_EXPRESSION
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * integerProp + MAX(integerProp)", "Calculated property", "desc", NO_ATTR, "integerProp"), COLLECTIONAL_EXPRESSION, "calculatedProperty", "collection", "collection.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection", "2 * integerProp + MAX(←.integerProp) + ←.integerProp", "Calculated property", "desc", NO_ATTR, "integerProp"), COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp.collection", "entityProp.collection.calculatedProperty", EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * integerProp + MAX(←.←.integerProp) + ←.←.integerProp + MAX(←.integerProp) + ←.integerProp", "Calculated property", "desc", NO_ATTR, "integerProp"), COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp.collection.slaveEntityProp", "entityProp.collection.slaveEntityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+	// AGGREGATED_COLLECTIONAL_EXPRESSION
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * MAX(2 * integerProp + MAX(integerProp))", "Calculated property", "desc", NO_ATTR, "integerProp"), AGGREGATED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "", "calculatedProperty", SlaveEntity.class, MasterEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection", "2 * MAX(2 * integerProp + MAX(←.integerProp) + ←.integerProp)", "Calculated property", "desc", NO_ATTR, "integerProp"), AGGREGATED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", EvenSlaverEntity.class, SlaveEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * MAX(2 * integerProp + MAX(←.←.integerProp) + ←.←.integerProp + MAX(←.integerProp) + ←.integerProp)", "Calculated property", "desc", NO_ATTR, "integerProp"), AGGREGATED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+	// ATTRIBUTED_COLLECTIONAL_EXPRESSION
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * integerProp + MAX(integerProp)", "Calculated property", "desc", ALL, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "", "calculatedProperty", SlaveEntity.class, MasterEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection", "2 * integerProp + MAX(←.integerProp) + ←.integerProp", "Calculated property", "desc", ANY, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", EvenSlaverEntity.class, SlaveEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * integerProp + MAX(←.←.integerProp) + ←.←.integerProp + MAX(←.integerProp) + ←.integerProp", "Calculated property", "desc", ALL, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+    }
+
+    @Test
     public void test_Attribute_property_enablement_for_different_categories() {
 	// EXPRESSION
 	final CalculatedProperty cp1 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp"), EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
@@ -302,5 +326,20 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("integerProp", "MAX(2 * moneyProp)");
 	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("entityProp.integerProp", "MAX(2 * integerProp * entityProp.moneyProp)");
 	correctCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp * entityProp.moneyProp");
+    }
+
+    @Test
+    public void test_origination_property_application_with_context_outsiders() {
+	correctCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp - ←.integerProp");
+	correctCalculatedPropertyCreationWithOriginationProperty("", "2 * integerProp - ←.integerProp");
+	incorrectCalculatedPropertyCreationWithOriginationProperty(null, "MAX(2 * integerProp - ←.integerProp)");
+	incorrectCalculatedPropertyCreationWithOriginationProperty("", "MAX(2 * integerProp - ←.integerProp)");
+	incorrectCalculatedPropertyCreationWithOriginationProperty("nonExistentProp", "2 * integerProp - ←.integerProp");
+	incorrectCalculatedPropertyCreationWithOriginationProperty("nonExistentProp", "MAX(2 * integerProp - ←.integerProp)");
+	correctCalculatedPropertyCreationWithOriginationProperty("←.integerProp", "MAX(2 * integerProp - ←.integerProp)");
+	correctCalculatedPropertyCreationWithOriginationProperty("entityProp.integerProp", "MAX(2 * integerProp * entityProp.integerProp - ←.integerProp)");
+	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("←.moneyProp", "MAX(2 * moneyProp - ←.integerProp)");
+	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("←.moneyProp", "MAX(2 * integerProp * entityProp.moneyProp - ←.integerProp)");
+	correctCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp * entityProp.moneyProp - ←.integerProp");
     }
 }

@@ -63,8 +63,11 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static Class<?> determineClass(final Class<?> clazz, final String propertyOrFunction, final boolean determineKeyType, final boolean determineCollectionalElementType) {
-	if (StringUtils.isEmpty(propertyOrFunction) || isDotNotation(propertyOrFunction)) {
-	    throw new IllegalArgumentException("Dot-notation or empty string should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
+	if (StringUtils.isEmpty(propertyOrFunction)) {
+	    throw new IllegalArgumentException("Empty string should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
+	}
+	if (isDotNotation(propertyOrFunction)) {
+	    throw new IllegalArgumentException("Dot-notation should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
 	}
 	if (determineKeyType && (AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.isAssignableFrom(clazz)) {
 	    ////////////////// Key property or getKey() method type determination //////////////////
