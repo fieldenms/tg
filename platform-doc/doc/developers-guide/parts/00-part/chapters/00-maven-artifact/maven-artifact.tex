@@ -58,11 +58,10 @@
     \item \texttt{platform-pojo-bl-1.1-javadoc.jar} -- oprional Javadoc archive that contains API documentatino of the dependency, which is very useful during development process.
     \item \texttt{platform-pojo-bl-1.1.pom} -- POM of the dependency required to indentify all transitive dependecies.
   \end{enumerate}
-  There could be some additional files associated with the dependency, which can be safely ignored at this stage.
+  There could be some additional files associated with the dependency (indicated as elipses on the figure) that can be safely ignored at the moment.
 
-  
   \begin{image}{A fragment of the local repository structure}{\label{img:ch00:01:local_repository_strucutre}}    
-    \begin{tikzpicture}	[scale=0.9,
+    \begin{tikzpicture}	[remember picture, scale=0.9,
 			  edge from parent fork right,grow=right,rounded corners=1pt,
 			  every node/.style={scale=0.6,fill=white!10,rounded corners, level distance = 40mm},
 			  edge from parent/.style={black,thick,draw},			  
@@ -73,14 +72,14 @@
 			  level 5/.style={level distance=40mm,sibling distance=10mm, nodes={fill=white!10}, minimum width=50mm, minimum height=5mm}
 			  ]      
       \node{$\sim$/.m2}
-	child {node[fill=codebgcolor!30] {.settings}}
+	child {node[fill=codebgcolor!30] (settings) {.settings}}
 	child {node[fill=highlight] {repository}
 	  child {node {group ID $N_1$}}	  
 	  child {node {\ldots}}	  
 	  child {node[fill=highlight] {fielden}
 	    child {node {artifact ID $N_2$}}	    
 	    child {node {\ldots}}	    
-	    child {node[fill=highlight] {platfrom-pojobl}
+	    child {node[fill=highlight] {platfrom-pojo-bl}
 	      child {node {version $N_3$}}
 	      child {node {\ldots}}	      
 	      child {node[fill=highlight] {1.1}
@@ -96,10 +95,56 @@
 	  child {node {group ID 1}}	  
 	};    
     \end{tikzpicture}
+    
+    \tikznote{tree_a1}{settings}{6cm}{-0.2cm}{4cm}{Settings File}{Contains Maven specific settings, which are discussed in detailes later in this section.}
   \end{image}
+  
 
+  It is quite naturally to ask now how do all of those dependencies get into the local repository and whether it should all be managed by hand?
+  The answer to the latter question is \emph{no}, there is no need to handle local repositories manually as Maven fully automates this process.
+  As to the former question, \emph{all dependencies are downloaded into the local repository from remote repositories}\footnote{
+    Dependencies can be added into the local repository manually by using special Maven commands. 
+    This capability is useful in cases where a developer needs to experiment with some libraries localy without affecting any shared projects.
+  }.
+  Dependencies are downloaded into the local repository only if projects, which need to be manged on a local machine, specify those dependencies.
+  This also includes transitive dependencies that the declared dependencies depend on.
+  In a simplified form it works like this, when Maven is requested to build a project it reads the POM file to determine project dependencies.
+  Reading dependecies one by one, Maven checks if they exist in the local repository.
+  If they do it adds a corresponding local path to the project classpath.
+  If some dependency cannot be resolved locally then Maven tries to find this dependency in remote repositories.
+  Once found, such dependency is donloaded locally and a corresponding local path is added to the project classpath.
+  In case where the dependency is not found, an error is reported about unresolved dependency.
 
   \paragraph*{Remote Repository}
+  
+  The \emph{remote repository} represents a dedicated server that is located either on LAN or Internet.
+  The dafault Maven action is to utilise a number of publicly availalbe remote Maven repositories, which contain a plethora of open source Java libraries.
+  However, some libraries may not be available in these repositories or only older versions are availalbe.
+  For example, comercial libraries such as Oracle JDBC drives are not part of any of the public Maven repositories.
+  In such cases it is more convenient or even required to establich an inhouse remote repository.
+  The most promitent advantage of this approach if the ability to manage all dependencies be that open source, inhouse or comercial libraries in a uniform way.
+  
+  An inhouse repository stores libraries uploaded manually by maintainers\footnote{This is usually done via a web interface of a repository server.}, but also it acts as a mirror for any publicly availble remote repository.
+  This way, there is no need to manually upload any publicly available libraries.
+  Any publicly available dependency is firts downloaded to the inhouse repository and then downloaded to the local machine where the request to find that dependency was initiated.
+  Subsequent requests for this dependency from other local machines would result in downloading the files from an inhouse repository directly\footnote{
+  This approaches has an added value by reducing the Internet traffic otherwise requried to download dependencies off the public repositories onto all local machines.
+  }.  
+  Thus, the inhouse repository serves as a single interaction point for resolving all dependencies for any project.
+  Figure \ref{img:ch00:01:maven_infrastructure} shows a schematic representation of the Maven local and remote repositories.
+
+  \begin{image}{The role of the inhouse repository}{\label{img:ch00:01:maven_infrastructure}}    
+    \begin{tikzpicture}	[remember picture]      
+	\node [aspect=0.3, cylinder, shape border rotate=90, draw] at (1,0)  {B};
+	
+	\aboxl[2.0cm,1.5cm,1.6,a1,(0,0)] {
+	    \begin{minipage}{1.5cm}
+	      inhouse
+	      repository
+            \end{minipage}
+	};
+    \end{tikzpicture}
+  \end{image}
 
   \subsection*{Download and Configure} 
   Maven can be downloaded from the official \href{http://maven.apache.org/download.html}{Apache Maven web site}\footnote{\url{http://maven.apache.org/download.html}}.
@@ -188,7 +233,7 @@
   \hyperref[lst:pom]{Listing \ref{lst:pom}} illustrates an fragment of a POM file with relevant comments for each of the key tags relevant to the project.
 
 
-  \clearpage
+  %\clearpage
   \lstset{language=XML,
 	  escapechar=\%,
 	  morekeywords={project, modelVersion, groupId, artifactId, packaging, packaging, version, encoding, name, description},
@@ -214,10 +259,11 @@
 	  </description>
     </project> 
     \end{lstlisting}
+
+    \tikzhighlight{lst_pom_n1}{lst_pom_n2}  
+    \tikznote{lst_pom_a1}{lst_pom_n2_1}{6cm}{0.5cm}{5cm}{Project Group}{This tag indicates project's group, which usually referes to the company or development group responsible for implementing the project.}
+
+    \tikzhighlight{lst_pom_n3}{lst_pom_n4}
+    \tikznote{lst_pom_a2}{lst_pom_n4_1}{4cm}{-0.5cm}{5cm}{Project Artifact}{There can be several notes for the same highlighted area.}
   \end{code}
 
-  \tikzhighlight{lst_pom_n1}{lst_pom_n2}  
-  \tikznote{lst_pom_a1}{lst_pom_n2_1}{6cm}{0.5cm}{5cm}{Project Group}{This tag indicates project's group, which usually referes to the company or development group responsible for implementing the project.}
-
-  \tikzhighlight{lst_pom_n3}{lst_pom_n4}
-  \tikznote{lst_pom_a2}{lst_pom_n4_1}{4cm}{-0.5cm}{5cm}{Project Artifact}{There can be several notes for the same highlighted area.}

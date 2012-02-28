@@ -230,16 +230,39 @@
 }
 
 \newcommand{\tikznote}[7]{
-\begin{tikzpicture}[remember picture, overlay, >=latex']    
-    \node[fill=annotationbgcolor, xshift=#3, yshift=#4] (#1) at (#2) 
-    {\begin{minipage}{#5}
-      \tiny
-      \textbf{#6}\newline
-      #7
-    \end{minipage}};
-    \fill [highlight,thick,->,out=180,in=0] (#1.west) edge (#2.east);
+\begin{tikzpicture}[remember picture, overlay, >=latex', note/.style={rectangle callout, rounded corners = 1pt, fill=annotationbgcolor, drop shadow}]    
+    \node [note=annotationbgcolor, callout absolute pointer={(#2.east)}, xshift=#3, yshift=#4] (#1) at (#2) 
+    {
+      \begin{minipage}{#5}
+       \tiny
+       \textbf{#6}\newline
+       #7
+     \end{minipage}
+    };
   \end{tikzpicture}
+% \begin{tikzpicture}[remember picture, overlay, >=latex']    
+%     \node[fill=annotationbgcolor, xshift=#3, yshift=#4] (#1) at (#2) 
+%     {\begin{minipage}{#5}
+%       \tiny
+%       \textbf{#6}\newline
+%       #7
+%     \end{minipage}};
+%     \fill [highlight,thick,->,out=180,in=0] (#1.west) edge (#2.east);
+%   \end{tikzpicture}
 }
+
+%-----#1 height, #2 width, #3 aspect, #4 name of the node, #5
+%-----coordinate, #6 label
+\def\aboxl[#1,#2,#3,#4,#5]#6{%
+	\node[draw, cylinder, alias=cyl, shape border rotate=90, aspect=#3, %
+	minimum height=#1, minimum width=#2, outer sep=-0.5\pgflinewidth, %
+	color=orange!60!black, left color=yellow!80, right color=yellow!80!orange, middle
+	color=white] (#4) at #5 {};%
+	\node at #5 [orange!80!black] {#6};%
+	\fill [yellow!30] let \p1 = ($(cyl.before top)!0.5!(cyl.after top)$), \p2 =
+	(cyl.top), \p3 = (cyl.before top), \n1={veclen(\x3-\x1,\y3-\y1)},
+	\n2={veclen(\x2-\x1,\y2-\y1)} in (\p1) ellipse (\n1 and \n2); }
+
 
 \newenvironment{myparastyle}{\setlength{\parindent}{1em}}{}
 \renewcommand{\textflush}{myparastyle}
@@ -249,7 +272,6 @@
   \vspace*{-50pt}
   \epigraph{\textit{#1}}{\textsc{#2}}
 }
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
