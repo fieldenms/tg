@@ -29,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 public class EntityFetcherTestCase extends BaseEntQueryTCase {
     final Injector injector = new ApplicationInjectorFactory().add(new HibernateUserTypesModule()).getInjector();
     private EntityResultTreeBuilder ef = new EntityResultTreeBuilder(new MappingsGenerator(new HashMap<Class, Class>(), injector, new ArrayList<Class<? extends AbstractEntity>>()));
-    private EntityFetcher entFetcher = new EntityFetcher(null, null, null, null) {};
+    private EntityFetcher entFetcher = new EntityFetcher(null, null, null, null, null, null) {};
 
     @Test
     @Ignore

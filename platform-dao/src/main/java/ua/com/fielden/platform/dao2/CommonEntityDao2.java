@@ -172,7 +172,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity> extends Abstrac
 	    } else if (!entity.getDirtyProperties().isEmpty()) {
 		// let's also make sure that duplicate entities are not allowed
 		final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop("id").as("id").modelAsAggregate();
-		final List<EntityAggregates> ids = new EntityFetcher<EntityAggregates>(getSession(), getEntityFactory(), mappingsGenerator, null).list(new QueryExecutionModel.Builder(model).build());
+		final List<EntityAggregates> ids = new EntityFetcher<EntityAggregates>(getSession(), getEntityFactory(), mappingsGenerator, null, null, null).list(new QueryExecutionModel.Builder(model).build());
 
 		final int count = ids.size();
 		if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get("id")).longValue())) {
@@ -303,7 +303,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity> extends Abstrac
     @SessionRequired
     protected List<T> list(final QueryExecutionModel<T> queryModel, final Integer pageNumber, final Integer pageCapacity) {
 	final DateTime st = new DateTime();
-	final List<T> result = new EntityFetcher(getSession(), getEntityFactory(), mappingsGenerator, null).list(queryModel/*.enhanceWith(filter, getUsername())*/, pageNumber, pageCapacity);
+	final List<T> result = new EntityFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()).list(queryModel, pageNumber, pageCapacity);
 	final Period pd = new Period(st, new DateTime());
 	//logger.info("\nFetch model tree: " + fetchModel);
 	logger.info("Total data retrieval time: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Results count: " + result.size());

@@ -84,7 +84,9 @@ public class BaseEntQueryTCase {
 
     protected static final MappingsGenerator MAPPINGS_GENERATOR = new MappingsGenerator(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes);
 
-    private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2, MAPPINGS_GENERATOR);
+    private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2, MAPPINGS_GENERATOR, null, null);
+
+    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DbVersion.H2, MAPPINGS_GENERATOR, new TestUserFilter(), null);
 
     protected static EntQuery entSourceQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsSourceQuery(qryModel);
@@ -104,6 +106,10 @@ public class BaseEntQueryTCase {
 
     protected static EntQuery entSubQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsSubquery(qryModel);
+    }
+
+    protected static EntQuery entResultQryWithUserFilter(final QueryModel qryModel) {
+	return qbwf.generateEntQueryAsResultQuery(qryModel);
     }
 
     protected static EntProp prop(final String propName) {
@@ -170,6 +176,15 @@ public class BaseEntQueryTCase {
 
     public static void assertModelsEquals(final QueryModel shortcutModel, final QueryModel explicitModel) {
 	final EntQuery shortcutQry = entResultQry(shortcutModel);
+	final EntQuery explicitQry = entResultQry(explicitModel);
+	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
+
+    }
+
+    public static void assertModelsEqualsAccordingUserDataFiltering(final QueryModel shortcutModel, final QueryModel explicitModel) {
+	System.out.println("11111111111111111111111111111111111111");
+	final EntQuery shortcutQry = entResultQryWithUserFilter(shortcutModel);
+	System.out.println("22222222222222222222222222222222222222");
 	final EntQuery explicitQry = entResultQry(explicitModel);
 	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
 

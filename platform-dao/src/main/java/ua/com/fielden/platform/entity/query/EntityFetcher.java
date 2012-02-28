@@ -30,9 +30,10 @@ import ua.com.fielden.platform.utils.Pair;
 public class EntityFetcher<E extends AbstractEntity> extends AbstractFetcher<E> {
     private final EntityEnhancer<E> entityEnhancer;
 
-    public EntityFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion) {
-	super(session, entityFactory, mappingsGenerator, dbVersion);
-	this.entityEnhancer = new EntityEnhancer<E>(session, entityFactory, mappingsGenerator, dbVersion);
+
+    public EntityFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion, final IFilter filter, final String username) {
+	super(session, entityFactory, mappingsGenerator, dbVersion, filter, username);
+	this.entityEnhancer = new EntityEnhancer<E>(session, entityFactory, mappingsGenerator, dbVersion, filter, username);
     }
 
     /**
@@ -125,7 +126,7 @@ public class EntityFetcher<E extends AbstractEntity> extends AbstractFetcher<E> 
 
     @SessionRequired
     protected List<EntityContainer<E>> listContainers(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-	final QueryModelResult modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getMappingsGenerator());
+	final QueryModelResult modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getMappingsGenerator(), getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
 	return entityEnhancer.enhance(result, entityEnhancer.enhanceFetchModelWithKeyProperties(queryModel.getFetchModel(), modelResult.getResultType()), modelResult.getResultType());
     }

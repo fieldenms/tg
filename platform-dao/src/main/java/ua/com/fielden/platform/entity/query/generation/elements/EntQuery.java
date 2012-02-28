@@ -12,6 +12,8 @@ import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -28,6 +30,8 @@ public class EntQuery implements ISingleOperand {
     private final Class resultType;
     private final QueryCategory category;
     private final MappingsGenerator mappingsGenerator;
+    private final IFilter filter;
+    private final String username;
 
     private EntQuery master;
 
@@ -47,7 +51,7 @@ public class EntQuery implements ISingleOperand {
      * modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for
      * unresolved only; if at some master the property of this subquery is resolved - it should be removed from here
      */
-    private final List<EntProp> unresolvedProps;
+    private List<EntProp> unresolvedProps;
 
     @Override
     public String toString() {
@@ -184,17 +188,33 @@ public class EntQuery implements ISingleOperand {
 	return result;
     }
 
-    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final Class resultType, final QueryCategory category, final MappingsGenerator mappingsGenerator) {
+    private EntQuerySourcesModel enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final EntQuerySourcesModel sources, final EntQueryGenerator generator) {
+	final IEntQuerySource newMain =
+		(sources.getMain() instanceof EntQuerySourceFromEntityType && filter != null && filter.enhance(sources.getMain().sourceType(), username) != null) ?
+	    new EntQuerySourceFromQueryModel(sources.getMain().getAlias(), mappingsGenerator, generator.generateEntQueryAsSourceQuery(filter.enhance(sources.getMain().sourceType(), username))) : null;
+
+	return newMain != null ? new EntQuerySourcesModel(newMain, sources.getCompounds()) : sources;
+    }
+
+    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, //
+	    final Class resultType, final QueryCategory category, final MappingsGenerator mappingsGenerator, //
+	    final IFilter filter, final String username, final EntQueryGenerator generator) {
 	super();
 	this.category = category;
 	this.mappingsGenerator = mappingsGenerator;
-	this.sources = sources;
+	this.filter = filter;
+	this.username = username;
+	this.sources = enhanceSourcesWithUserDataFiltering(filter, username, sources, generator);
 	this.conditions = conditions;
 	this.yields = yields;
 	this.groups = groups;
-	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? sources.getMain().sourceType() : null);
+	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? this.sources.getMain().sourceType() : null);
 
-	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : sources.getAllSourcesAndTheirJoinType()) {
+	enhanceToFinalState();
+    }
+
+    private void enhanceToFinalState() {
+	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
 	    final IEntQuerySource source = sourceAndItsJoinType.getKey();
 	    source.assignNullability(sourceAndItsJoinType.getValue());
 	    source.populateSourceItems(sourceAndItsJoinType.getValue());
@@ -218,9 +238,9 @@ public class EntQuery implements ISingleOperand {
 	    throw new RuntimeException("Couldn't resolve the following props: " + unresolvedProps);
 	}
 
-	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : sources.getAllSourcesAndTheirJoinType()) {
+	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
 	    final IEntQuerySource source = sourceAndItsJoinType.getKey();
-	    sources.getCompounds().addAll(source.generateMissingSources(source.getReferencingProps()));
+	    getSources().getCompounds().addAll(source.generateMissingSources(source.getReferencingProps()));
 	}
 
 	final List<EntProp> immediatePropertiesFinally = getImmediateProps();
@@ -231,7 +251,7 @@ public class EntQuery implements ISingleOperand {
 	propsToBeResolvedFinally.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
 	propsToBeResolvedFinally.removeAll(unresolvedProps);
 
-	sources.assignSqlAliases(getMasterIndex());
+	getSources().assignSqlAliases(getMasterIndex());
 
 	final List<EntProp> unresolvedFinalProps = resolvePropsFinally(propsToBeResolvedFinally);
 

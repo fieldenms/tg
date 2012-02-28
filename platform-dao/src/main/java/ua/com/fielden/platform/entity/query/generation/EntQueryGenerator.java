@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
@@ -14,37 +15,46 @@ import ua.com.fielden.platform.utils.Pair;
 public class EntQueryGenerator {
     private final DbVersion dbVersion;
     private final MappingsGenerator mappingsGenerator;
+    private final IFilter filter;
+    private final String username;
 
-    public EntQueryGenerator(final DbVersion dbVersion, final MappingsGenerator mappingsGenerator) {
+
+    public EntQueryGenerator(final DbVersion dbVersion, final MappingsGenerator mappingsGenerator, final IFilter filter, final String username) {
 	this.dbVersion = dbVersion;
 	this.mappingsGenerator = mappingsGenerator;
+	this.filter = filter;
+	this.username = username;
     }
 
     public EntQuery generateEntQueryAsResultQuery(final QueryModel qryModel, final Map<String, Object> paramValues) {
-	return generateEntQuery(qryModel, paramValues, QueryCategory.RESULT_QUERY);
+	return generateEntQuery(qryModel, paramValues, QueryCategory.RESULT_QUERY, filter, username);
     }
 
     public EntQuery generateEntQueryAsResultQuery(final QueryModel qryModel) {
 	return generateEntQueryAsResultQuery(qryModel, new HashMap<String, Object>());
     }
 
+    public EntQuery generateEntQueryAsSourceQuery(final QueryModel qryModel, final Map<String, Object> paramValues, final IFilter filter, final String username) {
+	return generateEntQuery(qryModel, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
+    }
+
     public EntQuery generateEntQueryAsSourceQuery(final QueryModel qryModel, final Map<String, Object> paramValues) {
-	return generateEntQuery(qryModel, paramValues, QueryCategory.SOURCE_QUERY);
+	return generateEntQuery(qryModel, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
     }
 
     public EntQuery generateEntQueryAsSourceQuery(final QueryModel qryModel) {
-	return generateEntQueryAsSourceQuery(qryModel, new HashMap<String, Object>());
+	return generateEntQueryAsSourceQuery(qryModel, new HashMap<String, Object>(), null, null);
     }
 
     public EntQuery generateEntQueryAsSubquery(final QueryModel qryModel, final Map<String, Object> paramValues) {
-	return generateEntQuery(qryModel, paramValues, QueryCategory.SUB_QUERY);
+	return generateEntQuery(qryModel, paramValues, QueryCategory.SUB_QUERY, filter, username);
     }
 
     public EntQuery generateEntQueryAsSubquery(final QueryModel qryModel) {
 	return generateEntQueryAsSubquery(qryModel, new HashMap<String, Object>());
     }
 
-    private EntQuery generateEntQuery(final QueryModel qryModel, final Map<String, Object> paramValues, final QueryCategory category) {
+    private EntQuery generateEntQuery(final QueryModel qryModel, final Map<String, Object> paramValues, final QueryCategory category, final IFilter filter, final String username) {
 	ConditionsBuilder where = null;
 	final QrySourcesBuilder from = new QrySourcesBuilder(null, this, paramValues);
 	final QryYieldsBuilder select = new QryYieldsBuilder(null, this, paramValues);
@@ -80,7 +90,8 @@ public class EntQueryGenerator {
 	    }
 	}
 
-	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), qryModel.getResultType(), category, mappingsGenerator);
+	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), qryModel.getResultType(), category, //
+		mappingsGenerator, filter, username, this);
     }
 
     public DbVersion getDbVersion() {

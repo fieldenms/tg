@@ -31,15 +31,16 @@ public class AbstractFetcher<E> {
     private Logger logger = Logger.getLogger(this.getClass());
     private MappingsGenerator mappingsGenerator;
     private DbVersion dbVersion;
+    private final IFilter filter;
+    private final String username;
 
-    public AbstractFetcher() {
-    }
-
-    public AbstractFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion) {
+    public AbstractFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion, final IFilter filter, final String username) {
 	this.session = session;
 	this.entityFactory = entityFactory;
 	this.mappingsGenerator = mappingsGenerator;
 	this.dbVersion = dbVersion;
+	this.filter = filter;
+	this.username = username;
     }
 
     /**
@@ -103,6 +104,14 @@ public class AbstractFetcher<E> {
 	}
 
 	return result;
+    }
+
+    public IFilter getFilter() {
+        return filter;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
 //    /**

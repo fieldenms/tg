@@ -30,12 +30,16 @@ public class EntityEnhancer<E extends AbstractEntity> {
     private Logger logger = Logger.getLogger(this.getClass());
     private MappingsGenerator mappingsGenerator;
     private DbVersion dbVersion;
+    private final IFilter filter;
+    private final String username;
 
-    protected EntityEnhancer(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion) {
+    protected EntityEnhancer(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion, final IFilter filter, final String username) {
 	this.session = session;
 	this.entityFactory = entityFactory;
 	this.mappingsGenerator = mappingsGenerator;
 	this.dbVersion = dbVersion;
+	this.filter = filter;
+	this.username = username;
     }
 
     protected fetch<E> enhanceFetchModelWithKeyProperties(final fetch<E> fetchModel, final Class<E> entitiesType) {
@@ -162,7 +166,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
 	    if (retrievedPropertyInstances.size() == 0) {
 		enhancedPropInstances = getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel);
 	    } else {
-		enhancedPropInstances = new EntityEnhancer(session, entityFactory, mappingsGenerator, dbVersion).enhance(retrievedPropertyInstances, fetchModel, fetchModel.getEntityType());
+		enhancedPropInstances = new EntityEnhancer(session, entityFactory, mappingsGenerator, dbVersion, filter, username).enhance(retrievedPropertyInstances, fetchModel, fetchModel.getEntityType());
 	    }
 
 	    // Replacing in entities the proxies of properties with properly enhanced property instances.
@@ -194,7 +198,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
 	    @SuppressWarnings("unchecked")
 	    final QueryModel currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(ID_PROPERTY_NAME).in().values(batch).model()/*.getModelWithAbstractEntities()*/;
 	    @SuppressWarnings("unchecked")
-	    final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion).listContainers(new QueryExecutionModel.Builder(currTypePropertyModel).fetchModel(fetchModel).build(), null, null);
+	    final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion, filter, username).listContainers(new QueryExecutionModel.Builder(currTypePropertyModel).fetchModel(fetchModel).build(), null, null);
 	    result.addAll(properties);
 	    from = to;
 	    to = to + batchSize;
@@ -277,7 +281,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
 		    : base.orderBy().prop(parentPropName).asc()).modelAsEntity(fetchModel.getEntityType())/*.getModelWithAbstractEntities()*/;
 	    @SuppressWarnings("unchecked")
 	    // final List<EntityContainer> properties = new Fetcher().listContainersWithoutKeyEnhanced(currTypePropertyModel, null, null);
-	    final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion).listContainers(new QueryExecutionModel.Builder(currTypePropertyModel).fetchModel(fetchModel).build(), null, null);
+	    final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion, filter, username).listContainers(new QueryExecutionModel.Builder(currTypePropertyModel).fetchModel(fetchModel).build(), null, null);
 	    result.addAll(properties);
 	    // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
 	    from = to;

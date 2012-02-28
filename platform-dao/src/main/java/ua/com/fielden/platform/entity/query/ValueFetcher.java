@@ -23,8 +23,8 @@ import ua.com.fielden.platform.entity.query.generation.DbVersion;
  */
 public class ValueFetcher extends AbstractFetcher {
 
-    public ValueFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion) {
-	super(session, entityFactory, mappingsGenerator, dbVersion);
+    public ValueFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion, final IFilter filter, final String username) {
+	super(session, entityFactory, mappingsGenerator, dbVersion, filter, username);
     }
 
     /**
@@ -99,7 +99,7 @@ public class ValueFetcher extends AbstractFetcher {
 
     @SessionRequired
     protected List<ValueContainer> listContainers(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-	final QueryModelResult modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getMappingsGenerator());
+	final QueryModelResult modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getMappingsGenerator(), getFilter(), getUsername());
 	return listContainersAsIs(modelResult, pageNumber, pageCapacity);
     }
 

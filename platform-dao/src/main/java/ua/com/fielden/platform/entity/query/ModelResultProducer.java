@@ -15,8 +15,8 @@ import ua.com.fielden.platform.entity.query.generation.elements.YieldsModel;
 
 public class ModelResultProducer {
 
-    public QueryModelResult getModelResult(final QueryExecutionModel qem, final DbVersion dbVersion, final MappingsGenerator mappingsGenerator) {
-	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, mappingsGenerator);
+    public QueryModelResult getModelResult(final QueryExecutionModel qem, final DbVersion dbVersion, final MappingsGenerator mappingsGenerator, final IFilter filter, final String username) {
+	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, mappingsGenerator, filter, username);
 	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getParamValues());
 	final String sql = entQuery.sql();
 	return new QueryModelResult(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());

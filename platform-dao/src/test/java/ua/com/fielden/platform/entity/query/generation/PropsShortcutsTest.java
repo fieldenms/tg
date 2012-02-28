@@ -242,4 +242,16 @@ public class PropsShortcutsTest extends BaseEntQueryTCase {
 		leftJoin(MAKE).as("rv2.model.make").on().prop("rv2.model.make").eq().prop("rv2.model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").and().prop("rv2.model.make.key").ne().val("MERC").model());
     }
+
+    @Test
+    public void test15() {
+	assertModelsEqualsAccordingUserDataFiltering(//
+		select(VEHICLE). //
+		where().prop("model.make.key").eq().val("MERC").model(),
+
+		select(select(VEHICLE).	where().prop("key").notLike().val("A%").model()). //
+		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
+		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		where().prop("model.make.key").eq().val("MERC").model());
+    }
 }

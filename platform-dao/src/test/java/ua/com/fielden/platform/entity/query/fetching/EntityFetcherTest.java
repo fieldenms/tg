@@ -23,7 +23,7 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 public class EntityFetcherTest extends DbDrivenTestCase {
 
     private static final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private static final EntityFetcher fetcher() {return new EntityFetcher(session(), factory, injector.getInstance(MappingsGenerator.class), null); }
+    private static final EntityFetcher fetcher() {return new EntityFetcher(session(), factory, injector.getInstance(MappingsGenerator.class), null, null, null); }
     private static final Session session() {return hibernateUtil.getSessionFactory().getCurrentSession();}
 
     public void test_vehicle_model_retrieval0() {
