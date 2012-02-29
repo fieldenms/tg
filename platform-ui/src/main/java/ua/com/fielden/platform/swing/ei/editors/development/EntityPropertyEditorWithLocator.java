@@ -12,7 +12,6 @@ import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.equery.fetch;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
@@ -21,6 +20,7 @@ import ua.com.fielden.platform.swing.components.smart.autocompleter.development.
 import ua.com.fielden.platform.swing.ei.editors.LabelAndTooltipExtractor;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationModel;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEditor {
@@ -32,62 +32,88 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
      * 
      * @return
      */
-    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForCentre(final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> criteria, final String propertyName, final ICriteriaGenerator criteriaGenerator, final boolean isSingle){
-	//TODO Refactor later after testing.
+    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForCentre(final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> criteria, final String propertyName, final ICriteriaGenerator criteriaGenerator){
 	final Pair<Class<?>, String> criteriaParameters = CriteriaReflector.getCriteriaProperty(criteria.getClass(), propertyName);
-	final EntityType typeAnnotation = AnnotationReflector.getPropertyAnnotation(EntityType.class, criteria.getType(), propertyName);
-	if(typeAnnotation == null){
-	    throw new IllegalStateException("Please annotate field '" + propertyName + "' with annotation " + EntityType.class.getName());
-	}
-	final Class entityType = typeAnnotation.value();
-	final Class rootType = criteriaParameters.getKey();
-	final ILocatorManager locatorManager = criteria.getDomainTreeManger().getFirstTick();
 	final IValueMatcher<?> valueMatcher = criteria.getValueMatcher(propertyName);
 	final MetaProperty metaProp = criteria.getProperty(propertyName);
-	final String caption = LabelAndTooltipExtractor.createCaption(metaProp.getTitle());
-	final String toolTip = LabelAndTooltipExtractor.createTooltip(metaProp.getDesc());
-	final boolean stringBinding = !PropertyDescriptor.class.equals(entityType);
-	return new EntityPropertyEditorWithLocator(criteria, //
-		propertyName, //
-		entityType, //
-		rootType, //
-		locatorManager, //
-		criteriaGenerator, //
-		valueMatcher, //
-		caption, //
-		toolTip, //
-		isSingle, //
-		stringBinding);
+
+	return createEntityPropertyEditorWithLocator(//
+		criteria,//
+		propertyName,//
+		criteriaParameters.getKey(),//
+		criteriaParameters.getValue(),//
+		criteria.getDomainTreeManger().getFirstTick(),//
+		criteriaGenerator,//
+		valueMatcher,//
+		LabelAndTooltipExtractor.createCaption(metaProp.getTitle()),//
+		LabelAndTooltipExtractor.createTooltip(metaProp.getDesc()));
     }
 
-    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForMaster(final AbstractEntity<?> entity, final String propertyName, final ILocatorManager locatorManager, final ICriteriaGenerator criteiraGenerator, final IValueMatcher<?> valueMatcher, final boolean isSingle){
+    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForMaster(final AbstractEntity<?> entity, final String propertyName, final ILocatorManager locatorManager, final ICriteriaGenerator criteriaGenerator, final IValueMatcher<?> valueMatcher, final boolean isSingle){
 	//createEditor(entity, propertyName, property.getType(), "", property.getDesc(), entity.getEntityFactory(), entityMasterFactory, vmf, daoFactory, locatorController, locatorRetriever);
-	//TODO Refactor later after testing.
-	final IsProperty propertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, entity.getType(), propertyName);
-	if(propertyAnnotation == null){
-	    throw new IllegalStateException("Please annotate field '" + propertyName + "' with annotation " + EntityType.class.getName());
-	}
-	final Class entityType = propertyAnnotation.value();
-	final Class rootType = entity.getType();
 	final MetaProperty metaProp = entity.getProperty(propertyName);
 	final String toolTip = metaProp.getDesc();
-	return new EntityPropertyEditorWithLocator(entity, //
-		propertyName, //
-		entityType, //
-		rootType, //
+
+	return createEntityPropertyEditorWithLocator(//
+		entity,//
+		propertyName,//
+		entity.getType(),//
+		propertyName,//
 		locatorManager, //
-		criteiraGenerator, //
-		valueMatcher, //
-		"", //
-		toolTip, //
-		isSingle, //
-		false);
+		criteriaGenerator,//
+		valueMatcher,//
+		"",//
+		toolTip);
     }
 
-    public EntityPropertyEditorWithLocator(final AbstractEntity<?> entity, final String propertyName, final Class<?> elementType, final Class<?> rootType, final ILocatorManager locatorManager, final ICriteriaGenerator criteiraGenerator, final IValueMatcher<?> valueMatcher, final String caption, final String toolTip, final boolean isSingle, final boolean stringBinding) {
-	super(entity, propertyName, new EntityLocatorValueMatcher(valueMatcher, locatorManager, rootType, propertyName));
+    private static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocator(final AbstractEntity<?> entity, //
+	    final String propertyName, //
+	    final Class<?> rootType, //
+	    final String locatorName, //
+	    final ILocatorManager locatorManager, //
+	    final ICriteriaGenerator criteriaGenerator, //
+	    final IValueMatcher<?> valueMatcher, //
+	    final String caption, //
+	    final String toolTip){
+	final MetaProperty metaProp = entity.getProperty(propertyName);
+	final IsProperty propertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, entity.getType(), propertyName);
+	final EntityType entityTypeAnnotation = AnnotationReflector.getPropertyAnnotation(EntityType.class, entity.getType(), propertyName);
+	final boolean isSingle = isSingle(entity, propertyName);
+	final boolean stringBinding = isStringBinded(entity, propertyName);
+	final Class<?> elementType = isSingle ? metaProp.getType() : (stringBinding ? entityTypeAnnotation.value() : propertyAnnotation.value());
+	if(!AbstractEntity.class.isAssignableFrom(elementType)){
+	    throw new IllegalArgumentException("The property: " + propertyName + " of " + entity.getType().getSimpleName() + " type, can not be bind to the autocompleter!");
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	final LocatorConfigurationModel locatorConfigurationModel = new LocatorConfigurationModel(
+		elementType,//
+		rootType,//
+		locatorName,//
+		locatorManager,//
+		entity.getEntityFactory(),//
+		criteriaGenerator);
+
+	return new EntityPropertyEditorWithLocator(entity, propertyName, locatorConfigurationModel, elementType, valueMatcher, caption, toolTip);
+    }
+
+    private static boolean isSingle(final AbstractEntity<?> entity, final String propertyName){
+	final MetaProperty metaProp = entity.getProperty(propertyName);
+	return !metaProp.isCollectional();
+    }
+
+    private static boolean isStringBinded(final AbstractEntity<?> entity, final String propertyName){
+	final IsProperty propertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, entity.getType(), propertyName);
+	final boolean isSingle = isSingle(entity, propertyName);
+	return isSingle ? false : String.class.isAssignableFrom(propertyAnnotation.value());
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public EntityPropertyEditorWithLocator(final AbstractEntity<?> entity, final String propertyName, final LocatorConfigurationModel locatorConfigurationModel, final Class<?> elementType, final IValueMatcher<?> valueMatcher, final String caption, final String toolTip) {
+	super(entity, propertyName, new EntityLocatorValueMatcher(valueMatcher, locatorConfigurationModel.locatorManager, locatorConfigurationModel.rootType, locatorConfigurationModel.name));
 	getValueMatcher().setBindedEntity(entity);
-	editor = createEditorWithLocator(entity, propertyName, elementType, rootType, caption, toolTip, locatorManager, criteiraGenerator, isSingle, stringBinding);
+	editor = createEditorWithLocator(entity, propertyName, locatorConfigurationModel, elementType,//
+		caption, toolTip, isSingle(entity, propertyName), isStringBinded(entity, propertyName));
     }
 
     @Override
@@ -117,19 +143,17 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
     private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditorWithLocator(//
 	    final AbstractEntity bindingEntity,//
 	    final String bindingPropertyName,//
+	    final LocatorConfigurationModel locatorConfigurationModel, //
 	    final Class entityType,//
-	    final Class rootType,//
 	    final String caption,//
 	    final String toolTip,//
-	    final ILocatorManager locatorManager,//
-	    final ICriteriaGenerator criteriaGenerator,//
 	    final boolean isSingle,//
 	    final boolean stringBinding//
 	    ){
 	if (!AbstractEntity.class.isAssignableFrom(entityType)) {
 	    throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + entityType + ".");
 	}
-	return ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, entityType, rootType, locatorManager, bindingEntity.getEntityFactory(), criteriaGenerator, getValueMatcher(), "key", "desc", caption, isSingle ? null : ",", toolTip, stringBinding);
+	return ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, locatorConfigurationModel, entityType, getValueMatcher(), "key", "desc", caption, isSingle ? null : ",", toolTip, stringBinding);
     }
 
     public static class EntityLocatorValueMatcher<T extends AbstractEntity, R extends AbstractEntity> implements IValueMatcher<T>{

@@ -4,6 +4,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.swing.ei.EntityInspectorModel;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.AbstractCentreConfigurationModel;
@@ -11,9 +12,11 @@ import ua.com.fielden.platform.swing.review.report.centre.configuration.Abstract
 public class AbstractEntityCentreModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractEntityReviewModel<T, DTM> {
 
     private final String name;
+    private final EntityInspectorModel<EntityQueryCriteria<DTM, T, IEntityDao<T>>> entityInspectorModel;
 
-    public AbstractEntityCentreModel(final AbstractCentreConfigurationModel<T, DTM> configurationModel, final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria, final String name) {
-	super(configurationModel, criteria);
+    public AbstractEntityCentreModel(final AbstractCentreConfigurationModel<T, DTM> configurationModel, final EntityInspectorModel<EntityQueryCriteria<DTM, T, IEntityDao<T>>> entityInspectorModel, final String name) {
+	super(configurationModel, entityInspectorModel.getEntity());
+	this.entityInspectorModel = entityInspectorModel;
 	this.name = name;
 	// TODO Auto-generated constructor stub
     }
@@ -31,6 +34,15 @@ public class AbstractEntityCentreModel<T extends AbstractEntity, DTM extends ICe
      */
     public String getName() {
 	return name;
+    }
+
+    /**
+     * Returns the {@link EntityInspectorModel} for this entity centre.
+     * 
+     * @return
+     */
+    public EntityInspectorModel<EntityQueryCriteria<DTM, T, IEntityDao<T>>> getEntityInspectorModel() {
+	return entityInspectorModel;
     }
 
     /**

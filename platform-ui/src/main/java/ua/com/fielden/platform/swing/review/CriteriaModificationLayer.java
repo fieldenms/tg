@@ -773,10 +773,10 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 
 	    final Color transparentWhite = new Color(255, 255, 255, 240);
 	    final Color moreTransparentWhite = new Color(255, 255, 255, 100);
-//	    leftValidationLayer.setColour(Boolean.TRUE.equals(fromExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
-//	    if (rightValidationLayer != null) {
-//		rightValidationLayer.setColour(Boolean.TRUE.equals(toExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
-//	    }
+	    //	    leftValidationLayer.setColour(Boolean.TRUE.equals(fromExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
+	    //	    if (rightValidationLayer != null) {
+	    //		rightValidationLayer.setColour(Boolean.TRUE.equals(toExclusive) ? BoundedValidationLayer.WARNING_COLOUR : null);
+	    //	    }
 	    if (!dateState.isEmpty()){
 		drawText(g2, layer, transparentWhite, dateStateItems.get(dateState).getStateCaption());
 	    }
@@ -803,14 +803,14 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	    // define how many characters in the caption can be drawn
 	    final int actualInsets = leftInset - component.getInsets().left;
 
-//	    // define how many characters in the caption can be drawn
-//	    final FontMetrics fm = g2.getFontMetrics();
-//	    Rectangle2D textBounds = fm.getStringBounds(text, g2);
-//	    int count = text.length();
-//	    while ((textBounds.getWidth() > fitToWidth) && (count > 4)) {
-//		textBounds = fm.getStringBounds(text.substring(0, count--), g2);
-//	    }
-//	    return count == text.length() ? text : StringUtils.abbreviate(text, count);
+	    //	    // define how many characters in the caption can be drawn
+	    //	    final FontMetrics fm = g2.getFontMetrics();
+	    //	    Rectangle2D textBounds = fm.getStringBounds(text, g2);
+	    //	    int count = text.length();
+	    //	    while ((textBounds.getWidth() > fitToWidth) && (count > 4)) {
+	    //		textBounds = fm.getStringBounds(text.substring(0, count--), g2);
+	    //	    }
+	    //	    return count == text.length() ? text : StringUtils.abbreviate(text, count);
 
 	    final String textToDisplay = Utils2D.abbreviate(g2, text, component.getSize().width - actualInsets);
 

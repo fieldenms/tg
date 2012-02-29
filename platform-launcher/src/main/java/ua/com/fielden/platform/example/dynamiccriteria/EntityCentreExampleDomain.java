@@ -5,6 +5,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleECEEntity;
 
 public class EntityCentreExampleDomain {
 
@@ -16,5 +17,6 @@ public class EntityCentreExampleDomain {
 
     static {
 	entityTypes.addAll(PlatformDomainTypes.types);
+	add(SimpleECEEntity.class);
     }
 }

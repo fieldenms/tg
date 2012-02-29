@@ -12,6 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Rectangle2D;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +22,7 @@ import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
+import org.apache.commons.lang.StringUtils;
 import org.jdesktop.jxlayer.JXLayer;
 import org.jdesktop.jxlayer.plaf.AbstractLayerUI;
 
@@ -31,14 +33,15 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.actions.Command;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
-import ua.com.fielden.platform.swing.ei.editors.RangePropertyEditor;
-import ua.com.fielden.platform.swing.review.DynamicProperty;
+import ua.com.fielden.platform.swing.ei.editors.development.RangePropertyEditor;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.utils.Utils2D;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
@@ -197,9 +200,10 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	final IPropertyEditor leftPropertyEditor = (this.propertyEditor instanceof RangePropertyEditor) ? ((RangePropertyEditor) this.propertyEditor).getFromEditor()
 		: this.propertyEditor;
 	final IPropertyEditor rightPropertyEditor = (this.propertyEditor instanceof RangePropertyEditor) ? ((RangePropertyEditor) this.propertyEditor).getToEditor() : null;
-	final Pair<Class<?>, String> critProperty = CriteriaReflector.getCriteriaProperty((Class<? extends EntityQueryCriteria>)eqc.getEntityClass(), leftPropertyEditor.getPropertyName());
+	final Pair<Class<?>, String> critProperty = CriteriaReflector.getCriteriaProperty((Class<? extends EntityQueryCriteria>)eqc.getType(), leftPropertyEditor.getPropertyName());
 	propertyName = critProperty.getValue();
 	rootType = critProperty.getKey();
+	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? rootType : PropertyTypeDeterminator.determineClass(rootType, propertyName, true, true);
 	leftValidationLayer = (BoundedValidationLayer<?>) leftPropertyEditor.getEditor();
 	rightValidationLayer = rightPropertyEditor != null ? (BoundedValidationLayer<?>) rightPropertyEditor.getEditor() : null;
 
@@ -207,14 +211,16 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	final IAddToCriteriaTickManager ftm = eqc.getDomainTreeManger().getFirstTick();
 	not = ftm.getNot(rootType, propertyName); // update Not state
 	orNull = ftm.getOrNull(rootType, propertyName); // update OrNull state
-	dateState.setDatePrefix(ftm.getDatePrefix(rootType, propertyName)); // update date prefix
-	dateState.setDateMnemonic(ftm.getDateMnemonic(rootType, propertyName)); // update date mnemonic
-	dateState.setAndBefore(ftm.getAndBefore(rootType, propertyName)); // update andBefore
-	fromExclusive = ftm.getExclusive(rootType, propertyName); // update left exclusiveness
-	try{
-	    toExclusive = ftm.getExclusive2(rootType, propertyName); // update right exclusiveness
-	}catch(final IllegalArgumentException e) {
-	    //The associated property doesn't have second value
+	if(EntityUtils.isRangeType(propertyType)){
+	    fromExclusive = ftm.getExclusive(rootType, propertyName); // update left exclusiveness
+	    if(rightValidationLayer != null){
+		toExclusive = ftm.getExclusive2(rootType, propertyName); // update right exclusiveness
+	    }
+	    if(Date.class.isAssignableFrom(propertyType)){
+		dateState.setDatePrefix(ftm.getDatePrefix(rootType, propertyName)); // update date prefix
+		dateState.setDateMnemonic(ftm.getDateMnemonic(rootType, propertyName)); // update date mnemonic
+		dateState.setAndBefore(ftm.getAndBefore(rootType, propertyName)); // update andBefore
+	    }
 	}
 
 	// create popup menu and its items and update their initial state:
@@ -224,7 +230,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	nullMenuItem.setMnemonic(KeyEvent.VK_H);
 	nullMenuItem.setSelected(Boolean.TRUE.equals(orNull));
 	nullMenuItem.addItemListener(this);
-	final CritOnly critOnly = AnnotationReflector.getPropertyAnnotation(CritOnly.class, eqc.getEntityClass(), propertyName);
+	final CritOnly critOnly = StringUtils.isEmpty(propertyName) ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, eqc.getEntityClass(), propertyName);
 	final boolean isCritOnly = critOnly != null;
 	final boolean isNotBoolOrCritOnlyDate = !(this.propertyEditor instanceof RangePropertyEditor && ( ((RangePropertyEditor) this.propertyEditor).isBool() || ((RangePropertyEditor) this.propertyEditor).isDate() && isCritOnly));
 	if (isNotBoolOrCritOnlyDate) { // all criteria could be altered by emptiness except boolean criteria
@@ -487,7 +493,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	    }
 	}
 
-	private void addDateMenuItems(final RangePropertyEditor rpe, final boolean add) {
+	private void addDateMenuItems(final boolean add) {
 	    if (add) {
 		if (popup.getComponentIndex(dateMenusSeparator) < 0) {
 		    popup.add(dateMenusSeparator);
@@ -531,7 +537,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 			if (propertyEditor instanceof RangePropertyEditor) { // only non-single date-criteria could be altered by date mnemonics, not single/boolean criteria.
 			    final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
 			    if (!rpe.isSingle() && rpe.isDate()) {
-				addDateMenuItems(rpe, false);
+				addDateMenuItems(false);
 			    }
 			}
 
@@ -563,16 +569,18 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 			if (propertyEditor instanceof RangePropertyEditor) { // only non-single date-criteria could be altered by date mnemonics, not single/boolean criteria.
 			    final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
 			    if (!rpe.isSingle() && rpe.isDate()) {
-				addDateMenuItems(rpe, true);
+				addDateMenuItems(true);
 			    } else {
-				addDateMenuItems(rpe, false);
+				addDateMenuItems(false);
 			    }
 			}
 
 			// update popup menu "negation" item:
 			notMenuItem.setEnabled(!isIgnored());
 			// invoke popup menu:
-			popup.show(e.getComponent(), e.getX(), e.getY());
+			if(popup.getComponentCount() != 0){
+			    popup.show(e.getComponent(), e.getX(), e.getY());
+			}
 		    }
 		}.actionPerformed(null);
 	    }
@@ -695,23 +703,24 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     }
 
     /**
-     * Updates a {@link DynamicProperty}s corresponding to high-level criteria modification layer with emptiness/negation/exclusiveness/dateValue.
+     * Updates a {@link IAddToCriteriaTickManager} model with corresponding emptiness/negation/exclusiveness/dateValue.
      */
     private void updateDynamicPropertiesState() {
-
+	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? rootType : PropertyTypeDeterminator.determineClass(rootType, propertyName, true, true);
+	// update an initial state of criteria modification layer:
 	final IAddToCriteriaTickManager ftm = eqc.getDomainTreeManger().getFirstTick();
-
 	ftm.setNot(rootType, propertyName, not); // update Not state
 	ftm.setOrNull(rootType, propertyName, orNull); // update "or null" parameter
-	ftm.setExclusive(rootType, propertyName, fromExclusive); // update exclusiveness
-	ftm.setDatePrefix(rootType, propertyName, dateState.getDatePrefix()); // update date prefix
-	ftm.setDateMnemonic(rootType, propertyName, dateState.getDateMnemonic()); // update date mnemonic
-	ftm.setAndBefore(rootType, propertyName, dateState.getAndBefore()); // update andBefore
-
-	try{
-	    ftm.setExclusive2(rootType, propertyName, toExclusive);
-	}catch(final IllegalArgumentException ex){
-	    //The associated property doesn't have second value
+	if(EntityUtils.isRangeType(propertyType)){
+	    ftm.setExclusive(rootType, propertyName, fromExclusive); // update exclusiveness
+	    if(rightValidationLayer != null){
+		ftm.setExclusive2(rootType, propertyName, toExclusive); // update right exclusiveness
+	    }
+	    if(Date.class.isAssignableFrom(propertyType)){
+		ftm.setDatePrefix(rootType, propertyName, dateState.getDatePrefix()); // update date prefix
+		ftm.setDateMnemonic(rootType, propertyName, dateState.getDateMnemonic()); // update date mnemonic
+		ftm.setAndBefore(rootType, propertyName, dateState.getAndBefore()); // update andBefore
+	    }
 	}
     }
 

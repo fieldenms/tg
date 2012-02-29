@@ -9,6 +9,7 @@ import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleECEEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationModel;
@@ -71,6 +72,7 @@ public class EntityCentreExample extends AbstractUiApplication {
     }
 
     public static void main(final String[] args) {
+	Rdbms.rdbms = Rdbms.H2;
 	new EntityCentreExample().launch(args);
     }
 

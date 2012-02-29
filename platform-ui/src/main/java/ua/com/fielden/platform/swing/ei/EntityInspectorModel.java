@@ -1,6 +1,3 @@
-/**
- *
- */
 package ua.com.fielden.platform.swing.ei;
 
 import java.util.Collections;

@@ -79,7 +79,7 @@ public class CriteriaReflector {
      */
     @SuppressWarnings("rawtypes")
     public static boolean isFirstParam(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
-	return AnnotationReflector.isPropertyAnnotationPresent(SecondParam.class, criteriaClass, propertyName);
+	return AnnotationReflector.isPropertyAnnotationPresent(FirstParam.class, criteriaClass, propertyName);
     }
 
     /**

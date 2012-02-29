@@ -27,7 +27,7 @@ import ua.com.fielden.platform.swing.ei.editors.IPropertyBinder;
  * @author 01es
  * 
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings("rawtypes")
 public class CrudEntityInspectorModel<T extends AbstractEntity> extends EntityInspectorModel<T> {
 
     private final IEntityDao<T> dao;

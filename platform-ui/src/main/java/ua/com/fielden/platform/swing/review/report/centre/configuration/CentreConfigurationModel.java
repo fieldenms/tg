@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.Action;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
@@ -12,8 +13,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.Command;
+import ua.com.fielden.platform.swing.ei.EntityInspectorModel;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityCentreModel;
+import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder;
+import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder.EntityCentreType;
 import ua.com.fielden.platform.swing.review.report.events.CentreConfigurationEvent;
 import ua.com.fielden.platform.swing.review.report.events.CentreConfigurationEvent.CentreConfigurationAction;
 import ua.com.fielden.platform.swing.review.report.interfaces.ICentreConfigurationEventListener;
@@ -97,7 +102,7 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 	if(cdtm == null || cdtm.getSecondTick().checkedProperties(entityType).isEmpty()){
 	    throw new IllegalStateException("The centre manager is not specified");
 	}
-	return new EntityCentreModel<T>(this, criteriaGenerator.generateCentreQueryCriteria(entityType, cdtm), name);
+	return new EntityCentreModel<T>(this, createInspectorModel(criteriaGenerator.generateCentreQueryCriteria(entityType, cdtm)), name);
     }
 
     @Override
@@ -125,6 +130,17 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 	    }
 	}
 	return Result.successful(this);
+    }
+
+    /**
+     * Creates the {@link EntityInspectorModel} for the specified criteria
+     * 
+     * @param criteria
+     * @return
+     */
+    private EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManager,T,IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ICentreDomainTreeManager,T,IEntityDao<T>> criteria){
+	return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManager,T,IEntityDao<T>>>(criteria,//
+		new CentrePropertyBinder<EntityQueryCriteria<ICentreDomainTreeManager,T,IEntityDao<T>>>(EntityCentreType.CENTRE, criteriaGenerator));
     }
 
     private Action createRemoveAction() {

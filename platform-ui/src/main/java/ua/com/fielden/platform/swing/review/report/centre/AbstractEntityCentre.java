@@ -9,6 +9,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -32,11 +33,13 @@ import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.ActionChangeButton;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
+import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
 import ua.com.fielden.platform.swing.pagination.development.Paginator;
 import ua.com.fielden.platform.swing.pagination.development.Paginator.IPageChangeFeedback;
 import ua.com.fielden.platform.swing.pagination.model.development.IPageHolderManager;
 import ua.com.fielden.platform.swing.pagination.model.development.PaginatorModel;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.taskpane.TaskPanel;
@@ -227,7 +230,12 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
      * 
      * @return
      */
+    @SuppressWarnings("unchecked")
     protected StubCriteriaPanel createCriteriaPanel() {
+	final Map<String, IPropertyEditor> editors = getModel().getEntityInspectorModel().getEditors();
+	if(!editors.isEmpty()){
+	    return new CriteriaDndPanel((EntityQueryCriteria<ICentreDomainTreeManager, ?, ?>) getModel().getCriteria(), getModel().getEntityInspectorModel().getEditors());
+	}
 	return null;
     }
 

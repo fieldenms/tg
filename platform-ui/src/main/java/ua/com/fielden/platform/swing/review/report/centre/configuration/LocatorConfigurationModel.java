@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.Action;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
@@ -14,8 +15,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.Command;
+import ua.com.fielden.platform.swing.ei.EntityInspectorModel;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityLocatorModel;
+import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder;
+import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder.EntityCentreType;
 import ua.com.fielden.platform.swing.review.report.events.LocatorConfigurationEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorConfigurationEvent.LocatorConfigurationAction;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorConfigurationEventListener;
@@ -26,11 +31,11 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
     /**
      * The class where the property specified with propertyName was declared.
      */
-    protected final Class<R> rootType;
+    public final Class<R> rootType;
     /**
      * The associated {@link ILocatorManager} instance.
      */
-    protected final ILocatorManager locatorManager;
+    public final ILocatorManager locatorManager;
 
     private final Action save, saveAsDefault, loadDefault;
     /**
@@ -113,7 +118,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
 	if(ldtm == null || ldtm.getSecondTick().checkedProperties(entityType).isEmpty()){
 	    throw new IllegalStateException("The locator manager is not specified correctly!");
 	}
-	return new EntityLocatorModel<T>(this, criteriaGenerator.generateLocatorQueryCriteria(entityType, ldtm), name);
+	return new EntityLocatorModel<T>(this, createInspectorModel(criteriaGenerator.generateLocatorQueryCriteria(entityType, ldtm)), name);
     }
 
     @Override
@@ -123,6 +128,17 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
 	    throw new IllegalStateException("The locator manager can not be null!");
 	}
 	return new DomainTreeEditorModel<T>(entityFactory, ldtm, entityType);
+    }
+
+    /**
+     * Creates the {@link EntityInspectorModel} for the specified criteria
+     * 
+     * @param criteria
+     * @return
+     */
+    private EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManager,T,IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ILocatorDomainTreeManager,T,IEntityDao<T>> criteria){
+	return new EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManager,T,IEntityDao<T>>>(criteria,//
+		new CentrePropertyBinder<EntityQueryCriteria<ILocatorDomainTreeManager,T,IEntityDao<T>>>(EntityCentreType.LOCATOR, criteriaGenerator));
     }
 
     private Action createSaveAction() {

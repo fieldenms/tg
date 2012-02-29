@@ -3,13 +3,14 @@ package ua.com.fielden.platform.swing.ei.editors.development;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
 import ua.com.fielden.platform.swing.ei.editors.LabelAndTooltipExtractor;
+import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 
 /**
@@ -30,9 +31,9 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
      * @param valueMatcher
      * @return
      */
-    public static EntityPropertyEditor createEntityPropertyEditorForMaster(final AbstractEntity<?> entity, final String propertyName, final IValueMatcher<?> valueMatcher, final boolean isSingle){
+    public static EntityPropertyEditor createEntityPropertyEditorForMaster(final AbstractEntity<?> entity, final String propertyName, final IValueMatcher<?> valueMatcher){
 	final MetaProperty metaProp = entity.getProperty(propertyName);
-	return new EntityPropertyEditor(entity, propertyName, "", metaProp.getDesc(), valueMatcher, isSingle, false);
+	return new EntityPropertyEditor(entity, propertyName, "", metaProp.getDesc(), valueMatcher);
     }
 
     /**
@@ -42,13 +43,10 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
      * @param propertyName
      * @return
      */
-    public static EntityPropertyEditor createEntityPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> criteria, final String propertyName, final boolean isSingle){
-	//TODO Refactor after testing.
+    public static EntityPropertyEditor createEntityPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> criteria, final String propertyName){
 	final MetaProperty metaProp = criteria.getProperty(propertyName);
-	final Class entityType = PropertyTypeDeterminator.determineClass(criteria.getType(), propertyName, true, true);
-	final boolean stringBinding = !PropertyDescriptor.class.equals(entityType);
 	final IValueMatcher<?> valueMatcher = criteria.getValueMatcher(propertyName);
-	return new EntityPropertyEditor(criteria, propertyName, LabelAndTooltipExtractor.createCaption(metaProp.getTitle()), LabelAndTooltipExtractor.createTooltip(metaProp.getDesc()), valueMatcher, isSingle, stringBinding);
+	return new EntityPropertyEditor(criteria, propertyName, LabelAndTooltipExtractor.createCaption(metaProp.getTitle()), LabelAndTooltipExtractor.createTooltip(metaProp.getDesc()), valueMatcher);
     }
 
     /**
@@ -60,15 +58,22 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
      * @param toolTip
      * @param valueMatcher
      */
-    public EntityPropertyEditor(final AbstractEntity<?> entity, final String propertyName, final String caption, final String toolTip, final IValueMatcher<?> valueMatcher, final boolean isSingle, final boolean stringBinding){
+    public EntityPropertyEditor(final AbstractEntity<?> entity, final String propertyName, final String caption, final String toolTip, final IValueMatcher<?> valueMatcher){
 	super(entity, propertyName, valueMatcher);
-	final MetaProperty property = entity.getProperty(propertyName);
-	editor = createEditor(entity, propertyName, property.getType(), caption, toolTip, isSingle, stringBinding);
+	final MetaProperty metaProp = entity.getProperty(propertyName);
+	final IsProperty propertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, entity.getType(), propertyName);
+	final EntityType entityTypeAnnotation = AnnotationReflector.getPropertyAnnotation(EntityType.class, entity.getType(), propertyName);
+	final boolean isSingle = metaProp.isCollectional() ? false : true;
+	final boolean stringBinding = isSingle ? false : String.class.isAssignableFrom(propertyAnnotation.value());
+	final Class<?> elementType = isSingle ? metaProp.getType() : (stringBinding ? entityTypeAnnotation.value() : propertyAnnotation.value());
+	if(!AbstractEntity.class.isAssignableFrom(elementType)){
+	    throw new IllegalArgumentException("The property: " + propertyName + " of " + entity.getType().getSimpleName() + " type, can not be bind to the autocompleter!");
+	}
+	editor = createEditor(entity, propertyName, elementType, caption, toolTip, isSingle, stringBinding);
     }
 
     @Override
     public IValueMatcher getValueMatcher() {
-	// TODO Auto-generated method stub
 	return super.getValueMatcher();
     }
 

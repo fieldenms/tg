@@ -18,7 +18,7 @@ public abstract class AbstractCentreConfigurationModel<T extends AbstractEntity,
     /**
      * The name (for entity centre) or property name (for entity locator) for which this centre/locator was created.
      */
-    protected final String name;
+    public final String name;
 
     /**
      * {@link EntityFactory}, needed for {@link DomainTreeEditorModel} creation.

@@ -45,8 +45,9 @@ public class RangePropertyEditor implements IPropertyEditor {
 	if (!fe.equals(te) || !fe.getPropertyType(fromEditor.getPropertyName()).equals(te.getPropertyType(toEditor.getPropertyName()))) {
 	    throw new RuntimeException("Entity or propertyType is not exactly the same for two editors that form Range/Boolean editor.");
 	}
-	final Pair<Class<?>, String> criteriaParameters = CriteriaReflector.getCriteriaProperty((Class<? extends EntityQueryCriteria>)entity.getClass(), fromEditor.getPropertyName());
 	this.entity = fromEditor.getEntity();
+	final Pair<Class<?>, String> criteriaParameters = CriteriaReflector.getCriteriaProperty((Class<? extends EntityQueryCriteria>)entity.getType(), fromEditor.getPropertyName());
+
 	this.root = criteriaParameters.getKey();
 	this.propertyName = CriteriaReflector.generateCriteriaPropertyName(root, criteriaParameters.getValue(), null);
 

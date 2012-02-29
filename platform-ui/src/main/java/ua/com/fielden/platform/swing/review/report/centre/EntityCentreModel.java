@@ -3,6 +3,7 @@ package ua.com.fielden.platform.swing.review.report.centre;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.ei.EntityInspectorModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationModel;
 
@@ -13,8 +14,8 @@ public class EntityCentreModel<T extends AbstractEntity> extends AbstractEntityC
     //private AbstractAnalysisConfigurationModel resultViewModel;
 
 
-    public EntityCentreModel(final CentreConfigurationModel<T> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final String name){
-	super(configurationModel, criteria, name);
+    public EntityCentreModel(final CentreConfigurationModel<T> configurationModel, final EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>>> entityInspectorModel, final String name){
+	super(configurationModel, entityInspectorModel, name);
     }
 
     @Override

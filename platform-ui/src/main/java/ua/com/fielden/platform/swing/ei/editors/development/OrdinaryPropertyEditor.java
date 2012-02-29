@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.swing.ei.editors.development;
 
-import static ua.com.fielden.platform.swing.components.bind.ComponentFactory.EditorCase.MIXED_CASE;
-import static ua.com.fielden.platform.swing.components.bind.ComponentFactory.EditorCase.UPPER_CASE;
+import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.MIXED_CASE;
+import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.UPPER_CASE;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -35,13 +35,12 @@ import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.components.smart.datepicker.DatePickerLayer;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
 import ua.com.fielden.platform.swing.ei.editors.LabelAndTooltipExtractor;
 import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.RadioButtonPanel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.swing.utils.TabAction;
@@ -110,7 +109,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 	editor = createEditor(entity, propertyName, metaProperty.getType(), metaProperty.getTitle(), metaProperty.getDesc(), metaProperty.isUpperCase(), defaultTimePortionMillis);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private JComponent createEditor(final AbstractEntity<?> entity, final String bindingPropertyName, final Class type, final String title, final String desc, final boolean upperCase, final Long defaultTimePortionMillis) {
 	final JComponent editor;
 	if (Integer.class == type || int.class == type) {

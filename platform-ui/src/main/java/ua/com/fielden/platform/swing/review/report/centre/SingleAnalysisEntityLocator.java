@@ -268,11 +268,11 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
 	locatorPanel.add(new JButton(selectAction));
 	locatorPanel.add(new JButton(closeAction), "wrap");
 	locatorPanel.add(searchByKeyAndDesc, "skip 1");
-	return null;
+	return locatorPanel;
     }
 
     private Action createSaveAction() {
-	return new AbstractAction() {
+	return new AbstractAction("Save") {
 
 	    private static final long serialVersionUID = 8474884103209307717L;
 
@@ -284,7 +284,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
     }
 
     private Action createSaveAsDefaultAction() {
-	return new AbstractAction() {
+	return new AbstractAction("Save as default") {
 
 	    private static final long serialVersionUID = 6870686264834331196L;
 
@@ -296,7 +296,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
     }
 
     private Action createLoadDefaultAction() {
-	return getModel().getName() == null ? null : new AbstractAction() {
+	return new AbstractAction("Load default") {
 
 	    private static final long serialVersionUID = 8474884103209307717L;
 

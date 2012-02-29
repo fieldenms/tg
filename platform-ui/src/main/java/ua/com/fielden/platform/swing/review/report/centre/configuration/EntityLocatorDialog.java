@@ -130,9 +130,9 @@ public class EntityLocatorDialog<VT extends AbstractEntity, RT extends AbstractE
 		final ILocatorManager locatorManager = locatorConfigurationView.getModel().locatorManager;
 		final Class<RT> entityType = locatorConfigurationView.getModel().rootType;
 		final String propertyName = locatorConfigurationView.getModel().name;
-		if(locatorConfigurationView.getPreviousView() == null){
-		    return;
-		}
+		//		if(locatorConfigurationView.getPreviousView() == null){
+		//		    return;
+		//		}
 		if (locatorManager.isChangedLocatorManager(entityType, propertyName)) {
 		    final Object options[] = { "Save", "Save as default", "No" };
 		    final int chosenOption = JOptionPane.showOptionDialog(EntityLocatorDialog.this, "This locator has been changed, would you like to save it?", "Save entity locator configuration", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);

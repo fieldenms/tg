@@ -37,11 +37,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IBindingEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.components.EditableCheckBox;
 import ua.com.fielden.platform.swing.components.EditableSpinner;
@@ -371,12 +368,9 @@ public class ComponentFactory {
      */
     @SuppressWarnings("rawtypes")
     private static <VT extends AbstractEntity, RT extends AbstractEntity> AutocompleterTextFieldLayerWithEntityLocator<VT> createUnBoundAutocompleterWithEntityLocator(//
-	    final ILocatorManager locatorManager, //
-	    final EntityFactory entityFactory, //
-	    final ICriteriaGenerator criteriaGenerator, //
-	    final IValueMatcher<VT> valueMatcher, //
+	    final LocatorConfigurationModel<VT, RT> locatorConfigurationModel,//
+	    final IValueMatcher<VT> valueMatcher,//
 	    final Class<VT> entityType,//
-	    final Class<RT> rootType,//
 	    final String propertyName,//
 	    final String expression,//
 	    final String secExpression,//
@@ -385,15 +379,8 @@ public class ComponentFactory {
 	final TwoPropertyListCellRenderer<VT> cellRenderer = new TwoPropertyListCellRenderer<VT>(expression, secExpression);
 	final JTextField textField = new UpperCaseTextField();
 	enhanceTextFieldByDeprecatingPreferredSize(textField);
-	final LocatorConfigurationModel<VT, RT> locatorConfigurationModel = new LocatorConfigurationModel<VT, RT>(
-		entityType,//
-		rootType,//
-		propertyName,//
-		locatorManager,//
-		entityFactory,//
-		criteriaGenerator);
 	final EntityLocatorDialog<VT, RT> entityLocatorDialog = new EntityLocatorDialog<VT, RT>(locatorConfigurationModel, !StringUtils.isEmpty(valueSeparator));
-	final AutocompleterTextFieldLayerWithEntityLocator<VT> autocomplter = new AutocompleterTextFieldLayerWithEntityLocator<VT>(//
+	final AutocompleterTextFieldLayerWithEntityLocator<VT> autocompleter = new AutocompleterTextFieldLayerWithEntityLocator<VT>(//
 		entityLocatorDialog,//
 		entityType,//
 		textField,//
@@ -402,8 +389,8 @@ public class ComponentFactory {
 		cellRenderer,//
 		caption,//
 		valueSeparator);
-	cellRenderer.setAuto(autocomplter.getAutocompleter());
-	return autocomplter;
+	cellRenderer.setAuto(autocompleter.getAutocompleter());
+	return autocompleter;
     }
 
     /**
@@ -838,11 +825,8 @@ public class ComponentFactory {
 	    //Autocomplter related parameters
 	    final IBindingEntity entity,//
 	    final String propertyName,//
+	    final LocatorConfigurationModel<VT, RT> locatorConfigurationModel,//
 	    final Class<VT> entityType,//
-	    final Class<RT> rootType,//
-	    final ILocatorManager locatorManager,//
-	    final EntityFactory entityFactory, //
-	    final ICriteriaGenerator criteriaGenerator, //
 	    final IValueMatcher<VT> valueMatcher, //
 	    final String expression,//
 	    final String secExpression,//
@@ -852,12 +836,9 @@ public class ComponentFactory {
 	    final String originalToolTipText,//
 	    final boolean stringBinding,//
 	    final IOnCommitAction... actions){
-	final AutocompleterTextFieldLayerWithEntityLocator<VT> autocompleter = createUnBoundAutocompleterWithEntityLocator(locatorManager, //
-		entityFactory,//
-		criteriaGenerator,//
+	final AutocompleterTextFieldLayerWithEntityLocator<VT> autocompleter = createUnBoundAutocompleterWithEntityLocator(locatorConfigurationModel,//
 		valueMatcher,//
 		entityType,//
-		rootType,//
 		propertyName,//
 		expression,//
 		secExpression,//

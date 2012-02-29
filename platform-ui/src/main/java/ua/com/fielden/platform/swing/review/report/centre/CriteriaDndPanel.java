@@ -157,7 +157,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
     private static int maxLabelWidth(final Collection<IPropertyEditor> editors) {
 	int maxLabelWidth = -1;
 	for (final IPropertyEditor editor : editors) {
-	    final boolean isNotSecondLabel = !CriteriaReflector.isSecondParam((Class<? extends EntityQueryCriteria>)editor.getEntity().getClass(), editor.getPropertyName());
+	    final boolean isNotSecondLabel = editor instanceof RangePropertyEditor ? true : !CriteriaReflector.isSecondParam((Class<? extends EntityQueryCriteria>)editor.getEntity().getClass(), editor.getPropertyName());
 	    if (isNotSecondLabel && editor.getLabel().getPreferredSize().getWidth() > maxLabelWidth) {
 		maxLabelWidth = (int) editor.getLabel().getPreferredSize().getWidth();
 	    }
@@ -822,9 +822,9 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
     /**
      * Layouts components on this panel.
      */
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void layoutEditors() {
-	final Class<? extends EntityQueryCriteria> criteriaClass = eqc.getClass();
+	final Class<? extends EntityQueryCriteria> criteriaClass = (Class<? extends EntityQueryCriteria>) eqc.getType();
 	final List<String> checkedProperties = eqc.getDomainTreeManger().getFirstTick().checkedProperties(eqc.getEntityClass());
 	for(final Entry<String, IPropertyEditor> entry : editors.entrySet()){
 	    final String propertyName = entry.getKey();
@@ -838,7 +838,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 		}
 		final Pair<Class<?>, String> criteriaParameters = CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
 		final int index = checkedProperties.indexOf(criteriaParameters.getValue());
-		addDraggable(editor, index / getRows(), index % getRows());
+		addDraggable(editor, (index / getRows()) * 2, index % getRows());
 	    }
 	}
     }

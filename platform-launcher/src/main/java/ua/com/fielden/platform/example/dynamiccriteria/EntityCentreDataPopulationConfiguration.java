@@ -24,8 +24,8 @@ public class EntityCentreDataPopulationConfiguration implements IDomainDrivenTes
 	    props.setProperty("app.home", "src/main/resources/entity_centre_example");
 	    props.setProperty("reports.path", "src/main/resources/entity_centre_example/reports");
 	    //TODO review this and override. domain.path, domain.package, tokens.path, tokens.package.
-	    //	    props.setProperty("domain.path", "../template-pojo-bl/target/classes");
-	    //	    props.setProperty("domain.package", "template");
+	    props.setProperty("domain.path", "/target/classes");
+	    props.setProperty("domain.package", "ua.com.fielden.platform.example.dynamiccriteria.entities");
 	    //	    props.setProperty("tokens.path", "../template-pojo-bl/target/classes");
 	    //	    props.setProperty("tokens.package", "template.security.tokens");
 	    //	    props.setProperty("workflow", "development");
