@@ -5,6 +5,10 @@
 %\myepigraph{In our profession, precision and perfection are not a dispensable luxury, but a simple necessity.}{Niklaus Wirth}
 
 \section{A Short Introduction to Apache Maven}
+
+  \begin{notebox}{Who shoul read it.}{\label{mb:skip}}
+    This chapter is required only for those readers who are unfamilar with Apache Maven, which is used for managing Triden Genesis based projects, and can be safely skipped otherwise.
+  \end{notebox}
   
   Apache Maven is a software project management and comprehension tool. 
   It is based on the concept of a \emph{project object model} or simpy POM to understand the structure of the project. 
@@ -123,7 +127,34 @@
   For example, comercial libraries such as Oracle JDBC drives are not part of any of the public Maven repositories.
   In such cases it is more convenient or even required to establich an inhouse remote repository.
   The most promitent advantage of this approach if the ability to manage all dependencies be that open source, inhouse or comercial libraries in a uniform way.
-  
+  Figure \ref{img:ch00:01:maven_repository_structure} shows a schematic representation of the Maven local and remote repositories.
+
+  \begin{image}{The role of the inhouse repository}{\label{img:ch00:01:maven_repository_structure}}    
+    \begin{tikzpicture}	[remember picture, >=latex', every text node part/.style={text centered}]      
+	\node [label=left:Developer, scale=0.7] (d1) at (-5,0) {\imagepartzerochapterzero{laptop.pdf}};
+	\node [label=left:Developer, scale=0.7] (d2) at (-5,-1) {\imagepartzerochapterzero{laptop.pdf}};
+	\node [] at (-5,-2.0) {\Large \ldots};
+	\node [label=left:Developer,scale=0.7] (d3) at (-5,-3) {\imagepartzerochapterzero{laptop.pdf}};
+
+	\node [] (I) at (4,-1) {\imagepartzerochapterzero{cloud.pdf}};
+	\node at (I) {Internet};
+	\node [scale=2.0] (S) at (0,-1) {\imagepartzerochapterzero{fileserver.pdf}};
+	\node [text width=4cm, yshift=-15] at (S.south) {Inhouse Maven Remote Repository Server};
+	
+
+	\coordinate (1) at (-0.9,-0.5);
+	\coordinate (2) at (-0.9,-1.0);
+	\coordinate (3) at (-0.9,-1.5);
+	\coordinate (4) at (0.9,-1.0);
+% 
+	\fill [black, thick,<->] (d1.east) edge (1.west);
+	\fill [black, thick,<->] (d2.east) edge (2.west);
+	\fill [black, thick,<->] (d3.east) edge (3.west);
+
+	\fill [black, thick,<->] (S.east) edge (I.west);
+    \end{tikzpicture}
+  \end{image}
+
   An inhouse repository stores libraries uploaded manually by maintainers\footnote{This is usually done via a web interface of a repository server.}, but also it acts as a mirror for any publicly availble remote repository.
   This way, there is no need to manually upload any publicly available libraries.
   Any publicly available dependency is firts downloaded to the inhouse repository and then downloaded to the local machine where the request to find that dependency was initiated.
@@ -131,37 +162,35 @@
   This approaches has an added value by reducing the Internet traffic otherwise requried to download dependencies off the public repositories onto all local machines.
   }.  
   Thus, the inhouse repository serves as a single interaction point for resolving all dependencies for any project.
-  Figure \ref{img:ch00:01:maven_infrastructure} shows a schematic representation of the Maven local and remote repositories.
-
-  \begin{image}{The role of the inhouse repository}{\label{img:ch00:01:maven_infrastructure}}    
-    \begin{tikzpicture}	[remember picture]      
-	\node [aspect=0.3, cylinder, shape border rotate=90, draw] at (1,0)  {B};
-	
-	\aboxl[2.0cm,1.5cm,1.6,a1,(0,0)] {
-	    \begin{minipage}{1.5cm}
-	      inhouse
-	      repository
-            \end{minipage}
-	};
-    \end{tikzpicture}
-  \end{image}
-
+  
   \subsection*{Download and Configure} 
   Maven can be downloaded from the official \href{http://maven.apache.org/download.html}{Apache Maven web site}\footnote{\url{http://maven.apache.org/download.html}}.
   The recommended at this time verion for TG-based applications is 2.2.1.
-  Once downloaded please follow the \href{http://maven.apache.org/download.html#Installation}{installation instructions} also awailable on the official site\footnote{\url{http://maven.apache.org/download.html\#Installation}}.
+  Once downloaded please follow the \href{http://maven.apache.org/download.html#Installation}{installation instructions}, which are also awailable on the official site\footnote{\url{http://maven.apache.org/download.html\#Installation}}.
   
-  \begin{notebox}{JDK Version}{\label{mb:java}}
+  \begin{notebox}{JDK Version.}{\label{mb:java}}
     It is important to note that Oracle JDK 6.x should be used for developing applications with TG, and it should be installed before downloading and installing Maven. 
   \end{notebox}
   
-  One of the key 
+  All Trident Genesis artifacts and their dependencies reside in the dedicated Maven Repository at the Fielden's R\&D facility (let's call it TG Maven Repository).
+  In order to follow the Maven way, this repository needs to be intergrated into the development infrastructure of the team using TG.
+  This can be done either by registering TG Maven Repository with an on-site Maven remote repository (the preferred approach), or by specifying it as a mirror in the Maven configuration file \texttt{.settings}.
+  The latter approach can be explained and easily followed by the reader without much prior knowledge, which is whay it is presented below.
+  
+  Listing~\ref{lst:settings} represents a content of the Maven configuration file \texttt{.settings} used by the TG Team.
+  It can be simply copied and pasted into a local copy of \texttt{$\sim$/.m2/.settings}).
+  The things that needs to be changed are the \emph{username} and \emph{password} in several entries.
+  The values for \emph{username} and \emph{password}  should be requested separately from the R\&D team.
+
+  The listing provides all the necessary annotations explaining configuration settings.
+  In case where a proxy server is used to access the Internet, the proxy settings also need to be provided as part of the local Maven settings.
+  Listing~\ref{lst:proxy} contains the necessary configuraton snippet, which should be only be provided with valid proxy address, port and cridentials if necessary.
 
   \lstset{language=XML,
 	  escapechar=\%,
 	  morekeywords={settings, encoding, mirrorOf, mirrors, mirror, id, profiles, profile, repositories, repository, url, releases, snapshots, version,
 			pluginRepositories, pluginRepository, activeProfiles, activeProfile, servers, server, username, password, 
-			directoryPermissions, filePermissions},
+			directoryPermissions, filePermissions, proxies, proxy, active, protocol, host, port, nonProxyHosts},
 	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
   \begin{code}{Maven Settings}{\label{lst:settings}}
     \begin{lstlisting}
@@ -170,13 +199,13 @@
 	<mirrors>
 	  <mirror>
 	    <id>nexus</id>
-	    <mirrorOf>*</mirrorOf>
+	    <mirrorOf>*</mirrorOf>%\tikzref{lst_settings_mirror}{1cm}{0.2cm}%
 	    <url>http://www.fielden.com.ua:8090/nexus/content/groups/public</url>
 	  </mirror>
 	</mirrors>
 	<profiles>
 	  <profile>
-	    <id>nexus</id>
+	    <id>nexus</id>%\tikzref{lst_settings_profile}{0.5cm}{-0.2cm}%
 	    <repositories>
 	      <repository>
 		<id>central</id>
@@ -197,7 +226,7 @@
 	</profiles>
 
 	<activeProfiles>
-	  <activeProfile>nexus</activeProfile>
+	  <activeProfile>nexus</activeProfile>%\tikzref{lst_settings_active_profile}{0.2cm}{0.2cm}%
 	</activeProfiles>
 
 	<servers>
@@ -208,7 +237,7 @@
 	    <directoryPermissions>0775</directoryPermissions>
 	    <filePermissions>0664</filePermissions>
 	  </server>
-	  <server>
+	  <server>%\tikzref{lst_settings_servers}{5.0cm}{0.2cm}%
 	    <id>Releases</id>
 	    <username>your username</username>
 	    <password>your password</password>
@@ -225,8 +254,36 @@
 	</servers>
       </settings>
     \end{lstlisting}
+
+    \tikznote{lst_settings_mirror_annotation}{lst_settings_mirror}{5cm}{0.8cm}{4cm}{Mirrors}{The \emph{mirror} section is responsible for specifying TG Maven Respository as the mirror for all Maven related requests.}
+
+    \tikznote{lst_settings_profile_annotation}{lst_settings_profile}{5.5cm}{0.3cm}{4cm}{Profiles}{The \emph{profiles} section lists all configured Maven profiles availalbe. In this case there is only one profile \emph{nexus}, which specifies artifact and plugin repository locations.}
+
+    \tikznote{lst_settings_active_profile_annotation}{lst_settings_active_profile}{3.5cm}{0.5cm}{4cm}{Active Profile}{There can be several proviles, so here we identify what profile is active.}
+
+    \tikznote{lst_settings_servers_annotation}{lst_settings_servers}{5.0cm}{-0.2cm}{6cm}{Servers}{
+      This sections is responsible for listing three server components registered as separate servers for Maven to access all types of artifacts (releases and snapshots).
+
+      Also, this is the area where \emph{username} and \emph{password} should be specified. 
+      Credentials for all three servers most likely would be the same.
+    }
   \end{code}
 
+  \begin{code}{Maven Proxy Settings}{\label{lst:proxy}}
+    \begin{lstlisting}
+      <proxies>
+	  <proxy>
+	    <active>true</active>
+	    <protocol>http</protocol>
+	    <host>192.168.1.5</host>
+	    <port>3128</port>
+	    <username></username>
+	    <password></password>
+	    <nonProxyHosts></nonProxyHosts>
+	  </proxy>
+	</proxies>
+    \end{lstlisting}
+  \end{code}
 
   \subsection*{POM Esseintials}  
 
@@ -244,8 +301,8 @@
     <project xmlns="..."
 	  xsi:schemaLocation="...">
 	  <modelVersion>4.0.0</modelVersion>
-	  %\tikzref{lst_pom_n1}{-1ex}{2ex}%<groupId>fielden</groupId>%\tikzref{lst_pom_n2}{1ex}{-0.8ex}\tikzref{lst_pom_n2_1}{1ex}{0.5ex}%
-	  %\tikzref{lst_pom_n3}{-1ex}{2ex}%<artifactId>platform-parent</artifactId>%\tikzref{lst_pom_n4}{1ex}{-0.8ex}\tikzref{lst_pom_n4_1}{1ex}{0.5ex}%
+	  %\tikzref{lst_pom_n1}{-1ex}{-0.8ex}%<groupId>fielden</groupId>%\tikzref{lst_pom_n2}{1ex}{-0.8ex}\tikzref{lst_pom_n2_1}{1ex}{0.5ex}%
+	  %\tikzref{lst_pom_n3}{-1ex}{-0.8ex}%<artifactId>platform-parent</artifactId>%\tikzref{lst_pom_n4}{1ex}{-0.8ex}\tikzref{lst_pom_n4_1}{1ex}{0.5ex}%
 	  <packaging>pom</packaging>
 	  <version>1.1-SNAPSHOT</version>
 	  <name>Trident Genesis Platform Parent</name>

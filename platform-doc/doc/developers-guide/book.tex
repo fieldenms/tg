@@ -8,7 +8,7 @@
 
 %\usepackage{standalone}
 
-\usepackage{makeidx}         % allows index generation
+%\usepackage{makeidx}         % allows index generation
 \usepackage{multicol}        % used for the two-column index
 \usepackage[bottom]{footmisc}% places footnotes at page bottom
 
@@ -74,6 +74,7 @@
 %\geometry{hmargin={20mm,20mm},vmargin={20mm,20mm}}
 %\geometry{mag=1414}
 
+%\usepackage{epstopdf}
 %\usepackage{color}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -225,7 +226,7 @@
 
 \newcommand{\tikzhighlight}[2]{
   \begin{tikzpicture}[remember picture,overlay,rounded corners=2pt]
-    \fill[highlight,opacity=0.2] (#1) rectangle (#2);
+    \draw[highlight,decorate,decoration={snake,amplitude=.1mm,segment length=4mm}] (#1) -- (#2);
   \end{tikzpicture}
 }
 
@@ -251,14 +252,15 @@
 %   \end{tikzpicture}
 }
 
-%-----#1 height, #2 width, #3 aspect, #4 name of the node, #5
-%-----coordinate, #6 label
-\def\aboxl[#1,#2,#3,#4,#5]#6{%
-	\node[draw, cylinder, alias=cyl, shape border rotate=90, aspect=#3, %
+%-----#1 height, #2 width, #3 aspect, #4 name of the node, 
+%-----#5 coordinate, #6, #7 scale factor for the cylinder and label
+%-----#8 label 
+\def\aboxl[#1,#2,#3,#4,#5, #6, #7]#8{%
+	\node[scale=#6, draw, cylinder, alias=cyl, shape border rotate=90, aspect=#3, %
 	minimum height=#1, minimum width=#2, outer sep=-0.5\pgflinewidth, %
 	color=orange!60!black, left color=yellow!80, right color=yellow!80!orange, middle
 	color=white] (#4) at #5 {};%
-	\node at #5 [orange!80!black] {#6};%
+	\node[scale=#7] at #5 [orange!80!black] {#8};%
 	\fill [yellow!30] let \p1 = ($(cyl.before top)!0.5!(cyl.after top)$), \p2 =
 	(cyl.top), \p3 = (cyl.before top), \n1={veclen(\x3-\x1,\y3-\y1)},
 	\n2={veclen(\x2-\x1,\y2-\y1)} in (\p1) ellipse (\n1 and \n2); }
@@ -273,6 +275,9 @@
   \epigraph{\textit{#1}}{\textsc{#2}}
 }
 
+\newcommand{\imagepartzerochapterzero}[1]{
+  \includegraphics{parts/00-part/chapters/00-maven-artifact/images/#1}
+}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
@@ -413,7 +418,7 @@
 \backmatter%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\include{glossary}
 %\include{solutions}
-\printindex
+%\printindex
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
