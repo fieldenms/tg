@@ -82,8 +82,8 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
 	finalReferencingProps.add(prop);
 	// TODO implement more transparently
-	prop.entProp.setSql(sqlAlias + "." + sourceItems.get(
-		(prop.prop.name.endsWith(".id") ? prop.prop.name.substring(0, prop.prop.name.length() - 3) : prop.prop.name)).getColumn());
+	prop.entProp.setSource(this);
+	prop.entProp.setSql(sourceItems.get((prop.prop.name.endsWith(".id") ? prop.prop.name.substring(0, prop.prop.name.length() - 3) : prop.prop.name)).getColumn());
     }
 
     @Override
@@ -461,5 +461,9 @@ public abstract class AbstractEntQuerySource implements IEntQuerySource {
 
     public boolean isNullable() {
         return nullable;
+    }
+
+    public String getSqlAlias() {
+        return sqlAlias;
     }
 }

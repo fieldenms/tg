@@ -57,6 +57,8 @@ public class EntQuery implements ISingleOperand {
     }
 
     public String sql() {
+	sources.assignSqlAliases(getMasterIndex());
+
 	final StringBuffer sb = new StringBuffer();
 	sb.append(isSubQuery() ? "(" : "");
 	sb.append("SELECT ");
@@ -247,8 +249,6 @@ public class EntQuery implements ISingleOperand {
 	propsToBeResolvedFinally.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
 	propsToBeResolvedFinally.removeAll(unresolvedProps);
 
-	getSources().assignSqlAliases(getMasterIndex());
-
 	final List<EntProp> unresolvedFinalProps = resolvePropsFinally(propsToBeResolvedFinally);
 
 	if (unresolvedFinalProps.size() > 0) {
@@ -257,7 +257,9 @@ public class EntQuery implements ISingleOperand {
 
 	assignPropertyPersistenceInfoToYields();
 
-	assignSqlParamNames();
+	if (isResultQuery()) {
+	    assignSqlParamNames();
+	}
     }
 
     private void setMaster(final EntQuery master) {
@@ -280,7 +282,7 @@ public class EntQuery implements ISingleOperand {
 	final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<EntProp>();
 	for (final EntQuery entQuery : immediateSubqueries) {
 	    unresolvedPropsFromSubqueries.addAll(entQuery.unresolvedProps);
-	    entQuery.unresolvedProps.clear();
+	    //entQuery.unresolvedProps.clear();
 	}
 	return unresolvedPropsFromSubqueries;
     }

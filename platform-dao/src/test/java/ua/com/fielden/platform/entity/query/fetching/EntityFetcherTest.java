@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
@@ -113,7 +114,6 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     	assertEquals("Incorrect value", new BigDecimal("165"), values.get(0).get("aa"));
     }
 
-
     public void test_vehicle_model_retrieval9() {
 	final AggregatedResultQueryModel model = select(TgVehicleModel.class).yield().countOfDistinct().prop("make").as("aa").modelAsAggregate();
 	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(model).build());
@@ -144,8 +144,60 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     	assertEquals("Incorrect value", "1", values.get(0).get("aa").toString());
     }
 
+    public void test_vehicle_model_retrieval12() {
+	final PrimitiveResultQueryModel subQry = select(TgVehicle.class).where().prop("model.make.key").eq().anyOfValues("BMW", "MERC").yield().prop("key").modelAsPrimitive();
+	final AggregatedResultQueryModel countModel = select(TgVehicle.class).where().prop("key").in().model(subQry). //
+		yield().countAll().as("aa"). //
+		modelAsAggregate();
+
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(countModel).build());
+    	assertEquals("Incorrect count", 1, values.size());
+    	assertEquals("Incorrect value", "1", values.get(0).get("aa").toString());
+    }
+
+    public void test_vehicle_model_retrieval13() {
+	final PrimitiveResultQueryModel subQry = select(TgVehicle.class).where().prop("model.make").eq().prop("make.id").yield().countAll().modelAsPrimitive();
+	final AggregatedResultQueryModel countModel = select(TgVehicleMake.class).as("make").yield().prop("key").as("make"). //
+	yield().model(subQry).as("vehicleCount"). //
+	modelAsAggregate();
+
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(countModel).build());
+	assertEquals("Incorrect count", 4, values.size());
+	for (final EntityAggregates result : values) {
+	    if (result.get("make").equals("MERC") || result.get("make").equals("AUDI")) {
+		assertEquals("Incorrect value for make " + result.get("make"), "1", result.get("vehicleCount").toString());
+	    } else {
+		assertEquals("Incorrect value", "0", result.get("vehicleCount").toString());
+	    }
+	}
+    }
+
+    public void test_vehicle_model_retrieval14() {
+	final PrimitiveResultQueryModel makeQry = select(TgVehicleMake.class).where().prop("model.make.key").eq().anyOfValues("BMW", "MERC").yield().prop("key").modelAsPrimitive();
+	final PrimitiveResultQueryModel modelQry = select(TgVehicleModel.class).where().prop("make.key").in().model(makeQry).yield().prop("key").modelAsPrimitive();
+	final AggregatedResultQueryModel countModel = select(TgVehicle.class).where().prop("model.key").in().model(modelQry). //
+	yield().countAll().as("aa"). //
+	modelAsAggregate();
+
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(countModel).build());
+    	assertEquals("Incorrect count", 1, values.size());
+    	assertEquals("Incorrect value", "1", values.get(0).get("aa").toString());
+    }
+
+    public void test_vehicle_model_retrieval15() {
+	final PrimitiveResultQueryModel makeQry = select(TgVehicleMake.class).where().prop("model.make.key").eq().anyOfValues("BMW", "MERC").and().prop("key").eq().prop("model.make.key").yield().prop("key").modelAsPrimitive();
+	final PrimitiveResultQueryModel modelQry = select(TgVehicleModel.class).where().prop("make.key").in().model(makeQry).and().prop("key").eq().param("model_param").yield().prop("key").modelAsPrimitive();
+	final AggregatedResultQueryModel countModel = select(TgVehicle.class).where().prop("model.key").in().model(modelQry). //
+	yield().countAll().as("aa"). //
+	modelAsAggregate();
+
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(countModel).paramValue("model_param", "316").build());
+    	assertEquals("Incorrect count", 1, values.size());
+    	assertEquals("Incorrect value", "1", values.get(0).get("aa").toString());
+    }
+
     @Override
     protected String[] getDataSetPathsForInsert() {
-	return new String[] { "src/test/resources/data-files/hibernate-query-test-case.flat.xml" };
+	return new String[] { "src/test/resources/data-files/entity-fetcher-test.flat.xml" };
     }
 }
