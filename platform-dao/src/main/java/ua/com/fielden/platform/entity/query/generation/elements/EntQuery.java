@@ -30,8 +30,6 @@ public class EntQuery implements ISingleOperand {
     private final Class resultType;
     private final QueryCategory category;
     private final MappingsGenerator mappingsGenerator;
-    private final IFilter filter;
-    private final String username;
 
     private EntQuery master;
 
@@ -202,8 +200,6 @@ public class EntQuery implements ISingleOperand {
 	super();
 	this.category = category;
 	this.mappingsGenerator = mappingsGenerator;
-	this.filter = filter;
-	this.username = username;
 	this.sources = enhanceSourcesWithUserDataFiltering(filter, username, sources, generator);
 	this.conditions = conditions;
 	this.yields = yields;

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.dao2;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -10,7 +11,6 @@ import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.UnorderedQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -91,9 +91,8 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity> implements IE
 
     @Override
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
-	final UnorderedQueryModel model = createQueryByKey(keyValues);
 	try {
-	    return getEntity(new QueryExecutionModel.Builder(model).fetchModel(fetchModel).build());
+	    return getEntity(new QueryExecutionModel.Builder(createQueryByKey(keyValues)).fetchModel(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
@@ -101,12 +100,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity> implements IE
 
     @Override
     public T findByKey(final Object... keyValues) {
-	final UnorderedQueryModel model = createQueryByKey(keyValues);
-	try {
-	    return getEntity(new QueryExecutionModel.Builder(model).build());
-	} catch (final Exception e) {
-	    throw new IllegalStateException(e);
-	}
+	return findByKeyAndFetch(null, keyValues);
     }
 
     /**
@@ -162,7 +156,12 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity> implements IE
     }
 
     @Override
-    public void delete(final QueryExecutionModel<T> model) {
+    public void delete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
 	throw new UnsupportedOperationException("By default deletion is not supported.");
+    }
+
+    @Override
+    public void delete(final EntityResultQueryModel<T> model) {
+	delete(model, null);
     }
 }

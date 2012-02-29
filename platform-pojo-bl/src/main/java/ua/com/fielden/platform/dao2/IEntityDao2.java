@@ -2,11 +2,13 @@ package ua.com.fielden.platform.dao2;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 
 /**
@@ -25,6 +27,11 @@ public interface IEntityDao2<T extends AbstractEntity> {
      * Username should be provided for every DAO instance in order to support data filtering and auditing.
      */
     void setUsername(final String username);
+
+    /**
+     * Returns provided name.
+     * @return
+     */
     String getUsername();
 
     /**
@@ -99,6 +106,16 @@ public interface IEntityDao2<T extends AbstractEntity> {
     IPage<T> firstPage(final int pageCapacity);
 
     /**
+     * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
+     *
+     * @param query
+     * @param pageCapacity
+     * @param pageNo
+     * @return
+     */
+    IPage<T> getPage(final int pageNo, final int pageCapacity);
+
+    /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query model (new EntityQuery).
      *
      * @param pageCapacity
@@ -117,16 +134,6 @@ public interface IEntityDao2<T extends AbstractEntity> {
      * @return
      */
     IPage<T> firstPage(final QueryExecutionModel<T> model, final QueryExecutionModel<EntityAggregates> summaryModel, final int pageCapacity);
-
-    /**
-     * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
-     *
-     * @param query
-     * @param pageCapacity
-     * @param pageNo
-     * @return
-     */
-    IPage<T> getPage(final int pageNo, final int pageCapacity);
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query model (new EntityQuery).
@@ -165,11 +172,17 @@ public interface IEntityDao2<T extends AbstractEntity> {
     void delete(final T entity);
 
     /**
-     * Deletes entities returned by provided query model.
+     * Deletes entities returned by provided query model with provided param values.
      *
      * @param model
      */
-    void delete(final QueryExecutionModel<T> model);
+    void delete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
+
+    /**
+     * Deletes entities returned by provided query model
+     * @param model
+     */
+    void delete(final EntityResultQueryModel<T> model);
 
     /**
      * Should return true if the passed entity exists in the persistent state.

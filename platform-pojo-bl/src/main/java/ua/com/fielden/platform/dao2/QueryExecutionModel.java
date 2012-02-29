@@ -12,7 +12,6 @@ public class QueryExecutionModel<T> {
     private final fetch fetchModel;
     private final Map<String, Object> paramValues;
     private final boolean lightweight;
-    //private final IFilter filter;
 
     private QueryExecutionModel(final Builder builder) {
 	queryModel = builder.queryModel;
@@ -48,7 +47,6 @@ public class QueryExecutionModel<T> {
 	    private fetch fetchModel;
 	    private Map<String, Object> paramValues = new HashMap<String, Object>();
 	    private boolean lightweight = false;
-	    //private IFilter filter;
 
 	public QueryExecutionModel build() {
 	    return new QueryExecutionModel(this);

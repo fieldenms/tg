@@ -30,10 +30,31 @@ import ua.com.fielden.platform.utils.Pair;
 public class EntityFetcher<E extends AbstractEntity> extends AbstractFetcher<E> {
     private final EntityEnhancer<E> entityEnhancer;
 
-
     public EntityFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion, final IFilter filter, final String username) {
 	super(session, entityFactory, mappingsGenerator, dbVersion, filter, username);
 	this.entityEnhancer = new EntityEnhancer<E>(session, entityFactory, mappingsGenerator, dbVersion, filter, username);
+    }
+
+    /**
+     * Fetches the results of the specified page based on the request of the given instance of IQueryOrderedModel.
+     *
+     * @param queryModel
+     * @param pageNumber
+     * @param pageCapacity
+     * @return
+     */
+    @SessionRequired
+    public List<E> list(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) {
+	try {
+	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight());
+	} catch (final Exception e) {
+	    e.printStackTrace();
+	    throw new IllegalStateException(e);
+	}
+    }
+
+    public List<E> list(final QueryExecutionModel queryModel) {
+	return list(queryModel, null, null);
     }
 
     /**
@@ -102,33 +123,10 @@ public class EntityFetcher<E extends AbstractEntity> extends AbstractFetcher<E> 
 	return result;
     }
 
-    /**
-     * Fetches the results of the specified page based on the request of the given instance of IQueryOrderedModel.
-     *
-     * @param queryModel
-     * @param pageNumber
-     * @param pageCapacity
-     * @return
-     */
-    @SessionRequired
-    public List<E> list(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) {
-	try {
-	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight());
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    throw new IllegalStateException(e);
-	}
-    }
-
-    public List<E> list(final QueryExecutionModel queryModel) {
-	return list(queryModel, null, null);
-    }
-
     @SessionRequired
     protected List<EntityContainer<E>> listContainers(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final QueryModelResult modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getMappingsGenerator(), getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
 	return entityEnhancer.enhance(result, entityEnhancer.enhanceFetchModelWithKeyProperties(queryModel.getFetchModel(), modelResult.getResultType()), modelResult.getResultType());
     }
-
 }

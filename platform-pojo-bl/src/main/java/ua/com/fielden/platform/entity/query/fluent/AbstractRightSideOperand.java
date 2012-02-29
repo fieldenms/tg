@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IQuantifiedOperand;
-import ua.com.fielden.platform.entity.query.model.UnorderedQueryModel;
+import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
 abstract class AbstractRightSideOperand<T> extends AbstractMultipleOperand<T> implements IQuantifiedOperand<T> {
 
@@ -10,13 +10,13 @@ abstract class AbstractRightSideOperand<T> extends AbstractMultipleOperand<T> im
     }
 
     @Override
-    public T any(final UnorderedQueryModel subQuery) {
+    public T any(final SingleResultQueryModel subQuery) {
 	getTokens().any(subQuery);
 	return getParent();
     }
 
     @Override
-    public T all(final UnorderedQueryModel subQuery) {
+    public T all(final SingleResultQueryModel subQuery) {
 	getTokens().all(subQuery);
 	return getParent();
     }

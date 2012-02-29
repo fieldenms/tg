@@ -5,8 +5,8 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.UnorderedQueryModel;
 
 /**
  * Class for collecting all interfaces, which are part of Entity Query Progressive Interfaces.
@@ -119,22 +119,22 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     interface IExistenceOperator<T extends ILogicalOperator<?>>  {
-        <E extends AbstractEntity> T exists(UnorderedQueryModel subQuery);
+        <E extends AbstractEntity> T exists(QueryModel subQuery);
 
-        <E extends AbstractEntity> T notExists(UnorderedQueryModel subQuery);
+        <E extends AbstractEntity> T notExists(QueryModel subQuery);
 
-        <E extends AbstractEntity> T existsAnyOf(UnorderedQueryModel ... subQueries);
+        <E extends AbstractEntity> T existsAnyOf(QueryModel ... subQueries);
 
-        <E extends AbstractEntity> T notExistsAnyOf(UnorderedQueryModel ... subQueries);
+        <E extends AbstractEntity> T notExistsAnyOf(QueryModel ... subQueries);
 
-        <E extends AbstractEntity> T existsAllOf(UnorderedQueryModel ... subQueries);
+        <E extends AbstractEntity> T existsAllOf(QueryModel ... subQueries);
 
-        <E extends AbstractEntity> T notExistsAllOf(UnorderedQueryModel ... subQueries);
+        <E extends AbstractEntity> T notExistsAllOf(QueryModel ... subQueries);
     }
 
     interface IQuantifiedOperand<T> extends IMultipleOperand<T> {
-        T all(UnorderedQueryModel subQuery);
-        T any(UnorderedQueryModel subQuery);
+        T all(SingleResultQueryModel subQuery);
+        T any(SingleResultQueryModel subQuery);
     }
 
     interface IComparisonQuantifiedOperand<T> extends IQuantifiedOperand<T>, IBeginExpression<IExprOperand0<T>> /*another entry point*/{

@@ -11,8 +11,8 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.UnorderedQueryModel;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -79,15 +79,15 @@ final class Tokens {
 	return add(TokenCategory.END_EXPR, null);
     }
 
-    public Tokens exists(final boolean negated, final UnorderedQueryModel model) {
+    public Tokens exists(final boolean negated, final QueryModel model) {
 	return add(TokenCategory.EXISTS_OPERATOR, negated, TokenCategory.EQUERY_TOKENS, model);
     }
 
-    public Tokens existsAnyOf(final boolean negated, final UnorderedQueryModel... subQueries) {
+    public Tokens existsAnyOf(final boolean negated, final QueryModel... subQueries) {
 	return add(TokenCategory.EXISTS_OPERATOR, negated, TokenCategory.ANY_OF_EQUERY_TOKENS, getListFromArray(subQueries));
     }
 
-    public Tokens existsAllOf(final boolean negated, final UnorderedQueryModel... subQueries) {
+    public Tokens existsAllOf(final boolean negated, final QueryModel... subQueries) {
 	return add(TokenCategory.EXISTS_OPERATOR, negated, TokenCategory.ALL_OF_EQUERY_TOKENS, getListFromArray(subQueries));
     }
 
@@ -219,11 +219,11 @@ final class Tokens {
 	return add(TokenCategory.ALL_OF_EXPR_TOKENS, getListFromArray(expressions));
     }
 
-    public Tokens any(final UnorderedQueryModel subQuery) {
+    public Tokens any(final SingleResultQueryModel subQuery) {
 	return add(TokenCategory.ANY_OPERATOR, subQuery);
     }
 
-    public Tokens all(final UnorderedQueryModel subQuery) {
+    public Tokens all(final SingleResultQueryModel subQuery) {
 	return add(TokenCategory.ALL_OPERATOR, subQuery);
     }
 

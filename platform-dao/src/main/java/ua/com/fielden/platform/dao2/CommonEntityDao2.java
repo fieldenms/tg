@@ -69,6 +69,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity> extends Abstrac
     private ThreadLocal<Session> threadLocalSession = new ThreadLocal<Session>();
 
     private MappingsGenerator mappingsGenerator;
+
     private EntityFactory entityFactory;
 
     private String username;
@@ -312,7 +313,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity> extends Abstrac
 
     @Override
     public List<T> getEntities(final QueryExecutionModel<T> query) {
-	return list(query/*, new fetchAll(getEntityType())*/, null, null);
+	return list(query, null, null);
     }
 
     /**
@@ -329,7 +330,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity> extends Abstrac
      */
     @Override
     public IPage<T> firstPage(final QueryExecutionModel<T> model, final int pageCapacity) {
-	return new EntityQueryPage(model, /*new fetchAll(getEntityType()),*/ 0, pageCapacity, evalNumOfPages(model, pageCapacity));
+	return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model, pageCapacity));
     }
 
     @Override
@@ -385,7 +386,8 @@ public abstract class CommonEntityDao2<T extends AbstractEntity> extends Abstrac
     protected int evalNumOfPages(final QueryExecutionModel<T> model, final int pageCapacity) {
 	final DateTime st = new DateTime();
 	int resultSize = 0;
-	final List<EntityAggregates> counts = null;//new EntityFetcher<EntityAggregates>(getSession(), getEntityFactory(), mappingsGenerator, null).list(model.enhanceWith(filter, getUsername()).getCountModel(), null, null, null);
+	final List<EntityAggregates> counts = null; //new EntityFetcher<EntityAggregates>(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()). //
+		//list(select(model)., null, null);
 
 	for (final EntityAggregates count : counts) {
 	    resultSize = resultSize + ((Number) count.get("RECORDS_COUNT")).intValue();
@@ -483,11 +485,6 @@ public abstract class CommonEntityDao2<T extends AbstractEntity> extends Abstrac
 
 	return oStream.toByteArray();
     }
-
-//    @Override
-//    public byte[] export(final QueryExecutionModel<T> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-//	return export(query, new fetchAll<T>(getEntityType()), propertyNames, propertyTitles);
-//    }
 
     /**
      * A convenient default implementation for entity deletion, which should be used by overriding method {@link #delete(Long)}.

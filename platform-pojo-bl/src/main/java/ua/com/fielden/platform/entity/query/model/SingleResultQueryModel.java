@@ -5,7 +5,7 @@ import java.util.List;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
-public abstract class SingleResultQueryModel extends UnorderedQueryModel {
+public abstract class SingleResultQueryModel extends QueryModel {
 
     SingleResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
 	super(tokens);
