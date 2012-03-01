@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
@@ -481,5 +482,19 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IStandAloneExprCompleted {
         ExpressionModel model();
+    }
+
+    //----------------------------------------------------------------------------------------------------------------------------------------------
+    interface IOrderingCompleted {
+        OrderingModel model();
+    }
+
+    interface ISingleOperandOrderable extends ISingleOperand<ISingleOperandOrderable>, IOrder<IOrderingItemCloseable>, IOrderingCompleted {
+    }
+
+    interface IOrderingItemCloseable extends IOrderingItem, IOrderingCompleted {
+    }
+
+    interface IOrderingItem extends ISingleOperand<ISingleOperandOrderable> {
     }
 }

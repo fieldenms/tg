@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -23,5 +24,11 @@ public class query {
 
     public static IStandAloneExprOperand expr() {
 	return new StandAloneExpOperand(new Tokens());
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static IOrderingItem orderBy() {
+	return new OrderingItem(new Tokens());
     }
 }

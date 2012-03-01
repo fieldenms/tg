@@ -11,7 +11,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public class ExpressionModel {
+public class OrderingModel {
     private final List<Pair<TokenCategory, Object>> tokens;
 
     @Override
@@ -19,13 +19,20 @@ public class ExpressionModel {
         return tokens.toString();
     }
 
-    public ExpressionModel(final List<Pair<TokenCategory, Object>> tokens) {
+    public OrderingModel(final List<Pair<TokenCategory, Object>> tokens) {
 	this.tokens = tokens;
+    }
+
+    public List<Pair<TokenCategory, Object>> getTokens() {
+        return tokens;
     }
 
     @Override
     public int hashCode() {
-        return toString().hashCode() * 23;
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + ((tokens == null) ? 0 : tokens.hashCode());
+	return result;
     }
 
     @Override
@@ -33,14 +40,20 @@ public class ExpressionModel {
 	if (this == obj) {
 	    return true;
 	}
-	if (!(obj instanceof ExpressionModel)) {
+	if (obj == null) {
 	    return false;
 	}
-
-	return toString().equals(obj.toString());
-    }
-
-    public List<Pair<TokenCategory, Object>> getTokens() {
-        return tokens;
+	if (!(obj instanceof OrderingModel)) {
+	    return false;
+	}
+	final OrderingModel other = (OrderingModel) obj;
+	if (tokens == null) {
+	    if (other.tokens != null) {
+		return false;
+	    }
+	} else if (!tokens.equals(other.tokens)) {
+	    return false;
+	}
+	return true;
     }
 }
