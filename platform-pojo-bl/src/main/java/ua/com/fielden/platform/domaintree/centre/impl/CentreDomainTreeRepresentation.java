@@ -111,7 +111,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	private Object typeAndSingleRelatedValue(final Class<?> root, final String property) {
 	    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	    final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-	    final CritOnly critAnnotation = AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, property);
+	    final CritOnly critAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, property);
 	    final boolean single = critAnnotation != null && Type.SINGLE.equals(critAnnotation.value());
 	    return DynamicQueryBuilder.getEmptyValue(propertyType, single);
 	}
@@ -120,6 +120,12 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	public Object getValueByDefault(final Class<?> root, final String property) {
 	    illegalExcludedProperties(getDtr(), root, property, "Could not ask a 'value by default' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return (propertiesDefaultValues1.containsKey(key(root, property))) ? propertiesDefaultValues1.get(key(root, property)) : typeAndSingleRelatedValue(root, property);
+	}
+
+	@Override
+	public Object getEmptyValueFor(final Class<?> root, final String property) {
+	    illegalExcludedProperties(getDtr(), root, property, "Could not ask an 'empty value' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    return typeAndSingleRelatedValue(root, property);
 	}
 
 	@Override
@@ -133,6 +139,12 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 	public Object getValue2ByDefault(final Class<?> root, final String property) {
 	    illegalExcludedProperties(getDtr(), root, property, "Could not ask a 'value 2 by default' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return (propertiesDefaultValues2.containsKey(key(root, property))) ? propertiesDefaultValues2.get(key(root, property)) : typeAndSingleRelatedValue(root, property);
+	}
+
+	@Override
+	public Object get2EmptyValueFor(final Class<?> root, final String property) {
+	    illegalExcludedProperties(getDtr(), root, property, "Could not ask an 'empty value' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    return typeAndSingleRelatedValue(root, property);
 	}
 
 	@Override

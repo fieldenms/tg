@@ -217,6 +217,17 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	IAddToCriteriaTickManager setColumnsNumber(final int columnsNumber);
 
 	/**
+	 * Returns value that indicates whether <i>main</i> value of a criteria property is empty or not.<br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 *
+	 * @param root -- a root type that contains property.
+	 * @param property -- a dot-notation expression that defines a property.
+	 * @return
+	 */
+	boolean isValueEmpty(final Class<?> root, final String property);
+
+	/**
 	 * Gets a <i>main</i> value of a criteria property. <br><br>
 	 *
 	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
@@ -238,6 +249,18 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	 * @return -- a criteria tick manager
 	 */
 	IAddToCriteriaTickManager setValue(final Class<?> root, final String property, final Object value);
+
+	/**
+	 * Returns value that indicates whether <i>secondary</i> value of a criteria property is empty or not. <br><br>
+	 *
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 *
+	 * @param root -- a root type that contains property.
+	 * @param property -- a dot-notation expression that defines a property.
+	 * @return
+	 */
+	boolean is2ValueEmpty(final Class<?> root, final String property);
+
 
 	/**
 	 * Gets a <i>secondary</i> value of a criteria property. <br><br>

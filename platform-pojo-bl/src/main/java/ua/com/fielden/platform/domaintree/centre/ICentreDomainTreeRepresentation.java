@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.domaintree.centre;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToResultTickRepresentation;
 
 /**
  * This interface defines how domain tree can be represented for <b>entity centres</b>. <br><br>
@@ -39,51 +37,73 @@ public interface ICentreDomainTreeRepresentation extends IDomainTreeRepresentati
      *
      */
     public interface IAddToCriteriaTickRepresentation extends ITickRepresentation {
-        /**
-         * Gets a <b>default</b> <i>main</i> value of a criteria property. <br><br>
-         *
-         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
-         *
-         * @param root -- a root type that contains property.
-         * @param property -- a dot-notation expression that defines a property.
-         * @return
-         */
-        Object getValueByDefault(final Class<?> root, final String property);
+	/**
+	 * Gets a <b>default</b> <i>main</i> value of a criteria property. <br><br>
+	 *
+	 * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
+	 *
+	 * @param root -- a root type that contains property.
+	 * @param property -- a dot-notation expression that defines a property.
+	 * @return
+	 */
+	Object getValueByDefault(final Class<?> root, final String property);
 
-        /**
-         * Sets a <b>default</b> <i>main</i> value of a criteria property. <br><br>
-         *
-         * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
-         *
-         * @param root -- a root type that contains property.
-         * @param property -- a dot-notation expression that defines a property.
-         * @param value -- a value to set
-         * @return -- a criteria tick representation
-         */
-        IAddToCriteriaTickRepresentation setValueByDefault(final Class<?> root, final String property, final Object value);
+	/**
+	 * Gets an <b>empty</b> <i>main</i> value of a criteria property. <br><br>
+	 *
+	 * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
+	 *
+	 * @param root -- a root type that contains property.
+	 * @param property -- a dot-notation expression that defines a property.
+	 * @return
+	 */
+	Object getEmptyValueFor(final Class<?> root, final String property);
 
-        /**
-         * Gets a <b>default</b> <i>secondary</i> value of a criteria property. <br><br>
-         *
-         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
-         *
-         * @param root -- a root type that contains property.
-         * @param property -- a dot-notation expression that defines a property.
-         * @return
-         */
-        Object getValue2ByDefault(final Class<?> root, final String property);
+	/**
+	 * Sets a <b>default</b> <i>main</i> value of a criteria property. <br><br>
+	 *
+	 * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
+	 *
+	 * @param root -- a root type that contains property.
+	 * @param property -- a dot-notation expression that defines a property.
+	 * @param value -- a value to set
+	 * @return -- a criteria tick representation
+	 */
+	IAddToCriteriaTickRepresentation setValueByDefault(final Class<?> root, final String property, final Object value);
 
-        /**
-         * Sets a <b>default</b> <i>secondary</i> value of a criteria property. <br><br>
-         *
-         * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
-         *
-         * @param root -- a root type that contains property.
-         * @param property -- a dot-notation expression that defines a property.
-         * @param value2 -- a value to set
-         * @return -- a criteria tick representation
-         */
-        IAddToCriteriaTickRepresentation setValue2ByDefault(final Class<?> root, final String property, final Object value2);
+	/**
+	 * Gets a <b>default</b> <i>secondary</i> value of a criteria property. <br><br>
+	 *
+	 * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
+	 *
+	 * @param root -- a root type that contains property.
+	 * @param property -- a dot-notation expression that defines a property.
+	 * @return
+	 */
+	Object getValue2ByDefault(final Class<?> root, final String property);
+
+	/**
+	 * Gets an <b>empty</b> <i>secondary</i> value of a criteria property. <br><br>
+	 *
+	 * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
+	 *
+	 * @param root -- a root type that contains property.
+	 * @param property -- a dot-notation expression that defines a property.
+	 * @return
+	 */
+	Object get2EmptyValueFor(final Class<?> root, final String property);
+
+	/**
+	 * Sets a <b>default</b> <i>secondary</i> value of a criteria property. <br><br>
+	 *
+	 * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
+	 *
+	 * @param root -- a root type that contains property.
+	 * @param property -- a dot-notation expression that defines a property.
+	 * @param value2 -- a value to set
+	 * @return -- a criteria tick representation
+	 */
+	IAddToCriteriaTickRepresentation setValue2ByDefault(final Class<?> root, final String property, final Object value2);
     }
 
     /**

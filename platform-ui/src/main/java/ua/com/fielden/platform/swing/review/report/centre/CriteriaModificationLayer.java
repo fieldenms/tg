@@ -424,13 +424,13 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	if (propertyEditor instanceof RangePropertyEditor) {
 	    final RangePropertyEditor rpe = (RangePropertyEditor) propertyEditor;
 	    if (!rpe.isSingle() && !rpe.isBool()) { // update exclusiveness according to an ignore state of each sub-editor:
-		if (rpe.getFromEditor().isIgnored() && Boolean.TRUE.equals(fromExclusive)) {
+		if (isPropertyIgnored(true) && Boolean.TRUE.equals(fromExclusive)) {
 		    System.out.print("Remove from exclusiveness. ");
 		    isInFromEditorHierarchy = true;
 		    fromExclusiveMenuItem.setSelected(false);
 		    isInFromEditorHierarchy = null;
 		}
-		if (rpe.getToEditor().isIgnored() && Boolean.TRUE.equals(toExclusive)) {
+		if (isPropertyIgnored(false) && Boolean.TRUE.equals(toExclusive)) {
 		    System.out.print("Remove to exclusiveness. ");
 		    isInFromEditorHierarchy = false;
 		    toExclusiveMenuItem.setSelected(false);
@@ -459,9 +459,24 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
      *
      * @return
      */
-    public boolean isIgnored(){
-	return propertyEditor.isIgnored() && dateState.isEmpty() && !Boolean.TRUE.equals(orNull);
+    private boolean isIgnored(){
+	return isPropertyIgnored() && dateState.isEmpty() && !Boolean.TRUE.equals(orNull);
     }
+
+    private boolean isPropertyIgnored(){
+	if(propertyEditor instanceof RangePropertyEditor){
+	    final RangePropertyEditor rangeEditor = (RangePropertyEditor) propertyEditor;
+	    return (isPropertyIgnored(true) && isPropertyIgnored(false)) || (rangeEditor.isBool() && !isPropertyIgnored(true) && !isPropertyIgnored(false));
+	}else{
+	    return isPropertyIgnored(true);
+	}
+    }
+
+    private boolean isPropertyIgnored(final boolean first){
+	final IAddToCriteriaTickManager ftm= eqc.getDomainTreeManger().getFirstTick();
+	return first ? ftm.isValueEmpty(rootType, propertyName) : ftm.is2ValueEmpty(rootType, propertyName);
+    }
+
 
     /**
      * Popup menu invocator.
@@ -558,8 +573,8 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 				exclusiveAdd(false, false);
 			    }
 			    final boolean mnemonicDeselected = dateState.isEmpty();
-			    fromExclusiveMenuItem.setEnabled(!rpe.getFromEditor().isIgnored() && mnemonicDeselected);
-			    toExclusiveMenuItem.setEnabled(!rpe.getToEditor().isIgnored() && mnemonicDeselected);
+			    fromExclusiveMenuItem.setEnabled(!isPropertyIgnored(true) && mnemonicDeselected);
+			    toExclusiveMenuItem.setEnabled(!isPropertyIgnored(false) && mnemonicDeselected);
 			} else {
 			    exclusiveAdd(false, true);
 			    exclusiveAdd(false, false);

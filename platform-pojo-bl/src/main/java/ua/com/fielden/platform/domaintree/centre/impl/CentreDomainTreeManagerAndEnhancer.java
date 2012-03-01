@@ -69,12 +69,12 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 
     @Override
     public IAddToCriteriaTickManager getFirstTick() {
-        return (IAddToCriteriaTickManager) super.getFirstTick();
+	return (IAddToCriteriaTickManager) super.getFirstTick();
     }
 
     @Override
     public IAddToResultTickManager getSecondTick() {
-        return (IAddToResultTickManager) super.getSecondTick();
+	return (IAddToResultTickManager) super.getSecondTick();
     }
 
     /**
@@ -83,8 +83,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
      * @author TG Team
      *
      */
-    public /* TODO reduce visibility */ class AddToCriteriaTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAddToCriteriaTickManager {
-	private static final long serialVersionUID = 5845028563069886027L;
+    /* TODO reduce visibility */
+    public class AddToCriteriaTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAddToCriteriaTickManager {
 
 	private AddToCriteriaTickManagerAndEnhancer(final TickManager base) {
 	    super(base);
@@ -169,6 +169,11 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
+	public boolean isValueEmpty(final Class<?> root, final String property) {
+	    return base().isValueEmpty(enhancer().getManagedType(root), property);
+	}
+
+	@Override
 	public IAddToCriteriaTickManager setValue(final Class<?> root, final String property, final Object value) {
 	    // inject an enhanced type into method implementation
 	    base().setValue(enhancer().getManagedType(root), property, value);
@@ -179,6 +184,11 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	public Object getValue2(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    return base().getValue2(enhancer().getManagedType(root), property);
+	}
+
+	@Override
+	public boolean is2ValueEmpty(final Class<?> root, final String property) {
+	    return base().is2ValueEmpty(enhancer().getManagedType(root), property);
 	}
 
 	@Override
@@ -283,6 +293,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	public Set<Class<?>> rootTypes() {
 	    return base().rootTypes();
 	}
+
     }
 
     /**
@@ -363,7 +374,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	 *
 	 */
 	protected class AddToCriteriaTickRepresentationAndEnhancer extends TickRepresentationAndEnhancer implements IAddToCriteriaTickRepresentation {
-	    private static final long serialVersionUID = -8143739289123268471L;
 
 	    protected AddToCriteriaTickRepresentationAndEnhancer(final ITickRepresentation base) {
 		super(base);
@@ -381,6 +391,11 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    }
 
 	    @Override
+	    public Object getEmptyValueFor(final Class<?> root, final String property) {
+		return base().getEmptyValueFor(enhancer().getManagedType(root), property);
+	    }
+
+	    @Override
 	    public IAddToCriteriaTickRepresentation setValueByDefault(final Class<?> root, final String property, final Object value) {
 		// inject an enhanced type into method implementation
 		base().setValueByDefault(enhancer().getManagedType(root), property, value);
@@ -394,11 +409,17 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    }
 
 	    @Override
+	    public Object get2EmptyValueFor(final Class<?> root, final String property) {
+		return base().get2EmptyValueFor(enhancer().getManagedType(root), property);
+	    }
+
+	    @Override
 	    public IAddToCriteriaTickRepresentation setValue2ByDefault(final Class<?> root, final String property, final Object value2) {
 		// inject an enhanced type into method implementation
 		base().setValue2ByDefault(enhancer().getManagedType(root), property, value2);
 		return this;
 	    }
+
 	}
 
 	/**

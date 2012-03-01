@@ -254,6 +254,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
+	public boolean isValueEmpty(final Class<?> root, final String property) {
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask whether 'value' is empty for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    final Object value = (propertiesValues1.containsKey(key(root, property))) ? propertiesValues1.get(key(root, property)) : tr().getValueByDefault(root, property);
+	    return EntityUtils.equalsEx(value, tr().getEmptyValueFor(root, property));
+	}
+
+	@Override
 	public IAddToCriteriaTickManager setValue(final Class<?> root, final String property, final Object value) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'value' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    propertiesValues1.put(key(root, property), value);
@@ -264,6 +271,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	public Object getValue2(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a 'value 2' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return (propertiesValues2.containsKey(key(root, property))) ? propertiesValues2.get(key(root, property)) : tr().getValue2ByDefault(root, property);
+	}
+
+	@Override
+	public boolean is2ValueEmpty(final Class<?> root, final String property) {
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask whether 'value 2' is empty for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    final Object value = (propertiesValues2.containsKey(key(root, property))) ? propertiesValues2.get(key(root, property)) : tr().getValue2ByDefault(root, property);
+	    return EntityUtils.equalsEx(value, tr().get2EmptyValueFor(root, property));
 	}
 
 	@Override
