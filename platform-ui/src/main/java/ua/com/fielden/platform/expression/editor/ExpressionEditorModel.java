@@ -11,9 +11,11 @@ import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 
 import net.miginfocom.swing.MigLayout;
@@ -24,8 +26,9 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.expression.IExpressionErrorPosition;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
@@ -34,6 +37,7 @@ import ua.com.fielden.platform.swing.model.UModel;
 import ua.com.fielden.platform.swing.model.UmState;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.ResourceLoader;
 
 import com.jgoodies.binding.value.Trigger;
 
@@ -46,6 +50,7 @@ import com.jgoodies.binding.value.Trigger;
 public class ExpressionEditorModel extends UModel<CalculatedProperty, CalculatedProperty, Object> {
 
     private final ExpressionPropertyEditor expressionEditor;
+    private final OriginationPropertyEditor originationEditor;
     private final IPropertyProvider propertySelectionModel;
 
     /**
@@ -57,10 +62,21 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
     public ExpressionEditorModel(final CalculatedProperty entity, final ILightweightPropertyBinder<CalculatedProperty> propertyBinder) {
 	super(entity, null, propertyBinder, false);
 	this.expressionEditor = new ExpressionPropertyEditor(entity);
+	this.originationEditor = new OriginationPropertyEditor(entity);
 	this.propertySelectionModel = new PropertyProvider();
+
+	//Configuring edit buttons of two property editors: expression editor and origination property editor.
+	final ButtonGroup buttonGroup = new ButtonGroup();
+	buttonGroup.add(expressionEditor.getEditButton());
+	buttonGroup.add(originationEditor.getEditButton());
+	expressionEditor.getEditButton().setSelected(true);
+
+	//Configuring property selection model. Added listener that updates one of two editors: expression editor or origination property editor.
 	this.propertySelectionModel.addPropertySelectionListener(getPropertySelectionListener());
+
 	final Map<String, IPropertyEditor> editors = new HashMap<String, IPropertyEditor>(getEditors());
 	editors.put("contextualExpression", expressionEditor);
+	editors.put("originationProperty", originationEditor);
 	setEditors(editors);
     }
 
@@ -318,47 +334,37 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
     private static class ExpressionPropertyEditor implements IPropertyEditor{
 
 	private final JLabel label;
-	private final BoundedValidationLayer<JTextField> editor;
+	private final BoundedValidationLayer<JTextField> textEditor;
+	private final JToggleButton editButton;
+	private final JPanel editor;
 	private final Trigger commitTrigger;
 
 	private CalculatedProperty entity;
-
-	private FocusGainedOperation focusGainedOperation = FocusGainedOperation.NONE;
-
-	/**
-	 * Temporary holds text to insert in to the expression editor. After the text was inserted, the property value can be set to null.
-	 */
-	private String textToInsert = null;
+	private final String propertyName;
 
 	/**
-	 * Indicates whether select inserted text or not.
+	 * Allows to set manually specified text.
 	 */
-	private boolean select = false;
-
-	/**
-	 * Indexes, those points on to the beginning and on to the end of the place where text should be inserted.
-	 */
-	private int startIndex, endIndex;
-
-	/**
-	 * relative index of the caret position.
-	 */
-	private int relativeCaretPosition;
+	private final ManualTextSetter manualTextSetter;
 
 	public ExpressionPropertyEditor(final CalculatedProperty entity){
 	    this.entity = entity;
+	    this.propertyName = "contextualExpression";
 	    entity.getProperty(getPropertyName()).addValidationResultsChangeListener(createExpressionValidationListener());
 	    this.commitTrigger = new Trigger();
-	    final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract("contextualExpression", entity.getType());
+	    final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
 
 	    label = DummyBuilder.label(titleAndDesc.getKey());
 	    label.setToolTipText(titleAndDesc.getValue());
 
+	    textEditor = ComponentFactory.createTriggeredStringTextField(entity, propertyName, commitTrigger, false, entity.getProperty(propertyName).getDesc());
+	    editButton = new JToggleButton(ResourceLoader.getIcon("images/cursor.png"));
+	    editor = new JPanel(new MigLayout("fill, insets 0", "[fill, grow]5[]", "[fill, grow]"));
+	    editor.add(textEditor);
+	    editor.add(editButton);
+	    manualTextSetter = new ManualTextSetter(textEditor);
 
-	    final BoundedValidationLayer<JTextField> component = ComponentFactory.createTriggeredStringTextField(entity, "contextualExpression", commitTrigger, false, entity.getProperty("contextualExpression").getDesc());
-	    editor = component;
-	    final JTextField field = editor.getView();
-	    field.addFocusListener(createExpressionFocusListener(editor.getView()));
+	    final JTextField field = textEditor.getView();
 	    final String actionName = "Enter action";
 	    field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), actionName);
 	    field.getActionMap().put(actionName, createCommiteAction());
@@ -373,15 +379,8 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		    final Result res = obj instanceof Result ? (Result) obj : null;
 		    if(res != null && !res.isSuccessful() && res.getEx() instanceof IExpressionErrorPosition){
 			final Exception ex = res.getEx();
-			final JTextField field = editor.getView();
 			final IExpressionErrorPosition errorPosition = (IExpressionErrorPosition) ex;
-			if(field.hasFocus()){
-			    field.setCaretPosition(errorPosition.position().intValue());
-			}else{
-			    focusGainedOperation = FocusGainedOperation.CARRET_CONTROL;
-			    relativeCaretPosition = errorPosition.position().intValue();
-			    editor.getView().requestFocusInWindow();
-			}
+			manualTextSetter.setCaretPosition(errorPosition.position().intValue());
 		    }
 
 		}
@@ -414,9 +413,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	 * @param relativeCaretPosition
 	 */
 	public void setText(final String text, final boolean select, final int relativeCaretPosition){
-	    final JTextField field = editor.getView();
-	    field.selectAll();
-	    insertText(text, TextInsertionType.REPLACE, false, relativeCaretPosition);
+	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, false, relativeCaretPosition);
 	}
 
 	/**
@@ -427,41 +424,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	 * @param select - indicates whether select inserted text or not.
 	 */
 	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int relativeCaretPosition){
-	    final JTextField field = editor.getView();
-	    if(field.getSelectionStart() == field.getSelectionEnd()){
-		startIndex = endIndex = field.getCaretPosition();
-		this.textToInsert = textToInsert;
-		this.select = select;
-		this.relativeCaretPosition = select  ? textToInsert.length() : relativeCaretPosition;
-		if(TextInsertionType.APPLY == insertionType){
-		    this.select = false;
-		    this.relativeCaretPosition = relativeCaretPosition;
-		}
-	    } else {
-		this.select = select;
-		switch(insertionType){
-		case APPLY:
-		    this.startIndex = field.getSelectionStart();
-		    this.endIndex = field.getSelectionEnd();
-		    this.textToInsert = textToInsert.substring(0, relativeCaretPosition) //
-		    /*              */+ field.getText().substring(startIndex, endIndex) + textToInsert.substring(relativeCaretPosition);
-		    this.relativeCaretPosition = this.textToInsert.length();
-		    break;
-		case APPEND:
-		    this.startIndex = this.endIndex = field.getCaretPosition();
-		    this.textToInsert = textToInsert;
-		    this.relativeCaretPosition = relativeCaretPosition;
-		    break;
-		case REPLACE:
-		    this.startIndex = field.getSelectionStart();
-		    this.endIndex = field.getSelectionEnd();
-		    this.relativeCaretPosition = relativeCaretPosition;
-		    this.textToInsert = textToInsert;
-		    break;
-		}
-	    }
-	    focusGainedOperation = FocusGainedOperation.TEXT_INSERTION;
-	    field.requestFocusInWindow();
+	    manualTextSetter.insertText(textToInsert, insertionType, select, relativeCaretPosition);
 	}
 
 	@Override
@@ -471,13 +434,13 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	@Override
 	public String getPropertyName() {
-	    return "contextualExpression";
+	    return propertyName;
 	}
 
 	@Override
 	public void bind(final AbstractEntity<?> entity) {
 	    this.entity = (CalculatedProperty)entity;
-	    this.editor.rebindTo(entity);
+	    this.textEditor.rebindTo(entity);
 	}
 
 	@Override
@@ -486,15 +449,33 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	}
 
 	@Override
-	public BoundedValidationLayer<JTextField> getEditor() {
+	public JPanel getEditor() {
 	    return editor;
+	}
+
+	/**
+	 * Returns the toggle button that is associated with this property editor.
+	 * 
+	 * @return
+	 */
+	public JToggleButton getEditButton() {
+	    return editButton;
+	}
+
+	/**
+	 * Returns the value that indicates whether this property editor is selected to receive input.
+	 * 
+	 * @return
+	 */
+	public boolean isChecked(){
+	    return getEditButton().isSelected();
 	}
 
 	@Override
 	public JPanel getDefaultLayout() {
 	    final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
 	    panel.add(label);
-	    panel.add(editor, "growx");
+	    panel.add(textEditor, "growx");
 	    return panel;
 	}
 
@@ -514,18 +495,242 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	public void commitEditorValue(){
 	    commitTrigger.triggerCommit();
 	}
+    }
+
+    private static class OriginationPropertyEditor implements IPropertyEditor{
+
+	private final JLabel label;
+	private final BoundedValidationLayer<JTextField> textEditor;
+	private final JToggleButton editButton;
+	private final JPanel editor;
+
+	private CalculatedProperty entity;
+	private final String propertyName;
 
 	/**
-	 * Determines the operation that should be performed after the text field gained the focus. There are three type of operation:
-	 * text insertion, caret position controlling or there was no operation to perform.
-	 *
-	 * @author TG Team
-	 *
+	 * Allows to set manually specified text.
 	 */
-	private static enum FocusGainedOperation{
-	    TEXT_INSERTION, CARRET_CONTROL, NONE;
+	private final ManualTextSetter manualTextSetter;
+
+	public OriginationPropertyEditor(final CalculatedProperty entity){
+	    this.entity = entity;
+	    this.propertyName = "originationProperty";
+
+	    final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
+	    label = DummyBuilder.label(titleAndDesc.getKey());
+	    label.setToolTipText(titleAndDesc.getValue());
+
+	    textEditor = ComponentFactory.createStringTextField(entity, propertyName, true, entity.getProperty(propertyName).getDesc(), EditorCase.MIXED_CASE);
+	    editButton = new JToggleButton(ResourceLoader.getIcon("images/cursor.png"));
+	    editor = new JPanel(new MigLayout("fill, insets 0", "[fill, grow]5[]", "[fill, grow]"));
+	    editor.add(textEditor);
+	    editor.add(editButton);
+	    manualTextSetter = new ManualTextSetter(textEditor);
 	}
 
+	/**
+	 * Set the specified text in to the editor.
+	 *
+	 * @param text
+	 * @param select
+	 * @param relativeCaretPosition
+	 */
+	public void setText(final String text, final boolean select, final int relativeCaretPosition){
+	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, false, relativeCaretPosition);
+	}
+
+	/**
+	 * Inserts specified text at the caret position or replaces selected text.
+	 *
+	 * @param textToInsert - specified text to insert.
+	 * @param insertionType
+	 * @param select - indicates whether select inserted text or not.
+	 */
+	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int relativeCaretPosition){
+	    manualTextSetter.insertText(textToInsert, insertionType, select, relativeCaretPosition);
+	}
+
+	@Override
+	public CalculatedProperty getEntity() {
+	    return entity;
+	}
+
+	@Override
+	public String getPropertyName() {
+	    return propertyName;
+	}
+
+	@Override
+	public void bind(final AbstractEntity<?> entity) {
+	    this.entity = (CalculatedProperty)entity;
+	    this.textEditor.rebindTo(entity);
+	}
+
+	@Override
+	public JLabel getLabel() {
+	    return label;
+	}
+
+	@Override
+	public JPanel getEditor() {
+	    return editor;
+	}
+
+	/**
+	 * Returns the toggle button that is associated with this property editor.
+	 * 
+	 * @return
+	 */
+	public JToggleButton getEditButton() {
+	    return editButton;
+	}
+
+	/**
+	 * Returns the value that indicates whether this property editor is selected to receive input.
+	 * 
+	 * @return
+	 */
+	public boolean isChecked(){
+	    return getEditButton().isSelected();
+	}
+
+	@Override
+	public JPanel getDefaultLayout() {
+	    final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[]5[]", "[c]"));
+	    panel.add(label);
+	    panel.add(textEditor, "growx");
+	    return panel;
+	}
+
+	@Override
+	public IValueMatcher<?> getValueMatcher() {
+	    throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
+	}
+
+	@Override
+	public boolean isIgnored() {
+	    return false;
+	}
+
+    }
+
+    /**
+     * Wraps the specific {@link BoundedValidationLayer} with text component and provides API to set text manually.
+     * 
+     * @author TG Team
+     *
+     */
+    private static class ManualTextSetter{
+
+	/**
+	 * The wrapped {@link BoundedValidationLayer} with text component.
+	 */
+	private final BoundedValidationLayer<JTextField> textComponent;
+
+	/**
+	 * Temporary holds text to insert in to the expression editor. After the text was inserted, the property value can be set to null.
+	 */
+	private String textToInsert = null;
+
+	/**
+	 * Indicates whether select inserted text or not.
+	 */
+	private boolean select = false;
+
+	/**
+	 * Indexes, those points on to the beginning and on to the end of the place where text should be inserted.
+	 */
+	private int startIndex, endIndex;
+
+	/**
+	 * Relative index of the caret position.
+	 */
+	private int relativeCaretPosition;
+
+	/**
+	 * Determines the operation that must be performed after the {@link #textComponent} gained the input focus.
+	 */
+	private FocusGainedOperation focusGainedOperation = FocusGainedOperation.NONE;
+
+	/**
+	 * Initiates this {@link ManualTextSetter} with specified {@link BoundedValidationLayer} instance.
+	 * 
+	 * @param textComponent
+	 */
+	public ManualTextSetter(final BoundedValidationLayer<JTextField> textComponent){
+	    this.textComponent = textComponent;
+	    final JTextField field = textComponent.getView();
+	    field.addFocusListener(createExpressionFocusListener(textComponent.getView()));
+	}
+
+	/**
+	 * Set the specified caret position for wrapped text component.
+	 * 
+	 * @param position
+	 */
+	public void setCaretPosition(final int position){
+	    final JTextField field = textComponent.getView();
+	    if(field.hasFocus()){
+		field.setCaretPosition(position);
+	    }else{
+		focusGainedOperation = FocusGainedOperation.CARRET_CONTROL;
+		relativeCaretPosition = position;
+		field.requestFocusInWindow();
+	    }
+	}
+
+	/**
+	 * Inserts specified text at the caret position or replaces selected text.
+	 *
+	 * @param textToInsert - specified text to insert.
+	 * @param insertionType
+	 * @param select - indicates whether select inserted text or not.
+	 */
+	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int relativeCaretPosition){
+	    final JTextField field = textComponent.getView();
+	    if(field.getSelectionStart() == field.getSelectionEnd()){
+		startIndex = endIndex = field.getCaretPosition();
+		this.textToInsert = textToInsert;
+		this.select = select;
+		this.relativeCaretPosition = select  ? textToInsert.length() : relativeCaretPosition;
+		if(TextInsertionType.APPLY == insertionType){
+		    this.select = false;
+		    this.relativeCaretPosition = relativeCaretPosition;
+		}
+	    } else {
+		this.select = select;
+		switch(insertionType){
+		case APPLY:
+		    this.startIndex = field.getSelectionStart();
+		    this.endIndex = field.getSelectionEnd();
+		    this.textToInsert = textToInsert.substring(0, relativeCaretPosition) //
+			    /*              */+ field.getText().substring(startIndex, endIndex) + textToInsert.substring(relativeCaretPosition);
+		    this.relativeCaretPosition = this.textToInsert.length();
+		    break;
+		case APPEND:
+		    this.startIndex = this.endIndex = field.getCaretPosition();
+		    this.textToInsert = textToInsert;
+		    this.relativeCaretPosition = relativeCaretPosition;
+		    break;
+		case REPLACE:
+		    this.startIndex = field.getSelectionStart();
+		    this.endIndex = field.getSelectionEnd();
+		    this.relativeCaretPosition = relativeCaretPosition;
+		    this.textToInsert = textToInsert;
+		    break;
+		}
+	    }
+	    focusGainedOperation = FocusGainedOperation.TEXT_INSERTION;
+	    field.requestFocusInWindow();
+	}
+
+	/**
+	 * Returns the {@link FocusListener} that listens the focus gained event for the specified {@link JTextField} instance.
+	 * This event handler also performs specific actions: text insert or caret position change.
+	 * 
+	 * @param textField
+	 * @return
+	 */
 	private FocusListener createExpressionFocusListener(final JTextField textField) {
 	    return new FocusListener() {
 
@@ -556,6 +761,16 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    };
 	}
 
+	/**
+	 * Determines the operation that should be performed after the text field gained the focus. There are three type of operation:
+	 * text insertion, caret position controlling or there was no operation to perform.
+	 *
+	 * @author TG Team
+	 *
+	 */
+	private static enum FocusGainedOperation{
+	    TEXT_INSERTION, CARRET_CONTROL, NONE;
+	}
     }
 
     /**

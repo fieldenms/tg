@@ -73,15 +73,6 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
 
     /**
-     * Generates next property name for calculated property.
-     *
-     * @return
-     */
-    private String generateNextPropertyName() {
-	return "_1$";
-    }
-
-    /**
      * Returns the selection model associated with this {@link DomainTreeEditorModel}
      *
      * @return
@@ -111,16 +102,6 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
     public Class<? extends AbstractEntity> getEntityClass() {
 	return (Class<? extends AbstractEntity>) expressionModel.getEntity().getRoot();
     }
-
-    //    protected IPropertySelectionListener getCalculatedPropertySelectListener() {
-    //	return new IPropertySelectionListener() {
-    //
-    //	    @Override
-    //	    public void propertyStateChanged(final String property, final boolean isSelected) {
-    //
-    //	    }
-    //	};
-    //    }
 
     /**
      * Adds {@link IPropertyEditListener} to the list of listeners to be notified when the edit calculated property action will take place.
