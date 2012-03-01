@@ -73,7 +73,7 @@ public class QueryModelYieldingCompositionTest extends BaseEntQueryTCase {
 
     @Test
     public void test5() {
-	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsPrimitive(Long.class);
+	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsPrimitive();
 	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
 	yields.put("", new YieldModel(new EntProp("v.model"), ""));
 	final YieldsModel exp = new YieldsModel(yields);

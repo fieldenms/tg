@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
-public class TestUserFilter implements IFilter {
+public class SimpleUserFilter implements IFilter {
 
     @Override
     public <T extends AbstractEntity> EntityResultQueryModel<T> enhance(final Class<T> entityType, final String username) {

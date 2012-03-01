@@ -139,8 +139,6 @@ public class QueryModelCompositionTest extends BaseEntQueryTCase {
 	.yield().yearOf().now().as("b")
 	.yield().join("b").as("c")
 	.yield().countAll().as("recCount")
-	.orderBy().prop("1").asc()
-	.orderBy().model(null).asc()
 	//.model()
 	;
     }

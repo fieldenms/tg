@@ -47,10 +47,4 @@ public class EntQueryResultTypeTest extends BaseEntQueryTCase {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).yield().prop("key").modelAsPrimitive();
 	assertEquals("Incorrect result type", null, entResultQry(qry).getResultType());
     }
-
-    @Test
-    public void test6() {
-	final PrimitiveResultQueryModel qry = select(VEHICLE).yield().prop("key").modelAsPrimitive(String.class);
-	assertEquals("Incorrect result type", String.class, entResultQry(qry).getResultType());
-    }
 }

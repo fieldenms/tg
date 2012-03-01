@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonSetOperand;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
@@ -28,7 +27,7 @@ abstract class AbstractSetOfOperands<T> extends AbstractSingleOperand<T> impleme
     }
 
     @Override
-    public <E extends AbstractEntity> T model(final SingleResultQueryModel model) {
+    public T model(final SingleResultQueryModel model) {
 	getTokens().model(model);
 	return getParent();
     }

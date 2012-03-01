@@ -83,7 +83,7 @@ public interface EntityQueryProgressiveInterfaces {
         T iVal(Object value);
         T param(String paramName);
         T iParam(String paramName);
-        <E extends AbstractEntity> T model(PrimitiveResultQueryModel model);
+        T model(PrimitiveResultQueryModel model);
         T expr(ExpressionModel Expr);
 
         // built-in SQL functions
@@ -119,17 +119,17 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     interface IExistenceOperator<T extends ILogicalOperator<?>>  {
-        <E extends AbstractEntity> T exists(QueryModel subQuery);
+        T exists(QueryModel subQuery);
 
-        <E extends AbstractEntity> T notExists(QueryModel subQuery);
+        T notExists(QueryModel subQuery);
 
-        <E extends AbstractEntity> T existsAnyOf(QueryModel ... subQueries);
+        T existsAnyOf(QueryModel ... subQueries);
 
-        <E extends AbstractEntity> T notExistsAnyOf(QueryModel ... subQueries);
+        T notExistsAnyOf(QueryModel ... subQueries);
 
-        <E extends AbstractEntity> T existsAllOf(QueryModel ... subQueries);
+        T existsAllOf(QueryModel ... subQueries);
 
-        <E extends AbstractEntity> T notExistsAllOf(QueryModel ... subQueries);
+        T notExistsAllOf(QueryModel ... subQueries);
     }
 
     interface IQuantifiedOperand<T> extends IMultipleOperand<T> {
@@ -144,7 +144,7 @@ public interface EntityQueryProgressiveInterfaces {
         <E extends Object> T values(E... values);
         T props(String... properties);
         T params(String... paramNames);
-        <E extends AbstractEntity> T model(SingleResultQueryModel model);
+        T model(SingleResultQueryModel model);
         // beginSet();
     }
 
@@ -187,8 +187,7 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IFirstYieldedItemAlias<T> {
         T as(String alias);
-        <ET extends AbstractEntity> EntityResultQueryModel<ET> modelAsEntity(final Class<ET> entityType);
-        PrimitiveResultQueryModel modelAsPrimitive(final Class<?> entityType);
+        <E extends AbstractEntity> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
         PrimitiveResultQueryModel modelAsPrimitive();
     }
 
@@ -252,27 +251,19 @@ public interface EntityQueryProgressiveInterfaces {
         IFunctionLastArgument<ICompleted> groupBy();
     }
 
-    public interface ICompletedAndYielded extends ICompletedAndOrdered {
+    public interface ICompletedAndYielded extends ICompletedCommon {
         IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded>> yield();
         //////////////////// RETURN /////////////////////////
         <T extends AbstractEntity>  EntityResultQueryModel<T> model();
-        <T extends AbstractEntity>  EntityResultQueryModel<T> modelAsEntity(Class<T> resultType);
-        AggregatedResultQueryModel modelAsAggregate();
     }
 
-    public interface ISubsequentCompletedAndYielded extends ICompletedAndOrdered {
+    public interface ISubsequentCompletedAndYielded extends ICompletedCommon{
         IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded>> yield();
-        //////////////////// RETURN /////////////////////////
-        //<T extends AbstractEntity> UnorderedQueryModel model();
-        <T extends AbstractEntity> EntityResultQueryModel<T> modelAsEntity(Class<T> resultType);
-        AggregatedResultQueryModel modelAsAggregate();
     }
 
-    public interface ICompletedAndOrdered {
-        IFunctionLastArgument<IOrder<ICompletedAndOrdered>> orderBy();
+    public interface ICompletedCommon {
         //////////////////// RETURN /////////////////////////
-        //<T extends AbstractEntity> QueryModel model();
-        <T extends AbstractEntity>  EntityResultQueryModel<T> modelAsEntity(Class<T> resultType);
+        <T extends AbstractEntity> EntityResultQueryModel<T> modelAsEntity(Class<T> resultType);
         AggregatedResultQueryModel modelAsAggregate();
     }
 

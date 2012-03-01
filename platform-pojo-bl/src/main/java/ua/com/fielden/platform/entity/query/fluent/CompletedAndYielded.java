@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-class CompletedAndYielded extends CompletedAndOrdered implements ICompletedAndYielded {
+class CompletedAndYielded extends CompletedCommon implements ICompletedAndYielded {
 
     CompletedAndYielded(final Tokens queryTokens) {
 	super(queryTokens);

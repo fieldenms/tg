@@ -40,7 +40,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
     public void test1() {
 	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").model();
 	final PrimitiveResultQueryModel shortcutQry = select(sourceQry). //
-	where().prop("model.make.key").eq().val("MERC").yield().prop("model.make.key").modelAsPrimitive(STRING);
+	where().prop("model.make.key").eq().val("MERC").yield().prop("model.make.key").modelAsPrimitive();
 	final EntQuery entQry = entResultQry(shortcutQry);
 	final List<PropResolutionInfo> src1Props = prepare( //
 		propResInf("model.make.key", null, ppi("model.make.key", STRING, H_STRING, true), ppi("model", MODEL, H_LONG, false)), //
@@ -62,7 +62,7 @@ public class QuerySourcesPreliminaryPropertiesAssociationTest extends BaseEntQue
 
     @Test
     public void test2() {
-	final PrimitiveResultQueryModel shortcutQry  = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").yield().prop("v.station.key").modelAsPrimitive(STRING);
+	final PrimitiveResultQueryModel shortcutQry  = select(VEHICLE).as("v").where().prop("v.station.key").eq().val("AA").yield().prop("v.station.key").modelAsPrimitive();
 	final EntQuery entQry = entResultQry(shortcutQry);
 	final List<PropResolutionInfo> src1Props = prepare( //
 		propResInf("v.station.key", "v", ppi("station.key", STRING, H_STRING, true), ppi("station", ORG5, H_LONG, true)), //

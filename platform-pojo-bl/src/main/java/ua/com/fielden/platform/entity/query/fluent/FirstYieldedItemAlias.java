@@ -24,11 +24,6 @@ public class FirstYieldedItemAlias<T> extends AbstractQueryLink implements IFirs
     }
 
     @Override
-    public PrimitiveResultQueryModel modelAsPrimitive(final Class<?> entityType) {
-	return new PrimitiveResultQueryModel(getTokens().getTokens(), entityType);
-    }
-
-    @Override
     public PrimitiveResultQueryModel modelAsPrimitive() {
 	return new PrimitiveResultQueryModel(getTokens().getTokens());
     }

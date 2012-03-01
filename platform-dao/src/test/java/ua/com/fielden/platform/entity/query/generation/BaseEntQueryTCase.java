@@ -86,7 +86,7 @@ public class BaseEntQueryTCase {
 
     private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2, MAPPINGS_GENERATOR, null, null);
 
-    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DbVersion.H2, MAPPINGS_GENERATOR, new TestUserFilter(), null);
+    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DbVersion.H2, MAPPINGS_GENERATOR, new SimpleUserFilter(), null);
 
     protected static EntQuery entSourceQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsSourceQuery(qryModel);

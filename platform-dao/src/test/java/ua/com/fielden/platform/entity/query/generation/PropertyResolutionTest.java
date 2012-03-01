@@ -20,7 +20,7 @@ public class PropertyResolutionTest extends BaseEntQueryTCase {
 
     @Test
     public void test1() {
-	final PrimitiveResultQueryModel qry = select(select(VEHICLE).where().anyOfProps("model", "eqClass").eq().val("MERC").yield().prop("model.key").as("vehicleModelKey").modelAsAggregate()).where().prop("vehicleModelKey").eq().val("MERC1").yield().prop("vehicleModelKey").modelAsPrimitive(String.class);
+	final PrimitiveResultQueryModel qry = select(select(VEHICLE).where().anyOfProps("model", "eqClass").eq().val("MERC").yield().prop("model.key").as("vehicleModelKey").modelAsAggregate()).where().prop("vehicleModelKey").eq().val("MERC1").yield().prop("vehicleModelKey").modelAsPrimitive();
 	try {
 	    entResultQry(qry);
 	    fail("Should have failed!");

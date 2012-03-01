@@ -64,7 +64,7 @@ public class EntityEnhancer<E extends AbstractEntity> {
      * @return
      * @throws Exception
      */
-    protected List<EntityContainer<E>> enhance(/*final Session session TMP, */final List<EntityContainer<E>> entities, final fetch<E> fetchModel, final Class<E> entitiesType)
+    protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final fetch<E> fetchModel, final Class<E> entitiesType)
 	    throws Exception {
 	if (fetchModel != null) {
 	    final Map<String, fetch<?>> propertiesFetchModels = fetchModel.getFetchModels();
@@ -79,7 +79,6 @@ public class EntityEnhancer<E extends AbstractEntity> {
 			mappingsGenerator.getPropPersistenceInfoExplicitly(entitiesType, propName).isOne2OneId() //mappingExtractor.isOneToOneDetails(entitiesType, propName) //
 		) {
 		    logger.debug("enhancing property [" + propName + "]");
-		    //session/*TMP*/,
 		    enhanceProperty(entities, propName, propFetchModel);
 		}
 		//		else if (mappingsGenerator.getPropPersistenceInfoExplicitly(entitiesType, propName).i/*mappingExtractor.isSimpleValue(entitiesType, propName)*/) {
@@ -277,8 +276,10 @@ public class EntityEnhancer<E extends AbstractEntity> {
 	    final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
 	    @SuppressWarnings("unchecked")
 	    final EntityQueryProgressiveInterfaces.ICompleted base = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch);
-	    final QueryModel currTypePropertyModel = (indexPropName != null ? base.orderBy().prop(parentPropName).asc().orderBy().prop(indexPropName).asc()
-		    : base.orderBy().prop(parentPropName).asc()).modelAsEntity(fetchModel.getEntityType())/*.getModelWithAbstractEntities()*/;
+	    // TODO implement properly using OrderBy model
+	    final QueryModel currTypePropertyModel = null;
+//		(indexPropName != null ? base.orderBy().prop(parentPropName).asc().orderBy().prop(indexPropName).asc()
+//		    : base.orderBy().prop(parentPropName).asc()).modelAsEntity(fetchModel.getEntityType())/*.getModelWithAbstractEntities()*/;
 	    @SuppressWarnings("unchecked")
 	    // final List<EntityContainer> properties = new Fetcher().listContainersWithoutKeyEnhanced(currTypePropertyModel, null, null);
 	    final List<EntityContainer> properties = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion, filter, username).listContainers(new QueryExecutionModel.Builder(currTypePropertyModel).fetchModel(fetchModel).build(), null, null);

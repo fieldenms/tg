@@ -80,7 +80,7 @@ public class YieldsShortcutsTest extends BaseEntQueryTCase {
     public void test_model_with_expression() {
 	select(VEHICLE).
 	where().beginExpr().val(100).mult().model(
-		select(FUEL_USAGE).yield().sumOf().prop("qty").modelAsPrimitive(BIG_DECIMAL)
+		select(FUEL_USAGE).yield().sumOf().prop("qty").modelAsPrimitive()
 		).endExpr().ge().val(1000).model();
 
 //	assertModelsEquals( //
