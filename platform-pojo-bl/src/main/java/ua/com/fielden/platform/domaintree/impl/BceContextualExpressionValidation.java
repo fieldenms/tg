@@ -3,6 +3,7 @@ package ua.com.fielden.platform.domaintree.impl;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
@@ -17,6 +18,13 @@ public class BceContextualExpressionValidation implements IBeforeChangeEventHand
     @Override
     public Result handle(final MetaProperty property, final String newContextualExpression, final String oldValue, final Set<Annotation> mutatorAnnotations) {
 	final CalculatedProperty cp = (CalculatedProperty) property.getEntity();
+
+	if (!cp.getProperty("root").isValid()) {
+	    return new IncorrectCalcPropertyKeyException("Cannot set contextualExpression when the Root type of calculated property is not valid.");
+	}
+	if (!cp.getProperty("contextPath").isValid()) {
+	    return new IncorrectCalcPropertyKeyException("Cannot set contextualExpression when the Context Path of calculated property is not valid.");
+	}
 
 	try {
 	    cp.initAst(newContextualExpression);

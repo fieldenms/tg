@@ -45,6 +45,7 @@ import ua.com.fielden.platform.utils.ClassComparator;
 @DescTitle(value = "Description", desc= "Calculated property description")
 public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> implements ICalculatedProperty {
     private static final long serialVersionUID = -8413970385471726648L;
+    protected static final String BULLSHIT = "BULLSHIT";
 
     // Required and immutable stuff
     @IsProperty
@@ -52,15 +53,17 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     @Title(value = "Root type", desc = "A higher order type")
     @Readonly
     @Invisible
-    private /* final */ Class<?> root;
+    @BeforeChange(@Handler(BceRootValidation.class))
+    private /* final */ Class<?> root = Class.class;
 
     @IsProperty
     @CompositeKeyMember(2)
     @Title(value = "Context path", desc = "A path to the calculated property context")
     @Readonly
     @Invisible
+    @BeforeChange(@Handler(BceContextPathValidation.class))
     @AfterChange(AceCalculatedPropertyContextTypePopulation.class)
-    private /* final */ String contextPath;
+    private /* final */ String contextPath = BULLSHIT;
 
     // Required and mutable stuff
     @IsProperty
@@ -159,12 +162,12 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	}
 	this.resultType = ast.getType();
 
-	final int contextPathLevel = StringUtils.isEmpty(contextPath) ? 1 : new LevelAllocatingVisitor((Class<? extends AbstractEntity>) getRoot(), contextPath).determineLevelForProperty(""); // new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getRoot(), "", contextPath).convert().getLevel();
-	final int level = ast.getLevel();
+	final int contextPathLevel = StringUtils.isEmpty(getContextPath()) ? 1 : new LevelAllocatingVisitor((Class<? extends AbstractEntity>) getRoot(), getContextPath()).determineLevelForProperty(""); // new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getRoot(), "", contextPath).convert().getLevel();
+	final int level = ast.getLevel() == null ? contextPathLevel : ast.getLevel();
 	final int levelsToRaiseTheProperty = contextPathLevel - level;
 
-	final boolean collectionOrInCollectionHierarchy = isCollectionOrInCollectionHierarchy(this.root, this.contextPath);
-	final String masterPath = collectionOrInCollectionHierarchy ? parentCollection(this.root, this.contextPath) : "";
+	final boolean collectionOrInCollectionHierarchy = isCollectionOrInCollectionHierarchy(this.root, this.getContextPath());
+	final String masterPath = collectionOrInCollectionHierarchy ? parentCollection(this.root, this.getContextPath()) : "";
 	if (collectionOrInCollectionHierarchy) { // collectional hierarchy
 	    if (levelsToRaiseTheProperty == 0) {
 		if (isAttributed()) { // 0 level attributed
@@ -172,7 +175,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 		    this.path = above(masterPath); // the level above except for root level -- ""
 		} else { // 0 level
 		    this.category = CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION;
-		    this.path = this.contextPath;
+		    this.path = this.getContextPath();
 		}
 	    } else if (levelsToRaiseTheProperty == 1) {
 		this.category = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION;
@@ -184,7 +187,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	} else { // simple hierarchy
 	    if (levelsToRaiseTheProperty == 0) {
 		this.category = CalculatedPropertyCategory.EXPRESSION;
-		this.path = this.contextPath;
+		this.path = this.getContextPath();
 	    } else if (levelsToRaiseTheProperty == 1) {
 		this.category = CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
 		this.path = above(masterPath); // the level above except for root level -- ""
@@ -326,12 +329,58 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
         this.contextPath = contextPath;
     }
 
-    public static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
-	DomainTreeEnhancer.validatePath(root, contextPath, "The context path [" + contextPath + "] in type [" + root.getSimpleName() + "] of calculated property does not exist.");
-        final CalculatedProperty calc = factory.newByKey(CalculatedProperty.class, root, contextPath, contextualExpression, title, attribute, originationProperty);
-        calc.setDesc(desc);
+    /**
+     * Creates empty {@link CalculatedProperty} with only necessary {@link #getRoot()} and {@link #getContextPath()} initialised.
+     * It is obvious that other required stuff will not be initialised and immediate validation will not be passed.
+     *
+     * @param factory
+     * @param root
+     * @param contextPath
+     * @param domainTreeEnhancer
+     * @return
+     */
+    public static CalculatedProperty createEmpty(final EntityFactory factory, final Class<?> root, final String contextPath, final IDomainTreeEnhancer domainTreeEnhancer) {
+	// DomainTreeEnhancer.validatePath(root, contextPath, "The context path [" + contextPath + "] in type [" + root + "] of calculated property does not exist.");
+        final CalculatedProperty calc = factory.newEntity(CalculatedProperty.class); // ByKey(CalculatedProperty.class, root, contextPath, contextualExpression, title, attribute, originationProperty);
+
+        // make Root and ContextPath not required -- their non-empty logic has been moved to corresponding Before Change Events
+        calc.getProperty("root").setRequired(false);
+        calc.getProperty("contextPath").setRequired(false);
+	// after the property has fully defined its correct context, the requiredness of originationProperty should be relaxed
+	// (originationProperty is required because it is key member). The requiredness of originationProperty depends on the
+	// expression category (e.g. for AGGREGATION_PROPERTY it should be required)
+	calc.getProperty("originationProperty").setRequired(false);
+
+        calc.setRoot(root);
+        calc.setContextPath(contextPath);
+
         calc.setEnhancer(domainTreeEnhancer);
+        return calc;
+    }
+
+    /**
+     * Creates full {@link CalculatedProperty} with all keys initialised.
+     *
+     * @param factory
+     * @param root
+     * @param contextPath
+     * @param contextualExpression
+     * @param title
+     * @param desc
+     * @param attribute
+     * @param originationProperty
+     * @param domainTreeEnhancer
+     * @return
+     */
+    public static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
+	final CalculatedProperty calc = createEmpty(factory, root, contextPath, domainTreeEnhancer);
+
+	calc.setContextualExpression(contextualExpression);
         calc.setTitle(title);
+        calc.setDesc(desc);
+        calc.setAttribute(attribute);
+        calc.setOriginationProperty(originationProperty);
+
         return calc;
     }
 
@@ -359,7 +408,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     }
 
     public void initAst(final String newContextualExpression) throws RecognitionException, SemanticException {
-	final ExpressionText2ModelConverter et2mc = new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getRoot(), contextPath, newContextualExpression);
+	final ExpressionText2ModelConverter et2mc = new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getRoot(), getContextPath(), newContextualExpression);
 	this.ast = et2mc.convert();
     }
 }

@@ -657,7 +657,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param property
      * @return
      */
-    protected static boolean isCalculated(final Class<?> root, final String property) {
+    public static boolean isCalculated(final Class<?> root, final String property) {
 	return AnnotationReflector.getPropertyAnnotation(Calculated.class, root, property) != null;
     }
 

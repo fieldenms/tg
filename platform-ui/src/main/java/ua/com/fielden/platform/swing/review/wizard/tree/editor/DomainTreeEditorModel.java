@@ -7,13 +7,12 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorModel;
 import ua.com.fielden.platform.expression.editor.IPropertySelectionListener;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.ei.LightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeModel2;
@@ -39,7 +38,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	//entity.setName(generateNextPropertyName());
 
 	this.dtme = dtme;
-	this.expressionModel = new ExpressionEditorModelForWizard(entity, new LightweightPropertyBinder<CalculatedProperty>(null, null, "key", "name"));
+	this.expressionModel = new ExpressionEditorModelForWizard(entity, new LightweightPropertyBinder<CalculatedProperty>(null, null/*, "key", "name"*/));
 	this.listenerList = new EventListenerList();
 	this.propertySelectionModel = new CalculatedPropertySelectModel();
 	this.propertySelectionModel.addPropertySelectionListener(createPropertySelectedListener());
@@ -53,7 +52,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
      * @return
      */
     private static boolean isCalculated(final Class<? extends AbstractEntity> entityClass, final String propertyName){
-	return StringUtils.isEmpty(propertyName) ? false : AnnotationReflector.isPropertyAnnotationPresent(Calculated.class, entityClass, propertyName);
+	return StringUtils.isEmpty(propertyName) ? false : AbstractDomainTreeRepresentation.isCalculated(entityClass, propertyName);// AnnotationReflector.isPropertyAnnotationPresent(Calculated.class, entityClass, propertyName);
     }
 
     /**
@@ -156,7 +155,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	    super.notifyActionStageChange(actionState);
 	    switch(actionState){
 	    case NEW_ACTION:
-		getEntity().restoreToOriginal();
+		// getEntity().restoreToOriginal();
 		getEntity().setInitialising(true);
 		getEntity().setContextPath(""); // TODO the context path should be taken from the property witha a New... button
 

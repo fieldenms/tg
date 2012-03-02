@@ -33,6 +33,7 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityWithUnionForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -104,6 +105,10 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
 	final CalculatedProperty calc = CalculatedProperty.create(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm().getEnhancer());
+	final Result isValid = calc.isValid();
+	if (!isValid.isSuccessful()) {
+	    throw isValid;
+	}
 	checkTrivialParams(calc, root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
 	return calc;
     }
@@ -116,6 +121,60 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	final CalculatedProperty copy = EntityUtils.deepCopy(calc, getSerialiser());
 	checkTrivialParams(copy, MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp");
 	assertCalculatedProperty(copy, EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+    }
+
+    protected void incorrectCalculatedPropertyCreationWithRoot(final Class<?> root) {
+	final CalculatedProperty cp = CalculatedProperty.createEmpty(factory(), root, "", dtm().getEnhancer());
+	checkTrivialParams(cp, Class.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, null);
+
+	final String message = "The creation of calc prop with root [" + root + "] should be failed.";
+	assertNotNull(message, cp.isValid());
+	assertNotNull(message, cp.getProperty("root").getFirstFailure());
+	assertFalse(message, cp.getProperty("root").getFirstFailure().isSuccessful());
+	assertTrue(message, cp.getProperty("root").getFirstFailure() instanceof IncorrectCalcPropertyKeyException);
+    }
+
+    protected void incorrectCalculatedPropertyCreationWithContextPath(final String contextPath) {
+	final CalculatedProperty cp = CalculatedProperty.createEmpty(factory(), MasterEntity.class, contextPath, dtm().getEnhancer());
+	checkTrivialParams(cp, MasterEntity.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, null);
+
+	final String message = "The creation of calc prop with contextPath [" + contextPath + "] should be failed.";
+	assertNotNull(message, cp.isValid());
+	assertNotNull(message, cp.getProperty("contextPath").getFirstFailure());
+	assertFalse(message, cp.getProperty("contextPath").getFirstFailure().isSuccessful());
+	assertTrue(message, cp.getProperty("contextPath").getFirstFailure() instanceof IncorrectCalcPropertyKeyException);
+    }
+
+    @Test
+    public void test_incorrect_creation_with_bad_Root_type() {
+	correctCalculatedPropertyCreation(MasterEntity.class, "");
+
+	incorrectCalculatedPropertyCreationWithRoot(null);
+	incorrectCalculatedPropertyCreationWithRoot(getClass());
+    }
+
+    @Test
+    public void test_incorrect_creation_with_bad_Context_Path() {
+	incorrectCalculatedPropertyCreationWithContextPath(null);
+	incorrectCalculatedPropertyCreationWithContextPath("entityProp.collection.nonExistentPath");
+
+	correctCalculatedPropertyCreation(MasterEntity.class, "");
+	correctCalculatedPropertyCreation(MasterEntity.class, "entityProp");
+	correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection");
+    }
+
+    protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath) {
+	final CalculatedProperty calc = CalculatedProperty.createEmpty(factory(), root, contextPath, dtm().getEnhancer());
+	checkTrivialParams(calc, root, contextPath, null, null, null, CalculatedPropertyAttribute.NO_ATTR, null);
+	return calc;
+    }
+
+    @Test
+    public void test_that_creation_of_calc_properties_with_undefined_level_will_add_them_into_provided_context() {
+	// properties like "2 * 3 -17"
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * 3 -17", "Calc", "Desc", CalculatedPropertyAttribute.NO_ATTR, null), EXPRESSION, "calc", "", "calc", MasterEntity.class, MasterEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp", "2 * 3 -17", "Calc", "Desc", CalculatedPropertyAttribute.NO_ATTR, null), EXPRESSION, "calc", "entityProp", "entityProp.calc", SlaveEntity.class, SlaveEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection", "2 * 3 -17", "Calc", "Desc", CalculatedPropertyAttribute.NO_ATTR, null), COLLECTIONAL_EXPRESSION, "calc", "entityProp.collection", "entityProp.collection.calc", EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
     }
 
     @Test
@@ -140,6 +199,25 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * integerProp", "Calculated property", "desc", ALL, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "", "calculatedProperty", SlaveEntity.class, MasterEntity.class, Integer.class);
 	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Calculated property", "desc", ANY, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", EvenSlaverEntity.class, SlaveEntity.class, Integer.class);
 	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection.slaveEntityProp", "2 * integerProp", "Calculated property", "desc", ALL, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+    }
+
+    @Test
+    public void test_originationProperty_requiredness_at_the_beginning() {
+    	CalculatedProperty cp = correctCalculatedPropertyCreation(MasterEntity.class, "");
+	assertFalse("Should be not required.", cp.getProperty("originationProperty").isRequired());
+
+	cp = correctCalculatedPropertyCreation(MasterEntity.class, "collection");
+	assertFalse("Should be not required.", cp.getProperty("originationProperty").isRequired());
+
+	cp = correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection");
+	assertFalse("Should be not required.", cp.getProperty("originationProperty").isRequired());
+
+	cp = correctCalculatedPropertyCreation(MasterEntity.class, "collection.entityProp");
+	assertFalse("Should be not required.", cp.getProperty("originationProperty").isRequired());
+
+	// AGGREGATED_EXPRESSION
+	cp = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * MAX(2 * integerProp)", "Calculated property", "desc", NO_ATTR, "integerProp"), AGGREGATED_EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
+	assertTrue("Should be required.", cp.getProperty("originationProperty").isRequired());
     }
 
     @Test

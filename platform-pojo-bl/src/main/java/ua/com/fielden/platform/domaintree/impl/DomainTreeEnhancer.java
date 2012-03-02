@@ -389,7 +389,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      */
     private static ICalculatedProperty validateCalculatedPropertyKey1(final Class<?> root, final String pathAndName, final boolean correctIfExists, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
 	if (StringUtils.isEmpty(pathAndName)) {
-	    throw new IncorrectCalcPropertyKeyException("The calculated property name cannot be empty.");
+	    throw new IncorrectCalcPropertyKeyException("The calculated property pathAndName cannot be empty.");
 	}
 	// throw exception when the place is not in the context of root type
 	if (!originalAndEnhancedRootTypes.keySet().contains(root)) {
@@ -423,11 +423,13 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     }
 
     protected static void validatePath(final Class<?> root, final String path, final String message) {
-	if (!StringUtils.isEmpty(path)) { // validate path
+	if (path == null) {
+	    throw new IncorrectCalcPropertyKeyException(message);
+	}
+	if (!"".equals(path)) { // validate path
 	    try {
 		PropertyTypeDeterminator.determinePropertyType(root, path); // throw exception when the place does not exist
 	    } catch (final Exception e) {
-		e.printStackTrace();
 		throw new IncorrectCalcPropertyKeyException(message);
 	    }
 	}
@@ -462,7 +464,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      */
     private static void addCalculatedProperty(final ICalculatedProperty calculatedProperty, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
 	final Class<?> root = calculatedProperty.getRoot();
-	validateCalculatedPropertyKey1(root, calculatedProperty.pathAndName(), false, calculatedProperties, originalAndEnhancedRootTypes);
+	// TODO !!! validateCalculatedPropertyKey1(root, calculatedProperty.pathAndName(), false, calculatedProperties, originalAndEnhancedRootTypes);
 
 	if (!calculatedProperties.containsKey(root)) {
 	    calculatedProperties.put(root, new ArrayList<ICalculatedProperty>());
@@ -480,7 +482,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
     @Override
     public void addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	addCalculatedProperty(CalculatedProperty.create(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, this));
+	final CalculatedProperty created = CalculatedProperty.create(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, this);
+	if (!created.isValid().isSuccessful()) {
+	    throw created.isValid();
+	}
+	addCalculatedProperty(created);
     }
 
     @Override

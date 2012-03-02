@@ -845,6 +845,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	    dm.addCalculatedProperty(rootType, contextPath, "5 * integerProp", title, "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	    fail("The calculated property key is incorrect. The action should be failed. Context path = [" + contextPath + "], title = " + title);
 	} catch (final IncorrectCalcPropertyKeyException e) {
+	} catch (final Exception e) {
 	}
     }
 
