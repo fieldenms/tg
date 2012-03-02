@@ -8,6 +8,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.entity.AbstractEntity;
 
 final class EntityResultTreeBuilder {
     private MappingsGenerator mappingsGenerator;
@@ -17,8 +18,8 @@ final class EntityResultTreeBuilder {
 	this.mappingsGenerator = mappingsGenerator;
     }
 
-    protected EntityTree buildEntityTree(final Class resultType, final Collection<PropertyPersistenceInfo> properties) throws Exception {
-	final EntityTree result = new EntityTree(resultType);
+    protected <E extends AbstractEntity<?>> EntityTree<E> buildEntityTree(final Class<E> resultType, final Collection<PropertyPersistenceInfo> properties) throws Exception {
+	final EntityTree<E> result = new EntityTree<E>(resultType);
 
 	final List<PropertyPersistenceInfo> singleProps = getFirstLevelSingleProps(resultType, properties);
 	final Map<String, Collection<PropertyPersistenceInfo>> compositeProps = getFirstLevelCompositeProps(resultType, properties);
@@ -67,7 +68,7 @@ final class EntityResultTreeBuilder {
      * @param allProps
      * @return
      */
-    private List<PropertyPersistenceInfo> getFirstLevelSingleProps(final Class resultType, final Collection<PropertyPersistenceInfo> allProps) {
+    private  <E extends AbstractEntity<?>> List<PropertyPersistenceInfo> getFirstLevelSingleProps(final Class<E> resultType, final Collection<PropertyPersistenceInfo> allProps) {
 	final List<PropertyPersistenceInfo> result = new ArrayList<PropertyPersistenceInfo>();
 
 	for (final PropertyPersistenceInfo prop : allProps) {
@@ -79,7 +80,7 @@ final class EntityResultTreeBuilder {
 	return result;
     }
 
-    private Map<String, Collection<PropertyPersistenceInfo>> getFirstLevelCompositeProps(final Class resultType, final Collection<PropertyPersistenceInfo> allProps) {
+    private <E extends AbstractEntity<?>> Map<String, Collection<PropertyPersistenceInfo>> getFirstLevelCompositeProps(final Class<E> resultType, final Collection<PropertyPersistenceInfo> allProps) {
 	final Map<String, Collection<PropertyPersistenceInfo>> result = new HashMap<String, Collection<PropertyPersistenceInfo>>();
 
 	for (final PropertyPersistenceInfo prop : allProps) {
@@ -113,7 +114,7 @@ final class EntityResultTreeBuilder {
 	return result;
     }
 
-    private Map<String, Collection<PropertyPersistenceInfo>> getFirstLevelCompositeValueProps(final Class resultType, final Collection<PropertyPersistenceInfo> allProps) {
+    private <E extends AbstractEntity<?>>Map<String, Collection<PropertyPersistenceInfo>> getFirstLevelCompositeValueProps(final Class<E> resultType, final Collection<PropertyPersistenceInfo> allProps) {
 	final Map<String, Collection<PropertyPersistenceInfo>> result = new HashMap<String, Collection<PropertyPersistenceInfo>>();
 
 	for (final PropertyPersistenceInfo prop : allProps) {

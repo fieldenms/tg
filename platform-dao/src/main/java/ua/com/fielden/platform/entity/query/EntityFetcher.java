@@ -67,7 +67,8 @@ public class EntityFetcher<E extends AbstractEntity<?>> extends AbstractFetcher<
      */
     @SessionRequired
     private List<EntityContainer<E>> listContainersAsIs(final QueryModelResult modelResult, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-	final EntityTree<E> resultTree = new EntityResultTreeBuilder(getMappingsGenerator()).buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
+	final Class<E> resultType = modelResult.getResultType();
+	final EntityTree<E> resultTree = new EntityResultTreeBuilder(getMappingsGenerator()).buildEntityTree(resultType, modelResult.getYieldedPropsInfo());
 
 	final Query query = produceHibernateQuery(modelResult.getSql(), getScalarInfo(resultTree), modelResult.getParamValues());
 	getLogger().info("query:\n   " + query.getQueryString() + "\n");
