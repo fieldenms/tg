@@ -27,7 +27,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  * @param <E>
  */
-public class EntityFetcher<E extends AbstractEntity> extends AbstractFetcher<E> {
+public class EntityFetcher<E extends AbstractEntity<?>> extends AbstractFetcher<E> {
     private final EntityEnhancer<E> entityEnhancer;
 
     public EntityFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion, final IFilter filter, final String username) {
@@ -67,7 +67,7 @@ public class EntityFetcher<E extends AbstractEntity> extends AbstractFetcher<E> 
      */
     @SessionRequired
     private List<EntityContainer<E>> listContainersAsIs(final QueryModelResult modelResult, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-	final EntityTree resultTree = new EntityResultTreeBuilder(getMappingsGenerator()).buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
+	final EntityTree<E> resultTree = new EntityResultTreeBuilder(getMappingsGenerator()).buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
 
 	final Query query = produceHibernateQuery(modelResult.getSql(), getScalarInfo(resultTree), modelResult.getParamValues());
 	getLogger().info("query:\n   " + query.getQueryString() + "\n");
@@ -87,7 +87,7 @@ public class EntityFetcher<E extends AbstractEntity> extends AbstractFetcher<E> 
 	return list;
     }
 
-    protected List<Pair<String, Type>> getScalarInfo(final EntityTree tree) {
+    protected List<Pair<String, Type>> getScalarInfo(final EntityTree<? extends AbstractEntity<?>> tree) {
 	final List<Pair<String, Type>> result = new ArrayList<Pair<String, Type>>();
 
 	for (final Map.Entry<PropertyPersistenceInfo, Integer> single : tree.getSingles().entrySet()) {
@@ -98,7 +98,7 @@ public class EntityFetcher<E extends AbstractEntity> extends AbstractFetcher<E> 
 	    result.addAll(getScalarInfo(composite.getValue()));
 	}
 
-	for (final Map.Entry<String, EntityTree> composite : tree.getComposites().entrySet()) {
+	for (final Map.Entry<String, EntityTree<? extends AbstractEntity<?>>> composite : tree.getComposites().entrySet()) {
 	    result.addAll(getScalarInfo(composite.getValue()));
 	}
 

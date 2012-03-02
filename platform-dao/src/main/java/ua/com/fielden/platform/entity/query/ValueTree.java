@@ -6,7 +6,7 @@ import java.util.TreeMap;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 
 /**
- * Tree of entity's properties hierarchy and correspondent property value index in raw data array. Tree structure to contain either ENTITY or COMPOSITE VALUE OBJECT
+ * Tree of entity's properties hierarchy and correspondent property value index in raw data array. Tree structure to contain COMPOSITE VALUE OBJECT
  *
  * @author TG Team
  *

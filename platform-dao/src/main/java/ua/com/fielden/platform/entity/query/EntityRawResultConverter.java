@@ -10,7 +10,7 @@ import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 
-public class EntityRawResultConverter<E extends AbstractEntity> {
+public class EntityRawResultConverter<E extends AbstractEntity<?>> {
     private EntityFactory entityFactory;
 
     protected EntityRawResultConverter(final EntityFactory entityFactory) {
@@ -24,7 +24,7 @@ public class EntityRawResultConverter<E extends AbstractEntity> {
      * @param nativeResult
      * @return
      */
-    protected List<EntityContainer<E>> transformFromNativeResult(final EntityTree resultTree, final List<Object> nativeResult) {
+    protected List<EntityContainer<E>> transformFromNativeResult(final EntityTree<E> resultTree, final List<Object> nativeResult) {
 	final List<EntityContainer<E>> result = new ArrayList<EntityContainer<E>>();
 
 	for (final Object nativeEntry : nativeResult) {
@@ -45,7 +45,7 @@ public class EntityRawResultConverter<E extends AbstractEntity> {
      */
 
     /*DONE*/
-    private EntityContainer<E> transformTuple(final Object[] data, final EntityTree resultTree, final boolean shouldBeFetched) {
+    private EntityContainer<E> transformTuple(final Object[] data, final EntityTree<? extends AbstractEntity<?>> resultTree, final boolean shouldBeFetched) {
 
 	final EntityContainer<E> entCont = new EntityContainer<E>(resultTree.getResultType(), shouldBeFetched);
 
@@ -57,7 +57,7 @@ public class EntityRawResultConverter<E extends AbstractEntity> {
 	    entCont.getComposites().put(compositeEntry.getKey(), transformTuple(data, compositeEntry.getValue(), shouldBeFetched));
 	}
 
-	for (final Map.Entry<String, EntityTree> entityEntry : resultTree.getComposites().entrySet()) {
+	for (final Map.Entry<String, EntityTree<? extends AbstractEntity<?>>> entityEntry : resultTree.getComposites().entrySet()) {
 	    entCont.getEntities().put(entityEntry.getKey(), transformTuple(data, entityEntry.getValue(), shouldBeFetched));
 	}
 

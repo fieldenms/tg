@@ -17,6 +17,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -79,7 +80,7 @@ public class EntityFetcherTestCase extends BaseEntQueryTCase {
 //	expEntTree.getSingles().put(new PropColumn("desc", "C4", Hibernate.STRING, null), 3);
 //	expEntTree.getSingles().put(new PropColumn("initDate", "C5", Hibernate.TIMESTAMP, null), 4);
 
-	final EntityTree expVehModelTree = new EntityTree(MODEL);
+	final EntityTree<TgVehicleModel> expVehModelTree = new EntityTree<TgVehicleModel>(MODEL);
 //	expVehModelTree.getSingles().put(new PropColumn("id", "C6", Hibernate.LONG, null), 5);
 
 	expEntTree.getComposites().put("model", expVehModelTree);

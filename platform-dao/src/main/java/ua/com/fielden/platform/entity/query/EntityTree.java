@@ -4,20 +4,21 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * Tree of entity's properties hierarchy and correspondent property value index in raw data array. Tree structure to contain either ENTITY or COMPOSITE VALUE OBJECT
+ * Tree of entity's properties hierarchy and correspondent property value index in raw data array. Tree structure to contain either ENTITY.
  *
  * @author TG Team
  *
  */
-public class EntityTree {
-    private Class resultType; // e.g. Vehicle
+public class EntityTree<E extends AbstractEntity<?>> {
+    private Class<E> resultType; // e.g. Vehicle
     private SortedMap<PropertyPersistenceInfo, Integer/*position in raw result array*/> singles = new TreeMap<PropertyPersistenceInfo, Integer>();
     private SortedMap<String /*composite value property name*/, ValueTree> compositeValues = new TreeMap<String, ValueTree>();
-    private SortedMap<String /*composite property name*/, EntityTree> composites = new TreeMap<String, EntityTree>();
+    private SortedMap<String /*composite property name*/, EntityTree<? extends AbstractEntity<?>>> composites = new TreeMap<String, EntityTree<? extends AbstractEntity<?>>>();
 
-    protected EntityTree(final Class resultType) {
+    protected EntityTree(final Class<E> resultType) {
 	this.resultType = resultType;
     }
 
@@ -26,7 +27,7 @@ public class EntityTree {
 	return "\n\tResult type: " + resultType.getName() + "\n\tsingles: " + singles + "\n\tcomposites:" + composites;
     }
 
-    public Class getResultType() {
+    public Class<E> getResultType() {
         return resultType;
     }
 
@@ -34,7 +35,7 @@ public class EntityTree {
         return singles;
     }
 
-    public SortedMap<String, EntityTree> getComposites() {
+    public SortedMap<String, EntityTree<? extends AbstractEntity<?>>> getComposites() {
         return composites;
     }
 
