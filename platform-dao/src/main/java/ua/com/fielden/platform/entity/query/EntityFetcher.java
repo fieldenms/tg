@@ -80,7 +80,7 @@ public class EntityFetcher<E extends AbstractEntity> extends AbstractFetcher<E> 
 
 	final DateTime st = new DateTime();
 	@SuppressWarnings("unchecked")
-	final List<EntityContainer<E>> list = new EntityRawResultConverter(getEntityFactory()).transformFromNativeResult(resultTree, query.list());
+	final List<EntityContainer<E>> list = new EntityRawResultConverter<E>(getEntityFactory()).transformFromNativeResult(resultTree, query.list());
 	final Period pd = new Period(st, new DateTime());
 	getLogger().info("Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + list.size());
 

@@ -12,8 +12,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 public class fetch<T extends AbstractEntity> {
     private final Class<T> entityType;
-    private final Map<String, fetch<?>> fetchModels = new HashMap<String, fetch<?>>();
-    private final Map<String, String> fetchTypes = new HashMap<String, String>();
+    private final Map<String, fetch<? extends AbstractEntity>> fetchModels = new HashMap<String, fetch<? extends AbstractEntity>>();
     private final List<String> fetchedProps = new ArrayList<String>();
 
     /**
@@ -22,19 +21,6 @@ public class fetch<T extends AbstractEntity> {
     protected fetch() {
 	this.entityType = null;
     }
-
-
-    private fetch<?> with(final String propName, final String string) {
-	// TODO Auto-generated method stub
-	return this;
-    }
-
-
-    private fetch<?> with(final String propName, final Class<?> propJavaType) {
-	// TODO Auto-generated method stub
-	return this;
-    }
-
 
     public fetch(final Class<T> entityType) {
 	this.entityType = entityType;
@@ -57,8 +43,7 @@ public class fetch<T extends AbstractEntity> {
 	return this;
     }
 
-    public fetch<T> with(final String propName, final fetch fetchModel) {
-	//System.out.println(fetchModel.getEntityType());
+    public fetch<T> with(final String propName, final fetch<? extends AbstractEntity> fetchModel) {
 	if (AbstractEntity.class.isAssignableFrom(fetchModel.getEntityType())) {
 	    fetchModels.put(propName, fetchModel);
 	} else {
