@@ -27,6 +27,7 @@ public class EntQuery implements ISingleOperand {
     private final ConditionsModel conditions;
     private final YieldsModel yields;
     private final GroupsModel groups;
+    private final OrderingsModel orderings;
     private final Class resultType;
     private final QueryCategory category;
     private final MappingsGenerator mappingsGenerator;
@@ -71,6 +72,7 @@ public class EntQuery implements ISingleOperand {
 	}
 	sb.append(groups.sql());
 	sb.append(isSubQuery() ? ")" : "");
+	sb.append(orderings.sql());
 	return sb.toString();
     }
 
@@ -196,7 +198,7 @@ public class EntQuery implements ISingleOperand {
 	return newMain != null ? new EntQuerySourcesModel(newMain, sources.getCompounds()) : sources;
     }
 
-    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, //
+    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final OrderingsModel orderings, //
 	    final Class resultType, final QueryCategory category, final MappingsGenerator mappingsGenerator, //
 	    final IFilter filter, final String username, final EntQueryGenerator generator) {
 	super();
@@ -206,6 +208,7 @@ public class EntQuery implements ISingleOperand {
 	this.conditions = conditions;
 	this.yields = yields;
 	this.groups = groups;
+	this.orderings = orderings;
 	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? this.sources.getMain().sourceType() : null);
 
 	enhanceToFinalState();
@@ -390,6 +393,7 @@ public class EntQuery implements ISingleOperand {
 	}
 	result.addAll(groups.getLocalProps());
 	result.addAll(yields.getLocalProps());
+	result.addAll(orderings.getLocalProps());
 	return result;
     }
 
@@ -397,6 +401,7 @@ public class EntQuery implements ISingleOperand {
 	final List<EntQuery> result = new ArrayList<EntQuery>();
 	result.addAll(yields.getLocalSubQueries());
 	result.addAll(groups.getLocalSubQueries());
+	result.addAll(orderings.getLocalSubQueries());
 	if (conditions != null) {
 	    result.addAll(conditions.getLocalSubQueries());
 	}
@@ -422,6 +427,7 @@ public class EntQuery implements ISingleOperand {
 	    result.addAll(conditions.getAllValues());
 	}
 	result.addAll(groups.getAllValues());
+	result.addAll(orderings.getAllValues());
 	result.addAll(yields.getAllValues());
 	return result;
     }
@@ -440,6 +446,10 @@ public class EntQuery implements ISingleOperand {
 
     public GroupsModel getGroups() {
 	return groups;
+    }
+
+    public OrderingsModel getOrderings() {
+        return orderings;
     }
 
     public EntQuery getMaster() {

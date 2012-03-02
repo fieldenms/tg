@@ -6,9 +6,11 @@ import java.util.List;
 
 public class Now implements ISingleOperand {
 
+    private final String sql = "NOW()";
+
     @Override
     public String sql() {
-	return "NOW()";
+	return sql;
     }
 
     public Now() {
@@ -46,6 +48,36 @@ public class Now implements ISingleOperand {
 
     @Override
     public boolean isNullable() {
+	return true;
+    }
+
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + ((sql == null) ? 0 : sql.hashCode());
+	return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	if (this == obj) {
+	    return true;
+	}
+	if (obj == null) {
+	    return false;
+	}
+	if (!(obj instanceof Now)) {
+	    return false;
+	}
+	final Now other = (Now) obj;
+	if (sql == null) {
+	    if (other.sql != null) {
+		return false;
+	    }
+	} else if (!sql.equals(other.sql)) {
+	    return false;
+	}
 	return true;
     }
 }

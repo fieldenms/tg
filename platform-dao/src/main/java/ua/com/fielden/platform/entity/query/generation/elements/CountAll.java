@@ -6,9 +6,11 @@ import java.util.List;
 
 public class CountAll implements ISingleOperand {
 
+    private final String sql = "COUNT(*)";
+
     @Override
     public String sql() {
-	return "COUNT(*)";
+	return sql;
     }
 
     public CountAll() {
@@ -46,6 +48,36 @@ public class CountAll implements ISingleOperand {
 
     @Override
     public boolean isNullable() {
+	return true;
+    }
+
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + ((sql == null) ? 0 : sql.hashCode());
+	return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	if (this == obj) {
+	    return true;
+	}
+	if (obj == null) {
+	    return false;
+	}
+	if (!(obj instanceof CountAll)) {
+	    return false;
+	}
+	final CountAll other = (CountAll) obj;
+	if (sql == null) {
+	    if (other.sql != null) {
+		return false;
+	    }
+	} else if (!sql.equals(other.sql)) {
+	    return false;
+	}
 	return true;
     }
 }

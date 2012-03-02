@@ -4,11 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 
 public class QueryExecutionModel<T> {
     private final QueryModel queryModel;
-    private final QueryModel orderModel;
+    private final OrderingModel orderModel;
     private final fetch fetchModel;
     private final Map<String, Object> paramValues;
     private final boolean lightweight;
@@ -25,7 +26,7 @@ public class QueryExecutionModel<T> {
         return queryModel;
     }
 
-    public QueryModel getOrderModel() {
+    public OrderingModel getOrderModel() {
         return orderModel;
     }
 
@@ -43,7 +44,7 @@ public class QueryExecutionModel<T> {
 
     public static class Builder {
 	    private QueryModel queryModel;
-	    private QueryModel orderModel;
+	    private OrderingModel orderModel;
 	    private fetch fetchModel;
 	    private Map<String, Object> paramValues = new HashMap<String, Object>();
 	    private boolean lightweight = false;
@@ -56,7 +57,7 @@ public class QueryExecutionModel<T> {
 	    this.queryModel = queryModel;
 	}
 
-	public Builder orderModel(final QueryModel val) {
+	public Builder orderModel(final OrderingModel val) {
 	    orderModel = val;
 	    return this;
 	}

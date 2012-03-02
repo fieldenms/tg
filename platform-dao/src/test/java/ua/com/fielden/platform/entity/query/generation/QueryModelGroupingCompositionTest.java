@@ -11,6 +11,9 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupModel;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupsModel;
+import ua.com.fielden.platform.entity.query.generation.elements.Now;
+import ua.com.fielden.platform.entity.query.generation.elements.OrderByModel;
+import ua.com.fielden.platform.entity.query.generation.elements.OrderingsModel;
 import ua.com.fielden.platform.entity.query.generation.elements.YearOfModel;
 import ua.com.fielden.platform.entity.query.generation.elements.YieldModel;
 import ua.com.fielden.platform.entity.query.generation.elements.YieldsModel;
@@ -22,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
-public class QueryModelGroupingCompositionTest extends BaseEntQueryTCase {
+public class QueryModelGroupingCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_query_with_one_group() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
@@ -63,18 +66,14 @@ public class QueryModelGroupingCompositionTest extends BaseEntQueryTCase {
     @Test
     public void test_query_ordering() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
-	final OrderingModel orderModel = orderBy().prop("model1").desc().prop("key").asc().dayOf().beginExpr().prop("a").add().prop("b").endExpr().desc().model();
+	final OrderingModel orderModel = orderBy().beginExpr().prop("model").add().now().endExpr().asc().prop("key").desc().model();
 	final EntQuery act = entResultQry(qry, orderModel);
+	System.out.println(act.sql());
 
-	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
-	yields.put("id", new YieldModel(new EntProp("model"), "id"));
-	final YieldsModel exp = new YieldsModel(yields);
-
-	assertEquals("models are different", exp, act.getYields());
-
-	final List<GroupModel> groups = new ArrayList<GroupModel>();
-	groups.add(new GroupModel(new EntProp("model")));
-	final GroupsModel exp2 = new GroupsModel(groups);
-	assertEquals("models are different", exp2, act.getGroups());
+	final List<OrderByModel> orderings = new ArrayList<OrderByModel>();
+	orderings.add(new OrderByModel(expression(prop("model"), compound(_add, new Now())), false));
+	orderings.add(new OrderByModel(prop("key"), true));
+	final OrderingsModel exp2 = new OrderingsModel(orderings);
+	assertEquals("models are different", exp2, act.getOrderings());
     }
 }

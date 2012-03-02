@@ -13,12 +13,14 @@ import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.types.Money;
+import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 public class EntityFetcherTest extends DbDrivenTestCase {
@@ -194,6 +196,14 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(countModel).paramValue("model_param", "316").build());
     	assertEquals("Incorrect count", 1, values.size());
     	assertEquals("Incorrect value", "1", values.get(0).get("aa").toString());
+    }
+
+    public void test_ordered_vehicle_retrieval16() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).model();
+	final OrderingModel ordering = orderBy().prop("model.make.key").desc().model();
+	final List<TgVehicle> models = fetcher().list(new QueryExecutionModel.Builder(qry).orderModel(ordering).build());
+    	final TgVehicle veh = models.get(0);
+	assertEquals("Incorrect key", "CAR2", veh.getKey());
     }
 
     @Override

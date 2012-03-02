@@ -113,23 +113,9 @@ public class EntQueryGenerator {
 		}
 	    }
 
-//	    for (final Pair<TokenCategory, Object> pair : orderModel.getTokens()) {
-//		if (TokenCategory.SORT_ORDER.equals(pair.getKey())) {
-//		    orderBy.add(pair.getKey(), pair.getValue());
-//		} else {
-//		    if (orderBy.getChild() != null) {
-//			//orderBy.add(TokenCategory.SORT_ORDER, QueryTokens.ASC);
-//		    }
-//		    orderBy.add(pair.getKey(), pair.getValue());
-//		    orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues));
-//		    orderBy.add(pair.getKey(), pair.getValue());
-//		}
-//	    }
 	}
 
-	System.out.println(orderBy.getModel());
-
-	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), qryModel.getResultType(), category, //
+	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), orderBy.getModel(), qryModel.getResultType(), category, //
 		mappingsGenerator, filter, username, this);
     }
 

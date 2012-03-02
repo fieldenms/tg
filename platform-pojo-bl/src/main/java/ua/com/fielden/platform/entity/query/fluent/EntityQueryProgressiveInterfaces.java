@@ -485,16 +485,13 @@ public interface EntityQueryProgressiveInterfaces {
     }
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
-    interface IOrderingCompleted {
-        OrderingModel model();
+    interface ISingleOperandOrderable extends IOrder<IOrderingItemCloseable> {
     }
 
-    interface ISingleOperandOrderable extends ISingleOperand<ISingleOperandOrderable>, IOrder<IOrderingItemCloseable>, IOrderingCompleted {
+    interface IOrderingItemCloseable extends IOrderingItem {
+	OrderingModel model();
     }
 
-    interface IOrderingItemCloseable extends IOrderingItem, IOrderingCompleted {
-    }
-
-    interface IOrderingItem extends ISingleOperand<ISingleOperandOrderable> {
+    interface IOrderingItem extends IExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable>> {
     }
 }
