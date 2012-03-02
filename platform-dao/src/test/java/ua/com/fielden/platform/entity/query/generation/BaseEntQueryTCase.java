@@ -25,6 +25,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntSet;
 import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
@@ -98,6 +99,10 @@ public class BaseEntQueryTCase {
 
     protected static EntQuery entResultQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsResultQuery(qryModel);
+    }
+
+    protected static EntQuery entResultQry(final QueryModel qryModel, final OrderingModel orderModel) {
+	return qb.generateEntQueryAsResultQuery(qryModel, orderModel, new HashMap<String, Object>());
     }
 
     protected static EntQuery entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {

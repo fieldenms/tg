@@ -16,8 +16,10 @@ import ua.com.fielden.platform.entity.query.generation.elements.YieldModel;
 import ua.com.fielden.platform.entity.query.generation.elements.YieldsModel;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 public class QueryModelGroupingCompositionTest extends BaseEntQueryTCase {
@@ -54,6 +56,24 @@ public class QueryModelGroupingCompositionTest extends BaseEntQueryTCase {
 	final List<GroupModel> groups = new ArrayList<GroupModel>();
 	groups.add(new GroupModel(eqClassProp));
 	groups.add(new GroupModel(yearOfModel));
+	final GroupsModel exp2 = new GroupsModel(groups);
+	assertEquals("models are different", exp2, act.getGroups());
+    }
+
+    @Test
+    public void test_query_ordering() {
+	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
+	final OrderingModel orderModel = orderBy().prop("model1").desc().prop("key").asc().dayOf().beginExpr().prop("a").add().prop("b").endExpr().desc().model();
+	final EntQuery act = entResultQry(qry, orderModel);
+
+	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
+	yields.put("id", new YieldModel(new EntProp("model"), "id"));
+	final YieldsModel exp = new YieldsModel(yields);
+
+	assertEquals("models are different", exp, act.getYields());
+
+	final List<GroupModel> groups = new ArrayList<GroupModel>();
+	groups.add(new GroupModel(new EntProp("model")));
 	final GroupsModel exp2 = new GroupsModel(groups);
 	assertEquals("models are different", exp2, act.getGroups());
     }

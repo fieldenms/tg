@@ -21,7 +21,7 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public String sql() {
-	return source.getSqlAlias() + "." + sql;
+	return (source != null ? source.getSqlAlias() : "?") +  "." + sql;
     }
 
     public EntProp(final String name) {
