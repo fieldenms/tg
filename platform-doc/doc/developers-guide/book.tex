@@ -8,7 +8,7 @@
 
 %\usepackage{standalone}
 
-%\usepackage{makeidx}         % allows index generation
+\usepackage{makeidx}         % allows index generation
 \usepackage{multicol}        % used for the two-column index
 \usepackage[bottom]{footmisc}% places footnotes at page bottom
 
@@ -117,12 +117,8 @@
   \begin{center}
     \begin{tikzpicture}
       \node [fill=codebgcolor!20!white,rounded corners=5pt]
-      \bgroup
-      \bgroup
-      \begin{tabular}{l}}
-      {\end{tabular}
-      \egroup
-      \egroup;
+      \bgroup}
+      {\egroup;
     \end{tikzpicture}
   \end{center}
 \end{program}
@@ -418,7 +414,7 @@
 \backmatter%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\include{glossary}
 %\include{solutions}
-%\printindex
+\printindex
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

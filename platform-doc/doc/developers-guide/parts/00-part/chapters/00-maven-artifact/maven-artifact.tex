@@ -4,15 +4,13 @@
 
 %\myepigraph{In our profession, precision and perfection are not a dispensable luxury, but a simple necessity.}{Niklaus Wirth}
 
-\section{A Short Introduction to Apache Maven}
-
   \begin{notebox}{Who shoul read it.}{\label{mb:skip}}
     This chapter is required only for those readers who are unfamilar with Apache Maven, which is used for managing Triden Genesis based projects, and can be safely skipped otherwise.
   \end{notebox}
   
   Apache Maven is a software project management and comprehension tool. 
   It is based on the concept of a \emph{project object model} or simpy POM to understand the structure of the project. 
-  Maven can manage a project's dependencies and build it from a central piece of information declared in its POM file.
+  Maven can manage project dependencies and build projects from a central piece of information declared in its POM file.
   POM files are maintained by developers and changed as project demands.
 
   The major feature of Maven we would like to emphasise specifically is the dependency management.
@@ -39,7 +37,7 @@
   These questions are amongst the main concerns addressed by Apache Maven.
   It is a very comprehensive tool that manges libraries, version resolution, localisation, and even handles transitive dependencies (i.e. libraries that depend on other libraries, which are not directly referenced by the project itself), which truly makes complex project possible.
 
-  \subsection*{Repositories and Artifacts}
+  \section*{Repositories and Artifacts}
   All dependencies that are managed by Maven are identified by three parameters: group ID, artifact ID and version.
   Artifact ID and version information are encoded into the jar file names.
   For exaple, if the file name of some dependency is \texttt{platform-pojobl-\tikzinline{1.1}.jar} then the highlighted portion \texttt{\tikzinline{1.1}} indicates the version, and the preceeding part \texttt{platform-pojobl} is the artifact ID.
@@ -49,7 +47,7 @@
   Roughly speaking, there are two types of repositories -- local and remote.
   
 
-  \paragraph*{Local Repository}
+  \subsection*{Local Repository}
   The local repository is represented by a specially designated directory \texttt{$\sim$/.m2} on every development workstation where symbol \tikzinline{$\sim$} indicates a user home directory.
   Figure \ref{img:ch00:01:local_repository_strucutre} depicts a fragment of the local repository structure.
   The top level of the local repository (indicated as left most node \texttt{$\sim$/.m2}) consist of subdirectory \texttt{repository} and a configuraton file \texttt{.settings}, which is discussed in more details lated in this section.
@@ -119,7 +117,7 @@
   Once found, such dependency is donloaded locally and a corresponding local path is added to the project classpath.
   In case where the dependency is not found, an error is reported about unresolved dependency.
 
-  \paragraph*{Remote Repository}
+  \subsection*{Remote Repository}
   
   The \emph{remote repository} represents a dedicated server that is located either on LAN or Internet.
   The dafault Maven action is to utilise a number of publicly availalbe remote Maven repositories, which contain a plethora of open source Java libraries.
@@ -140,17 +138,14 @@
 	\node at (I) {Internet};
 	\node [scale=2.0] (S) at (0,-1) {\imagepartzerochapterzero{fileserver.pdf}};
 	\node [text width=4cm, yshift=-15] at (S.south) {Inhouse Maven Remote Repository Server};
-	
 
 	\coordinate (1) at (-0.9,-0.5);
 	\coordinate (2) at (-0.9,-1.0);
 	\coordinate (3) at (-0.9,-1.5);
-	\coordinate (4) at (0.9,-1.0);
 % 
 	\fill [black, thick,<->] (d1.east) edge (1.west);
 	\fill [black, thick,<->] (d2.east) edge (2.west);
 	\fill [black, thick,<->] (d3.east) edge (3.west);
-
 	\fill [black, thick,<->] (S.east) edge (I.west);
     \end{tikzpicture}
   \end{image}
@@ -163,7 +158,7 @@
   }.  
   Thus, the inhouse repository serves as a single interaction point for resolving all dependencies for any project.
   
-  \subsection*{Download and Configure} 
+  \section*{Download and Configure} 
   Maven can be downloaded from the official \href{http://maven.apache.org/download.html}{Apache Maven web site}\footnote{\url{http://maven.apache.org/download.html}}.
   The recommended at this time verion for TG-based applications is 2.2.1.
   Once downloaded please follow the \href{http://maven.apache.org/download.html#Installation}{installation instructions}, which are also awailable on the official site\footnote{\url{http://maven.apache.org/download.html\#Installation}}.
@@ -178,14 +173,19 @@
   The latter approach can be explained and easily followed by the reader without much prior knowledge, which is whay it is presented below.
   
   Listing~\ref{lst:settings} represents a content of the Maven configuration file \texttt{.settings} used by the TG Team.
-  It can be simply copied and pasted into a local copy of \texttt{$\sim$/.m2/.settings}).
-  The things that needs to be changed are the \emph{username} and \emph{password} in several entries.
+  It can be simply copied and pasted into a local copy of \texttt{$\sim$/.m2/.settings}.
+  The presented files has three main sections:
+  \begin{enumerate}
+    \item Mirrors -- used to enforce s single Maven repository by having it mirror all repository requests. 
+	  The repository must contain all of the desired artifacts, or be able to proxy the requests to other repositories.
+    \item Profiles -- Maven supports the notion of configuration profiles. 
+	  If necessary there can be several profiles that can be associated with different settings and activated either globally or per project.
+    \item Servers -- server settings are used to control cridentials for accessing declared repositories for read as well as write, which is used for deplying release or snapshot artifacts.
+  \end{enumerate}
+  The only entires that need to be changed are the \emph{username} and \emph{password} in server related section.
   The values for \emph{username} and \emph{password}  should be requested separately from the R\&D team.
-
   The listing provides all the necessary annotations explaining configuration settings.
-  In case where a proxy server is used to access the Internet, the proxy settings also need to be provided as part of the local Maven settings.
-  Listing~\ref{lst:proxy} contains the necessary configuraton snippet, which should be only be provided with valid proxy address, port and cridentials if necessary.
-
+  
   \lstset{language=XML,
 	  escapechar=\%,
 	  morekeywords={settings, encoding, mirrorOf, mirrors, mirror, id, profiles, profile, repositories, repository, url, releases, snapshots, version,
@@ -269,6 +269,10 @@
     }
   \end{code}
 
+  In cases where a proxy server is used to access the Internet, the proxy settings also need to be provided as part of the local Maven settings.
+  Listing~\ref{lst:proxy} contains an example configuration snippet, which cab be used as part of the local \texttt{$\sim$/.m2/.settings} file.
+  This snippet should be modified by providing correct values for proxy address, port and user cridentials.
+
   \begin{code}{Maven Proxy Settings}{\label{lst:proxy}}
     \begin{lstlisting}
       <proxies>
@@ -285,9 +289,27 @@
     \end{lstlisting}
   \end{code}
 
-  \subsection*{POM Esseintials}  
+  \section*{POM Essentials}  
 
-  \hyperref[lst:pom]{Listing \ref{lst:pom}} illustrates an fragment of a POM file with relevant comments for each of the key tags relevant to the project.
+  As mentioned earlier, project object model is an XML representation of the Maven project held in a file named \texttt{pom.xml}. 
+  It defines all necessary information about project's sturucre, dependencies and build configuratons.
+  Stucturely, Maven supports single-module and multi-module projects.
+  For example, Trident Genesis itself is a multi-module project\footnote{Platfrom modules are covered in details later in the book.}.
+
+  Although, small applications could be managed as single-module projects, it should be used only if these applications are truly monolithic (which is rather an exception than a rule).  
+  Regardless of the domain complexity, every TG-based application is a multi-module project.
+  This provides a way to cleanaly separate application concerns by segregating them into separate project modules with weak interdependency.
+  
+  \begin{notebox}{The Interface-Segregation Principle.}{\label{mb:segregation}}
+    The interface-segregation principle is one of the five SOLID principles of Object-Oriented Design.
+    It is a software development principle used for clean development and is intended to help developers avoid making their software impossible to change. 
+    If followed, the ISP will help a system stay decoupled and thus easier to refactor, change, and redeploy. 
+    The ISP says that once an interface has become too 'fat' it needs to be split into smaller and more specific interfaces so that any clients of the interface will only know about the methods that pertain to them. In a nutshell, no client should be forced to depend on methods it does not use.
+
+    More on this topic can be found in~\cite{Martin2002}, or at \url{http://en.wikipedia.org/wiki/Interface_segregation_principle}.
+  \end{notebox}   
+
+  \hyperref[lst:pom]{Listing \ref{lst:pom}} illustrates a fragment of a POM file with relevant comments for each of the key tags relevant to the project.
 
 
   %\clearpage
