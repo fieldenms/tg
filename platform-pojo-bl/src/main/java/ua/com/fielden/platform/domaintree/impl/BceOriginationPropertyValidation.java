@@ -32,7 +32,8 @@ public class BceOriginationPropertyValidation implements IBeforeChangeEventHandl
 	    return e;
 	}
 
-	if (!cp.getContextualExpression().contains(newOriginationProperty)) {
+	//TODO must determine first whether contextual expression is null or not.
+	if (cp.getContextualExpression() == null || !cp.getContextualExpression().contains(newOriginationProperty)) {
 	    return new CalcPropertyKeyWarning("The origination property does not take a part in the expression. Is that correct?");
 	}
 	return Result.successful(newOriginationProperty);

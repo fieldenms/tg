@@ -12,6 +12,7 @@ import java.util.Map;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;
+import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
@@ -38,8 +40,6 @@ import ua.com.fielden.platform.swing.model.UmState;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
-
-import com.jgoodies.binding.value.Trigger;
 
 /**
  * Model for expression editor.
@@ -131,7 +131,9 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	};
 	action.setEnabled(true);
-	action.putValue(Action.SHORT_DESCRIPTION, "Create new");
+	final Icon icon = ResourceLoader.getIcon("images/add.png");
+	action.putValue(Action.LARGE_ICON_KEY, icon);
+	action.putValue(Action.SHORT_DESCRIPTION, "Create new calculated property");
 	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_N);
 	return action;
     }
@@ -162,7 +164,9 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	};
 	action.setEnabled(canEdit());
-	action.putValue(Action.SHORT_DESCRIPTION, "Edit");
+	final Icon icon = ResourceLoader.getIcon("images/calculator_edit.png");
+	action.putValue(Action.LARGE_ICON_KEY, icon);
+	action.putValue(Action.SHORT_DESCRIPTION, "Edit selected calculated proeprty");
 	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_E);
 	return action;
     }
@@ -174,7 +178,6 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	    @Override
 	    protected boolean preAction() {
-		expressionEditor.commitEditorValue();
 		notifyActionStageChange(ActionStage.SAVE_PRE_ACTION);
 		setState(UmState.UNDEFINED);
 		getCancelAction().setEnabled(false);
@@ -282,16 +285,35 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
     @Override
     protected Action createDeleteAction() {
-	return new AbstractAction() {
-
-	    private static final long serialVersionUID = 401520928333053877L;
+	final Command<Void> action = new Command<Void>("Delete") {
+	    private static final long serialVersionUID = 1L;
 
 	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		// TODO Auto-generated method stub
-
+	    protected boolean preAction() {
+		notifyActionStageChange(ActionStage.DELETE_PRE_ACTION);
+		setState(UmState.UNDEFINED);
+		return super.preAction();
 	    }
+
+	    @Override
+	    protected Void action(final ActionEvent event) throws Exception {
+		notifyActionStageChange(ActionStage.DELETE_ACTION);
+		return null;
+	    }
+
+	    @Override
+	    protected void postAction(final Void entity) {
+		setState(UmState.VIEW);
+		notifyActionStageChange(ActionStage.DELETE_POST_ACTION);
+	    }
+
 	};
+	action.setEnabled(true);
+	final Icon icon = ResourceLoader.getIcon("images/delete.png");
+	action.putValue(Action.LARGE_ICON_KEY, icon);
+	action.putValue(Action.SHORT_DESCRIPTION, "Delete entity");
+	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_D);
+	return action;
     }
 
     /**
@@ -325,7 +347,11 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    @Override
 	    public void propertyStateChanged(final String property, final boolean isSelected) {
 		if(isSelected){
-		    expressionEditor.insertText(property, TextInsertionType.REPLACE, true, property.length());
+		    if(expressionEditor.isChecked()){
+			expressionEditor.insertText(property, TextInsertionType.REPLACE, true, property.length());
+		    }else if (originationEditor.isChecked()){
+			originationEditor.setText(property, true, property.length());
+		    }
 		}
 	    }
 	};
@@ -337,7 +363,6 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	private final BoundedValidationLayer<JTextField> textEditor;
 	private final JToggleButton editButton;
 	private final JPanel editor;
-	private final Trigger commitTrigger;
 
 	private CalculatedProperty entity;
 	private final String propertyName;
@@ -351,13 +376,12 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    this.entity = entity;
 	    this.propertyName = "contextualExpression";
 	    entity.getProperty(getPropertyName()).addValidationResultsChangeListener(createExpressionValidationListener());
-	    this.commitTrigger = new Trigger();
 	    final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
 
 	    label = DummyBuilder.label(titleAndDesc.getKey());
 	    label.setToolTipText(titleAndDesc.getValue());
 
-	    textEditor = ComponentFactory.createTriggeredStringTextField(entity, propertyName, commitTrigger, false, entity.getProperty(propertyName).getDesc());
+	    textEditor = ComponentFactory.createStringTextField(entity, propertyName, true, entity.getProperty(propertyName).getDesc(), EditorCase.MIXED_CASE);
 	    editButton = new JToggleButton(ResourceLoader.getIcon("images/cursor.png"));
 	    editor = new JPanel(new MigLayout("fill, insets 0", "[fill, grow]5[]", "[fill, grow]"));
 	    editor.add(textEditor);
@@ -400,7 +424,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 		@Override
 		public void actionPerformed(final ActionEvent e) {
-		    commitEditorValue();
+		    textEditor.commit();
 		}
 	    };
 	}
@@ -413,7 +437,9 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	 * @param relativeCaretPosition
 	 */
 	public void setText(final String text, final boolean select, final int relativeCaretPosition){
-	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, false, relativeCaretPosition);
+	    final JTextField field = textEditor.getView();
+	    field.selectAll();
+	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, select, relativeCaretPosition);
 	}
 
 	/**
@@ -489,12 +515,6 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    return false;
 	}
 
-	/**
-	 * Triggers commit action for this property editor.
-	 */
-	public void commitEditorValue(){
-	    commitTrigger.triggerCommit();
-	}
     }
 
     private static class OriginationPropertyEditor implements IPropertyEditor{
@@ -536,7 +556,9 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	 * @param relativeCaretPosition
 	 */
 	public void setText(final String text, final boolean select, final int relativeCaretPosition){
-	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, false, relativeCaretPosition);
+	    final JTextField field = textEditor.getView();
+	    field.selectAll();
+	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, select, relativeCaretPosition);
 	}
 
 	/**
@@ -659,6 +681,26 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	 */
 	public ManualTextSetter(final BoundedValidationLayer<JTextField> textComponent){
 	    this.textComponent = textComponent;
+	    textComponent.addOnCommitAction(new IOnCommitAction() {
+
+		@Override
+		public void postSuccessfulCommitAction() {
+		    // TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void postNotSuccessfulCommitAction() {
+		    // TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void postCommitAction() {
+		    // TODO Auto-generated method stub
+
+		}
+	    });
 	    final JTextField field = textComponent.getView();
 	    field.addFocusListener(createExpressionFocusListener(textComponent.getView()));
 	}
@@ -745,6 +787,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		    case TEXT_INSERTION:
 			final String previousText = textField.getText();
 			textField.setText(previousText.substring(0, startIndex) + textToInsert + previousText.substring(endIndex));
+			textComponent.commit();
 			textField.setCaretPosition(startIndex+relativeCaretPosition);
 			if(select){
 			    textField.select(startIndex, startIndex + textToInsert.length());

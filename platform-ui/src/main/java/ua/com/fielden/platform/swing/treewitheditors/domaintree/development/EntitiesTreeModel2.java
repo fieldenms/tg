@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.treewitheditors.development;
+package ua.com.fielden.platform.swing.treewitheditors.domaintree.development;
 
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.DefaultTreeCheckingModel;
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingEvent;
@@ -6,11 +6,10 @@ import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingListener;
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingModel;
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingModel.CheckingMode;
 
-import java.awt.Component;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.swing.JTree;
+import javax.swing.Action;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.ExpandVetoException;
@@ -31,8 +30,7 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.dynamicreportstree.EntitiesTreeColumn;
 import ua.com.fielden.platform.swing.menu.filter.FilterableTreeModel;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
-import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeCellRenderer;
-import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeModel2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -65,7 +63,14 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      * @param secondTickCaption
      * 		  - the name of area corresponding to 1-check-box to which properties should be added/removed.
      */
-    public EntitiesTreeModel2(final IDomainTreeManagerAndEnhancer manager, final String firstTickCaption, final String secondTickCaption) {
+    public EntitiesTreeModel2(//
+	    final IDomainTreeManagerAndEnhancer manager,//
+	    final Action newAction,//
+	    final Action editAction,//
+	    final Action copyAction,//
+	    final Action removeAction,//
+	    final String firstTickCaption,//
+	    final String secondTickCaption) {
 	super(2);
 
 	this.getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).setCheckingMode(CheckingMode.SIMPLE);
@@ -76,8 +81,12 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	this.setRoot(this.rootNode = new EntitiesTreeNode2(createUserObject(EntitiesTreeModel2.class, ROOT_PROPERTY)));
 	this.nodesCache = AbstractDomainTree.createPropertiesMap();
 	this.nodesForSimplePropertiesCache = AbstractDomainTree.createPropertiesMap();
-	this.cellRenderer1 = createCellRenderer(this, firstTickCaption, secondTickCaption);
-	this.cellRenderer2 = createCellRenderer(this, firstTickCaption, secondTickCaption);
+	this.cellRenderer1 = new EntitiesTreeCellRenderer(this, //
+		newAction, editAction, copyAction, removeAction, //
+		firstTickCaption, secondTickCaption);
+	this.cellRenderer2 = new EntitiesTreeCellRenderer(this, //
+		newAction, editAction, copyAction, removeAction, //
+		firstTickCaption, secondTickCaption);
 
 	// initialise nodes according to included properties of the manager (these include "dummy" and "common properties" stuff)
 	for (final Class<?> root : manager.getRepresentation().rootTypes()) {
@@ -121,41 +130,6 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
     }
 
     /**
-     * Creates a tree cell renderer with some ticks invisible (e.g. "common" property and )
-     *
-     * @param entitiesTree
-     * @param firstTickCaption
-     * @param secondTickCaption
-     * @return
-     */
-    protected EntitiesTreeCellRenderer createCellRenderer(final EntitiesTreeModel2 entitiesTreeModel, final String firstTickCaption, final String secondTickCaption) {
-	return new EntitiesTreeCellRenderer(entitiesTreeModel, firstTickCaption, secondTickCaption) {
-	    private static final long serialVersionUID = 1L;
-
-	    @Override
-	    public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean selected, final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
-		setCheckingComponentVisible(true);
-
-		final EntitiesTreeNode2 node = (EntitiesTreeNode2) value;
-		final Class<?> root = node.getUserObject().getKey();
-		final String property = node.getUserObject().getValue();
-
-		if (!isNotDummyAndNotCommonProperty(property)) {
-		    setCheckingComponentVisible(false);
-		}
-
-		if (PropertyTypeDeterminator.isDotNotation(property)) {
-		    final String parentProperty = PropertyTypeDeterminator.penultAndLast(property).getKey();
-		    if (!AbstractDomainTree.isCommonBranch(parentProperty) && EntityUtils.isUnionEntityType(PropertyTypeDeterminator.determinePropertyType(root, AbstractDomainTree.reflectionProperty(parentProperty)))) {
-			setCheckingComponentVisible(1, false);
-		    }
-		}
-		return super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
-	    }
-	};
-    }
-
-    /**
      * Creates a node for a property (can be "dummy" or "common") and adds to appropriate place of entities tree.
      *
      * @param root
@@ -165,12 +139,12 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	final EntitiesTreeNode2 parentNode = StringUtils.isEmpty(property) ? rootNode //
 		: !PropertyTypeDeterminator.isDotNotation(property) ? node(root, "", true) //
 			: node(root, PropertyTypeDeterminator.penultAndLast(property).getKey(), true);
-	final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
-	nodesCache.put(AbstractDomainTree.key(root, property), node);
-	if (isNotDummyAndNotCommonProperty(property)) {
-	    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
-	}
-	parentNode.add(node);
+		final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
+		nodesCache.put(AbstractDomainTree.key(root, property), node);
+		if (isNotDummyAndNotCommonProperty(property)) {
+		    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
+		}
+		parentNode.add(node);
     }
 
     protected boolean isNotDummyAndNotCommonProperty(final String property) {
@@ -394,11 +368,11 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
     }
 
     public EntitiesTreeCellRenderer getCellRenderer1() {
-        return cellRenderer1;
+	return cellRenderer1;
     }
 
     public EntitiesTreeCellRenderer getCellRenderer2() {
-        return cellRenderer2;
+	return cellRenderer2;
     }
 
     public FilterableTreeModel getFilterableModel() {

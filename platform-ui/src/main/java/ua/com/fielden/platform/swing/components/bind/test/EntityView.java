@@ -83,6 +83,9 @@ public class EntityView {
 	entity.setMoney(new Money(new BigDecimal(122.0)));
 	entity.setDoubleProperty(new Double(1188));
 	entity.setBool(true);
+
+	entity.getProperty("strategy").setEditable(false);
+
 	entity.setStrategy(Strategy.COMMIT);
 	final ArrayList<Bicycle> bicycles = new ArrayList<Bicycle>();
 
@@ -103,6 +106,9 @@ public class EntityView {
 	freshEntity.setDoubleProperty(null);
 
 	freshEntity.setBool(false);
+
+	freshEntity.getProperty("strategy").setEditable(false);
+
 	freshEntity.setStrategy(Strategy.REVERT_ON_INVALID);
 	final ArrayList<Bicycle> freshBicycles = new ArrayList<Bicycle>();
 	freshBicycles.add(bicycles.get(2));
@@ -564,7 +570,7 @@ public class EntityView {
 		    ComponentFactory.createBoundedJXDatePicker(entity, Entity.PROPERTY_DATE, "vaidation layer for BoundedJXDatePicker", false, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()),
 		    ComponentFactory.createBoundedJXDatePicker(entity, Entity.PROPERTY_DATE, "vaidation layer for BoundedJXDatePicker", false, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()) //
 		    //
-	    ));
+		    ));
 	}
 
 	switchButton.addActionListener(new ActionListener() {

@@ -26,7 +26,7 @@ public class MultipleCheckboxTreeCellEditor2 extends AbstractCellEditor implemen
 
     private static final long serialVersionUID = -6872693277320582798L;
 
-    private final MultipleCheckboxTree2 tree;
+    protected final MultipleCheckboxTree2 tree;
     private final MultipleCheckboxTreeCellRenderer2 renderer;
 
     /**
@@ -138,6 +138,10 @@ public class MultipleCheckboxTreeCellEditor2 extends AbstractCellEditor implemen
 	    }
 	}
 	return -1;
+    }
+
+    public MultipleCheckboxTreeCellRenderer2 getRenderer() {
+	return renderer;
     }
 
 }

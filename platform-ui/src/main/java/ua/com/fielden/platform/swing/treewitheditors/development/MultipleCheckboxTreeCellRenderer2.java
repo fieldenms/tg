@@ -84,11 +84,12 @@ public class MultipleCheckboxTreeCellRenderer2 extends JPanel implements TreeCel
 
     @Override
     public String getToolTipText(final MouseEvent event) {
+	doLayout();
 	final Component selectedComponent = getComponetLocatedAt(event.getX(), event.getY());
 	if (selectedComponent != null && selectedComponent instanceof JComponent) {
 	    return ((JComponent) selectedComponent).getToolTipText();
 	}
-	return "";
+	return null;
     }
 
     /**
@@ -158,7 +159,7 @@ public class MultipleCheckboxTreeCellRenderer2 extends JPanel implements TreeCel
      *
      * @param visible
      */
-    protected void setCheckingComponentVisible(final boolean visible) {
+    protected void setCheckingComponentsVisible(final boolean visible) {
 	for (int componentIndex = 0; componentIndex < model.getCheckingModelCount(); componentIndex++) {
 	    setCheckingComponentVisible(componentIndex, visible);
 	}

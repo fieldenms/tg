@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.treewitheditors.development;
+package ua.com.fielden.platform.swing.treewitheditors.domaintree.development;
 
 import java.util.Collections;
 import java.util.List;

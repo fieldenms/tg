@@ -7,8 +7,6 @@ import javax.swing.tree.TreeSelectionModel;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
-import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeModel2;
-import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeNode2;
 import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTree2;
 
 /**

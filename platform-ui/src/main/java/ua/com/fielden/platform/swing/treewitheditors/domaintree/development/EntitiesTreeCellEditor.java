@@ -1,10 +1,18 @@
 package ua.com.fielden.platform.swing.treewitheditors.domaintree.development;
 
-import javax.swing.tree.TreeNode;
+import java.awt.Component;
+import java.awt.event.MouseEvent;
+import java.util.EventObject;
 
+import javax.swing.JTree;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+
+import org.apache.commons.lang.StringUtils;
+
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
-import ua.com.fielden.platform.swing.treewitheditors.development.EntitiesTreeNode2;
 import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeCellEditor2;
 
 public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
@@ -35,7 +43,45 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
     }
 
     @Override
+    public Component getTreeCellEditorComponent(final JTree tree, final Object value, final boolean isSelected, final boolean expanded, final boolean leaf, final int row) {
+	//TODO implemetn logic that determines what buttons should be visible and which not.
+	return super.getTreeCellEditorComponent(tree, value, isSelected, expanded, leaf, row);
+    }
+
+    @Override
     public Object getCellEditorValue() {
 	return ((EntitiesTreeNode2) getTree().getEditingPath().getLastPathComponent()).getUserObject();
+    }
+
+    @Override
+    public EntitiesTreeCellRenderer getRenderer() {
+	return (EntitiesTreeCellRenderer)super.getRenderer();
+    }
+
+    @Override
+    public boolean isCellEditable(final EventObject event) {
+	if(super.isCellEditable(event)){
+	    return true;
+	}
+	if(event instanceof MouseEvent){
+	    final MouseEvent e = (MouseEvent) event;
+	    if (!e.isControlDown() && !e.isConsumed()) {
+		final TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+		if(path == null){
+		    return false;
+		}
+		final Object lastComponent = path.getLastPathComponent();
+		final EntitiesTreeNode2 node = (EntitiesTreeNode2) lastComponent;
+		final Class<?> root = node.getUserObject().getKey();
+		final String property = node.getUserObject().getValue();
+		final Class<?> propertyType = StringUtils.isEmpty(property) ? root : PropertyTypeDeterminator.determineClass(root, property, true, true);
+		//TODO finish implementation: determine whether some buttons will be visible or not. If there is visible buttons then the cell is editable othervise it is not
+		//		if(AbstractEntity.class.isAssignableFrom(propertyType)){
+		//
+		//		}
+		return false;
+	    }
+	}
+	return false;
     }
 }

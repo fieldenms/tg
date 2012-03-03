@@ -83,8 +83,8 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
      * Gets the calculated property with a name <code>calculatedPropertyName</code>(dot-notation expression) from <code>rootType</code> hierarchy.
      * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property name is incorrect.<br><br>
      *
-     * @param rootType -- type of <b>root</b> entity, from which the calculated property should be removed (not derived type)
-     * @param calculatedPropertyName -- the dot-notation expression name of calculated property to be obtained
+     * @param rootType -- type of <b>root</b> entity, from which the calculated property should be obtained (not derived type).
+     * @param calculatedPropertyName -- the dot-notation expression name of calculated property to be obtained.
      */
     ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName);
 

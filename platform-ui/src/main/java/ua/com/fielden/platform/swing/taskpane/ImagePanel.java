@@ -4,6 +4,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 
+import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 
 public class ImagePanel extends JPanel {
@@ -14,6 +15,10 @@ public class ImagePanel extends JPanel {
 
     public ImagePanel() {
 	icon = null;
+    }
+
+    public ImagePanel(final ImageIcon icon){
+	setIcon(icon.getImage());
     }
 
     @Override
