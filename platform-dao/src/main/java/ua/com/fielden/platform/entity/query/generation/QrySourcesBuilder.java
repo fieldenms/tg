@@ -7,7 +7,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQueryCompoundSourceModel;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourcesModel;
+import ua.com.fielden.platform.entity.query.generation.elements.SourcesModel;
 import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -21,8 +21,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
     @Override
     public void add(final TokenCategory cat, final Object value) {
 	switch (cat) {
-	case INNER_JOIN: //eats token
-	case LEFT_JOIN: //eats token
+	case JOIN_TYPE: //eats token
 	    finaliseChild();
 	    setChild(new CompoundQrySourceBuilder(this, getQueryBuilder(), getParamValues(), cat, value));
 	    break;
@@ -42,7 +41,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
 	return getChild() == null;
     }
 
-    public EntQuerySourcesModel getModel() {
+    public SourcesModel getModel() {
 	if (getChild() != null) {
 	    finaliseChild();
 	}
@@ -53,7 +52,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
 	    final EntQueryCompoundSourceModel subsequentSource= (EntQueryCompoundSourceModel) iterator.next().getValue();
 	    otherSources.add(subsequentSource);
 	}
-	return new EntQuerySourcesModel(mainSource, otherSources);
+	return new SourcesModel(mainSource, otherSources);
 
     }
 

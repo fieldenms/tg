@@ -404,16 +404,16 @@ final class Tokens {
     }
 
     public <E extends AbstractEntity> Tokens innerJoin(final Class<E> entityType) {
-	return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
+	return add(TokenCategory.JOIN_TYPE, JoinType.IJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
     public <E extends AbstractEntity> Tokens leftJoin(final Class<E> entityType) {
-	return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
+	return add(TokenCategory.JOIN_TYPE, JoinType.LJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
     public <E extends AbstractEntity> Tokens innerJoin(final AggregatedResultQueryModel... sourceModels) {
 	if (sourceModels.length >= 1) {
-	    return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+	    return add(TokenCategory.JOIN_TYPE, JoinType.IJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
 	    throw new RuntimeException("No models have been specified as a source in from statement!");
 	}
@@ -421,7 +421,7 @@ final class Tokens {
 
     public <E extends AbstractEntity> Tokens innerJoin(final EntityResultQueryModel<E>... sourceModels) {
 	if (sourceModels.length >= 1) {
-	    return add(TokenCategory.INNER_JOIN, JoinType.IJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+	    return add(TokenCategory.JOIN_TYPE, JoinType.IJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
 	    throw new RuntimeException("No models have been specified as a source in from statement!");
 	}
@@ -429,7 +429,7 @@ final class Tokens {
 
     public <E extends AbstractEntity> Tokens leftJoin(final AggregatedResultQueryModel... sourceModels) {
 	if (sourceModels.length >= 1) {
-	    return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+	    return add(TokenCategory.JOIN_TYPE, JoinType.LJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
 	    throw new RuntimeException("No models have been specified as a source in from statement!");
 	}
@@ -437,7 +437,7 @@ final class Tokens {
 
     public <E extends AbstractEntity> Tokens leftJoin(final EntityResultQueryModel<E>... sourceModels) {
 	if (sourceModels.length >= 1) {
-	    return add(TokenCategory.LEFT_JOIN, JoinType.LJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+	    return add(TokenCategory.JOIN_TYPE, JoinType.LJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
 	    throw new RuntimeException("No models have been specified as a source in from statement!");
 	}

@@ -23,7 +23,7 @@ public class EntQuery implements ISingleOperand {
 
     private static String id = "id";
 
-    private final EntQuerySourcesModel sources;
+    private final SourcesModel sources;
     private final ConditionsModel conditions;
     private final YieldsModel yields;
     private final GroupsModel groups;
@@ -190,15 +190,15 @@ public class EntQuery implements ISingleOperand {
 	return result;
     }
 
-    private EntQuerySourcesModel enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final EntQuerySourcesModel sources, final EntQueryGenerator generator) {
+    private SourcesModel enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final SourcesModel sources, final EntQueryGenerator generator) {
 	final IEntQuerySource newMain =
 		(sources.getMain() instanceof EntQuerySourceFromEntityType && filter != null && filter.enhance(sources.getMain().sourceType(), username) != null) ?
 	    new EntQuerySourceFromQueryModel(sources.getMain().getAlias(), mappingsGenerator, generator.generateEntQueryAsSourceQuery(filter.enhance(sources.getMain().sourceType(), username))) : null;
 
-	return newMain != null ? new EntQuerySourcesModel(newMain, sources.getCompounds()) : sources;
+	return newMain != null ? new SourcesModel(newMain, sources.getCompounds()) : sources;
     }
 
-    public EntQuery(final EntQuerySourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final OrderingsModel orderings, //
+    public EntQuery(final SourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final OrderingsModel orderings, //
 	    final Class resultType, final QueryCategory category, final MappingsGenerator mappingsGenerator, //
 	    final IFilter filter, final String username, final EntQueryGenerator generator) {
 	super();
@@ -432,7 +432,7 @@ public class EntQuery implements ISingleOperand {
 	return result;
     }
 
-    public EntQuerySourcesModel getSources() {
+    public SourcesModel getSources() {
 	return sources;
     }
 

@@ -7,11 +7,11 @@ import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.utils.Pair;
 
 
-public class EntQuerySourcesModel implements IPropertyCollector {
+public class SourcesModel implements IPropertyCollector {
     private final IEntQuerySource main;
     private final List<EntQueryCompoundSourceModel> compounds;
 
-    public EntQuerySourcesModel(final IEntQuerySource main, final List<EntQueryCompoundSourceModel> compounds) {
+    public SourcesModel(final IEntQuerySource main, final List<EntQueryCompoundSourceModel> compounds) {
 	super();
 	this.main = main;
 	this.compounds = compounds;
@@ -117,10 +117,10 @@ public class EntQuerySourcesModel implements IPropertyCollector {
 	if (obj == null) {
 	    return false;
 	}
-	if (!(obj instanceof EntQuerySourcesModel)) {
+	if (!(obj instanceof SourcesModel)) {
 	    return false;
 	}
-	final EntQuerySourcesModel other = (EntQuerySourcesModel) obj;
+	final SourcesModel other = (SourcesModel) obj;
 	if (compounds == null) {
 	    if (other.compounds != null) {
 		return false;

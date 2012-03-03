@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.DayOfModel;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQueryCompoundSourceModel;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourceFromEntityType;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourcesModel;
+import ua.com.fielden.platform.entity.query.generation.elements.SourcesModel;
 import ua.com.fielden.platform.entity.query.generation.elements.EntSetFromQryModel;
 import ua.com.fielden.platform.entity.query.generation.elements.ExistenceTestModel;
 import ua.com.fielden.platform.entity.query.generation.elements.LikeTestModel;
@@ -258,7 +258,7 @@ public class QueryModelConditionsCompositionTest extends BaseEntQueryComposition
 	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(TgWorkOrder.class, "wo2", MAPPINGS_GENERATOR), JoinType.LJ, condition2));
 
 	final EntQuery act = entResultQry(qry);
-	final EntQuerySourcesModel exp = new EntQuerySourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v", MAPPINGS_GENERATOR), others);
+	final SourcesModel exp = new SourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v", MAPPINGS_GENERATOR), others);
 	assertEquals("models are different", exp, act.getSources());
 
 	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();

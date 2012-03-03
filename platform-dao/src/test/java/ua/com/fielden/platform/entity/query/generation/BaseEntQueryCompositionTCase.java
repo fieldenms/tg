@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundConditionModel;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundSingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ConditionsModel;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourcesModel;
+import ua.com.fielden.platform.entity.query.generation.elements.SourcesModel;
 import ua.com.fielden.platform.entity.query.generation.elements.Expression;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditionsModel;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupsModel;
@@ -54,7 +54,7 @@ public class BaseEntQueryCompositionTCase extends BaseEntQueryTCase {
 	assertEquals(("Yields models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
     }
 
-    protected static void assertModelsEquals(final EntQuerySourcesModel exp, final EntQuerySourcesModel act) {
+    protected static void assertModelsEquals(final SourcesModel exp, final SourcesModel act) {
 	assertEquals(("Sources models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
     }
 
