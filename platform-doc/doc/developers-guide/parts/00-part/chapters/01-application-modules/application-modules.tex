@@ -1,1 +1,147 @@
-\chapter{Divide and Conquer or Application Modules}\label{ch00:02}
+\chapter{As Quickly as Possible or Maven Archetypes to the Rescue}\label{ch00:02}
+%Divide and Conquer or Application Modules
+\myepigraph{One must learn by doing the thing; for though you think you know it, you have no certainty, until you try.}{Sophocles}                                                   
+
+The Maven Archetype concept is a cool way of automating a lot of otherwise manual labour when creating new projects.
+  \href{http://maven.apache.org/guides/introduction/introduction-to-archetypes.html}{Officially} archetype is a Maven project templating toolkit -- an original pattern or model from which all other things of the same kind are made.
+
+  The Trident Genesis Platform provides an archetype that conveniently generates a project template, which then can be enhanced to meet customer requirements.
+  The main goal of the provided archetype is to get developers up and running as quickly as possible with a simple, but fully operational TG-based application.
+  The first section provides steps how to use the TG application archetype, and the following sections discuss in details all the features of the generated project, which covers everything from importing the generated project into Eclipse down to project documentation and deployment.
+
+\section{Create new project from an archetype}
+
+    If Maven is correctly configured as described in section \ref{ch00:01} then running command \texttt{mvn archetype:generate -Dfilter=fielden:} in a terminal should provide a result oulined in listing \ref{lst:find-and-run-archetype}.
+
+\lstset{  escapechar=\%,
+	  morekeywords={mvn, archetype, generate, Dfilter, fielden, local},
+	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
+  \vspace*{-20pt}
+  \begin{code}{Find and Run TG Application Archetype}{\label{lst:find-and-run-archetype}}
+    \begin{lstlisting}
+user@workstation:~/workspace$ mvn archetype:generate -Dfilter=fielden:
+[INFO] Scanning for projects...
+[INFO] Searching repository for plugin with prefix: 'archetype'.
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Maven Default Project
+[INFO]    task-segment: [archetype:generate] (aggregator-style)
+[INFO] ------------------------------------------------------------------------
+[INFO] Preparing archetype:generate
+[INFO] No goals needed for project - skipping
+[INFO] [archetype:generate {execution: default-cli}]
+[INFO] Generating project in Interactive mode
+[INFO] No archetype defined.
+Choose archetype:
+1: local -> fielden:tg-application-archetype (This is a project template for constructing 
+	TG-based information systems. It provides templates for all application modules as 
+	per Trident Genesis platform specification. The development teams should use this 
+	template to significantly automates the initial creation of TG-based applications.)
+Choose a number or apply filter (format: [groupId:]artifactId, case sensitive contains): : 
+    \end{lstlisting}
+  \end{code}
+
+  This command requests Maven to generate a project using one of the archetypes with groupId equal to \emph{fielden}.
+  The only available at this stage archetype associated with \emph{fielden} is \emph{fielden:tg-application-archetype}
+  In order to select this archetype type 1 (or any other appropriate numeral, which points to archetype \emph{fielden:tg-application-archetype}) and hit \texttt{enter} to confirm the selection. 
+  This action result in a number of archetype specific prompts. 
+  Each of the prompts is illustrated and discussed below.
+  It is best if reader follow this section step by step trying to reproduce each of them on their system.
+
+  \begin{enumerate}
+    \item Define value for property 'groupId': : -- a Maven specific variable, which identifies the group ID of the project being created; this could be a short name (without spaces or other funny characters) of your company such as \emph{fielden}; hit \texttt{enter} to confirm.
+    \vspace*{-20pt}
+    \begin{code}{Application groupId}{\label{lst:archetype-groupId}}
+      \begin{lstlisting}
+	Define value for property 'groupId': : fielden		
+      \end{lstlisting}
+    \end{code}
+
+    \item Define value for property 'artifactId': : -- a Maven specific variable, which identifies the artifact ID of the project being created; this could be a short name (without spaces or other funny characters) of your project such as \emph{coolapp}; note that this value is used as part the project's top level directory naming structure; hit \texttt{enter} to confirm.
+    \vspace*{-20pt}
+    \begin{code}{Application artifactId}{\label{lst::archetype-archetypeId}}
+      \begin{lstlisting}
+	Define value for property 'groupId': : fielden		
+	Define value for property 'artifactId': : coolapp
+      \end{lstlisting}
+    \end{code}
+
+    \item Define value for property 'version': 1.0-SNAPSHOT: -- a Maven specific variable, which identifies version of the artifact (i.e. your project); the default is \emph{1.0-SNAPSHOT}, which is only reasonable given a new project is being created; hit \texttt{enter} to confirm.
+    \vspace*{-20pt}
+    \begin{code}{Application version}{\label{lst::archetype-version}}
+      \begin{lstlisting}
+	Define value for property 'groupId': : fielden		
+	Define value for property 'artifactId': : coolapp
+	Define value for property 'version': 1.0-SNAPSHOT:
+      \end{lstlisting}
+    \end{code}
+
+    \item Define value for property 'package': fielden: -- a Maven specific variable, which identifies Java package name, which is used as the root for all generated Java files; the default value matches the groupId, which is reasonable due to a Java custom of naming packages based on the company name (actually Internet domain name, which in most cases should correspond to the company name); hit \texttt{enter} to confirm.
+    \vspace*{-20pt}
+    \begin{code}{Application default package}{\label{lst::archetype-package}}
+      \begin{lstlisting}
+	Define value for property 'groupId': : fielden		
+	Define value for property 'artifactId': : coolapp
+	Define value for property 'version': 1.0-SNAPSHOT:
+	Define value for property 'package': fielden:
+      \end{lstlisting}
+    \end{code}
+
+    \item Define value for property 'companyName': : -- a TG archetype specific variable, which should be provided with a full name of the company, which will be delivering the project being generated; the example below uses value \emph{Fielden Management Services}; hit \texttt{enter} to confirm.
+    \vspace*{-20pt}
+    \begin{code}{Application default package}{\label{lst::archetype-package}}
+      \begin{lstlisting}
+	Define value for property 'groupId': : fielden		
+	Define value for property 'artifactId': : coolapp
+	Define value for property 'version': 1.0-SNAPSHOT:
+	Define value for property 'package': fielden:
+	Define value for property 'companyName': : Fielden Management Services
+      \end{lstlisting}
+    \end{code}
+
+    \item Define value for property 'prjectName': : -- a TG archetype specific variable, which should be provided with a full name of the project; the example below uses value \emph{Coo App}; hit \texttt{enter} to confirm.
+    \vspace*{-20pt}
+    \begin{code}{Application default package}{\label{lst::archetype-package}}
+      \begin{lstlisting}
+	Define value for property 'groupId': : fielden		
+	Define value for property 'artifactId': : coolapp
+	Define value for property 'version': 1.0-SNAPSHOT:
+	Define value for property 'package': fielden:
+	Define value for property 'companyName': : Fielden Management Services
+	Define value for property 'prjectName': : Cool App
+      \end{lstlisting}
+    \end{code}
+
+    \item Define value for property 'prjectWebSite': : -- a TG archetype specific variable, which should be provided with an URI to the project web site; the value is required, so if there is no project web site then a fictitious one should be specified; please note that it is required to specify access protocol as part of the URI such as \texttt{http://}; hit \texttt{enter} to confirm.
+    \vspace*{-20pt}
+    \begin{code}{Application default package}{\label{lst::archetype-package}}
+      \begin{lstlisting}
+	Define value for property 'groupId': : fielden		
+	Define value for property 'artifactId': : coolapp
+	Define value for property 'version': 1.0-SNAPSHOT:
+	Define value for property 'package': fielden:	
+	Define value for property 'companyName': : Fielden Management Services
+	Define value for property 'prjectName': : Cool App
+	Define value for property 'prjectWebSite': : http://www.fielden.com.au/coolapp
+      \end{lstlisting}
+    \end{code}
+
+    \item Define value for property 'supportEmail': : -- a TG archetype specific variable, which should be provided with an intended for this project support email address; hit \texttt{enter} to confirm.
+    \vspace*{-20pt}
+    \begin{code}{Application default package}{\label{lst::archetype-package}}
+      \begin{lstlisting}
+	Define value for property 'groupId': : fielden		
+	Define value for property 'artifactId': : coolapp
+	Define value for property 'version': 1.0-SNAPSHOT:
+	Define value for property 'package': fielden:	
+	Define value for property 'companyName': : Fielden Management Services
+	Define value for property 'prjectName': : Cool App
+	Define value for property 'prjectWebSite': : http://www.fielden.com.au/coolapp
+	Define value for property 'supportEmail': : coolapp@support.fielden.com.au
+      \end{lstlisting}
+    \end{code}
+
+  \end{enumerate}
+
+   Once the above variables have been entered Maven lists all of their values and prompts the developer to confirm their values before generating the project. 
+   The default confirmation value is \texttt{Y} -- pressing \texttt{enter} leads to confirmation of the values' correctness. 
+   Typing \texttt{N} and pressing \texttt{enter} leads to new prompts for all the variables.

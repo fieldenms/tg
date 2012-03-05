@@ -1,7 +1,5 @@
 \chapter{Maven to Rule'em All or Project Comprehension with Maven}\label{ch00:01}
 
-\myepigraph{One must learn by doing the thing; for though you think you know it, you have no certainty, until you try.}{Sophocles}                                                   
-
 %\myepigraph{In our profession, precision and perfection are not a dispensable luxury, but a simple necessity.}{Niklaus Wirth}
 
   \begin{notebox}{Who should read it.}{\label{mb:skip}}
@@ -37,7 +35,7 @@
   These questions are amongst the main concerns addressed by Apache Maven.
   It is a very comprehensive tool that manages libraries, version resolution, localisation, and even handles transitive dependencies (i.e. libraries that depend on other libraries, which are not directly referenced by the project itself), which truly makes complex project possible.
 
-  \section*{Repositories and Artifacts}
+  \section{Repositories and Artifacts}
   All dependencies that are managed by Maven are identified by three parameters: group ID, artifact ID and version.
   Artifact ID and version information are encoded into the jar file names.
   For example, if the file name of some dependency is \texttt{platform-pojo-bl-\tikzinline{1.1}.jar} then the highlighted portion \texttt{\tikzinline{1.1}} indicates the version, and the preceding part \texttt{platform-pojo-bl} is the artifact ID.
@@ -158,7 +156,7 @@
   }.  
   Thus, the inhouse repository serves as a single interaction point for resolving all dependencies for any project.
   
-  \section*{Download and Configure} 
+  \section{Download and Configure} 
   Maven can be downloaded from the official \href{http://maven.apache.org/download.html}{Apache Maven web site}\footnote{\url{http://maven.apache.org/download.html}}.
   The recommended at this time version for TG-based applications is 2.2.1.
   Once downloaded please follow the \href{http://maven.apache.org/download.html#Installation}{installation instructions}, which are also available on the official site\footnote{\url{http://maven.apache.org/download.html\#Installation}}.
@@ -292,7 +290,7 @@
     \tikznote{lst_proxy_a2}{lst_proxy_credentials}{4cm}{0.3cm}{5cm}{Proxy Credentials}{Provide appropriate \emph{username} and \emph{password} to access the proxy server.}
   \end{code}
 
-  \section*{POM Essentials}
+  \section{POM Essentials}
 
   As mentioned earlier, project object model is an XML representation of the Maven project held in a file named \texttt{pom.xml}. 
   It defines all necessary information about project's structure, dependencies and build configurations.
@@ -336,8 +334,6 @@
   Maven is very strict when it comes to proper dependency management.
   So don't fight it -- embrace it.
   
-
-  \vspace*{-20pt}
   \lstset{language=XML,
 	  escapechar=\%,
 	  morekeywords={project, modelVersion, groupId, artifactId, packaging, packaging, version, encoding, name, description, modules, module},
