@@ -23,7 +23,9 @@ import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
+import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleECEEntity;
+import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleNestedEntity;
 import ua.com.fielden.platform.serialisation.impl.DefaultSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
@@ -58,6 +60,8 @@ public class EntityCentreExampleSerialisationClassProvider extends DefaultSerial
 	super(settings);
 	types.addAll(TgKryo.typesForRegistration("../platform-pojo-bl/target/classes", "ua.com.fielden.platform.domaintree", DOMAIN_TREE_TYPES));
 	types.add(SimpleECEEntity.class);
+	types.add(SimpleNestedEntity.class);
+	types.add(SimpleCompositeEntity.class);
     }
 
 }

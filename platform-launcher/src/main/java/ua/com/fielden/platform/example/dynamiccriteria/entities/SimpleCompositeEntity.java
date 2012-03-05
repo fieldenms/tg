@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.example.dynamiccriteria.entities;
 
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.EntityTitle;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -14,21 +13,27 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
-import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleECEEntityDao;
+import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleCompositeEntityDao;
 
-@EntityTitle("Simple entity type")
-@KeyType(String.class)
-@KeyTitle(value = "Simple entity", desc = "Simple entity description")
-@MapEntityTo("SIMPLEECEENTITY")
-@DefaultController(ISimpleECEEntityDao.class)
-public class SimpleECEEntity extends AbstractEntity<String> {
+@KeyTitle("Simple Composite Entity")
+@KeyType(DynamicEntityKey.class)
+@MapEntityTo("SIMPLE_COMPOSITE_ENTITY")
+@DefaultController(ISimpleCompositeEntityDao.class)
+public class SimpleCompositeEntity extends AbstractEntity<DynamicEntityKey> {
 
-    private static final long serialVersionUID = -8516470172415858958L;
+    private static final long serialVersionUID = 5952735860737176582L;
 
     @IsProperty
-    @Title(value = "String property", desc = "String property description")
-    @MapTo("STRING_PROPERTY")
-    private String stringProperty;
+    @Title(value = "Simple entity", desc = "Simple entity description")
+    @CompositeKeyMember(1)
+    @MapTo("ID_SIMPLE_ENTITY")
+    private SimpleECEEntity simpleEntity;
+
+    @IsProperty
+    @Title(value = "String key property", desc = "String proerty key description")
+    @CompositeKeyMember(2)
+    @MapTo("STRING_KEY")
+    private String stringKey;
 
     @IsProperty
     @Title(value = "Init. date", desc = "Date of initiation")
@@ -45,22 +50,29 @@ public class SimpleECEEntity extends AbstractEntity<String> {
     @MapTo("NUM_VALUE")
     private Integer numValue;
 
-    @MapTo("ID_NESTED_ENTITY")
-    @Title(value = "Aggregated entity", desc = "Aggregated entity description")
-    @IsProperty
-    private SimpleNestedEntity nestedEntity;
+    /**
+     * Constructor for the entity factory from TG.
+     */
+    protected SimpleCompositeEntity() {
+	setKey(new DynamicEntityKey(this));
+    }
 
-    @IsProperty(value = SimpleCompositeEntity.class, linkProperty = "simpleEntity") @Title("Collection property") @MapTo("ID_SIMPLE_ENTITY")
-    private Set<SimpleCompositeEntity> entities = new HashSet<SimpleCompositeEntity>();
-    public Set<SimpleCompositeEntity> getFuelUsages() { return entities; }
-
-    public String getStringProperty() {
-	return stringProperty;
+    public SimpleECEEntity getSimpleEntity() {
+	return simpleEntity;
     }
 
     @Observable
-    public void setStringProperty(final String stringProperty) {
-	this.stringProperty = stringProperty;
+    public void setSimpleEntity(final SimpleECEEntity simpleEntity) {
+	this.simpleEntity = simpleEntity;
+    }
+
+    public String getStringKey() {
+	return stringKey;
+    }
+
+    @Observable
+    public void setStringKey(final String stringKey) {
+	this.stringKey = stringKey;
     }
 
     public Date getInitDate() {
@@ -88,14 +100,5 @@ public class SimpleECEEntity extends AbstractEntity<String> {
     @Observable
     public void setNumValue(final Integer numValue) {
 	this.numValue = numValue;
-    }
-
-    public SimpleNestedEntity getNestedEntity() {
-	return nestedEntity;
-    }
-
-    @Observable
-    public void setNestedEntity(final SimpleNestedEntity nestedEntity) {
-	this.nestedEntity = nestedEntity;
     }
 }

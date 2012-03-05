@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.example.dynamiccriteria.entities;
 
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -14,16 +12,16 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
-import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleECEEntityDao;
+import ua.com.fielden.platform.example.dynamiccriteria.iao.INestedEntityDao;
 
-@EntityTitle("Simple entity type")
+@EntityTitle("Simple nested entity type")
 @KeyType(String.class)
-@KeyTitle(value = "Simple entity", desc = "Simple entity description")
-@MapEntityTo("SIMPLEECEENTITY")
-@DefaultController(ISimpleECEEntityDao.class)
-public class SimpleECEEntity extends AbstractEntity<String> {
+@KeyTitle(value = "Nested entity", desc = "Nested entity description")
+@MapEntityTo("NESTEDENTITY")
+@DefaultController(INestedEntityDao.class)
+public class SimpleNestedEntity extends AbstractEntity<String> {
 
-    private static final long serialVersionUID = -8516470172415858958L;
+    private static final long serialVersionUID = 1894452161311610171L;
 
     @IsProperty
     @Title(value = "String property", desc = "String property description")
@@ -44,15 +42,6 @@ public class SimpleECEEntity extends AbstractEntity<String> {
     @Title(value = "Num. value", desc = "Number value ")
     @MapTo("NUM_VALUE")
     private Integer numValue;
-
-    @MapTo("ID_NESTED_ENTITY")
-    @Title(value = "Aggregated entity", desc = "Aggregated entity description")
-    @IsProperty
-    private SimpleNestedEntity nestedEntity;
-
-    @IsProperty(value = SimpleCompositeEntity.class, linkProperty = "simpleEntity") @Title("Collection property") @MapTo("ID_SIMPLE_ENTITY")
-    private Set<SimpleCompositeEntity> entities = new HashSet<SimpleCompositeEntity>();
-    public Set<SimpleCompositeEntity> getFuelUsages() { return entities; }
 
     public String getStringProperty() {
 	return stringProperty;
@@ -88,14 +77,5 @@ public class SimpleECEEntity extends AbstractEntity<String> {
     @Observable
     public void setNumValue(final Integer numValue) {
 	this.numValue = numValue;
-    }
-
-    public SimpleNestedEntity getNestedEntity() {
-	return nestedEntity;
-    }
-
-    @Observable
-    public void setNestedEntity(final SimpleNestedEntity nestedEntity) {
-	this.nestedEntity = nestedEntity;
     }
 }
