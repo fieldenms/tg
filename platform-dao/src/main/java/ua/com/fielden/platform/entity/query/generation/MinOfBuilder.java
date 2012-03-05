@@ -4,7 +4,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.generation.elements.MinOfModel;
 
-public class MinOfBuilder extends AbstractFunctionBuilder {
+public class MinOfBuilder extends OneArgumentFunctionBuilder {
 
     protected MinOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);

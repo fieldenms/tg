@@ -58,6 +58,15 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case MAX:
 	    setChild(new MaxOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
+	case SECOND:
+	    setChild(new SecondOfBuilder(this, queryBuilder, getParamValues()));
+	    break;
+	case MINUTE:
+	    setChild(new MinuteOfBuilder(this, queryBuilder, getParamValues()));
+	    break;
+	case HOUR:
+	    setChild(new HourOfBuilder(this, queryBuilder, getParamValues()));
+	    break;
 	case DAY:
 	    setChild(new DayOfBuilder(this, queryBuilder, getParamValues()));
 	    break;
@@ -76,17 +85,24 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case AVERAGE_DISTINCT:
 	    setChild(new AverageOfBuilder(this, queryBuilder, getParamValues(), true));
 	    break;
-	case COUNT_DAYS:
-	case CASE_WHEN:
-	case ROUND:
-	case IF_NULL:
 	case UPPERCASE:
+	    setChild(new UpperCaseOfBuilder(this, queryBuilder, getParamValues()));
+	    break;
 	case LOWERCASE:
-	case SECOND:
-	case MINUTE:
-	case HOUR:
-	    // TODO implement the rest
-	    throw new RuntimeException("Not yet implemented: " + function);
+	    setChild(new LowerCaseOfBuilder(this, queryBuilder, getParamValues()));
+	    break;
+	case IF_NULL:
+	    setChild(new IfNullBuilder(this, queryBuilder, getParamValues()));
+	    break;
+	case COUNT_DAYS:
+	    setChild(new CountDaysBuilder(this, queryBuilder, getParamValues()));
+	    break;
+	case CASE_WHEN:
+	    setChild(new CaseFunctionBuilder(this, queryBuilder, getParamValues()));
+	    break;
+	case ROUND:
+	    setChild(new RoundToBuilder(this, queryBuilder, getParamValues()));
+	    break;
 	default:
 	    throw new RuntimeException("Unrecognised function token: " + function);
 	}

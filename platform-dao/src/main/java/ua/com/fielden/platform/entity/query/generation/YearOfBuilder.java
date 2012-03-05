@@ -4,7 +4,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.generation.elements.YearOfModel;
 
-public class YearOfBuilder extends AbstractFunctionBuilder {
+public class YearOfBuilder extends OneArgumentFunctionBuilder {
 
     protected YearOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
 	super(parent, queryBuilder, paramValues);

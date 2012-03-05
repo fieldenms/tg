@@ -206,6 +206,28 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 	assertEquals("Incorrect key", "CAR2", veh.getKey());
     }
 
+    public void test_vehicle_model_retrieval17() {
+	final AggregatedResultQueryModel model = select(TgVehicle.class). //
+		where().prop("model.make.key").eq().val("MERC"). //
+		yield().lowerCase().prop("model.make.key").as("make").
+		yield().ifNull().prop("replacedBy").then().val(1).as("not-replaced-yet").
+		yield().ifNull().prop("model.make.key").then().val("unknown").as("make-key").
+		yield().countDays().between().now().and().now().as("zero-days").
+		yield().caseWhen().prop("price.amount").ge().prop("purchasePrice.amount").then().
+		beginExpr().beginExpr().prop("price.amount").add().prop("purchasePrice.amount").endExpr().div().val(2).endExpr().end().as("avgPrice"). //
+		yield().round().beginExpr().prop("price.amount").div().val(3).endExpr().to(1).as("third-of-price"). //
+
+		modelAsAggregate();
+	final List<EntityAggregates> values = fetcher().list(new QueryExecutionModel.Builder(model).build());
+    	assertEquals("Incorrect count", 1, values.size());
+    	assertEquals("Incorrect value", "merc", values.get(0).get("make"));
+    	assertEquals("Incorrect value", "1", values.get(0).get("not-replaced-yet").toString());
+    	assertEquals("Incorrect value", "MERC", values.get(0).get("make-key"));
+    	assertEquals("Incorrect value", "0", values.get(0).get("zero-days").toString());
+    	assertEquals("Incorrect value", "150", values.get(0).get("avgPrice").toString());
+    	assertEquals("Incorrect value", "66.7", values.get(0).get("third-of-price").toString());
+    }
+
     @Override
     protected String[] getDataSetPathsForInsert() {
 	return new String[] { "src/test/resources/data-files/entity-fetcher-test.flat.xml" };

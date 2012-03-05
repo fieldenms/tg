@@ -4,7 +4,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.generation.elements.CountOfModel;
 
-public class CountOfBuilder extends AbstractFunctionBuilder {
+public class CountOfBuilder extends OneArgumentFunctionBuilder {
     private final boolean distinct;
     protected CountOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final boolean distinct) {
 	super(parent, queryBuilder, paramValues);
