@@ -41,6 +41,8 @@ import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
+import com.jgoodies.binding.value.Trigger;
+
 /**
  * Model for expression editor.
  *
@@ -129,6 +131,12 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		notifyActionStageChange(ActionStage.NEW_POST_ACTION);
 	    }
 
+	    @Override
+	    protected void handlePreAndPostActionException(final Throwable ex) {
+		super.handlePreAndPostActionException(ex);
+		setState(UmState.VIEW);
+	    }
+
 	};
 	action.setEnabled(true);
 	final Icon icon = ResourceLoader.getIcon("images/add.png");
@@ -162,6 +170,12 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		notifyActionStageChange(ActionStage.EDIT_POST_ACTION);
 	    }
 
+	    @Override
+	    protected void handlePreAndPostActionException(final Throwable ex) {
+		super.handlePreAndPostActionException(ex);
+		setState(UmState.VIEW);
+	    }
+
 	};
 	action.setEnabled(canEdit());
 	final Icon icon = ResourceLoader.getIcon("images/calculator_edit.png");
@@ -178,6 +192,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	    @Override
 	    protected boolean preAction() {
+		expressionEditor.commitEditorValue();
 		notifyActionStageChange(ActionStage.SAVE_PRE_ACTION);
 		setState(UmState.UNDEFINED);
 		getCancelAction().setEnabled(false);
@@ -363,6 +378,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	private final BoundedValidationLayer<JTextField> textEditor;
 	private final JToggleButton editButton;
 	private final JPanel editor;
+	private final Trigger commitTrigger;
 
 	private CalculatedProperty entity;
 	private final String propertyName;
@@ -376,17 +392,18 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    this.entity = entity;
 	    this.propertyName = "contextualExpression";
 	    entity.getProperty(getPropertyName()).addValidationResultsChangeListener(createExpressionValidationListener());
+	    this.commitTrigger = new Trigger();
 	    final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
 
 	    label = DummyBuilder.label(titleAndDesc.getKey());
 	    label.setToolTipText(titleAndDesc.getValue());
 
-	    textEditor = ComponentFactory.createStringTextField(entity, propertyName, true, entity.getProperty(propertyName).getDesc(), EditorCase.MIXED_CASE);
+	    textEditor = ComponentFactory.createTriggeredStringTextField(entity, propertyName, commitTrigger, false, entity.getProperty(propertyName).getDesc());
 	    editButton = new JToggleButton(ResourceLoader.getIcon("images/cursor.png"));
 	    editor = new JPanel(new MigLayout("fill, insets 0", "[fill, grow]5[]", "[fill, grow]"));
 	    editor.add(textEditor);
 	    editor.add(editButton);
-	    manualTextSetter = new ManualTextSetter(textEditor);
+	    manualTextSetter = new ManualTextSetter(textEditor, false);
 
 	    final JTextField field = textEditor.getView();
 	    final String actionName = "Enter action";
@@ -424,7 +441,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 		@Override
 		public void actionPerformed(final ActionEvent e) {
-		    textEditor.commit();
+		    commitEditorValue();
 		}
 	    };
 	}
@@ -515,6 +532,12 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    return false;
 	}
 
+	/**
+	 * Triggers commit action for this property editor.
+	 */
+	public void commitEditorValue(){
+	    commitTrigger.triggerCommit();
+	}
     }
 
     private static class OriginationPropertyEditor implements IPropertyEditor{
@@ -545,7 +568,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    editor = new JPanel(new MigLayout("fill, insets 0", "[fill, grow]5[]", "[fill, grow]"));
 	    editor.add(textEditor);
 	    editor.add(editButton);
-	    manualTextSetter = new ManualTextSetter(textEditor);
+	    manualTextSetter = new ManualTextSetter(textEditor, true);
 	}
 
 	/**
@@ -650,6 +673,11 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	private final BoundedValidationLayer<JTextField> textComponent;
 
 	/**
+	 * Determines whether trigger commit after the text was inserted or not.
+	 */
+	private final boolean triggerCommitOnTextInsertion;
+
+	/**
 	 * Temporary holds text to insert in to the expression editor. After the text was inserted, the property value can be set to null.
 	 */
 	private String textToInsert = null;
@@ -675,34 +703,23 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	private FocusGainedOperation focusGainedOperation = FocusGainedOperation.NONE;
 
 	/**
+	 * Determines the operation that must be performed after the on commit action was performed.
+	 */
+	private AfterCommitActions afterCommitAction = AfterCommitActions.NONE;
+
+	/**
 	 * Initiates this {@link ManualTextSetter} with specified {@link BoundedValidationLayer} instance.
 	 * 
 	 * @param textComponent
 	 */
-	public ManualTextSetter(final BoundedValidationLayer<JTextField> textComponent){
+	public ManualTextSetter(final BoundedValidationLayer<JTextField> textComponent, final boolean triggerCommitOnTextInsertion){
 	    this.textComponent = textComponent;
-	    textComponent.addOnCommitAction(new IOnCommitAction() {
-
-		@Override
-		public void postSuccessfulCommitAction() {
-		    // TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void postNotSuccessfulCommitAction() {
-		    // TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void postCommitAction() {
-		    // TODO Auto-generated method stub
-
-		}
-	    });
+	    this.triggerCommitOnTextInsertion = triggerCommitOnTextInsertion;
 	    final JTextField field = textComponent.getView();
 	    field.addFocusListener(createExpressionFocusListener(textComponent.getView()));
+	    if(triggerCommitOnTextInsertion){
+		textComponent.addOnCommitAction(createSelectionOnCommitAction(textComponent.getView()));
+	    }
 	}
 
 	/**
@@ -766,6 +783,34 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    field.requestFocusInWindow();
 	}
 
+
+	private IOnCommitAction createSelectionOnCommitAction(final JTextField textField) {
+	    return new IOnCommitAction() {
+
+		@Override
+		public void postSuccessfulCommitAction() {
+		    //Ignored for now.
+		}
+
+		@Override
+		public void postNotSuccessfulCommitAction() {
+		    //Ignored for now.
+		}
+
+		@Override
+		public void postCommitAction() {
+		    if(AfterCommitActions.SELECT == afterCommitAction){
+			if(select){
+			    textField.select(startIndex, startIndex + textToInsert.length());
+			}else{
+			    textField.select(textField.getCaretPosition(), textField.getCaretPosition());
+			}
+		    }
+		    afterCommitAction = AfterCommitActions.NONE;
+		}
+	    };
+	}
+
 	/**
 	 * Returns the {@link FocusListener} that listens the focus gained event for the specified {@link JTextField} instance.
 	 * This event handler also performs specific actions: text insert or caret position change.
@@ -787,12 +832,16 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		    case TEXT_INSERTION:
 			final String previousText = textField.getText();
 			textField.setText(previousText.substring(0, startIndex) + textToInsert + previousText.substring(endIndex));
-			textComponent.commit();
 			textField.setCaretPosition(startIndex+relativeCaretPosition);
-			if(select){
-			    textField.select(startIndex, startIndex + textToInsert.length());
+			if(triggerCommitOnTextInsertion){
+			    afterCommitAction = AfterCommitActions.SELECT;
+			    textComponent.commit();
 			}else{
-			    textField.select(textField.getCaretPosition(), textField.getCaretPosition());
+			    if(select){
+				textField.select(startIndex, startIndex + textToInsert.length());
+			    }else{
+				textField.select(textField.getCaretPosition(), textField.getCaretPosition());
+			    }
 			}
 			break;
 		    case CARRET_CONTROL:
@@ -813,6 +862,10 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	 */
 	private static enum FocusGainedOperation{
 	    TEXT_INSERTION, CARRET_CONTROL, NONE;
+	}
+
+	private static enum AfterCommitActions{
+	    SELECT, NONE;
 	}
     }
 
