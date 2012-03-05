@@ -359,7 +359,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 		    final Title titleAnnotation = calculatedField.getAnnotation(Title.class);
 		    final String title = titleAnnotation == null ? "" : titleAnnotation.value();
 		    final String desc = titleAnnotation == null ? "" : titleAnnotation.desc();
-		    final ICalculatedProperty calculatedProperty = CalculatedProperty.create(factory, root, calcAnnotation.contextPath(), calcAnnotation.contextualExpression(), title, desc, calcAnnotation.attribute(), calcAnnotation.origination(), dte);
+		    final ICalculatedProperty calculatedProperty = CalculatedProperty.createAndValidate(factory, root, calcAnnotation.contextPath(), calcAnnotation.contextualExpression(), title, desc, calcAnnotation.attribute(), calcAnnotation.origination(), dte);
 		    newCalcProperties.add(calculatedProperty);
 		}
 	    }
@@ -373,7 +373,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     }
 
     @Override
-    public ICalculatedProperty validateCalculatedPropertyKey(final Class<?> root, final String pathAndName, final boolean correctIfExists) {
+    public ICalculatedProperty validateCalculatedPropertyKey(final Class<?> root, final String pathAndName, final Boolean correctIfExists) {
 	return validateCalculatedPropertyKey1(root, pathAndName, correctIfExists, calculatedProperties, originalAndEnhancedRootTypes);
     }
 
@@ -387,7 +387,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param originalAndEnhancedRootTypes
      * @return
      */
-    private static ICalculatedProperty validateCalculatedPropertyKey1(final Class<?> root, final String pathAndName, final boolean correctIfExists, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
+    private static ICalculatedProperty validateCalculatedPropertyKey1(final Class<?> root, final String pathAndName, final Boolean correctIfExists, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
 	if (StringUtils.isEmpty(pathAndName)) {
 	    throw new IncorrectCalcPropertyKeyException("The calculated property pathAndName cannot be empty.");
 	}
@@ -401,7 +401,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 	validatePath(root, path, "The place [" + path + "] in type [" + root.getSimpleName() + "] of calculated property does not exist.");
 
 	final ICalculatedProperty calculatedProperty = calculatedProperty(root, pathAndName, calculatedProperties);
-	if (correctIfExists) {
+	if (correctIfExists == null) {
+	    return calculatedProperty;
+	} else if (correctIfExists) {
 	    if (calculatedProperty == null) {
 		throw new IncorrectCalcPropertyKeyException("The calculated property with name [" + pathAndName + "] does not exist.");
 	    }
@@ -464,7 +466,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      */
     private static void addCalculatedProperty(final ICalculatedProperty calculatedProperty, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
 	final Class<?> root = calculatedProperty.getRoot();
-	// TODO !!! validateCalculatedPropertyKey1(root, calculatedProperty.pathAndName(), false, calculatedProperties, originalAndEnhancedRootTypes);
+	validateCalculatedPropertyKey1(root, calculatedProperty.pathAndName(), false, calculatedProperties, originalAndEnhancedRootTypes);
 
 	if (!calculatedProperties.containsKey(root)) {
 	    calculatedProperties.put(root, new ArrayList<ICalculatedProperty>());
@@ -482,10 +484,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
     @Override
     public void addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-	final CalculatedProperty created = CalculatedProperty.create(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, this);
-	if (!created.isValid().isSuccessful()) {
-	    throw created.isValid();
-	}
+	final CalculatedProperty created = CalculatedProperty.createAndValidate(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, this);
 	addCalculatedProperty(created);
     }
 

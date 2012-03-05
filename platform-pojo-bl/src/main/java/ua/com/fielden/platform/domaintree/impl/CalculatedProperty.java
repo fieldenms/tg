@@ -106,6 +106,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     private transient AstNode ast;
 
     private /* final */ transient IDomainTreeEnhancer enhancer;
+    private transient boolean isExtracting = false;
 
     /**
      * Default constructor.
@@ -359,6 +360,30 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     }
 
     /**
+     * Creates full {@link CalculatedProperty} with all keys initialised and validates it.
+     *
+     * @param factory
+     * @param root
+     * @param contextPath
+     * @param contextualExpression
+     * @param title
+     * @param desc
+     * @param attribute
+     * @param originationProperty
+     * @param domainTreeEnhancer
+     * @return
+     */
+    public static CalculatedProperty createAndValidate(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
+	final CalculatedProperty calc = create(factory, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, domainTreeEnhancer);
+
+	if (!calc.isValid().isSuccessful()) {
+	    throw calc.isValid();
+	}
+
+        return calc;
+    }
+
+    /**
      * Creates full {@link CalculatedProperty} with all keys initialised.
      *
      * @param factory
@@ -374,6 +399,34 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
      */
     public static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
 	final CalculatedProperty calc = createEmpty(factory, root, contextPath, domainTreeEnhancer);
+
+	calc.setContextualExpression(contextualExpression);
+        calc.setTitle(title);
+        calc.setDesc(desc);
+        calc.setAttribute(attribute);
+        calc.setOriginationProperty(originationProperty);
+
+        return calc;
+    }
+
+    /**
+     * Creates full {@link CalculatedProperty} with all keys initialised.
+     *
+     * @param factory
+     * @param root
+     * @param contextPath
+     * @param contextualExpression
+     * @param title
+     * @param desc
+     * @param attribute
+     * @param originationProperty
+     * @param domainTreeEnhancer
+     * @return
+     */
+    public static CalculatedProperty createWhileExtracting(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
+	final CalculatedProperty calc = createEmpty(factory, root, contextPath, domainTreeEnhancer);
+
+	calc.setExtracting(true);
 
 	calc.setContextualExpression(contextualExpression);
         calc.setTitle(title);
@@ -410,5 +463,13 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     public void initAst(final String newContextualExpression) throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter et2mc = new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getRoot(), getContextPath(), newContextualExpression);
 	this.ast = et2mc.convert();
+    }
+
+    public boolean isExtracting() {
+        return isExtracting;
+    }
+
+    public void setExtracting(final boolean isExtracting) {
+        this.isExtracting = isExtracting;
     }
 }

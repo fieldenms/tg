@@ -11,13 +11,11 @@ import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorModel;
 import ua.com.fielden.platform.expression.editor.IPropertySelectionListener;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.ei.LightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2;
@@ -52,7 +50,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	this.rootType = rootType;
 	this.dtme = dtme;
 	this.factory = factory;
-	final CalculatedProperty entity = CalculatedProperty.create(factory, rootType, null, null, null, null, CalculatedPropertyAttribute.NO_ATTR, null, dtme.getEnhancer());
+	final CalculatedProperty entity = CalculatedProperty.createAndValidate(factory, rootType, null, null, null, null, CalculatedPropertyAttribute.NO_ATTR, null, dtme.getEnhancer());
 	this.expressionModel = new ExpressionEditorModelForWizard(entity, new LightweightPropertyBinder<CalculatedProperty>(null, null/*, "key", "name"*/));
 	this.listenerList = new EventListenerList();
 	this.propertySelectionModel = new CalculatedPropertySelectModel();
@@ -62,7 +60,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * Returns the action that copy the selected calculated property.
-     * 
+     *
      * @return
      */
     public final Action getCopyAction() {
@@ -202,8 +200,8 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 		if(propertySelectionModel != null && propertySelectionModel.isPropertySelected()){
 		    final String selectedProperty = propertySelectionModel.getSelectedProperty();
 		    final String contextPath = selectedProperty.lastIndexOf('.') > -1 ? selectedProperty.substring(0, selectedProperty.lastIndexOf('.')) : "";
-		    final String originationProperty = Reflector.fromAbsotule2RelativePath(contextPath, selectedProperty);
-		    final CalculatedProperty entity = CalculatedProperty.create(factory, rootType, contextPath, null, null, null, CalculatedPropertyAttribute.NO_ATTR, originationProperty, dtme.getEnhancer());
+		    // final String originationProperty = Reflector.fromAbsotule2RelativePath(contextPath, selectedProperty);
+		    final CalculatedProperty entity = CalculatedProperty.createEmpty(factory, rootType, contextPath, /* null, null, null, CalculatedPropertyAttribute.NO_ATTR, originationProperty, */ dtme.getEnhancer());
 		    setEntity(entity);
 		} else {
 		    throw new IllegalStateException("Please select property first to create new calculated property!");

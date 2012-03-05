@@ -132,5 +132,5 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
      * @param originalAndEnhancedRootTypes
      * @return
      */
-    ICalculatedProperty validateCalculatedPropertyKey(final Class<?> root, final String pathAndName, final boolean correctIfExists);
+    ICalculatedProperty validateCalculatedPropertyKey(final Class<?> root, final String pathAndName, final Boolean correctIfExists);
 }
