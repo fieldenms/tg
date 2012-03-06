@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 final class EntityResultTreeBuilder {

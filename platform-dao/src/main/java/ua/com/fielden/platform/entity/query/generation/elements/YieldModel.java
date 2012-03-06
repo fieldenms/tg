@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 
 public class YieldModel {
     private final ISingleOperand operand;

@@ -8,8 +8,8 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
-import ua.com.fielden.platform.dao.PropertyPersistenceType;
+import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao2.PropertyPersistenceType;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

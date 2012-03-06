@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.query;
 import java.util.Map;
 import java.util.SortedSet;
 
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 
 public class QueryModelResult {
     private Class resultType;

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.dao2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
