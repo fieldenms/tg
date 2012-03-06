@@ -5,7 +5,7 @@
 	<groupId>fielden</groupId>
 	<artifactId>platform-launcher</artifactId>
 	<packaging>jar</packaging>
-	<version>1.1-SNAPSHOT</version>
+	<version>1.2-SNAPSHOT</version>
 	<name>Trident Genesis Platform Launcher</name>
     <description>
 		The main purpose of this project is to provide examples of how certain parts of TG-platform can be used for application development. 
@@ -14,27 +14,27 @@
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-ui</artifactId>
-			<version>1.1-SNAPSHOT</version>
+			<version>${version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-pojo-bl</artifactId>
-			<version>1.1-SNAPSHOT</version>
+			<version>${version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-dao</artifactId>
-			<version>1.1-SNAPSHOT</version>
+			<version>${version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-web-resources</artifactId>
-			<version>1.1-SNAPSHOT</version>
+			<version>${version}</version>
 		</dependency>		
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-rao</artifactId>
-			<version>1.1-SNAPSHOT</version>
+			<version>${version}</version>
 		</dependency>
 		<!-- C3P0 dependencies, which is the default database connection pooling facility -->
 		<dependency>
