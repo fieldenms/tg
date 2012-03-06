@@ -25,6 +25,7 @@ import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.expression.IExpressionErrorPosition;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
@@ -74,7 +75,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	expressionEditor.getEditButton().setSelected(true);
 
 	//Configuring property selection model. Added listener that updates one of two editors: expression editor or origination property editor.
-	this.propertySelectionModel.addPropertySelectionListener(getPropertySelectionListener());
+	this.propertySelectionModel.addPropertySelectionListener(createPropertySelectionListener());
 
 	final Map<String, IPropertyEditor> editors = new HashMap<String, IPropertyEditor>(getEditors());
 	editors.put("contextualExpression", expressionEditor);
@@ -326,7 +327,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	action.setEnabled(true);
 	final Icon icon = ResourceLoader.getIcon("images/delete.png");
 	action.putValue(Action.LARGE_ICON_KEY, icon);
-	action.putValue(Action.SHORT_DESCRIPTION, "Delete entity");
+	action.putValue(Action.SHORT_DESCRIPTION, "Delete selected calculated property");
 	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_D);
 	return action;
     }
@@ -356,16 +357,17 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
      *
      * @return
      */
-    private IPropertySelectionListener getPropertySelectionListener(){
+    private IPropertySelectionListener createPropertySelectionListener(){
 	return new IPropertySelectionListener() {
 
 	    @Override
 	    public void propertyStateChanged(final String property, final boolean isSelected) {
 		if(isSelected){
+		    final String textToInsert = Reflector.fromAbsotule2RelativePath(getManagedEntity().getContextPath(), property);
 		    if(expressionEditor.isChecked()){
-			expressionEditor.insertText(property, TextInsertionType.REPLACE, true, property.length());
+			expressionEditor.insertText(textToInsert, TextInsertionType.REPLACE, true, textToInsert.length());
 		    }else if (originationEditor.isChecked()){
-			originationEditor.setText(property, true, property.length());
+			originationEditor.setText(textToInsert, true, textToInsert.length());
 		    }
 		}
 	    }

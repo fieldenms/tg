@@ -7,7 +7,8 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.event.EventListenerList;
 
-import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
@@ -16,9 +17,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorModel;
 import ua.com.fielden.platform.expression.editor.IPropertySelectionListener;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.ei.LightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
@@ -83,10 +86,6 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
      */
     public final ExpressionEditorModel getExpressionModel() {
 	return expressionModel;
-    }
-
-    public ActionPanelBuilder getPropertyManagementActionPanel() {
-	return new ActionPanelBuilder().addButton(expressionModel.getNewAction()).addButton(expressionModel.getEditAction());
     }
 
     public EntitiesTreeModel2 createTreeModel() {
@@ -197,12 +196,15 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	    super.notifyActionStageChange(actionState);
 	    switch(actionState){
 	    case NEW_ACTION:
+		//TODO if this implementation is incorrect then advise!
 		if(propertySelectionModel != null && propertySelectionModel.isPropertySelected()){
-		    final String selectedProperty = propertySelectionModel.getSelectedProperty();
-		    final String contextPath = selectedProperty.lastIndexOf('.') > -1 ? selectedProperty.substring(0, selectedProperty.lastIndexOf('.')) : "";
-		    // final String originationProperty = Reflector.fromAbsotule2RelativePath(contextPath, selectedProperty);
-		    final CalculatedProperty entity = CalculatedProperty.createEmpty(factory, rootType, contextPath, /* null, null, null, CalculatedPropertyAttribute.NO_ATTR, originationProperty, */ dtme.getEnhancer());
-		    setEntity(entity);
+		    final Class<?> propertyType = StringUtils.isEmpty(propertySelectionModel.getSelectedProperty()) ? rootType : PropertyTypeDeterminator.determinePropertyType(rootType, propertySelectionModel.getSelectedProperty());
+		    if(EntityUtils.isEntityType(propertyType)){
+			final CalculatedProperty entity = CalculatedProperty.createEmpty(factory, rootType, propertySelectionModel.getSelectedProperty(), /* null, null, null, CalculatedPropertyAttribute.NO_ATTR, null, */ dtme.getEnhancer());
+			setEntity(entity);
+		    } else {
+			throw new IllegalStateException("The context property can not have type different then entity type!");
+		    }
 		} else {
 		    throw new IllegalStateException("Please select property first to create new calculated property!");
 		}

@@ -5,8 +5,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-import javax.swing.BorderFactory;
-import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -32,18 +30,12 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 
     private final DomainTreeEditorModel<T> domainTreeEditorModel;
 
+    final JXCollapsiblePane editorPanel;
     //    private final JLabel treeCaption;
 
     public DomainTreeEditorView(final DomainTreeEditorModel<T> domainTreeEditorModel){
-	super(new MigLayout("fill, insets 0", "[fill, grow]", "[][fill, grow][]"));
+	super(new MigLayout("fill, insets 0", "[fill, grow]", "[fill, grow][fill]"));
 	this.domainTreeEditorModel = domainTreeEditorModel;
-
-
-	//Configuring the property management action panel.
-	final JToolBar toolBar = domainTreeEditorModel.getPropertyManagementActionPanel().buildActionPanel();
-	toolBar.setFloatable(false);
-	toolBar.setBorder(BorderFactory.createEmptyBorder());
-	add(toolBar, "wrap");
 
 	//Configuring the entities tree.
 	final EntitiesTreeModel2 treeModel = domainTreeEditorModel.createTreeModel();
@@ -55,12 +47,22 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 
 	//Configuring the expression editor.
 	final ExpressionEditorView editorView = new ExpressionEditorView(domainTreeEditorModel.getExpressionModel());
-	final JXCollapsiblePane editorPanel = new JXCollapsiblePane(new MigLayout("fill, insets 0","[fill, grow]","[fill, grow]"));
+	editorPanel = new JXCollapsiblePane(new MigLayout("fill, insets 0","[fill, grow]","[fill, grow]"));
 	editorPanel.setCollapsed(true);
 	editorPanel.add(editorView);
 	domainTreeEditorModel.addPropertyEditListener(createPropertyEditListener(editorPanel, tree));
 	add(editorPanel);
     }
+
+    //TODO Implement this as the task for the ticket #347
+    //    /**
+    //     * Set the specified animate flag for the collapsible editor panel.
+    //     *
+    //     * @param animate
+    //     */
+    //    public void setEditorPanelAnimated(final boolean animate){
+    //	editorPanel.setAnimated(animate);
+    //    }
 
     /**
      * Returns the associated wizard model.
@@ -89,6 +91,8 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 	    @Override
 	    public void finishEdit() {
 		tree.setEditable(true);
+		//TODO consider whether to start editing tree path after editor panel was collapsed!
+		//tree.startEditingAtPath(tree.getSelectionPath());
 		editorPanel.setCollapsed(true);
 	    }
 	};
@@ -100,7 +104,7 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 	    @Override
 	    public void valueChanged(final TreeSelectionEvent e) {
 		final boolean isSeleted = tree.getSelectionModel().isPathSelected(e.getPath());
-		getModel().getPropertySelectionModel().propertyStateChanged(getPropertyName(e.getPath()), isSeleted);
+		getModel().getPropertySelectionModel().propertyStateChanged(getUserObjectFor(e.getPath()).getValue(), isSeleted);
 	    }
 	};
     }
@@ -113,17 +117,22 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 		final int y = e.getY();
 		final TreePath path = tree.getPathForLocation(x, y);
 		if (path != null && getModel().getExpressionModel().getState() != UmState.VIEW) {
-		    getModel().getExpressionModel().getPropertySelectionModel().propertyStateChanged(getPropertyName(path),true);
+		    getModel().getExpressionModel().getPropertySelectionModel().propertyStateChanged(getUserObjectFor(path).getValue(),true);
 		}
 	    }
 	};
     }
 
+    /**
+     * Returns the user object for the last component of the specified tree path.
+     * 
+     * @param path
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    private String getPropertyName(final TreePath path){
+    private Pair<Class<?>, String> getUserObjectFor(final TreePath path){
 	final DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-	final Pair<Class<?>, String> rootAndProp = (Pair<Class<?>, String>) node.getUserObject();
-	return rootAndProp.getValue();
-    }
+	return (Pair<Class<?>, String>) node.getUserObject();
 
+    }
 }

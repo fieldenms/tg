@@ -62,9 +62,7 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 	this.confPanel.add(copyPanel);
 	this.confPanel.add(removePanel);
 
-	for(final ActionImagePanel actionPanel : confPanel){
-	    actionPanel.setVisible(false);
-	}
+	setButtonsVisible(false);
 
 	this.criteriaName = criteriaName;
 	this.resultSetName = resultSetName;
@@ -104,6 +102,17 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 	add(label);
     }
 
+    /**
+     * Set specified visible flag for all configuration buttons : new, edit, copy, delete.
+     * 
+     * @param visible
+     */
+    public void setButtonsVisible(final boolean visible){
+	for(final ActionImagePanel actionPanel : confPanel){
+	    actionPanel.setVisible(visible);
+	}
+    }
+
     @Override
     public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean selected, final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
 
@@ -138,10 +147,8 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 	}
 
 	//Adding visible configuration buttons to this cell renderer component.
+	removeButtons();
 	for(final ActionImagePanel button : confPanel){
-	    if(button.getParent() == this){
-		remove(button);
-	    }
 	    if(button.isVisible()){
 		add(button ,"width " + buttonWidth + ":" + buttonWidth + ":" + buttonWidth + ", height " + buttonHeight + ":" + buttonHeight + ":" + buttonHeight);
 	    }
@@ -150,6 +157,20 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 	return super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
     }
 
+    /**
+     * Removes all configuration buttons from the container.
+     */
+    private void removeButtons() {
+	for(final ActionImagePanel button : confPanel){
+	    remove(button);
+	}
+    }
+
+    /**
+     * Returns {@link IDomainTreeManagerAndEnhancer}
+     * 
+     * @return
+     */
     private IDomainTreeManagerAndEnhancer getManager() {
 	return getModel().getManager();
     }

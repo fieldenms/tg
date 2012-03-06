@@ -10,10 +10,12 @@ import javax.swing.tree.TreePath;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
 import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeCellEditor2;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 
@@ -44,8 +46,28 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 
     @Override
     public Component getTreeCellEditorComponent(final JTree tree, final Object value, final boolean isSelected, final boolean expanded, final boolean leaf, final int row) {
-	//TODO implemetn logic that determines what buttons should be visible and which not.
+	final EntitiesTreeNode2 node = (EntitiesTreeNode2) value;
+	final Class<?> root = node.getUserObject().getKey();
+	final String property = node.getUserObject().getValue();
+	final Class<?> propertyType = StringUtils.isEmpty(property) ? root : PropertyTypeDeterminator.determineClass(root, property, true, true);
+	getRenderer().setButtonsVisible(false);
+	try {
+	    getTree().getEntitiesModel().getManager().getEnhancer().getCalculatedProperty(root, property);
+	    getRenderer().setEditButtonVisible(true);
+	    getRenderer().setCopyButtonVisible(true);
+	    getRenderer().setRemoveButtonVisible(true);
+
+	} catch (final IncorrectCalcPropertyKeyException ex){
+	    if(EntityUtils.isEntityType(propertyType)){
+		getRenderer().setNewButtonVisible(true);
+	    }
+	}
 	return super.getTreeCellEditorComponent(tree, value, isSelected, expanded, leaf, row);
+    }
+
+    @Override
+    public EntitiesTree2 getTree() {
+	return (EntitiesTree2)super.getTree();
     }
 
     @Override
@@ -74,11 +96,10 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 		final EntitiesTreeNode2 node = (EntitiesTreeNode2) lastComponent;
 		final Class<?> root = node.getUserObject().getKey();
 		final String property = node.getUserObject().getValue();
-		final Class<?> propertyType = StringUtils.isEmpty(property) ? root : PropertyTypeDeterminator.determineClass(root, property, true, true);
-		//TODO finish implementation: determine whether some buttons will be visible or not. If there is visible buttons then the cell is editable othervise it is not
-		//		if(AbstractEntity.class.isAssignableFrom(propertyType)){
-		//
-		//		}
+		final Class<?> propertyType = StringUtils.isEmpty(property) ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
+		if(EntityUtils.isEntityType(propertyType)){
+		    return true;
+		}
 		return false;
 	    }
 	}

@@ -51,6 +51,8 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
 	//Initiates wizards main parts and components.
 	this.treeEditorView = new DomainTreeEditorView<T>(treeEditorModel);
+	//TODO Implement this as the task for the ticket #347
+	//this.treeEditorView.setEditorPanelAnimated(false);
 	this.buildAction = createBuildAction();
 	this.cancelAction = createCancelAction();
 	this.actionPanel = createActionPanel();
@@ -109,19 +111,19 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     @Override
     public void addSelectionEventListener(final ISelectionEventListener l) {
-        listenerList.add(ISelectionEventListener.class, l);
+	listenerList.add(ISelectionEventListener.class, l);
     }
 
     @Override
     public void removeSelectionEventListener(final ISelectionEventListener l) {
-        listenerList.remove(ISelectionEventListener.class, l);
+	listenerList.remove(ISelectionEventListener.class, l);
     }
 
     /**
      * Selects this {@link AbstractConfigurationModel} and fires {@link SelectionEvent}.
      */
     public void select(){
-        fireSelectionEvent(new SelectionEvent(this));
+	fireSelectionEvent(new SelectionEvent(this));
     }
 
     /**
@@ -189,9 +191,9 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
      * @param event
      */
     protected final void fireSelectionEvent(final SelectionEvent event){
-        for(final ISelectionEventListener listener : listenerList.getListeners(ISelectionEventListener.class)){
-            listener.viewWasSelected(event);
-        }
+	for(final ISelectionEventListener listener : listenerList.getListeners(ISelectionEventListener.class)){
+	    listener.viewWasSelected(event);
+	}
     }
 
     /**
