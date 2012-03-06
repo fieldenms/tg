@@ -4,7 +4,7 @@
 	<groupId>fielden</groupId>
 	<artifactId>platform-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>1.1</version>
+	<version>1.2-SNAPSHOT</version>
 	<name>Trident Genesis Platform Parent</name>
 	<description>
 		Trident Genesis is an application platform designed for
@@ -258,10 +258,10 @@
 
 	<scm>
 		<connection>
-			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/tags/releases/platform-parent-1.1
+			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/trunk
 		</connection>
 		<developerConnection>
-			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/tags/releases/platform-parent-1.1
+			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/trunk
 		</developerConnection>
 	</scm>
 
