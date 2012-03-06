@@ -22,6 +22,11 @@ public class BceOriginationPropertyValidation implements IBeforeChangeEventHandl
     @Override
     public Result handle(final MetaProperty property, final String newOriginationProperty, final String oldValue, final Set<Annotation> mutatorAnnotations) {
 	final CalculatedProperty cp = (CalculatedProperty) property.getEntity();
+
+	if (cp.validateRootAndContext() != null) {
+	    return cp.validateRootAndContext();
+	}
+
 	// check if the "originationProperty" is correct in context of "contextType":
 	if (property.isRequired() && StringUtils.isEmpty(newOriginationProperty)) {
 	    return new IncorrectCalcPropertyKeyException("The origination property cannot be empty for Aggregated Expressions. It is required to ");

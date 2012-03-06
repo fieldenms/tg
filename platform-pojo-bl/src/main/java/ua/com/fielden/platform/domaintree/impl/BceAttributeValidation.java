@@ -20,6 +20,11 @@ public class BceAttributeValidation implements IBeforeChangeEventHandler<Calcula
     @Override
     public Result handle(final MetaProperty property, final CalculatedPropertyAttribute newAttribute, final CalculatedPropertyAttribute oldValue, final Set<Annotation> mutatorAnnotations) {
 	final CalculatedProperty cp = (CalculatedProperty) property.getEntity();
+
+	if (cp.validateRootAndContext() != null) {
+	    return cp.validateRootAndContext();
+	}
+
 	if (newAttribute == null) {
 	    return new IncorrectCalcPropertyKeyException("The attribute cannot be null.");
 	}

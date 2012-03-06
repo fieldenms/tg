@@ -302,7 +302,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     }
 
     public String pathWith(final String name) {
-	return "".equals(path()) ? name : path() + "." + name;
+	return path() == null ? null : "".equals(path()) ? name : path() + "." + name;
     }
 
     @Override
@@ -462,5 +462,21 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     public void initAst(final String newContextualExpression) throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter et2mc = new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getRoot(), getContextPath(), newContextualExpression);
 	this.ast = et2mc.convert();
+    }
+
+    /**
+     * Root and context path are essential for all other parts of {@link CalculatedProperty}.
+     * So this method returns a first failure for these properties or <code>null</code> if there is no failure.
+     *
+     * @return
+     */
+    protected IncorrectCalcPropertyKeyException validateRootAndContext() {
+	if (!getProperty("root").isValid()) {
+	    return (IncorrectCalcPropertyKeyException) getProperty("root").getFirstFailure();
+	} else if (!getProperty("contextPath").isValid()) {
+	    return (IncorrectCalcPropertyKeyException) getProperty("contextPath").getFirstFailure();
+	} else {
+	    return null;
+	}
     }
 }

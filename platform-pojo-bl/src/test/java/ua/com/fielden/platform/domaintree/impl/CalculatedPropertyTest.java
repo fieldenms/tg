@@ -159,6 +159,23 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection");
     }
 
+    @Test
+    public void test_Title_validation_for_empty_expression_and_revalidation_after_Expression_change() {
+	final CalculatedProperty calc = correctCalculatedPropertyCreation(MasterEntity.class, "entityProp");
+
+	calc.setTitle("String prop");
+
+	assertNull("Should be valid.", calc.getProperty("title").getFirstFailure());
+
+	calc.setContextualExpression("integerProp * 2");
+
+	final String message2 = "The title [" + "String prop" + "] should become incorrect in context [" + "entityProp" + "] => parentType [" + calc.parentType().getSimpleName() + "].";
+	assertNotNull(message2, calc.isValid());
+	assertNotNull(message2, calc.getProperty("title").getFirstFailure());
+	assertFalse(message2, calc.getProperty("title").getFirstFailure().isSuccessful());
+	assertTrue(message2, calc.getProperty("title").getFirstFailure() instanceof IncorrectCalcPropertyKeyException);
+    }
+
     protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath) {
 	final CalculatedProperty calc = CalculatedProperty.createEmpty(factory(), root, contextPath, dtm().getEnhancer());
 	checkTrivialParams(calc, root, contextPath, null, null, null, CalculatedPropertyAttribute.NO_ATTR, null);

@@ -19,6 +19,12 @@ import ua.com.fielden.platform.error.Result;
 public class BceTitleValidation implements IBeforeChangeEventHandler<String> {
     @Override
     public Result handle(final MetaProperty property, final String newTitle, final String oldValue, final Set<Annotation> mutatorAnnotations) {
+	final CalculatedProperty cp = (CalculatedProperty) property.getEntity();
+
+	if (cp.validateRootAndContext() != null) {
+	    return cp.validateRootAndContext();
+	}
+
 	if (StringUtils.isEmpty(newTitle)) {
 	    return new IncorrectCalcPropertyKeyException("A title of the calculated property cannot be empty.");
 	}
@@ -27,8 +33,7 @@ public class BceTitleValidation implements IBeforeChangeEventHandler<String> {
 	    return new IncorrectCalcPropertyKeyException("Please specify more appropriate title with some characters (and perhaps digits).");
 	}
 
-	final CalculatedProperty cp = (CalculatedProperty) property.getEntity();
-	if (cp.getEnhancer() != null) {
+	if (cp.getEnhancer() != null && cp.path() != null) {
 	    // validate if calculated property is correct in context of other calculated properties inside Domain Tree Enhancer
 	    try {
 		cp.getEnhancer().validateCalculatedPropertyKey(cp.getRoot(), cp.pathWith(name), false);
