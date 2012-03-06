@@ -29,7 +29,6 @@ public class BceContextualExpressionValidation implements IBeforeChangeEventHand
 	try {
 	    cp.initAst(newContextualExpression);
 	} catch (final Exception ex) {
-	    ex.printStackTrace();
 	    return new Result(ex);
 	}
 

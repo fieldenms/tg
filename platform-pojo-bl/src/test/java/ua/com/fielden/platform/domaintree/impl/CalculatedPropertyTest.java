@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedP
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -276,6 +277,25 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertNotNull(message2, cp.getProperty("title").getFirstFailure());
 	assertFalse(message2, cp.getProperty("title").getFirstFailure().isSuccessful());
 	assertTrue(message2, cp.getProperty("title").getFirstFailure() instanceof IncorrectCalcPropertyKeyException);
+    }
+
+    @Test
+    public void test_that_OriginationProperty_is_revalidated_after_ContextualExpression_has_been_changed() {
+	final CalculatedProperty cp = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "SUM(bigDecimalProp)", "Aggregated", "desc", NO_ATTR, "bigDecimalProp"), AGGREGATED_EXPRESSION, "aggregated", "", "aggregated", MasterEntity.class, MasterEntity.class, BigDecimal.class);
+
+	assertNotNull("Should be valid", cp.isValid());
+	assertTrue("Should be valid", cp.isValid().isSuccessful());
+
+
+	cp.setContextualExpression("SUM(integerProp)");
+
+	final String message2 = "The originationProperty should remain correct but become warned due to contextualExpression changes [" + cp.getContextualExpression() + "].";
+	assertNotNull(message2, cp.isValid());
+	assertTrue(message2, cp.isValid().isSuccessful());
+	assertNull(message2, cp.getProperty("originationProperty").getFirstFailure());
+	assertNotNull(message2, cp.getProperty("originationProperty").getFirstWarning());
+	assertTrue(message2, cp.getProperty("originationProperty").getFirstWarning().isWarning());
+	assertTrue(message2, cp.getProperty("originationProperty").getFirstWarning() instanceof CalcPropertyKeyWarning);
     }
 
     protected void assertCalculatedPropertyName(final ICalculatedProperty calc, final String name) {

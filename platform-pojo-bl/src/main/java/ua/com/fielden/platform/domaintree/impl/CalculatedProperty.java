@@ -70,7 +70,8 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     @IsProperty
     @CompositeKeyMember(3)
     @Title(value = "Expression", desc = "Property evaluation formula")
-    @Dependent("title") // revalidates "title" to ensure that title / name of property is unique in potentially another parentType (after "contextualExpression" has been changed)
+    @Dependent({"title", "originationProperty"}) // revalidates "title" to ensure that title / name of property is unique in potentially another parentType (after "contextualExpression" has been changed)
+    // revalidates "originationProperty" to ensure that it is correct after "contextualExpression" has been changed
     @BeforeChange(@Handler(BceContextualExpressionValidation.class))
     @AfterChange(AceCalculatedPropertyMetaInformationPopulation.class)
     private String contextualExpression;
