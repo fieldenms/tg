@@ -219,9 +219,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case IPARAM:
 	    return new EntValue(getParamValue((String) value), true);
 	case VAL:
-	    return new EntValue(value);
+	    return new EntValue(processValue(value));
 	case IVAL:
-	    return new EntValue(value, true);
+	    return new EntValue(processValue(value), true);
 	case ZERO_ARG_FUNCTION:
 	    return getZeroArgFunctionModel((Functions) value);
 	case EXPR:
@@ -240,35 +240,43 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
     protected Object getParamValue(final String paramName) {
 	if (getParamValues().containsKey(paramName)) {
-	    return processParamValue(getParamValues().get(paramName));
+	    return processValue(getParamValues().get(paramName));
 	} else {
 	    throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
 	}
     }
 
-    private Object processParamValue (final Object paramValue) {
-	if (paramValue != null && paramValue.getClass().isArray()) {
+    private Object processValue (final Object value) {
+	if (value != null && value.getClass().isArray()) {
 	    final List<Object> values = new ArrayList<Object>();
-	    for (final Object object : (Object[]) paramValue) {
-		values.add(convertParamValue(object));
+	    for (final Object object : (Object[]) value) {
+		values.add(convertValue(object));
 	    }
 	    return values.toArray();
 	} else {
-	    return convertParamValue(paramValue);
+	    return convertValue(value);
 	}
     }
 
     /** Ensures that values of special types such as {@link Class} or {@link PropertyDescriptor} are converted to String. */
-    private Object convertParamValue(final Object paramValue) {
-	if (paramValue instanceof PropertyDescriptor || paramValue instanceof Class) {
-	    return paramValue.toString();
-	} else if (paramValue instanceof AbstractEntity) {
-	    return ((AbstractEntity) paramValue).getId();
-	} else if (paramValue instanceof Money) {
-	    return ((Money) paramValue).getAmount();
-	} else {
-	    return paramValue;
+    private Object convertValue(final Object value) {
+	if (value instanceof Boolean) {
+	    return getQueryBuilder().getMappingsGenerator().getBooleanValue((Boolean) value);
 	}
+
+	if (value instanceof AbstractEntity) {
+	    return ((AbstractEntity) value).getId();
+	}
+
+	if (value instanceof PropertyDescriptor || value instanceof Class) {
+	    return value.toString();
+	}
+
+	if (value instanceof Money) {
+	    return ((Money) value).getAmount();
+	}
+
+	return value;
     }
 
     protected ISetOperand getModelForSetOperand(final TokenCategory cat, final Object value) {

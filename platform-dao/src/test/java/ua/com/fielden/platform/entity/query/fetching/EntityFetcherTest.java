@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.hibernate.Session;
 
+import ua.com.fielden.platform.dao.FirstLevelSecurityToken1;
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.types.Money;
 import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
@@ -209,6 +211,8 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     public void test_vehicle_model_retrieval17() {
 	final AggregatedResultQueryModel model = select(TgVehicle.class). //
 		where().prop("model.make.key").eq().val("MERC"). //
+		and().prop("active").eq().val(false). //
+		and().prop("leased").eq().val(true). //
 		yield().lowerCase().prop("model.make.key").as("make").
 		yield().ifNull().prop("replacedBy").then().val(1).as("not-replaced-yet").
 		yield().ifNull().prop("model.make.key").then().val("unknown").as("make-key").
@@ -228,8 +232,27 @@ public class EntityFetcherTest extends DbDrivenTestCase {
     	assertEquals("Incorrect value", "66.7", values.get(0).get("third-of-price").toString());
     }
 
+    public void test_vehile_18() {
+	final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicleMake.class).where().prop("key").eq().val("MERC").model();
+	final List<TgVehicleMake> makes = fetcher().list(new QueryExecutionModel.Builder(qry).build());
+    	final TgVehicleMake make = makes.get(0);
+
+	final EntityResultQueryModel<TgVehicle> qry2 = select(TgVehicle.class).where().prop("model.make").eq().val(make).model();
+	final List<TgVehicle> models = fetcher().list(new QueryExecutionModel.Builder(qry2).build());
+	assertEquals("Incorrect key", "CAR2", models.get(0).getKey());
+    }
+
+    public void test_19() {
+	final EntityResultQueryModel<SecurityRoleAssociation> associationModel = select(SecurityRoleAssociation.class). //
+		where().prop("securityToken").eq().val(FirstLevelSecurityToken1.class.getName()).model();
+	final List<SecurityRoleAssociation> entities = fetcher().list(new QueryExecutionModel.Builder(associationModel).build());
+	assertEquals("Incorrect count", 2, entities.size());
+	assertEquals("Incorrect key", FirstLevelSecurityToken1.class, entities.get(0).getSecurityToken());
+
+    }
+
     @Override
     protected String[] getDataSetPathsForInsert() {
-	return new String[] { "src/test/resources/data-files/entity-fetcher-test.flat.xml" };
+	return new String[] { "src/test/resources/data-files/entity-fetcher-test.flat.xml",  "src/test/resources/data-files/user-user_role-test-case.flat.xml"};
     }
 }

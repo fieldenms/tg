@@ -32,6 +32,8 @@ public class YieldsShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("station").as("station"). //
 		yield().prop("price.amount").as("price.amount"). //
 		yield().prop("purchasePrice.amount").as("purchasePrice.amount"). //
+		yield().prop("active").as("active"). //
+		yield().prop("leased").as("leased"). //
 		modelAsEntity(VEHICLE));
     }
 
@@ -54,6 +56,8 @@ public class YieldsShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("station").as("station"). //
 		yield().prop("price.amount").as("price.amount"). //
 		yield().prop("purchasePrice.amount").as("purchasePrice.amount"). //
+		yield().prop("active").as("active"). //
+		yield().prop("leased").as("leased"). //
 		modelAsEntity(VEHICLE));
     }
 

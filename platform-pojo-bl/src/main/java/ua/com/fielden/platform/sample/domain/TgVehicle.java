@@ -42,6 +42,32 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty @MapTo(userType = ISimpleMoneyType.class)
     private Money purchasePrice;
 
+    @IsProperty @MapTo @Title(value = "Active", desc = "Active")
+    private boolean active;
+
+    @IsProperty @MapTo @Title(value = "Leased", desc = "Leased?")
+    private boolean leased;
+
+    @Observable
+    public TgVehicle setLeased(final boolean leased) {
+	this.leased = leased;
+	return this;
+    }
+
+    public boolean getLeased() {
+	return leased;
+    }
+
+    @Observable
+    public TgVehicle setActive(final boolean active) {
+	this.active = active;
+	return this;
+    }
+
+    public boolean getActive() {
+	return active;
+    }
+
     /**
      * Constructor for (@link EntityFactory}.
      */

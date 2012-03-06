@@ -12,7 +12,10 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.hibernate.type.BooleanType;
+import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.TypeFactory;
+import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -51,6 +54,21 @@ public class MappingsGenerator {
     private final Map<Class, Class> hibTypesDefaults = new HashMap<Class, Class>();
     private Injector hibTypesInjector;
     private final DdlGenerator ddlGenerator = new DdlGenerator();
+
+    public Object getBooleanValue(final boolean value) {
+	final Class booleanHibClass = hibTypesDefaults.get(boolean.class);
+	if (booleanHibClass.equals(YesNoType.class)) {
+	    return value ? "Y" : "N";
+	}
+	if (booleanHibClass.equals(TrueFalseType.class)) {
+	    return value ? "T" : "F";
+	}
+	if (booleanHibClass.equals(BooleanType.class)) {
+	    return value ? 1 : 0;
+	}
+
+	throw new IllegalStateException("No appropriate converting hib type found for java boolean type");
+    }
 
     /**
      * Just for convenience of search.

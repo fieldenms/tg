@@ -115,7 +115,7 @@ public class EntQuery implements ISingleOperand {
 	} else if (allPropsYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
 	    for (final PropertyPersistenceInfo ppi : mappingsGenerator.getEntityPPIs(type())) {
-		if (!ppi.isCompositeProperty()) {
+		if (!ppi.isCompositeProperty() && !ppi.isCollection()) {
 		    yields.getYields().put(ppi.getName(), new YieldModel(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName(), ppi));
 		}
 	    }
@@ -151,7 +151,7 @@ public class EntQuery implements ISingleOperand {
 	if (finalPropInfo != null) {
 	    return mappingsGenerator.isNullable(type(), yield.getAlias());
 	} else {
-	    return yield.getOperand().isNullable();//true; //TODO implement properly
+	    return yield.getOperand().isNullable();
 	}
     }
 
