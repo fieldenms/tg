@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fielden</groupId>
 	<artifactId>platform-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>1.1-SNAPSHOT</version>
+	<version>1.1</version>
 	<name>Trident Genesis Platform Parent</name>
 	<description>
 		Trident Genesis is an application platform designed for
@@ -24,7 +23,7 @@
 	<developers>
 		<developer>
 			<id>01es</id>
-			<url></url>
+			<url />
 			<name>Oles Hodych</name>
 			<organization>FMS.ua</organization>
 			<organizationUrl>
@@ -38,7 +37,7 @@
 		</developer>
 		<developer>
 			<id>nazar</id>
-			<url></url>
+			<url />
 			<name>Nazar Chaykivskyy</name>
 			<organization>FMS.ua</organization>
 			<organizationUrl>
@@ -52,7 +51,7 @@
 		</developer>
 		<developer>
 			<id>jhou</id>
-			<url></url>
+			<url />
 			<name>Yura Prokopiv</name>
 			<organization>FMS.ua</organization>
 			<organizationUrl>
@@ -66,7 +65,7 @@
 		</developer>
 		<developer>
 			<id>oleh</id>
-			<url></url>
+			<url />
 			<name>Oleh Maykovych</name>
 			<organization>FMS.ua</organization>
 			<organizationUrl>
@@ -259,10 +258,10 @@
 
 	<scm>
 		<connection>
-			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/trunk
+			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/tags/releases/platform-parent-1.1
 		</connection>
 		<developerConnection>
-			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/trunk
+			scm:svn:https://www.fielden.com.ua/svn/trident-genesis/tags/releases/platform-parent-1.1
 		</developerConnection>
 	</scm>
 
