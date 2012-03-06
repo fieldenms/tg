@@ -36,7 +36,8 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
     @Override
     public String toString() {
-        return "\nname = " + name + "\njavaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + "\nhibType = " + (hibType != null ? hibType.getClass().getSimpleName() : hibType) + "\ntype = " + type + "\ncolumn(s) = " + columns;
+	return "\nname = " + name + "\njavaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + "\nhibType = "
+		+ (hibType != null ? hibType.getClass().getSimpleName() : hibType) + "\ntype = " + type + "\ncolumn(s) = " + columns;
     }
 
     public boolean isCompositeProperty() {
@@ -85,7 +86,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    for (final String subpropName : subprops) {
 		final String column = columns.get(index);
 		final Object hibType = subpropsTypes.get(index);
-		result.add(new PropertyPersistenceInfo.Builder(name + "." +subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(PropertyPersistenceType.COMPOSITE_DETAILS).hibType(hibType).build());
+		result.add(new PropertyPersistenceInfo.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(PropertyPersistenceType.COMPOSITE_DETAILS).hibType(hibType).build());
 		index = index + 1;
 	    }
 	}
@@ -107,15 +108,15 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     }
 
     public String getName() {
-        return name;
+	return name;
     }
 
     public Class getJavaType() {
-        return javaType;
+	return javaType;
     }
 
     public Object getHibType() {
-        return hibType;
+	return hibType;
     }
 
     public PropertyPersistenceType getType() {
@@ -123,11 +124,11 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     }
 
     public List<String> getColumns() {
-        return columns;
+	return columns;
     }
 
     public String getColumn() {
-        return columns.get(0);
+	return columns.get(0);
     }
 
     public static class Builder {
@@ -176,8 +177,12 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    return this;
 	}
     }
-    
+
     public boolean isNullable() {
-        return nullable;
+	return nullable;
+    }
+
+    public static enum PropertyPersistenceType {
+	PROP, COLLECTIONAL, ENTITY, ID, ONE2ONE_ID, VERSION, PRIMITIVE_KEY, ENTITY_KEY, COMPOSITE_DETAILS;
     }
 }
