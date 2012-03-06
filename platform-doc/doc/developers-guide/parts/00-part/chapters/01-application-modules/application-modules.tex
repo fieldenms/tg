@@ -11,12 +11,18 @@ The Maven Archetype concept is a cool way of automating a lot of otherwise manua
 
 \section{Create new project from an archetype}
 
-    If Maven is correctly configured as described in section \ref{ch00:01} then running command \texttt{mvn archetype:generate -Dfilter=fielden:} in a terminal should provide a result oulined in listing \ref{lst:find-and-run-archetype}.
+  All commands for project generation are executed in a terminal\footnote{The majority of Maven related interaction is done via a terminal.
+  Thus, it is useful be familiar with command line commands of your oprtating system of choice.
+  All examples in this book are performed under Linux, but they are all fully applicable to Windows or Mac OS.
+  Any Linux specific commands are highlighed in separate notes.}.
+  Therefore, fire up the terminal and navigate to a working directory.
+  For the sake of completeness, let's consider the that working directory is \texttt{workspace}, which is located in the user's home directory.
+  
+  If Maven is correctly configured as described in section \ref{ch00:01} then running command \texttt{mvn archetype:generate -Dfilter=fielden:} in a terminal should provide a result oulined in listing \ref{lst:find-and-run-archetype}.
 
-\lstset{  escapechar=\%,
+  \lstset{  escapechar=\%,
 	  morekeywords={mvn, archetype, generate, Dfilter, fielden, local},
 	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
-  \vspace*{-20pt}
   \begin{code}{Find and Run TG Application Archetype}{\label{lst:find-and-run-archetype}}
     \begin{lstlisting}
 user@workstation:~/workspace$ mvn archetype:generate -Dfilter=fielden:
@@ -49,7 +55,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 
   \begin{enumerate}
     \item Define value for property 'groupId': : -- a Maven specific variable, which identifies the group ID of the project being created; this could be a short name (without spaces or other funny characters) of your company such as \emph{fielden}; hit \texttt{enter} to confirm.
-    \vspace*{-20pt}
+      
     \begin{code}{Application groupId}{\label{lst:archetype-groupId}}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
@@ -145,3 +151,40 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
    Once the above variables have been entered Maven lists all of their values and prompts the developer to confirm their values before generating the project. 
    The default confirmation value is \texttt{Y} -- pressing \texttt{enter} leads to confirmation of the values' correctness. 
    Typing \texttt{N} and pressing \texttt{enter} leads to new prompts for all the variables.
+
+    \vspace*{-20pt}
+    \begin{code}{Properties configuration confirmation}{\label{lst:properties_confirmation}}
+      \begin{lstlisting}
+	Confirm properties configuration:
+	groupId: fielden
+	artifactId: coolapp
+	version: 1.0-SNAPSHOT
+	package: fielden
+	companyName: Fielden Management Services
+	projectName: Cool App
+	projectWebSite: http://www.fielden.com.au/coolapp
+	supportEmail: coolapp@support.fielden.com.au
+	Y:
+      \end{lstlisting}
+    \end{code}
+
+    Confirming properties should result in a successfull generation of the TG-based application.
+
+  \begin{notebox}{Inspect project directory structure.}{\label{mb:project-dir-structure}}
+      Under Linux a directory structure of the generated project can be inspecte by using the \texttt{tree} command as follows.
+	
+      \begin{verbatim}
+	user@workstation:~/workspace$ tree -L 2 -d
+	.
+	|-- coolapp
+	|   |-- coolapp-dao
+	|   |-- coolapp-pojo-bl
+	|   |-- coolapp-rao
+	|   |-- coolapp-ui
+	|   |-- coolapp-web-client
+	|   `-- coolapp-web-server
+      \end{verbatim}
+  \end{notebox}    
+  
+
+
