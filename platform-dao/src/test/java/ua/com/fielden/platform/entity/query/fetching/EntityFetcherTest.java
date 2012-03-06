@@ -251,6 +251,12 @@ public class EntityFetcherTest extends DbDrivenTestCase {
 
     }
 
+    public void test_vehile_20() {
+	final EntityResultQueryModel<TgVehicle> qry2 = select(TgVehicle.class).where().prop("model.make.key").iLike().val("me%").and().prop("key").iLike().val("%2").model();
+	final List<TgVehicle> models = fetcher().list(new QueryExecutionModel.Builder(qry2).build());
+	assertEquals("Incorrect key", "CAR2", models.get(0).getKey());
+    }
+
     @Override
     protected String[] getDataSetPathsForInsert() {
 	return new String[] { "src/test/resources/data-files/entity-fetcher-test.flat.xml",  "src/test/resources/data-files/user-user_role-test-case.flat.xml"};

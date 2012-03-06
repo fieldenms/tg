@@ -12,7 +12,7 @@ public class LikeTestModel implements ICondition {
 
     @Override
     public String sql() {
-	return leftOperand.sql() + (negated ? "NOT LIKE " : "LIKE ") + rightOperand.sql();
+	return leftOperand.sql() + (negated ? " NOT LIKE " : " LIKE ") + rightOperand.sql();
     }
 
     public LikeTestModel(final ISingleOperand leftOperand, final ISingleOperand rightOperand, final boolean negated, final boolean caseInsensitive) {

@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.entity.query.generation.elements.ISetOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.LikeTestModel;
+import ua.com.fielden.platform.entity.query.generation.elements.LowerCaseOfModel;
 import ua.com.fielden.platform.entity.query.generation.elements.NullTestModel;
 import ua.com.fielden.platform.entity.query.generation.elements.QuantifiedTestModel;
 import ua.com.fielden.platform.entity.query.generation.elements.Quantifier;
@@ -177,13 +178,13 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	} else if (isSingleVsMultipleLikeTest()) {
 	    return handleIgnore(getSingleVsMultipleLikeTest());
 	} else if (isPlainILikeTest()) {
-	    throw new RuntimeException("Not implemented yet");
+	    return handleIgnore(getPlainILikeTest());
 	} else if (isMultipleVsSingleILikeTest()) {
-	    throw new RuntimeException("Not implemented yet");
+	    return handleIgnore(getMultipleVsSingleILikeTest());
 	} else if (isMultipleVsMultipleILikeTest()) {
-	    throw new RuntimeException("Not implemented yet");
+	    return handleIgnore(getMultipleVsMultipleILikeTest());
 	} else if (isSingleVsMultipleILikeTest()) {
-	    throw new RuntimeException("Not implemented yet");
+	    return handleIgnore(getSingleVsMultipleILikeTest());
 	} else if (isPlainSetTest()) {
 	    return handleIgnore(getPlainSetTest());
 	} else if (isMultipleSetTest()) {
@@ -317,6 +318,12 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	return new LikeTestModel(firstOperand, secondOperand, (Boolean) secondValue(), false);
     }
 
+    private LikeTestModel getPlainILikeTest() {
+	final ISingleOperand firstOperand = new LowerCaseOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	final ISingleOperand secondOperand = new LowerCaseOfModel(getModelForSingleOperand(thirdCat(), thirdValue()));
+	return new LikeTestModel(firstOperand, secondOperand, (Boolean) secondValue(), false);
+    }
+
     private GroupedConditionsModel getMultipleVsMultipleLikeTest() {
 	final List<ISingleOperand> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
 	final List<ISingleOperand> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
@@ -336,6 +343,25 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	return getGroup(outerConditions, leftLogicalOperator);
     }
 
+    private GroupedConditionsModel getMultipleVsMultipleILikeTest() {
+	final List<ISingleOperand> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
+	final List<ISingleOperand> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
+
+	final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+
+	final List<ICondition> outerConditions = new ArrayList<ICondition>();
+	for (final ISingleOperand leftOperand : leftOperands) {
+	    final List<ICondition> innerConditions = new ArrayList<ICondition>();
+	    for (final ISingleOperand rightOperand : rightOperands) {
+		innerConditions.add(new LikeTestModel(new LowerCaseOfModel(leftOperand), new LowerCaseOfModel(rightOperand), (Boolean) secondValue(), false));
+	    }
+	    final GroupedConditionsModel group = getGroup(innerConditions, rightLogicalOperator);
+	    outerConditions.add(group);
+	}
+	return getGroup(outerConditions, leftLogicalOperator);
+    }
+
     private GroupedConditionsModel getMultipleVsSingleLikeTest() {
 	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
 	final ISingleOperand singleOperand = getModelForSingleOperand(thirdCat(), thirdValue());
@@ -347,12 +373,35 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 	return getGroup(conditions, logicalOperator);
     }
 
+    private GroupedConditionsModel getMultipleVsSingleILikeTest() {
+	final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
+	final ISingleOperand singleOperand = new LowerCaseOfModel(getModelForSingleOperand(thirdCat(), thirdValue()));
+	final List<ICondition> conditions = new ArrayList<ICondition>();
+	for (final ISingleOperand operand : operands) {
+	    conditions.add(new LikeTestModel(new LowerCaseOfModel(operand), singleOperand, (Boolean) secondValue(), false));
+	}
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	return getGroup(conditions, logicalOperator);
+    }
+
+
     private GroupedConditionsModel getSingleVsMultipleLikeTest() {
 	final List<ISingleOperand> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
 	final ISingleOperand singleOperand = getModelForSingleOperand(firstCat(), firstValue());
 	final List<ICondition> conditions = new ArrayList<ICondition>();
 	for (final ISingleOperand operand : operands) {
 	    conditions.add(new LikeTestModel(singleOperand, operand, (Boolean) secondValue(), false));
+	}
+	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
+	return getGroup(conditions, logicalOperator);
+    }
+
+    private GroupedConditionsModel getSingleVsMultipleILikeTest() {
+	final List<ISingleOperand> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
+	final ISingleOperand singleOperand = new LowerCaseOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	final List<ICondition> conditions = new ArrayList<ICondition>();
+	for (final ISingleOperand operand : operands) {
+	    conditions.add(new LikeTestModel(singleOperand, new LowerCaseOfModel(operand), (Boolean) secondValue(), false));
 	}
 	final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? LogicalOperator.OR : LogicalOperator.AND;
 	return getGroup(conditions, logicalOperator);
