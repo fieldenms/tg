@@ -18,7 +18,6 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
@@ -259,7 +258,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertTrue("Should be enabled (editable).", cp5.getProperty("attribute").isEditable());
     }
 
-    @Test @Ignore
+    @Test
     public void test_that_Title_is_revalidated_after_parentType_has_been_changed() {
 	// COLLECTIONAL_EXPRESSION
 	final CalculatedProperty cp = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * integerProp", "Placeholder prop", "desc", NO_ATTR, "integerProp"), COLLECTIONAL_EXPRESSION, "placeholderProp", "collection", "collection.placeholderProp", SlaveEntity.class, SlaveEntity.class, Integer.class);

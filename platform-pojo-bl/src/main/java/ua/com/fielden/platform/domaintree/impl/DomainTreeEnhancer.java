@@ -325,7 +325,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * Extracts all calculated properties from enhanced root types.
      *
      * @param originalAndEnhancedRootTypes
-     * @param dte TODO
+     * @param dte
      * @return
      */
     protected static Map<Class<?>, List<ICalculatedProperty>> extractAll(final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes, final DomainTreeEnhancer dte, final EntityFactory factory) {
@@ -345,7 +345,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param type -- enhanced type to load properties
      * @param root -- not enhanced root type
      * @param path -- the path to loaded calculated props
-     * @param dte TODO
+     * @param dte
      */
     private static List<ICalculatedProperty> reload(final Class<?> type, final Class<?> root, final String path, final DomainTreeEnhancer dte, final EntityFactory factory) {
 	final List<ICalculatedProperty> newCalcProperties = new ArrayList<ICalculatedProperty>();
@@ -359,7 +359,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 		    final Title titleAnnotation = calculatedField.getAnnotation(Title.class);
 		    final String title = titleAnnotation == null ? "" : titleAnnotation.value();
 		    final String desc = titleAnnotation == null ? "" : titleAnnotation.desc();
-		    final ICalculatedProperty calculatedProperty = CalculatedProperty.createAndValidate(factory, root, calcAnnotation.contextPath(), calcAnnotation.contextualExpression(), title, desc, calcAnnotation.attribute(), calcAnnotation.origination(), dte);
+		    final ICalculatedProperty calculatedProperty = CalculatedProperty.createWithoutValidation(factory, root, calcAnnotation.contextPath(), calcAnnotation.contextualExpression(), title, desc, calcAnnotation.attribute(), calcAnnotation.origination(), dte);
 		    newCalcProperties.add(calculatedProperty);
 		}
 	    }

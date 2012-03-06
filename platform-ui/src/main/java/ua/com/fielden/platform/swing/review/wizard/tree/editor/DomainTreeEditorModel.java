@@ -9,7 +9,6 @@ import javax.swing.event.EventListenerList;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
@@ -53,7 +52,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	this.rootType = rootType;
 	this.dtme = dtme;
 	this.factory = factory;
-	final CalculatedProperty entity = CalculatedProperty.createAndValidate(factory, rootType, null, null, null, null, CalculatedPropertyAttribute.NO_ATTR, null, dtme.getEnhancer());
+	final CalculatedProperty entity = CalculatedProperty.createEmpty(factory, rootType, "", dtme.getEnhancer());
 	this.expressionModel = new ExpressionEditorModelForWizard(entity, new LightweightPropertyBinder<CalculatedProperty>(null, null/*, "key", "name"*/));
 	this.listenerList = new EventListenerList();
 	this.propertySelectionModel = new CalculatedPropertySelectModel();
@@ -230,6 +229,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	    case SAVE_POST_ACTION_SUCCESSFUL:
 		//TODO must ask whether can add edited calculated property or not.
 		dtme.getEnhancer().addCalculatedProperty(getEntity());
+		dtme.getEnhancer().apply();
 		firePropertyProcessAction(new IPropertyProcessingAction(){
 
 		    @Override

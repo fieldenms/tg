@@ -33,6 +33,7 @@ import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.ClassComparator;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * An {@link ICalculatedProperty} default implementation, which can be binded to Expression Editor.
@@ -106,7 +107,6 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     private transient AstNode ast;
 
     private /* final */ transient IDomainTreeEnhancer enhancer;
-    private transient boolean isExtracting = false;
 
     /**
      * Default constructor.
@@ -332,7 +332,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 
     /**
      * Creates empty {@link CalculatedProperty} with only necessary {@link #getRoot()} and {@link #getContextPath()} initialised.
-     * It is obvious that other required stuff will not be initialised and immediate validation will not be passed.
+     * It is obvious that other required stuff will not be initialised. immediate validation intentionally will not be performed.
      *
      * @param factory
      * @param root
@@ -341,8 +341,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
      * @return
      */
     public static CalculatedProperty createEmpty(final EntityFactory factory, final Class<?> root, final String contextPath, final IDomainTreeEnhancer domainTreeEnhancer) {
-	// DomainTreeEnhancer.validatePath(root, contextPath, "The context path [" + contextPath + "] in type [" + root + "] of calculated property does not exist.");
-        final CalculatedProperty calc = factory.newEntity(CalculatedProperty.class); // ByKey(CalculatedProperty.class, root, contextPath, contextualExpression, title, attribute, originationProperty);
+        final CalculatedProperty calc = factory.newEntity(CalculatedProperty.class);
 
         // make Root and ContextPath not required -- their non-empty logic has been moved to corresponding Before Change Events
         calc.getProperty("root").setRequired(false);
@@ -373,6 +372,24 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
      * @param domainTreeEnhancer
      * @return
      */
+    protected static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
+        return setImportantStuff(contextualExpression, title, desc, attribute, originationProperty, createEmpty(factory, root, contextPath, domainTreeEnhancer));
+    }
+
+    /**
+     * Creates full {@link CalculatedProperty} with all keys initialised, validates it and throws validation exception if any.
+     *
+     * @param factory
+     * @param root
+     * @param contextPath
+     * @param contextualExpression
+     * @param title
+     * @param desc
+     * @param attribute
+     * @param originationProperty
+     * @param domainTreeEnhancer
+     * @return
+     */
     public static CalculatedProperty createAndValidate(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
 	final CalculatedProperty calc = create(factory, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, domainTreeEnhancer);
 
@@ -384,7 +401,8 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     }
 
     /**
-     * Creates full {@link CalculatedProperty} with all keys initialised.
+     * Creates full {@link CalculatedProperty} with all keys initialised without validation.
+     * It should be used only when the {@link CalculatedProperty} is surely correct, e.g. after 1) deserialisation 2) extracting from enhanced domain.
      *
      * @param factory
      * @param root
@@ -397,43 +415,23 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
      * @param domainTreeEnhancer
      * @return
      */
-    public static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
+    protected static CalculatedProperty createWithoutValidation(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
 	final CalculatedProperty calc = createEmpty(factory, root, contextPath, domainTreeEnhancer);
 
-	calc.setContextualExpression(contextualExpression);
-        calc.setTitle(title);
-        calc.setDesc(desc);
-        calc.setAttribute(attribute);
-        calc.setOriginationProperty(originationProperty);
+        calc.setInitialising(true);
+	setImportantStuff(contextualExpression, title, desc, attribute, originationProperty, calc);
+        calc.setInitialising(false);
+        EntityUtils.handleMetaProperties(calc); // it is important to invoke definers after raw setters (without validation) have been invoked.
 
         return calc;
     }
 
-    /**
-     * Creates full {@link CalculatedProperty} with all keys initialised.
-     *
-     * @param factory
-     * @param root
-     * @param contextPath
-     * @param contextualExpression
-     * @param title
-     * @param desc
-     * @param attribute
-     * @param originationProperty
-     * @param domainTreeEnhancer
-     * @return
-     */
-    public static CalculatedProperty createWhileExtracting(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
-	final CalculatedProperty calc = createEmpty(factory, root, contextPath, domainTreeEnhancer);
-
-	calc.setExtracting(true);
-
+    private static CalculatedProperty setImportantStuff(final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final CalculatedProperty calc) {
 	calc.setContextualExpression(contextualExpression);
         calc.setTitle(title);
         calc.setDesc(desc);
         calc.setAttribute(attribute);
         calc.setOriginationProperty(originationProperty);
-
         return calc;
     }
 
@@ -463,13 +461,5 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     public void initAst(final String newContextualExpression) throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter et2mc = new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getRoot(), getContextPath(), newContextualExpression);
 	this.ast = et2mc.convert();
-    }
-
-    public boolean isExtracting() {
-        return isExtracting;
-    }
-
-    public void setExtracting(final boolean isExtracting) {
-        this.isExtracting = isExtracting;
     }
 }
