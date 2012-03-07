@@ -8,8 +8,10 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorModel.TextInsertionType;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.swing.review.RadioButtonPanel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 
@@ -28,12 +30,12 @@ public class ExpressionEditorView extends BaseNotifPanel<ExpressionEditorModel> 
 	// row 1
 	addWithParamsForEditor(componentsPanel, editors, "contextualExpression", "span");
 	addWithParamsForEditor(componentsPanel, editors, "originationProperty", "span");
-	//final RadioButtonPanel radioButtonPanel = (RadioButtonPanel)editors.get("attribute").getEditor();
-	//radioButtonPanel.setLayout(new MigLayout("fill, insets 0", "[l][l][l, grow]", "[]"));
-	//radioButtonPanel.layoutEditor(CalculatedPropertyAttribute.ALL);
-	//radioButtonPanel.layoutEditor(CalculatedPropertyAttribute.ANY);
-	//radioButtonPanel.layoutEditor(CalculatedPropertyAttribute.NO_ATTR);
-	//addWithParamsForEditor(componentsPanel, editors, "attribute", "span");
+	final RadioButtonPanel radioButtonPanel = (RadioButtonPanel)editors.get("attribute").getEditor();
+	radioButtonPanel.setLayout(new MigLayout("fill, insets 0", "[l][l][l, grow]", "[]"));
+	radioButtonPanel.layoutEditor(CalculatedPropertyAttribute.ALL); // 
+	radioButtonPanel.layoutEditor(CalculatedPropertyAttribute.ANY);
+	radioButtonPanel.layoutEditor(CalculatedPropertyAttribute.NO_ATTR);
+	addWithParamsForEditor(componentsPanel, editors, "attribute", "span");
 
 	// row 2
 	componentsPanel.add(new JLabel("Functions"), "gapbottom 5, gaptop 5, span, split 2, aligny center");

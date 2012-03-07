@@ -259,8 +259,16 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_Attribute_property_enablement_for_different_categories() {
+	// Empty calc prop
+	CalculatedProperty cp1 = correctCalculatedPropertyCreation(MasterEntity.class, "");
+	assertFalse("Should be disabled (non-editable).", cp1.getProperty("attribute").isEditable());
+	cp1 = correctCalculatedPropertyCreation(MasterEntity.class, "entityProp");
+	assertFalse("Should be disabled (non-editable).", cp1.getProperty("attribute").isEditable());
+	cp1 = correctCalculatedPropertyCreation(MasterEntity.class, "collection");
+	assertFalse("Should be disabled (non-editable).", cp1.getProperty("attribute").isEditable());
+
 	// EXPRESSION
-	final CalculatedProperty cp1 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp"), EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
+	cp1 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp"), EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
 	assertFalse("Should be disabled (non-editable).", cp1.getProperty("attribute").isEditable());
 	// AGGREGATED_EXPRESSION
 	final CalculatedProperty cp2 = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * MAX(2 * integerProp)", "Calculated property", "desc", NO_ATTR, "integerProp"), AGGREGATED_EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);

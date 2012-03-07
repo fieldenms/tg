@@ -97,4 +97,9 @@ public class DistributionProperty implements IDistributedProperty{
     public String getDesc() {
 	return desc;
     }
+
+    @Override
+    public String getTitle() {
+        return name;
+    }
 }

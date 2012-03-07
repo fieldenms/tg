@@ -308,10 +308,10 @@ public class EntityView {
 	    //=================================
 
 	    // onKeyTyped radiobuttons
-	    final BoundedValidationLayer<JRadioButton> revertRadioButtonOKT = ComponentFactory.createRadioButton(entity, Entity.PROPERTY_STRATEGY, Strategy.REVERT, "revert radiobutton", new SimpleOnCommitSysoutMessageAction("REVERT radioButton onKeyTyped OnCommitAction"));
-	    final BoundedValidationLayer<JRadioButton> commitRadioButtonOKT = ComponentFactory.createRadioButton(entity, Entity.PROPERTY_STRATEGY, Strategy.COMMIT, "commit radiobutton", new SimpleOnCommitSysoutMessageAction("COMMIT radioButton onKeyTyped OnCommitAction"));
-	    final BoundedValidationLayer<JRadioButton> revertOnInvalidRadioButtonOKT = ComponentFactory.createRadioButton(entity, Entity.PROPERTY_STRATEGY, Strategy.REVERT_ON_INVALID, "revertOnInvalid radiobutton", new SimpleOnCommitSysoutMessageAction("REVERT_ON_INVALID radioButton onKeyTyped OnCommitAction"));
-	    final BoundedValidationLayer<JRadioButton> commitOnValidRadioButtonOKT = ComponentFactory.createRadioButton(entity, Entity.PROPERTY_STRATEGY, Strategy.COMMIT_ON_VALID, "commitOnValid radiobutton", new SimpleOnCommitSysoutMessageAction("COMMIT_ON_VALID radioButton onKeyTyped OnCommitAction"));
+	    final BoundedValidationLayer<JRadioButton> revertRadioButtonOKT = ComponentFactory.createRadioButton(entity, Entity.PROPERTY_STRATEGY, Strategy.REVERT, Strategy.REVERT.toString(), "revert radiobutton", new SimpleOnCommitSysoutMessageAction("REVERT radioButton onKeyTyped OnCommitAction"));
+	    final BoundedValidationLayer<JRadioButton> commitRadioButtonOKT = ComponentFactory.createRadioButton(entity, Entity.PROPERTY_STRATEGY, Strategy.COMMIT, Strategy.COMMIT.toString(), "commit radiobutton", new SimpleOnCommitSysoutMessageAction("COMMIT radioButton onKeyTyped OnCommitAction"));
+	    final BoundedValidationLayer<JRadioButton> revertOnInvalidRadioButtonOKT = ComponentFactory.createRadioButton(entity, Entity.PROPERTY_STRATEGY, Strategy.REVERT_ON_INVALID, Strategy.REVERT_ON_INVALID.toString(), "revertOnInvalid radiobutton", new SimpleOnCommitSysoutMessageAction("REVERT_ON_INVALID radioButton onKeyTyped OnCommitAction"));
+	    final BoundedValidationLayer<JRadioButton> commitOnValidRadioButtonOKT = ComponentFactory.createRadioButton(entity, Entity.PROPERTY_STRATEGY, Strategy.COMMIT_ON_VALID, Strategy.COMMIT_ON_VALID.toString(), "commitOnValid radiobutton", new SimpleOnCommitSysoutMessageAction("COMMIT_ON_VALID radioButton onKeyTyped OnCommitAction"));
 
 	    // onTriggerCommit radioButtons
 	    enumPropertyWrapper = ComponentFactory.createPropertyWrapper(entity, Entity.PROPERTY_STRATEGY, saveButtonTrigger, new SimpleOnCommitSysoutMessageAction("AnyRadiobutton onTriggerCommit OnCommitAction"));

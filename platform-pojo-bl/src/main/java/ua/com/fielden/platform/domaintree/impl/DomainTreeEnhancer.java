@@ -359,7 +359,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 		    final Title titleAnnotation = calculatedField.getAnnotation(Title.class);
 		    final String title = titleAnnotation == null ? "" : titleAnnotation.value();
 		    final String desc = titleAnnotation == null ? "" : titleAnnotation.desc();
-		    final ICalculatedProperty calculatedProperty = CalculatedProperty.createWithoutValidation(factory, root, calcAnnotation.contextPath(), calcAnnotation.contextualExpression(), title, desc, calcAnnotation.attribute(), calcAnnotation.origination(), dte);
+		    final ICalculatedProperty calculatedProperty = CalculatedProperty.createWithoutValidation/*createAndValidate*/(factory, root, calcAnnotation.contextPath(), calcAnnotation.contextualExpression(), title, desc, calcAnnotation.attribute(), calcAnnotation.origination(), dte);
 		    newCalcProperties.add(calculatedProperty);
 		}
 	    }

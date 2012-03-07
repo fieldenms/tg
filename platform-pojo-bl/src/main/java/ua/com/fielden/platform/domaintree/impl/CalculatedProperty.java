@@ -351,6 +351,8 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	// (originationProperty is required because it is key member). The requiredness of originationProperty depends on the
 	// expression category (e.g. for AGGREGATION_PROPERTY it should be required)
 	calc.getProperty("originationProperty").setRequired(false);
+	// Attribute property should be disabled at beginning. Its enablement will change after CalculatedProperty category changes.
+	calc.getProperty("attribute").setEditable(false);
 
         calc.setRoot(root);
         calc.setContextPath(contextPath);

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree;
 
+import ua.com.fielden.platform.basic.IPropertyEnum;
 
 /**
  * The <b>calculated property</b> represents an abstraction for an expression which could be used in queries
@@ -75,7 +76,7 @@ public interface ICalculatedProperty {
      * Returns an expression string in <b>eQuery manner</b> that defines a calculated property.
      * The expression should be fully defined in context of {@link #contextType()}.
      * Concrete parts of expression (simple or other calculated properties) should be incorporated into this expression using dot-notation. <br><br>
-     * 
+     *
      * For e.g. :<br>
      * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
      * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
@@ -100,7 +101,7 @@ public interface ICalculatedProperty {
      * Sets an expression string in <b>eQuery manner</b> that defines a calculated property.
      * The expression should be fully defined in context of {@link #contextType()}.
      * Concrete parts of expression (simple or other calculated properties) should be incorporated into this expression using dot-notation. <br><br>
-     * 
+     *
      * For e.g. :<br>
      * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
      * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
@@ -116,14 +117,14 @@ public interface ICalculatedProperty {
      * {@link #contextType()} = FuelUsage.class, // a context type of a calculated property (inferred) <br>
      * {@link #parentType()} = Vehicle.class, // a type of a calculated property parent (inferred) <br>
      * {@link #resultType()} = BigDecimal.class, // a resultant type of a calculated property expression (inferred) <br>
-     * 
+     *
      * @param contextualExpression -- an expression string in <b>eQuery manner</b> that defines a calculated property.
      */
     ICalculatedProperty setContextualExpression(final String contextualExpression);
 
     /**
      * Returns the title of calculated property.
-     * 
+     *
      * For e.g. :<br>
      * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
      * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
@@ -146,7 +147,7 @@ public interface ICalculatedProperty {
 
     /**
      * Sets the title of calculated property.
-     * 
+     *
      * For e.g. :<br>
      * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
      * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
@@ -167,7 +168,7 @@ public interface ICalculatedProperty {
 
     /**
      * Returns the description of calculated property.
-     * 
+     *
      * For e.g. :<br>
      * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
      * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
@@ -190,7 +191,7 @@ public interface ICalculatedProperty {
 
     /**
      * Sets the description of calculated property.
-     * 
+     *
      * For e.g. :<br>
      * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
      * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
@@ -220,14 +221,49 @@ public interface ICalculatedProperty {
      * @author TG Team
      *
      */
-    public enum CalculatedPropertyAttribute{
+    public enum CalculatedPropertyAttribute implements IPropertyEnum {
 	/** ALL attributes for collectional expressions. */
-	ALL(),
+	ALL("All", "All"),
 	/** ANY attribute for collectional expressions. */
-	ANY(),
+	ANY("Any", "Any"),
 	/** An empty attribute for collectional expressions (and also a placeholder for other types of expressions). */
-	NO_ATTR();
+	NO_ATTR("No attribute", "No attribute");
 
+	/**
+	 * Represents the enumeration component title.
+	 */
+	private final String title;
+
+	/**
+	 * Represents the enumeration component description;
+	 */
+	private final String desc;
+
+	/**
+	 * Initiates this Calculated property component with specified title and description.
+	 *
+	 * @param title
+	 * @param desc
+	 */
+	private CalculatedPropertyAttribute(final String title, final String desc){
+	    this.title = title;
+	    this.desc = desc;
+	}
+
+	@Override
+	public String getTooltip() {
+	    return desc;
+	}
+
+	@Override
+	public final String toString() {
+	    return super.toString(); // this should not be modified!
+	}
+
+	@Override
+	public String getTitle() {
+	    return title;
+	}
     }
     /**
      * An attribute for a calculated property. Can be ALL or ANY (or NO_ATTR) in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR.
@@ -277,7 +313,7 @@ public interface ICalculatedProperty {
 
     /**
      * A name of property in context type ({@link #contextType()}), from which this calculated property has been originated.
-     * 
+     *
      * For e.g. :<br>
      * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
      * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
@@ -300,7 +336,7 @@ public interface ICalculatedProperty {
 
     /**
      * Sets a name of property in context type ({@link #contextType()}), from which this calculated property has been originated.
-     * 
+     *
      * For e.g. :<br>
      * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
      * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
@@ -331,7 +367,7 @@ public interface ICalculatedProperty {
      * For e.g. {@link CalculatedPropertyCategory#COLLECTIONAL_EXPRESSION}, {@link CalculatedPropertyCategory#EXPRESSION},
      * {@link CalculatedPropertyCategory#AGGREGATED_COLLECTIONAL_EXPRESSION}, {@link CalculatedPropertyCategory#ATTRIBUTED_COLLECTIONAL_EXPRESSION},
      * {@link CalculatedPropertyCategory#AGGREGATED_EXPRESSION}.<br><br>
-     * 
+     *
      * TODO : currently the properties higher from contextPath cannot be used inside expression.
      *
      * @author TG Team
@@ -345,7 +381,7 @@ public interface ICalculatedProperty {
 	 * Example: <br>
 	 * Place : Vehicle=><i>[status]</i>; <br>
 	 * Property = <i>[status.operational] and ([lastReading] > 1000 or [replacing.techDetails.amount] < 100)</i><br><br>
-	 * 
+	 *
 	 * TODO : currently the properties higher from contextPath cannot be used inside expression.
 	 *
 	 */
@@ -357,7 +393,7 @@ public interface ICalculatedProperty {
 	 * Example: <br>
 	 * Place : Vehicle=><i>[]</i>; <br>
 	 * Property = <i>2 * <b>SUM(</b>2 * [replacing.techDetails.amount] - [lastReading]<b>)</b> + 3 * <b>AVG(</b>[replacing.lastReading] * 7<b>)</b></i><br><br>
-	 * 
+	 *
 	 * TODO : currently the properties higher from contextPath cannot be used inside expression.
 	 *
 	 */
@@ -369,7 +405,7 @@ public interface ICalculatedProperty {
 	 * Example: <br>
 	 * Place : Vehicle=><i>[fuelUsages]</i>; <br>
 	 * Property = <i>2 * <b>[fuelUsages.oilQty]</b> - 4 * <b>[fuelUsages.details.oilPrice]</b> - [lastReading]</i><br><br>
-	 * 
+	 *
 	 * TODO : currently the properties higher from contextPath cannot be used inside expression.
 	 *
 	 */
@@ -380,7 +416,7 @@ public interface ICalculatedProperty {
 	 * Example: <br>
 	 * Place : Vehicle=><i>[]</i>; <br>
 	 * Property = <i><b>SUM(</b>2 * [fuelUsages.oilQty] - [lastReading]<b>)</b> + [replacing.lastReading] * 7</i><br><br>
-	 * 
+	 *
 	 * TODO : currently the properties higher from contextPath cannot be used inside expression.
 	 *
 	 */
@@ -392,7 +428,7 @@ public interface ICalculatedProperty {
 	 * Example: <br>
 	 * Place : Vehicle=><i>[]</i>; <br>
 	 * Property = <i><b>ALL(</b>2 * [fuelUsages.oilQty] - [lastReading]<b>)</b></i><br><br>
-	 * 
+	 *
 	 * TODO : currently the properties higher from contextPath cannot be used inside expression.
 	 *
 	 */
@@ -401,7 +437,7 @@ public interface ICalculatedProperty {
 
     /**
      * Returns a category (type, class -- see {@link CalculatedPropertyCategory}) of calculated property.
-     * 
+     *
      * For e.g. :<br>
      * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
      * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
@@ -539,7 +575,7 @@ public interface ICalculatedProperty {
 
     /**
      * A result type of calculated property (the type of resultant {@link #getContextualExpression()}).
-     * 
+     *
      * For e.g. :<br>
      * {@link #getRoot()} = WorkOrder.class, // a root of a calculated property<br>
      * {@link #getContextPath()} = vehicle.replacing.fuelUsages, // a context path of the calculated property<br>
