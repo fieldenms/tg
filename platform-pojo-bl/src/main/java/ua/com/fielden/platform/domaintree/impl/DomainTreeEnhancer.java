@@ -373,21 +373,51 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     }
 
     @Override
-    public ICalculatedProperty validateCalculatedPropertyKey(final Class<?> root, final String pathAndName, final Boolean correctIfExists) {
-	return validateCalculatedPropertyKey1(root, pathAndName, correctIfExists, calculatedProperties, originalAndEnhancedRootTypes);
+    public ICalculatedProperty validateCalculatedPropertyKey(final ICalculatedProperty calculatedProperty, final String pathAndName) {
+	return validateCalculatedPropertyKey1(calculatedProperty, pathAndName, calculatedProperties, originalAndEnhancedRootTypes);
     }
 
     /**
-     * Validates the calculated property by its key [root + pathAndName]. Validation depends on current state of enhanced domain.
+     * Validates the calculated property key (see {@link #validatePropertyKey0(Class, String, Map)}) and checks whether another property with the same name exists (calculated or not).
+     * If exists -- throws {@link IncorrectCalcPropertyKeyException}.
      *
-     * @param root
-     * @param pathAndName
-     * @param correctIfExists -- specify <code>true</code> for "correct" key if the calc property exists (when property getting/removing), <code>false</code> for "incorrect" key if the calc property exists (when property adding).
+     * @param calculatedPropertyToCheck
+     * @param newPathAndName
      * @param calculatedProperties
      * @param originalAndEnhancedRootTypes
      * @return
      */
-    private static ICalculatedProperty validateCalculatedPropertyKey1(final Class<?> root, final String pathAndName, final Boolean correctIfExists, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
+    private static ICalculatedProperty validateCalculatedPropertyKey1(final ICalculatedProperty calculatedPropertyToCheck, final String newPathAndName, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
+	final Class<?> root = calculatedPropertyToCheck.getRoot();
+	validatePropertyKey0(root, newPathAndName, originalAndEnhancedRootTypes);
+
+	final ICalculatedProperty calculatedProperty = calculatedProperty(root, newPathAndName, calculatedProperties);
+	if (calculatedProperty != null) {
+	    if (calculatedProperty == calculatedPropertyToCheck) {
+		// this is the same property!
+	    } else {
+		throw new IncorrectCalcPropertyKeyException("The calculated property with name [" + newPathAndName + "] already exists.");
+	    }
+	}
+	try {
+	    PropertyTypeDeterminator.determinePropertyType(root, newPathAndName);
+	    // if (AbstractDomainTreeRepresentation.isCalculated(root, pathAndName)) {
+	    //     return null; // the property with a suggested name exists in original domain, but it is "calculated", which is correct
+	    // }
+	} catch (final Exception e) {
+	    return null; // the property with a suggested name does not exist in original domain, which is correct
+	}
+	throw new IncorrectCalcPropertyKeyException("The property with the name [" + newPathAndName + "] already exists in original domain (inside " + root.getSimpleName() + " root). Please try another name for calculated property.");
+    }
+
+    /**
+     * Validates calculated property key [root + pathAndName] to check if 1) root exists in the domain 2) pathAndName is not empty 3) pathAndName parent exists.
+     *
+     * @param root
+     * @param pathAndName
+     * @param originalAndEnhancedRootTypes
+     */
+    private static void validatePropertyKey0(final Class<?> root, final String pathAndName, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
 	if (StringUtils.isEmpty(pathAndName)) {
 	    throw new IncorrectCalcPropertyKeyException("The calculated property pathAndName cannot be empty.");
 	}
@@ -399,29 +429,26 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 	final Pair<String, String> pathAndName1 = PropertyTypeDeterminator.isDotNotation(pathAndName) ? PropertyTypeDeterminator.penultAndLast(pathAndName) : new Pair<String, String>("", pathAndName);
 	final String path = pathAndName1.getKey();
 	validatePath(root, path, "The place [" + path + "] in type [" + root.getSimpleName() + "] of calculated property does not exist.");
+    }
+
+    /**
+     * Validates the calculated property key (see {@link #validatePropertyKey0(Class, String, Map)}) and checks whether calculated property with the suggested name exists.
+     * If not -- throws {@link IncorrectCalcPropertyKeyException}.
+     *
+     * @param root
+     * @param pathAndName
+     * @param calculatedProperties
+     * @param originalAndEnhancedRootTypes
+     * @return
+     */
+    private static ICalculatedProperty validateCalculatedPropertyKey2(final Class<?> root, final String pathAndName, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
+	validatePropertyKey0(root, pathAndName, originalAndEnhancedRootTypes);
 
 	final ICalculatedProperty calculatedProperty = calculatedProperty(root, pathAndName, calculatedProperties);
-	if (correctIfExists == null) {
-	    return calculatedProperty;
-	} else if (correctIfExists) {
-	    if (calculatedProperty == null) {
-		throw new IncorrectCalcPropertyKeyException("The calculated property with name [" + pathAndName + "] does not exist.");
-	    }
-	    return calculatedProperty;
-	} else {
-	    if (calculatedProperty != null) {
-		throw new IncorrectCalcPropertyKeyException("The calculated property with name [" + pathAndName + "] already exists.");
-	    }
-	    try {
-		PropertyTypeDeterminator.determinePropertyType(root, pathAndName);
-		// if (AbstractDomainTreeRepresentation.isCalculated(root, pathAndName)) {
-		//     return null; // the property with a suggested name exists in original domain, but it is "calculated", which is correct
-		// }
-	    } catch (final Exception e) {
-		return null; // the property with a suggested name does not exist in original domain, which is correct
-	    }
-	    throw new IncorrectCalcPropertyKeyException("The property with the name [" + pathAndName + "] already exists in original domain (inside " + root.getSimpleName() + " root). Please try another name for calculated property.");
+	if (calculatedProperty == null) {
+	    throw new IncorrectCalcPropertyKeyException("The calculated property with name [" + pathAndName + "] does not exist.");
 	}
+	return calculatedProperty;
     }
 
     protected static void validatePath(final Class<?> root, final String path, final String message) {
@@ -466,7 +493,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      */
     private static void addCalculatedProperty(final ICalculatedProperty calculatedProperty, final Map<Class<?>, List<ICalculatedProperty>> calculatedProperties, final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes) {
 	final Class<?> root = calculatedProperty.getRoot();
-	validateCalculatedPropertyKey1(root, calculatedProperty.pathAndName(), false, calculatedProperties, originalAndEnhancedRootTypes);
+	validateCalculatedPropertyKey1(calculatedProperty, calculatedProperty.pathAndName(), calculatedProperties, originalAndEnhancedRootTypes);
 
 	if (!calculatedProperties.containsKey(root)) {
 	    calculatedProperties.put(root, new ArrayList<ICalculatedProperty>());
@@ -490,12 +517,12 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
     @Override
     public ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
-	return validateCalculatedPropertyKey1(rootType, calculatedPropertyName, true, calculatedProperties, originalAndEnhancedRootTypes);
+	return validateCalculatedPropertyKey2(rootType, calculatedPropertyName, calculatedProperties, originalAndEnhancedRootTypes);
     }
 
     @Override
     public void removeCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
-	final ICalculatedProperty calculatedProperty = validateCalculatedPropertyKey1(rootType, calculatedPropertyName, true, calculatedProperties, originalAndEnhancedRootTypes);
+	final ICalculatedProperty calculatedProperty = validateCalculatedPropertyKey2(rootType, calculatedPropertyName, calculatedProperties, originalAndEnhancedRootTypes);
 	final boolean removed = calculatedProperties.get(rootType).remove(calculatedProperty);
 
 	if (!removed) {

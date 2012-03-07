@@ -123,14 +123,11 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
     public int hashCode();
 
     /**
-     * Validates the calculated property by its key [root + pathAndName]. Validation depends on current state of enhanced domain.
+     * Validates the calculated property by its new "pathAndName". Validation depends on current state of enhanced domain.
      *
-     * @param root
-     * @param pathAndName
-     * @param correctIfExists -- specify <code>true</code> for "correct" key if the calc property exists (when property getting/removing), <code>false</code> for "incorrect" key if the calc property exists (when property adding).
-     * @param calculatedProperties
-     * @param originalAndEnhancedRootTypes
+     * @param calculatedProperty
+     * @param newPathAndName
      * @return
      */
-    ICalculatedProperty validateCalculatedPropertyKey(final Class<?> root, final String pathAndName, final Boolean correctIfExists);
+    ICalculatedProperty validateCalculatedPropertyKey(final ICalculatedProperty calculatedProperty, final String newPathAndName);
 }

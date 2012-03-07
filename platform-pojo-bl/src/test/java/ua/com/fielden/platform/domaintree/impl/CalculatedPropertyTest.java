@@ -278,7 +278,6 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_that_Title_is_revalidated_after_parentType_has_been_changed() {
-	// COLLECTIONAL_EXPRESSION
 	final CalculatedProperty cp = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "collection", "2 * integerProp", "Placeholder prop", "desc", NO_ATTR, "integerProp"), COLLECTIONAL_EXPRESSION, "placeholderProp", "collection", "collection.placeholderProp", SlaveEntity.class, SlaveEntity.class, Integer.class);
 
 	final String message = "The title [" + "Placeholder prop" + "] should be correct in context [" + "collection" + "] => parentType [" + cp.parentType().getSimpleName() + "].";
@@ -294,6 +293,25 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertNotNull(message2, cp.getProperty("title").getFirstFailure());
 	assertFalse(message2, cp.getProperty("title").getFirstFailure().isSuccessful());
 	assertTrue(message2, cp.getProperty("title").getFirstFailure() instanceof IncorrectCalcPropertyKeyException);
+    }
+
+    @Test
+    public void test_that_Title_is_revalidated_after_parentType_has_been_changed_2() {
+	CalculatedProperty cp = assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp", "2 * integerProp", "Double integer prop", "desc", NO_ATTR, "integerProp"), EXPRESSION, "doubleIntegerProp", "entityProp", "entityProp.doubleIntegerProp", SlaveEntity.class, SlaveEntity.class, Integer.class);
+
+	final String message = "Should be correct.";
+	assertNotNull(message, cp.isValid());
+	assertTrue(message, cp.isValid().isSuccessful());
+
+	dtm().getEnhancer().addCalculatedProperty(cp);
+	dtm().getEnhancer().apply();
+
+	cp = (CalculatedProperty) dtm().getEnhancer().getCalculatedProperty(MasterEntity.class, "entityProp.doubleIntegerProp");
+	cp.setContextualExpression("MAX(" + cp.getContextualExpression() + ")");
+
+	assertNotNull(message, cp.isValid());
+	assertTrue(message, cp.isValid().isSuccessful());
+	assertNull(message, cp.getProperty("title").getFirstFailure());
     }
 
     @Test

@@ -36,7 +36,7 @@ public class BceTitleValidation implements IBeforeChangeEventHandler<String> {
 	if (cp.getEnhancer() != null && cp.path() != null) {
 	    // validate if calculated property is correct in context of other calculated properties inside Domain Tree Enhancer
 	    try {
-		cp.getEnhancer().validateCalculatedPropertyKey(cp.getRoot(), cp.pathWith(name), false);
+		cp.getEnhancer().validateCalculatedPropertyKey(cp, cp.pathWith(name));
 	    } catch (final IncorrectCalcPropertyKeyException e) {
 		return e;
 	    }

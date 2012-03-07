@@ -216,8 +216,8 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
-	public ICalculatedProperty validateCalculatedPropertyKey(final Class<?> root, final String pathAndName, final Boolean correctIfExists) {
-	    return baseEnhancer.validateCalculatedPropertyKey(root, pathAndName, correctIfExists);
+	public ICalculatedProperty validateCalculatedPropertyKey(final ICalculatedProperty calculatedProperty, final String pathAndName) {
+	    return baseEnhancer.validateCalculatedPropertyKey(calculatedProperty, pathAndName);
 	}
     }
 
