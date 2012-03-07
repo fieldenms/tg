@@ -61,11 +61,24 @@ public class RadioButtonPanel extends JPanel {
      * @param key
      * @param constrained
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     public void layoutEditor(final Enum key, final Object constrained) {
 	final BoundedValidationLayer<JRadioButton> value = radioButtonMap.get(key);
 	if (value != null) {
 	    add(value, constrained);
+	}
+    }
+
+    /**
+     * Add the radio button associated with the key to the container if it's not yet added.
+     * 
+     * @param key
+     */
+    @SuppressWarnings("rawtypes")
+    public void layoutEditor(final Enum key) {
+	final BoundedValidationLayer<JRadioButton> value = radioButtonMap.get(key);
+	if (value != null) {
+	    add(value);
 	}
     }
 

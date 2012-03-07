@@ -19,6 +19,7 @@ import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizardEventListener;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorView;
+import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
@@ -36,6 +37,8 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     private final DomainTreeEditorView<T> treeEditorView;
 
+    private final String domainEditorCaption;
+
     //Parts of the action panel. (i.e. the panel with build and cancel buttons and other controls).
     private final JPanel actionPanel;
     private final Action buildAction, cancelAction;
@@ -46,13 +49,11 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
      * @param treeEditorModel
      * @param progressLayer
      */
-    public AbstractWizardView(final DomainTreeEditorModel<T> treeEditorModel, final BlockingIndefiniteProgressLayer progressLayer){
+    public AbstractWizardView(final DomainTreeEditorModel<T> treeEditorModel, final String domainEditorCaption, final BlockingIndefiniteProgressLayer progressLayer){
 	this.progressLayer = progressLayer;
-
+	this.domainEditorCaption = domainEditorCaption;
 	//Initiates wizards main parts and components.
 	this.treeEditorView = new DomainTreeEditorView<T>(treeEditorModel);
-	//TODO Implement this as the task for the ticket #347
-	//this.treeEditorView.setEditorPanelAnimated(false);
 	this.buildAction = createBuildAction();
 	this.cancelAction = createCancelAction();
 	this.actionPanel = createActionPanel();
@@ -150,7 +151,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
      * @return
      */
     protected JPanel createActionPanel() {
-	final JPanel actionPanel = new JPanel(new MigLayout("fill, insets 10", "push[fill, :100:][fill, :100:]", "[c]"));
+	final JPanel actionPanel = new JPanel(new MigLayout("fill, insets 0", "push[fill, :100:][fill, :100:]", "[c]"));
 	actionPanel.add(new JButton(getBuildAction()));
 	actionPanel.add(new JButton(getCancelAction()));
 	return actionPanel;
@@ -160,8 +161,9 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
      * Layouts the components of this wizard view.
      */
     protected void layoutComponents(){
-	setLayout(new MigLayout("fill, insets 0", "[fill, grow]", "[fill, grow][]"));
+	setLayout(new MigLayout("fill, insets 5", "[fill, grow]", "[][fill, grow][]"));
 
+	add(DummyBuilder.label(domainEditorCaption), "wrap");
 	add(getTreeEditorView(), "wrap");
 	add(getActionPanel());
     }

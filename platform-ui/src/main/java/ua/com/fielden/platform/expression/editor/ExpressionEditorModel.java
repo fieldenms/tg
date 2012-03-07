@@ -338,14 +338,14 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
      * @param function
      * @return
      */
-    protected Action getFunctionAction(final String title, final String desc, final String insertionText, final TextInsertionType insertionType, final boolean select, final int relativeIndex){
+    protected Action getFunctionAction(final String title, final String desc, final String insertionText, final TextInsertionType insertionType, final boolean select, final int selectionStartIndex, final int charNumberToSelect, final int relativeIndex){
 	final Action functionAction= new AbstractAction(title) {
 
 	    private static final long serialVersionUID = 8346239807039308077L;
 
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
-		expressionEditor.insertText(insertionText, insertionType, select, relativeIndex);
+		expressionEditor.insertText(insertionText, insertionType, select, selectionStartIndex, charNumberToSelect, relativeIndex);
 	    }
 	};
 	functionAction.putValue(Action.SHORT_DESCRIPTION, desc);
@@ -365,7 +365,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		if(isSelected){
 		    final String textToInsert = Reflector.fromAbsotule2RelativePath(getManagedEntity().getContextPath(), property);
 		    if(expressionEditor.isChecked()){
-			expressionEditor.insertText(textToInsert, TextInsertionType.REPLACE, true, textToInsert.length());
+			expressionEditor.insertText(textToInsert, TextInsertionType.REPLACE, true, 0, textToInsert.length(), textToInsert.length());
 		    }else if (originationEditor.isChecked()){
 			originationEditor.setText(textToInsert, true, textToInsert.length());
 		    }
@@ -458,7 +458,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	public void setText(final String text, final boolean select, final int relativeCaretPosition){
 	    final JTextField field = textEditor.getView();
 	    field.selectAll();
-	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, select, relativeCaretPosition);
+	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, select, 0, text.length(), relativeCaretPosition);
 	}
 
 	/**
@@ -468,8 +468,8 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	 * @param insertionType
 	 * @param select - indicates whether select inserted text or not.
 	 */
-	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int relativeCaretPosition){
-	    manualTextSetter.insertText(textToInsert, insertionType, select, relativeCaretPosition);
+	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int selectionStartIndex, final int charNumberToSelect, final int relativeCaretPosition){
+	    manualTextSetter.insertText(textToInsert, insertionType, select, selectionStartIndex, charNumberToSelect, relativeCaretPosition);
 	}
 
 	@Override
@@ -583,7 +583,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	public void setText(final String text, final boolean select, final int relativeCaretPosition){
 	    final JTextField field = textEditor.getView();
 	    field.selectAll();
-	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, select, relativeCaretPosition);
+	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, select, 0, text.length(), relativeCaretPosition);
 	}
 
 	/**
@@ -593,8 +593,8 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	 * @param insertionType
 	 * @param select - indicates whether select inserted text or not.
 	 */
-	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int relativeCaretPosition){
-	    manualTextSetter.insertText(textToInsert, insertionType, select, relativeCaretPosition);
+	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int selectionStartIndex, final int charNumberToSelect, final int relativeCaretPosition){
+	    manualTextSetter.insertText(textToInsert, insertionType, select, selectionStartIndex, charNumberToSelect, relativeCaretPosition);
 	}
 
 	@Override
@@ -695,6 +695,11 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	private int startIndex, endIndex;
 
 	/**
+	 * Determines the selection region to select after insertion.
+	 */
+	private int selectionStartIndex, charNumberToSelect;
+
+	/**
 	 * Relative index of the caret position.
 	 */
 	private int relativeCaretPosition;
@@ -747,37 +752,42 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	 * @param insertionType
 	 * @param select - indicates whether select inserted text or not.
 	 */
-	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int relativeCaretPosition){
+	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int selectionStartIndex, final int charNumberToSelect, final int relativeCaretPosition){
 	    final JTextField field = textComponent.getView();
 	    if(field.getSelectionStart() == field.getSelectionEnd()){
 		startIndex = endIndex = field.getCaretPosition();
 		this.textToInsert = textToInsert;
-		this.select = select;
-		this.relativeCaretPosition = select  ? textToInsert.length() : relativeCaretPosition;
-		if(TextInsertionType.APPLY == insertionType){
-		    this.select = false;
-		    this.relativeCaretPosition = relativeCaretPosition;
-		}
+		this.select = TextInsertionType.APPLY == insertionType ? false : select;
+		this.selectionStartIndex = selectionStartIndex;
+		this.charNumberToSelect = charNumberToSelect;
+		this.relativeCaretPosition = relativeCaretPosition;
 	    } else {
 		this.select = select;
 		switch(insertionType){
 		case APPLY:
 		    this.startIndex = field.getSelectionStart();
 		    this.endIndex = field.getSelectionEnd();
+		    this.selectionStartIndex = selectionStartIndex;
+
 		    this.textToInsert = textToInsert.substring(0, relativeCaretPosition) //
 			    /*              */+ field.getText().substring(startIndex, endIndex) + textToInsert.substring(relativeCaretPosition);
 		    this.relativeCaretPosition = this.textToInsert.length();
+		    this.charNumberToSelect = field.getText().substring(startIndex, endIndex).length() + charNumberToSelect;
 		    break;
 		case APPEND:
 		    this.startIndex = this.endIndex = field.getCaretPosition();
 		    this.textToInsert = textToInsert;
 		    this.relativeCaretPosition = relativeCaretPosition;
+		    this.selectionStartIndex = selectionStartIndex;
+		    this.charNumberToSelect = charNumberToSelect;
 		    break;
 		case REPLACE:
 		    this.startIndex = field.getSelectionStart();
 		    this.endIndex = field.getSelectionEnd();
 		    this.relativeCaretPosition = relativeCaretPosition;
 		    this.textToInsert = textToInsert;
+		    this.selectionStartIndex = selectionStartIndex;
+		    this.charNumberToSelect = charNumberToSelect;
 		    break;
 		}
 	    }
@@ -803,7 +813,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		public void postCommitAction() {
 		    if(AfterCommitActions.SELECT == afterCommitAction){
 			if(select){
-			    textField.select(startIndex, startIndex + textToInsert.length());
+			    textField.select(startIndex + selectionStartIndex, startIndex + selectionStartIndex + charNumberToSelect);
 			}else{
 			    textField.select(textField.getCaretPosition(), textField.getCaretPosition());
 			}
@@ -840,7 +850,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 			    textComponent.commit();
 			}else{
 			    if(select){
-				textField.select(startIndex, startIndex + textToInsert.length());
+				textField.select(startIndex + selectionStartIndex, startIndex + selectionStartIndex + charNumberToSelect);
 			    }else{
 				textField.select(textField.getCaretPosition(), textField.getCaretPosition());
 			    }

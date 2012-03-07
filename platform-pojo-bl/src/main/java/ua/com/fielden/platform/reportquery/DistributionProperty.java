@@ -4,7 +4,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.basic.IPropertyEnum;
 
-public class DistributionProperty implements IDistributedProperty {
+public class DistributionProperty implements IDistributedProperty{
 
     private final String name, desc, actProperty;
 

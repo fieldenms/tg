@@ -229,13 +229,14 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 		    }
 		});
 		break;
-	    case CANCEL_POST_ACTION:
+
 	    case SAVE_POST_ACTION_SUCCESSFUL:
 		//TODO must ask whether can add edited calculated property or not.
 		if (isNew) {
 		    dtme.getEnhancer().addCalculatedProperty(getEntity());
 		}
 		dtme.getEnhancer().apply();
+	    case CANCEL_POST_ACTION:
 		firePropertyProcessAction(new IPropertyProcessingAction(){
 
 		    @Override

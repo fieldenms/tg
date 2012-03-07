@@ -12,9 +12,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
-
-import org.jdesktop.swingx.JXCollapsiblePane;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorView;
 import ua.com.fielden.platform.swing.model.UmState;
@@ -30,11 +27,10 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 
     private final DomainTreeEditorModel<T> domainTreeEditorModel;
 
-    final JXCollapsiblePane editorPanel;
-    //    private final JLabel treeCaption;
+    private final ExpressionEditorView editorView;
 
     public DomainTreeEditorView(final DomainTreeEditorModel<T> domainTreeEditorModel){
-	super(new MigLayout("fill, insets 0", "[fill, grow]", "[fill, grow][fill]"));
+	super(new MigLayout("fill, insets 0", "[fill, grow]", "[fill, grow][]"));
 	this.domainTreeEditorModel = domainTreeEditorModel;
 
 	//Configuring the entities tree.
@@ -46,23 +42,9 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 	add(treePanel, "wrap");
 
 	//Configuring the expression editor.
-	final ExpressionEditorView editorView = new ExpressionEditorView(domainTreeEditorModel.getExpressionModel());
-	editorPanel = new JXCollapsiblePane(new MigLayout("fill, insets 0","[fill, grow]","[fill, grow]"));
-	editorPanel.setCollapsed(true);
-	editorPanel.add(editorView);
-	domainTreeEditorModel.addPropertyEditListener(createPropertyEditListener(editorPanel, tree));
-	add(editorPanel);
+	editorView = new ExpressionEditorView(domainTreeEditorModel.getExpressionModel());
+	domainTreeEditorModel.addPropertyEditListener(createPropertyEditListener(tree));
     }
-
-    //TODO Implement this as the task for the ticket #347
-    //    /**
-    //     * Set the specified animate flag for the collapsible editor panel.
-    //     *
-    //     * @param animate
-    //     */
-    //    public void setEditorPanelAnimated(final boolean animate){
-    //	editorPanel.setAnimated(animate);
-    //    }
 
     /**
      * Returns the associated wizard model.
@@ -79,13 +61,15 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 	return null;
     }
 
-    private IPropertyEditListener createPropertyEditListener(final JXCollapsiblePane editorPanel, final EntitiesTree2 tree) {
+    private IPropertyEditListener createPropertyEditListener(final EntitiesTree2 tree) {
 	return new IPropertyEditListener() {
 
 	    @Override
 	    public void startEdit() {
 		tree.setEditable(false);
-		editorPanel.setCollapsed(false);
+		setEditorViewVisible(true);
+		validate();
+		repaint();
 	    }
 
 	    @Override
@@ -93,7 +77,7 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 		tree.setEditable(true);
 		//TODO consider whether to start editing tree path after editor panel was collapsed!
 		//tree.startEditingAtPath(tree.getSelectionPath());
-		editorPanel.setCollapsed(true);
+		setEditorViewVisible(false);
 	    }
 	};
     }
@@ -121,6 +105,27 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 		}
 	    }
 	};
+    }
+
+    /**
+     * Shows or hide editor's panel.
+     * 
+     * @param visible
+     */
+    private void setEditorViewVisible(final boolean visible){
+	if(visible){
+	    if(editorView.getParent() == null){
+		add(editorView);
+		validate();
+		repaint();
+	    }
+	} else {
+	    if(editorView.getParent() == this){
+		remove(editorView);
+		validate();
+		repaint();
+	    }
+	}
     }
 
     /**

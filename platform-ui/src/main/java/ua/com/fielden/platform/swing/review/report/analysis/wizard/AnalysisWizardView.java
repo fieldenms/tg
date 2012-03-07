@@ -13,7 +13,7 @@ public class AnalysisWizardView<T extends AbstractEntity, DTM extends ICentreDom
     private final AbstractEntityCentre<T, DTM> owner;
 
     public AnalysisWizardView(final AbstractEntityCentre<T, DTM> owner, final DomainTreeEditorModel<T> treeEditorModel, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(treeEditorModel, progressLayer);
+	super(treeEditorModel, "Choose distribution and aggregation properties", progressLayer);
 	this.owner = owner;
     }
 

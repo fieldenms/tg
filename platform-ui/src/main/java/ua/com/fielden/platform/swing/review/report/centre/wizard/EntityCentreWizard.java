@@ -24,7 +24,7 @@ public class EntityCentreWizard<T extends AbstractEntity> extends AbstractWizard
     private static final long serialVersionUID = -1304048423695832696L;
 
     public EntityCentreWizard(final DomainTreeEditorModel<T> treeEditorModel, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(treeEditorModel, progressLayer);
+	super(treeEditorModel, "Choose properties for selection criteria and result set", progressLayer);
 	layoutComponents();
     }
 
