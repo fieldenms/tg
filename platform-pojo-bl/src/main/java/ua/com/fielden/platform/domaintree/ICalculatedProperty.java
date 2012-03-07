@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree;
 
-import ua.com.fielden.platform.basic.IPropertyEnum;
 
 /**
  * The <b>calculated property</b> represents an abstraction for an expression which could be used in queries
@@ -221,44 +220,14 @@ public interface ICalculatedProperty {
      * @author TG Team
      *
      */
-    public enum CalculatedPropertyAttribute implements IPropertyEnum{
+    public enum CalculatedPropertyAttribute{
 	/** ALL attributes for collectional expressions. */
-	ALL("All", "All"),
+	ALL(),
 	/** ANY attribute for collectional expressions. */
-	ANY("Any", "Any"),
+	ANY(),
 	/** An empty attribute for collectional expressions (and also a placeholder for other types of expressions). */
-	NO_ATTR("No attribute", "No attribute");
+	NO_ATTR();
 
-	/**
-	 * Represents the enumeration component title.
-	 */
-	private final String title;
-
-	/**
-	 * Represents the enumeration component description;
-	 */
-	private final String desc;
-
-	/**
-	 * Initiates this Calculated property component with specified title and description.
-	 * 
-	 * @param title
-	 * @param desc
-	 */
-	private CalculatedPropertyAttribute(final String title, final String desc){
-	    this.title = title;
-	    this.desc = desc;
-	}
-
-	@Override
-	public String getTooltip() {
-	    return desc;
-	}
-
-	@Override
-	public String toString() {
-	    return title;
-	}
     }
     /**
      * An attribute for a calculated property. Can be ALL or ANY (or NO_ATTR) in case of COLLECTIONAL_EXPRESSION category, otherwise should be NO_ATTR.
