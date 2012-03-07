@@ -47,18 +47,15 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
     @Override
     public Component getTreeCellEditorComponent(final JTree tree, final Object value, final boolean isSelected, final boolean expanded, final boolean leaf, final int row) {
 	final EntitiesTreeNode2 node = (EntitiesTreeNode2) value;
-	final Class<?> root = node.getUserObject().getKey();
-	final String property = node.getUserObject().getValue();
-	final Class<?> propertyType = StringUtils.isEmpty(property) ? root : PropertyTypeDeterminator.determineClass(root, property, true, true);
 	getRenderer().setButtonsVisible(false);
 	try {
-	    getTree().getEntitiesModel().getManager().getEnhancer().getCalculatedProperty(root, property);
+	    getTree().getEntitiesModel().getManager().getEnhancer().getCalculatedProperty(node.getUserObject().getKey(), node.getUserObject().getValue());
 	    getRenderer().setEditButtonVisible(true);
 	    getRenderer().setCopyButtonVisible(true);
 	    getRenderer().setRemoveButtonVisible(true);
 
 	} catch (final IncorrectCalcPropertyKeyException ex){
-	    if(EntityUtils.isEntityType(propertyType)){
+	    if(EntityUtils.isEntityType(propertyType(node))){
 		getRenderer().setNewButtonVisible(true);
 	    }
 	}
@@ -93,16 +90,20 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 		    return false;
 		}
 		final Object lastComponent = path.getLastPathComponent();
-		final EntitiesTreeNode2 node = (EntitiesTreeNode2) lastComponent;
-		final Class<?> root = node.getUserObject().getKey();
-		final String property = node.getUserObject().getValue();
-		final Class<?> propertyType = StringUtils.isEmpty(property) ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-		if(EntityUtils.isEntityType(propertyType)){
+		final EntitiesTreeNode2 node = (EntitiesTreeNode2) lastComponent;		
+		if(EntityUtils.isEntityType(propertyType(node))){
 		    return true;
 		}
 		return false;
 	    }
 	}
 	return false;
+    }
+    
+    protected Class<?> propertyType(final EntitiesTreeNode2 node) {
+	final Class<?> enhancedRoot = getTree().getEntitiesModel().getManager().getEnhancer().getManagedType(node.getUserObject().getKey());
+	final String property = node.getUserObject().getValue();
+	final Class<?> propertyType = StringUtils.isEmpty(property) ? enhancedRoot : PropertyTypeDeterminator.determinePropertyType(enhancedRoot, property);
+	return propertyType;
     }
 }

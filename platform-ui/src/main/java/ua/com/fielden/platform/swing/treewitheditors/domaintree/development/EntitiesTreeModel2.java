@@ -139,12 +139,13 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	final EntitiesTreeNode2 parentNode = StringUtils.isEmpty(property) ? rootNode //
 		: !PropertyTypeDeterminator.isDotNotation(property) ? node(root, "", true) //
 			: node(root, PropertyTypeDeterminator.penultAndLast(property).getKey(), true);
-		final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
-		nodesCache.put(AbstractDomainTree.key(root, property), node);
-		if (isNotDummyAndNotCommonProperty(property)) {
-		    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
-		}
-		parentNode.add(node);
+	final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
+	nodesCache.put(AbstractDomainTree.key(root, property), node);
+	if (isNotDummyAndNotCommonProperty(property)) {
+	    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
+	}
+	// TODO check: parentNode.add(node);
+	this.insertNodeInto(node, parentNode, parentNode.getChildCount());
     }
 
     protected boolean isNotDummyAndNotCommonProperty(final String property) {
@@ -158,7 +159,8 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      * @param property
      */
     private void removeNode(final Class<?> root, final String property) {
-	node(root, property, true).removeFromParent();
+	// TODO check: node(root, property, true).removeFromParent();
+	this.removeNodeFromParent(node(root, property, true));
 	nodesCache.remove(AbstractDomainTree.key(root, property));
 	if (isNotDummyAndNotCommonProperty(property)) {
 	    nodesForSimplePropertiesCache.remove(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)));

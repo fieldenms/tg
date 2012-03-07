@@ -185,6 +185,8 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
      *
      */
     private class ExpressionEditorModelForWizard extends ExpressionEditorModel{
+	
+	private boolean isNew;
 
 	public ExpressionEditorModelForWizard(final CalculatedProperty entity, final ILightweightPropertyBinder<CalculatedProperty> propertyBinder) {
 	    super(entity, propertyBinder);
@@ -201,6 +203,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 		    if(EntityUtils.isEntityType(propertyType)){
 			final CalculatedProperty entity = CalculatedProperty.createEmpty(factory, rootType, propertySelectionModel.getSelectedProperty(), /* null, null, null, CalculatedPropertyAttribute.NO_ATTR, null, */ dtme.getEnhancer());
 			setEntity(entity);
+			isNew = true;
 		    } else {
 			throw new IllegalStateException("The context property can not have type different then entity type!");
 		    }
@@ -211,6 +214,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	    case EDIT_ACTION:
 		if(canEdit()){
 		    setEntity((CalculatedProperty)dtme.getEnhancer().getCalculatedProperty(rootType, propertySelectionModel.getSelectedProperty()));
+		    isNew = false;
 		} else {
 		    throw new IllegalStateException("Please select generated property first to edit it");
 		}
@@ -228,7 +232,9 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	    case CANCEL_POST_ACTION:
 	    case SAVE_POST_ACTION_SUCCESSFUL:
 		//TODO must ask whether can add edited calculated property or not.
-		dtme.getEnhancer().addCalculatedProperty(getEntity());
+		if (isNew) {
+		    dtme.getEnhancer().addCalculatedProperty(getEntity());
+		}
 		dtme.getEnhancer().apply();
 		firePropertyProcessAction(new IPropertyProcessingAction(){
 
