@@ -10,8 +10,4 @@ public class PrimitiveResultQueryModel extends SingleResultQueryModel {
     public PrimitiveResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
 	super(tokens);
     }
-
-    public PrimitiveResultQueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<?> entityType) {
-	super(tokens, entityType);
-    }
 }

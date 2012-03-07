@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 public class DefaultFilter implements IFilter {
 
      @Override
-    public <T extends AbstractEntity> EntityResultQueryModel<T> enhance(final Class<T> entityType, final String username) {
+    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> enhance(final Class<T> entityType, final String username) {
 	return null;
     }
 }

@@ -13,13 +13,8 @@ class SubsequentCompletedAndYielded extends CompletedCommon implements ISubseque
 	super(queryTokens);
     }
 
-//    @Override
-//    public <T extends AbstractEntity> UnorderedQueryModel model() {
-//	return new UnorderedQueryModel(getTokens());
-//    }
-
     @Override
-    public <T extends AbstractEntity> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
+    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
 	return new EntityResultQueryModel<T>(getTokens().getTokens(), resultType);
     }
 

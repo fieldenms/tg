@@ -20,7 +20,7 @@ import ua.com.fielden.platform.pagination.IPage;
  * @author TG Team
  *
  */
-public interface IEntityDao2<T extends AbstractEntity> {
+public interface IEntityDao2<T extends AbstractEntity<?>> {
     static final int DEFAULT_PAGE_CAPACITY = 25;
 
     /**

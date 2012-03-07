@@ -56,6 +56,36 @@ public class MappingsGenerator {
     private final Map<Class, Class> hibTypesDefaults = new HashMap<Class, Class>();
     private Injector hibTypesInjector;
     private final DdlGenerator ddlGenerator = new DdlGenerator();
+    private Map<Class, SortedMap<String, PropertyPersistenceInfo>> hibTypeInfosMap = new HashMap<Class, SortedMap<String, PropertyPersistenceInfo>>();
+    final List<Class<? extends AbstractEntity>> entityTypes;
+
+    public MappingsGenerator(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity>> entityTypes) {
+	if (hibTypesDefaults != null) {
+	    this.hibTypesDefaults.putAll(hibTypesDefaults);
+	}
+	this.hibTypesInjector = hibTypesInjector;
+	this.entityTypes = entityTypes;
+	for (final Class<? extends AbstractEntity> entityType : entityTypes) {
+	    try {
+		final Set<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
+		final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
+		result.addAll(ppis);
+		result.addAll(generatePPIsForCompositeTypeProps(ppis));
+		hibTypeInfosMap.put(entityType, getMap(result));
+	    } catch (final Exception e) {
+		e.printStackTrace();
+	    }
+	}
+    }
+
+    private Set<PropertyPersistenceInfo> generatePPIsForCompositeTypeProps(final Set<PropertyPersistenceInfo> ppis) {
+	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
+	for (final PropertyPersistenceInfo ppi : ppis) {
+	    result.addAll(ppi.getCompositeTypeSubprops());
+	}
+	return result;
+    }
+
 
     public Object getBooleanValue(final boolean value) {
 	final Class booleanHibClass = hibTypesDefaults.get(boolean.class);
@@ -71,12 +101,6 @@ public class MappingsGenerator {
 
 	throw new IllegalStateException("No appropriate converting hib type found for java boolean type");
     }
-
-    /**
-     * Just for convenience of search.
-     */
-    private Map<Class, SortedMap<String, PropertyPersistenceInfo>> hibTypeInfosMap = new HashMap<Class, SortedMap<String, PropertyPersistenceInfo>>();
-    final List<Class<? extends AbstractEntity>> entityTypes;
 
     public String getTableClause(final Class entityType) {
 	return ddlGenerator.getTableClause(entityType);
@@ -129,25 +153,6 @@ public class MappingsGenerator {
 	}
     }
 
-    public MappingsGenerator(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity>> entityTypes) {
-	if (hibTypesDefaults != null) {
-	    this.hibTypesDefaults.putAll(hibTypesDefaults);
-	}
-	this.hibTypesInjector = hibTypesInjector;
-	this.entityTypes = entityTypes;
-	for (final Class<? extends AbstractEntity> entityType : entityTypes) {
-	    try {
-		final Set<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
-		final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
-		result.addAll(ppis);
-		result.addAll(generatePPIsForCompositeTypeProps(ppis));
-		hibTypeInfosMap.put(entityType, getMap(result));
-	    } catch (final Exception e) {
-		e.printStackTrace();
-	    }
-	}
-    }
-
     private SortedMap<String, PropertyPersistenceInfo> getMap(final Set<PropertyPersistenceInfo> collection) {
 	final SortedMap<String, PropertyPersistenceInfo> result = new TreeMap<String, PropertyPersistenceInfo>();
 	for (final PropertyPersistenceInfo propertyPersistenceInfo : collection) {
@@ -158,10 +163,6 @@ public class MappingsGenerator {
 
     public Collection<PropertyPersistenceInfo> getEntityPPIs(final Class entityType) {
 	return hibTypeInfosMap.get(entityType).values();
-    }
-
-    public MappingsGenerator(final List<Class<? extends AbstractEntity>> entityTypes) {
-	this(null, null, entityTypes);
     }
 
     public String generateMappings() {
@@ -313,14 +314,6 @@ public class MappingsGenerator {
 		final PropertyPersistenceInfo ppi = getCommonPropHibInfo(entityType, field);
 		result.add(ppi);
 	    }
-	}
-	return result;
-    }
-
-    private Set<PropertyPersistenceInfo> generatePPIsForCompositeTypeProps(final Set<PropertyPersistenceInfo> ppis) {
-	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
-	for (final PropertyPersistenceInfo ppi : ppis) {
-	    result.addAll(ppi.getCompositeTypeSubprops());
 	}
 	return result;
     }

@@ -62,7 +62,7 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
  * @param <K>
  *            -- entitie's key type
  */
-public abstract class CommonEntityDao2<T extends AbstractEntity> extends AbstractEntityDao2<T> {
+public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends AbstractEntityDao2<T> {
 
     private Logger logger = Logger.getLogger(this.getClass());
 

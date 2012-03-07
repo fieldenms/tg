@@ -9,7 +9,7 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 public class SimpleUserFilter implements IFilter {
 
     @Override
-    public <T extends AbstractEntity> EntityResultQueryModel<T> enhance(final Class<T> entityType, final String username) {
+    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> enhance(final Class<T> entityType, final String username) {
 	return (EntityResultQueryModel<T>) (entityType.equals(TgVehicle.class) ? select(entityType).where().prop("key").notLike().val("A%").model() : null);
     }
 }

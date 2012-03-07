@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 
 import com.google.inject.ImplementedBy;
 
@@ -16,5 +17,5 @@ import com.google.inject.ImplementedBy;
 @ImplementedBy(DefaultFilter.class)
 public interface IFilter {
 
-    <T extends AbstractEntity> EntityResultQueryModel<T> enhance(Class<T> entityType, final String username);
+    <T extends AbstractEntity<?>> EntityResultQueryModel<T> enhance(Class<T> entityType, final String username);
 }

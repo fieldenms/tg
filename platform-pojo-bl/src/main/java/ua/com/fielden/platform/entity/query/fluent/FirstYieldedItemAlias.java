@@ -19,7 +19,7 @@ public class FirstYieldedItemAlias<T> extends AbstractQueryLink implements IFirs
     }
 
     @Override
-    public <ET extends AbstractEntity> EntityResultQueryModel<ET> modelAsEntity(final Class<ET> entityType) {
+    public <ET extends AbstractEntity<?>> EntityResultQueryModel<ET> modelAsEntity(final Class<ET> entityType) {
 	return new EntityResultQueryModel<ET>(getTokens().getTokens(), entityType);
     }
 

@@ -2,12 +2,13 @@ package ua.com.fielden.platform.entity.query.model;
 
 import java.util.List;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
 public abstract class QueryModel {
     private final List<Pair<TokenCategory, Object>> tokens;
-    private Class resultType;
+    private Class<? extends AbstractEntity<?>> resultType;
 
     @Override
     public String toString() {
@@ -18,7 +19,7 @@ public abstract class QueryModel {
 	this.tokens = tokens;
     }
 
-    public QueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class resultType) {
+    public QueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<? extends AbstractEntity<?>> resultType) {
 	this(tokens);
 	this.resultType = resultType;
     }
@@ -66,7 +67,7 @@ public abstract class QueryModel {
 	return true;
     }
 
-    public Class getResultType() {
+    public Class<? extends AbstractEntity<?>> getResultType() {
         return resultType;
     }
 }

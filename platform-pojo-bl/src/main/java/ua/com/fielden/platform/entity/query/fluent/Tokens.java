@@ -42,11 +42,6 @@ final class Tokens {
 	return add(cat2, value2);
     }
 
-    private Tokens add(final TokenCategory cat1, final Object value1, final TokenCategory cat2, final Object value2, final TokenCategory cat3, final Object value3) {
-	add(cat1, value1, cat2, value2);
-	return add(cat3, value3);
-    }
-
     private List<Object> getListFromArray(final Object... items) {
 	final List<Object> result = new ArrayList<Object>();
 	if (items != null) {
@@ -379,11 +374,11 @@ final class Tokens {
 	return add(TokenCategory.QUERY_TOKEN, QueryTokens.ORDER_BY);
     }
 
-    public <E extends AbstractEntity> Tokens joinAlias(final String alias) {
+    public Tokens joinAlias(final String alias) {
 	return add(TokenCategory.QRY_SOURCE_ALIAS, alias);
     }
 
-    public <E extends AbstractEntity> Tokens from(final Class<E> entityType) {
+    public <E extends AbstractEntity<?>> Tokens from(final Class<E> entityType) {
 	return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
@@ -395,7 +390,7 @@ final class Tokens {
 	}
     }
 
-    public Tokens from(final EntityResultQueryModel... sourceModels) {
+    public Tokens from(final EntityResultQueryModel<? extends AbstractEntity<?>>... sourceModels) {
 	if (sourceModels.length >= 1) {
 	    return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
@@ -403,15 +398,15 @@ final class Tokens {
 	}
     }
 
-    public <E extends AbstractEntity> Tokens innerJoin(final Class<E> entityType) {
+    public <E extends AbstractEntity<?>> Tokens innerJoin(final Class<E> entityType) {
 	return add(TokenCategory.JOIN_TYPE, JoinType.IJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
-    public <E extends AbstractEntity> Tokens leftJoin(final Class<E> entityType) {
+    public <E extends AbstractEntity<?>> Tokens leftJoin(final Class<E> entityType) {
 	return add(TokenCategory.JOIN_TYPE, JoinType.LJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
-    public <E extends AbstractEntity> Tokens innerJoin(final AggregatedResultQueryModel... sourceModels) {
+    public <E extends AbstractEntity<?>> Tokens innerJoin(final AggregatedResultQueryModel... sourceModels) {
 	if (sourceModels.length >= 1) {
 	    return add(TokenCategory.JOIN_TYPE, JoinType.IJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
@@ -419,7 +414,7 @@ final class Tokens {
 	}
     }
 
-    public <E extends AbstractEntity> Tokens innerJoin(final EntityResultQueryModel<E>... sourceModels) {
+    public <E extends AbstractEntity<?>> Tokens innerJoin(final EntityResultQueryModel<E>... sourceModels) {
 	if (sourceModels.length >= 1) {
 	    return add(TokenCategory.JOIN_TYPE, JoinType.IJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
@@ -427,7 +422,7 @@ final class Tokens {
 	}
     }
 
-    public <E extends AbstractEntity> Tokens leftJoin(final AggregatedResultQueryModel... sourceModels) {
+    public <E extends AbstractEntity<?>> Tokens leftJoin(final AggregatedResultQueryModel... sourceModels) {
 	if (sourceModels.length >= 1) {
 	    return add(TokenCategory.JOIN_TYPE, JoinType.LJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
@@ -435,7 +430,7 @@ final class Tokens {
 	}
     }
 
-    public <E extends AbstractEntity> Tokens leftJoin(final EntityResultQueryModel<E>... sourceModels) {
+    public <E extends AbstractEntity<?>> Tokens leftJoin(final EntityResultQueryModel<E>... sourceModels) {
 	if (sourceModels.length >= 1) {
 	    return add(TokenCategory.JOIN_TYPE, JoinType.LJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {

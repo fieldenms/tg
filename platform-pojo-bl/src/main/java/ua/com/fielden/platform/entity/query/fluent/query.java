@@ -8,15 +8,15 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class query {
-    public static <T extends AbstractEntity> IFromAlias select(final Class<T> entityType) {
+    public static <T extends AbstractEntity<?>> IFromAlias select(final Class<T> entityType) {
 	return new FromAlias((new Tokens()).from(entityType));
     }
 
-    public static <T extends AbstractEntity> IFromAlias select(final EntityResultQueryModel<T>... sourceQueryModels) {
+    public static <T extends AbstractEntity<?>> IFromAlias select(final EntityResultQueryModel<T>... sourceQueryModels) {
 	return new FromAlias((new Tokens()).from(sourceQueryModels));
     }
 
-    public static <T extends AbstractEntity> IFromAlias select(final AggregatedResultQueryModel... sourceQueryModels) {
+    public static <T extends AbstractEntity<?>> IFromAlias select(final AggregatedResultQueryModel... sourceQueryModels) {
 	return new FromAlias((new Tokens()).from(sourceQueryModels));
     }
 

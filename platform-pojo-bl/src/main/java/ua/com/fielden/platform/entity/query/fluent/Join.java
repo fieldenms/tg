@@ -13,12 +13,12 @@ class Join extends PlainJoin implements IJoin {
     }
 
     @Override
-    public <T extends AbstractEntity> IJoinAlias join(final Class<T> entityType) {
+    public <T extends AbstractEntity<?>> IJoinAlias join(final Class<T> entityType) {
 	return new JoinAlias(getTokens().innerJoin(entityType));
     }
 
     @Override
-    public <T extends AbstractEntity> IJoinAlias leftJoin(final Class<T> entityType) {
+    public <T extends AbstractEntity<?>> IJoinAlias leftJoin(final Class<T> entityType) {
 	return new JoinAlias(getTokens().leftJoin(entityType));
     }
 
@@ -28,7 +28,7 @@ class Join extends PlainJoin implements IJoin {
     }
 
     @Override
-    public <T extends AbstractEntity> IJoinAlias join(final EntityResultQueryModel<T> model) {
+    public <T extends AbstractEntity<?>> IJoinAlias join(final EntityResultQueryModel<T> model) {
 	return new JoinAlias(getTokens().innerJoin(model));
     }
 
@@ -38,7 +38,7 @@ class Join extends PlainJoin implements IJoin {
     }
 
     @Override
-    public <T extends AbstractEntity> IJoinAlias leftJoin(final EntityResultQueryModel<T> model) {
+    public <T extends AbstractEntity<?>> IJoinAlias leftJoin(final EntityResultQueryModel<T> model) {
 	return new JoinAlias(getTokens().leftJoin(model));
     }
 

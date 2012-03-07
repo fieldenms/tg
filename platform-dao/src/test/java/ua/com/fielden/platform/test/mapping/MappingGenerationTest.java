@@ -16,7 +16,7 @@ public class MappingGenerationTest {
     public void dump_mapping_for_type_wity_byte_array_property() {
 	final List<Class<? extends AbstractEntity>> domainTypes = new ArrayList<Class<? extends AbstractEntity>>();
 	domainTypes.add(EntityCentreConfig.class);
-	final MappingsGenerator mg = new MappingsGenerator(domainTypes);
+	final MappingsGenerator mg = new MappingsGenerator(null, null, domainTypes);
 	final String tgModelMapping = mg.generateMappings();
 	final String expectedMapping =
 			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +

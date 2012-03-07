@@ -11,7 +11,7 @@ class CompletedCommon extends AbstractQueryLink implements ICompletedCommon {
 	super(queryTokens);
     }
 
-    public <T extends AbstractEntity> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
+    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
 	return new EntityResultQueryModel<T>(getTokens().getTokens(), resultType);
     }
 

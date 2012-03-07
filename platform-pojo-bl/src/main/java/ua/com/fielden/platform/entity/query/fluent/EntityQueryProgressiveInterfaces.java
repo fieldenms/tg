@@ -188,7 +188,7 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IFirstYieldedItemAlias<T> {
         T as(String alias);
-        <E extends AbstractEntity> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
+        <E extends AbstractEntity<?>> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
         PrimitiveResultQueryModel modelAsPrimitive();
     }
 
@@ -218,13 +218,13 @@ public interface EntityQueryProgressiveInterfaces {
 
     public interface IJoin extends IPlainJoin {
 
-        <T extends AbstractEntity> IJoinAlias join(final Class<T> entityType);
+        <T extends AbstractEntity<?>> IJoinAlias join(final Class<T> entityType);
 
-        <T extends AbstractEntity> IJoinAlias leftJoin(final Class<T> entityType);
+        <T extends AbstractEntity<?>> IJoinAlias leftJoin(final Class<T> entityType);
 
-        <T extends AbstractEntity> IJoinAlias join(final EntityResultQueryModel<T> model);
+        <T extends AbstractEntity<?>> IJoinAlias join(final EntityResultQueryModel<T> model);
 
-        <T extends AbstractEntity> IJoinAlias leftJoin(final EntityResultQueryModel<T> model);
+        <T extends AbstractEntity<?>> IJoinAlias leftJoin(final EntityResultQueryModel<T> model);
 
         IJoinAlias join(final AggregatedResultQueryModel model);
 
@@ -255,7 +255,7 @@ public interface EntityQueryProgressiveInterfaces {
     public interface ICompletedAndYielded extends ICompletedCommon {
         IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded>> yield();
         //////////////////// RETURN /////////////////////////
-        <T extends AbstractEntity>  EntityResultQueryModel<T> model();
+        <T extends AbstractEntity<?>>  EntityResultQueryModel<T> model();
     }
 
     public interface ISubsequentCompletedAndYielded extends ICompletedCommon{
@@ -264,7 +264,7 @@ public interface EntityQueryProgressiveInterfaces {
 
     public interface ICompletedCommon {
         //////////////////// RETURN /////////////////////////
-        <T extends AbstractEntity> EntityResultQueryModel<T> modelAsEntity(Class<T> resultType);
+        <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(Class<T> resultType);
         AggregatedResultQueryModel modelAsAggregate();
     }
 

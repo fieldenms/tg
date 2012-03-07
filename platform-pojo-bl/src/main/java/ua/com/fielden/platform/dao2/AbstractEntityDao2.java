@@ -23,7 +23,7 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
  * @author TG Team
  *
  */
-public abstract class AbstractEntityDao2<T extends AbstractEntity> implements IEntityDao2<T> {
+public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements IEntityDao2<T> {
 
     private final static String ID_PROPERTY_NAME = "id";
     private final Class<? extends Comparable> keyType;
@@ -109,7 +109,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity> implements IE
      * @param keyValues
      * @return
      */
-    protected EntityResultQueryModel createQueryByKey(final Object... keyValues) {
+    protected EntityResultQueryModel<T> createQueryByKey(final Object... keyValues) {
 	final IPlainJoin qry = select(getEntityType());
 
 	if (getKeyType() == DynamicEntityKey.class) {
@@ -134,10 +134,6 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity> implements IE
 	    return cc.model();
 	} else if (keyValues.length != 1) {
 	    throw new IllegalArgumentException("Only one key value is expected instead of " + keyValues.length + " when looking for an entity by a non-composite key.");
-	} else if (AbstractEntity.class.isAssignableFrom(getKeyType())) {
-	    return qry//
-		    .where().prop("key")// .id
-		    .eq().val(((AbstractEntity) keyValues[0]).getId()).model();
 	} else {
 	    return qry//
 		    .where().prop("key")//
