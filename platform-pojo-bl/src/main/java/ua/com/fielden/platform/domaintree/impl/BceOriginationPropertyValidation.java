@@ -27,6 +27,9 @@ public class BceOriginationPropertyValidation implements IBeforeChangeEventHandl
 	    return cp.validateRootAndContext();
 	}
 
+	if (newOriginationProperty == null) {
+	    return new IncorrectCalcPropertyKeyException("The origination property cannot be null.");
+	}
 	// check if the "originationProperty" is correct in context of "contextType":
 	if (property.isRequired() && StringUtils.isEmpty(newOriginationProperty)) {
 	    return new IncorrectCalcPropertyKeyException("The origination property cannot be empty for Aggregated Expressions. It is required to ");

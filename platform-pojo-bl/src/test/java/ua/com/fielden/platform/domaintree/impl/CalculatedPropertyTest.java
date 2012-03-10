@@ -121,7 +121,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected void incorrectCalculatedPropertyCreationWithRoot(final Class<?> root) {
 	final CalculatedProperty cp = CalculatedProperty.createEmpty(factory(), root, "", dtm().getEnhancer());
-	checkTrivialParams(cp, Class.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, null);
+	checkTrivialParams(cp, Class.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, "");
 
 	final String message = "The creation of calc prop with root [" + root + "] should be failed.";
 	assertNotNull(message, cp.isValid());
@@ -132,7 +132,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected void incorrectCalculatedPropertyCreationWithContextPath(final String contextPath) {
 	final CalculatedProperty cp = CalculatedProperty.createEmpty(factory(), MasterEntity.class, contextPath, dtm().getEnhancer());
-	checkTrivialParams(cp, MasterEntity.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, null);
+	checkTrivialParams(cp, MasterEntity.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, "");
 
 	final String message = "The creation of calc prop with contextPath [" + contextPath + "] should be failed.";
 	assertNotNull(message, cp.isValid());
@@ -178,16 +178,16 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath) {
 	final CalculatedProperty calc = CalculatedProperty.createEmpty(factory(), root, contextPath, dtm().getEnhancer());
-	checkTrivialParams(calc, root, contextPath, null, null, null, CalculatedPropertyAttribute.NO_ATTR, null);
+	checkTrivialParams(calc, root, contextPath, null, null, null, CalculatedPropertyAttribute.NO_ATTR, "");
 	return calc;
     }
 
     @Test
     public void test_that_creation_of_calc_properties_with_undefined_level_will_add_them_into_provided_context() {
 	// properties like "2 * 3 -17"
-	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * 3 -17", "Calc", "Desc", CalculatedPropertyAttribute.NO_ATTR, null), EXPRESSION, "calc", "", "calc", MasterEntity.class, MasterEntity.class, Integer.class);
-	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp", "2 * 3 -17", "Calc", "Desc", CalculatedPropertyAttribute.NO_ATTR, null), EXPRESSION, "calc", "entityProp", "entityProp.calc", SlaveEntity.class, SlaveEntity.class, Integer.class);
-	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection", "2 * 3 -17", "Calc", "Desc", CalculatedPropertyAttribute.NO_ATTR, null), COLLECTIONAL_EXPRESSION, "calc", "entityProp.collection", "entityProp.collection.calc", EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * 3 -17", "Calc", "Desc", CalculatedPropertyAttribute.NO_ATTR, ""), EXPRESSION, "calc", "", "calc", MasterEntity.class, MasterEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp", "2 * 3 -17", "Calc", "Desc", CalculatedPropertyAttribute.NO_ATTR, ""), EXPRESSION, "calc", "entityProp", "entityProp.calc", SlaveEntity.class, SlaveEntity.class, Integer.class);
+	assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection", "2 * 3 -17", "Calc", "Desc", CalculatedPropertyAttribute.NO_ATTR, ""), COLLECTIONAL_EXPRESSION, "calc", "entityProp.collection", "entityProp.collection.calc", EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
     }
 
     @Test
@@ -426,7 +426,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected void incorrectCalculatedPropertyCreationWithOriginationProperty(final String originationProperty, final String contextualExpression) {
 	final CalculatedProperty cp = CalculatedProperty.create(factory(), MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, originationProperty, dtm().getEnhancer());
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, null);
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, "");
 
 	final String message = "The creation of calc prop with originationProperty [" + originationProperty + "] should be failed.";
 	assertNotNull(message, cp.isValid());
@@ -451,7 +451,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     @Test
     public void test_origination_property_application() {
-	correctCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp");
+	incorrectCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp");
 	correctCalculatedPropertyCreationWithOriginationProperty("", "2 * integerProp");
 	incorrectCalculatedPropertyCreationWithOriginationProperty(null, "MAX(2 * integerProp)");
 	incorrectCalculatedPropertyCreationWithOriginationProperty("", "MAX(2 * integerProp)");
@@ -461,12 +461,13 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	correctCalculatedPropertyCreationWithOriginationProperty("entityProp.integerProp", "MAX(2 * integerProp * entityProp.integerProp)");
 	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("integerProp", "MAX(2 * moneyProp)");
 	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("entityProp.integerProp", "MAX(2 * integerProp * entityProp.moneyProp)");
-	correctCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp * entityProp.moneyProp");
+	incorrectCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp * entityProp.moneyProp");
+	correctCalculatedPropertyCreationWithOriginationProperty("", "2 * integerProp * entityProp.moneyProp");
     }
 
     @Test
     public void test_origination_property_application_with_context_outsiders() {
-	correctCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp - ←.integerProp");
+	incorrectCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp - ←.integerProp");
 	correctCalculatedPropertyCreationWithOriginationProperty("", "2 * integerProp - ←.integerProp");
 	incorrectCalculatedPropertyCreationWithOriginationProperty(null, "MAX(2 * integerProp - ←.integerProp)");
 	incorrectCalculatedPropertyCreationWithOriginationProperty("", "MAX(2 * integerProp - ←.integerProp)");
@@ -476,6 +477,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	correctCalculatedPropertyCreationWithOriginationProperty("entityProp.integerProp", "MAX(2 * integerProp * entityProp.integerProp - ←.integerProp)");
 	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("←.moneyProp", "MAX(2 * moneyProp - ←.integerProp)");
 	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("←.moneyProp", "MAX(2 * integerProp * entityProp.moneyProp - ←.integerProp)");
-	correctCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp * entityProp.moneyProp - ←.integerProp");
+	incorrectCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp * entityProp.moneyProp - ←.integerProp");
+	correctCalculatedPropertyCreationWithOriginationProperty("", "2 * integerProp * entityProp.moneyProp - ←.integerProp");
     }
 }

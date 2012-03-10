@@ -3,6 +3,9 @@ package ua.com.fielden.platform.domaintree.impl;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
+
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
@@ -20,6 +23,10 @@ public class BceContextualExpressionValidation implements IBeforeChangeEventHand
 
 	if (cp.validateRootAndContext() != null) {
 	    return cp.validateRootAndContext();
+	}
+	
+	if (StringUtils.isEmpty(newContextualExpression)) {
+	    throw new IncorrectCalcPropertyKeyException("The expression cannot be empty.");
 	}
 
 	try {

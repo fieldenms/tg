@@ -96,7 +96,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     @CompositeKeyMember(6)
     @Title(value = "Origination property", desc = "A property from which this calculated property has been originated.")
     @BeforeChange(@Handler(BceOriginationPropertyValidation.class))
-    private String originationProperty; // required only for AGGREGATED_EXPRESSIONs which represent Totals and should be assigned to some "original" property
+    private String originationProperty = ""; // required only for AGGREGATED_EXPRESSIONs which represent Totals and should be assigned to some "original" property
 
     // Inferred stuff
     private /* final */ transient Class<?> contextType;
@@ -398,6 +398,9 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 
 	if (!calc.isValid().isSuccessful()) {
 	    throw calc.isValid();
+	}
+	if (calc.category() == null) {
+	    throw new IncorrectCalcPropertyKeyException("The category of calculated property cannot be null.");
 	}
 
         return calc;
