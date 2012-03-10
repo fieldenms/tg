@@ -8,11 +8,11 @@ import java.util.List;
 public class EntValue implements ISingleOperand {
     private final Object value;
     private final boolean ignoreNull;
-    private String paramName;
+    private String sqlParamName;
 
     @Override
     public String sql() {
-	return paramName != null ? ":" + paramName : value.toString();
+	return sqlParamName != null ? ":" + sqlParamName : value.toString();
     }
 
     public EntValue(final Object value) {
@@ -80,12 +80,12 @@ public class EntValue implements ISingleOperand {
 	return value != null ? value.getClass() : null;
     }
 
-    public String getParamName() {
-        return paramName;
+    public String getSqlParamName() {
+        return sqlParamName;
     }
 
-    public void setParamName(final String paramName) {
-        this.paramName = paramName;
+    public void setSqlParamName(final String sqlParamName) {
+        this.sqlParamName = sqlParamName;
     }
 
     public Object getValue() {

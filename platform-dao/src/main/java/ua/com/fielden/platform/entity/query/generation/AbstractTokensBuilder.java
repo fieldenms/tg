@@ -11,8 +11,8 @@ import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
-import ua.com.fielden.platform.entity.query.generation.elements.EntSet;
-import ua.com.fielden.platform.entity.query.generation.elements.EntSetFromQryModel;
+import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
+import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSet;
 import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.ISetOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
@@ -296,7 +296,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	    singleCat = TokenCategory.EXPR_TOKENS;
 	    break;
 	case EQUERY_TOKENS:
-	    return new EntSetFromQryModel((EntQuery) getModelForSingleOperand(cat, value));
+	    return new QueryBasedSet((EntQuery) getModelForSingleOperand(cat, value));
 	default:
 	    throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
 	}
@@ -307,7 +307,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	    result.add(getModelForSingleOperand(singleCat, singleValue));
 	}
 
-	return new EntSet(result);
+	return new OperandsBasedSet(result);
     }
 
     protected ISingleOperand getModelForSingleOperand(final Pair<TokenCategory, Object> pair) {

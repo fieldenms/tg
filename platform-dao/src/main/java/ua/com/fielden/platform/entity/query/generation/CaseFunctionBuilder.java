@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.query.generation;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.CaseFunctionModel;
+import ua.com.fielden.platform.entity.query.generation.elements.CaseWhen;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.utils.Pair;
@@ -25,7 +25,7 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
 	return getChild() == null;
     }
 
-    public CaseFunctionModel getModel() {
+    public CaseWhen getModel() {
 //	if (getChild() != null) {
 //	    throw new RuntimeException("Unable to produce result - unfinished model state!");
 //	}
@@ -36,7 +36,7 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
 //	    final CompoundConditionModel subsequentCompoundCondition = (CompoundConditionModel) iterator.next().getValue();
 //	    otherConditions.add(subsequentCompoundCondition);
 //	}
-	return new CaseFunctionModel((ICondition) firstValue(), (ISingleOperand) secondValue());
+	return new CaseWhen((ICondition) firstValue(), (ISingleOperand) secondValue());
     }
 
     @Override

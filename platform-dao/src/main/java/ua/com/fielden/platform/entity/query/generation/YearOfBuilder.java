@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.YearOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.YearOf;
 
 public class YearOfBuilder extends OneArgumentFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class YearOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new YearOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new YearOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

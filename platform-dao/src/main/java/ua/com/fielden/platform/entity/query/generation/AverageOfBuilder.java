@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.AverageOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.AverageOf;
 
 public class AverageOfBuilder extends OneArgumentFunctionBuilder {
     private final boolean distinct;
@@ -13,6 +13,6 @@ public class AverageOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new AverageOfModel(getModelForSingleOperand(firstCat(), firstValue()), distinct);
+	return new AverageOf(getModelForSingleOperand(firstCat(), firstValue()), distinct);
     }
 }

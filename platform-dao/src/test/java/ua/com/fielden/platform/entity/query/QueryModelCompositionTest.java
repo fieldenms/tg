@@ -16,35 +16,35 @@ import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryCompositionTCase;
-import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTestModel;
-import ua.com.fielden.platform.entity.query.generation.elements.CompoundConditionModel;
+import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
+import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundSingleOperand;
-import ua.com.fielden.platform.entity.query.generation.elements.ConditionsModel;
-import ua.com.fielden.platform.entity.query.generation.elements.DayOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.Conditions;
+import ua.com.fielden.platform.entity.query.generation.elements.DayOf;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQueryCompoundSourceModel;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourceFromEntityType;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuerySourceFromQueryModel;
-import ua.com.fielden.platform.entity.query.generation.elements.EntSetFromQryModel;
+import ua.com.fielden.platform.entity.query.generation.elements.CompoundSource;
+import ua.com.fielden.platform.entity.query.generation.elements.TypeBasedSource;
+import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSource;
+import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSet;
 import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
-import ua.com.fielden.platform.entity.query.generation.elements.ExistenceTestModel;
+import ua.com.fielden.platform.entity.query.generation.elements.ExistenceTest;
 import ua.com.fielden.platform.entity.query.generation.elements.Expression;
-import ua.com.fielden.platform.entity.query.generation.elements.GroupModel;
-import ua.com.fielden.platform.entity.query.generation.elements.GroupsModel;
-import ua.com.fielden.platform.entity.query.generation.elements.LikeTestModel;
-import ua.com.fielden.platform.entity.query.generation.elements.MonthOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.GroupBy;
+import ua.com.fielden.platform.entity.query.generation.elements.GroupBys;
+import ua.com.fielden.platform.entity.query.generation.elements.LikeTest;
+import ua.com.fielden.platform.entity.query.generation.elements.MonthOf;
 import ua.com.fielden.platform.entity.query.generation.elements.Now;
-import ua.com.fielden.platform.entity.query.generation.elements.NullTestModel;
-import ua.com.fielden.platform.entity.query.generation.elements.OrderByModel;
-import ua.com.fielden.platform.entity.query.generation.elements.OrderingsModel;
-import ua.com.fielden.platform.entity.query.generation.elements.QuantifiedTestModel;
+import ua.com.fielden.platform.entity.query.generation.elements.NullTest;
+import ua.com.fielden.platform.entity.query.generation.elements.OrderBy;
+import ua.com.fielden.platform.entity.query.generation.elements.OrderBys;
+import ua.com.fielden.platform.entity.query.generation.elements.QuantifiedTest;
 import ua.com.fielden.platform.entity.query.generation.elements.Quantifier;
-import ua.com.fielden.platform.entity.query.generation.elements.SetTestModel;
-import ua.com.fielden.platform.entity.query.generation.elements.SourcesModel;
-import ua.com.fielden.platform.entity.query.generation.elements.YearOfModel;
-import ua.com.fielden.platform.entity.query.generation.elements.YieldModel;
-import ua.com.fielden.platform.entity.query.generation.elements.YieldsModel;
+import ua.com.fielden.platform.entity.query.generation.elements.SetTest;
+import ua.com.fielden.platform.entity.query.generation.elements.Sources;
+import ua.com.fielden.platform.entity.query.generation.elements.YearOf;
+import ua.com.fielden.platform.entity.query.generation.elements.Yield;
+import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -69,28 +69,28 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_like() {
 	assertModelsEquals( //
-		conditions(new LikeTestModel(prop("model.desc"), val(mercLike), false, false)), //
+		conditions(new LikeTest(prop("model.desc"), val(mercLike), false, false)), //
 		conditions(where_veh.prop("model.desc").like().val(mercLike)));
     }
 
     @Test
     public void test_notLike() {
 	assertModelsEquals( //
-		conditions(new LikeTestModel(prop("model.desc"), val(mercLike), true, false)), //
+		conditions(new LikeTest(prop("model.desc"), val(mercLike), true, false)), //
 		conditions(where_veh.prop("model.desc").notLike().val(mercLike)));
     }
 
     @Test
     public void test_set_test_with_values() {
 	assertModelsEquals(//
-		conditions(new SetTestModel(prop("model"), false, set(val(merc), val(audi)))), //
+		conditions(new SetTest(prop("model"), false, set(val(merc), val(audi)))), //
 		conditions(where_veh.prop("model").in().values(merc, audi)));
     }
 
     @Test
     public void test_set_test_with_query() {
 	assertModelsEquals( //
-		conditions(new SetTestModel(prop("model"), false, new EntSetFromQryModel(entSubQry(select(MODEL).model())))), //
+		conditions(new SetTest(prop("model"), false, new QueryBasedSet(entSubQry(select(MODEL).model())))), //
 		conditions(where_veh.prop("model").in().model(select(MODEL).model())));
     }
 
@@ -98,23 +98,23 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_plain_quantified_test() {
 	final EntityResultQueryModel<TgVehicleModel> vehModels = select(MODEL).model();
 	assertModelsEquals( //
-		conditions(new QuantifiedTestModel(prop("model"), _eq, Quantifier.ANY, entSubQry(vehModels))), //
+		conditions(new QuantifiedTest(prop("model"), _eq, Quantifier.ANY, entSubQry(vehModels))), //
 		conditions(where_veh.prop("model").eq().any(vehModels)));
     }
 
     @Test
     public void test_simple_query_model_01() {
 	assertModelsEquals( //
-		conditions(new NullTestModel(prop("model"), true), //
-			compound(_and, new NullTestModel(prop("station"), false))), //
+		conditions(new NullTest(prop("model"), true), //
+			compound(_and, new NullTest(prop("station"), false))), //
 		conditions(where_veh.prop("model").isNotNull().and().prop("station").isNull()));
     }
 
     @Test
     public void test_simple_query_model_02() {
 	assertModelsEquals(//
-		conditions(new ComparisonTestModel(prop("price"), _gt, val(100)), //
-			compound(_and, new ComparisonTestModel(prop("purchasePrice"), _lt, prop("price")))), //
+		conditions(new ComparisonTest(prop("price"), _gt, val(100)), //
+			compound(_and, new ComparisonTest(prop("purchasePrice"), _lt, prop("price")))), //
 		conditions(where_veh.prop("price").gt().val(100).and().prop("purchasePrice").lt().prop("price")));
     }
 
@@ -124,8 +124,8 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	paramValues.put("eqclass", "CL1");
 
 	assertModelsEquals(//
-		conditions(new NullTestModel(prop("model"), true), //
-			compound(_and, new NullTestModel(val("CL1"), false))), //
+		conditions(new NullTest(prop("model"), true), //
+			compound(_and, new NullTest(val("CL1"), false))), //
 		conditions(where_veh.prop("model").isNotNull().and().param("eqclass").isNull(), paramValues));
     }
 
@@ -133,8 +133,8 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_simple_query_model_04() {
 	assertModelsEquals(//
 		conditions(group(false, //
-			new NullTestModel(prop("model"), true), //
-			compound(_and, new NullTestModel(prop("station"), false)))), //
+			new NullTest(prop("model"), true), //
+			compound(_and, new NullTest(prop("station"), false)))), //
 		conditions(where_veh.begin().prop("model").isNotNull().and().prop("station").isNull().end()));
     }
 
@@ -142,60 +142,60 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_simple_query_model_05() {
 	assertModelsEquals( //
 	conditions(group(false, //
-		new NullTestModel(prop("model"), true), //
-		compound(_and, new NullTestModel(prop("station"), false))), //
-		compound(_and, new NullTestModel(prop("price"), true))), //
+		new NullTest(prop("model"), true), //
+		compound(_and, new NullTest(prop("station"), false))), //
+		compound(_and, new NullTest(prop("price"), true))), //
 		conditions(where_veh.begin().prop("model").isNotNull().and().prop("station").isNull().end().and().prop("price").isNotNull()));
     }
 
     @Test
     public void test_simple_query_model_06() {
 	assertModelsEquals(//
-	conditions(new NullTestModel(prop("model"), true), //
-		compound(_and, new ExistenceTestModel(false, entSubQry(select(VEHICLE).model())))), //
+	conditions(new NullTest(prop("model"), true), //
+		compound(_and, new ExistenceTest(false, entSubQry(select(VEHICLE).model())))), //
 		conditions(where_veh.prop("model").isNotNull().and().exists(select(VEHICLE).model())));
     }
 
     @Test
     public void test_simple_query_model_07() {
 	assertModelsEquals(//
-	conditions(group(false, new NullTestModel(prop("model"), true), //
-		compound(_or, new NullTestModel(prop("station"), true)))), //
+	conditions(group(false, new NullTest(prop("model"), true), //
+		compound(_or, new NullTest(prop("station"), true)))), //
 		conditions(where_veh.anyOfProps("model", "station").isNotNull()));
     }
 
     @Test
     public void test_simple_query_model_08() {
 	assertModelsEquals(//
-	conditions(new NullTestModel(expression(prop("price"), compound(_add, prop("purchasePrice"))), false)), //
+	conditions(new NullTest(expression(prop("price"), compound(_add, prop("purchasePrice"))), false)), //
 		conditions(where_veh.beginExpr().prop("price").add().prop("purchasePrice").endExpr().isNull()));
     }
 
     @Test
     public void test_simple_query_model_09() {
 	assertModelsEquals(//
-	conditions(new NullTestModel(expression(prop("price.amount"), compound(_add, prop("purchasePrice.amount"))), false)), //
+	conditions(new NullTest(expression(prop("price.amount"), compound(_add, prop("purchasePrice.amount"))), false)), //
 		conditions(where_veh.expr(expr().prop("price.amount").add().prop("purchasePrice.amount").model()).isNull()));
     }
 
     @Test
     public void test_simple_query_model_10() {
 	assertModelsEquals(//
-	conditions(new NullTestModel(expression(prop("model"), compound(_add, expression(prop("model"), compound(_mult, prop("station"))))), false)), //
+	conditions(new NullTest(expression(prop("model"), compound(_add, expression(prop("model"), compound(_mult, prop("station"))))), false)), //
 		conditions(where_veh.expr(expr().prop("model").add().expr(expr().prop("model").mult().prop("station").model()).model()).isNull()));
     }
 
     @Test
     public void test_simple_query_model_11() {
 	assertModelsEquals(//
-		conditions(new ComparisonTestModel(new DayOfModel(prop("initDate")), _gt, val(15)), compound(_and, new ComparisonTestModel(prop("price"), _lt, prop("purchasePrice")))), //
+		conditions(new ComparisonTest(new DayOf(prop("initDate")), _gt, val(15)), compound(_and, new ComparisonTest(prop("price"), _lt, prop("purchasePrice")))), //
 		conditions(where_veh.dayOf().prop("initDate").gt().val(15).and().prop("price").lt().prop("purchasePrice")));
     }
 
     @Test
     public void test_simple_query_model_12() {
 	assertModelsEquals(//
-		conditions(new ComparisonTestModel(new MonthOfModel(prop("initDate")), _gt, val(3)), compound(_and, new ComparisonTestModel(prop("price"), _lt, prop("purchasePrice")))), //
+		conditions(new ComparisonTest(new MonthOf(prop("initDate")), _gt, val(3)), compound(_and, new ComparisonTest(prop("price"), _lt, prop("purchasePrice")))), //
 		conditions(where_veh.monthOf().prop("initDate").gt().val(3).and().prop("price").lt().prop("purchasePrice")));
     }
 
@@ -203,16 +203,16 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_simple_query_model_13() {
 	assertModelsEquals(//
 		conditions(group(false, //
-			new ExistenceTestModel(false, entSubQry(select(VEHICLE).model())), //
+			new ExistenceTest(false, entSubQry(select(VEHICLE).model())), //
 			compound(_or, //
-				new ExistenceTestModel(false, entSubQry(select(WORK_ORDER).model()))))), //
+				new ExistenceTest(false, entSubQry(select(WORK_ORDER).model()))))), //
 		conditions(where_veh.existsAnyOf(select(VEHICLE).model(), select(WORK_ORDER).model())));
     }
 
     @Test
     public void test_ignore_of_null_value_in_condition1() {
 	assertModelsEquals(//
-		conditions(new LikeTestModel(prop("model.desc"), val(mercLike), false, false)), //
+		conditions(new LikeTest(prop("model.desc"), val(mercLike), false, false)), //
 		conditions(where_veh.prop("model.desc").like().iVal(mercLike)));
     }
 
@@ -228,7 +228,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("param", "MERC%");
 	assertModelsEquals(//
-		conditions(new LikeTestModel(prop("model.desc"), val("MERC%"), false, false)), //
+		conditions(new LikeTest(prop("model.desc"), val("MERC%"), false, false)), //
 		conditions(where_veh.prop("model.desc").like().param("param"), paramValues));
     }
 
@@ -255,7 +255,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	paramValues.put("costDivider", 2);
 
 	assertModelsEquals(//
-		conditions(new ComparisonTestModel(
+		conditions(new ComparisonTest(
 			expression(
 				expression(
 					expression(
@@ -278,20 +278,20 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(TgWorkOrder.class).as("wo").on().prop("v").eq().prop("wo.vehicle").leftJoin(TgWorkOrder.class).as("wo2").on().prop("v").eq().prop("wo2.vehicle"). //
 	where().dayOf().prop("initDate").gt().val(15).and().prop("price").lt().prop("purchasePrice").model();
 
-	final ConditionsModel condition1 = new ConditionsModel(new ComparisonTestModel(prop("v"), _eq, prop("wo.vehicle")), new ArrayList<CompoundConditionModel>());
-	final ConditionsModel condition2 = new ConditionsModel(new ComparisonTestModel(prop("v"), _eq, prop("wo2.vehicle")), new ArrayList<CompoundConditionModel>());
+	final Conditions condition1 = new Conditions(new ComparisonTest(prop("v"), _eq, prop("wo.vehicle")), new ArrayList<CompoundCondition>());
+	final Conditions condition2 = new Conditions(new ComparisonTest(prop("v"), _eq, prop("wo2.vehicle")), new ArrayList<CompoundCondition>());
 
-	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
-	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(TgWorkOrder.class, "wo", MAPPINGS_GENERATOR), JoinType.IJ, condition1));
-	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(TgWorkOrder.class, "wo2", MAPPINGS_GENERATOR), JoinType.LJ, condition2));
+	final List<CompoundSource> others = new ArrayList<CompoundSource>();
+	others.add(new CompoundSource(new TypeBasedSource(TgWorkOrder.class, "wo", MAPPINGS_GENERATOR), JoinType.IJ, condition1));
+	others.add(new CompoundSource(new TypeBasedSource(TgWorkOrder.class, "wo2", MAPPINGS_GENERATOR), JoinType.LJ, condition2));
 
 	final EntQuery act = entResultQry(qry);
-	final SourcesModel exp = new SourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v", MAPPINGS_GENERATOR), others);
+	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", MAPPINGS_GENERATOR), others);
 	assertEquals("models are different", exp, act.getSources());
 
-	final List<CompoundConditionModel> others2 = new ArrayList<CompoundConditionModel>();
-	others2.add(new CompoundConditionModel(_and, new ComparisonTestModel(prop("price"), _lt, prop("purchasePrice"))));
-	final ConditionsModel exp2 = new ConditionsModel(new ComparisonTestModel(new DayOfModel(prop("initDate")), _gt, val(15)), others2);
+	final List<CompoundCondition> others2 = new ArrayList<CompoundCondition>();
+	others2.add(new CompoundCondition(_and, new ComparisonTest(prop("price"), _lt, prop("purchasePrice"))));
+	final Conditions exp2 = new Conditions(new ComparisonTest(new DayOf(prop("initDate")), _gt, val(15)), others2);
 	assertEquals(exp2, act.getConditions());
     }
 
@@ -301,15 +301,15 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
 	final EntQuery act = entResultQry(qry);
 
-	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
-	yields.put("id", new YieldModel(new EntProp("model"), "id"));
-	final YieldsModel exp = new YieldsModel(yields);
+	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
+	yields.put("id", new Yield(new EntProp("model"), "id"));
+	final Yields exp = new Yields(yields);
 
 	assertEquals("models are different", exp, act.getYields());
 
-	final List<GroupModel> groups = new ArrayList<GroupModel>();
-	groups.add(new GroupModel(new EntProp("model")));
-	final GroupsModel exp2 = new GroupsModel(groups);
+	final List<GroupBy> groups = new ArrayList<GroupBy>();
+	groups.add(new GroupBy(new EntProp("model")));
+	final GroupBys exp2 = new GroupBys(groups);
 	assertEquals("models are different", exp2, act.getGroups());
     }
 
@@ -317,19 +317,19 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_query_with_several_groups() {
 	final AggregatedResultQueryModel qry = select(VEHICLE).groupBy().prop("model").groupBy().yearOf().prop("initDate").yield().prop("model").as("model").yield().yearOf().prop("initDate").as("initYear").modelAsAggregate();
 	final EntQuery act = entResultQry(qry);
-	final YearOfModel yearOfModel = new YearOfModel(new EntProp("initDate"));
+	final YearOf yearOfModel = new YearOf(new EntProp("initDate"));
 	final EntProp eqClassProp = new EntProp("model");
 
-	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
-	yields.put("model", new YieldModel(eqClassProp, "model"));
-	yields.put("initYear", new YieldModel(yearOfModel, "initYear"));
-	final YieldsModel exp = new YieldsModel(yields);
+	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
+	yields.put("model", new Yield(eqClassProp, "model"));
+	yields.put("initYear", new Yield(yearOfModel, "initYear"));
+	final Yields exp = new Yields(yields);
 	assertEquals("models are different", exp, act.getYields());
 
-	final List<GroupModel> groups = new ArrayList<GroupModel>();
-	groups.add(new GroupModel(eqClassProp));
-	groups.add(new GroupModel(yearOfModel));
-	final GroupsModel exp2 = new GroupsModel(groups);
+	final List<GroupBy> groups = new ArrayList<GroupBy>();
+	groups.add(new GroupBy(eqClassProp));
+	groups.add(new GroupBy(yearOfModel));
+	final GroupBys exp2 = new GroupBys(groups);
 	assertEquals("models are different", exp2, act.getGroups());
     }
 
@@ -340,10 +340,10 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final EntQuery act = entResultQry(qry, orderModel);
 	System.out.println(act.sql());
 
-	final List<OrderByModel> orderings = new ArrayList<OrderByModel>();
-	orderings.add(new OrderByModel(expression(prop("model"), compound(_add, new Now())), false));
-	orderings.add(new OrderByModel(prop("key"), true));
-	final OrderingsModel exp2 = new OrderingsModel(orderings);
+	final List<OrderBy> orderings = new ArrayList<OrderBy>();
+	orderings.add(new OrderBy(expression(prop("model"), compound(_add, new Now())), false));
+	orderings.add(new OrderBy(prop("key"), true));
+	final OrderBys exp2 = new OrderBys(orderings);
 	assertEquals("models are different", exp2, act.getOrderings());
     }
 
@@ -354,50 +354,50 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("param", 20);
 	final AggregatedResultQueryModel qry = select(VEHICLE).yield().prop("station").as("st").yield().beginExpr().prop("model").add().param("param").endExpr().as("m").modelAsAggregate();
-	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
-	yields.put("st", new YieldModel(new EntProp("station"), "st"));
+	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
+	yields.put("st", new Yield(new EntProp("station"), "st"));
 	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
 	compSingleOperands.add(new CompoundSingleOperand(new EntValue(20), ArithmeticalOperator.ADD));
 	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
-	yields.put("m", new YieldModel(expression, "m"));
-	final YieldsModel exp = new YieldsModel(yields);
+	yields.put("m", new Yield(expression, "m"));
+	final Yields exp = new Yields(yields);
 	assertEquals("models are different", exp, entResultQry(qry, paramValues).getYields());
     }
 
     @Test
     public void test2() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).yield().prop("model").modelAsEntity(MODEL);
-	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
-	yields.put("id", new YieldModel(new EntProp("model"), "id"));
-	final YieldsModel exp = new YieldsModel(yields);
+	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
+	yields.put("id", new Yield(new EntProp("model"), "id"));
+	final Yields exp = new Yields(yields);
 	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 
     @Test
     public void test3() {
 	final AggregatedResultQueryModel qry = select(VEHICLE).yield().prop("station").as("st").yield().prop("model").as("m").modelAsAggregate();
-	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
-	yields.put("st", new YieldModel(new EntProp("station"), "st"));
-	yields.put("m", new YieldModel(new EntProp("model"), "m"));
-	final YieldsModel exp = new YieldsModel(yields);
+	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
+	yields.put("st", new Yield(new EntProp("station"), "st"));
+	yields.put("m", new Yield(new EntProp("model"), "m"));
+	final Yields exp = new Yields(yields);
 	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 
     @Test
     public void test4() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsEntity(MODEL);
-	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
-	yields.put("id", new YieldModel(new EntProp("v.model"), "id"));
-	final YieldsModel exp = new YieldsModel(yields);
+	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
+	yields.put("id", new Yield(new EntProp("v.model"), "id"));
+	final Yields exp = new Yields(yields);
 	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 
     @Test
     public void test5() {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsPrimitive();
-	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
-	yields.put("", new YieldModel(new EntProp("v.model"), ""));
-	final YieldsModel exp = new YieldsModel(yields);
+	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
+	yields.put("", new Yield(new EntProp("v.model"), ""));
+	final Yields exp = new Yields(yields);
 	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 
@@ -442,12 +442,12 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_query_sources1() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(WORK_ORDER).as("wo").on().prop("v").eq().prop("vehicle").model();
 
-	final ConditionsModel condition = new ConditionsModel(new ComparisonTestModel(new EntProp("v"), ComparisonOperator.EQ, new EntProp("vehicle")), new ArrayList<CompoundConditionModel>());
+	final Conditions condition = new Conditions(new ComparisonTest(new EntProp("v"), ComparisonOperator.EQ, new EntProp("vehicle")), new ArrayList<CompoundCondition>());
 
-	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
-	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(WORK_ORDER, "wo", MAPPINGS_GENERATOR), JoinType.IJ, condition));
+	final List<CompoundSource> others = new ArrayList<CompoundSource>();
+	others.add(new CompoundSource(new TypeBasedSource(WORK_ORDER, "wo", MAPPINGS_GENERATOR), JoinType.IJ, condition));
 
-	final SourcesModel exp = new SourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v", MAPPINGS_GENERATOR), others);
+	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", MAPPINGS_GENERATOR), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 
@@ -455,12 +455,12 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_query_sources1a() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(WORK_ORDER).as("wo").on().prop("v").eq().prop("wo.vehicle").where().val(1).isNotNull().model();
 
-	final ConditionsModel condition = new ConditionsModel(new ComparisonTestModel(new EntProp("v"), ComparisonOperator.EQ, new EntProp("wo.vehicle")), new ArrayList<CompoundConditionModel>());
+	final Conditions condition = new Conditions(new ComparisonTest(new EntProp("v"), ComparisonOperator.EQ, new EntProp("wo.vehicle")), new ArrayList<CompoundCondition>());
 
-	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
-	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(WORK_ORDER, "wo", MAPPINGS_GENERATOR), JoinType.IJ, condition));
+	final List<CompoundSource> others = new ArrayList<CompoundSource>();
+	others.add(new CompoundSource(new TypeBasedSource(WORK_ORDER, "wo", MAPPINGS_GENERATOR), JoinType.IJ, condition));
 
-	final SourcesModel exp = new SourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v", MAPPINGS_GENERATOR), others);
+	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", MAPPINGS_GENERATOR), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 
@@ -468,12 +468,12 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_query_sources_with_explicit_join_and_without_aliases() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(WORK_ORDER).on().prop("v").eq().prop("vehicle").model();
 
-	final ConditionsModel condition = new ConditionsModel(new ComparisonTestModel(new EntProp("v"), ComparisonOperator.EQ, new EntProp("vehicle")), new ArrayList<CompoundConditionModel>());
+	final Conditions condition = new Conditions(new ComparisonTest(new EntProp("v"), ComparisonOperator.EQ, new EntProp("vehicle")), new ArrayList<CompoundCondition>());
 
-	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
-	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(WORK_ORDER, null, MAPPINGS_GENERATOR), JoinType.IJ, condition));
+	final List<CompoundSource> others = new ArrayList<CompoundSource>();
+	others.add(new CompoundSource(new TypeBasedSource(WORK_ORDER, null, MAPPINGS_GENERATOR), JoinType.IJ, condition));
 
-	final SourcesModel exp = new SourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v", MAPPINGS_GENERATOR), others);
+	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", MAPPINGS_GENERATOR), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 
@@ -481,14 +481,14 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_query_sources2() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(WORK_ORDER).as("wo").on().prop("v").eq().prop("wo.vehicle").leftJoin(WORK_ORDER).as("wo2").on().prop("v").eq().prop("wo2.vehicle").model();
 
-	final ConditionsModel condition1 = new ConditionsModel(new ComparisonTestModel(new EntProp("v"), ComparisonOperator.EQ, new EntProp("wo.vehicle")), new ArrayList<CompoundConditionModel>());
-	final ConditionsModel condition2 = new ConditionsModel(new ComparisonTestModel(new EntProp("v"), ComparisonOperator.EQ, new EntProp("wo2.vehicle")), new ArrayList<CompoundConditionModel>());
+	final Conditions condition1 = new Conditions(new ComparisonTest(new EntProp("v"), ComparisonOperator.EQ, new EntProp("wo.vehicle")), new ArrayList<CompoundCondition>());
+	final Conditions condition2 = new Conditions(new ComparisonTest(new EntProp("v"), ComparisonOperator.EQ, new EntProp("wo2.vehicle")), new ArrayList<CompoundCondition>());
 
-	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
-	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(WORK_ORDER, "wo", MAPPINGS_GENERATOR), JoinType.IJ, condition1));
-	others.add(new EntQueryCompoundSourceModel(new EntQuerySourceFromEntityType(WORK_ORDER, "wo2", MAPPINGS_GENERATOR), JoinType.LJ, condition2));
+	final List<CompoundSource> others = new ArrayList<CompoundSource>();
+	others.add(new CompoundSource(new TypeBasedSource(WORK_ORDER, "wo", MAPPINGS_GENERATOR), JoinType.IJ, condition1));
+	others.add(new CompoundSource(new TypeBasedSource(WORK_ORDER, "wo2", MAPPINGS_GENERATOR), JoinType.LJ, condition2));
 
-	final SourcesModel exp = new SourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v", MAPPINGS_GENERATOR), others);
+	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", MAPPINGS_GENERATOR), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 
@@ -497,7 +497,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final EntityResultQueryModel<TgVehicle> sourceQry = select(VEHICLE).as("v").where().prop("v.model").isNotNull().model();
 	final EntityResultQueryModel<TgVehicle> qry = select(sourceQry).as("v").where().prop("v.model").isNotNull().model();
 
-	final SourcesModel exp = new SourcesModel(new EntQuerySourceFromQueryModel("v", MAPPINGS_GENERATOR, entSourceQry(sourceQry)), new ArrayList<EntQueryCompoundSourceModel>());
+	final Sources exp = new Sources(new QueryBasedSource("v", MAPPINGS_GENERATOR, entSourceQry(sourceQry)), new ArrayList<CompoundSource>());
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 
@@ -529,16 +529,16 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_simple_query_model_13_() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").model();
-	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
-	final SourcesModel exp = new SourcesModel(new EntQuerySourceFromEntityType(VEHICLE, "v", MAPPINGS_GENERATOR), others);
+	final List<CompoundSource> others = new ArrayList<CompoundSource>();
+	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", MAPPINGS_GENERATOR), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 
     @Test
     public void test_simple_query_model_14() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).model();
-	final List<EntQueryCompoundSourceModel> others = new ArrayList<EntQueryCompoundSourceModel>();
-	final SourcesModel exp = new SourcesModel(new EntQuerySourceFromEntityType(VEHICLE, null, MAPPINGS_GENERATOR), others);
+	final List<CompoundSource> others = new ArrayList<CompoundSource>();
+	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, null, MAPPINGS_GENERATOR), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 

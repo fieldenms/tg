@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.MinuteOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.MinuteOf;
 
 public class MinuteOfBuilder extends OneArgumentFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class MinuteOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new MinuteOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new MinuteOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

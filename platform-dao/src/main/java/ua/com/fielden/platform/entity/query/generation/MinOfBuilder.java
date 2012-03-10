@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.MinOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.MinOf;
 
 public class MinOfBuilder extends OneArgumentFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class MinOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new MinOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new MinOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

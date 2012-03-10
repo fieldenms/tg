@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.CompoundConditionModel;
-import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditionsModel;
+import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
+import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditions;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -33,12 +33,12 @@ public class GroupedConditionsBuilder extends AbstractTokensBuilder {
 	}
 	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
 	final ICondition firstCondition = (ICondition) iterator.next().getValue();
-	final List<CompoundConditionModel> otherConditions = new ArrayList<CompoundConditionModel>();
+	final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
 	for (; iterator.hasNext();) {
-	    final CompoundConditionModel subsequentCompoundCondition = (CompoundConditionModel) iterator.next().getValue();
+	    final CompoundCondition subsequentCompoundCondition = (CompoundCondition) iterator.next().getValue();
 	    otherConditions.add(subsequentCompoundCondition);
 	}
-	return new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, new GroupedConditionsModel(negated, firstCondition, otherConditions));
+	return new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, new GroupedConditions(negated, firstCondition, otherConditions));
     }
 
     @Override

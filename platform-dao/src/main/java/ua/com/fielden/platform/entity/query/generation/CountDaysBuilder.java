@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.CountDaysModel;
+import ua.com.fielden.platform.entity.query.generation.elements.CountDays;
 
 public class CountDaysBuilder extends TwoArgumentsFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class CountDaysBuilder extends TwoArgumentsFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new CountDaysModel(getModelForSingleOperand(firstCat(), firstValue()), getModelForSingleOperand(secondCat(), secondValue()));
+	return new CountDays(getModelForSingleOperand(firstCat(), firstValue()), getModelForSingleOperand(secondCat(), secondValue()));
     }
 }

@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.OrderByModel;
-import ua.com.fielden.platform.entity.query.generation.elements.OrderingsModel;
+import ua.com.fielden.platform.entity.query.generation.elements.OrderBy;
+import ua.com.fielden.platform.entity.query.generation.elements.OrderBys;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryOrderingsBuilder extends AbstractTokensBuilder {
@@ -36,17 +36,17 @@ public class QryOrderingsBuilder extends AbstractTokensBuilder {
 	return false;
     }
 
-    public OrderingsModel getModel() {
+    public OrderBys getModel() {
 	if (getChild() != null && getSize() == 0) {
 	    finaliseChild();
 	    //throw new RuntimeException("Unable to produce result - unfinished model state!");
 	}
-	final List<OrderByModel> models = new ArrayList<OrderByModel>();
+	final List<OrderBy> models = new ArrayList<OrderBy>();
 	for (final Pair<TokenCategory, Object> pair : getTokens()) {
-	    models.add((OrderByModel) pair.getValue());
+	    models.add((OrderBy) pair.getValue());
 	}
 
-	return new OrderingsModel(models);
+	return new OrderBys(models);
     }
 
     @Override

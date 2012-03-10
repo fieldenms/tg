@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.SumOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.SumOf;
 
 public class SumOfBuilder extends OneArgumentFunctionBuilder {
     private final boolean distinct;
@@ -13,6 +13,6 @@ public class SumOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new SumOfModel(getModelForSingleOperand(firstCat(), firstValue()), distinct);
+	return new SumOf(getModelForSingleOperand(firstCat(), firstValue()), distinct);
     }
 }

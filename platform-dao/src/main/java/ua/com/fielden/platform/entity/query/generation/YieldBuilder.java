@@ -4,7 +4,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
-import ua.com.fielden.platform.entity.query.generation.elements.YieldModel;
+import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.utils.Pair;
 
 public class YieldBuilder extends AbstractTokensBuilder {
@@ -22,6 +22,6 @@ public class YieldBuilder extends AbstractTokensBuilder {
     public Pair<TokenCategory, Object> getResult() {
 	final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
 	final String alias = (String) secondValue();
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new YieldModel(operand, alias == null ? "" : alias));
+	return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new Yield(operand, alias == null ? "" : alias));
     }
 }

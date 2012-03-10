@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.HourOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.HourOf;
 
 public class HourOfBuilder extends OneArgumentFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class HourOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new HourOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new HourOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

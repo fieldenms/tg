@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.CountOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.CountOf;
 
 public class CountOfBuilder extends OneArgumentFunctionBuilder {
     private final boolean distinct;
@@ -13,6 +13,6 @@ public class CountOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new CountOfModel(getModelForSingleOperand(firstCat(), firstValue()), distinct);
+	return new CountOf(getModelForSingleOperand(firstCat(), firstValue()), distinct);
     }
 }

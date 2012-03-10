@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.LowerCaseOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.LowerCaseOf;
 
 public class LowerCaseOfBuilder extends OneArgumentFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class LowerCaseOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new LowerCaseOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new LowerCaseOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

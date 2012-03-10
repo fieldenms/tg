@@ -12,7 +12,7 @@ public class EntProp implements ISingleOperand {
 
     private EntQuery holder; // query, where given property resides (not to be mixed with the query, which source given property is resolved to - in case of correlated subqueries these two may be different queries (subquery and one of its master).
     private String sql;
-    private IEntQuerySource source;
+    private ISource source;
 
     @Override
     public String toString() {
@@ -142,7 +142,7 @@ public class EntProp implements ISingleOperand {
         this.nullable = nullable;
     }
 
-    public void setSource(final IEntQuerySource source) {
+    public void setSource(final ISource source) {
 	this.source = source;
     }
 }

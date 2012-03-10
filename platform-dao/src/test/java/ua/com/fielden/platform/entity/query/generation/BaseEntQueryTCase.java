@@ -16,14 +16,14 @@ import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
-import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
-import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PurePropInfo;
-import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTestModel;
+import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
+import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PurePropInfo;
+import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
-import ua.com.fielden.platform.entity.query.generation.elements.EntSet;
+import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
 import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
-import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
+import ua.com.fielden.platform.entity.query.generation.elements.ISource;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -125,8 +125,8 @@ public class BaseEntQueryTCase {
 	return new EntValue(value);
     }
 
-    protected static EntSet set(final ISingleOperand ... operands) {
-	return new EntSet(Arrays.asList(operands));
+    protected static OperandsBasedSet set(final ISingleOperand ... operands) {
+	return new OperandsBasedSet(Arrays.asList(operands));
     }
 
     protected static PurePropInfo ppi(final String name, final Class type, final Object hibType, final boolean nullable) {
@@ -149,11 +149,11 @@ public class BaseEntQueryTCase {
 	return new PropResolutionInfo(prop(propName), aliasPart, propPart, propPart, true);
     }
 
-    protected final ComparisonTestModel alwaysTrueCondition = new ComparisonTestModel(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
+    protected final ComparisonTest alwaysTrueCondition = new ComparisonTest(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
 
     protected List<List<PropResolutionInfo>> getSourcesReferencingProps(final EntQuery entQry) {
 	final List<List<PropResolutionInfo>> result = new ArrayList<List<PropResolutionInfo>>();
-	for (final IEntQuerySource source : entQry.getSources().getAllSources()) {
+	for (final ISource source : entQry.getSources().getAllSources()) {
 	    if (!source.generated()) {
 		result.add(source.getReferencingProps());
 	    }
@@ -164,7 +164,7 @@ public class BaseEntQueryTCase {
 
     protected List<List<PropResolutionInfo>> getSourcesFinalReferencingProps(final EntQuery entQry) {
 	final List<List<PropResolutionInfo>> result = new ArrayList<List<PropResolutionInfo>>();
-	for (final IEntQuerySource source : entQry.getSources().getAllSources()) {
+	for (final ISource source : entQry.getSources().getAllSources()) {
 	    result.add(source.getFinalReferencingProps());
 	}
 

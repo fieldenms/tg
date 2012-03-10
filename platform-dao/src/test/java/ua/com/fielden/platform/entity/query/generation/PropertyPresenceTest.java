@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.query.generation;
 import org.hibernate.Hibernate;
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
+import ua.com.fielden.platform.entity.query.generation.elements.ISource;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.sample.domain.TgModelCount;
@@ -13,7 +13,7 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 public class PropertyPresenceTest extends BaseEntQueryTCase {
 
-    private IEntQuerySource getMainSource(final QueryModel qry) {
+    private ISource getMainSource(final QueryModel qry) {
 	return entResultQry(qry).getSources().getMain();
     }
 

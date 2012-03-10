@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQueryCompoundSourceModel;
-import ua.com.fielden.platform.entity.query.generation.elements.SourcesModel;
-import ua.com.fielden.platform.entity.query.generation.elements.IEntQuerySource;
+import ua.com.fielden.platform.entity.query.generation.elements.CompoundSource;
+import ua.com.fielden.platform.entity.query.generation.elements.Sources;
+import ua.com.fielden.platform.entity.query.generation.elements.ISource;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder extends AbstractTokensBuilder {
@@ -41,18 +41,18 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
 	return getChild() == null;
     }
 
-    public SourcesModel getModel() {
+    public Sources getModel() {
 	if (getChild() != null) {
 	    finaliseChild();
 	}
 	final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-	final IEntQuerySource mainSource = (IEntQuerySource) iterator.next().getValue();
-	final List<EntQueryCompoundSourceModel> otherSources = new ArrayList<EntQueryCompoundSourceModel>();
+	final ISource mainSource = (ISource) iterator.next().getValue();
+	final List<CompoundSource> otherSources = new ArrayList<CompoundSource>();
 	for (; iterator.hasNext();) {
-	    final EntQueryCompoundSourceModel subsequentSource= (EntQueryCompoundSourceModel) iterator.next().getValue();
+	    final CompoundSource subsequentSource= (CompoundSource) iterator.next().getValue();
 	    otherSources.add(subsequentSource);
 	}
-	return new SourcesModel(mainSource, otherSources);
+	return new Sources(mainSource, otherSources);
 
     }
 

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.UpperCaseOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.UpperCaseOf;
 
 public class UpperCaseOfBuilder extends OneArgumentFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class UpperCaseOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new UpperCaseOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new UpperCaseOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

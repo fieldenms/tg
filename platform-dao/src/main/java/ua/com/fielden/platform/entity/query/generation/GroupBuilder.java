@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.query.generation;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.GroupModel;
+import ua.com.fielden.platform.entity.query.generation.elements.GroupBy;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -21,6 +21,6 @@ public class GroupBuilder extends AbstractTokensBuilder {
     @Override
     public Pair<TokenCategory, Object> getResult() {
 	final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_GROUP, new GroupModel(operand));
+	return new Pair<TokenCategory, Object>(TokenCategory.QRY_GROUP, new GroupBy(operand));
     }
 }

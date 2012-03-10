@@ -4,7 +4,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.CompoundConditionModel;
+import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -23,7 +23,7 @@ public class CompoundConditionBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-	return new Pair<TokenCategory, Object>(TokenCategory.COMPOUND_CONDITION, new CompoundConditionModel((LogicalOperator) getTokens().get(0).getValue(), (ICondition) getTokens().get(1).getValue()));
+	return new Pair<TokenCategory, Object>(TokenCategory.COMPOUND_CONDITION, new CompoundCondition((LogicalOperator) getTokens().get(0).getValue(), (ICondition) getTokens().get(1).getValue()));
     }
 
 }

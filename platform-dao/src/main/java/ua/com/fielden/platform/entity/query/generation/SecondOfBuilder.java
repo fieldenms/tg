@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.SecondOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.SecondOf;
 
 public class SecondOfBuilder extends OneArgumentFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class SecondOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new SecondOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new SecondOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

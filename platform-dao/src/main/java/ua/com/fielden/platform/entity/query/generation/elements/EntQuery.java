@@ -14,7 +14,7 @@ import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
-import ua.com.fielden.platform.entity.query.generation.elements.AbstractEntQuerySource.PropResolutionInfo;
+import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -23,11 +23,11 @@ public class EntQuery implements ISingleOperand {
 
     private static String id = "id";
 
-    private final SourcesModel sources;
-    private final ConditionsModel conditions;
-    private final YieldsModel yields;
-    private final GroupsModel groups;
-    private final OrderingsModel orderings;
+    private final Sources sources;
+    private final Conditions conditions;
+    private final Yields yields;
+    private final GroupBys groups;
+    private final OrderBys orderings;
     private final Class resultType;
     private final QueryCategory category;
     private final MappingsGenerator mappingsGenerator;
@@ -86,7 +86,7 @@ public class EntQuery implements ISingleOperand {
 	return masterIndex;
     }
 
-    public YieldModel getYield(final String yieldName) {
+    public Yield getYield(final String yieldName) {
 	return yields.getYields().get(yieldName);
     }
 
@@ -109,25 +109,25 @@ public class EntQuery implements ISingleOperand {
     private void enhanceYieldsModel() {
 	// enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
 	if (idAliasEnhancementRequired()) {
-	    final YieldModel idModel = new YieldModel(yields.getYields().values().iterator().next().getOperand(), id);
+	    final Yield idModel = new Yield(yields.getYields().values().iterator().next().getOperand(), id);
 	    yields.getYields().clear();
 	    yields.getYields().put(idModel.getAlias(), idModel);
 	} else if (allPropsYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
 	    for (final PropertyPersistenceInfo ppi : mappingsGenerator.getEntityPPIs(type())) {
 		if (!ppi.isCompositeProperty() && !ppi.isCollection()) {
-		    yields.getYields().put(ppi.getName(), new YieldModel(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName(), ppi));
+		    yields.getYields().put(ppi.getName(), new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName(), ppi));
 		}
 	    }
 	} else if (idPropYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-	    yields.getYields().put(id, new YieldModel(new EntProp(yieldPropAliasPrefix + id), id));
+	    yields.getYields().put(id, new Yield(new EntProp(yieldPropAliasPrefix + id), id));
 	}
     }
 
     private void assignPropertyPersistenceInfoToYields() {
 	int yieldIndex = 0;
-	for (final YieldModel yield : yields.getYields().values()) {
+	for (final Yield yield : yields.getYields().values()) {
 	    yieldIndex = yieldIndex + 1;
 	    final PropertyPersistenceInfo ppi = new PropertyPersistenceInfo.Builder(yield.getAlias(), determineYieldJavaType(yield), determineYieldNullability(yield)). //
 	    column("C" + yieldIndex). //
@@ -137,7 +137,7 @@ public class EntQuery implements ISingleOperand {
 	}
     }
 
-    private Object determineYieldHibType(final YieldModel yield) {
+    private Object determineYieldHibType(final Yield yield) {
 	final PropertyPersistenceInfo finalPropInfo = mappingsGenerator.getInfoForDotNotatedProp(type(), yield.getAlias());
 	if (finalPropInfo != null) {
 	    return finalPropInfo.getHibType();
@@ -146,7 +146,7 @@ public class EntQuery implements ISingleOperand {
 	}
     }
 
-    private boolean determineYieldNullability(final YieldModel yield) {
+    private boolean determineYieldNullability(final Yield yield) {
 	final PropertyPersistenceInfo finalPropInfo = mappingsGenerator.getInfoForDotNotatedProp(type(), yield.getAlias());
 	if (finalPropInfo != null) {
 	    return mappingsGenerator.isNullable(type(), yield.getAlias());
@@ -155,7 +155,7 @@ public class EntQuery implements ISingleOperand {
 	}
     }
 
-    private Class determineYieldJavaType(final YieldModel yield) {
+    private Class determineYieldJavaType(final Yield yield) {
 	if (EntityUtils.isPersistedEntityType(type())) {
 	    final Class yieldTypeAccordingToQuerySources = yield.getOperand().type();
 	    final Class yieldTypeAccordingToQueryResultType = PropertyTypeDeterminator.determinePropertyType(type(), yield.getAlias());
@@ -178,27 +178,27 @@ public class EntQuery implements ISingleOperand {
 	int paramCount = 0;
 	for (final EntValue value : getAllValues()) {
 	    paramCount = paramCount + 1;
-	    value.setParamName("P" + paramCount);
+	    value.setSqlParamName("P" + paramCount);
 	}
     }
 
     public Map<String, Object> getValuesForSqlParams() {
 	final Map<String, Object> result = new HashMap<String, Object>();
 	for (final EntValue value : getAllValues()) {
-	    result.put(value.getParamName(), value.getValue());
+	    result.put(value.getSqlParamName(), value.getValue());
 	}
 	return result;
     }
 
-    private SourcesModel enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final SourcesModel sources, final EntQueryGenerator generator) {
-	final IEntQuerySource newMain =
-		(sources.getMain() instanceof EntQuerySourceFromEntityType && filter != null && filter.enhance(sources.getMain().sourceType(), username) != null) ?
-	    new EntQuerySourceFromQueryModel(sources.getMain().getAlias(), mappingsGenerator, generator.generateEntQueryAsSourceQuery(filter.enhance(sources.getMain().sourceType(), username))) : null;
+    private Sources enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final Sources sources, final EntQueryGenerator generator) {
+	final ISource newMain =
+		(sources.getMain() instanceof TypeBasedSource && filter != null && filter.enhance(sources.getMain().sourceType(), username) != null) ?
+	    new QueryBasedSource(sources.getMain().getAlias(), mappingsGenerator, generator.generateEntQueryAsSourceQuery(filter.enhance(sources.getMain().sourceType(), username))) : null;
 
-	return newMain != null ? new SourcesModel(newMain, sources.getCompounds()) : sources;
+	return newMain != null ? new Sources(newMain, sources.getCompounds()) : sources;
     }
 
-    public EntQuery(final SourcesModel sources, final ConditionsModel conditions, final YieldsModel yields, final GroupsModel groups, final OrderingsModel orderings, //
+    public EntQuery(final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
 	    final Class resultType, final QueryCategory category, final MappingsGenerator mappingsGenerator, //
 	    final IFilter filter, final String username, final EntQueryGenerator generator) {
 	super();
@@ -215,8 +215,8 @@ public class EntQuery implements ISingleOperand {
     }
 
     private void enhanceToFinalState() {
-	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
-	    final IEntQuerySource source = sourceAndItsJoinType.getKey();
+	for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
+	    final ISource source = sourceAndItsJoinType.getKey();
 	    source.assignNullability(sourceAndItsJoinType.getValue());
 	    source.populateSourceItems(sourceAndItsJoinType.getValue());
 	}
@@ -239,8 +239,8 @@ public class EntQuery implements ISingleOperand {
 	    throw new RuntimeException("Couldn't resolve the following props: " + unresolvedProps);
 	}
 
-	for (final Pair<IEntQuerySource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
-	    final IEntQuerySource source = sourceAndItsJoinType.getKey();
+	for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
+	    final ISource source = sourceAndItsJoinType.getKey();
 	    getSources().getCompounds().addAll(source.generateMissingSources(source.getReferencingProps()));
 	}
 
@@ -294,11 +294,11 @@ public class EntQuery implements ISingleOperand {
 	final List<EntProp> unresolvedProps = new ArrayList<EntProp>();
 
 	for (final EntProp propToBeResolvedPair : propsToBeResolved) {
-	    final Map<IEntQuerySource, PropResolutionInfo> sourceCandidates = findSourceMatchCandidates(propToBeResolvedPair);
+	    final Map<ISource, PropResolutionInfo> sourceCandidates = findSourceMatchCandidates(propToBeResolvedPair);
 	    if (sourceCandidates.size() == 0) {
 		unresolvedProps.add(propToBeResolvedPair);
 	    } else {
-		final Pair<PropResolutionInfo, IEntQuerySource> propResolutionResult = performPropResolveAction(sourceCandidates);
+		final Pair<PropResolutionInfo, ISource> propResolutionResult = performPropResolveAction(sourceCandidates);
 		propResolutionResult.getValue().addReferencingProp(propResolutionResult.getKey());
 	    }
 	}
@@ -310,9 +310,9 @@ public class EntQuery implements ISingleOperand {
 	final List<EntProp> unresolvedProps = new ArrayList<EntProp>();
 
 	for (final EntProp propToBeResolvedPair : propsToBeResolved) {
-	    final Map<IEntQuerySource, PropResolutionInfo> sourceCandidates = findSourceMatchCandidates(propToBeResolvedPair);
+	    final Map<ISource, PropResolutionInfo> sourceCandidates = findSourceMatchCandidates(propToBeResolvedPair);
 	    if (sourceCandidates.size() > 0) {
-		final Pair<PropResolutionInfo, IEntQuerySource> propResolutionResult = performPropResolveAction(sourceCandidates);
+		final Pair<PropResolutionInfo, ISource> propResolutionResult = performPropResolveAction(sourceCandidates);
 		propResolutionResult.getValue().addFinalReferencingProp(propResolutionResult.getKey());
 	    } else {
 		unresolvedProps.add(propToBeResolvedPair);
@@ -322,9 +322,9 @@ public class EntQuery implements ISingleOperand {
 	return unresolvedProps;
     }
 
-    private Map<IEntQuerySource, PropResolutionInfo> findSourceMatchCandidates(final EntProp prop) {
-	final Map<IEntQuerySource, PropResolutionInfo> result = new HashMap<IEntQuerySource, PropResolutionInfo>();
-	for (final IEntQuerySource source : sources.getAllSources()) {
+    private Map<ISource, PropResolutionInfo> findSourceMatchCandidates(final EntProp prop) {
+	final Map<ISource, PropResolutionInfo> result = new HashMap<ISource, PropResolutionInfo>();
+	for (final ISource source : sources.getAllSources()) {
 	    final PropResolutionInfo hasProp = source.containsProperty(prop);
 	    if (hasProp != null) {
 		result.put(source, hasProp);
@@ -341,32 +341,32 @@ public class EntQuery implements ISingleOperand {
      * @param prop
      * @return
      */
-    private Pair<PropResolutionInfo, IEntQuerySource> performPropResolveAction(final Map<IEntQuerySource, PropResolutionInfo> candidates) {
+    private Pair<PropResolutionInfo, ISource> performPropResolveAction(final Map<ISource, PropResolutionInfo> candidates) {
 	if (candidates.size() == 1) {
-	    return new Pair<PropResolutionInfo, IEntQuerySource>(candidates.values().iterator().next(), candidates.keySet().iterator().next());
+	    return new Pair<PropResolutionInfo, ISource>(candidates.values().iterator().next(), candidates.keySet().iterator().next());
 	} else {
 	    final SortedSet<Integer> preferenceNumbers = new TreeSet<Integer>();
-	    final Map<Integer, List<IEntQuerySource>> sourcesPreferences = new HashMap<Integer, List<IEntQuerySource>>();
-	    for (final Entry<IEntQuerySource, PropResolutionInfo> entry : candidates.entrySet()) {
+	    final Map<Integer, List<ISource>> sourcesPreferences = new HashMap<Integer, List<ISource>>();
+	    for (final Entry<ISource, PropResolutionInfo> entry : candidates.entrySet()) {
 		final Integer currPrefNumber = entry.getValue().getPreferenceNumber();
 		preferenceNumbers.add(currPrefNumber);
 		if (!sourcesPreferences.containsKey(currPrefNumber)) {
-		    sourcesPreferences.put(currPrefNumber, new ArrayList<IEntQuerySource>());
+		    sourcesPreferences.put(currPrefNumber, new ArrayList<ISource>());
 		}
 		sourcesPreferences.get(currPrefNumber).add(entry.getKey());
 	    }
 
 	    final Integer preferenceResult = preferenceNumbers.first();
 
-	    final List<IEntQuerySource> preferedSourceList = sourcesPreferences.get(preferenceResult);
+	    final List<ISource> preferedSourceList = sourcesPreferences.get(preferenceResult);
 	    if (preferedSourceList.size() == 1) {
-		return new Pair<PropResolutionInfo, IEntQuerySource>(candidates.get(sourcesPreferences.get(preferenceResult).get(0)), sourcesPreferences.get(preferenceResult).get(0));
+		return new Pair<PropResolutionInfo, ISource>(candidates.get(sourcesPreferences.get(preferenceResult).get(0)), sourcesPreferences.get(preferenceResult).get(0));
 	    } else {
 		int notAliasedSourcesCount = 0;
-		Pair<PropResolutionInfo, IEntQuerySource> resultPair = null;
-		for (final IEntQuerySource qrySource : preferedSourceList) {
+		Pair<PropResolutionInfo, ISource> resultPair = null;
+		for (final ISource qrySource : preferedSourceList) {
 		    if (qrySource.getAlias() == null) {
-			resultPair = new Pair<PropResolutionInfo, IEntQuerySource>(candidates.get(qrySource), qrySource);
+			resultPair = new Pair<PropResolutionInfo, ISource>(candidates.get(qrySource), qrySource);
 			notAliasedSourcesCount = notAliasedSourcesCount + 1;
 		    }
 		}
@@ -432,23 +432,23 @@ public class EntQuery implements ISingleOperand {
 	return result;
     }
 
-    public SourcesModel getSources() {
+    public Sources getSources() {
 	return sources;
     }
 
-    public ConditionsModel getConditions() {
+    public Conditions getConditions() {
 	return conditions;
     }
 
-    public YieldsModel getYields() {
+    public Yields getYields() {
 	return yields;
     }
 
-    public GroupsModel getGroups() {
+    public GroupBys getGroups() {
 	return groups;
     }
 
-    public OrderingsModel getOrderings() {
+    public OrderBys getOrderings() {
         return orderings;
     }
 

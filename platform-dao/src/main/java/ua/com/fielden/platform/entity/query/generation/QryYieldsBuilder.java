@@ -5,8 +5,8 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.YieldModel;
-import ua.com.fielden.platform.entity.query.generation.elements.YieldsModel;
+import ua.com.fielden.platform.entity.query.generation.elements.Yield;
+import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryYieldsBuilder extends AbstractTokensBuilder {
@@ -22,17 +22,17 @@ public class QryYieldsBuilder extends AbstractTokensBuilder {
 
     // TODO handle yield().entity(String joinAlias) properly
 
-    public YieldsModel getModel() {
+    public Yields getModel() {
 	if (getChild() != null && getSize() == 0) {
 	    finaliseChild();
 	    //throw new RuntimeException("Unable to produce result - unfinished model state!");
 	}
-	final SortedMap<String, YieldModel> yields = new TreeMap<String, YieldModel>();
+	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
 	for (final Pair<TokenCategory, Object> pair : getTokens()) {
-	    yields.put(((YieldModel) pair.getValue()).getAlias(), (YieldModel) pair.getValue());
+	    yields.put(((Yield) pair.getValue()).getAlias(), (Yield) pair.getValue());
 	}
 
-	return new YieldsModel(yields);
+	return new Yields(yields);
     }
 
 

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.RoundToModel;
+import ua.com.fielden.platform.entity.query.generation.elements.RoundTo;
 
 public class RoundToBuilder extends TwoArgumentsFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class RoundToBuilder extends TwoArgumentsFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new RoundToModel(getModelForSingleOperand(firstCat(), firstValue()), getModelForSingleOperand(secondCat(), secondValue()));
+	return new RoundTo(getModelForSingleOperand(firstCat(), firstValue()), getModelForSingleOperand(secondCat(), secondValue()));
     }
 }

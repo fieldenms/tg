@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.MaxOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.MaxOf;
 
 public class MaxOfBuilder extends OneArgumentFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class MaxOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new MaxOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new MaxOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }

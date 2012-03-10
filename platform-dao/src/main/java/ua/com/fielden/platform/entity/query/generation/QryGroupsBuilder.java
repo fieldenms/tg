@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.GroupModel;
-import ua.com.fielden.platform.entity.query.generation.elements.GroupsModel;
+import ua.com.fielden.platform.entity.query.generation.elements.GroupBy;
+import ua.com.fielden.platform.entity.query.generation.elements.GroupBys;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryGroupsBuilder extends AbstractTokensBuilder {
@@ -20,16 +20,16 @@ public class QryGroupsBuilder extends AbstractTokensBuilder {
 	return false;
     }
 
-    public GroupsModel getModel() {
+    public GroupBys getModel() {
 	if (getChild() != null && getSize() == 0) {
 	    throw new RuntimeException("Unable to produce result - unfinished model state!");
 	}
-	final List<GroupModel> groups = new ArrayList<GroupModel>();
+	final List<GroupBy> groups = new ArrayList<GroupBy>();
 	for (final Pair<TokenCategory, Object> pair : getTokens()) {
-	    groups.add((GroupModel) pair.getValue());
+	    groups.add((GroupBy) pair.getValue());
 	}
 
-	return new GroupsModel(groups);
+	return new GroupBys(groups);
     }
 
     @Override

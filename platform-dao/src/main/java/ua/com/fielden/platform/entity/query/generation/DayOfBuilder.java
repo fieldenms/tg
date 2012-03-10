@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.generation.elements.DayOfModel;
+import ua.com.fielden.platform.entity.query.generation.elements.DayOf;
 
 public class DayOfBuilder extends OneArgumentFunctionBuilder {
 
@@ -12,6 +12,6 @@ public class DayOfBuilder extends OneArgumentFunctionBuilder {
 
     @Override
     Object getModel() {
-	return new DayOfModel(getModelForSingleOperand(firstCat(), firstValue()));
+	return new DayOf(getModelForSingleOperand(firstCat(), firstValue()));
     }
 }
