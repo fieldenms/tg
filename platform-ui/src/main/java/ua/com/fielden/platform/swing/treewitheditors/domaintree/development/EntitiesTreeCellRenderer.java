@@ -8,7 +8,6 @@ import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.JTree;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
@@ -18,8 +17,8 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.dynamicreportstree.EntitiesTreeColumn;
 import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeCellRenderer2;
+import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2.EntitiesTreeUserObject;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 
 public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 {
 
@@ -32,8 +31,6 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 
     private final Font originalFont;
     private final Font derivedFont;
-    private final String criteriaName;
-    private final String resultSetName;
 
     private final ActionImagePanel newPanel;
     private final ActionImagePanel editPanel;
@@ -46,9 +43,7 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 	    final Action newAction,//
 	    final Action editAction,//
 	    final Action copyAction,//
-	    final Action removeAction,//
-	    final String criteriaName,//
-	    final String resultSetName) {
+	    final Action removeAction) {
 	super(model);
 	//Creating and configuring all action panels
 	newPanel = new ActionImagePanel(newAction);
@@ -64,8 +59,6 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 
 	setButtonsVisible(false);
 
-	this.criteriaName = criteriaName;
-	this.resultSetName = resultSetName;
 	originalFont = label.getFont();
 	derivedFont = originalFont.deriveFont(Font.BOLD);
 	label.setLeafIcon(null);
@@ -171,56 +164,31 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
      * 
      * @return
      */
-    private IDomainTreeManagerAndEnhancer getManager() {
+    protected IDomainTreeManagerAndEnhancer getManager() {
 	return getModel().getManager();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected String getLabelToolTipText(final TreePath treePath) {
-	if(treePath != null){
-	    final Pair<Class<?>, String> rootAndProp = (Pair<Class<?>, String>) ((DefaultMutableTreeNode) treePath.getLastPathComponent()).getUserObject();
-	    final Class<?> root = rootAndProp.getKey();
-	    final String property = rootAndProp.getValue();
-	    return EntitiesTreeModel2.extractTitleAndDesc(getManager().getEnhancer().getManagedType(root), property).getValue();
+	if (treePath != null) {
+	    final EntitiesTreeUserObject userObject = ((EntitiesTreeNode2) treePath.getLastPathComponent()).getUserObject();
+	    return userObject.getLabelTooltip();
 	}
 	return null;
     }
 
     @Override
     protected String getCheckingComponentToolTipText(final int index, final TreePath treePath) {
-	if(treePath != null){
-	    final Pair<Class<?>, String> rootAndProp = ((EntitiesTreeNode2) treePath.getLastPathComponent()).getUserObject();
-	    final Class<?> root = getManager().getEnhancer().getManagedType(rootAndProp.getKey());
-	    final String property = rootAndProp.getValue();
-
-	    if(index == EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()){
-		return createCriteriaCheckboxToolTipText(root, property);
-	    }else if(index == EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()){
-		return createResultSetCheckboxToolTipText(root, property);
+	if (treePath != null) {
+	    final EntitiesTreeUserObject userObject = ((EntitiesTreeNode2) treePath.getLastPathComponent()).getUserObject();
+	    if (index == EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()) {
+		return userObject.getFirstTickTooltip(); // createCriteriaCheckboxToolTipText(root, property);
+	    } else if (index == EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()) {
+		return userObject.getSecondTickTooltip(); // createResultSetCheckboxToolTipText(root, property);
 	    }
 	    return super.getCheckingComponentToolTipText(index, treePath);
 	}
 	return null;
-    }
-
-    private String createCriteriaCheckboxToolTipText(final Class<?> root, final String property) {
-	final IDomainTreeManagerAndEnhancer manager = getModel().getManager();
-	if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getFirstTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
-	    return null;
-	}
-	if (EntityUtils.isUnionEntityType(PropertyTypeDeterminator.transform(root, AbstractDomainTree.reflectionProperty(property)).getKey())) { // parent is union entity
-	    return "<html>If not selected, then entities with <i><b>" + EntitiesTreeModel2.extractTitleAndDesc(root, property).getKey() + "</b></i> will be ignored</html>";
-	}
-	return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, property).getKey() + "</b> to/from " + criteriaName + "</html>";
-    }
-
-    private String createResultSetCheckboxToolTipText(final Class<?> root, final String property) {
-	final IDomainTreeManagerAndEnhancer manager = getModel().getManager();
-	if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getSecondTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
-	    return null;
-	}
-	return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, property).getKey() + "</b> to/from " + resultSetName + "</html>";
     }
 
     @Override

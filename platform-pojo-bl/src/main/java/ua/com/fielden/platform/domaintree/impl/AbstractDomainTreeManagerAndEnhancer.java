@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
@@ -64,6 +66,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
      *
      */
     private static class DomainTreeEnhancerWithPropertiesPopulation implements IDomainTreeEnhancer {
+	private final transient Logger logger = Logger.getLogger(getClass());
 	private final DomainTreeEnhancer baseEnhancer;
 	private final DomainTreeRepresentationAndEnhancer dtr;
 
@@ -113,24 +116,18 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
 	@Override
 	public void apply() {
-	    final Map<Class<?>, List<ICalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer.getOriginalAndEnhancedRootTypes(), baseEnhancer, baseEnhancer.getFactory()); // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
-	    // TODO this or baseEnhancer?!!!
+	    final Map<Class<?>, List<ICalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer);
 	    baseEnhancer.apply();
 	    final Map<Class<?>, List<ICalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<ICalculatedProperty>>(baseEnhancer.calculatedProperties());
 
 	    final Set<Pair<Class<?>, String>> was = migrateToSet(oldCalculatedProperties);
+	    for (final Pair<Class<?>, String> rootAndProp : was) {
+		logger.info("The property (was): root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
+	    }
 	    final Set<Pair<Class<?>, String>> is = migrateToSet(newCalculatedProperties);
+	    for (final Pair<Class<?>, String> rootAndProp : is) {
+		logger.info("The property (is): root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
+	    }
 
 	    final Set<Pair<Class<?>, String>> wasUnionIs = new HashSet<Pair<Class<?>,String>>(was);
 	    wasUnionIs.addAll(is);
@@ -146,6 +143,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 		if (!dtr.isExcludedImmutably(root, newProperty)) {
 		    // the property is not excluded 1) by contract 2) was not excluded manually
 		    // this is a new property. "includedProperties" should be updated (the new property added).
+		    logger.info("The property to be added: root == " + root + ", property == " + newProperty);
 		    final String parent = PropertyTypeDeterminator.isDotNotation(newProperty) ? PropertyTypeDeterminator.penultAndLast(newProperty).getKey() : "";
 		    // ! important ! the parent should be warmed up before adding anything to it!
 		    dtr.warmUp(root, parent);
@@ -171,6 +169,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 		final Class<?> root = rootAndProp.getKey();
 		final String removedProperty = rootAndProp.getValue();
 		// this is a removed property. "includedProperties" should be updated (the removed property should be removed in incl properties).
+		logger.info("The property to be removed: root == " + root + ", property == " + removedProperty);
 		dtr.includedPropertiesMutable(root).remove(removedProperty);
 	    }
 
@@ -179,10 +178,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    // TODO update retained calc properties in included properties list? Will their places be changed? Will excludement logic be changed after that?
 	    // TODO update retained calc properties in included properties list? Will their places be changed? Will excludement logic be changed after that?
 	    // form a set of retained calculated properties:
-	    // final Set<Pair<Class<?>, String>> retained = new HashSet<Pair<Class<?>,String>>(is);
-	    // retained.retainAll(was);
-	    // for (final Pair<Class<?>, String> rootAndProp : retained) {
-	    // }
+	    final Set<Pair<Class<?>, String>> retained = new HashSet<Pair<Class<?>, String>>(is);
+	    retained.retainAll(was);
+	    for (final Pair<Class<?>, String> rootAndProp : retained) {
+		logger.info("The property to be retained: root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
+	    }
 	}
 
 	@Override

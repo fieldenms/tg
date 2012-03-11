@@ -31,6 +31,7 @@ import ua.com.fielden.platform.swing.dynamicreportstree.EntitiesTreeColumn;
 import ua.com.fielden.platform.swing.menu.filter.FilterableTreeModel;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
 import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeModel2;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -53,6 +54,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
     private final EntitiesTreeCellRenderer cellRenderer1, cellRenderer2;
     private final FilterableTreeModel filterableModel;
     private final Logger logger = Logger.getLogger(getClass());
+    private final String firstTickCaption, secondTickCaption;
 
     /**
      * Creates a new tree model for the 'entities tree' relying on {@link IDomainTreeManagerAndEnhancer}.
@@ -72,6 +74,9 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    final String firstTickCaption,//
 	    final String secondTickCaption) {
 	super(2);
+	
+	this.firstTickCaption = firstTickCaption;
+	this.secondTickCaption = secondTickCaption;
 
 	this.getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).setCheckingMode(CheckingMode.SIMPLE);
 	this.getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).setCheckingMode(CheckingMode.SIMPLE);
@@ -82,11 +87,9 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	this.nodesCache = AbstractDomainTree.createPropertiesMap();
 	this.nodesForSimplePropertiesCache = AbstractDomainTree.createPropertiesMap();
 	this.cellRenderer1 = new EntitiesTreeCellRenderer(this, //
-		newAction, editAction, copyAction, removeAction, //
-		firstTickCaption, secondTickCaption);
+		newAction, editAction, copyAction, removeAction);
 	this.cellRenderer2 = new EntitiesTreeCellRenderer(this, //
-		newAction, editAction, copyAction, removeAction, //
-		firstTickCaption, secondTickCaption);
+		newAction, editAction, copyAction, removeAction);
 
 	// initialise nodes according to included properties of the manager (these include "dummy" and "common properties" stuff)
 	for (final Class<?> root : manager.getRepresentation().rootTypes()) {
@@ -144,7 +147,6 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	if (isNotDummyAndNotCommonProperty(property)) {
 	    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
 	}
-	// TODO check: parentNode.add(node);
 	this.insertNodeInto(node, parentNode, parentNode.getChildCount());
     }
 
@@ -159,8 +161,8 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      * @param property
      */
     private void removeNode(final Class<?> root, final String property) {
-	// TODO check: node(root, property, true).removeFromParent();
-	this.removeNodeFromParent(node(root, property, true));
+	final EntitiesTreeNode2 node = node(root, property, true);
+	this.removeNodeFromParent(node);
 	nodesCache.remove(AbstractDomainTree.key(root, property));
 	if (isNotDummyAndNotCommonProperty(property)) {
 	    nodesForSimplePropertiesCache.remove(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)));
@@ -358,15 +360,64 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      * @param property
      * @return
      */
-    protected Pair<Class<?>, String> createUserObject(final Class<?> root, final String property) {
-	return new Pair<Class<?>, String>(root, property) {
-	    private static final long serialVersionUID = -7106027050288695731L;
-
-	    @Override
-	    public String toString() {
-		return extractTitleAndDesc(getManager().getEnhancer().getManagedType(root), property).getKey();
+    protected EntitiesTreeUserObject createUserObject(final Class<?> root, final String property) {
+	return new EntitiesTreeUserObject(root, property);
+    }
+    
+    /**
+     * An user object containing title, label toolTip and two checkboxes toolTips.
+     * 
+     * @author TG Team
+     *
+     */
+    public class EntitiesTreeUserObject extends Pair<Class<?>, String> {
+	private static final long serialVersionUID = 6190072664610668018L;
+	private final String toStringTitle, labelTooltip, firstTickTooltip, secondTickTooltip;
+	
+	public EntitiesTreeUserObject(final Class<?> root, final String property) {
+	    super(root, property);
+	    
+	    final Class<?> managedRoot = getManager().getEnhancer().getManagedType(root);
+	    final Pair<String, String> titleAndDesc = extractTitleAndDesc(managedRoot, property);
+	    toStringTitle = titleAndDesc.getKey();
+	    labelTooltip = titleAndDesc.getValue();
+	    firstTickTooltip = createCriteriaCheckboxToolTipText(managedRoot, property);
+	    secondTickTooltip = createResultSetCheckboxToolTipText(managedRoot, property);
+	}
+	
+	@Override
+	public final String toString() {
+	    return toStringTitle;
+	}
+	
+	public String getLabelTooltip() {
+	    return labelTooltip;
+	}
+	
+	public String getFirstTickTooltip() {
+	    return firstTickTooltip;
+	}
+	
+	public String getSecondTickTooltip() {
+	    return secondTickTooltip;
+	}
+	
+	private String createCriteriaCheckboxToolTipText(final Class<?> root, final String property) {
+	    if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getFirstTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
+		return null;
 	    }
-	};
+	    if (EntityUtils.isUnionEntityType(PropertyTypeDeterminator.transform(root, AbstractDomainTree.reflectionProperty(property)).getKey())) { // parent is union entity
+		return "<html>If not selected, then entities with <i><b>" + EntitiesTreeModel2.extractTitleAndDesc(root, property).getKey() + "</b></i> will be ignored</html>";
+	    }
+	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, property).getKey() + "</b> to/from " + firstTickCaption + "</html>";
+	}
+
+	private String createResultSetCheckboxToolTipText(final Class<?> root, final String property) {
+	    if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getSecondTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
+		return null;
+	    }
+	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, property).getKey() + "</b> to/from " + secondTickCaption + "</html>";
+	}
     }
 
     public EntitiesTreeCellRenderer getCellRenderer1() {

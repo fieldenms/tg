@@ -22,13 +22,13 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -152,7 +152,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 	}
 
 	this.calculatedProperties = new HashMap<Class<?>, List<ICalculatedProperty>>();
-	this.calculatedProperties.putAll(calculatedProperties == null ? extractAll(originalAndEnhancedRootTypes, this, getFactory()) : calculatedProperties);
+	this.calculatedProperties.putAll(calculatedProperties == null ? extractAll(this) : calculatedProperties);
     }
 
     private static Map<Class<?>, Pair<Class<?>, List<byte[]>>> createOriginalAndEnhancedRootTypesFromRootTypes(final Set<Class<?>> rootTypes) {
@@ -318,7 +318,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     public void discard() {
 	//////////// Performs migration [originalAndEnhancedRootTypes => calculatedProperties] ////////////
 	calculatedProperties.clear();
-	calculatedProperties.putAll(extractAll(originalAndEnhancedRootTypes, this, getFactory()));
+	calculatedProperties.putAll(extractAll(this));
     }
 
     /**
@@ -328,12 +328,12 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param dte
      * @return
      */
-    protected static Map<Class<?>, List<ICalculatedProperty>> extractAll(final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes, final DomainTreeEnhancer dte, final EntityFactory factory) {
+    protected static Map<Class<?>, List<ICalculatedProperty>> extractAll(final DomainTreeEnhancer dte) {
 	final Map<Class<?>, List<ICalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<ICalculatedProperty>>();
-	for (final Entry<Class<?>, Class<?>> originalAndEnhanced : originalAndEnhancedRootTypes.entrySet()) {
-	    final List<ICalculatedProperty> calc = reload(originalAndEnhanced.getValue(), originalAndEnhanced.getKey(), "", dte, factory);
+	for (final Entry<Class<?>, Class<?>> originalAndEnhanced : dte.originalAndEnhancedRootTypes.entrySet()) {
+	    final List<ICalculatedProperty> calc = reload(originalAndEnhanced.getValue(), originalAndEnhanced.getKey(), "", dte);
 	    for (final ICalculatedProperty calculatedProperty : calc) {
-		addCalculatedProperty(calculatedProperty, newCalculatedProperties, originalAndEnhancedRootTypes);
+		addCalculatedProperty(calculatedProperty, newCalculatedProperties, dte.originalAndEnhancedRootTypes);
 	    }
 	}
 	return newCalculatedProperties;
@@ -347,7 +347,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param path -- the path to loaded calculated props
      * @param dte
      */
-    private static List<ICalculatedProperty> reload(final Class<?> type, final Class<?> root, final String path, final DomainTreeEnhancer dte, final EntityFactory factory) {
+    private static List<ICalculatedProperty> reload(final Class<?> type, final Class<?> root, final String path, final DomainTreeEnhancer dte) {
 	final List<ICalculatedProperty> newCalcProperties = new ArrayList<ICalculatedProperty>();
 	if (!DynamicEntityClassLoader.isEnhanced(type)) {
 	    return newCalcProperties;
@@ -359,14 +359,17 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 		    final Title titleAnnotation = calculatedField.getAnnotation(Title.class);
 		    final String title = titleAnnotation == null ? "" : titleAnnotation.value();
 		    final String desc = titleAnnotation == null ? "" : titleAnnotation.desc();
-		    final ICalculatedProperty calculatedProperty = CalculatedProperty.createWithoutValidation/*createAndValidate*/(factory, root, calcAnnotation.contextPath(), calcAnnotation.contextualExpression(), title, desc, calcAnnotation.attribute(), calcAnnotation.origination(), dte);
+		    final ICalculatedProperty calculatedProperty = CalculatedProperty.createWithoutValidation/*createAndValidate*/(dte.getFactory(), root, calcAnnotation.contextPath(), calcAnnotation.contextualExpression(), title, desc, calcAnnotation.attribute(), calcAnnotation.origination(), dte);
 		    newCalcProperties.add(calculatedProperty);
 		}
 	    }
-	    // reload all "entity-typed" sub-properties if they are enhanced
-	    for (final Field entityProp : Finder.findPropertiesThatAreEntities(type)) {
-		final String newPath = StringUtils.isEmpty(path) ? entityProp.getName() : (path + "." + entityProp.getName());
-		newCalcProperties.addAll(reload(entityProp.getType(), root, newPath, dte, factory));
+	    // reload all "entity-typed" and "collectional entity-typed" sub-properties if they are enhanced
+	    for (final Field prop : Finder.findProperties(type)) {		
+		if (EntityUtils.isEntityType(prop.getType()) || EntityUtils.isCollectional(prop.getType())) {
+		    final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(type, prop.getName());
+		    final String newPath = StringUtils.isEmpty(path) ? prop.getName() : (path + "." + prop.getName());
+		    newCalcProperties.addAll(reload(propType, root, newPath, dte));		    
+		}
 	    }
 	    return newCalcProperties;
 	}
