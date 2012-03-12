@@ -52,6 +52,24 @@ public interface IGlobalDomainTreeManager {
     ICentreDomainTreeManagerAndEnhancer getEntityCentreManager(final Class<?> root, final String name);
 
     /**
+     * Freezes all the changes of a current version of <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>.
+     * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
+     *
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
+     * Non-base users can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but cannot save/remove base user's reports (throws {@link IllegalArgumentException}).
+     * Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br><br>
+     *
+     * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}),
+     * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
+     * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
+     *
+     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
+     * @return
+     */
+    void freezeEntityCentreManager(final Class<?> root, final String name);
+
+    /**
      * Initialises a brand new <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>.
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
@@ -70,6 +88,7 @@ public interface IGlobalDomainTreeManager {
 
     /**
      * Discards a current version of <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>.
+     * If a current version of <b>entity-centre manager</b> was freezed then it just "discards" the changes after freezing.
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
@@ -89,6 +108,7 @@ public interface IGlobalDomainTreeManager {
 
     /**
      * Saves a current version of <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>.
+     * If a current version of <b>entity-centre manager</b> was freezed then it just "applies" the changes after freezing.
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).

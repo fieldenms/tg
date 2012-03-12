@@ -49,6 +49,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     private final EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> persistentCentres;
     private final transient EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> currentCentres;
+    private final transient EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> freezedCentres;
     private final transient EnhancementPropertiesMap<Boolean> centresOwning;
 
     private final EnhancementRootsMap<IMasterDomainTreeManager> persistentMasters;
@@ -67,6 +68,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	// lazy stuff
 	this.persistentCentres = createPropertiesMap();
 	this.currentCentres = createPropertiesMap();
+	this.freezedCentres = createPropertiesMap();
 	this.centresOwning = createPropertiesMap();
 
 	this.persistentMasters = createRootsMap();
@@ -110,6 +112,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public void initEntityCentreManager(final Class<?> root, final String name) {
+	if (isFreezed(root, name)) {
+	    error("Unable to Init the 'freezed' entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
+	}
 	final String rootName = root.getName();
 	final String title = title(root, name);
 	final IQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(rootName, title);
@@ -330,6 +335,47 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     public void discardEntityCentreManager(final Class<?> root, final String name) {
 	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
 	currentCentres.put(key(root, name), initCriteriaManagerCrossReferences(EntityUtils.deepCopy(persistentCentres.get(key(root, name)), getSerialiser())));
+
+	if (isFreezed(root, name)) {
+	    unfreeze(root, name);
+	}
+    }
+
+    @Override
+    public void freezeEntityCentreManager(final Class<?> root, final String name) {
+	if (isFreezed(root, name)) {
+	    error("Unable to freeze the entity-centre instance more than once for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
+	}
+	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
+	notInitiliasedError(currentCentres.get(key(root, name)), root, name);
+	final ICentreDomainTreeManagerAndEnhancer persistentCentre = persistentCentres.remove(key(root, name));
+	freezedCentres.put(key(root, name), persistentCentre);
+	persistentCentres.put(key(root, name), initCriteriaManagerCrossReferences(EntityUtils.deepCopy(currentCentres.get(key(root, name)), getSerialiser())));
+    }
+
+    /**
+     * Returns <code>true</code> if the centre instance is in 'freezed' state, <code>false</code> otherwise.
+     *
+     * @param root
+     * @param name
+     * @return
+     */
+    protected boolean isFreezed(final Class<?> root, final String name) {
+	return freezedCentres.get(key(root, name)) != null;
+    }
+
+    /**
+     * Unfreezes the centre instance that is currently freezed.
+     *
+     * @param root
+     * @param name
+     */
+    protected void unfreeze(final Class<?> root, final String name) {
+	if (!isFreezed(root, name)) {
+	    error("Unable to unfreeze the entity-centre instance that is not 'freezed' for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
+	}
+	final ICentreDomainTreeManagerAndEnhancer persistentCentre = freezedCentres.remove(key(root, name));
+	persistentCentres.put(key(root, name), persistentCentre);
     }
 
     /**
@@ -360,25 +406,29 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public void saveEntityCentreManager(final Class<?> root, final String name) {
-	final ICentreDomainTreeManagerAndEnhancer currentMgr = getEntityCentreManager(root, name);
-	validateBeforeSaving(currentMgr, root, name);
-	prepareInstanceBeforeSave(currentMgr);
+	if (isFreezed(root, name)) {
+	    unfreeze(root, name);
+	} else {
+	    final ICentreDomainTreeManagerAndEnhancer currentMgr = getEntityCentreManager(root, name);
+	    validateBeforeSaving(currentMgr, root, name);
+	    prepareInstanceBeforeSave(currentMgr);
 
-	// save an instance of EntityCentreConfig with overridden body, which should exist in DB
-	final String title = title(root, name);
+	    // save an instance of EntityCentreConfig with overridden body, which should exist in DB
+	    final String title = title(root, name);
 
-	final IQueryModel<EntityCentreConfig> model = modelForCurrentUser(root.getName(), title);
-	final int count = entityCentreConfigController.count(model);
-	if (count == 1) { // for current user => 1 entity-centre
-	    final EntityCentreConfig ecc = entityCentreConfigController.getEntity(model);
-	    ecc.setConfigBody(getSerialiser().serialise(currentMgr));
-	    entityCentreConfigController.save(ecc);
+	    final IQueryModel<EntityCentreConfig> model = modelForCurrentUser(root.getName(), title);
+	    final int count = entityCentreConfigController.count(model);
+	    if (count == 1) { // for current user => 1 entity-centre
+		final EntityCentreConfig ecc = entityCentreConfigController.getEntity(model);
+		ecc.setConfigBody(getSerialiser().serialise(currentMgr));
+		entityCentreConfigController.save(ecc);
 
-	    persistentCentres.put(key(root, name), initCriteriaManagerCrossReferences(EntityUtils.deepCopy(currentMgr, getSerialiser())));
-	} else if (count < 1) { // there is no entity-centre
-	    error("Unable to save a non-existent (non-visible for current user) entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
-	} else { // > 1
-	    error("There are more than one entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+		persistentCentres.put(key(root, name), initCriteriaManagerCrossReferences(EntityUtils.deepCopy(currentMgr, getSerialiser())));
+	    } else if (count < 1) { // there is no entity-centre
+		error("Unable to save a non-existent (non-visible for current user) entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+	    } else { // > 1
+		error("There are more than one entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+	    }
 	}
     }
 
@@ -424,6 +474,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public void saveAsEntityCentreManager(final Class<?> root, final String originalName, final String newName) {
+	if (isFreezed(root, originalName)) {
+	    error("Unable to SaveAs the 'freezed' entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title(root, originalName) + "] for current user [" + currentUser() + "].");
+	}
 	final ICentreDomainTreeManagerAndEnhancer originationMgr = getEntityCentreManager(root, originalName);
 	validateBeforeSaving(originationMgr, root, originalName);
 	// create a copy of current instance of entity centre
@@ -484,6 +537,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public void removeEntityCentreManager(final Class<?> root, final String name) {
+	if (isFreezed(root, name)) {
+	    error("Unable to Remove the 'freezed' entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
+	}
 	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
 	if (name == null) {
 	    error("Unable to remove a principle entity-centre for type [" + root.getSimpleName() + "].");

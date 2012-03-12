@@ -551,6 +551,82 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
     }
 
     @Test
+    public void test_that_CENTRE_freezing_works_fine() {
+	// create PRINCIPLE and REPORT report for USER2
+	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
+	nonBaseMgr.initEntityCentreManager(MasterEntity.class, null);
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, null).getFirstTick().check(MasterEntity.class, "integerProp", true);
+	nonBaseMgr.saveAsEntityCentreManager(MasterEntity.class, null, "REPORT");
+
+	assertFalse("Should not be changed.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().check(MasterEntity.class, "integerProp", false);
+
+	assertTrue("Should be changed after modification.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertFalse("Should be unchecked after modification.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+
+	// FREEEEEEEZEEEEEE all current changes
+	nonBaseMgr.freezeEntityCentreManager(MasterEntity.class, "REPORT");
+	assertFalse("Should not be changed after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertFalse("Should be unchecked after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+
+	////////////////////// Not permitted tasks after report has been freezed //////////////////////
+	try {
+	    nonBaseMgr.freezeEntityCentreManager(MasterEntity.class, "REPORT");
+	    fail("Double freezing is not permitted. Please do you job -- save/discard and freeze again if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    nonBaseMgr.initEntityCentreManager(MasterEntity.class, "REPORT");
+	    fail("Init action is not permitted while report is freezed. Please do you job -- save/discard and Init it if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    nonBaseMgr.saveAsEntityCentreManager(MasterEntity.class, "REPORT", "NEW_REPORT_TITLE");
+	    fail("Saving As is not permitted while report is freezed. Please do you job -- save/discard and SaveAs if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    nonBaseMgr.removeEntityCentreManager(MasterEntity.class, "REPORT");
+	    fail("Removing is not permitted while report is freezed. Please do you job -- save/discard and remove it if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+
+	// change smth.
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().check(MasterEntity.class, "integerProp", true);
+	assertTrue("Should be changed after modification after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertTrue("Should be checked after modification after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+
+	// discard after-freezing changes
+	nonBaseMgr.discardEntityCentreManager(MasterEntity.class, "REPORT");
+	assertTrue("Should be changed after discard after freezing (due to existence of before-freezing changes).", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertFalse("Should be unchecked after discard after freezing (according to before-freezing changes).", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+
+	// FREEEEEEEZEEEEEE all current changes (again)
+	nonBaseMgr.freezeEntityCentreManager(MasterEntity.class, "REPORT");
+	assertFalse("Should not be changed after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertFalse("Should be unchecked after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+	assertFalse("Should be unchecked after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "bigDecimalProp"));
+
+	// change smth.
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().check(MasterEntity.class, "bigDecimalProp", true);
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().check(MasterEntity.class, "integerProp", true);
+	assertTrue("Should be changed after modification after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertTrue("Should be checked after modification after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "bigDecimalProp"));
+	assertTrue("Should be checked after modification after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+
+	// save (precisely "apply") after-freezing changes
+	nonBaseMgr.saveEntityCentreManager(MasterEntity.class, "REPORT");
+	assertTrue("Should be changed after applying.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertTrue("Should be checked after applying.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "bigDecimalProp"));
+	assertTrue("Should be checked after applying.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+
+	// return to the original version of the manager and check if it really is not changed
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().check(MasterEntity.class, "bigDecimalProp", false);
+
+	assertFalse("Should not be changed after returning to original version.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+    }
+
+    @Test
     public void test_that_CENTRE_reloading_works_fine() {
 	// create PRINCIPLE and REPORT report for USER2
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
