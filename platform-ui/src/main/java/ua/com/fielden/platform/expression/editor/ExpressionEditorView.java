@@ -11,7 +11,7 @@ import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorModel.TextInsertionType;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
-import ua.com.fielden.platform.swing.review.RadioButtonPanel;
+import ua.com.fielden.platform.swing.ei.editors.development.RadioButtonPanel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 
@@ -32,7 +32,7 @@ public class ExpressionEditorView extends BaseNotifPanel<ExpressionEditorModel> 
 	addWithParamsForEditor(componentsPanel, editors, "originationProperty", "span");
 	final RadioButtonPanel radioButtonPanel = (RadioButtonPanel)editors.get("attribute").getEditor();
 	radioButtonPanel.setLayout(new MigLayout("fill, insets 0", "[l][l][l, grow]", "[]"));
-	radioButtonPanel.layoutEditor(CalculatedPropertyAttribute.ALL); // 
+	radioButtonPanel.layoutEditor(CalculatedPropertyAttribute.ALL); //
 	radioButtonPanel.layoutEditor(CalculatedPropertyAttribute.ANY);
 	radioButtonPanel.layoutEditor(CalculatedPropertyAttribute.NO_ATTR);
 	addWithParamsForEditor(componentsPanel, editors, "attribute", "span");
@@ -45,8 +45,6 @@ public class ExpressionEditorView extends BaseNotifPanel<ExpressionEditorModel> 
 	//row 3
 	add(componentsPanel, editors, "title");
 	addAndWrap(componentsPanel, editors, "desc");
-
-	//TODO add attribute editor
 
 	//////////////////action panel ///////////////////
 	final JPanel actionPanel = new JPanel(new MigLayout("fill, insets 5", "push[fill,:100:][fill,:100:]", "[c]"));

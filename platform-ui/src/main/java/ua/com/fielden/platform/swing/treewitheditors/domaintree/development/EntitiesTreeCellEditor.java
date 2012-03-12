@@ -90,16 +90,20 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 		    return false;
 		}
 		final Object lastComponent = path.getLastPathComponent();
-		final EntitiesTreeNode2 node = (EntitiesTreeNode2) lastComponent;		
-		if(EntityUtils.isEntityType(propertyType(node))){
+		final EntitiesTreeNode2 node = (EntitiesTreeNode2) lastComponent;
+		try {
+		    getTree().getEntitiesModel().getManager().getEnhancer().getCalculatedProperty(node.getUserObject().getKey(), node.getUserObject().getValue());
 		    return true;
+		} catch (final IncorrectCalcPropertyKeyException ex) {
+		    if (EntityUtils.isEntityType(propertyType(node))) {
+			return true;
+		    }
 		}
-		return false;
 	    }
 	}
 	return false;
     }
-    
+
     protected Class<?> propertyType(final EntitiesTreeNode2 node) {
 	final Class<?> enhancedRoot = getTree().getEntitiesModel().getManager().getEnhancer().getManagedType(node.getUserObject().getKey());
 	final String property = node.getUserObject().getValue();

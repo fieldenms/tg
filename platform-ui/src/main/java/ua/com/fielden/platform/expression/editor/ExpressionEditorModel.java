@@ -56,6 +56,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
     private final OriginationPropertyEditor originationEditor;
     private final IPropertyProvider propertySelectionModel;
 
+
     /**
      * Initiates expression editor with specific {@link ExpressionEntity} instance and appropriate {@link ILightweightPropertyBinder}.
      *
@@ -82,6 +83,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	editors.put("originationProperty", originationEditor);
 	setEditors(editors);
     }
+
 
     /**
      * Returns the associated property selection model.
@@ -208,9 +210,6 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    protected Result action(final ActionEvent arg0) throws Exception {
 		notifyActionStageChange(ActionStage.SAVE_ACTION);
 		try {
-
-		    //TODO must also create new calculated property for specified entity.
-
 		    return getManagedEntity().isValid();
 		} catch (final Exception ex) {
 		    return new Result(getManagedEntity(), ex);
@@ -323,6 +322,12 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		notifyActionStageChange(ActionStage.DELETE_POST_ACTION);
 	    }
 
+	    @Override
+	    protected void handlePreAndPostActionException(final Throwable ex) {
+		super.handlePreAndPostActionException(ex);
+		setState(UmState.VIEW);
+	    }
+
 	};
 	action.setEnabled(true);
 	final Icon icon = ResourceLoader.getIcon("images/delete.png");
@@ -331,6 +336,8 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_D);
 	return action;
     }
+
+
 
     /**
      * Creates {@link Action} for function buttons.

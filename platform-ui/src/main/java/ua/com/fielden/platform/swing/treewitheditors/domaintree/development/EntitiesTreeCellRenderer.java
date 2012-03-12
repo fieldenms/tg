@@ -58,6 +58,9 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 	this.confPanel.add(removePanel);
 
 	setButtonsVisible(false);
+	for(final ActionImagePanel actionPanel : confPanel){
+	    actionPanel.setFocusable(true);
+	}
 
 	originalFont = label.getFont();
 	derivedFont = originalFont.deriveFont(Font.BOLD);

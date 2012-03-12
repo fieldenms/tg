@@ -70,6 +70,19 @@ public class RadioButtonPanel extends JPanel {
     }
 
     /**
+     * Add the radio button associated with the key to the container if it's not yet added.
+     * 
+     * @param key
+     */
+    @SuppressWarnings("rawtypes")
+    public void layoutEditor(final Enum key) {
+	final BoundedValidationLayer<JRadioButton> value = radioButtonMap.get(key);
+	if (value != null) {
+	    add(value);
+	}
+    }
+
+    /**
      * removes the editor associated with the key from the panle's container
      * 
      * @param key

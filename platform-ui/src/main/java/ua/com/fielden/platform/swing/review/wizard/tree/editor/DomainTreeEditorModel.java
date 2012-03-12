@@ -2,9 +2,7 @@ package ua.com.fielden.platform.swing.review.wizard.tree.editor;
 
 import java.awt.event.ActionEvent;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.Icon;
 import javax.swing.event.EventListenerList;
 
 import org.apache.commons.lang.StringUtils;
@@ -17,8 +15,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorModel;
 import ua.com.fielden.platform.expression.editor.IPropertySelectionListener;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.swing.ei.LightweightPropertyBinder;
+import ua.com.fielden.platform.swing.actions.Command;
+import ua.com.fielden.platform.swing.ei.development.LightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.model.UmState;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -31,7 +31,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
  */
 public class DomainTreeEditorModel<T extends AbstractEntity> {
 
-    private final ExpressionEditorModel expressionModel;
+    private final ExpressionEditorModelForWizard expressionModel;
 
     private final EventListenerList listenerList;
     private final CalculatedPropertySelectModel propertySelectionModel;
@@ -57,7 +57,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	this.listenerList = new EventListenerList();
 	this.propertySelectionModel = new CalculatedPropertySelectModel();
 	this.propertySelectionModel.addPropertySelectionListener(createPropertySelectedListener());
-	this.copyAction = createCopyAction();
+	this.copyAction = expressionModel.getCopyAction();
     }
 
     /**
@@ -127,24 +127,6 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	}
     }
 
-    private Action createCopyAction() {
-	return new AbstractAction("Copy") {
-
-	    private static final long serialVersionUID = -2026358870743243018L;
-	    {
-		final Icon icon = ResourceLoader.getIcon("images/page_white_copy.png");
-		putValue(Action.LARGE_ICON_KEY, icon);
-		putValue(Action.SHORT_DESCRIPTION, "Copy the selected calculated property");
-	    }
-
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		// TODO Implement copy action for calculated property.
-
-	    }
-	};
-    }
-
     /**
      * Notify all listeners that have registered interest for notification on the edit event.
      *
@@ -188,8 +170,20 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
 	private boolean isNew;
 
+	private final Action copyAction;
+
 	public ExpressionEditorModelForWizard(final CalculatedProperty entity, final ILightweightPropertyBinder<CalculatedProperty> propertyBinder) {
 	    super(entity, propertyBinder);
+	    this.copyAction = createCopyAction();
+	}
+
+	/**
+	 * Returns the "copy calculated property" action.
+	 * 
+	 * @return
+	 */
+	public Action getCopyAction() {
+	    return copyAction;
 	}
 
 	@Override
@@ -213,10 +207,19 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 		break;
 	    case EDIT_ACTION:
 		if(canEdit()){
-		    setEntity((CalculatedProperty)dtme.getEnhancer().getCalculatedProperty(rootType, propertySelectionModel.getSelectedProperty()));
+		    final CalculatedProperty entity = (CalculatedProperty)dtme.getEnhancer().getCalculatedProperty(rootType, propertySelectionModel.getSelectedProperty());
+		    setEntity(entity);
 		    isNew = false;
 		} else {
 		    throw new IllegalStateException("Please select generated property first to edit it");
+		}
+		break;
+	    case DELETE_ACTION:
+		if(propertySelectionModel != null && propertySelectionModel.isPropertySelected()){
+		    dtme.getEnhancer().removeCalculatedProperty(rootType, propertySelectionModel.getSelectedProperty());
+		    dtme.getEnhancer().apply();
+		} else {
+		    throw new IllegalStateException("Please select calculated property to remove!");
 		}
 		break;
 	    case NEW_POST_ACTION:
@@ -235,9 +238,6 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 		if (isNew) {
 		    dtme.getEnhancer().addCalculatedProperty(getEntity());
 		}
-		dtme.getEnhancer().apply();
-	    case CANCEL_POST_ACTION:
-		// TODO please provide discard action
 		firePropertyProcessAction(new IPropertyProcessingAction(){
 
 		    @Override
@@ -245,6 +245,17 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 			listener.finishEdit();
 		    }
 		});
+		dtme.getEnhancer().apply();
+		break;
+	    case CANCEL_POST_ACTION:
+		firePropertyProcessAction(new IPropertyProcessingAction(){
+
+		    @Override
+		    public void processPropertyEditAction(final IPropertyEditListener listener) {
+			listener.finishEdit();
+		    }
+		});
+		dtme.getEnhancer().discard();
 		break;
 	    }
 	}
@@ -252,6 +263,54 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	@Override
 	protected boolean canEdit() {
 	    return propertySelectionModel != null && propertySelectionModel.isPropertySelected() && isGenerated(propertySelectionModel.getSelectedProperty());
+	}
+
+	private Action createCopyAction() {
+	    return new Command<Void>("Copy") {
+		private static final long serialVersionUID = 1L;
+
+		{
+		    putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/page_white_copy.png"));
+		    putValue(Action.SHORT_DESCRIPTION, "Copy the selected calculated property");
+		}
+
+		@Override
+		protected boolean preAction() {
+		    setState(UmState.UNDEFINED);
+		    return super.preAction();
+		}
+
+		@Override
+		protected Void action(final ActionEvent event) throws Exception {
+		    if(propertySelectionModel != null && propertySelectionModel.isPropertySelected()){
+			final CalculatedProperty entity = (CalculatedProperty)dtme.getEnhancer().copyCalculatedProperty(rootType, propertySelectionModel.getSelectedProperty());
+			setEntity(entity);
+			isNew = true;
+		    } else {
+			throw new IllegalStateException("Please select calculated property to edit!");
+		    }
+		    return null;
+		}
+
+		@Override
+		protected void postAction(final Void entity) {
+		    setState(UmState.EDIT);
+		    firePropertyProcessAction(new IPropertyProcessingAction(){
+
+			@Override
+			public void processPropertyEditAction(final IPropertyEditListener listener) {
+			    listener.startEdit();
+			}
+		    });
+		}
+
+		@Override
+		protected void handlePreAndPostActionException(final Throwable ex) {
+		    super.handlePreAndPostActionException(ex);
+		    setState(UmState.VIEW);
+		}
+
+	    };
 	}
 
     }

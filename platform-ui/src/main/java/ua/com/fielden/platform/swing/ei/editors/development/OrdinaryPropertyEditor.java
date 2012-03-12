@@ -84,7 +84,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
      * @param propertyName
      * @return
      */
-    public static OrdinaryPropertyEditor createOrdinaryPropertyEditor(final AbstractEntity<?> entity, final String propertyName){
+    public static OrdinaryPropertyEditor createOrdinaryPropertyEditorForMaster(final AbstractEntity<?> entity, final String propertyName){
 	return new OrdinaryPropertyEditor(entity, propertyName, 0L);
     }
 
@@ -197,7 +197,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 	    final RadioButtonPanel radioPanel = new RadioButtonPanel();
 	    for (final Object value : values) {
 		if (value instanceof IPropertyEnum) {
-		    radioPanel.addEditor((Enum) value, ComponentFactory.createRadioButton(entity, bindingPropertyName, value, ((IPropertyEnum) value).getTooltip()));
+		    radioPanel.addEditor((Enum) value, ComponentFactory.createRadioButton(entity, bindingPropertyName, value, ((IPropertyEnum) value).getTitle(), ((IPropertyEnum) value).getTooltip()));
 		}
 	    }
 	    rebindableEditor = null;

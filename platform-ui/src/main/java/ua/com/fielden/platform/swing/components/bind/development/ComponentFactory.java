@@ -64,7 +64,7 @@ import com.jgoodies.binding.value.ValueModel;
 /**
  * The factory to create components from entity's properties or from propertyWrappers
  *
- * @author Jhou
+ * @author TG Team
  *
  */
 public class ComponentFactory {
@@ -702,8 +702,8 @@ public class ComponentFactory {
      * @param choice
      * @return
      */
-    public static BoundedValidationLayer<JRadioButton> createRadioButton(final IBindingEntity entity, final String propertyName, final Object choice, final String originalToolTipText, final IOnCommitAction... actions) {
-	final JRadioButton radioButton = new JRadioButton(choice.toString());
+    public static BoundedValidationLayer<JRadioButton> createRadioButton(final IBindingEntity entity, final String propertyName, final Object choice, final String title, final String originalToolTipText, final IOnCommitAction... actions) {
+	final JRadioButton radioButton = new JRadioButton(title);
 	final BoundedValidationLayer<JRadioButton> validationLayer = createBoundedValidationLayer(radioButton, originalToolTipText);
 	Binder.bindRadioButton(validationLayer, entity, propertyName, choice, actions);
 	return validationLayer;
