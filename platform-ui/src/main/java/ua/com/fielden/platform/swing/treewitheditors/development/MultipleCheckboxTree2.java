@@ -14,6 +14,7 @@ import javax.swing.ToolTipManager;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeSelectionModel;
 
+import ua.com.fielden.platform.swing.menu.filter.AbstractFilterableTreeModel;
 import ua.com.fielden.platform.swing.treewitheditors.Tree;
 
 /**
@@ -64,7 +65,12 @@ public class MultipleCheckboxTree2 extends Tree {
     public void setModel(final TreeModel newModel) {
 	super.setModel(newModel);
 
-	setSpecificModel((MultipleCheckboxTreeModel2) newModel);
+	if(newModel instanceof AbstractFilterableTreeModel){
+	    final AbstractFilterableTreeModel filterableTreeModel = (AbstractFilterableTreeModel)newModel;
+	    setSpecificModel((MultipleCheckboxTreeModel2) filterableTreeModel.getOriginModel());
+	}else{
+	    setSpecificModel((MultipleCheckboxTreeModel2) newModel);
+	}
 
 	for (int modelCounter = 0; modelCounter < this.model.getCheckingModelCount(); modelCounter++) {
 	    final TreeCheckingModel checkingModel = this.model.getCheckingModel(modelCounter);
@@ -90,6 +96,6 @@ public class MultipleCheckboxTree2 extends Tree {
     }
 
     public MultipleCheckboxTreeModel2 getSpecificModel() {
-        return model;
+	return model;
     }
 }

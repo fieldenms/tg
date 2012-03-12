@@ -58,7 +58,7 @@ public class EntitiesTree2 extends MultipleCheckboxTree2 {
 	// TODO is the step below essential?
 	// TODO is the step below essential?
 	// TODO is the step below essential?
-	// setModel(filterableModel);
+	setModel(entitiesModel.getFilterableModel());
 
 	// TODO during expanding "warming up" action has adequate performance. But after that... UI expanding is very slow! Please, investigate.
 	addTreeWillExpandListener(this.entitiesModel.createTreeWillExpandListener());

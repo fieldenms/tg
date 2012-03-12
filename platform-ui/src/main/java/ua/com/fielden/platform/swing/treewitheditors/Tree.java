@@ -219,7 +219,8 @@ public class Tree extends JTree {
 		return traceNextAvailablePath(startPath, pathsToExpand, numOfPaths - 1);
 	    }
 	    pathsToExpand.add(startPath);
-	    final Object child = getModel().getChild(startPath.getLastPathComponent(), 0);
+	    final Object treeNode = startPath.getLastPathComponent();
+	    final Object child = getModel().getChildCount(treeNode) == 0 ? null : getModel().getChild(treeNode, 0);
 	    if (child == null) {
 		return traceNextAvailablePath(startPath, pathsToExpand, numOfPaths);
 	    } else {
@@ -263,7 +264,8 @@ public class Tree extends JTree {
 	    final TreePath parentPath=path.getParentPath();
 	    final Object lastComponent= path.getLastPathComponent();
 	    final int childIndex = getModel().getIndexOfChild(parentPath.getLastPathComponent(), lastComponent);
-	    final Object child=getModel().getChild(parentPath.getLastPathComponent(), childIndex+1);
+	    final Object treeNode = parentPath.getLastPathComponent();
+	    final Object child = getModel().getChildCount(treeNode) <= childIndex + 1 ? null : getModel().getChild(treeNode, childIndex+1);
 	    if(child==null){
 		path=parentPath;
 	    }else{
