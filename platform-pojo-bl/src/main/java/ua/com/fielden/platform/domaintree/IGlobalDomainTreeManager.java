@@ -108,7 +108,7 @@ public interface IGlobalDomainTreeManager {
 
     /**
      * Saves a current version of <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>.
-     * If a current version of <b>entity-centre manager</b> was freezed then it just "applies" the changes after freezing.
+     * If a current version of <b>entity-centre manager</b> was freezed then it just "accepts" the current version.
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).

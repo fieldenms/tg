@@ -92,7 +92,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     void initAnalysisManagerByDefault(final String name, final AnalysisType analysisType);
 
     /**
-     * Discards a current version of analysis manager with specified <code>name</code>. <br><br>
+     * Discards a current version of analysis manager with specified <code>name</code>.
+     * If a current version of <b>analysis manager</b> was freezed then it just "discards" the changes after freezing.
+     * <br><br>
      *
      * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
      * [persistentAnalyses => currentAnalyses]. <br><br>
@@ -106,7 +108,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     void discardAnalysisManager(final String name);
 
     /**
-     * Accepts a current version of analysis manager with specified <code>name</code>. <br><br>
+     * Accepts a current version of analysis manager with specified <code>name</code>.
+     * If a current version of <b>analysis manager</b> was freezed then it just "accepts" the current version.
+     * <br><br>
      *
      * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
      * [persistentAnalyses => currentAnalyses]. <br><br>
@@ -160,6 +164,20 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
      * @return
      */
     IAbstractAnalysisDomainTreeManagerAndEnhancer getAnalysisManager(final String name);
+
+    /**
+     * Freezes a current version of analysis manager with specified <code>name</code>. <br><br>
+     *
+     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
+     * [persistentAnalyses => currentAnalyses]. <br><br>
+     *
+     * This current version of a analysis manager can be altered by its methods, and then accepted ({@link #acceptAnalysisManager(String)} method) or discarded (
+     * {@link #discardAnalysisManager(String)} method). <br><br>
+     *
+     * @param name -- a name that defines an analysis.
+     * @return
+     */
+    void freezeAnalysisManager(final String name);
 
     /**
      * Returns an <b>ordered</b> list of existent analysis names (which are the keys, that can be used in {@link #getAnalysisManager(String)} method).

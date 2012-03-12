@@ -530,6 +530,11 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
     @Override
+    public void freezeAnalysisManager(final String name) {
+	base().freezeAnalysisManager(name);
+    }
+
+    @Override
     public List<String> analysisKeys() {
 	return base().analysisKeys();
     }

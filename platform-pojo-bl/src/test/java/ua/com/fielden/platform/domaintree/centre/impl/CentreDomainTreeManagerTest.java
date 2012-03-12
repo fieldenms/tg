@@ -701,6 +701,82 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     @Test
+    public void test_that_Analyses_freezing_works_fine() {
+	final AnalysisType analysisType = AnalysisType.SIMPLE;
+	final String name2 = "A brand new SIMPLE analysis";
+
+	final String property1 = "booleanProp", property2 = "entityProp.booleanProp";
+
+
+	// initialise a brand new instance of analysis again (e.g. pivot)
+	dtm().initAnalysisManagerByDefault(name2, analysisType);
+	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property1, true);
+	dtm().acceptAnalysisManager(name2);
+
+	assertFalse("Should not be changed.", dtm().isChangedAnalysisManager(name2));
+	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property1, false);
+
+	assertTrue("Should be changed after modification.", dtm().isChangedAnalysisManager(name2));
+	assertFalse("Should be unchecked after modification.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+
+	// FREEEEEEEZEEEEEE all current changes
+	dtm().freezeAnalysisManager(name2);
+	assertFalse("Should not be changed after freezing.", dtm().isChangedAnalysisManager(name2));
+	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+
+	////////////////////// Not permitted tasks after report has been freezed //////////////////////
+	try {
+	    dtm().freezeAnalysisManager(name2);
+	    fail("Double freezing is not permitted. Please do you job -- save/discard and freeze again if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    dtm().initAnalysisManagerByDefault(name2, analysisType);
+	    fail("Init action is not permitted while report is freezed. Please do you job -- save/discard and Init it if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    dtm().removeAnalysisManager(name2);
+	    fail("Removing is not permitted while report is freezed. Please do you job -- save/discard and remove it if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+
+	// change smth.
+	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property1, true);
+	assertTrue("Should be changed after modification after freezing.", dtm().isChangedAnalysisManager(name2));
+	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+
+	// discard after-freezing changes
+	dtm().discardAnalysisManager(name2);
+	assertTrue("Should be changed after discard after freezing (due to existence of before-freezing changes).", dtm().isChangedAnalysisManager(name2));
+	assertFalse("Should be unchecked after discard after freezing (according to before-freezing changes).", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+
+	// FREEEEEEEZEEEEEE all current changes (again)
+	dtm().freezeAnalysisManager(name2);
+	assertFalse("Should not be changed after freezing.", dtm().isChangedAnalysisManager(name2));
+	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property2));
+
+	// change smth.
+	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property2, true);
+	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property1, true);
+	assertTrue("Should be changed after modification after freezing.", dtm().isChangedAnalysisManager(name2));
+	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property2));
+	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+
+	// apply after-freezing changes
+	dtm().acceptAnalysisManager(name2);
+	assertTrue("Should be changed after applying.", dtm().isChangedAnalysisManager(name2));
+	assertTrue("Should be checked after applying.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property2));
+	assertTrue("Should be checked after applying.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+
+	// return to the original version of the manager and check if it really is not changed
+	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property2, false);
+
+	assertFalse("Should not be changed after returning to original version.", dtm().isChangedAnalysisManager(name2));
+    }
+
+    @Test
     public void test_the_order_of_Analyses() {
 	for (int i = 1; i <= 5; i++) {
 	    dtm().initAnalysisManagerByDefault("Pivot " + i, AnalysisType.PIVOT);

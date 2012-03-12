@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
@@ -48,9 +50,11 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 public class CentreDomainTreeManager extends AbstractDomainTreeManager implements ICentreDomainTreeManager {
     private static final long serialVersionUID = 7832625541851145438L;
+    private final transient Logger logger = Logger.getLogger(getClass());
 
     private final LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses;
     private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> currentAnalyses;
+    private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> freezedAnalyses;
     private Boolean runAutomatically;
 
     /**
@@ -81,6 +85,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	for (final Entry<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> entry : this.persistentAnalyses.entrySet()) {
 	    currentAnalyses.put(entry.getKey(), EntityUtils.deepCopy(entry.getValue(), getSerialiser())); // should be initialised with copies of persistent analyses
 	}
+	freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
     }
 
     @Override
@@ -650,6 +655,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
     @Override
     public void initAnalysisManagerByDefault(final String name, final AnalysisType analysisType) {
+	if (isFreezed(name)) {
+	    error("Unable to Init analysis instance if it is freezed for title [" + name + "].");
+	}
 	if (getAnalysisManager(name) != null) {
 	    throw new IllegalArgumentException("The analysis with name [" + name + "] already exists.");
 	}
@@ -671,15 +679,23 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	} else {
 	    currentAnalyses.remove(name);
 	}
+
+	if (isFreezed(name)) {
+	    unfreeze(name);
+	}
     }
 
     @Override
     public void acceptAnalysisManager(final String name) {
-	final IAbstractAnalysisDomainTreeManagerAndEnhancer dtm = EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser());
-	if (dtm != null) {
-	    persistentAnalyses.put(name, dtm);
+	if (isFreezed(name)) {
+	    unfreeze(name);
 	} else {
-	    persistentAnalyses.remove(name);
+	    final IAbstractAnalysisDomainTreeManagerAndEnhancer dtm = EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser());
+	    if (dtm != null) {
+		persistentAnalyses.put(name, dtm);
+	    } else {
+		persistentAnalyses.remove(name);
+	    }
 	}
     }
 
@@ -690,6 +706,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
     @Override
     public void removeAnalysisManager(final String name) {
+	if (isFreezed(name)) {
+	    error("Unable to remove analysis instance if it is freezed for title [" + name + "].");
+	}
 	final IAbstractAnalysisDomainTreeManager mgr = getAnalysisManager(name);
 	if (mgr == null) {
 	    throw new IllegalArgumentException("The unknown analysis with name [" + name + "] can not be removed.");
@@ -701,6 +720,66 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     @Override
     public IAbstractAnalysisDomainTreeManagerAndEnhancer getAnalysisManager(final String name) {
 	return currentAnalyses.get(name);
+    }
+
+    @Override
+    public void freezeAnalysisManager(final String name) {
+	if (isFreezed(name)) {
+	    error("Unable to freeze the analysis instance more than once for title [" + name + "].");
+	}
+	notInitiliasedError(persistentAnalyses.get(name), name);
+	notInitiliasedError(currentAnalyses.get(name), name);
+	final IAbstractAnalysisDomainTreeManagerAndEnhancer persistentAnalysis = persistentAnalyses.remove(name);
+	freezedAnalyses.put(name, persistentAnalysis);
+	persistentAnalyses.put(name, EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser()));
+    }
+
+    /**
+     * Returns <code>true</code> if the analysis instance is in 'freezed' state, <code>false</code> otherwise.
+     *
+     * @param name
+     * @return
+     */
+    protected boolean isFreezed(final String name) {
+	return freezedAnalyses.get(name) != null;
+    }
+
+    /**
+     * Unfreezes the centre instance that is currently freezed.
+     *
+     * @param root
+     * @param name
+     */
+    protected void unfreeze(final String name) {
+	if (!isFreezed(name)) {
+	    error("Unable to unfreeze the analysis instance that is not 'freezed' for title [" + name + "].");
+	}
+	final IAbstractAnalysisDomainTreeManagerAndEnhancer persistentAnalysis = freezedAnalyses.remove(name);
+	persistentAnalyses.put(name, persistentAnalysis);
+    }
+
+
+    /**
+     * Throws an error when the instance is <code>null</code> (not initialised).
+     *
+     * @param mgr
+     * @param root
+     * @param name
+     */
+    private void notInitiliasedError(final IAbstractAnalysisDomainTreeManagerAndEnhancer mgr, final String name) {
+	if (mgr == null) {
+	    error("Unable to perform this operation on the analysis instance, that wasn't initialised, for title [" + name + "].");
+	}
+    }
+
+    /**
+     * Logs and throws an {@link IllegalArgumentException} error with specified message.
+     *
+     * @param message
+     */
+    private void error(final String message) {
+	logger.error(message);
+	throw new IllegalArgumentException(message);
     }
 
     @Override
