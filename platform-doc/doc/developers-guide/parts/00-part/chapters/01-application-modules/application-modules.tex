@@ -22,8 +22,8 @@ The Maven Archetype concept is a cool way of automating a lot of otherwise manua
 
   \lstset{  escapechar=\%,
 	  morekeywords={mvn, archetype, generate, Dfilter, fielden, local},
-	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
-  \begin{code}{Find and Run TG Application Archetype}{\label{lst:find-and-run-archetype}}
+	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{black}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
+  \begin{code}{Find and Run TG Application Archetype}{\label{lst:find-and-run-archetype}}{terminalbgcolor}
     \begin{lstlisting}
 user@workstation:~/workspace$ mvn archetype:generate -Dfilter=fielden:
 [INFO] Scanning for projects...
@@ -56,7 +56,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
   \begin{enumerate}
     \item Define value for property 'groupId': : -- a Maven specific variable, which identifies the group ID of the project being created; this could be a short name (without spaces or other funny characters) of your company such as \emph{fielden}; hit \texttt{enter} to confirm.
       
-    \begin{code}{Application groupId}{\label{lst:archetype-groupId}}
+    \begin{code}{Application groupId}{\label{lst:archetype-groupId}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
       \end{lstlisting}
@@ -64,7 +64,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 
     \item Define value for property 'artifactId': : -- a Maven specific variable, which identifies the artifact ID of the project being created; this could be a short name (without spaces or other funny characters) of your project such as \emph{coolapp}; note that this value is used as part the project's top level directory naming structure; hit \texttt{enter} to confirm.
     \vspace*{-20pt}
-    \begin{code}{Application artifactId}{\label{lst::archetype-archetypeId}}
+    \begin{code}{Application artifactId}{\label{lst::archetype-archetypeId}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
 	Define value for property 'artifactId': : coolapp
@@ -73,7 +73,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 
     \item Define value for property 'version': 1.0-SNAPSHOT: -- a Maven specific variable, which identifies version of the artifact (i.e. your project); the default is \emph{1.0-SNAPSHOT}, which is only reasonable given a new project is being created; hit \texttt{enter} to confirm.
     \vspace*{-20pt}
-    \begin{code}{Application version}{\label{lst::archetype-version}}
+    \begin{code}{Application version}{\label{lst::archetype-version}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
 	Define value for property 'artifactId': : coolapp
@@ -83,7 +83,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 
     \item Define value for property 'package': fielden: -- a Maven specific variable, which identifies Java package name, which is used as the root for all generated Java files; the default value matches the groupId, which is reasonable due to a Java custom of naming packages based on the company name (actually Internet domain name, which in most cases should correspond to the company name); hit \texttt{enter} to confirm.
     \vspace*{-20pt}
-    \begin{code}{Application default package}{\label{lst::archetype-package}}
+    \begin{code}{Application default package}{\label{lst::archetype-package}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
 	Define value for property 'artifactId': : coolapp
@@ -94,7 +94,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 
     \item Define value for property 'companyName': : -- a TG archetype specific variable, which should be provided with a full name of the company, which will be delivering the project being generated; the example below uses value \emph{Fielden Management Services}; hit \texttt{enter} to confirm.
     \vspace*{-20pt}
-    \begin{code}{Application default package}{\label{lst::archetype-package}}
+    \begin{code}{Application default package}{\label{lst::archetype-package}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
 	Define value for property 'artifactId': : coolapp
@@ -106,7 +106,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 
     \item Define value for property 'prjectName': : -- a TG archetype specific variable, which should be provided with a full name of the project; the example below uses value \emph{Coo App}; hit \texttt{enter} to confirm.
     \vspace*{-20pt}
-    \begin{code}{Application default package}{\label{lst::archetype-package}}
+    \begin{code}{Application default package}{\label{lst::archetype-package}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
 	Define value for property 'artifactId': : coolapp
@@ -119,7 +119,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 
     \item Define value for property 'prjectWebSite': : -- a TG archetype specific variable, which should be provided with an URI to the project web site; the value is required, so if there is no project web site then a fictitious one should be specified; please note that it is required to specify access protocol as part of the URI such as \texttt{http://}; hit \texttt{enter} to confirm.
     \vspace*{-20pt}
-    \begin{code}{Application default package}{\label{lst::archetype-package}}
+    \begin{code}{Application default package}{\label{lst::archetype-package}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
 	Define value for property 'artifactId': : coolapp
@@ -133,7 +133,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 
     \item Define value for property 'supportEmail': : -- a TG archetype specific variable, which should be provided with an intended for this project support email address; hit \texttt{enter} to confirm.
     \vspace*{-20pt}
-    \begin{code}{Application default package}{\label{lst::archetype-package}}
+    \begin{code}{Application default package}{\label{lst::archetype-package}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
 	Define value for property 'artifactId': : coolapp
@@ -148,12 +148,12 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 
   \end{enumerate}
 
-   Once the above variables have been entered Maven lists all of their values and prompts the developer to confirm their values before generating the project. 
-   The default confirmation value is \texttt{Y} -- pressing \texttt{enter} leads to confirmation of the values' correctness. 
-   Typing \texttt{N} and pressing \texttt{enter} leads to new prompts for all the variables.
+  Once the above variables have been entered Maven lists all of their values and prompts the developer to confirm their values before generating the project. 
+  The default confirmation value is \texttt{Y} -- pressing \texttt{enter} leads to confirmation of the values' correctness. 
+  Typing \texttt{N} and pressing \texttt{enter} leads to new prompts for all the variables.
 
-    \vspace*{-20pt}
-    \begin{code}{Properties configuration confirmation}{\label{lst:properties_confirmation}}
+  \vspace*{-20pt}
+  \begin{code}{Properties configuration confirmation}{\label{lst:properties_confirmation}}{terminalbgcolor}
       \begin{lstlisting}
 	Confirm properties configuration:
 	groupId: fielden
@@ -166,9 +166,10 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 	supportEmail: coolapp@support.fielden.com.au
 	Y:
       \end{lstlisting}
-    \end{code}
+  \end{code}
 
-    Confirming properties should result in a successfull generation of the TG-based application.
+  Confirming properties should result in a successfull generation of the TG-based application.
+  Note \ref{mb:project-dir-structure} list a directory structure of the generated application skeleton.  
 
   \begin{notebox}{Inspect project directory structure.}{\label{mb:project-dir-structure}}
       Under Linux a directory structure of the generated project can be inspecte by using the \texttt{tree} command as follows.
@@ -186,5 +187,126 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
       \end{verbatim}
   \end{notebox}    
   
+  The generated project is a complete TG-based application, which is ready to be built and deployed.
+  Thus, before delving into how it can be enhanced, the next section outlines the build and deployment process, which is identical for every TG-based application.
 
+\section{Build, Deploy, Execute}
+  Maven is used to fully manage the project, which includes its build and deployment process.
+  Therefore, navigate to the generated project directory in the terminal as illustrated in listing~\ref{lst:cd_to_project}.
 
+  \vspace*{-20pt}
+  \begin{code}{Navigate to the project main directory}{\label{lst:cd_to_project}}{terminalbgcolor}
+      \begin{lstlisting}
+	user@workstation:~/workspace$ cd coolapp
+        user@workstation:~/workspace/coolapp$
+      \end{lstlisting}
+  \end{code}
+
+  And run the Maven \texttt{install} command as illustrated in listing~\ref{lst:mvn_clean_install}, which generates all application deployment artifacts.
+
+  \begin{code}{Project installation}{\label{lst:mvn_clean_install}}{terminalbgcolor}
+     \begin{lstlisting}
+        user@workstation:~/workspace/coolapp$mvn clean install
+     \end{lstlisting}
+  \end{code}
+
+  Successful execution of this command should complete with an output similar to the listed in listing~\ref{lst:mvn_clean_install_completed}.
+  The build process produces two artifacts -- an application web server (unpacked and ready to be used) and a client application installation package.
+  
+  \begin{code}{Successful project installation output}{\label{lst:mvn_clean_install_completed}}{terminalbgcolor}
+      \begin{lstlisting}
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary:
+[INFO] ------------------------------------------------------------------------
+[INFO] Cool App Parent Project ............................... SUCCESS [4.212s]
+[INFO] Cool App POJOs and Business Logic Module .............. SUCCESS [6.380s]
+[INFO] Cool App DAO Module ................................... SUCCESS [12.244s]
+[INFO] Cool App UI Module .................................... SUCCESS [6.673s]
+[INFO] Cool App RAO Module ................................... SUCCESS [2.736s]
+[INFO] Cool App Web Client Module ............................ SUCCESS [18.680s]
+[INFO] Cool App Web Server Module ............................ SUCCESS [3.523s]
+[INFO] ------------------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESSFUL
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 55 seconds
+[INFO] Finished at: Mon Mar 12 13:05:07 EET 2012
+[INFO] Final Memory: 81M/416M
+[INFO] ------------------------------------------------------------------------
+user@workstation:~/workspace/coolapp$ 
+      \end{lstlisting}
+  \end{code}
+
+\subsection{Server}
+
+  The application server is represented by the \emph{Cool App Web Server Module}, which is located in directory \texttt{coolapp-web-server}.
+  The build process compiles project modules and automatically collects all dependecies, executions scripts, a sample database, configuration into the deployment directory \texttt{coolapp-web-server/target/deployment}.
+  Listing \ref{lst:app_server} outlines the sturcutre of this directory.
+
+  \begin{code}{Application server directories}{\label{lst:app_server}}{terminalbgcolor}
+     \begin{lstlisting}
+user@workstation:~/workspace/coolapp$ tree -L 1 coolapp-web-server/target/deployment/
+coolapp-web-server/target/deployment/
+|-- application.properties
+|-- attachments
+|-- client
+|-- db
+|-- lib
+|-- log4j.xml
+|-- start-server
+|-- start-server.bat
+`-- webapp
+     \end{lstlisting}
+  \end{code}
+
+  Navigate to the deployment directory\footnote{This is important in order for the startup script to correctly set the application directory.} and simply run the \texttt{start-server.bar} under Windows or \texttt{start-server} under Linux\footnote{File \texttt{start-server} needs to be made executed by running \texttt{chomod +x start-server} while in the deployment directory.} in order to start an application server.
+  Once started it listens on port \texttt{8091} for incomming connections.
+  Now it's time to install the client application.
+
+\subsection{Client}
+  \sloppypar
+  If an application server is up and running then a new terminal window (or a tab) should be open to start client application installation.
+  The client application is represented by module \emph{Cool App Web Client Module}, which is located in directory \texttt{coolapp-web-client}.
+  As part of the build process, an installation package is assembled and placed into directory \texttt{coolapp-web-client/target} as an executable jar file \texttt{coolapp-web-client-1.0-SNAPSHOT-standard.jar}\footnote{The \texttt{1.0-SNAPSHOT} indicates the current project version, which is used by default during generation.}.   
+  This jar file can be executed from a file manager by double clicking on it\footnote{If JRE is properly installed then Java should be associated} or from a terminal by running the \texttt{java} process as outlined in listing~\ref{lst:install_client}
+
+  \begin{code}{Application server directories}{\label{lst:install_client}}{terminalbgcolor}
+     \begin{lstlisting}
+user@workstation:~/workspace/coolapp$ java -jar java -jar \
+> coolapp-web-client/target/coolapp-web-client-1.0-SNAPSHOT-standard.jar
+     \end{lstlisting}
+  \end{code}
+
+  The first screen of the installation process is depicted on Fig.~\ref{img:ch00:02:client_installation_first_screen}.
+  Please note the information on this screen, which reuses the porject properties that were provided as part of project generation.
+  For example, it states that the softeare is developed by \emph{Fielden Management Services} and also lists application support email andress and a web page.
+  
+  Simply follow the steps of the installation process, which should result in successful deployment of the client application.
+  One of the final steps lists components that are provided as part of the installation.
+  Specifically, \emph{Main Application} and \emph{Documentation} as depicted in Fig.~\ref{img:ch00:02:client_installation_doc}.
+  An interesting thing here is the documentation, which is an optional component (can be unchecked).
+  Application documentation gets generated during the build process.
+  Its creation and maintenance is discussed later in this chapter.
+
+  \begin{image}{First screen of the client installation process}{\label{img:ch00:02:client_installation_first_screen}}    
+    \includegraphics[width=0.7\textwidth]{parts/00-part/chapters/01-application-modules/images/01-client-installation.png}
+  \end{image}
+
+  \begin{image}{Client documentation provided as part of the installation}{\label{img:ch00:02:client_installation_doc}}    
+    \includegraphics[width=0.7\textwidth]{parts/00-part/chapters/01-application-modules/images/02-client-installation-doc.png}
+  \end{image}
+
+  Another important screen is where user needs to specify an application server URI and port.
+  The default value is \url{www.fielden.com.au}, but for our purpose due to locally deployed application server, it should be changed to \texttt{localhost} as depiceted in Fig.~\ref{img:ch00:02:client_installation_uri}.
+
+  \begin{image}{Application server URI}{\label{img:ch00:02:client_installation_uri}}    
+    \includegraphics[width=0.7\textwidth]{parts/00-part/chapters/01-application-modules/images/03-client-installation-uri.png}
+  \end{image}
+  
+  Once installation is completed, run the client application by either navigating to the specified installation directory and running \texttt{run.bar} (\texttt{run.sh} for Linux) or by choosing an appropriate program from the \emph{Start} menu under Windows.
+  The login screen of the generated application is depicted in Fig.~\ref{img:ch00:02:client_login}.
+  The default user name and password is \emph{DEMO} (both capital).
+
+  \begin{image}{Application login}{\label{img:ch00:02:client_login}}    
+    \includegraphics[width=0.7\textwidth]{parts/00-part/chapters/01-application-modules/images/04-client-login.png}
+  \end{image}

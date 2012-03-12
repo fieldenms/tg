@@ -104,18 +104,19 @@
 \definecolor{stringcolor}{HTML}{2C3E82}
 \definecolor{highlight}{HTML}{FFB100}
 \definecolor{annotationbgcolor}{HTML}{FFD473}
+\definecolor{terminalbgcolor}{HTML}{A9A9A9}  
 
 \definecolor{bggreen}{HTML}{AEF26D}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
-\newenvironment{code}[2]
+\newenvironment{code}[3]
 { \begin{program}
   \capstart
   \captionsetup{format=plain,justification=centering,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}
   \caption{#2#1}
   \begin{center}
     \begin{tikzpicture}
-      \node [fill=codebgcolor!20!white,rounded corners=5pt]
+      \node [fill=#3!20!white,rounded corners=5pt]
       \bgroup}
       {\egroup;
     \end{tikzpicture}
