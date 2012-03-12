@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
-public class fetch<T extends AbstractEntity> {
+public class fetch<T extends AbstractEntity<?>> {
     private final Class<T> entityType;
-    private final Map<String, fetch<? extends AbstractEntity>> fetchModels = new HashMap<String, fetch<? extends AbstractEntity>>();
+    private final Map<String, fetch<? extends AbstractEntity<?>>> fetchModels = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
     private final List<String> fetchedProps = new ArrayList<String>();
 
     /**
@@ -43,7 +43,7 @@ public class fetch<T extends AbstractEntity> {
 	return this;
     }
 
-    public fetch<T> with(final String propName, final fetch<? extends AbstractEntity> fetchModel) {
+    public fetch<T> with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
 	if (AbstractEntity.class.isAssignableFrom(fetchModel.getEntityType())) {
 	    fetchModels.put(propName, fetchModel);
 	} else {
@@ -52,7 +52,7 @@ public class fetch<T extends AbstractEntity> {
 	return this;
     }
 
-    public Map<String, fetch<?>> getFetchModels() {
+    public Map<String, fetch<? extends AbstractEntity<?>>> getFetchModels() {
 	return fetchModels;
     }
 

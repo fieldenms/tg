@@ -43,11 +43,9 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
      * @param shouldBeFetched
      * @return
      */
+    private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTuple(final Object[] data, final EntityTree<ET> resultTree, final boolean shouldBeFetched) {
 
-    /*DONE*/
-    private EntityContainer<E> transformTuple(final Object[] data, final EntityTree<? extends AbstractEntity<?>> resultTree, final boolean shouldBeFetched) {
-
-	final EntityContainer<E> entCont = new EntityContainer<E>(resultTree.getResultType(), shouldBeFetched);
+	final EntityContainer<ET> entCont = new EntityContainer<ET>(resultTree.getResultType(), shouldBeFetched);
 
 	for (final Map.Entry<PropertyPersistenceInfo, Integer> primEntry : resultTree.getSingles().entrySet()) {
 	    entCont.getPrimitives().put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsType(), primEntry.getKey().getHibTypeAsUserType()));
@@ -64,7 +62,6 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
 	return entCont;
     }
 
-    /*DONE*/
     private ValueContainer transformTuple(final Object[] data, final ValueTree resultTree, final boolean shouldBeFetched) {
 
 	final ValueContainer entCont = new ValueContainer(resultTree.getHibType());
@@ -76,7 +73,6 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
 	return entCont;
     }
 
-    /*DONE*/
     private Object convertValue(final Object rawValue, final Type hibType, final IUserTypeInstantiate userType) {
 	if (hibType != null) {
 	    return rawValue;

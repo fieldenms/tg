@@ -17,6 +17,8 @@ import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.Pair;
 
 
@@ -44,7 +46,7 @@ public class EntityFetcher<E extends AbstractEntity<?>> extends AbstractFetcher<
      * @return
      */
     @SessionRequired
-    public List<E> list(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) {
+    public List<E> list(final QueryExecutionModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity) {
 	try {
 	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight());
 	} catch (final Exception e) {
@@ -53,7 +55,7 @@ public class EntityFetcher<E extends AbstractEntity<?>> extends AbstractFetcher<
 	}
     }
 
-    public List<E> list(final QueryExecutionModel queryModel) {
+    public List<E> list(final QueryExecutionModel<E> queryModel) {
 	return list(queryModel, null, null);
     }
 
@@ -125,9 +127,22 @@ public class EntityFetcher<E extends AbstractEntity<?>> extends AbstractFetcher<
     }
 
     @SessionRequired
-    protected List<EntityContainer<E>> listContainers(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
+    protected List<EntityContainer<E>> listContainers(final QueryExecutionModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final QueryModelResult modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getMappingsGenerator(), getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
-	return entityEnhancer.enhance(result, entityEnhancer.enhanceFetchModelWithKeyProperties(queryModel.getFetchModel(), modelResult.getResultType()), modelResult.getResultType());
+	return entityEnhancer.enhance(result, enhanceFetchModelWithKeyProperties(queryModel.getFetchModel(), modelResult.getResultType()), modelResult.getResultType());
     }
+
+    private fetch<E> enhanceFetchModelWithKeyProperties(final fetch<E> fetchModel, final Class<E> entitiesType) {
+	final fetch<E> enhancedFetchModel = fetchModel != null ? fetchModel : new fetch(entitiesType);
+	final List<String> keyMemberNames = Finder.getFieldNames(Finder.getKeyMembers(entitiesType));
+	for (final String keyProperty : keyMemberNames) {
+	    final Class propType = PropertyTypeDeterminator.determinePropertyType(entitiesType, keyProperty);
+	    if (AbstractEntity.class.isAssignableFrom(propType) && !enhancedFetchModel.getFetchModels().containsKey(keyProperty)) {
+		enhancedFetchModel.with(keyProperty, new fetch(propType));
+	    }
+	}
+	return enhancedFetchModel;
+    }
+
 }

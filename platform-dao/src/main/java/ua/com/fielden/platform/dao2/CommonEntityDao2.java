@@ -173,8 +173,8 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	    } else if (!entity.getDirtyProperties().isEmpty()) {
 		// let's also make sure that duplicate entities are not allowed
 		final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop("id").as("id").modelAsAggregate();
-		final List<EntityAggregates> ids = new EntityFetcher<EntityAggregates>(getSession(), getEntityFactory(), mappingsGenerator, null, null, null).list(new QueryExecutionModel.Builder(model).build());
-
+		// FIXME
+		final List<EntityAggregates> ids = null;//new EntityFetcher<EntityAggregates>(getSession(), getEntityFactory(), mappingsGenerator, null, null, null).list(new AggregatesQueryExecutionModel.Builder(model).build());
 		final int count = ids.size();
 		if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get("id")).longValue())) {
 		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " entity already exists."));

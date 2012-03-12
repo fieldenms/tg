@@ -4,22 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.Functions;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
-import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
-import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSet;
 import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.ISetOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.Now;
+import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
+import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSet;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -219,9 +217,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case IPARAM:
 	    return new EntValue(getParamValue((String) value), true);
 	case VAL:
-	    return new EntValue(processValue(value));
+	    return new EntValue(preprocessValue(value));
 	case IVAL:
-	    return new EntValue(processValue(value), true);
+	    return new EntValue(preprocessValue(value), true);
 	case ZERO_ARG_FUNCTION:
 	    return getZeroArgFunctionModel((Functions) value);
 	case EXPR:
@@ -240,13 +238,13 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
     protected Object getParamValue(final String paramName) {
 	if (getParamValues().containsKey(paramName)) {
-	    return processValue(getParamValues().get(paramName));
+	    return preprocessValue(getParamValues().get(paramName));
 	} else {
 	    throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
 	}
     }
 
-    private Object processValue (final Object value) {
+    private Object preprocessValue (final Object value) {
 	if (value != null && value.getClass().isArray()) {
 	    final List<Object> values = new ArrayList<Object>();
 	    for (final Object object : (Object[]) value) {
@@ -263,19 +261,6 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	if (value instanceof Boolean) {
 	    return getQueryBuilder().getMappingsGenerator().getBooleanValue((Boolean) value);
 	}
-
-	if (value instanceof AbstractEntity) {
-	    return ((AbstractEntity) value).getId();
-	}
-
-	if (value instanceof PropertyDescriptor || value instanceof Class) {
-	    return value.toString();
-	}
-
-	if (value instanceof Money) {
-	    return ((Money) value).getAmount();
-	}
-
 	return value;
     }
 

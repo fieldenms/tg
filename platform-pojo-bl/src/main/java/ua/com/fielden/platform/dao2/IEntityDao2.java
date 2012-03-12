@@ -6,7 +6,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -133,7 +132,7 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
      * @param pageCapacity
      * @return
      */
-    IPage<T> firstPage(final QueryExecutionModel<T> model, final QueryExecutionModel<EntityAggregates> summaryModel, final int pageCapacity);
+    IPage<T> firstPage(final QueryExecutionModel<T> model, final AggregatesQueryExecutionModel summaryModel, final int pageCapacity);
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query model (new EntityQuery).

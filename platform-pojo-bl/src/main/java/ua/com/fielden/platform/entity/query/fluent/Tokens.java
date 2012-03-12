@@ -23,6 +23,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 final class Tokens {
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
+    private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
 
     public Tokens() {
     }
@@ -42,10 +43,20 @@ final class Tokens {
 	return add(cat2, value2);
     }
 
-    private List<Object> getListFromArray(final Object... items) {
-	final List<Object> result = new ArrayList<Object>();
+    private <E extends Object> List<E> getListFromArray(final E... items) {
+	final List<E> result = new ArrayList<E>();
 	if (items != null) {
 	    result.addAll(Arrays.asList(items));
+	}
+	return result;
+    }
+
+    private List<Object> getValuesListFromArray(final Object... items) {
+	final List<Object> result = new ArrayList<Object>();
+	if (items != null) {
+	    for (final Object value : items) {
+		result.add(valuePreprocessor.preprocessValue(value));
+	    }
 	}
 	return result;
     }
@@ -131,11 +142,11 @@ final class Tokens {
     }
 
     public Tokens val(final Object value) {
-	return add(TokenCategory.VAL, value);
+	return add(TokenCategory.VAL, valuePreprocessor.preprocessValue(value));
     }
 
     public Tokens iVal(final Object value) {
-	return add(TokenCategory.IVAL, value);
+	return add(TokenCategory.IVAL, valuePreprocessor.preprocessValue(value));
     }
 
     public Tokens model(final PrimitiveResultQueryModel model) {
@@ -187,7 +198,7 @@ final class Tokens {
     }
 
     public Tokens anyOfValues(final Object... values) {
-	return add(TokenCategory.ANY_OF_VALUES, getListFromArray(values));
+	return add(TokenCategory.ANY_OF_VALUES, getValuesListFromArray(values));
     }
 
     public Tokens anyOfExpressions(final ExpressionModel... expressions) {
@@ -207,7 +218,7 @@ final class Tokens {
     }
 
     public Tokens allOfValues(final Object... values) {
-	return add(TokenCategory.ALL_OF_VALUES, getListFromArray(values));
+	return add(TokenCategory.ALL_OF_VALUES, getValuesListFromArray(values));
     }
 
     public Tokens allOfExpressions(final ExpressionModel... expressions) {
@@ -231,7 +242,7 @@ final class Tokens {
     }
 
     public Tokens setOfValues(final Object... values) {
-	return add(TokenCategory.SET_OF_VALUES, getListFromArray(values));
+	return add(TokenCategory.SET_OF_VALUES, getValuesListFromArray(values));
     }
 
     public Tokens setOfExpressions(final ExpressionModel... expressions) {

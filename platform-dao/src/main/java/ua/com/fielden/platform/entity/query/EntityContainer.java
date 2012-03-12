@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-public class EntityContainer<R extends AbstractEntity> {
+public class EntityContainer<R extends AbstractEntity<?>> {
     private final static String ID_PROPERTY_NAME = "id";
 
     private final Class<R> resultType; // should also cover marker interfaces for TgCompositeUserType
@@ -20,11 +20,11 @@ public class EntityContainer<R extends AbstractEntity> {
     private boolean shouldBeFetched;
     private final Map<String, Object> primitives = new HashMap<String, Object>();
     private final Map<String, ValueContainer> composites = new HashMap<String, ValueContainer>();
-    private final Map<String, EntityContainer> entities = new HashMap<String, EntityContainer>();
-    private final Map<String, Collection<EntityContainer>> collections = new HashMap<String, Collection<EntityContainer>>();
+    private final Map<String, EntityContainer<? extends AbstractEntity<?>>> entities = new HashMap<String, EntityContainer<? extends AbstractEntity<?>>>();
+    private final Map<String, Collection<EntityContainer<AbstractEntity<?>>>> collections = new HashMap<String, Collection<EntityContainer<AbstractEntity<?>>>>();
     private final Logger logger = Logger.getLogger(this.getClass());
 
-    public EntityContainer(final Class resultType, final boolean shouldBeFetched) {
+    public EntityContainer(final Class<R> resultType, final boolean shouldBeFetched) {
 	this.resultType = resultType;
 	this.shouldBeFetched = shouldBeFetched;
     }
@@ -65,7 +65,7 @@ public class EntityContainer<R extends AbstractEntity> {
 	    + compositePropEntry.getKey() + "] due to:" + e);
 	    }
 	}
-	for (final Map.Entry<String, EntityContainer> entityEntry : entities.entrySet()) {
+	for (final Map.Entry<String, EntityContainer<? extends AbstractEntity<?>>> entityEntry : entities.entrySet()) {
 	    if (entityEntry.getValue() == null || entityEntry.getValue().notYetInitialised() || !entityEntry.getValue().shouldBeFetched) {
 		setPropertyValue(entity, entityEntry.getKey(), null, userViewOnly);
 	    } else if (entityEntry.getValue().isInstantiated()) {
@@ -75,14 +75,14 @@ public class EntityContainer<R extends AbstractEntity> {
 	    }
 	}
 
-	for (final Map.Entry<String, Collection<EntityContainer>> entityEntry : collections.entrySet()) {
-	    Collection collectionalProp = null;
+	for (final Map.Entry<String, Collection<EntityContainer<AbstractEntity<?>>>> entityEntry : collections.entrySet()) {
+	    Collection<AbstractEntity<?>> collectionalProp = null;
 	    try {
 		collectionalProp = entityEntry.getValue().getClass().newInstance();
 	    } catch (final Exception e) {
 		throw new RuntimeException("COULD NOT EXECUTE [collectionalProp = entityEntry.getValue().getClass().newInstance();] due to: " + e);
 	    }
-	    for (final EntityContainer container : entityEntry.getValue()) {
+	    for (final EntityContainer<? extends AbstractEntity<?>> container : entityEntry.getValue()) {
 		if (!container.notYetInitialised()) {
 		    collectionalProp.add(container.instantiate(entFactory, userViewOnly));
 		}
@@ -99,7 +99,7 @@ public class EntityContainer<R extends AbstractEntity> {
 	return entity;
     }
 
-    private void setPropertyValue(final AbstractEntity entity, final String propName, final Object propValue, final boolean userViewOnly) {
+    private void setPropertyValue(final R entity, final String propName, final Object propValue, final boolean userViewOnly) {
 	if (!userViewOnly || EntityAggregates.class.isAssignableFrom(resultType)) {
 	    entity.set(propName, propValue);
 	} else {
@@ -126,11 +126,11 @@ public class EntityContainer<R extends AbstractEntity> {
         return composites;
     }
 
-    public Map<String, EntityContainer> getEntities() {
+    public Map<String, EntityContainer<? extends AbstractEntity<?>>> getEntities() {
         return entities;
     }
 
-    public Map<String, Collection<EntityContainer>> getCollections() {
+    public Map<String, Collection<EntityContainer<AbstractEntity<?>>>> getCollections() {
         return collections;
     }
 
