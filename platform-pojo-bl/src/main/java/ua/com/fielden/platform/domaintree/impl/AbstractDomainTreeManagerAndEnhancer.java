@@ -216,6 +216,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
+	public ICalculatedProperty copyCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
+	    return baseEnhancer.copyCalculatedProperty(rootType, calculatedPropertyName);
+	}
+
+	@Override
 	public ICalculatedProperty validateCalculatedPropertyKey(final ICalculatedProperty calculatedProperty, final String pathAndName) {
 	    return baseEnhancer.validateCalculatedPropertyKey(calculatedProperty, pathAndName);
 	}

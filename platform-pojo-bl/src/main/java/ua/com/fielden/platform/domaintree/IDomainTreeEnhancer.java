@@ -89,6 +89,15 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
     ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName);
 
     /**
+     * Copies the calculated property with a name <code>calculatedPropertyName</code>(dot-notation expression) from <code>rootType</code> hierarchy.
+     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property name is incorrect.<br><br>
+     *
+     * @param rootType -- type of <b>root</b> entity, from which the calculated property should be copied (not derived type).
+     * @param calculatedPropertyName -- the dot-notation expression name of calculated property to be copied.
+     */
+    ICalculatedProperty copyCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName);
+
+    /**
      * Indicates a situation when the name of calculated property is incorrect (for e.g. the place does not exist or name is not unique in the hierarchy).
      *
      * @author TG Team

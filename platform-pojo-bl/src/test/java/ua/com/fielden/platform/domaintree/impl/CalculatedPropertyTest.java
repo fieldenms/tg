@@ -34,7 +34,6 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityWithUnionForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * A test for {@link CalculatedProperty}.
@@ -114,7 +113,11 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	final CalculatedProperty calc = CalculatedProperty.createAndValidate(factory(), MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
 	checkTrivialParams(calc, MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp");
 	assertCalculatedProperty(calc, EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
-	final CalculatedProperty copy = EntityUtils.deepCopy(calc, getSerialiser());
+
+	dtm().getEnhancer().addCalculatedProperty(calc);
+	dtm().getEnhancer().apply();
+
+	final CalculatedProperty copy = (CalculatedProperty) dtm().getEnhancer().copyCalculatedProperty(MasterEntity.class, "entityProp.calculatedProperty");
 	checkTrivialParams(copy, MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp");
 	assertCalculatedProperty(copy, EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
     }

@@ -185,7 +185,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
      *
      */
     private class ExpressionEditorModelForWizard extends ExpressionEditorModel{
-	
+
 	private boolean isNew;
 
 	public ExpressionEditorModelForWizard(final CalculatedProperty entity, final ILightweightPropertyBinder<CalculatedProperty> propertyBinder) {
@@ -237,6 +237,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 		}
 		dtme.getEnhancer().apply();
 	    case CANCEL_POST_ACTION:
+		// TODO please provide discard action
 		firePropertyProcessAction(new IPropertyProcessingAction(){
 
 		    @Override

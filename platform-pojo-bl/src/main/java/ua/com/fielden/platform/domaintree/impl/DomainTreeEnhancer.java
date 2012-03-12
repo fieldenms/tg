@@ -364,11 +364,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 		}
 	    }
 	    // reload all "entity-typed" and "collectional entity-typed" sub-properties if they are enhanced
-	    for (final Field prop : Finder.findProperties(type)) {		
+	    for (final Field prop : Finder.findProperties(type)) {
 		if (EntityUtils.isEntityType(prop.getType()) || EntityUtils.isCollectional(prop.getType())) {
 		    final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(type, prop.getName());
 		    final String newPath = StringUtils.isEmpty(path) ? prop.getName() : (path + "." + prop.getName());
-		    newCalcProperties.addAll(reload(propType, root, newPath, dte));		    
+		    newCalcProperties.addAll(reload(propType, root, newPath, dte));
 		}
 	    }
 	    return newCalcProperties;
@@ -521,6 +521,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     @Override
     public ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
 	return validateCalculatedPropertyKey2(rootType, calculatedPropertyName, calculatedProperties, originalAndEnhancedRootTypes);
+    }
+
+    @Override
+    public ICalculatedProperty copyCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
+        return EntityUtils.deepCopy(getCalculatedProperty(rootType, calculatedPropertyName), getSerialiser());
     }
 
     @Override
