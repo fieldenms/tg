@@ -12,13 +12,13 @@ The Maven Archetype concept is a cool way of automating a lot of otherwise manua
 \section{Create new project from an archetype}
 
   All commands for project generation are executed in a terminal\footnote{The majority of Maven related interaction is done via a terminal.
-  Thus, it is useful be familiar with command line commands of your oprtating system of choice.
+  Thus, it is useful be familiar with command line commands of your operating system of choice.
   All examples in this book are performed under Linux, but they are all fully applicable to Windows or Mac OS.
-  Any Linux specific commands are highlighed in separate notes.}.
+  Any Linux specific commands are highlighted in separate notes.}.
   Therefore, fire up the terminal and navigate to a working directory.
   For the sake of completeness, let's consider the that working directory is \texttt{workspace}, which is located in the user's home directory.
   
-  If Maven is correctly configured as described in section \ref{ch00:01} then running command \texttt{mvn archetype:generate -Dfilter=fielden:} in a terminal should provide a result oulined in listing \ref{lst:find-and-run-archetype}.
+  If Maven is correctly configured as described in section \ref{ch00:01} then running command \texttt{mvn archetype:generate -Dfilter=fielden:} in a terminal should provide a result outlined in listing \ref{lst:find-and-run-archetype}.
 
   \lstset{  escapechar=\%,
 	  morekeywords={mvn, archetype, generate, Dfilter, fielden, local},
@@ -46,7 +46,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
     \end{lstlisting}
   \end{code}
 
-  This command requests Maven to generate a project using one of the archetypes with groupId equal to \emph{fielden}.
+  This command requests Maven to generate a project using one of the archetypes with \texttt{groupId} equal to \emph{fielden}.
   The only available at this stage archetype associated with \emph{fielden} is \emph{fielden:tg-application-archetype}
   In order to select this archetype type 1 (or any other appropriate numeral, which points to archetype \emph{fielden:tg-application-archetype}) and hit \texttt{enter} to confirm the selection. 
   This action result in a number of archetype specific prompts. 
@@ -168,11 +168,11 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
       \end{lstlisting}
   \end{code}
 
-  Confirming properties should result in a successfull generation of the TG-based application.
+  Confirming properties should result in a successful generation of the TG-based application.
   Note \ref{mb:project-dir-structure} list a directory structure of the generated application skeleton.  
 
   \begin{notebox}{Inspect project directory structure.}{\label{mb:project-dir-structure}}
-      Under Linux a directory structure of the generated project can be inspecte by using the \texttt{tree} command as follows.
+      Under Linux a directory structure of the generated project can be inspected by using the \texttt{tree} command as follows.
 	
       \begin{verbatim}
 	user@workstation:~/workspace$ tree -L 2 -d
@@ -240,8 +240,9 @@ user@workstation:~/workspace/coolapp$
 \subsection{Server}
 
   The application server is represented by the \emph{Cool App Web Server Module}, which is located in directory \texttt{coolapp-web-server}.
-  The build process compiles project modules and automatically collects all dependecies, executions scripts, a sample database, configuration into the deployment directory \texttt{coolapp-web-server/target/deployment}.
-  Listing \ref{lst:app_server} outlines the sturcutre of this directory.
+  The build process compiles project modules and automatically collects all dependencies, executions scripts, a sample database, configuration into the deployment directory \texttt{coolapp-web-server/target/deployment}.
+  It also packages this directory as a zip arhive file \texttt{coolapp-web-server-1.0-SNAPSHOT-distribution.zip} located under \texttt{coolapp-web-server/target}, which is ready for distibution.
+  Listing \ref{lst:app_server} outlines the structure of this directory.
 
   \begin{code}{Application server directories}{\label{lst:app_server}}{terminalbgcolor}
      \begin{lstlisting}
@@ -253,14 +254,14 @@ coolapp-web-server/target/deployment/
 |-- db
 |-- lib
 |-- log4j.xml
-|-- start-server
+|-- start-server.sh
 |-- start-server.bat
 `-- webapp
      \end{lstlisting}
   \end{code}
 
-  Navigate to the deployment directory\footnote{This is important in order for the startup script to correctly set the application directory.} and simply run the \texttt{start-server.bar} under Windows or \texttt{start-server} under Linux\footnote{File \texttt{start-server} needs to be made executed by running \texttt{chomod +x start-server} while in the deployment directory.} in order to start an application server.
-  Once started it listens on port \texttt{8091} for incomming connections.
+  Navigate to the deployment directory\footnote{This is important in order for the start-up script to correctly set the application directory.} and simply run the \texttt{start-server.bat} under Windows or \texttt{start-server.sh} under Linux in order to start an application server.
+  Once started it listens on port \texttt{8091} for incoming connections.
   Now it's time to install the client application.
 
 \subsection{Client}
@@ -272,14 +273,14 @@ coolapp-web-server/target/deployment/
 
   \begin{code}{Application server directories}{\label{lst:install_client}}{terminalbgcolor}
      \begin{lstlisting}
-user@workstation:~/workspace/coolapp$ java -jar java -jar \
+user@workstation:~/workspace/coolapp$ java -jar \
 > coolapp-web-client/target/coolapp-web-client-1.0-SNAPSHOT-standard.jar
      \end{lstlisting}
   \end{code}
 
   The first screen of the installation process is depicted on Fig.~\ref{img:ch00:02:client_installation_first_screen}.
-  Please note the information on this screen, which reuses the porject properties that were provided as part of project generation.
-  For example, it states that the softeare is developed by \emph{Fielden Management Services} and also lists application support email andress and a web page.
+  Please note the information on this screen, which reuses the project properties that were provided as part of project generation.
+  For example, it states that the software is developed by \emph{Fielden Management Services} and also lists application support email address and a web page.
   
   Simply follow the steps of the installation process, which should result in successful deployment of the client application.
   One of the final steps lists components that are provided as part of the installation.
@@ -289,24 +290,39 @@ user@workstation:~/workspace/coolapp$ java -jar java -jar \
   Its creation and maintenance is discussed later in this chapter.
 
   \begin{image}{First screen of the client installation process}{\label{img:ch00:02:client_installation_first_screen}}    
-    \includegraphics[width=0.7\textwidth]{parts/00-part/chapters/01-application-modules/images/01-client-installation.png}
+    \includegraphics[width=0.6\textwidth]{parts/00-part/chapters/01-application-modules/images/01-client-installation.png}
   \end{image}
 
   \begin{image}{Client documentation provided as part of the installation}{\label{img:ch00:02:client_installation_doc}}    
-    \includegraphics[width=0.7\textwidth]{parts/00-part/chapters/01-application-modules/images/02-client-installation-doc.png}
+    \includegraphics[width=0.6\textwidth]{parts/00-part/chapters/01-application-modules/images/02-client-installation-doc.png}
   \end{image}
 
   Another important screen is where user needs to specify an application server URI and port.
-  The default value is \url{www.fielden.com.au}, but for our purpose due to locally deployed application server, it should be changed to \texttt{localhost} as depiceted in Fig.~\ref{img:ch00:02:client_installation_uri}.
+  The default value is \url{www.fielden.com.au}, but for our purpose due to locally deployed application server, it should be changed to \texttt{localhost} as depicted in Fig.~\ref{img:ch00:02:client_installation_uri}.
 
   \begin{image}{Application server URI}{\label{img:ch00:02:client_installation_uri}}    
-    \includegraphics[width=0.7\textwidth]{parts/00-part/chapters/01-application-modules/images/03-client-installation-uri.png}
+    \includegraphics[width=0.6\textwidth]{parts/00-part/chapters/01-application-modules/images/03-client-installation-uri.png}
   \end{image}
   
-  Once installation is completed, run the client application by either navigating to the specified installation directory and running \texttt{run.bar} (\texttt{run.sh} for Linux) or by choosing an appropriate program from the \emph{Start} menu under Windows.
+  Once installation is completed, run the client application by either navigating to the specified installation directory and running \texttt{run.bat} (\texttt{run.sh} for Linux) or by choosing an appropriate program from the \emph{Start} menu under Windows.
   The login screen of the generated application is depicted in Fig.~\ref{img:ch00:02:client_login}.
-  The default user name and password is \emph{DEMO} (both capital).
+  The default user name and password is \emph{SU} (both capital).
 
   \begin{image}{Application login}{\label{img:ch00:02:client_login}}    
-    \includegraphics[width=0.7\textwidth]{parts/00-part/chapters/01-application-modules/images/04-client-login.png}
+    \includegraphics[width=0.6\textwidth]{parts/00-part/chapters/01-application-modules/images/04-client-login.png}
   \end{image}
+
+  The main window of the launched client application is depicted on Fig.~\ref{img:ch00:02:client_main_window}.
+  As can be observed, the generated application provides all the necessary functionality for managing users, roles, security tokens as well as the default implementation for \emph{Personnel} and \emph{Attachments}.
+
+  \begin{image}{Application main window}{\label{img:ch00:02:client_main_window}}    
+    \includegraphics[width=0.7\textwidth]{parts/00-part/chapters/01-application-modules/images/05-client-main-window.png}
+  \end{image}
+
+  The above demonstrated how easy it is to start building a TG-based application.
+  The provided Trident Genesis Archetype generates a fully operational software with ready to be distributed application server deployment files and a client installation package.
+  The use of command line tools for building the project is important as it can be used on headless build servers, which a common practice in the software industry.
+
+  It is important to note that Trident Genesis Platform provides a complete development methodology, which includes the unified programming model, software distribution model and application documentation creation.
+  The following sections provide more detailed explanation about the generated application modules, how to set up a development environment and make simple project changes.
+ 
