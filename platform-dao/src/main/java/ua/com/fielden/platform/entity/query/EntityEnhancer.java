@@ -98,10 +98,10 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
      * @param propType
      * @return
      */
-    private List<EntityContainer<? extends AbstractEntity<?>>> getRetrievedPropertyInstances(final List<EntityContainer<E>> entities, final String propName) {
-	final List<EntityContainer<? extends AbstractEntity<?>>> propValues = new ArrayList<EntityContainer<? extends AbstractEntity<?>>>();
+    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getRetrievedPropertyInstances(final List<EntityContainer<E>> entities, final String propName) {
+	final List<EntityContainer<T>> propValues = new ArrayList<EntityContainer<T>>();
 	for (final EntityContainer<E> entity : entities) {
-	    final EntityContainer<? extends AbstractEntity<?>> prop = entity.getEntities().get(propName);
+	    final EntityContainer<T> prop = (EntityContainer<T>) entity.getEntities().get(propName);
 	    if (prop != null && !prop.notYetInitialised()) {
 		propValues.add(prop);
 		prop.setShouldBeFetched(true);
@@ -118,21 +118,20 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
      * @return
      * @throws Exception
      */
-    private List<EntityContainer<E>> enhanceProperty(final List<EntityContainer<E>> entities, final String propertyName, final fetch<? extends AbstractEntity<?>> fetchModel) throws Exception {
+    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceProperty(final List<EntityContainer<E>> entities, final String propertyName, final fetch<T> fetchModel) throws Exception {
 	// Obtaining map between property id and list of entities where this property occurs
 	final Map<Long, List<EntityContainer<E>>> propertyValuesIds = getEntityPropertyIds(entities, propertyName);
 	logger.info("got ids count: " + propertyValuesIds.size());
 
 	if (propertyValuesIds.size() > 0) {
 	    // Constructing model for retrieving property instances based on the provided fetch model and list of instances ids
-	    final List<EntityContainer<? extends AbstractEntity<?>>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
+	    final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
 	    logger.info("got retrievedPropertyInstances count: " + retrievedPropertyInstances.size());
-	    final List<EntityContainer<? extends AbstractEntity<?>>> enhancedPropInstances;
+	    final List<EntityContainer<T>> enhancedPropInstances;
 	    if (retrievedPropertyInstances.size() == 0) {
-		// FIXME
-		enhancedPropInstances = null;//getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel);
+		enhancedPropInstances = getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel);
 	    } else {
-		enhancedPropInstances = new EntityEnhancer(session, entityFactory, mappingsGenerator, dbVersion, filter, username).enhance(retrievedPropertyInstances, fetchModel, fetchModel.getEntityType());
+		enhancedPropInstances = new EntityEnhancer<T>(session, entityFactory, mappingsGenerator, dbVersion, filter, username).enhance(retrievedPropertyInstances, fetchModel, fetchModel.getEntityType());
 	    }
 
 	    // Replacing in entities the proxies of properties with properly enhanced property instances.
