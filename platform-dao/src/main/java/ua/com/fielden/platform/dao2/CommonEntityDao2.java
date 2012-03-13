@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.AggregatesFetcher;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -37,7 +39,7 @@ import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -75,6 +77,13 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
     private String username;
 
     private final IFilter filter;
+
+    private final  QueryExecutionModel<T> defaultModel;
+
+    {
+	final EntityResultQueryModel<T> query = select(getEntityType()).model();
+	defaultModel = new QueryExecutionModel.Builder<T>(query).build();
+    }
 
     /**
      * A principle constructor.
@@ -156,7 +165,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 		    throw isValid;
 		}
 		// let's also make sure that duplicate entities are not allowed
-		final Integer count = count(new QueryExecutionModel.Builder(createQueryByKey(entity.getKey())).lightweight(true).build());
+		final Integer count = count(createQueryByKey(entity.getKey()), Collections.<String, Object> emptyMap());
 		if (count > 0) {
 		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " already exists."));
 		}
@@ -173,8 +182,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	    } else if (!entity.getDirtyProperties().isEmpty()) {
 		// let's also make sure that duplicate entities are not allowed
 		final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop("id").as("id").modelAsAggregate();
-		// FIXME
-		final List<EntityAggregates> ids = null;//new EntityFetcher<EntityAggregates>(getSession(), getEntityFactory(), mappingsGenerator, null, null, null).list(new AggregatesQueryExecutionModel.Builder(model).build());
+		final List<EntityAggregates> ids = new AggregatesFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, null, null).list(new AggregatesQueryExecutionModel.Builder(model).build());
 		final int count = ids.size();
 		if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get("id")).longValue())) {
 		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " entity already exists."));
@@ -289,8 +297,8 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	return getSession().createQuery("select id from " + getEntityType().getName() + " where id = :in_id").setLong("in_id", id).uniqueResult() != null;
     }
 
-    public int count(final QueryExecutionModel<T> model) {
-	return evalNumOfPages(model, 1);
+    public int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+	return evalNumOfPages(model, paramValues, 1);
     }
 
     /**
@@ -304,7 +312,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
     @SessionRequired
     protected List<T> list(final QueryExecutionModel<T> queryModel, final Integer pageNumber, final Integer pageCapacity) {
 	final DateTime st = new DateTime();
-	final List<T> result = new EntityFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()).list(queryModel, pageNumber, pageCapacity);
+	final List<T> result = new EntityFetcher<T>(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()).list(queryModel, pageNumber, pageCapacity);
 	final Period pd = new Period(st, new DateTime());
 	//logger.info("\nFetch model tree: " + fetchModel);
 	logger.info("Total data retrieval time: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Results count: " + result.size());
@@ -320,34 +328,33 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
      * Returns a first page holding up to <code>pageCapacity</code> instance of entities retrieved by query with no filtering conditions. Useful for things like autocompleters.
      */
     @Override
-    public IPage<T> firstPage(final int pageCapacity) {
-	final QueryExecutionModel<T> model = new QueryExecutionModel.Builder(select(getEntityType()).model()).build();
-	return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model, pageCapacity));
+    public IPage2<T> firstPage(final int pageCapacity) {
+	return new EntityQueryPage(defaultModel, 0, pageCapacity, evalNumOfPages(defaultModel.getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity));
     }
 
     /**
      * Returns a first page holding up to <code>size</code> instance of entities retrieved by the provided query model. This allows a query based pagination.
      */
     @Override
-    public IPage<T> firstPage(final QueryExecutionModel<T> model, final int pageCapacity) {
-	return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model, pageCapacity));
+    public IPage2<T> firstPage(final QueryExecutionModel<T> model, final int pageCapacity) {
+	return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
     }
 
     @Override
-    public IPage<T> getPage(final QueryExecutionModel<T> model, final int pageNo, final int pageCapacity) {
+    public IPage2<T> getPage(final QueryExecutionModel<T> model, final int pageNo, final int pageCapacity) {
 	return getPage(model, pageNo, 0, pageCapacity);
     }
 
     @Override
-    public IPage<T> getPage(final QueryExecutionModel<T> model, final int pageNo, final int pageCount, final int pageCapacity) {
-	final int numberOfPages = pageCount > 0 ? pageCount : evalNumOfPages(model, pageCapacity);
+    public IPage2<T> getPage(final QueryExecutionModel<T> model, final int pageNo, final int pageCount, final int pageCapacity) {
+	final int numberOfPages = pageCount > 0 ? pageCount : evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity);
 	final int pageNumber = pageNo < 0 ? numberOfPages - 1 : pageNo;
-	return new EntityQueryPage(model, /*new fetchAll(getEntityType()),*/ pageNumber, pageCapacity, numberOfPages);
+	return new EntityQueryPage(model, pageNumber, pageCapacity, numberOfPages);
     }
 
     @Override
     public T getEntity(final QueryExecutionModel<T> model) {
-	final List<T> data = new EntityQueryPage(model, /*new fetchAll(getEntityType()),*/ 0, DEFAULT_PAGE_CAPACITY, 1).data();
+	final List<T> data = new EntityQueryPage(model, 0, DEFAULT_PAGE_CAPACITY, 1).data();
 	if (data.size() > 1) {
 	    throw new IllegalArgumentException("The provided query model leads to retrieval of more than one entity (" + data.size() + ").");
 	}
@@ -355,11 +362,10 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
     }
 
     @Override
-    public IPage<T> getPage(final int pageNo, final int pageCapacity) {
-	final QueryExecutionModel<T> model = new QueryExecutionModel.Builder(select(getEntityType()).model()).build();
-	final int numberOfPages = evalNumOfPages(model, pageCapacity);
+    public IPage2<T> getPage(final int pageNo, final int pageCapacity) {
+	final int numberOfPages = evalNumOfPages(defaultModel.getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity);
 	final int pageNumber = pageNo < 0 ? numberOfPages - 1 : pageNo;
-	return new EntityQueryPage(model, pageNumber, pageCapacity, numberOfPages);
+	return new EntityQueryPage(defaultModel, pageNumber, pageCapacity, numberOfPages);
     }
 
     public Session getSession() {
@@ -383,14 +389,16 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
      * @return
      */
     @SessionRequired
-    protected int evalNumOfPages(final QueryExecutionModel<T> model, final int pageCapacity) {
+    protected int evalNumOfPages(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
 	final DateTime st = new DateTime();
 	int resultSize = 0;
-	final List<EntityAggregates> counts = null; //new EntityFetcher<EntityAggregates>(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()). //
-		//list(select(model)., null, null);
+	final AggregatedResultQueryModel countQuery = select(model).yield().countAll().as("count").modelAsAggregate();
+	final AggregatesQueryExecutionModel countModel = new AggregatesQueryExecutionModel.Builder(countQuery).paramValues(paramValues).lightweight(true).build();
+	final List<EntityAggregates> counts = new AggregatesFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()). //
+		list(countModel, null, null);
 
 	for (final EntityAggregates count : counts) {
-	    resultSize = resultSize + ((Number) count.get("RECORDS_COUNT")).intValue();
+	    resultSize = resultSize + ((Number) count.get("count")).intValue();
 	}
 
 	final Period pd = new Period(st, new DateTime());
@@ -530,7 +538,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
      * @author 01es
      *
      */
-    public class EntityQueryPage implements IPage<T> {
+    public class EntityQueryPage implements IPage2<T> {
 	private final int pageNumber; // zero-based
 	private final int numberOfPages;
 	private final int pageCapacity;
@@ -554,7 +562,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	}
 
 	@Override
-	public ua.com.fielden.platform.equery.EntityAggregates summary() {
+	public EntityAggregates summary() {
 	    return null;
 	}
 
@@ -579,7 +587,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	}
 
 	@Override
-	public IPage<T> next() {
+	public IPage2<T> next() {
 	    if (hasNext()) {
 		return new EntityQueryPage(queryModel, no() + 1, capacity(), numberOfPages);
 	    }
@@ -587,7 +595,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	}
 
 	@Override
-	public IPage<T> prev() {
+	public IPage2<T> prev() {
 	    if (hasPrev()) {
 		return new EntityQueryPage(queryModel, no() - 1, capacity(), numberOfPages);
 	    }
@@ -595,7 +603,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	}
 
 	@Override
-	public IPage<T> first() {
+	public IPage2<T> first() {
 	    if (hasPrev()) {
 		return new EntityQueryPage(queryModel, 0, capacity(), numberOfPages);
 	    }
@@ -603,7 +611,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	}
 
 	@Override
-	public IPage<T> last() {
+	public IPage2<T> last() {
 	    if (hasNext()) {
 		return new EntityQueryPage(queryModel, numberOfPages - 1, capacity(), numberOfPages);
 	    }
@@ -628,5 +636,9 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 
     protected EntityFactory getEntityFactory() {
 	return entityFactory;
+    }
+
+    public MappingsGenerator getMappingsGenerator() {
+        return mappingsGenerator;
     }
 }

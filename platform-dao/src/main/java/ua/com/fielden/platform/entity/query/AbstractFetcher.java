@@ -10,9 +10,13 @@ import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.type.Type;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.utils.Pair;
@@ -25,7 +29,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  * @param <E>
  */
-public class AbstractFetcher<E> {
+public class AbstractFetcher<E extends AbstractEntity<?>> {
     private Session session;
     private EntityFactory entityFactory;
     private Logger logger = Logger.getLogger(this.getClass());
@@ -33,6 +37,7 @@ public class AbstractFetcher<E> {
     private DbVersion dbVersion;
     private final IFilter filter;
     private final String username;
+    private final EntityEnhancer<E> entityEnhancer;
 
     public AbstractFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion, final IFilter filter, final String username) {
 	this.session = session;
@@ -41,6 +46,7 @@ public class AbstractFetcher<E> {
 	this.dbVersion = dbVersion;
 	this.filter = filter;
 	this.username = username;
+	this.entityEnhancer = new EntityEnhancer<E>(session, entityFactory, mappingsGenerator, dbVersion, filter, username);
     }
 
     /**
@@ -95,8 +101,7 @@ public class AbstractFetcher<E> {
         return dbVersion;
     }
 
-    /*DONE*/
-    protected List<Pair<String, Type>> getScalarInfo(final ValueTree tree) {
+    protected List<Pair<String, Type>> getScalarFromValueTree(final ValueTree tree) {
 	final List<Pair<String, Type>> result = new ArrayList<Pair<String, Type>>();
 
 	for (final Map.Entry<PropertyPersistenceInfo, Integer> single : tree.getSingles().entrySet()) {
@@ -114,98 +119,74 @@ public class AbstractFetcher<E> {
         return username;
     }
 
-//    /**
-//     * Executes query and produces its result in the form of entity containers; no additional fetching to match provided fetch model is performed.
-//     * @param modelResult
-//     * @param pageNumber
-//     * @param pageCapacity
-//     * @return
-//     * @throws Exception
-//     */
-//    @SessionRequired
-//    private List<EntityContainer<E>> listContainersAsIs(final QueryModelResult modelResult, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-//	final EntityTree resultTree = new EntityResultTreeBuilder(mappingsGenerator).buildTree(modelResult.getResultType(), null/*need instance of eg SimpleMoneyType*/, modelResult.getYieldedPropsInfo());
-//
-//	final Query query = produceHibernateQuery(modelResult.getSql(), getScalarInfo(resultTree), modelResult.getParamValues());
-//	logger.info("query:\n   " + query.getQueryString() + "\n");
-//	if (pageNumber != null && pageCapacity != null) {
-//	    query.//
-//	    setFirstResult(pageNumber * pageCapacity).//
-//	    setFetchSize(pageCapacity).//
-//	    setMaxResults(pageCapacity);
-//	}
-//
-//	final DateTime st = new DateTime();
-//	@SuppressWarnings("unchecked")
-//	final List<EntityContainer<E>> list = new EntityRawResultConverter(entityFactory).transformFromNativeResult(resultTree, query.list());
-//	final Period pd = new Period(st, new DateTime());
-//	logger.info("Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + list.size());
-//
-//	return list;
-//    }
-//
-//    /*DONE*/
-//    protected List<Pair<String, Type>> getScalarInfo(final EntityTree tree) {
-//	final List<Pair<String, Type>> result = new ArrayList<Pair<String, Type>>();
-//
-//	for (final Map.Entry<PropertyPersistenceInfo, Integer> single : tree.getSingles().entrySet()) {
-//	    result.add(new Pair<String, Type>(single.getKey().getColumn(), single.getKey().getHibTypeAsType()));
-//	}
-//
-//	for (final Map.Entry<String, EntityTree> composite : tree.getComposites().entrySet()) {
-//	    result.addAll(getScalarInfo(composite.getValue()));
-//	}
-//
-//	return result;
-//    }
-//
-//    /**
-//     * Instantiates data from containers into respective entities.
-//     * @param containers
-//     * @param userViewOnly
-//     * @return
-//     */
-//    private List<E> instantiateFromContainers(final List<EntityContainer<E>> containers, final boolean userViewOnly) {
-//	logger.info("Instantiating from containers -- entity type is " + (containers.size() > 0 ? containers.get(0).resultType.getName() : "?"));
-//	final DateTime st = new DateTime();
-//	final List<E> result = new ArrayList<E>();
-//	for (final EntityContainer<E> entityContainer : containers) {
-//	    result.add(entityContainer.instantiate(entityFactory, userViewOnly));
-//	}
-//	final Period pd = new Period(st, new DateTime());
-//	logger.info("Done. Instantiating from containers -- entity type is " + (containers.size() > 0 ? containers.get(0).resultType.getName() : "?") + "\n Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
-//	return result;
-//    }
-//
-//    /**
-//     * Fetches the results of the specified page based on the request of the given instance of IQueryOrderedModel.
-//     *
-//     * @param queryModel
-//     * @param pageNumber
-//     * @param pageCapacity
-//     * @return
-//     */
-//    @SessionRequired
-//    public List<E> list(final Session session, final EntityFactory entityFactory, final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity, final boolean lightweight) {
-//	this.session = session;
-//	this.entityFactory = entityFactory;
-//	try {
-//	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), lightweight);
-//	} catch (final Exception e) {
-//	    e.printStackTrace();
-//	    throw new IllegalStateException(e);
-//	}
-//    }
-//
-//    public List<E> list(final Session session, final EntityFactory entityFactory, final QueryExecutionModel queryModel, final boolean lightweight) {
-//	return list(session, entityFactory, queryModel, null, null, lightweight);
-//    }
-//
-//    @SessionRequired
-//    protected List<EntityContainer<E>> listContainers(final QueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-//	final QueryModelResult modelResult = new ModelResultProducer().getModelResult(queryModel, dbVersion, mappingsGenerator);
-//	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
-//	return entityEnhancer.enhance(session/*TMP*/, result, entityEnhancer.enhanceFetchModelWithKeyProperties(queryModel.getFetchModel(), modelResult.getResultType()), modelResult.getResultType());
-//    }
-//
+    protected List<Pair<String, Type>> getScalarFromEntityTree(final EntityTree<? extends AbstractEntity<?>> tree) {
+	final List<Pair<String, Type>> result = new ArrayList<Pair<String, Type>>();
+
+	for (final Map.Entry<PropertyPersistenceInfo, Integer> single : tree.getSingles().entrySet()) {
+	    result.add(new Pair<String, Type>(single.getKey().getColumn(), single.getKey().getHibTypeAsType()));
+	}
+
+	for (final Map.Entry<String, ValueTree> composite : tree.getCompositeValues().entrySet()) {
+	    result.addAll(getScalarFromValueTree(composite.getValue()));
+	}
+
+	for (final Map.Entry<String, EntityTree<? extends AbstractEntity<?>>> composite : tree.getComposites().entrySet()) {
+	    result.addAll(getScalarFromEntityTree(composite.getValue()));
+	}
+
+	return result;
+    }
+
+    /**
+     * Instantiates data from containers into respective entities.
+     * @param containers
+     * @param userViewOnly
+     * @return
+     */
+    protected List<E> instantiateFromContainers(final List<EntityContainer<E>> containers, final boolean userViewOnly) {
+	getLogger().info("Instantiating from containers -- entity type is " + (containers.size() > 0 ? containers.get(0).getResultType().getName() : "?"));
+	final DateTime st = new DateTime();
+	final List<E> result = new ArrayList<E>();
+	for (final EntityContainer<E> entityContainer : containers) {
+	    result.add(entityContainer.instantiate(getEntityFactory(), userViewOnly));
+	}
+	final Period pd = new Period(st, new DateTime());
+	getLogger().info("Done. Instantiating from containers -- entity type is " + (containers.size() > 0 ? containers.get(0).getResultType().getName() : "?") + "\n Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
+	return result;
+    }
+
+    public EntityEnhancer<E> getEntityEnhancer() {
+        return entityEnhancer;
+    }
+
+    /**
+     * Executes query and produces its result in the form of entity containers; no additional fetching to match provided fetch model is performed.
+     * @param modelResult
+     * @param pageNumber
+     * @param pageCapacity
+     * @return
+     * @throws Exception
+     */
+    @SessionRequired
+    protected List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity) throws Exception {
+	final Class<E> resultType = modelResult.getResultType();
+	final EntityTree<E> resultTree = new EntityResultTreeBuilder(getMappingsGenerator()).buildEntityTree(resultType, modelResult.getYieldedPropsInfo());
+
+	final Query query = produceHibernateQuery(modelResult.getSql(), getScalarFromEntityTree(resultTree), modelResult.getParamValues());
+	getLogger().info("query:\n   " + query.getQueryString() + "\n");
+	if (pageNumber != null && pageCapacity != null) {
+	    query.//
+	    setFirstResult(pageNumber * pageCapacity).//
+	    setFetchSize(pageCapacity).//
+	    setMaxResults(pageCapacity);
+	}
+
+	final DateTime st = new DateTime();
+	@SuppressWarnings("unchecked")
+	final List<EntityContainer<E>> list = new EntityRawResultConverter<E>(getEntityFactory()).transformFromNativeResult(resultTree, query.list());
+	final Period pd = new Period(st, new DateTime());
+	getLogger().info("Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + list.size());
+
+	return list;
+    }
 }

@@ -5,8 +5,10 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao2.AggregatesQueryExecutionModel;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
@@ -15,11 +17,18 @@ import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 
 public class ModelResultProducer {
 
-    public QueryModelResult getModelResult(final QueryExecutionModel qem, final DbVersion dbVersion, final MappingsGenerator mappingsGenerator, final IFilter filter, final String username) {
+    public <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T> qem, final DbVersion dbVersion, final MappingsGenerator mappingsGenerator, final IFilter filter, final String username) {
 	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, mappingsGenerator, filter, username);
 	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getParamValues());
 	final String sql = entQuery.sql();
-	return new QueryModelResult(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
+	return new QueryModelResult<T>(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
+    }
+
+    public QueryModelResult<EntityAggregates> getModelResult(final AggregatesQueryExecutionModel qem, final DbVersion dbVersion, final MappingsGenerator mappingsGenerator, final IFilter filter, final String username) {
+	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, mappingsGenerator, filter, username);
+	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getParamValues());
+	final String sql = entQuery.sql();
+	return new QueryModelResult<EntityAggregates>(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
     }
 
     private SortedSet<PropertyPersistenceInfo> getResultPropsInfos(final Yields model) {

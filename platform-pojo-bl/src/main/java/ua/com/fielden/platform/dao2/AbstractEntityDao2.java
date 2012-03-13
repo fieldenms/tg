@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
@@ -64,7 +64,8 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
 
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
 	try {
-	    return getEntity(new QueryExecutionModel.Builder(select(getEntityType()).where().prop(ID_PROPERTY_NAME).eq().val(id).model()).fetchModel(fetchModel).build());
+	    final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(ID_PROPERTY_NAME).eq().val(id).model();
+	    return getEntity(new QueryExecutionModel.Builder<T>(query).fetchModel(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
@@ -91,7 +92,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     @Override
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
 	try {
-	    return getEntity(new QueryExecutionModel.Builder(createQueryByKey(keyValues)).fetchModel(fetchModel).build());
+	    return getEntity(new QueryExecutionModel.Builder<T>(createQueryByKey(keyValues)).fetchModel(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
@@ -141,7 +142,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public IPage<T> firstPage(final QueryExecutionModel<T> model, final AggregatesQueryExecutionModel summaryModel, final int pageCapacity) {
+    public IPage2<T> firstPage(final QueryExecutionModel<T> model, final AggregatesQueryExecutionModel summaryModel, final int pageCapacity) {
 	throw new UnsupportedOperationException("Not implemented.");
     }
 
