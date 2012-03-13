@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
@@ -24,11 +26,13 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class LocatorManager extends AbstractDomainTree implements ILocatorManager {
+    private final transient Logger logger = Logger.getLogger(getClass());
     // this instance should be initialised using Reflection when GlobalDomainTreeManager creates/deserialises the instance of LocatorManager
     private final transient IGlobalDomainTreeRepresentation globalRepresentation;
     private final EnhancementLinkedRootsSet rootTypes;
     private final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> persistentLocators;
     private final transient EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> currentLocators;
+    private final transient EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> freezedLocators;
 
     /**
      * A locator <i>manager</i> constructor (save, int, discard locators, etc.) for the first time instantiation.
@@ -56,10 +60,24 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	for (final Entry<Pair<Class<?>, String>, ILocatorDomainTreeManagerAndEnhancer> entry : this.persistentLocators.entrySet()) {
 	    currentLocators.put(entry.getKey(), EntityUtils.deepCopy(entry.getValue(), getSerialiser())); // should be initialised with copies of persistent locators
 	}
+	freezedLocators = createPropertiesMap();
+    }
+
+    /**
+     * Logs and throws an {@link IllegalArgumentException} error with specified message.
+     *
+     * @param message
+     */
+    private void error(final String message) {
+	logger.error(message);
+	throw new IllegalArgumentException(message);
     }
 
     @Override
     public ILocatorDomainTreeManagerAndEnhancer produceLocatorManagerByDefault(final Class<?> root, final String property) {
+	if (isFreezed(root, property)) {
+	    error("Unable to Produce locator instance if it is freezed for type [" + root + "] and property [" + property + "].");
+	}
 	AbstractDomainTree.illegalType(root, property, "Could not init a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
@@ -75,11 +93,17 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     @Override
     public void initLocatorManagerByDefault(final Class<?> root, final String property) {
+	if (isFreezed(root, property)) {
+	    error("Unable to Init locator instance if it is freezed for type [" + root + "] and property [" + property + "].");
+	}
 	init(root, property, produceLocatorManagerByDefault(root, property));
     }
 
     @Override
     public void resetLocatorManager(final Class<?> root, final String property) {
+	if (isFreezed(root, property)) {
+	    error("Unable to Reset locator instance if it is freezed for type [" + root + "] and property [" + property + "].");
+	}
 	init(root, property, null);
     }
 
@@ -87,16 +111,27 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     public void discardLocatorManager(final Class<?> root, final String property) {
 	AbstractDomainTree.illegalType(root, property, "Could not discard a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
 	currentLocators.put(key(root, property), EntityUtils.deepCopy(persistentLocators.get(key(root, property)), getSerialiser()));
+
+	if (isFreezed(root, property)) {
+	    unfreeze(root, property);
+	}
     }
 
     @Override
     public void acceptLocatorManager(final Class<?> root, final String property) {
-	AbstractDomainTree.illegalType(root, property, "Could not save a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
-	persistentLocators.put(key(root, property), EntityUtils.deepCopy(currentLocators.get(key(root, property)), getSerialiser()));
+	if (isFreezed(root, property)) {
+	    unfreeze(root, property);
+	} else {
+	    AbstractDomainTree.illegalType(root, property, "Could not save a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
+	    persistentLocators.put(key(root, property), EntityUtils.deepCopy(currentLocators.get(key(root, property)), getSerialiser()));
+	}
     }
 
     @Override
     public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
+	if (isFreezed(root, property)) {
+	    error("Unable to Save locator instance Globally if it is freezed for type [" + root + "] and property [" + property + "].");
+	}
 	AbstractDomainTree.illegalType(root, property, "Could not save globally a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
@@ -107,6 +142,56 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     public ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property) {
 	AbstractDomainTree.illegalType(root, property, "Could not retrieve a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
 	return currentLocators.get(key(root, property));
+    }
+
+    /**
+     * Throws an error when the instance is <code>null</code> (not initialised).
+     *
+     * @param mgr
+     * @param root
+     * @param name
+     */
+    private void notInitiliasedError(final ILocatorDomainTreeManagerAndEnhancer mgr, final Class<?> root, final String property) {
+	if (mgr == null) {
+	    error("Unable to perform this operation on the locator instance, that wasn't initialised, for type [" + root + "] and property [" + property + "].");
+	}
+    }
+
+    @Override
+    public void freezeLocatorManager(final Class<?> root, final String property) {
+	if (isFreezed(root, property)) {
+	    error("Unable to freeze the locator instance more than once for type [" + root + "] and property [" + property + "].");
+	}
+	notInitiliasedError(persistentLocators.get(key(root, property)), root, property);
+	notInitiliasedError(currentLocators.get(key(root, property)), root, property);
+	final ILocatorDomainTreeManagerAndEnhancer persistentLocator = persistentLocators.remove(key(root, property));
+	freezedLocators.put(key(root, property), persistentLocator);
+	persistentLocators.put(key(root, property), EntityUtils.deepCopy(currentLocators.get(key(root, property)), getSerialiser()));
+    }
+
+    /**
+     * Returns <code>true</code> if the locator instance is in 'freezed' state, <code>false</code> otherwise.
+     *
+     * @param root
+     * @param property
+     * @return
+     */
+    protected boolean isFreezed(final Class<?> root, final String property) {
+	return freezedLocators.get(key(root, property)) != null;
+    }
+
+    /**
+     * Unfreezes the locator instance that is currently freezed.
+     *
+     * @param root
+     * @param property
+     */
+    protected void unfreeze(final Class<?> root, final String property) {
+	if (!isFreezed(root, property)) {
+	    error("Unable to unfreeze the locator instance that is not 'freezed' for type [" + root + "] and property [" + property + "].");
+	}
+	final ILocatorDomainTreeManagerAndEnhancer persistentLocator = freezedLocators.remove(key(root, property));
+	persistentLocators.put(key(root, property), persistentLocator);
     }
 
     @Override

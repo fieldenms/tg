@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.domaintree.testing;
 
+import java.math.BigDecimal;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -31,5 +33,16 @@ public class EntityWithStringKeyType extends AbstractEntity<String> {
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
+    }
+
+    @IsProperty
+    private BigDecimal bigDecimalProp = null;
+
+    public BigDecimal getBigDecimalProp() {
+        return bigDecimalProp;
+    }
+    @Observable
+    public void setBigDecimalProp(final BigDecimal bigDecimalProp) {
+        this.bigDecimalProp = bigDecimalProp;
     }
 }

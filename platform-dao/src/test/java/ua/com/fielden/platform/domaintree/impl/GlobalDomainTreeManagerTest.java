@@ -627,6 +627,105 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
     }
 
     @Test
+    public void test_that_CENTRE_LOCATORS_freezing_works_fine() {
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////// INITIALISATION /////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
+	managerForNonBaseUser.initEntityCentreManager(MasterEntity.class, null);
+	managerForNonBaseUser.saveAsEntityCentreManager(MasterEntity.class, null, NON_BASE_USERS_SAVE_AS);
+	final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
+	final String property = "entityProp.simpleEntityProp";
+	dtm.getFirstTick().check(MasterEntity.class, property, true);
+	final ILocatorManager locatorManager = dtm.getFirstTick();
+
+	// initialise a default locator for type EntityWithStringKeyType which will affect initialisation of [MasterEntity.entityProp.simpleEntityProp] property.
+	initDefaultLocatorForSomeTestType(managerForNonBaseUser);
+	assertNull("Should be null before creation.", locatorManager.getLocatorManager(MasterEntity.class, property));
+	// initialise a brand new instance of locator
+	locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
+	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "bigDecimalProp", true);
+	locatorManager.acceptLocatorManager(MasterEntity.class, property);
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////// FREEEEEEEEEEEEEEEZZZZZZZZZZZZZZZZEEEEEEEEEEEEEEEEEEEEEEEE//////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	assertFalse("Should not be changed.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
+	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
+
+	assertTrue("Should be changed after modification..", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
+	assertTrue("Should be checked after modification.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+
+	// FREEEEEEEZEEEEEE all current changes
+	locatorManager.freezeLocatorManager(MasterEntity.class, property);
+	assertFalse("Should not be changed after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
+	assertTrue("Should be checked after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+
+	////////////////////// Not permitted tasks after report has been freezed //////////////////////
+	try {
+	    locatorManager.freezeLocatorManager(MasterEntity.class, property);
+	    fail("Double freezing is not permitted. Please do you job -- save/discard and freeze again if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
+	    fail("Init action is not permitted while report is freezed. Please do you job -- save/discard and Init it if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    locatorManager.produceLocatorManagerByDefault(MasterEntity.class, property);
+	    fail("Locator producing is not permitted. Please do you job -- save/discard and then produce new stuff if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    locatorManager.resetLocatorManager(MasterEntity.class, property);
+	    fail("Reset action is not permitted while report is freezed. Please do you job -- save/discard and then Reset it if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    locatorManager.saveLocatorManagerGlobally(MasterEntity.class, property);
+	    fail("Saving Globally is not permitted while report is freezed. Please do you job -- save/discard and then Save it Globally if you need!");
+	} catch (final IllegalArgumentException e) {
+	}
+
+	// change smth.
+	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
+	assertTrue("Should be changed after modification after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
+	assertFalse("Should be unchecked after modification after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+
+	// discard after-freezing changes
+	locatorManager.discardLocatorManager(MasterEntity.class, property);
+	assertTrue("Should be changed after discard after freezing (due to existence of before-freezing changes).", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
+	assertTrue("Should be checked after discard after freezing (according to before-freezing changes).", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+
+	// FREEEEEEEZEEEEEE all current changes (again)
+	locatorManager.freezeLocatorManager(MasterEntity.class, property);
+	assertFalse("Should not be changed after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
+	assertTrue("Should be checked after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertTrue("Should be checked after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "bigDecimalProp"));
+
+	// change smth.
+	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
+	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "bigDecimalProp", false);
+	assertTrue("Should be changed after modification after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
+	assertFalse("Should be unchecked after modification after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertFalse("Should be unchecked after modification after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "bigDecimalProp"));
+
+	// save (precisely "apply") after-freezing changes
+	locatorManager.acceptLocatorManager(MasterEntity.class, property);
+	assertTrue("Should be changed after applying.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
+	assertFalse("Should be unchecked after applying.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertFalse("Should be unchecked after applying.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "bigDecimalProp"));
+
+	// return to the original version of the manager and check if it really is not changed
+	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "bigDecimalProp", true);
+
+	assertFalse("Should not be changed after returning to original version.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
+    }
+
+    @Test
     public void test_that_CENTRE_reloading_works_fine() {
 	// create PRINCIPLE and REPORT report for USER2
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();

@@ -84,6 +84,11 @@ public class MasterDomainTreeManager extends AbstractDomainTree implements IMast
     }
 
     @Override
+    public void freezeLocatorManager(final Class<?> root, final String property) {
+	locatorManager.freezeLocatorManager(root, property);
+    }
+
+    @Override
     public boolean isChangedLocatorManager(final Class<?> root, final String property) {
 	return locatorManager.isChangedLocatorManager(root, property);
     }

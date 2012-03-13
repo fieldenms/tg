@@ -227,6 +227,12 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
+	public void freezeLocatorManager(final Class<?> root, final String property) {
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not freeze a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    locatorManager.freezeLocatorManager(root, property);
+	}
+
+	@Override
 	public boolean isChangedLocatorManager(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask whether a locator has been changed for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return locatorManager.isChangedLocatorManager(root, property);
@@ -757,7 +763,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	final IAbstractAnalysisDomainTreeManagerAndEnhancer persistentAnalysis = freezedAnalyses.remove(name);
 	persistentAnalyses.put(name, persistentAnalysis);
     }
-
 
     /**
      * Throws an error when the instance is <code>null</code> (not initialised).

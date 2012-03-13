@@ -70,7 +70,9 @@ public interface ILocatorManager extends IRootTyped {
     void initLocatorManagerByDefault(final Class<?> root, final String property);
 
     /**
-     * Discards a current version of a locator manager for <i>entity-typed</i> property. <br><br>
+     * Discards a current version of a locator manager for <i>entity-typed</i> property.
+     * If a current version of <b>locator manager</b> was freezed then it just "discards" the changes made after freezing.
+     * <br><br>
      *
      * (implementation note) : there should be two sets of locators : persistentLocators and currentLocators. save = [persistentLocators <= currentLocators]. discard =
      * [persistentLocators => currentLocators]. <br><br>
@@ -88,7 +90,9 @@ public interface ILocatorManager extends IRootTyped {
     void discardLocatorManager(final Class<?> root, final String property);
 
     /**
-     * Accepts a current version of a locator manager for <i>entity-typed</i> property. <br><br>
+     * Accepts a current version of a locator manager for <i>entity-typed</i> property.
+     * If a current version of <b>locator manager</b> was freezed then it just "accepts" the current version.
+     * <br><br>
      *
      * (implementation note) : there should be two sets of locators : persistentLocators and currentLocators. save = [persistentLocators <= currentLocators]. discard =
      * [persistentLocators => currentLocators]. <br><br>
@@ -147,6 +151,24 @@ public interface ILocatorManager extends IRootTyped {
      * @return
      */
     ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property);
+
+    /**
+     * Freezes a current version of a locator manager for <i>entity-typed</i> property. <br><br>
+     *
+     * (implementation note) : there should be two sets of locators : persistentLocators and currentLocators. save = [persistentLocators <= currentLocators]. discard =
+     * [persistentLocators => currentLocators]. <br><br>
+     *
+     * This current version of a locator manager can be altered by its methods, and then saved ({@link #acceptLocatorManager(Class, String, boolean)} method) or discarded (
+     * {@link #discardLocatorManager(Class, String, boolean)} method). <br><br>
+     *
+     * TODO Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+     * Throws {@link IllegalArgumentException} when the property is not of {@link AbstractEntity} type.
+     *
+     * @param root -- a root type that contains property.
+     * @param property -- a dot-notation expression that defines a property.
+     * @return
+     */
+    void freezeLocatorManager(final Class<?> root, final String property);
 
     /**
      * Returns <code>true</code> if the current version of locator manager instance for <i>entity-typed</i> property has been changed since last saving/discard (or since

@@ -138,6 +138,12 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
+	public void freezeLocatorManager(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    base().freezeLocatorManager(enhancer().getManagedType(root), property);
+	}
+
+	@Override
 	public boolean isChangedLocatorManager(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    return base().isChangedLocatorManager(enhancer().getManagedType(root), property);

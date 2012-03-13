@@ -294,7 +294,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_order_of_included_properties_is_correct_and_circular_references_manage_Dummy_property() {
 	assertEquals("Not root type -- should return empty list of included properties.", Collections.emptyList(), dtm().getRepresentation().includedProperties(EntityWithoutKeyType.class));
-	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp"), dtm().getRepresentation().includedProperties(EntityWithStringKeyType.class));
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "bigDecimalProp"), dtm().getRepresentation().includedProperties(EntityWithStringKeyType.class));
 	assertEquals("Incorrect included properties.", Arrays.asList(""), dtm().getRepresentation().includedProperties(EntityWithNormalNature.class));
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
 
@@ -331,16 +331,16 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 	dtm().getEnhancer().apply();
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
     }
-    
+
     @Test
     public void test_that_domain_changes_for_First_Level_COLLECTIONS_are_correctly_reflected_in_Included_properties() {
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
 	dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityPropCollection", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dtm().getEnhancer().apply();
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "entityPropCollection.prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
-	
+
 	PropertyTypeDeterminator.determinePropertyType(dtm().getEnhancer().getManagedType(MasterEntityForIncludedPropertiesLogic.class), "entityPropCollection.prop1");
-	
+
 	dtm().getEnhancer().getCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityPropCollection.prop1").setAttribute(CalculatedPropertyAttribute.ALL);
 	dtm().getEnhancer().apply();
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
@@ -363,7 +363,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 	dtm().getEnhancer().apply();
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
     }
-    
+
     @Test
     public void test_that_domain_changes_for_Second_Level_circular_properties_are_correctly_reflected_in_Included_properties() {
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
