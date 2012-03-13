@@ -185,6 +185,249 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
+    public void test_1_1_1() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		where().prop("model.key").eq().val("SPR 318").model(),
+
+		select(VEHICLE). //
+		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
+		where().prop("model.key").eq().val("SPR 318").model());
+    }
+
+    @Test
+    public void test_1_1_2() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		where().prop("replacedBy.key").eq().val("CAR1").model(),
+
+		select(VEHICLE). //
+		leftJoin(VEHICLE).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		where().prop("replacedBy.key").eq().val("CAR1").model());
+    }
+
+    @Test
+    public void test_1_2_1() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		leftJoin(VEHICLE).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		where().prop("replacedBy.model.key").eq().val("SPR 318").model(),
+
+		select(VEHICLE). //
+		leftJoin(VEHICLE).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		leftJoin(MODEL).as("replacedBy.model").on().prop("replacedBy.model").eq().prop("replacedBy.model.id"). //
+		where().prop("replacedBy.model.key").eq().val("SPR 318").model());
+    }
+
+    @Test
+    public void test_1_2_2() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		leftJoin(VEHICLE).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		where().prop("replacedBy.replacedBy.key").eq().val("CAR1").model(),
+
+		select(VEHICLE). //
+		leftJoin(VEHICLE).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		leftJoin(VEHICLE).as("replacedBy.replacedBy").on().prop("replacedBy.replacedBy").eq().prop("replacedBy.replacedBy.id"). //
+		where().prop("replacedBy.replacedBy.key").eq().val("CAR1").model());
+    }
+
+
+    @Test
+    public void test_1_3_1() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		join(VEHICLE).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		where().prop("rb.model.key").eq().val("SPR 318").model(),
+
+		select(VEHICLE). //
+		join(VEHICLE).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		join(MODEL).as("rb.model").on().prop("rb.model").eq().prop("rb.model.id"). //
+		where().prop("rb.model.key").eq().val("SPR 318").model());
+    }
+
+    @Test
+    public void test_1_3_2() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		join(VEHICLE).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		where().prop("rb.replacedBy.key").eq().val("CAR1").model(),
+
+		select(VEHICLE). //
+		join(VEHICLE).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		leftJoin(VEHICLE).as("rb.replacedBy").on().prop("rb.replacedBy").eq().prop("rb.replacedBy.id"). //
+		where().prop("rb.replacedBy.key").eq().val("CAR1").model());
+    }
+
+    @Test
+    public void test_2_1_1() {
+	assertModelsEquals(//
+		select(select(VEHICLE).model()). //
+		where().prop("model.key").eq().val("SPR 318").model(),
+
+		select(select(VEHICLE).model()). //
+		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
+		where().prop("model.key").eq().val("SPR 318").model());
+    }
+
+    @Test
+    public void test_2_1_2() {
+	assertModelsEquals(//
+		select(select(VEHICLE).model()). //
+		where().prop("replacedBy.key").eq().val("CAR1").model(),
+
+		select(select(VEHICLE).model()). //
+		leftJoin(VEHICLE).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		where().prop("replacedBy.key").eq().val("CAR1").model());
+    }
+
+    @Test
+    public void test_2_2_1() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		leftJoin(select(VEHICLE).model()).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		where().prop("replacedBy.model.key").eq().val("SPR 318").model(),
+
+		select(VEHICLE). //
+		leftJoin(select(VEHICLE).model()).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		leftJoin(MODEL).as("replacedBy.model").on().prop("replacedBy.model").eq().prop("replacedBy.model.id"). //
+		where().prop("replacedBy.model.key").eq().val("SPR 318").model());
+    }
+
+    @Test
+    public void test_2_2_2() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		leftJoin(select(VEHICLE).model()).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		where().prop("replacedBy.replacedBy.key").eq().val("CAR1").model(),
+
+		select(VEHICLE). //
+		leftJoin(select(VEHICLE).model()).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		leftJoin(VEHICLE).as("replacedBy.replacedBy").on().prop("replacedBy.replacedBy").eq().prop("replacedBy.replacedBy.id"). //
+		where().prop("replacedBy.replacedBy.key").eq().val("CAR1").model());
+    }
+
+    @Test
+    public void test_2_3_1() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		join(select(VEHICLE).model()).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		where().prop("rb.model.key").eq().val("SPR 318").model(),
+
+		select(VEHICLE). //
+		join(select(VEHICLE).model()).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		join(MODEL).as("rb.model").on().prop("rb.model").eq().prop("rb.model.id"). //
+		where().prop("rb.model.key").eq().val("SPR 318").model());
+    }
+
+    @Test
+    public void test_2_3_2() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		join(select(VEHICLE).model()).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		where().prop("rb.replacedBy.key").eq().val("CAR1").model(),
+
+		select(VEHICLE). //
+		join(select(VEHICLE).model()).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		leftJoin(VEHICLE).as("rb.replacedBy").on().prop("rb.replacedBy").eq().prop("rb.replacedBy.id"). //
+		where().prop("rb.replacedBy.key").eq().val("CAR1").model());
+    }
+
+    EntityResultQueryModel<TgVehicle> getReversedVehicleModel() {
+	return
+		select(VEHICLE). //
+		join(VEHICLE).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		leftJoin(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
+		yield().prop("replacedBy.id").as("replacedBy"). //
+		yield().prop("model.id").as("model"). //
+		yield().prop("id").as("id"). //
+		yield().prop("version").as("version"). //
+		yield().prop("key").as("key"). //
+		yield().prop("desc").as("desc"). //
+		yield().prop("initDate").as("initDate"). //
+		yield().prop("station").as("station"). //
+		yield().prop("price.amount").as("price.amount"). //
+		yield().prop("purchasePrice.amount").as("purchasePrice.amount"). //
+		yield().prop("active").as("active"). //
+		yield().prop("leased").as("leased"). //
+		modelAsEntity(VEHICLE);
+    }
+
+    @Test
+    public void test_3_1_1() {
+	assertModelsEquals(//
+		select(getReversedVehicleModel()). //
+		where().prop("model.key").eq().val("SPR 318").model(),
+
+		select(getReversedVehicleModel()). //
+		leftJoin(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
+		where().prop("model.key").eq().val("SPR 318").model());
+    }
+
+    @Test
+    public void test_3_1_2() {
+	assertModelsEquals(//
+		select(getReversedVehicleModel()). //
+		where().prop("replacedBy.key").eq().val("CAR1").model(),
+
+		select(getReversedVehicleModel()). //
+		join(VEHICLE).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		where().prop("replacedBy.key").eq().val("CAR1").model());
+    }
+
+    @Test
+    public void test_3_2_1() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		leftJoin(getReversedVehicleModel()).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		where().prop("replacedBy.model.key").eq().val("SPR 318").model(),
+
+		select(VEHICLE). //
+		leftJoin(getReversedVehicleModel()).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		leftJoin(MODEL).as("replacedBy.model").on().prop("replacedBy.model").eq().prop("replacedBy.model.id"). //
+		where().prop("replacedBy.model.key").eq().val("SPR 318").model());
+    }
+
+    @Test
+    public void test_3_2_2() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		leftJoin(getReversedVehicleModel()).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		where().prop("replacedBy.replacedBy.key").eq().val("CAR1").model(),
+
+		select(VEHICLE). //
+		leftJoin(getReversedVehicleModel()).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
+		leftJoin(VEHICLE).as("replacedBy.replacedBy").on().prop("replacedBy.replacedBy").eq().prop("replacedBy.replacedBy.id"). //
+		where().prop("replacedBy.replacedBy.key").eq().val("CAR1").model());
+    }
+
+    @Test
+    public void test_3_3_1() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		join(getReversedVehicleModel()).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		where().prop("rb.model.key").eq().val("SPR 318").model(),
+
+		select(VEHICLE). //
+		join(getReversedVehicleModel()).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		leftJoin(MODEL).as("rb.model").on().prop("rb.model").eq().prop("rb.model.id"). //
+		where().prop("rb.model.key").eq().val("SPR 318").model());
+    }
+
+    @Test
+    public void test_3_3_2() {
+	assertModelsEquals(//
+		select(VEHICLE). //
+		join(getReversedVehicleModel()).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		where().prop("rb.replacedBy.key").eq().val("CAR1").model(),
+
+		select(VEHICLE). //
+		join(getReversedVehicleModel()).as("rb").on().prop("replacedBy").eq().prop("rb.id"). //
+		join(VEHICLE).as("rb.replacedBy").on().prop("rb.replacedBy").eq().prop("rb.replacedBy.id"). //
+		where().prop("rb.replacedBy.key").eq().val("CAR1").model());
+    }
+
+    @Test
     public void test2() {
 	assertModelsEquals(//
 		select(VEHICLE). //
@@ -192,7 +435,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 
 		select(VEHICLE). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").model());
     }
 
@@ -204,7 +447,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 
 		select(VEHICLE). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		leftJoin(ORG5).as("station").on().prop("station").eq().prop("station.id"). //
 		where().prop("station.key").like().val("AA%").and().prop("model.make.key").eq().val("MERC").model());
     }
@@ -219,7 +462,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 
 		select(sourceQry). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").model());
     }
 
@@ -235,7 +478,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		select(sourceQry). //
 		leftJoin(ORG5).as("s").on().prop("station").eq().prop("s"). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		where().prop("s.key").like().val("AA%").and().prop("model.make.key").eq().val("MERC").model());
     }
 
@@ -267,7 +510,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		select(sourceQry). //
 		leftJoin(ORG5).as("s").on().prop("station").eq().prop("s"). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		leftJoin(ORG4).as("s.parent").on().prop("s.parent").eq().prop("s.parent.id"). //
 		where().prop("s.parent.key").like().val("AA%").and().prop("model.make.key").eq().val("MERC").model());
     }
@@ -281,7 +524,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 
 		select(VEHICLE). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").model());
     }
 
@@ -309,7 +552,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		select(VEHICLE). //
 		leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv"). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").model());
     }
 
@@ -323,7 +566,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		select(VEHICLE). //
 		leftJoin(VEHICLE).as("replacedBy").on().prop("replacedBy").eq().prop("replacedBy.id"). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").model());
     }
 
@@ -364,7 +607,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		select(VEHICLE). //
 		leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv"). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		leftJoin(MODEL).as("rv.model").on().prop("rv.model").eq().prop("rv.model.id"). //
 		leftJoin(MAKE).as("rv.model.make").on().prop("rv.model.make").eq().prop("rv.model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").and().prop("rv.model.make.key").ne().val("MERC").model());
@@ -383,9 +626,9 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv"). //
 		join(VEHICLE).as("rv2").on().prop("rv.replacedBy").eq().prop("rv2"). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		join(MODEL).as("rv2.model").on().prop("rv2.model").eq().prop("rv2.model.id"). //
-		leftJoin(MAKE).as("rv2.model.make").on().prop("rv2.model.make").eq().prop("rv2.model.make.id"). //
+		join(MAKE).as("rv2.model.make").on().prop("rv2.model.make").eq().prop("rv2.model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").and().prop("rv2.model.make.key").ne().val("MERC").model());
     }
 
@@ -402,9 +645,9 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv.id"). //
 		join(VEHICLE).as("rv2").on().prop("rv.replacedBy").eq().prop("rv2.id"). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		join(MODEL).as("rv2.model").on().prop("rv2.model").eq().prop("rv2.model.id"). //
-		leftJoin(MAKE).as("rv2.model.make").on().prop("rv2.model.make").eq().prop("rv2.model.make.id"). //
+		join(MAKE).as("rv2.model.make").on().prop("rv2.model.make").eq().prop("rv2.model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").and().prop("rv2.model.make.key").ne().val("MERC").model());
     }
 
@@ -418,7 +661,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 
 		select(select(VEHICLE).	where().prop("key").notLike().val("A%").model()). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		leftJoin(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").model());
     }
 }

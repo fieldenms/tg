@@ -148,11 +148,11 @@ public class EntQuery implements ISingleOperand {
 
     private boolean determineYieldNullability(final Yield yield) {
 	final PropertyPersistenceInfo finalPropInfo = mappingsGenerator.getInfoForDotNotatedProp(type(), yield.getAlias());
-	if (finalPropInfo != null) {
-	    return mappingsGenerator.isNullable(type(), yield.getAlias());
-	} else {
+//	if (finalPropInfo != null) {
+//	    return mappingsGenerator.isNullable(type(), yield.getAlias());
+//	} else {
 	    return yield.getOperand().isNullable();
-	}
+//	}
     }
 
     private Class determineYieldJavaType(final Yield yield) {
@@ -161,7 +161,8 @@ public class EntQuery implements ISingleOperand {
 	    final Class yieldTypeAccordingToQueryResultType = PropertyTypeDeterminator.determinePropertyType(type(), yield.getAlias());
 
 	    if (yieldTypeAccordingToQuerySources != null && !yieldTypeAccordingToQuerySources.equals(yieldTypeAccordingToQueryResultType)) {
-		if (!(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQuerySources) && Long.class.equals(yieldTypeAccordingToQueryResultType))) {
+		if (!(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQuerySources) && Long.class.equals(yieldTypeAccordingToQueryResultType)) && //
+			!(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQueryResultType) && Long.class.equals(yieldTypeAccordingToQuerySources))) {
 		    throw new IllegalStateException("Different types: from source = " + yieldTypeAccordingToQuerySources.getSimpleName() + " from result type = "
 			    + yieldTypeAccordingToQueryResultType.getSimpleName());
 		}

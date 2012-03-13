@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
@@ -21,7 +22,7 @@ import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 public class TgVehicleModel extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty
+    @IsProperty @Required
     @MapTo
     @Title(value = "Test vehicle model", desc = "Test vehicle model")
     private TgVehicleMake make;

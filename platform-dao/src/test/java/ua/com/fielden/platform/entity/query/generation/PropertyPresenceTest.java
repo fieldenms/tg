@@ -39,7 +39,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 	assertPropInfoEquals(qry, "desc", propResInf("desc", null, ppi("desc", STRING, H_STRING, true)));
 	assertPropInfoEquals(qry, "model", propResInf("model", null, ppi("model", MODEL, H_LONG, false)));
 	assertPropInfoEquals(qry, "model.desc", propResInf("model.desc", null, ppi("model.desc", STRING, H_STRING, true), ppi("model", MODEL, H_LONG, false)));
-	assertPropInfoEquals(qry, "model.make.key", propResInf("model.make.key", null, ppi("model.make.key", STRING, H_STRING, true), ppi("model", MODEL, H_LONG, false)));
+	assertPropInfoEquals(qry, "model.make.key", propResInf("model.make.key", null, ppi("model.make.key", STRING, H_STRING, false), ppi("model", MODEL, H_LONG, false)));
 	assertPropInfoEquals(qry, "model.make.desc", propResInf("model.make.desc", null, ppi("model.make.desc", STRING, H_STRING, true), ppi("model", MODEL, H_LONG, false)));
     }
 
@@ -230,7 +230,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 
 	assertPropInfoEquals(qry, "model", propResInf("model", null, ppi("model", MODEL, H_LONG, false)));
 	assertPropInfoEquals(qry, "model.id", propResInf("model.id", null, ppi("model.id", LONG, H_LONG, false), ppi("model", MODEL, H_LONG, false)));
-	assertPropInfoEquals(qry, "model.make", propResInf("model.make", null, ppi("model.make", MAKE, H_LONG, true), ppi("model", MODEL, H_LONG, false)));
+	assertPropInfoEquals(qry, "model.make", propResInf("model.make", null, ppi("model.make", MAKE, H_LONG, false), ppi("model", MODEL, H_LONG, false)));
     }
 
     @Test
@@ -241,7 +241,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 		yield().minOf().yearOf().prop("initDate").as("aka.earliestInitYear"). //
 		modelAsAggregate();
 	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("model.make.key").eq().val("MERC").and().prop("aka.earliestInitYear").ge().val(2000).modelAsAggregate();
-	assertPropInfoEquals(qry, "model.make.key", propResInf("model.make.key", null, ppi("model.make.key", STRING, H_STRING, true), ppi("model", MODEL, H_LONG, false)));
+	assertPropInfoEquals(qry, "model.make.key", propResInf("model.make.key", null, ppi("model.make.key", STRING, H_STRING, false), ppi("model", MODEL, H_LONG, false)));
 	assertPropInfoEquals(qry, "aka.earliestInitYear", propResInf("aka.earliestInitYear", null, ppi("aka.earliestInitYear", null, null, true)));
     }
 
@@ -253,7 +253,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 	yield().minOf().yearOf().prop("initDate").as("earliestInitYear"). //
 	modelAsAggregate();
 	final AggregatedResultQueryModel qry = select(sourceQry).where().prop("my.model.make.key").eq().val("MERC").and().prop("earliestInitYear").ge().val(2000).modelAsAggregate();
-	assertPropInfoEquals(qry, "my.model.make.key", propResInf("my.model.make.key", null, ppi("my.model.make.key", STRING, H_STRING, true), ppi("my.model", MODEL, H_LONG, false)));
+	assertPropInfoEquals(qry, "my.model.make.key", propResInf("my.model.make.key", null, ppi("my.model.make.key", STRING, H_STRING, false), ppi("my.model", MODEL, H_LONG, false)));
 	assertPropInfoEquals(qry, "earliestInitYear", propResInf("earliestInitYear", null, ppi("earliestInitYear", null, null, true)));
     }
 
@@ -265,7 +265,7 @@ public class PropertyPresenceTest extends BaseEntQueryTCase {
 	assertPropInfoEquals(qry, "vehicle", propResInf("vehicle", null, ppi("vehicle", VEHICLE, H_LONG, false)));
 	assertPropInfoEquals(qry, "vehicle.model", propResInf("vehicle.model", null, ppi("vehicle.model", MODEL, H_LONG, false), ppi("vehicle", VEHICLE, H_LONG, false)));
 	assertPropInfoEquals(qry, "vehicle.model.key", propResInf("vehicle.model.key", null, ppi("vehicle.model.key", STRING, H_STRING, false), ppi("vehicle", VEHICLE, H_LONG, false)));
-	assertPropInfoEquals(qry, "vehicle.model.make", propResInf("vehicle.model.make", null, ppi("vehicle.model.make", MAKE, H_LONG, true), ppi("vehicle", VEHICLE, H_LONG, false)));
+	assertPropInfoEquals(qry, "vehicle.model.make", propResInf("vehicle.model.make", null, ppi("vehicle.model.make", MAKE, H_LONG, false), ppi("vehicle", VEHICLE, H_LONG, false)));
 //	assertPropInfoEquals(qry, "date", propResInf("date", null, ppi("date", DATE, H_LONG, false)));
     }
 

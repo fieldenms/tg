@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(String.class)
@@ -18,7 +19,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class TgOrgUnit4 extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty
+    @IsProperty @Required
     @MapTo
     @Title(value = "Parent", desc = "Parent")
     private TgOrgUnit3 parent;

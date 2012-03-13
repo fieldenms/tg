@@ -68,9 +68,10 @@ public class MappingsGeneratorPPIsTest extends BaseEntQueryTCase {
 	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.id"));
 	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.key"));
 	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.desc"));
-	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make"));
-	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make.id"));
-	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make.key"));
+	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make"));
+	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make.id"));
+	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make.key"));
+	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make.desc"));
 	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "price.amount"));
 	try {
 	    assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "price.currency"));

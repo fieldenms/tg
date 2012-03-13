@@ -88,13 +88,13 @@ public class QuerySourcesFinalPropertiesAssociationTest extends BaseEntQueryTCas
 	final EntQuery entQry = entResultQry(qry);
 
 	final List<PropResolutionInfo> src1FinProps = prepare( //
-		propResInf("model.make", null, ppi("model.make", MAKE, Hibernate.LONG, true))
+		propResInf("model.make", null, ppi("model.make", MAKE, Hibernate.LONG, false))
 		);
 
 	final List<PropResolutionInfo> src2FinProps = prepare( //
-		propResInf("model.make.id", "model.make", ppi("id", LONG, H_LONG, true)), //
-		propResInf("model.make.key", "model.make", ppi("key", STRING, H_STRING, true)), //
-		propResInf("model.make.key", "model.make", ppi("key", STRING, H_STRING, true)));
+		propResInf("model.make.id", "model.make", ppi("id", LONG, H_LONG, false)), //
+		propResInf("model.make.key", "model.make", ppi("key", STRING, H_STRING, false)), //
+		propResInf("model.make.key", "model.make", ppi("key", STRING, H_STRING, false)));
 	assertEquals(incP2S, compose(src1FinProps, src2FinProps), getSourcesFinalReferencingProps(entQry));
     }
 
