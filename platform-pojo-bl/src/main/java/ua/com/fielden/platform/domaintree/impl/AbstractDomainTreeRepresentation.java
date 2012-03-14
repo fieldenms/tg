@@ -17,8 +17,6 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager.ChangedAction;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager.IPropertyStructureChangedListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -47,7 +45,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentation {
-
     private final EnhancementLinkedRootsSet rootTypes;
     private final EnhancementSet excludedProperties;
     private final ITickRepresentation firstTick;
@@ -55,6 +52,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
     private final EnhancementRootsMap<ListenedArrayList> includedProperties;
     private final transient AbstractDomainTreeManager dtm;
+
+    private final transient List<IPropertyListener> propertyListeners, disabledPropertyListeners;
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
@@ -67,6 +66,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	this.excludedProperties.addAll(excludedProperties);
 	this.firstTick = firstTick;
 	this.secondTick = secondTick;
+
+	propertyListeners = new ArrayList<IPropertyListener>();
+	disabledPropertyListeners = new ArrayList<IPropertyListener>();
 
 	this.dtm = null; // IMPORTANT : to use this "dtm", this representation should be passed into manager constructor, which should initialise "dtm" field.
 
@@ -342,22 +344,22 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     public static class ListenedArrayList extends ArrayList<String> {
 	private static final long serialVersionUID = -4295706377290507263L;
 	private final transient Class<?> root;
-	private final transient AbstractDomainTreeManager parentDtm;
+	private final transient AbstractDomainTreeRepresentation parentDtr;
 
 	public ListenedArrayList() {
 	    this(null, null);
 	}
 
-	public ListenedArrayList(final Class<?> root, final AbstractDomainTreeManager parentDtm) {
+	public ListenedArrayList(final Class<?> root, final AbstractDomainTreeRepresentation parentDtr) {
 	    super();
 	    this.root = root;
-	    this.parentDtm = parentDtm;
+	    this.parentDtr = parentDtr;
 	}
 
 	private void fireProperty(final Class<?> root, final String property, final boolean added) {
-	    if (parentDtm != null) {
-		for (final IPropertyStructureChangedListener listener : parentDtm.listeners()) {
-		    listener.propertyStructureChanged(root, property, added ? ChangedAction.ADDED : ChangedAction.REMOVED);
+	    if (parentDtr != null) {
+		for (final IPropertyListener listener : parentDtr.propertyListeners) {
+		    listener.propertyStateChanged(root, property, added, null);
 		}
 	    }
 	}
@@ -423,9 +425,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	final Class<?> root = DynamicEntityClassLoader.getOriginalType(root1);
 	if (includedProperties.get(root) == null) { // not yet loaded
 	    final Date st = new Date();
-	    dtm.enableListening(false);
+	    enableListening(false);
 	    // initialise included properties using isExcluded contract and manually excluded properties
-	    final ListenedArrayList includedProps = new ListenedArrayList(root, this.dtm);
+	    final ListenedArrayList includedProps = new ListenedArrayList(root, this);
 	    if (!isExcludedImmutably(root, "")) { // the entity itself is included -- add it to "included properties" list
 		includedProps.add("");
 		if (!EntityUtils.isEntityType(root)) {
@@ -433,11 +435,36 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		}
 		includedProps.addAll(constructProperties(root, "", constructKeysAndProperties(root)));
 	    }
-	    dtm.enableListening(true);
+	    enableListening(true);
 	    includedProperties.put(root, includedProps);
 	    logger().info("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + includedProps.size() + " included properties => [" + includedProps + "].");
 	}
         return includedProperties.get(root);
+    }
+
+    /**
+     * Enables or disables listening for each {@link ListenedArrayList} structures.
+     *
+     * @param enable
+     */
+    private void enableListening(final boolean enable) {
+	if (enable) {
+	    propertyListeners.addAll(disabledPropertyListeners);
+	    disabledPropertyListeners.clear();
+	} else {
+	    disabledPropertyListeners.addAll(propertyListeners);
+	    propertyListeners.clear();
+	}
+    }
+
+    @Override
+    public boolean addPropertyListener(final IPropertyListener listener) {
+	return propertyListeners.add(listener);
+    }
+
+    @Override
+    public boolean removePropertyListener(final IPropertyListener listener) {
+        return propertyListeners.remove(listener);
     }
 
     @Override
@@ -518,12 +545,17 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	private final transient AbstractDomainTreeRepresentation dtr;
 	private final transient TickManager tickManager;
 
+	private final transient List<IPropertyDisablementListener> propertyDisablementListeners;
+
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor and then into manager constructor, which should initialise "dtr" and "tickManager" fields.
 	 */
 	protected AbstractTickRepresentation() {
 	    this.disabledProperties = createSet();
 	    this.checkedProperties = createSet();
+
+	    this.propertyDisablementListeners = new ArrayList<IPropertyDisablementListener>();
+
 	    this.dtr = null; // IMPORTANT : to use this tick it should be passed into representation constructor, which should initialise "dtr" field.
 	    this.tickManager = null; // IMPORTANT : to use this tick it should be passed into manager constructor, which should initialise "tickManager" field.
 	}
@@ -543,17 +575,26 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    fireDisablingEvent(root, property);
 	}
 
+	@Override
+	public boolean addPropertyDisablementListener(final IPropertyDisablementListener listener) {
+	    return propertyDisablementListeners.add(listener);
+	}
+
+	@Override
+	public boolean removePropertyDisablementListener(final IPropertyDisablementListener listener) {
+	    return propertyDisablementListeners.remove(listener);
+	}
+
 	/**
-	 * TODO
-	 *
+	 * Fires disablement event for specified property (the property has been disabled successfully).
 	 *
 	 * @param root
 	 * @param property
 	 */
 	private void fireDisablingEvent(final Class<?> root, final String property) {
 	    // fire DISABLED event after successful "disabled" action
-	    for (final IPropertyStructureChangedListener listener : getDtr().dtm().listeners()) {
-		listener.propertyStructureChanged(root, property, ChangedAction.ENABLEMENT_OR_CHECKING_CHANGED);
+	    for (final IPropertyDisablementListener listener : propertyDisablementListeners) {
+		listener.propertyStateChanged(root, property, true, null);
 	    }
 	}
 

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.domaintree;
 
 import java.util.List;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyStateListener;
 
 /**
  * This interface defines how domain tree can be managed. <br><br>
@@ -61,49 +61,6 @@ public interface IDomainTreeManager {
     ITickManager getSecondTick();
 
     /**
-     * A listener interface for structural changes of property structures (e.g. property added / removed / checked / disabled / etc.).
-     *
-     * @author TG Team
-     *
-     */
-    public interface IPropertyStructureChangedListener {
-	/**
-	 * Invokes after successful "change" of property (e.g. added / removed / checked / disabled / etc.).
-	 *
-	 * @param root
-	 * @param property
-	 * @param changedAction
-	 */
-	void propertyStructureChanged(final Class<?> root, final String property, final ChangedAction changedAction);
-    }
-
-    /**
-     * The types of actions that can be done with properties in Domain Trees.
-     *
-     * @author TG Team
-     *
-     */
-    public enum ChangedAction {
-	ADDED, REMOVED, ENABLEMENT_OR_CHECKING_CHANGED
-    }
-
-    /**
-     * Adds a structural changes listener, which is necessary to reflect structural changes on depending models (Entities tree model etc.).
-     *
-     * @param listener
-     * @return
-     */
-    boolean addPropertyStructureChangedListener(final IPropertyStructureChangedListener listener);
-
-    /**
-     * Removes a previously added structural changes listener, which was necessary to reflect structural changes on depending models (Entities tree model etc.).
-     *
-     * @param listener
-     * @return
-     */
-    boolean removePropertyStructureChangedListener(final IPropertyStructureChangedListener listener);
-
-    /**
      * This interface defines how domain tree can be managed. <br><br>
      * Domain tree consists of a tree of properties.
      * Each property has two true-false modifiers.<br><br>
@@ -155,6 +112,36 @@ public interface IDomainTreeManager {
          * @return
          */
         List<String> checkedProperties(final Class<?> root);
+
+        /**
+         * A post-successful listener for property checking.
+         *
+         * @author TG Team
+         *
+         */
+        public interface IPropertyCheckingListener extends IPropertyStateListener<Boolean> {
+	    /**
+	     * @param hasBeenChecked -- <code>true</code> to indicate that property was successfully checked, <code>false</code> to indicate that it was successfully unchecked.
+	     */
+	    @Override
+	    void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState);
+        }
+
+        /**
+         * Adds a {@link IPropertyCheckingListener} listener.
+         *
+         * @param listener
+         * @return
+         */
+        boolean addPropertyCheckingListener(final IPropertyCheckingListener listener);
+
+        /**
+         * Removes a {@link IPropertyCheckingListener} listener.
+         *
+         * @param listener
+         * @return
+         */
+        boolean removePropertyCheckingListener(final IPropertyCheckingListener listener);
 
         /**
          * Swaps two properties (<code>property1</code> and <code>property2</code>) in an ordered list of checked properties for concrete <code>root</code> type.

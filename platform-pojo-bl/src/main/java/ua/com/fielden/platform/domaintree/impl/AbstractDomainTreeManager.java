@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
@@ -35,9 +36,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     private final AbstractDomainTreeRepresentation dtr;
     private final TickManager firstTick;
     private final TickManager secondTick;
-    private final transient IPropertyStructureChangedListener listener;
-
-    private final transient List<IPropertyStructureChangedListener> listeners, disabledListeners;
+    private final transient IPropertyListener listener;
 
     /**
      * A <i>manager</i> constructor.
@@ -52,9 +51,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	this.dtr = dtr;
 	this.firstTick = firstTick;
 	this.secondTick = secondTick;
-
-	listeners = new ArrayList<IPropertyStructureChangedListener>();
-	disabledListeners = new ArrayList<IPropertyStructureChangedListener>();
 
 	// initialise the references on "dtr" instance in "firstTick" and "secondTick" fields
 	// and initialise the references on "firstTick" and "secondTick" instances in "dtr.firstTick" and "dtr.secondTick" fields
@@ -93,11 +89,11 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	for (final Entry<Class<?>, ListenedArrayList> entry : this.dtr.includedProperties().entrySet()) {
 	    // initialise the references on this instance in "included properties" lists
 	    try {
-		final Field parentDtmField = Finder.findFieldByName(ListenedArrayList.class, "parentDtm");
-		final boolean isAccessible = parentDtmField.isAccessible();
-		parentDtmField.setAccessible(true);
-		parentDtmField.set(entry.getValue(), this);
-		parentDtmField.setAccessible(isAccessible);
+		final Field parentDtrField = Finder.findFieldByName(ListenedArrayList.class, "parentDtr");
+		final boolean isAccessible = parentDtrField.isAccessible();
+		parentDtrField.setAccessible(true);
+		parentDtrField.set(entry.getValue(), this.getRepresentation());
+		parentDtrField.setAccessible(isAccessible);
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		throw new IllegalStateException(e);
@@ -106,7 +102,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
 	// the below listener is intended to update checked properties for both ticks when the skeleton of included properties has been changed
 	listener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick);
-	this.addPropertyStructureChangedListener(listener);
+	this.getRepresentation().addPropertyListener(listener);
     }
 
     /**
@@ -143,7 +139,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      * @author TG Team
      *
      */
-    protected static class IncludedAndCheckedPropertiesSynchronisationListener implements IPropertyStructureChangedListener {
+    protected static class IncludedAndCheckedPropertiesSynchronisationListener implements IPropertyListener {
 	private final ITickManagerWithMutability firstTick, secondTick;
 
 	/**
@@ -158,23 +154,28 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	}
 
 	@Override
-	public void propertyStructureChanged(final Class<?> root, final String property, final ChangedAction changedAction) {
-	    if (ChangedAction.REMOVED.equals(changedAction)) {
+	public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
+	    if (wasAddedOrRemoved == null) {
+		throw new IllegalArgumentException("'wasAddedOrRemoved' cannot be 'null'.");
+	    }
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
+	    if (!wasAddedOrRemoved) { // property has been REMOVED
 		if (!isDummyMarker(property)) {
 		    final String reflectionProperty = reflectionProperty(property);
 		    // update checked properties
 		    if (firstTick.checkedPropertiesMutable(root).contains(reflectionProperty)) {
 			firstTick.checkedPropertiesMutable(root).remove(reflectionProperty);
-		    } else {
-			logger().warn("Could not uncheck already unchecked property [" + reflectionProperty + "] in type [" + root.getSimpleName() + "].");
 		    }
 		    if (secondTick.checkedPropertiesMutable(root).contains(reflectionProperty)) {
 			secondTick.checkedPropertiesMutable(root).remove(reflectionProperty);
-		    } else {
-			logger().warn("Could not uncheck already unchecked property [" + reflectionProperty + "] in type [" + root.getSimpleName() + "].");
 		    }
 		}
-	    } else if (ChangedAction.ADDED.equals(changedAction)) {
+	    } else { // property has been ADDED
 		if (!isDummyMarker(property)) {
 		    final String reflectionProperty = reflectionProperty(property);
 		    // update checked properties
@@ -189,34 +190,8 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	}
     }
 
-    protected IPropertyStructureChangedListener listener() {
+    protected IPropertyListener listener() {
 	return listener;
-    }
-
-
-    /**
-     * Enables or disables listening for each {@link ListenedArrayList} structures.
-     *
-     * @param enable
-     */
-    protected void enableListening(final boolean enable) {
-	if (enable) {
-	    listeners.addAll(disabledListeners);
-	    disabledListeners.clear();
-	} else {
-	    disabledListeners.addAll(listeners);
-	    listeners.clear();
-	}
-    }
-
-    @Override
-    public boolean addPropertyStructureChangedListener(final IPropertyStructureChangedListener listener) {
-	return listeners.add(listener);
-    }
-
-    @Override
-    public boolean removePropertyStructureChangedListener(final IPropertyStructureChangedListener listener) {
-        return listeners.remove(listener);
     }
 
     /**
@@ -235,6 +210,8 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	private final transient AbstractDomainTreeRepresentation dtr;
 	private final transient ITickRepresentation tr;
 
+	private final transient List<IPropertyCheckingListener> propertyCheckingListeners;
+
 	/**
 	 * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr" fields.
 	 */
@@ -248,6 +225,9 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	protected TickManager(final Map<Class<?>, List<String>> checkedProperties) {
 	    this.checkedProperties = createRootsMap();
 	    this.checkedProperties.putAll(checkedProperties);
+
+	    this.propertyCheckingListeners = new ArrayList<IPropertyCheckingListener>();
+
 	    this.dtr = null;
 	    this.tr = null;
 	}
@@ -308,8 +288,8 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		    checkedPropertiesMutable(root).add(property);
 
 		    // fire CHECKED event after successful "checked" action
-		    for (final IPropertyStructureChangedListener listener : dtr.dtm().listeners()) {
-			listener.propertyStructureChanged(root, property, ChangedAction.ENABLEMENT_OR_CHECKING_CHANGED);
+		    for (final IPropertyCheckingListener listener : propertyCheckingListeners) {
+			listener.propertyStateChanged(root, property, check, null);
 		    }
 		} else {
 		    logger().warn("Could not check already checked property [" + property + "] in type [" + root.getSimpleName() + "].");
@@ -319,13 +299,23 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		    checkedPropertiesMutable(root).remove(property);
 
 		    // fire UNCHECKED event after successful "unchecked" action
-		    for (final IPropertyStructureChangedListener listener : dtr.dtm().listeners()) {
-			listener.propertyStructureChanged(root, property, ChangedAction.ENABLEMENT_OR_CHECKING_CHANGED);
+		    for (final IPropertyCheckingListener listener : propertyCheckingListeners) {
+			listener.propertyStateChanged(root, property, check, null);
 		    }
 		} else {
 		    logger().warn("Could not uncheck already unchecked property [" + property + "] in type [" + root.getSimpleName() + "].");
 		}
 	    }
+	}
+
+	@Override
+	public boolean addPropertyCheckingListener(final IPropertyCheckingListener listener) {
+	    return propertyCheckingListeners.add(listener);
+	}
+
+	@Override
+	public boolean removePropertyCheckingListener(final IPropertyCheckingListener listener) {
+	    return propertyCheckingListeners.remove(listener);
 	}
 
 	@Override
@@ -492,9 +482,5 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	} else if (!secondTick.equals(other.secondTick))
 	    return false;
 	return true;
-    }
-
-    public List<IPropertyStructureChangedListener> listeners() {
-        return listeners;
     }
 }

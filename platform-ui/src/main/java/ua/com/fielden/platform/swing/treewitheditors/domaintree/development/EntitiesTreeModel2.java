@@ -19,10 +19,11 @@ import javax.swing.tree.TreePath;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeManager.ChangedAction;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager.IPropertyStructureChangedListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager.IPropertyCheckingListener;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation.IPropertyDisablementListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -74,7 +75,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    final String firstTickCaption,//
 	    final String secondTickCaption) {
 	super(2);
-	
+
 	this.firstTickCaption = firstTickCaption;
 	this.secondTickCaption = secondTickCaption;
 
@@ -96,26 +97,77 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    final List<String> properties = manager.getRepresentation().includedProperties(root);
 	    for (final String property : properties) {
 		createAndAddNode(root, property);
-		updateNodeState(manager, root, property, ChangedAction.ADDED);
+		// updateNodeState(manager, root, property, ChangedAction.ADDED);
+		if (isNotDummyAndNotCommonProperty(property)) { // Update the state of newly created node according to a property state in manager (ignore "dummy" due to its temporal nature)
+		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
+		}
 	    }
 	}
 
-	// add the listener into manager to correctly reflect structural changes (property added / removed / checked / disabled / etc.) in this EntitiesTreeModel
-	final IPropertyStructureChangedListener managerListener = new IPropertyStructureChangedListener() {
+//	// add the listener into manager to correctly reflect structural changes (property added / removed / checked / disabled / etc.) in this EntitiesTreeModel
+//	final IPropertyCheckingListener managerListener = new IPropertyCheckingListener() {
+//	    @Override
+//	    public void propertyStateChanged(final Class<?> root, final String property, final ChangedAction changedAction) {
+//		if (ChangedAction.REMOVED.equals(changedAction)) {
+//		    removeNode(root, property);
+//		    updateNodeState(manager, root, property, changedAction);
+//		} else if (ChangedAction.ADDED.equals(changedAction)) {
+//		    createAndAddNode(root, property);
+//		    updateNodeState(manager, root, property, changedAction);
+//		} else if (ChangedAction.ENABLEMENT_OR_CHECKING_CHANGED.equals(changedAction)) {
+//		    updateNodeState(manager, root, AbstractDomainTree.reflectionProperty(property), changedAction);
+//		}
+//	    }
+//	};
+//	this.manager.addPropertyCheckingListener(managerListener);
+
+	// add the listener into manager's representation to correctly reflect 'structural' changes (property added / removed) in this EntitiesTreeModel
+	this.manager.getRepresentation().addPropertyListener(new IPropertyListener() {
 	    @Override
-	    public void propertyStructureChanged(final Class<?> root, final String property, final ChangedAction changedAction) {
-		if (ChangedAction.REMOVED.equals(changedAction)) {
-		    removeNode(root, property);
-		    updateNodeState(manager, root, property, changedAction);
-		} else if (ChangedAction.ADDED.equals(changedAction)) {
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
+		if (wasAddedOrRemoved == null) {
+		    throw new IllegalArgumentException("'wasAddedOrRemoved' cannot be 'null'.");
+		}
+		if (wasAddedOrRemoved) {
 		    createAndAddNode(root, property);
-		    updateNodeState(manager, root, property, changedAction);
-		} else if (ChangedAction.ENABLEMENT_OR_CHECKING_CHANGED.equals(changedAction)) {
-		    updateNodeState(manager, root, AbstractDomainTree.reflectionProperty(property), changedAction);
+		    // updateNodeState(manager, root, property, ChangedAction.ADDED); // in this case property can be "dummy" or under "common-properties" umbrella
+		    if (isNotDummyAndNotCommonProperty(property)) { // Update the state of newly created node according to a property state in manager (ignore "dummy" due to its temporal nature)
+			provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
+		    }
+		} else {
+		    removeNode(root, property);
+		    // updateNodeState(manager, root, property, ChangedAction.REMOVED); nothing to do with an useless item
 		}
 	    }
-	};
-	this.manager.addPropertyStructureChangedListener(managerListener);
+	});
+	// add the listener into manager's representation's firstTick to correctly reflect 'disablement' changes (property disabled / enabled) in this EntitiesTreeModel
+	this.manager.getRepresentation().getFirstTick().addPropertyDisablementListener(new IPropertyDisablementListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasDisabled, final Boolean oldState) {
+		if (wasDisabled == null) {
+		    throw new IllegalArgumentException("'wasDisabled' cannot be 'null'.");
+		}
+		if (wasDisabled) { // TODO
+		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
+		} else {
+		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
+		}
+	    }
+	});
+	// add the listener into manager's firstTick to correctly reflect 'checking' changes (property checked / unchecked) in this EntitiesTreeModel
+	this.manager.getFirstTick().addPropertyCheckingListener(new IPropertyCheckingListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState) {
+		if (hasBeenChecked == null) {
+		    throw new IllegalArgumentException("'wasChecked' cannot be 'null'.");
+		}
+		if (hasBeenChecked) { // TODO
+		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
+		} else {
+		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
+		}
+	    }
+	});
 
 	// add the listener into EntitiesTreeModel to correctly reflect changes (node checked) in its manager
 	this.addTreeCheckingListener(listeners[0], 0);
@@ -190,27 +242,6 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    } else {
 		model.removeCheckingPath(path);
 	    }
-	}
-    }
-
-    /**
-     * Updates a state of node for a property. Note that for {@link ChangedAction#REMOVED} or {@link ChangedAction#ADDED} actions -- a "dummy" / "common" property can be used,
-     * but for other actions -- "real" properties should be used.
-     *
-     * @param manager
-     * @param root
-     * @param property
-     * @param changedAction
-     */
-    protected void updateNodeState(final IDomainTreeManagerAndEnhancer manager, final Class<?> root, final String property, final ChangedAction changedAction) {
-	if (ChangedAction.REMOVED.equals(changedAction)) { // do nothing with an useless item
-	    return;
-	} else if (ChangedAction.ADDED.equals(changedAction)) { // in this case property can be "dummy" or under "common-properties" umbrella
-	    if (isNotDummyAndNotCommonProperty(property)) { // Update the state of newly created node according to a property state in manager (ignore "dummy" due to its temporal nature)
-		provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
-	    }
-	} else if (ChangedAction.ENABLEMENT_OR_CHECKING_CHANGED.equals(changedAction)) {
-	    provideNodeState(manager, root, property);
 	}
     }
 
@@ -363,20 +394,20 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
     protected EntitiesTreeUserObject createUserObject(final Class<?> root, final String property) {
 	return new EntitiesTreeUserObject(root, property);
     }
-    
+
     /**
      * An user object containing title, label toolTip and two checkboxes toolTips.
-     * 
+     *
      * @author TG Team
      *
      */
     public class EntitiesTreeUserObject extends Pair<Class<?>, String> {
 	private static final long serialVersionUID = 6190072664610668018L;
 	private final String toStringTitle, labelTooltip, firstTickTooltip, secondTickTooltip;
-	
+
 	public EntitiesTreeUserObject(final Class<?> root, final String property) {
 	    super(root, property);
-	    
+
 	    final Class<?> managedRoot = getManager().getEnhancer().getManagedType(root);
 	    final Pair<String, String> titleAndDesc = extractTitleAndDesc(managedRoot, property);
 	    toStringTitle = titleAndDesc.getKey();
@@ -384,24 +415,24 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    firstTickTooltip = createCriteriaCheckboxToolTipText(managedRoot, property);
 	    secondTickTooltip = createResultSetCheckboxToolTipText(managedRoot, property);
 	}
-	
+
 	@Override
 	public final String toString() {
 	    return toStringTitle;
 	}
-	
+
 	public String getLabelTooltip() {
 	    return labelTooltip;
 	}
-	
+
 	public String getFirstTickTooltip() {
 	    return firstTickTooltip;
 	}
-	
+
 	public String getSecondTickTooltip() {
 	    return secondTickTooltip;
 	}
-	
+
 	private String createCriteriaCheckboxToolTipText(final Class<?> root, final String property) {
 	    if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getFirstTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
 		return null;

@@ -3,8 +3,6 @@ package ua.com.fielden.platform.domaintree;
 import java.util.List;
 import java.util.Set;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
-
 /**
  * This interface defines how domain tree can be represented. <br><br>
  *
@@ -76,6 +74,46 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      * @return
      */
     List<String> includedProperties(final Class<?> root);
+
+    /**
+     * A post-successful listener for property addition / removal.
+     *
+     * @author TG Team
+     *
+     */
+    public interface IPropertyListener extends IPropertyStateListener<Boolean> {
+	/**
+	 * @param wasAddedOrRemoved -- <code>true</code> to indicate that property was successfully added, <code>false</code> to indicate that it was successfully removed.
+	 */
+	@Override
+	void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState);
+    }
+
+//    /**
+//     * The types of actions that can be done with properties in Domain Trees.
+//     *
+//     * @author TG Team
+//     *
+//     */
+//    public enum ChangedAction {
+//	ADDED, REMOVED, ENABLEMENT_OR_CHECKING_CHANGED
+//    }
+
+    /**
+     * Adds a {@link IPropertyListener} listener.
+     *
+     * @param listener
+     * @return
+     */
+    boolean addPropertyListener(final IPropertyListener listener);
+
+    /**
+     * Removes a {@link IPropertyListener} listener.
+     *
+     * @param listener
+     * @return
+     */
+    boolean removePropertyListener(final IPropertyListener listener);
 
     /**
      * The structure of properties in case of circular references can be "not loaded" to some level of properties.
@@ -157,6 +195,46 @@ public interface IDomainTreeRepresentation extends IRootTyped {
         void disableImmutably(final Class<?> root, final String property);
 
         /**
+         * A post-successful listener for property disablement.
+         *
+         * @author TG Team
+         *
+         */
+        public interface IPropertyDisablementListener extends IPropertyStateListener<Boolean> {
+	    /**
+	     * @param wasDisabled -- <code>true</code> to indicate that property was successfully disabled, <code>false</code> to indicate that it was successfully enabled.
+	     */
+	    @Override
+	    void propertyStateChanged(final Class<?> root, final String property, final Boolean wasDisabled, final Boolean oldState);
+        }
+
+//        /**
+//         * The types of actions that can be done with properties in Domain Trees.
+//         *
+//         * @author TG Team
+//         *
+//         */
+//        public enum ChangedAction {
+//    	ADDED, REMOVED, ENABLEMENT_OR_CHECKING_CHANGED
+//        }
+
+        /**
+         * Adds a {@link IPropertyDisablementListener} listener.
+         *
+         * @param listener
+         * @return
+         */
+        boolean addPropertyDisablementListener(final IPropertyDisablementListener listener);
+
+        /**
+         * Removes a {@link IPropertyDisablementListener} listener.
+         *
+         * @param listener
+         * @return
+         */
+        boolean removePropertyDisablementListener(final IPropertyDisablementListener listener);
+
+        /**
          * Defines a contract which ticks for which properties should be <b>immutably</b> checked (and automatically disabled!) in domain tree representation. <br><br>
          *
          * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br><br>
@@ -202,4 +280,23 @@ public interface IDomainTreeRepresentation extends IRootTyped {
 
     @Override
     public int hashCode();
+
+    /**
+     * A base listener interface for state "changes" of the property (e.g. property added / removed / checked / disabled / etc.).
+     *
+     * @author TG Team
+     *
+     * @param <T>
+     */
+    public interface IPropertyStateListener<T> {
+	/**
+	 * Invokes after successful "change" of property state (e.g. added / removed / checked / disabled / etc.).
+	 *
+	 * @param root
+	 * @param property
+	 * @param newState
+	 * @param oldState
+	 */
+	void propertyStateChanged(final Class<?> root, final String property, final T newState, final T oldState);
+    }
 }

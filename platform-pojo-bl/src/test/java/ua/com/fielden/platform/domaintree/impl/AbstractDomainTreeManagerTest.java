@@ -452,10 +452,10 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	dtm().getEnhancer().addCalculatedProperty(calc5);
 	dtm().getEnhancer().apply();
 
-	assertTrue("The brand new calculated property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
-	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, calcProp2));
-	assertTrue("The brand new calculated property should be immutable checked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
-	assertFalse("The brand new calculated property should NOT be checked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
+	assertTrue("The calculated property with the same name should 'remain' excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
+	assertTrue("The calculated property with the same name should 'remain' disabled.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, calcProp2));
+	assertTrue("The calculated property with the same name should 'remain' immutably checked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
+	assertFalse("The calculated property with the same name should 'remain' checked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// serialise and deserialise and then check the order of "checked properties"
@@ -465,9 +465,9 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, calcProp2));
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp3"));
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp5"));
-	assertTrue("The brand new calculated property should be excluded.", copy.getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
-	assertTrue("The brand new calculated property should be disabled.", copy.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, calcProp2));
-	assertTrue("The brand new calculated property should be immutable checked.", copy.getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
-	assertFalse("The brand new calculated property should NOT be checked.", copy.getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
+	assertTrue("The calculated property with the same name should 'remain' excluded.", copy.getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
+	assertTrue("The calculated property with the same name should 'remain' disabled.", copy.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, calcProp2));
+	assertTrue("The calculated property with the same name should 'remain' immutably checked.", copy.getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
+	assertFalse("The calculated property with the same name should 'remain' checked.", copy.getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
     }
 }
