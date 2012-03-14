@@ -38,6 +38,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.Finder;
@@ -49,6 +50,7 @@ import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 /**
@@ -88,7 +90,8 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 
     {
 	final EntityResultQueryModel<T> query = select(getEntityType()).model();
-	defaultModel = new QueryExecutionModel.Builder<T>(query).build();
+	final OrderingModel orderBy = orderBy().prop(ID_PROPERTY_NAME).asc().model();
+	defaultModel = new QueryExecutionModel.Builder<T>(query).orderModel(orderBy).build();
     }
 
     /**

@@ -24,7 +24,7 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
  */
 public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements IEntityDao2<T> {
 
-    private final static String ID_PROPERTY_NAME = "id";
+    protected final static String ID_PROPERTY_NAME = "id";
     private final Class<? extends Comparable> keyType;
     private final Class<T> entityType;
 
