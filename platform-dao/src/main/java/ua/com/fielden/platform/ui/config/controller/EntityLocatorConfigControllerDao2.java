@@ -1,25 +1,25 @@
 package ua.com.fielden.platform.ui.config.controller;
 
-import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
+import ua.com.fielden.platform.dao2.CommonEntityDao2;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController2;
 
 import com.google.inject.Inject;
 
 /**
- * DAO implementation of {@link IEntityLocatorConfigController}.
+ * DAO implementation of {@link IEntityLocatorConfigController2}.
  *
  * @author TG Team
  *
  */
 @EntityType(EntityLocatorConfig.class)
-public class EntityLocatorConfigControllerDao extends CommonEntityDao<EntityLocatorConfig> implements IEntityLocatorConfigController {
+public class EntityLocatorConfigControllerDao2 extends CommonEntityDao2<EntityLocatorConfig> implements IEntityLocatorConfigController2 {
 
     @Inject
-    protected EntityLocatorConfigControllerDao(final IFilter filter) {
+    protected EntityLocatorConfigControllerDao2(final IFilter filter) {
 	super(filter);
     }
 

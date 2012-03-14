@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.security.user.User;
 
 /**
  * Defines a contract that should be implemented by any data access object being that a Hibernate or REST driven implementation.
@@ -32,6 +33,13 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
      * @return
      */
     String getUsername();
+
+    /**
+     * Should return the current application user.
+     *
+     * @return
+     */
+    abstract User getUser();
 
     /**
      * Should return an entity type the DAO is managing.

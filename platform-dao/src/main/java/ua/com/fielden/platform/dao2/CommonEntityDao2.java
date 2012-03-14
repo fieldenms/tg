@@ -43,6 +43,8 @@ import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.security.user.IUserDao2;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 
 import com.google.inject.Inject;
@@ -79,6 +81,10 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
     private final IFilter filter;
 
     private final  QueryExecutionModel<T> defaultModel;
+
+    @Inject
+    private IUserDao2 userDao;
+
 
     {
 	final EntityResultQueryModel<T> query = select(getEntityType()).model();
@@ -640,5 +646,10 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 
     public MappingsGenerator getMappingsGenerator() {
         return mappingsGenerator;
+    }
+
+    @Override
+    public User getUser() {
+	return userDao.findByKey(getUsername());
     }
 }

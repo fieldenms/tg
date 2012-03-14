@@ -17,5 +17,5 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
 public @interface EntityExists {
-    Class<? extends AbstractEntity> value();
+    Class<? extends AbstractEntity<?>> value();
 }
