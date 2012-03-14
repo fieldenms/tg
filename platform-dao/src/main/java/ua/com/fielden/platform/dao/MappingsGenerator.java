@@ -162,7 +162,11 @@ public class MappingsGenerator {
     }
 
     public Collection<PropertyPersistenceInfo> getEntityPPIs(final Class entityType) {
-	return hibTypeInfosMap.get(entityType).values();
+	final SortedMap<String,PropertyPersistenceInfo> typeMap = hibTypeInfosMap.get(entityType);
+	if (typeMap == null) {
+	    throw new IllegalStateException("Missing ppi map for entity type: " + entityType);
+	}
+	return typeMap.values();
     }
 
     public String generateMappings() {

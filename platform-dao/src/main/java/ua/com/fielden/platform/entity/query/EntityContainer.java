@@ -29,8 +29,16 @@ public class EntityContainer<R extends AbstractEntity<?>> {
 	this.shouldBeFetched = shouldBeFetched;
     }
 
+    private int countAllDataItems () {
+	return primitives.size() + entities.size() + composites.size() + collections.size();
+    }
+
+    public boolean isEmpty() {
+	 return countAllDataItems()== 1 && primitives.containsKey(ID_PROPERTY_NAME) && getId() == null;
+    }
+
     public boolean notYetInitialised() {
-	return primitives.size() + entities.size() + collections.size() == 1 && getId() != null;
+	return countAllDataItems() == 1 && getId() != null;
     }
 
     public boolean isInstantiated() {
