@@ -2,12 +2,20 @@
 %Divide and Conquer or Application Modules
 \myepigraph{One must learn by doing the thing; for though you think you know it, you have no certainty, until you try.}{Sophocles}                                                   
 
-The Maven Archetype concept is a cool way of automating a lot of otherwise manual labour when creating new projects.
+  The Maven Archetype concept is a cool way of automating a lot of otherwise manual labour when creating new projects.
   \href{http://maven.apache.org/guides/introduction/introduction-to-archetypes.html}{Officially} archetype is a Maven project templating toolkit -- an original pattern or model from which all other things of the same kind are made.
 
   The Trident Genesis Platform provides an archetype that conveniently generates a project template, which then can be enhanced to meet customer requirements.
-  The main goal of the provided archetype is to get developers up and running as quickly as possible with a simple, but fully operational TG-based application.
-  The first section provides steps how to use the TG application archetype, and the following sections discuss in details all the features of the generated project, which covers everything from importing the generated project into Eclipse down to project documentation and deployment.
+  The main goal of the provided archetype is to get developers up and running as quickly as possible with a simple, but fully operational TG-based application that would cover all main aspects of a \emph{complete} application.
+  This includes brending, documentation, buid and deployment support.
+  
+  \begin{notebox}{Documentation.}{\label{mb:documentation-during-build}}
+    Application documentation is built at the same time as the project, and it gets incorporated into the client application installation package.
+    This way documentation becomes a first-class citizen of the development/deployment life cycle, and will never be forgotten during application releases.
+    However, it does require \LaTeX to be installed on the system where application needs to be prepared for deployment.
+  \end{notebox}
+
+  The first section provides steps to use the Triden Genesis application archetype, and is followed by sections discussing the details of all the features of the generated project covering everything from importing the generated project into Eclipse down to project documentation and deployment.
 
 \section{Create new project from an archetype}
 
@@ -63,7 +71,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
     \end{code}
 
     \item Define value for property 'artifactId': : -- a Maven specific variable, which identifies the artifact ID of the project being created; this could be a short name (without spaces or other funny characters) of your project such as \emph{coolapp}; note that this value is used as part the project's top level directory naming structure; hit \texttt{enter} to confirm.
-    \vspace*{-20pt}
+    
     \begin{code}{Application artifactId}{\label{lst::archetype-archetypeId}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
@@ -72,7 +80,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
     \end{code}
 
     \item Define value for property 'version': 1.0-SNAPSHOT: -- a Maven specific variable, which identifies version of the artifact (i.e. your project); the default is \emph{1.0-SNAPSHOT}, which is only reasonable given a new project is being created; hit \texttt{enter} to confirm.
-    \vspace*{-20pt}
+    
     \begin{code}{Application version}{\label{lst::archetype-version}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
@@ -82,7 +90,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
     \end{code}
 
     \item Define value for property 'package': fielden: -- a Maven specific variable, which identifies Java package name, which is used as the root for all generated Java files; the default value matches the groupId, which is reasonable due to a Java custom of naming packages based on the company name (actually Internet domain name, which in most cases should correspond to the company name); hit \texttt{enter} to confirm.
-    \vspace*{-20pt}
+    
     \begin{code}{Application default package}{\label{lst::archetype-package}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
@@ -93,7 +101,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
     \end{code}
 
     \item Define value for property 'companyName': : -- a TG archetype specific variable, which should be provided with a full name of the company, which will be delivering the project being generated; the example below uses value \emph{Fielden Management Services}; hit \texttt{enter} to confirm.
-    \vspace*{-20pt}
+    
     \begin{code}{Application default package}{\label{lst::archetype-package}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
@@ -105,7 +113,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
     \end{code}
 
     \item Define value for property 'prjectName': : -- a TG archetype specific variable, which should be provided with a full name of the project; the example below uses value \emph{Coo App}; hit \texttt{enter} to confirm.
-    \vspace*{-20pt}
+    
     \begin{code}{Application default package}{\label{lst::archetype-package}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
@@ -118,7 +126,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
     \end{code}
 
     \item Define value for property 'prjectWebSite': : -- a TG archetype specific variable, which should be provided with an URI to the project web site; the value is required, so if there is no project web site then a fictitious one should be specified; please note that it is required to specify access protocol as part of the URI such as \texttt{http://}; hit \texttt{enter} to confirm.
-    \vspace*{-20pt}
+    
     \begin{code}{Application default package}{\label{lst::archetype-package}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
@@ -132,7 +140,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
     \end{code}
 
     \item Define value for property 'supportEmail': : -- a TG archetype specific variable, which should be provided with an intended for this project support email address; hit \texttt{enter} to confirm.
-    \vspace*{-20pt}
+    
     \begin{code}{Application default package}{\label{lst::archetype-package}}{terminalbgcolor}
       \begin{lstlisting}
 	Define value for property 'groupId': : fielden		
@@ -152,7 +160,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
   The default confirmation value is \texttt{Y} -- pressing \texttt{enter} leads to confirmation of the values' correctness. 
   Typing \texttt{N} and pressing \texttt{enter} leads to new prompts for all the variables.
 
-  \vspace*{-20pt}
+  
   \begin{code}{Properties configuration confirmation}{\label{lst:properties_confirmation}}{terminalbgcolor}
       \begin{lstlisting}
 	Confirm properties configuration:
@@ -169,8 +177,29 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
   \end{code}
 
   Confirming properties should result in a successful generation of the TG-based application.
-  Note \ref{mb:project-dir-structure} list a directory structure of the generated application skeleton.  
+  Alternatively, it could be more convenient to avoid the interactive prompts and run TG archetype in a single command as shown in listing~\ref{lst:archetype_single_command}.
 
+  \begin{code}{Single command for project generation}{\label{lst:archetype_single_command}}{terminalbgcolor}
+      \begin{lstlisting}
+  mvn archetype:generate \
+	-DarchetypeGroupId=fielden \
+	-DarchetypeArtifactId=tg-application-archetype \
+	-DarchetypeVersion=1.0 \
+	-DgroupId=fielden \
+	-DartifactId=coolapp \
+	-Dversion=1.0-SNAPSHOT \
+	-Dpackage=fielden \
+	-DcompanyName="Fielden Management Servces" \
+	-DprojectName="Cool App" \
+	-DprojectWebSite=http://www.fielden.com.au/coolapp \
+	-DsupportEmail=coolapp@support.fielden.com.au
+      \end{lstlisting}
+  \end{code}
+
+  Note \ref{mb:project-dir-structure} lists a directory structure of the generated application skeleton.
+  The generated project is a complete TG-based application, which is ready to be built and deployed.
+  All of this is achieved by running just one command, significantly stream lining the process of project initiation.
+ 
   \begin{notebox}{Inspect project directory structure.}{\label{mb:project-dir-structure}}
       Under Linux a directory structure of the generated project can be inspected by using the \texttt{tree} command as follows.
 	
@@ -185,16 +214,15 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 	|   |-- coolapp-web-client
 	|   `-- coolapp-web-server
       \end{verbatim}
-  \end{notebox}    
-  
-  The generated project is a complete TG-based application, which is ready to be built and deployed.
-  Thus, before delving into how it can be enhanced, the next section outlines the build and deployment process, which is identical for every TG-based application.
+  \end{notebox}
 
-\section{Build, Deploy, Execute}
+  Before delving into the details of enhancing the generated project with additional functionality that would address the business requirements, the next section outlines the build and deployment process.
+  This process is identical for every TG-based application, and once learned it will allways be easily reused.
+
+\section{Build, Deploy, Run}
   Maven is used to fully manage the project, which includes its build and deployment process.
-  Therefore, navigate to the generated project directory in the terminal as illustrated in listing~\ref{lst:cd_to_project}.
-
-  \vspace*{-20pt}
+  In order to follow the process please navigate to the generated project directory in the terminal as illustrated in listing~\ref{lst:cd_to_project}.
+  
   \begin{code}{Navigate to the project main directory}{\label{lst:cd_to_project}}{terminalbgcolor}
       \begin{lstlisting}
 	user@workstation:~/workspace$ cd coolapp
@@ -202,7 +230,8 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
       \end{lstlisting}
   \end{code}
 
-  And run the Maven \texttt{install} command as illustrated in listing~\ref{lst:mvn_clean_install}, which generates all application deployment artifacts.
+  Then run the Maven \texttt{clean} and \texttt{install} goals as illustrated in listing~\ref{lst:mvn_clean_install}, which generates all application deployment artifacts.
+  The \texttt{clean} goal is not essential for the first run, but in order not to think when it is needed and when not, simply always use it.
 
   \begin{code}{Project installation}{\label{lst:mvn_clean_install}}{terminalbgcolor}
      \begin{lstlisting}
@@ -323,6 +352,6 @@ user@workstation:~/workspace/coolapp$ java -jar \
   The provided Trident Genesis Archetype generates a fully operational software with ready to be distributed application server deployment files and a client installation package.
   The use of command line tools for building the project is important as it can be used on headless build servers, which a common practice in the software industry.
 
-  It is important to note that Trident Genesis Platform provides a complete development methodology, which includes the unified programming model, software distribution model and application documentation creation.
+  It is important to note that Trident Genesis Platform offers a complete development methodology, which includes the unified programming model, software distribution model and application documentation creation.
+  
   The following sections provide more detailed explanation about the generated application modules, how to set up a development environment and make simple project changes.
- 
