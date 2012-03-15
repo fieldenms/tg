@@ -27,7 +27,7 @@ public class DomainTreeRepresentation1 extends AbstractDomainTreeRepresentation 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected DomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final ITickRepresentation firstTick, final ITickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
+    protected DomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractTickRepresentation firstTick, final AbstractTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
 	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
     }
 

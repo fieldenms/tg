@@ -34,7 +34,7 @@ public class AnalysisDomainTreeRepresentation extends AbstractAnalysisDomainTree
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected AnalysisDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final IAnalysisAddToDistributionTickRepresentation firstTick, final IAnalysisAddToAggregationTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
+    protected AnalysisDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AnalysisAddToDistributionTickRepresentation firstTick, final AnalysisAddToAggregationTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
 	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
     }
 

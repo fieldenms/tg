@@ -49,7 +49,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected CentreDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final IAddToCriteriaTickRepresentation firstTick, final IAddToResultTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
+    protected CentreDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AddToCriteriaTick firstTick, final AddToResultSetTick secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
 	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
     }
 

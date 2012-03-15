@@ -12,11 +12,14 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation.IPropertyDisablementListener;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
@@ -884,4 +887,81 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 		"entityProp.collection.entityWithCompositeKeyProp.keyPartProp", //
 		"entityProp.collection.critOnlyAECollectionProp.integerProp"); //
     }
+
+    private static int i, j;
+
+    @Test @Ignore
+    public void test_that_PropertyListeners_work() {
+	i = 0; j = 0;
+	final IPropertyListener listener = new IPropertyListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
+		if (wasAddedOrRemoved == null) {
+		    throw new IllegalArgumentException("'wasAddedOrRemoved' cannot be null.");
+		}
+		if (wasAddedOrRemoved) {
+		    i++;
+		} else {
+		    j++;
+		}
+	    }
+	};
+	dtm().getRepresentation().addPropertyListener(listener);
+
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getRepresentation().excludeImmutably(MasterEntity.class, "integerProp");
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
+
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2 * integerProp", "Calc prop1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
+
+	dtm().getEnhancer().removeCalculatedProperty(MasterEntity.class, "calcProp1");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 2, j);
+
+	dtm().getRepresentation().warmUp(MasterEntity.class, "entityProp.entityProp.slaveEntityProp");
+	assertEquals("Incorrect value 'i'.", 49, i);
+	assertEquals("Incorrect value 'j'.", 3, j);
+    }
+
+    @Test
+    public void test_that_PropertyDisablementListeners_work() {
+	i = 0; j = 0;
+	final IPropertyDisablementListener listener = new IPropertyDisablementListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
+		if (hasBeenDisabled == null) {
+		    throw new IllegalArgumentException("'hasBeenDisabled' cannot be null.");
+		}
+		if (hasBeenDisabled) {
+		    i++;
+		} else {
+		    j++;
+		}
+	    }
+	};
+	dtm().getRepresentation().getFirstTick().addPropertyDisablementListener(listener);
+
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "integerProp");
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getRepresentation().getFirstTick().checkImmutably(MasterEntity.class, "bigDecimalProp");
+	assertEquals("Incorrect value 'i'.", 2, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getRepresentation().warmUp(MasterEntity.class, "entityProp.entityProp.slaveEntityProp");
+	assertEquals("Incorrect value 'i'.", 2, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+    }
+
 }

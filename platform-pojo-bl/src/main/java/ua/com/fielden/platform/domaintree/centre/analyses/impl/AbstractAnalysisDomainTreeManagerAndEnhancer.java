@@ -5,13 +5,14 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager.AbstractAnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager.AbstractAnalysisAddToDistributionTickManager;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -167,10 +168,10 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
 	}
 
 	@Override
-	protected abstract IAbstractAnalysisAddToDistributionTickRepresentation createFirstTick(final ITickRepresentation base);
+	protected abstract IAbstractAnalysisAddToDistributionTickRepresentation createFirstTick(final AbstractTickRepresentation base);
 
 	@Override
-	protected abstract IAbstractAnalysisAddToAggregationTickRepresentation createSecondTick(final ITickRepresentation base);
+	protected abstract IAbstractAnalysisAddToAggregationTickRepresentation createSecondTick(final AbstractTickRepresentation base);
 
 	//	@Override
 	//	protected IAbstractAnalysisAddToDistributionTickRepresentation createFirstTick(final ITickRepresentation base) {
@@ -191,7 +192,7 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
 	protected abstract class AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer extends TickRepresentationAndEnhancer implements IAbstractAnalysisAddToDistributionTickRepresentation {
 	    private static final long serialVersionUID = -8143739289123268471L;
 
-	    protected AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer(final ITickRepresentation base) {
+	    protected AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
 
@@ -210,7 +211,7 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
 	protected abstract class AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer extends TickRepresentationAndEnhancer implements IAbstractAnalysisAddToAggregationTickRepresentation {
 	    private static final long serialVersionUID = -8143739289123268471L;
 
-	    protected AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer(final ITickRepresentation base) {
+	    protected AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
 

@@ -11,6 +11,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisD
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -58,12 +59,12 @@ public class AbstractAnalysisDomainTreeManagerAndEnhancer1 extends AbstractAnaly
 	}
 
 	@Override
-	protected IAbstractAnalysisAddToDistributionTickRepresentation createFirstTick(final ITickRepresentation base) {
+	protected IAbstractAnalysisAddToDistributionTickRepresentation createFirstTick(final AbstractTickRepresentation base) {
 	    return new AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer1(base);
 	}
 
 	@Override
-	protected IAbstractAnalysisAddToAggregationTickRepresentation createSecondTick(final ITickRepresentation base) {
+	protected IAbstractAnalysisAddToAggregationTickRepresentation createSecondTick(final AbstractTickRepresentation base) {
 	    return new AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer1(base);
 	}
 
@@ -76,7 +77,7 @@ public class AbstractAnalysisDomainTreeManagerAndEnhancer1 extends AbstractAnaly
 	public class AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer1 extends AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer implements IAbstractAnalysisAddToDistributionTickRepresentation {
 	    private static final long serialVersionUID = -8143739289123268471L;
 
-	    protected AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer1(final ITickRepresentation base) {
+	    protected AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer1(final AbstractTickRepresentation base) {
 		super(base);
 	    }
 	}
@@ -90,7 +91,7 @@ public class AbstractAnalysisDomainTreeManagerAndEnhancer1 extends AbstractAnaly
 	public class AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer1 extends AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer implements IAbstractAnalysisAddToAggregationTickRepresentation {
 	    private static final long serialVersionUID = -8143739289123268471L;
 
-	    protected AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer1(final ITickRepresentation base) {
+	    protected AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer1(final AbstractTickRepresentation base) {
 		super(base);
 	    }
 	}

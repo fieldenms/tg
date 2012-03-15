@@ -194,10 +194,10 @@ public interface IDomainTreeRepresentation extends IRootTyped {
          */
         public interface IPropertyDisablementListener extends IPropertyStateListener<Boolean> {
 	    /**
-	     * @param wasDisabled -- <code>true</code> to indicate that property was successfully disabled, <code>false</code> to indicate that it was successfully enabled.
+	     * @param hasBeenDisabled -- <code>true</code> to indicate that property was successfully disabled, <code>false</code> to indicate that it was successfully enabled.
 	     */
 	    @Override
-	    void propertyStateChanged(final Class<?> root, final String property, final Boolean wasDisabled, final Boolean oldState);
+	    void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState);
         }
 
         /**

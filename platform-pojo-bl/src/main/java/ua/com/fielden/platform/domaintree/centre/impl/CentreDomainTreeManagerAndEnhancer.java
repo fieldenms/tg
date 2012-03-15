@@ -16,6 +16,7 @@ import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.Ad
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -364,12 +365,12 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
-	protected IAddToCriteriaTickRepresentation createFirstTick(final ITickRepresentation base) {
+	protected IAddToCriteriaTickRepresentation createFirstTick(final AbstractTickRepresentation base) {
 	    return new AddToCriteriaTickRepresentationAndEnhancer(base);
 	}
 
 	@Override
-	protected IAddToResultTickRepresentation createSecondTick(final ITickRepresentation base) {
+	protected IAddToResultTickRepresentation createSecondTick(final AbstractTickRepresentation base) {
 	    return new AddToResultTickRepresentationAndEnhancer(base);
 	}
 
@@ -381,7 +382,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	 */
 	protected class AddToCriteriaTickRepresentationAndEnhancer extends TickRepresentationAndEnhancer implements IAddToCriteriaTickRepresentation {
 
-	    protected AddToCriteriaTickRepresentationAndEnhancer(final ITickRepresentation base) {
+	    protected AddToCriteriaTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
 
@@ -437,7 +438,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	protected class AddToResultTickRepresentationAndEnhancer extends TickRepresentationAndEnhancer implements IAddToResultTickRepresentation {
 	    private static final long serialVersionUID = -6145540404981386675L;
 
-	    protected AddToResultTickRepresentationAndEnhancer(final ITickRepresentation base) {
+	    protected AddToResultTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
 

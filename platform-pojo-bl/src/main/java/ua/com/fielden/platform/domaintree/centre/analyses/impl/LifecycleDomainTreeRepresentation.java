@@ -34,7 +34,7 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected LifecycleDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final ILifecycleAddToDistributionTickRepresentation firstTick, final ILifecycleAddToCategoriesTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
+    protected LifecycleDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final LifecycleAddToDistributionTickRepresentation firstTick, final LifecycleAddToCategoriesTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
 	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
     }
 

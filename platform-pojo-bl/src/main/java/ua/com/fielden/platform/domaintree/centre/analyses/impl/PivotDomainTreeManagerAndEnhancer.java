@@ -11,6 +11,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeMa
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -103,12 +104,12 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
 	}
 
 	@Override
-	protected IPivotAddToDistributionTickRepresentation createFirstTick(final ITickRepresentation base) {
+	protected IPivotAddToDistributionTickRepresentation createFirstTick(final AbstractTickRepresentation base) {
 	    return new PivotAddToDistributionTickRepresentationAndEnhancer(base);
 	}
 
 	@Override
-	protected IPivotAddToAggregationTickRepresentation createSecondTick(final ITickRepresentation base) {
+	protected IPivotAddToAggregationTickRepresentation createSecondTick(final AbstractTickRepresentation base) {
 	    return new PivotAddToAggregationTickRepresentationAndEnhancer(base);
 	}
 
@@ -121,7 +122,7 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
 	public class PivotAddToDistributionTickRepresentationAndEnhancer extends AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer implements IPivotAddToDistributionTickRepresentation {
 	    private static final long serialVersionUID = -8143739289123268471L;
 
-	    protected PivotAddToDistributionTickRepresentationAndEnhancer(final ITickRepresentation base) {
+	    protected PivotAddToDistributionTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
 
@@ -150,7 +151,7 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
 	public class PivotAddToAggregationTickRepresentationAndEnhancer extends AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer implements IPivotAddToAggregationTickRepresentation {
 	    private static final long serialVersionUID = -8143739289123268471L;
 
-	    protected PivotAddToAggregationTickRepresentationAndEnhancer(final ITickRepresentation base) {
+	    protected PivotAddToAggregationTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
 

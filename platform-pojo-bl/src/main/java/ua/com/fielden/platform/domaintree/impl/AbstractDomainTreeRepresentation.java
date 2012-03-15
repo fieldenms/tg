@@ -18,6 +18,7 @@ import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -47,8 +48,8 @@ import ua.com.fielden.platform.utils.Pair;
 public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentation {
     private final EnhancementLinkedRootsSet rootTypes;
     private final EnhancementSet excludedProperties;
-    private final ITickRepresentation firstTick;
-    private final ITickRepresentation secondTick;
+    private final AbstractTickRepresentation firstTick;
+    private final AbstractTickRepresentation secondTick;
     /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
     private final EnhancementRootsMap<ListenedArrayList> includedProperties;
     private final transient AbstractDomainTreeManager dtm;
@@ -58,7 +59,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected AbstractDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final ITickRepresentation firstTick, final ITickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
+    protected AbstractDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractTickRepresentation firstTick, final AbstractTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
 	super(serialiser);
 	this.rootTypes = new EnhancementLinkedRootsSet();
 	this.rootTypes.addAll(rootTypes);
@@ -539,8 +540,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @author TG Team
      *
      */
-    protected static abstract class AbstractTickRepresentation implements ITickRepresentation {
-	private final EnhancementSet disabledProperties;
+    public static abstract class AbstractTickRepresentation implements ITickRepresentationWithMutability {
+	private final EnhancementSet disabledManuallyProperties;
 	private final Set<Pair<Class<?>, String>> checkedProperties;
 	private final transient AbstractDomainTreeRepresentation dtr;
 	private final transient TickManager tickManager;
@@ -551,7 +552,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor and then into manager constructor, which should initialise "dtr" and "tickManager" fields.
 	 */
 	protected AbstractTickRepresentation() {
-	    this.disabledProperties = createSet();
+	    this.disabledManuallyProperties = createSet();
 	    this.checkedProperties = createSet();
 
 	    this.propertyDisablementListeners = new ArrayList<IPropertyDisablementListener>();
@@ -563,14 +564,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	@Override
 	public boolean isDisabledImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not ask a 'disabled' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return (disabledProperties.contains(key(root, property))) || // disable manually disabled properties
+	    return (disabledManuallyProperties.contains(key(root, property))) || // disable manually disabled properties
 	    		(isCheckedImmutably(root, property)); // the checked by default properties should be disabled (immutable checking)
 	}
 
 	@Override
 	public final void disableImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not disable already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    disabledProperties.add(key(root, property));
+	    disabledManuallyProperties.add(key(root, property));
 
 	    fireDisablingEvent(root, property);
 	}
@@ -622,7 +623,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    final int prime = 31;
 	    int result = 1;
 	    result = prime * result + ((checkedProperties == null) ? 0 : checkedProperties.hashCode());
-	    result = prime * result + ((disabledProperties == null) ? 0 : disabledProperties.hashCode());
+	    result = prime * result + ((disabledManuallyProperties == null) ? 0 : disabledManuallyProperties.hashCode());
 	    return result;
 	}
 
@@ -640,12 +641,17 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		    return false;
 	    } else if (!checkedProperties.equals(other.checkedProperties))
 		return false;
-	    if (disabledProperties == null) {
-		if (other.disabledProperties != null)
+	    if (disabledManuallyProperties == null) {
+		if (other.disabledManuallyProperties != null)
 		    return false;
-	    } else if (!disabledProperties.equals(other.disabledProperties))
+	    } else if (!disabledManuallyProperties.equals(other.disabledManuallyProperties))
 		return false;
 	    return true;
+	}
+
+	@Override
+	public EnhancementSet disabledManuallyPropertiesMutable() {
+	    return disabledManuallyProperties;
 	}
     }
 

@@ -37,7 +37,7 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected PivotDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final IPivotAddToDistributionTickRepresentation firstTick, final IPivotAddToAggregationTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
+    protected PivotDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final PivotAddToDistributionTickRepresentation firstTick, final PivotAddToAggregationTickRepresentation secondTick, final EnhancementRootsMap<ListenedArrayList> includedProperties) {
 	super(serialiser, rootTypes, excludedProperties, firstTick, secondTick, includedProperties);
     }
 

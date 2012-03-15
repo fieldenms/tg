@@ -13,6 +13,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTr
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager.LifecycleAddToDistributionTickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -91,12 +92,12 @@ public class LifecycleDomainTreeManagerAndEnhancer extends AbstractAnalysisDomai
 	}
 
 	@Override
-	protected ILifecycleAddToDistributionTickRepresentation createFirstTick(final ITickRepresentation base) {
+	protected ILifecycleAddToDistributionTickRepresentation createFirstTick(final AbstractTickRepresentation base) {
 	    return new LifecycleAddToDistributionTickRepresentationAndEnhancer(base);
 	}
 
 	@Override
-	protected ILifecycleAddToCategoriesTickRepresentation createSecondTick(final ITickRepresentation base) {
+	protected ILifecycleAddToCategoriesTickRepresentation createSecondTick(final AbstractTickRepresentation base) {
 	    return new LifecycleAddToCategoriesTickRepresentationAndEnhancer(base);
 	}
 
@@ -109,7 +110,7 @@ public class LifecycleDomainTreeManagerAndEnhancer extends AbstractAnalysisDomai
 	public class LifecycleAddToDistributionTickRepresentationAndEnhancer extends AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer implements ILifecycleAddToDistributionTickRepresentation {
 	    private static final long serialVersionUID = -8143739289123268471L;
 
-	    protected LifecycleAddToDistributionTickRepresentationAndEnhancer(final ITickRepresentation base) {
+	    protected LifecycleAddToDistributionTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
 
@@ -128,7 +129,7 @@ public class LifecycleDomainTreeManagerAndEnhancer extends AbstractAnalysisDomai
 	public class LifecycleAddToCategoriesTickRepresentationAndEnhancer extends AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer implements ILifecycleAddToCategoriesTickRepresentation {
 	    private static final long serialVersionUID = -8143739289123268471L;
 
-	    protected LifecycleAddToCategoriesTickRepresentationAndEnhancer(final ITickRepresentation base) {
+	    protected LifecycleAddToCategoriesTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
 

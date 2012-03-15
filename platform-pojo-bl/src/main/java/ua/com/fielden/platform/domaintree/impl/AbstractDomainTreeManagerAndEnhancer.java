@@ -18,8 +18,10 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerA
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickManagerWithMutability;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.IncludedAndCheckedPropertiesSynchronisationListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -241,7 +243,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	enhancerWithPropertiesPopulation = new DomainTreeEnhancerWithPropertiesPopulation((DomainTreeEnhancer) this.enhancer, dtr);
 
 	final IPropertyListener oldListener = this.base.listener();
-	final IPropertyListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick);
+	final IPropertyListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick());
 	this.base.getRepresentation().removePropertyListener(oldListener);
 	this.getRepresentation().addPropertyListener(newListener);
     }
@@ -345,6 +347,8 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    base.moveToTheEnd(enhancerWithPropertiesPopulation.getManagedType(root), what);
 	}
 
+
+
 	protected IDomainTreeEnhancer enhancer() {
 	    return enhancerWithPropertiesPopulation;
 	}
@@ -373,8 +377,8 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	protected DomainTreeRepresentationAndEnhancer(final AbstractDomainTreeRepresentation base) {
 	    this.base = base;
 
-	    firstTick = createFirstTick(base.getFirstTick());
-	    secondTick = createSecondTick(base.getSecondTick());
+	    firstTick = createFirstTick((AbstractTickRepresentation) base.getFirstTick());
+	    secondTick = createSecondTick((AbstractTickRepresentation) base.getSecondTick());
 	}
 
 	@Override
@@ -400,11 +404,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    return this.base.includedPropertiesMutable(enhancerWithPropertiesPopulation.getManagedType(root));
 	}
 
-	protected ITickRepresentation createFirstTick(final ITickRepresentation base) {
+	protected ITickRepresentation createFirstTick(final AbstractTickRepresentation base) {
 	    return new TickRepresentationAndEnhancer(base);
 	}
 
-	protected ITickRepresentation createSecondTick(final ITickRepresentation base) {
+	protected ITickRepresentation createSecondTick(final AbstractTickRepresentation base) {
 	    return new TickRepresentationAndEnhancer(base);
 	}
 
@@ -414,11 +418,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	 * @author TG Team
 	 *
 	 */
-	protected class TickRepresentationAndEnhancer implements ITickRepresentation {
+	protected class TickRepresentationAndEnhancer implements ITickRepresentationWithMutability {
 	    private static final long serialVersionUID = -4811228680416493535L;
-	    private final ITickRepresentation base;
+	    private final AbstractTickRepresentation base;
 
-	    protected TickRepresentationAndEnhancer(final ITickRepresentation base) {
+	    protected TickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		this.base = base;
 	    }
 
@@ -460,6 +464,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    public boolean removePropertyDisablementListener(final IPropertyDisablementListener listener) {
 		// inject an enhanced type into method implementation
 	        return base.removePropertyDisablementListener(listener);
+	    }
+
+	    @Override
+	    public EnhancementSet disabledManuallyPropertiesMutable() {
+	        return base.disabledManuallyPropertiesMutable();
 	    }
 	}
 

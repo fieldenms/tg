@@ -101,7 +101,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	}
 
 	// the below listener is intended to update checked properties for both ticks when the skeleton of included properties has been changed
-	listener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick);
+	listener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick());
 	this.getRepresentation().addPropertyListener(listener);
     }
 
@@ -134,56 +134,83 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     }
 
     /**
-     * The "structure changed" listener that takes care about synchronisation of "included properties" with "checked properties" for both ticks.
+     * This interface is just a wrapper for {@link ITickManager} with accessor to mutable "checked properties".
+     *
+     * @author TG Team
+     *
+     */
+    public interface ITickRepresentationWithMutability extends ITickRepresentation {
+	/**
+	 * Getter of mutable "disabled manually properties" cache for internal purposes.
+	 *
+	 * @param root
+	 * @return
+	 */
+	EnhancementSet disabledManuallyPropertiesMutable();
+    }
+
+    /**
+     * The "structure changed" listener that takes care about synchronisation of "included properties" with "checked / disabled properties" for both ticks.
      *
      * @author TG Team
      *
      */
     protected static class IncludedAndCheckedPropertiesSynchronisationListener implements IPropertyListener {
-	private final ITickManagerWithMutability firstTick, secondTick;
+	private final ITickManagerWithMutability firstTickManager, secondTickManager;
+	private final ITickRepresentationWithMutability firstTickRepresentation, secondTickRepresentation;
 
 	/**
-	 * A constructor that requires two ticks for synchronisation.
+	 * A constructor that requires two ticks and two tick representations for synchronisation.
 	 *
 	 * @param firstTick
 	 * @param secondTick
 	 */
-	protected IncludedAndCheckedPropertiesSynchronisationListener(final ITickManagerWithMutability firstTick, final ITickManagerWithMutability secondTick) {
-	    this.firstTick = firstTick;
-	    this.secondTick = secondTick;
+	protected IncludedAndCheckedPropertiesSynchronisationListener(final ITickManagerWithMutability firstTick, final ITickManagerWithMutability secondTick, final ITickRepresentationWithMutability firstTickRepresentation, final ITickRepresentationWithMutability secondTickRepresentation) {
+	    this.firstTickManager = firstTick;
+	    this.secondTickManager = secondTick;
+	    this.firstTickRepresentation = firstTickRepresentation;
+	    this.secondTickRepresentation = secondTickRepresentation;
 	}
 
 	@Override
-	public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
-	    if (wasAddedOrRemoved == null) {
-		throw new IllegalArgumentException("'wasAddedOrRemoved' cannot be 'null'.");
+	public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenAdded, final Boolean oldState) {
+	    if (hasBeenAdded == null) {
+		throw new IllegalArgumentException("'hasBeenAdded' cannot be 'null'.");
 	    }
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? with Usage of the property? Not only with Checking!
-	    if (!wasAddedOrRemoved) { // property has been REMOVED
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
+	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
+	    if (!hasBeenAdded) { // property has been REMOVED
 		if (!isDummyMarker(property)) {
 		    final String reflectionProperty = reflectionProperty(property);
 		    // update checked properties
-		    if (firstTick.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-			firstTick.checkedPropertiesMutable(root).remove(reflectionProperty);
+		    if (firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+			firstTickManager.checkedPropertiesMutable(root).remove(reflectionProperty);
 		    }
-		    if (secondTick.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-			secondTick.checkedPropertiesMutable(root).remove(reflectionProperty);
+		    if (secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+			secondTickManager.checkedPropertiesMutable(root).remove(reflectionProperty);
+		    }
+
+		    // update manually disabled properties
+		    if (firstTickRepresentation.disabledManuallyPropertiesMutable().contains(key(root, reflectionProperty))) {
+			firstTickRepresentation.disabledManuallyPropertiesMutable().remove(key(root, reflectionProperty));
+		    }
+		    if (secondTickRepresentation.disabledManuallyPropertiesMutable().contains(key(root, reflectionProperty))) {
+			secondTickRepresentation.disabledManuallyPropertiesMutable().remove(key(root, reflectionProperty));
 		    }
 		}
 	    } else { // property has been ADDED
 		if (!isDummyMarker(property)) {
 		    final String reflectionProperty = reflectionProperty(property);
 		    // update checked properties
-		    if (firstTick.isCheckedNaturally(root, reflectionProperty) && !firstTick.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-			firstTick.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
+		    if (firstTickManager.isCheckedNaturally(root, reflectionProperty) && !firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+			firstTickManager.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
 		    }
-		    if (secondTick.isCheckedNaturally(root, reflectionProperty) && !secondTick.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-			secondTick.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
+		    if (secondTickManager.isCheckedNaturally(root, reflectionProperty) && !secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+			secondTickManager.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
 		    }
 		}
 	    }
