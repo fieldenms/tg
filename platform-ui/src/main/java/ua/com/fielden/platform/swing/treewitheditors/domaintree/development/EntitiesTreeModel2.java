@@ -93,87 +93,107 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 		newAction, editAction, copyAction, removeAction);
 
 	// initialise nodes according to included properties of the manager (these include "dummy" and "common properties" stuff)
-	for (final Class<?> root : manager.getRepresentation().rootTypes()) {
-	    final List<String> properties = manager.getRepresentation().includedProperties(root);
+	for (final Class<?> root : this.manager.getRepresentation().rootTypes()) {
+	    // load checked properties for both ticks to make ticks fully operational before the user check any property
+	    this.manager.getFirstTick().checkedProperties(root);
+	    this.manager.getSecondTick().checkedProperties(root);
+	    
+	    final List<String> properties = this.manager.getRepresentation().includedProperties(root);
 	    for (final String property : properties) {
 		createAndAddNode(root, property);
 		// updateNodeState(manager, root, property, ChangedAction.ADDED);
 		if (isNotDummyAndNotCommonProperty(property)) { // Update the state of newly created node according to a property state in manager (ignore "dummy" due to its temporal nature)
-		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
+		    provideNodeState(this.manager, root, AbstractDomainTree.reflectionProperty(property));
 		}
 	    }
 	}
 
-//	// add the listener into manager to correctly reflect structural changes (property added / removed / checked / disabled / etc.) in this EntitiesTreeModel
-//	final IPropertyCheckingListener managerListener = new IPropertyCheckingListener() {
-//	    @Override
-//	    public void propertyStateChanged(final Class<?> root, final String property, final ChangedAction changedAction) {
-//		if (ChangedAction.REMOVED.equals(changedAction)) {
-//		    removeNode(root, property);
-//		    updateNodeState(manager, root, property, changedAction);
-//		} else if (ChangedAction.ADDED.equals(changedAction)) {
-//		    createAndAddNode(root, property);
-//		    updateNodeState(manager, root, property, changedAction);
-//		} else if (ChangedAction.ENABLEMENT_OR_CHECKING_CHANGED.equals(changedAction)) {
-//		    updateNodeState(manager, root, AbstractDomainTree.reflectionProperty(property), changedAction);
-//		}
-//	    }
-//	};
-//	this.manager.addPropertyCheckingListener(managerListener);
-
 	// add the listener into manager's representation to correctly reflect 'structural' changes (property added / removed) in this EntitiesTreeModel
-	this.manager.getRepresentation().addPropertyListener(new IPropertyListener() {
-	    @Override
-	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
-		if (wasAddedOrRemoved == null) {
-		    throw new IllegalArgumentException("'wasAddedOrRemoved' cannot be 'null'.");
-		}
-		if (wasAddedOrRemoved) {
-		    createAndAddNode(root, property);
-		    // updateNodeState(manager, root, property, ChangedAction.ADDED); // in this case property can be "dummy" or under "common-properties" umbrella
-		    if (isNotDummyAndNotCommonProperty(property)) { // Update the state of newly created node according to a property state in manager (ignore "dummy" due to its temporal nature)
-			provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
-		    }
-		} else {
-		    removeNode(root, property);
-		    // updateNodeState(manager, root, property, ChangedAction.REMOVED); nothing to do with an useless item
-		}
-	    }
-	});
-	// add the listener into manager's representation's firstTick to correctly reflect 'disablement' changes (property disabled / enabled) in this EntitiesTreeModel
-	this.manager.getRepresentation().getFirstTick().addPropertyDisablementListener(new IPropertyDisablementListener() {
-	    @Override
-	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasDisabled, final Boolean oldState) {
-		if (wasDisabled == null) {
-		    throw new IllegalArgumentException("'wasDisabled' cannot be 'null'.");
-		}
-		if (wasDisabled) { // TODO
-		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
-		} else {
-		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
-		}
-	    }
-	});
-	// add the listener into manager's firstTick to correctly reflect 'checking' changes (property checked / unchecked) in this EntitiesTreeModel
-	this.manager.getFirstTick().addPropertyCheckingListener(new IPropertyCheckingListener() {
-	    @Override
-	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState) {
-		if (hasBeenChecked == null) {
-		    throw new IllegalArgumentException("'wasChecked' cannot be 'null'.");
-		}
-		if (hasBeenChecked) { // TODO
-		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
-		} else {
-		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
-		}
-	    }
-	});
+	this.manager.getRepresentation().addPropertyListener(new PropertyListener());
+	// add two listeners into manager's representation's first and second ticks to correctly reflect 'disablement' changes (property disabled / enabled) in this EntitiesTreeModel
+	this.manager.getRepresentation().getFirstTick().addPropertyDisablementListener(new PropertyDisablementListener(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()));
+	this.manager.getRepresentation().getSecondTick().addPropertyDisablementListener(new PropertyDisablementListener(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()));
+	// add two listeners into manager's first and second tick to correctly reflect 'checking' changes (property checked / unchecked) in this EntitiesTreeModel
+	this.manager.getFirstTick().addPropertyCheckingListener(new PropertyCheckingListener(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()));
+	this.manager.getSecondTick().addPropertyCheckingListener(new PropertyCheckingListener(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()));
 
-	// add the listener into EntitiesTreeModel to correctly reflect changes (node checked) in its manager
+	// add the listener into EntitiesTreeModel to correctly reflect changes (node checked / unchecked) in its manager
 	this.addTreeCheckingListener(listeners[0], 0);
 	this.addTreeCheckingListener(listeners[1], 1);
 
 	this.filterableModel = createFilteringModel(this);
+    }
+    
+    /**
+     * A listener of manager's representation that correctly reflects 'structural' changes (property added / removed) in this {@link EntitiesTreeModel2}.
+     * 
+     * @author TG Team
+     *
+     */
+    private class PropertyListener implements IPropertyListener {
+	@Override
+	public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
+	    if (wasAddedOrRemoved) {
+		createAndAddNode(root, property);
+		// in this case property can be "dummy" or under "common-properties" umbrella
+		if (isNotDummyAndNotCommonProperty(property)) { // Update the state of newly created node according to a property state in manager (ignore "dummy" due to its temporal nature)
+		    provideNodeState(manager, root, AbstractDomainTree.reflectionProperty(property));
+		}
+	    } else {
+		removeNode(root, property); // nothing to do with an useless item -- just remove it
+	    }
+	}
+    }
+    
+    /**
+     * A listener of manager's representation's tick that correctly reflects 'disablement' changes (property disabled / enabled) in this {@link EntitiesTreeModel2}. 
+     * 
+     * @author TG Team
+     *
+     */
+    private class PropertyDisablementListener implements IPropertyDisablementListener {
+	private final int modelIndex;
+	
+	/** Creates a listener of manager's representation's tick that correctly reflects 'disablement' changes (property disabled / enabled) in this {@link EntitiesTreeModel2}. */
+	public PropertyDisablementListener(final int modelIndex) {
+	    this.modelIndex = modelIndex;
+	}
+
+	@Override
+	public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
+	    getCheckingModel(modelIndex).setPathEnabled(path(root, AbstractDomainTree.reflectionProperty(property)), !hasBeenDisabled);
+	}
+    }
+    
+    /**
+     * A listener of manager's tick that correctly reflects 'checking' changes (property checked / unchecked) in this {@link EntitiesTreeModel2}. 
+     * 
+     * @author TG Team
+     *
+     */
+    private class PropertyCheckingListener implements IPropertyCheckingListener {
+	private final int modelIndex;
+	
+	/** Creates a listener of manager's tick that correctly reflects 'checking' changes (property checked / unchecked) in this {@link EntitiesTreeModel2}. */
+	public PropertyCheckingListener(final int modelIndex) {
+	    this.modelIndex = modelIndex;
+	}
+
+	@Override
+	public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState) {
+	    provideCheckingPath(getCheckingModel(modelIndex), path(root, AbstractDomainTree.reflectionProperty(property)), hasBeenChecked);
+	}
+    }
+    
+    /**
+     * Finds a path corresponding to a property (without any "dummy" naming).
+     *
+     * @param root
+     * @param property
+     * @return
+     */
+    private TreePath path(final Class<?> root, final String property) {
+	return new TreePath(getPathToRoot(node(root, property, false)));
     }
 
     protected FilterableTreeModel createFilteringModel(final EntitiesTreeModel2 entitiesTreeModel2) {
@@ -233,13 +253,9 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	if (checked) {
 	    if (!currentPaths.contains(path)) {
 		model.addCheckingPath(path);
-	    } else {
-		logger.warn("Currently checked path [" + path + "] is trying to be checked again.");
 	    }
 	} else {
-	    if (!currentPaths.contains(path)) {
-		logger.warn("Currently unchecked path [" + path + "] is trying to be unchecked again.");
-	    } else {
+	    if (currentPaths.contains(path)) {
 		model.removeCheckingPath(path);
 	    }
 	}
@@ -331,7 +347,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	final EnhancementPropertiesMap<EntitiesTreeNode2> cache = withDummyNaming ? nodesCache : nodesForSimplePropertiesCache;
 	return cache.get(AbstractDomainTree.key(root, property));
     }
-
+    
     /**
      * Creates a {@link TreeWillExpandListener} that "warms up" the manager's property (loads children), which node is trying to be expanded.
      *
