@@ -3,6 +3,8 @@ package ua.com.fielden.platform.domaintree.impl;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isCollectionOrInCollectionHierarchy;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.parentCollection;
 
+import java.nio.ByteBuffer;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 
@@ -32,6 +34,9 @@ import ua.com.fielden.platform.expression.ast.visitor.LevelAllocatingVisitor;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.ClassComparator;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -446,9 +451,9 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     }
 
     public void setEnhancer(final IDomainTreeEnhancer enhancer) {
-	if (enhancer == null) {
-	    throw new IncorrectCalcPropertyKeyException("An enhancer of the calculated property cannot be 'null'.");
-	}
+//	if (enhancer == null) {
+//	    throw new IncorrectCalcPropertyKeyException("An enhancer of the calculated property cannot be 'null'.");
+//	}
         this.enhancer = enhancer;
     }
 
@@ -483,5 +488,47 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	} else {
 	    return null;
 	}
+    }
+    
+    /**
+     * A specific Kryo serialiser for {@link CalculatedProperty}.
+     *
+     * @author TG Team
+     *
+     */
+    public static class CalculatedPropertySerialiser extends TgSimpleSerializer<CalculatedProperty> {
+	public CalculatedPropertySerialiser(final TgKryo kryo) {
+	    super(kryo);
+	}
+
+	@Override
+	public CalculatedProperty read(final ByteBuffer buffer) {
+	    final Class<?> root = readValue(buffer, Class.class);
+	    final String contextPath = readValue(buffer, String.class);
+	    final String contextualExpression = readValue(buffer, String.class);
+	    final String title = readValue(buffer, String.class);
+	    final CalculatedPropertyAttribute attribute = readValue(buffer, CalculatedPropertyAttribute.class);
+	    final String originationProperty = readValue(buffer, String.class);
+	    final String desc = readValue(buffer, String.class);
+	    return CalculatedProperty.create(kryo.factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, /* domainTreeEnhancer should be initialised later!*/ null);
+	}
+
+	@Override
+	public void write(final ByteBuffer buffer, final CalculatedProperty cp) {
+	    writeValue(buffer, cp.root);
+	    writeValue(buffer, cp.contextPath);
+	    writeValue(buffer, cp.contextualExpression);
+	    writeValue(buffer, cp.title);
+	    writeValue(buffer, cp.attribute);
+	    writeValue(buffer, cp.originationProperty);
+	    writeValue(buffer, cp.getDesc());
+	}
+    }
+    
+    protected CalculatedProperty copy(final ISerialiser serialiser) {
+	final CalculatedProperty copy = EntityUtils.deepCopy(this, serialiser);
+	copy.setEnhancer(enhancer);
+	copy.isValid();
+	return copy;
     }
 }

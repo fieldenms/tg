@@ -64,6 +64,8 @@ import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAn
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation.LocatorDomainTreeRepresentationSerialiser;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
+import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
+import ua.com.fielden.platform.domaintree.impl.CalculatedProperty.CalculatedPropertySerialiser;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.DomainTreeEnhancerSerialiser;
 import ua.com.fielden.platform.domaintree.impl.LocatorManager;
@@ -203,7 +205,7 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer colorSerializer;
     private final Serializer sortKeySerialiser;
     // "domain trees" serialisers
-//    private final Serializer calculatedPropertySerialiser;
+    private final Serializer calculatedPropertySerialiser;
     private final Serializer locatorManagerSerialiser;
     private final Serializer domainTreeEnhancerSerialiser;
     private final Serializer criteriaDomainTreeRepresentationSerialiser;
@@ -248,7 +250,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	colorSerializer = new ColorSerializer();
 	sortKeySerialiser = new SortKeySerialiser(this);
 	// "domain trees" serialisers
-//	calculatedPropertySerialiser = new CalculatedPropertySerialiser(this);
+	calculatedPropertySerialiser = new CalculatedPropertySerialiser(this);
 	locatorManagerSerialiser = new LocatorManagerSerialiser(this);
 	domainTreeEnhancerSerialiser = new DomainTreeEnhancerSerialiser(this);
 	criteriaDomainTreeRepresentationSerialiser = new CentreDomainTreeRepresentationSerialiser(this);
@@ -433,6 +435,8 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return resultSerialiser;
 	} else if (PropertyDescriptor.class.isAssignableFrom(type)) { // PropertyDescriptor must alway be checked before any other entity
 	    return pdSerialiser;
+	} else if (CalculatedProperty.class.isAssignableFrom(type)) {
+	    return calculatedPropertySerialiser;
 	} else if (AbstractEntity.class.isAssignableFrom(type)) {
 	    final Class<AbstractEntity> entityType = (Class<AbstractEntity>) PropertyTypeDeterminator.stripIfNeeded(type);
 	    Serializer ser = entitySerialisers.get(entityType);
@@ -471,8 +475,6 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return colorSerializer;
 	} else if (SortKey.class.isAssignableFrom(type)) {
 	    return sortKeySerialiser;
-//	} else if (CalculatedProperty.class.isAssignableFrom(type)) {
-//	    return calculatedPropertySerialiser;
 	} else if (DomainTreeEnhancer.class.isAssignableFrom(type)) { // "domain tree" serialisers
 	    return domainTreeEnhancerSerialiser;
 	} else if (LocatorManager.class.isAssignableFrom(type)) {

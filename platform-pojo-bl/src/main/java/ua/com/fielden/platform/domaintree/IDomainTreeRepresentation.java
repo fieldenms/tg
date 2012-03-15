@@ -3,6 +3,8 @@ package ua.com.fielden.platform.domaintree;
 import java.util.List;
 import java.util.Set;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
+
 /**
  * This interface defines how domain tree can be represented. <br><br>
  *
@@ -88,16 +90,6 @@ public interface IDomainTreeRepresentation extends IRootTyped {
 	@Override
 	void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState);
     }
-
-//    /**
-//     * The types of actions that can be done with properties in Domain Trees.
-//     *
-//     * @author TG Team
-//     *
-//     */
-//    public enum ChangedAction {
-//	ADDED, REMOVED, ENABLEMENT_OR_CHECKING_CHANGED
-//    }
 
     /**
      * Adds a {@link IPropertyListener} listener.
@@ -207,16 +199,6 @@ public interface IDomainTreeRepresentation extends IRootTyped {
 	    @Override
 	    void propertyStateChanged(final Class<?> root, final String property, final Boolean wasDisabled, final Boolean oldState);
         }
-
-//        /**
-//         * The types of actions that can be done with properties in Domain Trees.
-//         *
-//         * @author TG Team
-//         *
-//         */
-//        public enum ChangedAction {
-//    	ADDED, REMOVED, ENABLEMENT_OR_CHECKING_CHANGED
-//        }
 
         /**
          * Adds a {@link IPropertyDisablementListener} listener.

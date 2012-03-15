@@ -24,6 +24,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.CalcPropertyKeyWarning;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
@@ -34,6 +35,7 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityWithUnionForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 
 /**
  * A test for {@link CalculatedProperty}.
@@ -80,7 +82,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected ICalculatedProperty checkTrivialParams(final ICalculatedProperty calc, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
+    protected ICalculatedProperty checkTrivialParams(final CalculatedProperty calc, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer enhancer) {
 	assertEquals("The root is incorrect.", root, calc.getRoot());
 	assertEquals("The contextPath is incorrect.", contextPath, calc.getContextPath());
 	assertEquals("The contextualExpression is incorrect.", contextualExpression, calc.getContextualExpression());
@@ -88,6 +90,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertEquals("The desc is incorrect.", desc, calc.getDesc());
 	assertEquals("The attribute is incorrect.", attribute, calc.getAttribute());
 	assertEquals("The originationProperty is incorrect.", originationProperty, calc.getOriginationProperty());
+	assertEquals("The enhancer is incorrect.", enhancer, calc.getEnhancer());
 	return calc;
     }
 
@@ -104,27 +107,54 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
 	final CalculatedProperty calc = CalculatedProperty.createAndValidate(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm().getEnhancer());
-	checkTrivialParams(calc, root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
+	checkTrivialParams(calc, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm().getEnhancer());
 	return calc;
     }
 
     @Test
     public void test_serialisation() {
-	final CalculatedProperty calc = CalculatedProperty.createAndValidate(factory(), MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
-	checkTrivialParams(calc, MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp");
-	assertCalculatedProperty(calc, EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+	// copy incorrect calc property
+	CalculatedProperty calc = CalculatedProperty.createEmpty(factory(), MasterEntity.class, "", dtm().getEnhancer());
+	calc.isValid();
+	checkTrivialParams(calc, MasterEntity.class, "", null, null, null, NO_ATTR, "", dtm().getEnhancer());
+	assertCalculatedProperty(calc, null, null, null, null, MasterEntity.class, null, null);
+
+	CalculatedProperty copy = calc.copy(getSerialiser());
+	
+	checkTrivialParams(calc, MasterEntity.class, "", null, null, null, NO_ATTR, "", dtm().getEnhancer());
+	assertCalculatedProperty(calc, null, null, null, null, MasterEntity.class, null, null);
+	
+	assertValidationResultsEquals(calc, copy);
+	
+	// ============================================
+	
+	calc = CalculatedProperty.createAndValidate(factory(), MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
+	checkTrivialParams(calc, MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
+	assertCalculatedProperty(calc, EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
 
 	dtm().getEnhancer().addCalculatedProperty(calc);
 	dtm().getEnhancer().apply();
 
-	final CalculatedProperty copy = (CalculatedProperty) dtm().getEnhancer().copyCalculatedProperty(MasterEntity.class, "entityProp.calculatedProperty");
-	checkTrivialParams(copy, MasterEntity.class, "entityProp", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp");
-	assertCalculatedProperty(copy, EXPRESSION, "calculatedProperty", "entityProp", "entityProp.calculatedProperty", SlaveEntity.class, SlaveEntity.class, Integer.class);
+	copy = (CalculatedProperty) dtm().getEnhancer().copyCalculatedProperty(MasterEntity.class, "calculatedProperty");
+	if (!copy.isValid().isSuccessful()) { // Should be successful 
+	    throw copy.isValid();
+	}
+	checkTrivialParams(copy, MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
+	assertCalculatedProperty(copy, EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
+    }
+
+    private void assertValidationResultsEquals(final CalculatedProperty calc1, final CalculatedProperty calc2) {
+	for (final MetaProperty property1 : calc1.getProperties().values()) {
+	    final MetaProperty property2 = calc2.getProperty(property1.getName());
+	    if (property1.getFirstFailure() != null) {
+		assertEquals("Validation results should be equal.", property1.getFirstFailure().getMessage(), property2.getFirstFailure().getMessage());
+	    }
+	}
     }
 
     protected void incorrectCalculatedPropertyCreationWithRoot(final Class<?> root) {
 	final CalculatedProperty cp = CalculatedProperty.createEmpty(factory(), root, "", dtm().getEnhancer());
-	checkTrivialParams(cp, Class.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, "");
+	checkTrivialParams(cp, Class.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, "", dtm().getEnhancer());
 
 	final String message = "The creation of calc prop with root [" + root + "] should be failed.";
 	assertNotNull(message, cp.isValid());
@@ -135,7 +165,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected void incorrectCalculatedPropertyCreationWithContextPath(final String contextPath) {
 	final CalculatedProperty cp = CalculatedProperty.createEmpty(factory(), MasterEntity.class, contextPath, dtm().getEnhancer());
-	checkTrivialParams(cp, MasterEntity.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, "");
+	checkTrivialParams(cp, MasterEntity.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, "", dtm().getEnhancer());
 
 	final String message = "The creation of calc prop with contextPath [" + contextPath + "] should be failed.";
 	assertNotNull(message, cp.isValid());
@@ -181,7 +211,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath) {
 	final CalculatedProperty calc = CalculatedProperty.createEmpty(factory(), root, contextPath, dtm().getEnhancer());
-	checkTrivialParams(calc, root, contextPath, null, null, null, CalculatedPropertyAttribute.NO_ATTR, "");
+	checkTrivialParams(calc, root, contextPath, null, null, null, CalculatedPropertyAttribute.NO_ATTR, "", dtm().getEnhancer());
 	return calc;
     }
 
@@ -354,7 +384,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected void incorrectCalculatedPropertyCreationWithName(final String title) {
 	final CalculatedProperty cp = CalculatedProperty.create(factory(), MasterEntity.class, "", "2 * integerProp", title, "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
-	checkTrivialParams(cp, MasterEntity.class, "", "2 * integerProp", null, "desc", NO_ATTR, "integerProp");
+	checkTrivialParams(cp, MasterEntity.class, "", "2 * integerProp", null, "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
 
 	assertNotNull("The creation of calc prop with title [" + title + "] should be failed.", cp.isValid());
 	assertNotNull("The creation of calc prop with title [" + title + "] should be failed.", cp.getProperty("title").getFirstFailure());
@@ -366,7 +396,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected void incorrectCalculatedPropertyCreationWithAttribute(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
 	final CalculatedProperty cp = CalculatedProperty.create(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm().getEnhancer());
-	checkTrivialParams(cp, root, contextPath, contextualExpression, title, desc, CalculatedPropertyAttribute.NO_ATTR, originationProperty);
+	checkTrivialParams(cp, root, contextPath, contextualExpression, title, desc, CalculatedPropertyAttribute.NO_ATTR, originationProperty, dtm().getEnhancer());
 
 	final String message = "The creation of calc prop with attribute [" + attribute + "] should be failed.";
 	assertNotNull(message, cp.isValid());
@@ -429,7 +459,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 
     protected void incorrectCalculatedPropertyCreationWithOriginationProperty(final String originationProperty, final String contextualExpression) {
 	final CalculatedProperty cp = CalculatedProperty.create(factory(), MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, originationProperty, dtm().getEnhancer());
-	checkTrivialParams(cp, MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, "");
+	checkTrivialParams(cp, MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, "", dtm().getEnhancer());
 
 	final String message = "The creation of calc prop with originationProperty [" + originationProperty + "] should be failed.";
 	assertNotNull(message, cp.isValid());

@@ -525,7 +525,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
     @Override
     public ICalculatedProperty copyCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
-        return EntityUtils.deepCopy(getCalculatedProperty(rootType, calculatedPropertyName), getSerialiser());
+        return ((CalculatedProperty) getCalculatedProperty(rootType, calculatedPropertyName)).copy(getSerialiser());
     }
 
     @Override
