@@ -22,12 +22,12 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.types.Money;
 import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
-public class EntityFetcherTest extends DbDrivenTestCase {
+public class EntityFetcherTest extends DbDrivenTestCase2 {
 
     private static final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private static final EntityFetcher fetcher() {return new EntityFetcher(session(), factory, injector.getInstance(MappingsGenerator.class), null, null, null); }

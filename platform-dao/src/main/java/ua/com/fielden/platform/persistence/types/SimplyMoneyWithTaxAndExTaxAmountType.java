@@ -99,7 +99,9 @@ public class SimplyMoneyWithTaxAndExTaxAmountType implements CompositeUserType, 
 
     @Override
     public Object instantiate(final Map<String, Object> arguments) {
-	return new Money((BigDecimal) arguments.get("exTaxAmount"), (BigDecimal) arguments.get("taxAmount"), getInstance(Locale.getDefault()));
+	final BigDecimal taxAmount = (BigDecimal) arguments.get("taxAmount");
+	final BigDecimal exTaxAmount = (BigDecimal) arguments.get("exTaxAmount");
+	return new Money(exTaxAmount.add(taxAmount), taxAmount, getInstance(Locale.getDefault()));
     }
 
     @Override

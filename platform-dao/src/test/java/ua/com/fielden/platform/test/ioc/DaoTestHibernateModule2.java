@@ -2,16 +2,19 @@ package ua.com.fielden.platform.test.ioc;
 
 import org.hibernate.SessionFactory;
 
+import ua.com.fielden.platform.dao.EntityWithMoneyDao2;
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.filtering.DataFilter2;
 import ua.com.fielden.platform.dao2.EntityAggregatesDao2;
 import ua.com.fielden.platform.dao2.IDaoFactory2;
 import ua.com.fielden.platform.dao2.IEntityAggregatesDao2;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserRoleDao2;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.CommonFactoryModule2;
+import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel2;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao2;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao2;
@@ -40,6 +43,8 @@ import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigControlle
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigControllerDao2;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao2;
 import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder2;
+
+import com.google.inject.TypeLiteral;
 
 
 /**
@@ -98,7 +103,7 @@ public class DaoTestHibernateModule2 extends CommonFactoryModule2 {
 	bind(IDaoFactory2.class).toInstance(getDaoFactory());
 //	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
 
-//	bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
-//	}).to(EntityWithMoneyDao.class);
+	bind(new TypeLiteral<IEntityDao2<EntityWithMoney>>() {
+	}).to(EntityWithMoneyDao2.class);
     }
 }
