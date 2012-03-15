@@ -38,7 +38,6 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.Finder;
@@ -50,7 +49,6 @@ import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 /**
@@ -82,17 +80,9 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 
     private final IFilter filter;
 
-    private final  QueryExecutionModel<T> defaultModel;
-
     @Inject
     private IUserDao2 userDao;
 
-
-    {
-	final EntityResultQueryModel<T> query = select(getEntityType()).model();
-	final OrderingModel orderBy = orderBy().prop(ID_PROPERTY_NAME).asc().model();
-	defaultModel = new QueryExecutionModel.Builder<T>(query).orderModel(orderBy).build();
-    }
 
     /**
      * A principle constructor.
@@ -338,7 +328,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
      */
     @Override
     public IPage2<T> firstPage(final int pageCapacity) {
-	return new EntityQueryPage(defaultModel, 0, pageCapacity, evalNumOfPages(defaultModel.getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity));
+	return new EntityQueryPage(getDefaultQueryExecutionModel(), 0, pageCapacity, evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity));
     }
 
     /**
@@ -372,9 +362,9 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 
     @Override
     public IPage2<T> getPage(final int pageNo, final int pageCapacity) {
-	final int numberOfPages = evalNumOfPages(defaultModel.getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity);
+	final int numberOfPages = evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity);
 	final int pageNumber = pageNo < 0 ? numberOfPages - 1 : pageNo;
-	return new EntityQueryPage(defaultModel, pageNumber, pageCapacity, numberOfPages);
+	return new EntityQueryPage(getDefaultQueryExecutionModel(), pageNumber, pageCapacity, numberOfPages);
     }
 
     public Session getSession() {

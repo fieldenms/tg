@@ -19,6 +19,7 @@ public class DynamicEntityDao2 extends CommonEntityDao2 {
 
     private Class<? extends AbstractEntity<?>> entityType;
     private Class<? extends Comparable> keyType;
+    private QueryExecutionModel<? extends AbstractEntity<?>> defaultModel;
 
     /**
      * Needed for reflective instantiation.
@@ -31,6 +32,7 @@ public class DynamicEntityDao2 extends CommonEntityDao2 {
     public void setEntityType(final Class<? extends AbstractEntity<?>> type) {
 	this.entityType = type;
 	this.keyType = AnnotationReflector.getKeyType(entityType);
+	this.defaultModel = produceDefaultQueryExecutionModel(entityType);
     }
 
     @Override
@@ -42,4 +44,10 @@ public class DynamicEntityDao2 extends CommonEntityDao2 {
     public Class<? extends Comparable> getKeyType() {
 	return keyType;
     }
+
+    @Override
+    protected QueryExecutionModel<? extends AbstractEntity<?>> getDefaultQueryExecutionModel() {
+	return defaultModel;
+    }
+
 }

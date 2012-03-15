@@ -390,6 +390,9 @@ final class Tokens {
     }
 
     public <E extends AbstractEntity<?>> Tokens from(final Class<E> entityType) {
+	if (entityType == null) {
+	    throw new IllegalArgumentException("Missing entity type in query: " + this.tokens);
+	}
 	return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 

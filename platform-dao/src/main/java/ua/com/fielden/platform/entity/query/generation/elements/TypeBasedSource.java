@@ -14,11 +14,14 @@ public class TypeBasedSource extends AbstractSource {
     private final boolean generated;
 
     public TypeBasedSource(final Class<? extends AbstractEntity> entityType, final String alias, final MappingsGenerator mappingsGenerator) {
-    	this(entityType, alias, false, mappingsGenerator);
+	this(entityType, alias, false, mappingsGenerator);
     }
 
     public TypeBasedSource(final Class<? extends AbstractEntity> entityType, final String alias, final boolean generated, final MappingsGenerator mappingsGenerator) {
 	super(alias, mappingsGenerator);
+	if (entityType == null) {
+	    throw new IllegalArgumentException("Missing entity type!");
+	}
 	this.entityType = entityType;
 	this.generated = generated;
     }

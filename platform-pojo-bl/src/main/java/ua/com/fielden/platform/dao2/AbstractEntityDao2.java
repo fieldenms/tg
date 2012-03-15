@@ -10,10 +10,12 @@ import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 /**
@@ -27,6 +29,8 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     protected final static String ID_PROPERTY_NAME = "id";
     private final Class<? extends Comparable> keyType;
     private final Class<T> entityType;
+    private final QueryExecutionModel<T> defaultModel;
+
 
     /**
      * A principle constructor, which requires entity type that should be managed by this DAO instance. Entity's key type is determined automatically.
@@ -40,6 +44,17 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
 	}
 	this.entityType = (Class<T>) annotation.value();
 	this.keyType = AnnotationReflector.getKeyType(entityType);
+	this.defaultModel = produceDefaultQueryExecutionModel(entityType);
+    }
+
+    protected QueryExecutionModel<T> produceDefaultQueryExecutionModel(final Class<T> entityType) {
+	final EntityResultQueryModel<T> query = select(entityType).model();
+	final OrderingModel orderBy = orderBy().prop(ID_PROPERTY_NAME).asc().model();
+	return new QueryExecutionModel.Builder<T>(query).orderModel(orderBy).build();
+    }
+
+    protected QueryExecutionModel<T> getDefaultQueryExecutionModel() {
+	return defaultModel;
     }
 
     @Override
