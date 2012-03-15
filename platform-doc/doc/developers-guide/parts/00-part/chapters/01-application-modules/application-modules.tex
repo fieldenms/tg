@@ -1,5 +1,4 @@
-\chapter{As Quickly as Possible or Maven Archetypes to the Rescue}\label{ch00:02}
-%Divide and Conquer or Application Modules
+\chapter{As Quickly as Possible or Trident Genesis Archetype to the Rescue}\label{ch00:02}
 \myepigraph{One must learn by doing the thing; for though you think you know it, you have no certainty, until you try.}{Sophocles}                                                   
 
   The Maven Archetype concept is a cool way of automating a lot of otherwise manual labour when creating new projects.
@@ -24,7 +23,7 @@
   All examples in this book are performed under Linux, but they are all fully applicable to Windows or Mac OS.
   Any Linux specific commands are highlighted in separate notes.}.
   Therefore, fire up the terminal and navigate to a working directory.
-  For the sake of completeness, let's consider the that working directory is \texttt{workspace}, which is located in the user's home directory.
+  For the sake of completeness, let's consider the that working directory is \texttt{workspace-tg-apps}, which is located in the user's home directory.
   
   If Maven is correctly configured as described in section \ref{ch00:01} then running command \texttt{mvn archetype:generate -Dfilter=fielden:} in a terminal should provide a result outlined in listing \ref{lst:find-and-run-archetype}.
 
@@ -33,7 +32,7 @@
 	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{black}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
   \begin{code}{Find and Run TG Application Archetype}{\label{lst:find-and-run-archetype}}{terminalbgcolor}
     \begin{lstlisting}
-user@workstation:~/workspace$ mvn archetype:generate -Dfilter=fielden:
+user@workstation:~/workspace-tg-apps$ mvn archetype:generate -Dfilter=fielden:
 [INFO] Scanning for projects...
 [INFO] Searching repository for plugin with prefix: 'archetype'.
 [INFO] ------------------------------------------------------------------------
@@ -204,7 +203,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
       Under Linux a directory structure of the generated project can be inspected by using the \texttt{tree} command as follows.
 	
       \begin{verbatim}
-	user@workstation:~/workspace$ tree -L 2 -d
+	user@workstation:~/workspace-tg-apps$ tree -L 2 -d
 	.
 	|-- coolapp
 	|   |-- coolapp-dao
@@ -225,8 +224,8 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
   
   \begin{code}{Navigate to the project main directory}{\label{lst:cd_to_project}}{terminalbgcolor}
       \begin{lstlisting}
-	user@workstation:~/workspace$ cd coolapp
-        user@workstation:~/workspace/coolapp$
+	user@workstation:~/workspace-tg-apps$ cd coolapp
+        user@workstation:~/workspace-tg-apps/coolapp$
       \end{lstlisting}
   \end{code}
 
@@ -235,7 +234,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 
   \begin{code}{Project installation}{\label{lst:mvn_clean_install}}{terminalbgcolor}
      \begin{lstlisting}
-        user@workstation:~/workspace/coolapp$mvn clean install
+        user@workstation:~/workspace-tg-apps/coolapp$mvn clean install
      \end{lstlisting}
   \end{code}
 
@@ -262,7 +261,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
 [INFO] Finished at: Mon Mar 12 13:05:07 EET 2012
 [INFO] Final Memory: 81M/416M
 [INFO] ------------------------------------------------------------------------
-user@workstation:~/workspace/coolapp$ 
+user@workstation:~/workspace-tg-apps/coolapp$ 
       \end{lstlisting}
   \end{code}
 
@@ -275,7 +274,7 @@ user@workstation:~/workspace/coolapp$
 
   \begin{code}{Application server directories}{\label{lst:app_server}}{terminalbgcolor}
      \begin{lstlisting}
-user@workstation:~/workspace/coolapp$ tree -L 1 coolapp-web-server/target/deployment/
+user@workstation:~/workspace-tg-apps/coolapp$ tree -L 1 coolapp-web-server/target/deployment/
 coolapp-web-server/target/deployment/
 |-- application.properties
 |-- attachments
@@ -302,12 +301,12 @@ coolapp-web-server/target/deployment/
 
   \begin{code}{Application server directories}{\label{lst:install_client}}{terminalbgcolor}
      \begin{lstlisting}
-user@workstation:~/workspace/coolapp$ java -jar \
+user@workstation:~/workspace-tg-apps/coolapp$ java -jar \
 > coolapp-web-client/target/coolapp-web-client-1.0-SNAPSHOT-standard.jar
      \end{lstlisting}
   \end{code}
 
-  The first screen of the installation process is depicted on Fig.~\ref{img:ch00:02:client_installation_first_screen}.
+  The first screen of the installation process is depicted in Fig.~\ref{img:ch00:02:client_installation_first_screen}.
   Please note the information on this screen, which reuses the project properties that were provided as part of project generation.
   For example, it states that the software is developed by \emph{Fielden Management Services} and also lists application support email address and a web page.
   
@@ -341,17 +340,188 @@ user@workstation:~/workspace/coolapp$ java -jar \
     \includegraphics[width=0.6\textwidth]{parts/00-part/chapters/01-application-modules/images/04-client-login.png}
   \end{image}
 
-  The main window of the launched client application is depicted on Fig.~\ref{img:ch00:02:client_main_window}.
+  The main window of the launched client application is depicted in Fig.~\ref{img:ch00:02:client_main_window}.
   As can be observed, the generated application provides all the necessary functionality for managing users, roles, security tokens as well as the default implementation for \emph{Personnel} and \emph{Attachments}.
 
   \begin{image}{Application main window}{\label{img:ch00:02:client_main_window}}    
     \includegraphics[width=0.7\textwidth]{parts/00-part/chapters/01-application-modules/images/05-client-main-window.png}
   \end{image}
 
-  The above demonstrated how easy it is to start building a TG-based application.
+  The above demonstrates how easy it is to start building a TG-based application.
   The provided Trident Genesis Archetype generates a fully operational software with ready to be distributed application server deployment files and a client installation package.
-  The use of command line tools for building the project is important as it can be used on headless build servers, which a common practice in the software industry.
+  The use of command line tools for building the project is important as it can be used on headless build servers, which is a common practice in the software industry.
 
   It is important to note that Trident Genesis Platform offers a complete development methodology, which includes the unified programming model, software distribution model and application documentation creation.
   
   The following sections provide more detailed explanation about the generated application modules, how to set up a development environment and make simple project changes.
+
+\section{Moving to Eclipse}
+  It is assumed that the reader is well familiar with Eclipse IDE.
+  For developing applications with Trident Genesis we recommend using \href{http://www.eclipse.org/downloads}{Eclipse IDE for Java Developers} as it provides just the right combination of features without introducing unnecessary dependencies.
+  The following Plugins are recommended, but not critical, to be installed before starting TG-based application development with Eclipse.
+
+  \begin{description}
+    \item[\href{http://www.eclipse.org/m2e/}{M2E}] \hfill \\
+	Provides Maven integration with Eclipse. 
+	Very useful for analysis and editing of Project Object Model files.
+	Sets the \texttt{M2\_REPO} classpath variable pointing to a local Maven repository, which otherwise needs to be created manually.
+    \item[\href{http://www.eclipse.org/egit/}{EGit}] \hfill \\
+	Provides Git SCM integration with Eclipse. 
+	Git is recommended as the preveffered source control management system. 
+	This plugin ensures correct recognition of various refactorings (e.g. class name refactoring) by Git.
+  \end{description}
+
+  In case where for some reason it was decided not to install the M2E plugin, please ensure that the \texttt{M2\_REPO} classpath variable needs to be created in order to properly resolve locations of prject dependencies. 
+  Figure~\ref{img:ch00:02:m2_repo} depicts such configuration.
+
+  \begin{image}{Setting Eclipse \texttt{M2\_REPO} classpath variable}{\label{img:ch00:02:m2_repo}}    
+    \includegraphics[width=0.9\textwidth]{parts/00-part/chapters/01-application-modules/images/06-eclipse-m2-variable.png}
+  \end{image}
+
+\subsection{Generating Eclipse Project}
+
+  In order to make the genereated \emph{Cool App} project recongisable by Eclipse IDE, it is necessary to created Eclipse specific project files.
+  Conveniently Maven also automates this process.
+  Navigate to the project directory \emph{coolapp}, and run the command in listing~\ref{lst:gen_eclipse} to produce all necessary Eclipse files.
+  
+  \begin{code}{Maven command to generate Eclipse project}{\label{lst:gen_eclipse}}{terminalbgcolor}
+     \begin{lstlisting}
+user@workstation:~/workspace-tg-apps/coolapp$ mvn -DdownloadSources="true" \
+> -DdownloadJavadocs="true" eclipse:eclipse
+     \end{lstlisting}
+  \end{code}
+    
+  Options \texttt{downloadSources} and \texttt{downloadJavadocs} ensure that all project dependencies are downloaded with their source and documentation if available.
+  This provides developers with capability to read API documentation and even review some of the implementation details from within Eclipse IDE.
+  Also, having the source code of project dependencies is crucial in some cases for debugging purposes.
+
+  If the command executed successfully then it should end with the result depicted in listing~\ref{lst:mvn_eclipse_eclipse_completed}. 
+  The generated Eclipse project files contain references to all declated in POM dependencies, which use the \texttt{M2\_REPO} classpath variable value to ensure relative paths.
+
+  \begin{notebox}{Project Object Model is primary.}{\label{mb:maven_primary}}
+    Remember that POM is the primary source of informaton for governing the project.
+    Therefore, any changes to project dependencies must be done by manipulating project POM files, which may requre regeneration of the Eclipse specific files by running the same single command.
+  \end{notebox}
+  
+  \begin{code}{Successful Eclipse project generation}{\label{lst:mvn_eclipse_eclipse_completed}}{terminalbgcolor}
+      \begin{lstlisting}
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary:
+[INFO] ------------------------------------------------------------------------
+[INFO] Cool App Parent Project ............................... SUCCESS [3.206s]
+[INFO] Cool App POJOs and Business Logic Module .............. SUCCESS [0.538s]
+[INFO] Cool App DAO Module ................................... SUCCESS [0.430s]
+[INFO] Cool App UI Module .................................... SUCCESS [0.656s]
+[INFO] Cool App RAO Module ................................... SUCCESS [0.353s]
+[INFO] Cool App Web Client Module ............................ SUCCESS [0.810s]
+[INFO] Cool App Web Server Module ............................ SUCCESS [0.390s]
+[INFO] ------------------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESSFUL
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 7 seconds
+[INFO] Finished at: Thu Mar 15 12:13:18 EET 2012
+[INFO] Final Memory: 28M/175M
+[INFO] ------------------------------------------------------------------------
+user@workstation:~/workspace-tg-apps/coolapp$ 
+      \end{lstlisting}
+  \end{code}
+
+  Now it is time to import the project into Eclipse IDE.
+
+\subsection{Importing Project into Eclipse}
+
+  Firts what needs to be done is to start Eclipse IDE with workspace directory pointing to \texttt{$\sim$/workspace-tg-apps/} where the generated \texttt{coolapp} project is located.
+  Figure~\ref{img:ch00:02:eclipse_workspace} depicts selection of directory \texttt{$\sim$/workspace-tg-apps} as the workspace.  
+
+  \begin{image}{Eclipse Workspace}{\label{img:ch00:02:eclipse_workspace}}    
+    \includegraphics[width=0.9\textwidth]{parts/00-part/chapters/01-application-modules/images/07-eclipse-workspace.png}
+  \end{image}
+
+  Once Eclipse has finished loading, choose the \emph{Java Perspective} and use the \emph{Import\ldots} option to initiate the project import as depicted in Fig.~\ref{img:ch00:02:eclipse_importing}.
+  
+  \begin{image}{Initiating Eclipse Import}{\label{img:ch00:02:eclipse_importing}}    
+    \includegraphics[width=0.95\textwidth]{parts/00-part/chapters/01-application-modules/images/08-eclipse-importing.png}
+  \end{image}
+
+  In the \emph{Import} dialog choose \emph{Existing Projects into Workspace} as depicted in Fig.~\ref{img:ch00:02:eclipse_importing_existing}.
+
+  \begin{wrapfigure}{r}{0.5\textwidth}
+    \capstart  
+    \captionsetup{font=footnotesize,justification=centering,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}  
+    \vspace*{-20pt} 
+    \caption{\label{img:ch00:02:eclipse_importing_existing}Import Existing Project into Workspace}
+    \begin{center}
+      \includegraphics[width=0.48\textwidth]{parts/00-part/chapters/01-application-modules/images/09-eclipse-importing.png}
+    \end{center}
+     \vspace*{-10pt} 
+  \end{wrapfigure}
+
+  In the next fialog \emph{Brows\ldots} to select \texttt{coolapp} directory as root.
+  The result of this action should be the appearance of all project modules in the \emph{Projects} list as depicted in Fig.~\ref{img:ch00:02:eclipse_importing_root}.  
+  Therefore, each project module is recognised by Eclipse IDE as a separate project.
+  
+  Eclipse supports the notion of project dependencies where different projects may have other porjects in their class path.
+  This is the mechanism by which Maven resolves the dependencies between project modules at the source code level.
+  So any design time changes in any module are immediately visible to any other project module that depends on the changed one.
+
+  Click the \emph{Finish} button to complete the import process.
+  As the result there should be six separate Eclipse projects representing the project modules visible in \emph{Package Explorer} as depicted in Fig.~\ref{img:ch00:02:eclipse_imported_modules}.
+  The imported modules are automatically compiled and if all dependencies are resolved correctly there should be no compilation errors.
+
+  \begin{image}{Select \texttt{coolapp} Directory as Root}{\label{img:ch00:02:eclipse_importing_root}}    
+    \includegraphics[width=0.7\textwidth]{parts/00-part/chapters/01-application-modules/images/10-eclipse-importing.png}
+  \end{image}
+ 
+  \begin{image}{Imported Modules}{\label{img:ch00:02:eclipse_imported_modules}}    
+    \includegraphics[width=0.4\textwidth]{parts/00-part/chapters/01-application-modules/images/11-eclipse-imported-modules.png}
+  \end{image}  
+ 
+
+  The next step is setup \emph{Run} configurations in order to be able running both application server and client from inside of Eclipse IDE.
+  The following section walks through this process.
+
+\subsection{Setting up Run Configurations}
+
+  In order to run application server and client from Eclipse, there is no need to build and package project modules.
+  The compilation process is fully incremental in Eclipse, wich makes every change to the source code affective almost instantaneously.
+  And packaging is not needed as there is no need to deploy anything.
+
+  \subsubsection*{Server}
+  The application server is represented by project \texttt{coolapp-web-server}.
+  In order to start the server a \emph{Run} configuration needs to be created for this project.
+  
+  Go to main Eclipse menu \emph{Run} and select \emph{Run Configurations\ldots} to start the configuration dialog.
+  Select item \emph{Java Application} in the tree on the left-hand side of the dialog and click the \emph{New launch configuration} (\tikz[baseline=-5pt]\node (V) {\includegraphics{parts/00-part/chapters/01-application-modules/images/12-server-module-run-config-new-button.png}};) button located on the left side of the toolbox above the tree.
+  Provide the configuration with sensible name such as \emph{Cool App Server}, which can be done in the panel on the right-hand side of the dialog.
+  Specify value \emph{coolapp-web-server} for the \emph{Project} field (or select is from the list provided once the \emph{Browse\ldots} button is clicked).
+  The \emph{Main class} value should be set to \emph{fielden.webapp.StartAsWebinf}.
+  Figure~\ref{img:ch00:02:server-module-run-config-main-tab} depicts such configuration.  
+
+  \begin{image}{Cool App Server Run Configuration (Main)}{\label{img:ch00:02:server-module-run-config-main-tab}}    
+    \includegraphics[width=0.75\textwidth]{parts/00-part/chapters/01-application-modules/images/13-server-module-run-config-main-tab.png}
+  \end{image}
+
+  The application server needs requires a number of settings such as what database should be used, on port to lisnet and more.
+  The generated project contains all of these settigs as part of file \emph{application.properties} located at the root of the module.
+  In order to specify this file select tabsheet \emph{Arguments} and set the value of \emph{Program arguments} to \emph{application.properties} as depicted in Fig.~\ref{img:ch00:02:server-module-run-config-args-tab}.
+  Once that is done press the \emph{Run} button in the bottom right corner of the dialog to start the server.
+  The next step is to run the client application.
+
+  \begin{image}{Cool App Server Run Configuration (Arguments)}{\label{img:ch00:02:server-module-run-config-args-tab}}    
+    \includegraphics[width=0.75\textwidth]{parts/00-part/chapters/01-application-modules/images/14-server-module-run-config-arguments-tab.png}
+  \end{image}
+  
+
+  \subsubsection*{Client}
+
+
+  \begin{image}{Cool App Client Run Configuration (Main)}{\label{img:ch00:02:client-module-run-config-main-tab}}    
+    \includegraphics[width=0.75\textwidth]{parts/00-part/chapters/01-application-modules/images/15-client-module-run-config-main-tab.png}
+  \end{image}
+
+  \begin{image}{Cool App Client Run Configuration (Arguments)}{\label{img:ch00:02:client-module-run-config-arguments-tab}}    
+    \includegraphics[width=0.75\textwidth]{parts/00-part/chapters/01-application-modules/images/16-client-module-run-config-arguments-tab.png}
+  \end{image}
+
+  Once that is done press the \emph{Run} button in the bottom right corner of the dialog to start the client.

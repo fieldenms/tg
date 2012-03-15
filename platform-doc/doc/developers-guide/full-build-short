@@ -3,5 +3,5 @@ pdflatex book.tex
 #pdflatex book.tex
 pdflatex book.tex
 #pdflatex book.tex
-evince 'book.pdf' > /dev/null;
+evince 'book.pdf' &> /dev/null;
 
