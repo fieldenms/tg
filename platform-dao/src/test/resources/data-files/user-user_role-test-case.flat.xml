@@ -15,10 +15,10 @@
 	<RMA_PERSON ID_COLUMN="3" VERSION_COLUMN="0" PERSON_NO="user3" PERSON_DESC="user desc 3" PASSWORD="userpass3"/>
 	<RMA_PERSON ID_COLUMN="4" VERSION_COLUMN="0" PERSON_NO="user4" PERSON_DESC="user desc 4" PASSWORD="userpass4"/>
 	
-	<CRAFT _ID="1" _VERSION="0"	KEY_="user1" DESC_="user desc 1" IS_BASE="Y" USER_NAME="user 1" USER_PASSWORD="userpass1"/> <!-- base user -->
-	<CRAFT _ID="2" _VERSION="0"	KEY_="user2" DESC_="user desc 2" IS_BASE="Y" USER_NAME="user 2" USER_PASSWORD="userpass2"/> <!-- base user -->
-	<CRAFT _ID="3" _VERSION="0"	KEY_="user3" DESC_="user desc 3" IS_BASE="Y" USER_NAME="user 3" USER_PASSWORD="userpass3"/> <!-- base user -->
-	<CRAFT _ID="4" _VERSION="0"	KEY_="user4" DESC_="user desc 4" IS_BASE="Y" USER_NAME="user 4" USER_PASSWORD="userpass4"/> <!-- base user -->
+	<CRAFT _ID="1" _VERSION="0"	KEY_="user1" DESC_="user desc 1" IS_BASE="Y" USER_NAME="user1" USER_PASSWORD="userpass1"/> <!-- base user -->
+	<CRAFT _ID="2" _VERSION="0"	KEY_="user2" DESC_="user desc 2" IS_BASE="Y" USER_NAME="user2" USER_PASSWORD="userpass2"/> <!-- base user -->
+	<CRAFT _ID="3" _VERSION="0"	KEY_="user3" DESC_="user desc 3" IS_BASE="Y" USER_NAME="user3" USER_PASSWORD="userpass3"/> <!-- base user -->
+	<CRAFT _ID="4" _VERSION="0"	KEY_="user4" DESC_="user desc 4" IS_BASE="Y" USER_NAME="user4" USER_PASSWORD="userpass4"/> <!-- base user -->
 	
 
 	<USER_ROLE_ASSOCIATION _ID="1" _VERSION="0" ID_CRAFT="1" ID_USER_ROLE="1"/>

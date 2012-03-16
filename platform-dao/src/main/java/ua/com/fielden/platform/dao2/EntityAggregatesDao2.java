@@ -3,9 +3,6 @@ package ua.com.fielden.platform.dao2;
 import java.io.IOException;
 import java.util.List;
 
-import org.joda.time.DateTime;
-import org.joda.time.Period;
-
 import ua.com.fielden.platform.dao.UsernameSetterMixin;
 import ua.com.fielden.platform.entity.query.AggregatesFetcher;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -79,10 +76,7 @@ public class EntityAggregatesDao2 implements IEntityAggregatesDao2 {
 
     @Override
     public List<EntityAggregates> listAggregates(final AggregatesQueryExecutionModel aggregatesQueryModel) {
-	final DateTime st = new DateTime();
-	final List<EntityAggregates> result = new AggregatesFetcher(dao.getSession(), dao.getEntityFactory(), dao.getMappingsGenerator(), null, null, getUsername()).list(aggregatesQueryModel, null, null);
-	final Period pd = new Period(st, new DateTime());
-	return result;
+	return new AggregatesFetcher(dao.getSession(), dao.getEntityFactory(), dao.getMappingsGenerator(), null, null, getUsername()).list(aggregatesQueryModel, null, null);
     }
 
     @Override

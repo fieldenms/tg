@@ -181,11 +181,11 @@ public class UserUserRoleTestCase2 extends DbDrivenTestCase2 {
     }
 
     //FIXME
-//    public void test_count_association_between_user_and_token() {
-//	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", FirstLevelSecurityToken1.class));
-//	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", ThirdLevelSecurityToken1.class));
-//	assertEquals("Incorrect number of associations between user and token.", 0, securityDao.countAssociations("user1", ThirdLevelSecurityToken2.class));
-//    }
+    public void test_count_association_between_user_and_token() {
+	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", FirstLevelSecurityToken1.class));
+	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", ThirdLevelSecurityToken1.class));
+	assertEquals("Incorrect number of associations between user and token.", 0, securityDao.countAssociations("user1", ThirdLevelSecurityToken2.class));
+    }
 
     @Override
     protected String[] getDataSetPathsForInsert() {

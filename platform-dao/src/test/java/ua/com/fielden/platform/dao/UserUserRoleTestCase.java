@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.equery.equery.select;
-
 import java.util.List;
 
 import ua.com.fielden.platform.equery.fetch;
@@ -13,6 +11,8 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.domain.entities.Person;
 import ua.com.fielden.platform.test.domain.entities.daos.IPersonDao;
+
+import static ua.com.fielden.platform.equery.equery.select;
 
 /**
  * Test case for the {@link IPersonDao}, {@link IUserRoleDao}, {@link IUserAndRoleAssociationDao}, and {@link SecurityRoleAssociationDao} classes
@@ -180,11 +180,11 @@ public class UserUserRoleTestCase extends DbDrivenTestCase {
     }
 
     //TODO fix
-//    public void test_count_association_between_user_and_token() {
-//	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", FirstLevelSecurityToken1.class));
-//	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", ThirdLevelSecurityToken1.class));
-//	assertEquals("Incorrect number of associations between user and token.", 0, securityDao.countAssociations("user1", ThirdLevelSecurityToken2.class));
-//    }
+    public void test_count_association_between_user_and_token() {
+	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", FirstLevelSecurityToken1.class));
+	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", ThirdLevelSecurityToken1.class));
+	assertEquals("Incorrect number of associations between user and token.", 0, securityDao.countAssociations("user1", ThirdLevelSecurityToken2.class));
+    }
 
     @Override
     protected String[] getDataSetPathsForInsert() {
