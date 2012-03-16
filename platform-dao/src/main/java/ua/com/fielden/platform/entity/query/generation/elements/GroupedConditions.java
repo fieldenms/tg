@@ -11,6 +11,11 @@ public class GroupedConditions extends Conditions implements ICondition {
     }
 
     @Override
+    public String sql() {
+        return "(" + super.sql() + ")";
+    }
+
+    @Override
     public boolean ignore() {
 	return false;
     }
