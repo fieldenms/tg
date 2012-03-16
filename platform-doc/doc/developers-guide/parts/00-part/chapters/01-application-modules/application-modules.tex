@@ -6,7 +6,7 @@
 
   The Trident Genesis Platform provides an archetype that conveniently generates a project template, which then can be enhanced to meet customer requirements.
   The main goal of the provided archetype is to get developers up and running as quickly as possible with a simple, but fully operational TG-based application that would cover all main aspects of a \emph{complete} application.
-  This includes brending, documentation, buid and deployment support.
+  This includes branding, documentation, build and deployment support.
   
   \begin{notebox}{Documentation.}{\label{mb:documentation-during-build}}
     Application documentation is built at the same time as the project, and it gets incorporated into the client application installation package.
@@ -14,7 +14,7 @@
     However, it does require \LaTeX to be installed on the system where application needs to be prepared for deployment.
   \end{notebox}
 
-  The first section provides steps to use the Triden Genesis application archetype, and is followed by sections discussing the details of all the features of the generated project covering everything from importing the generated project into Eclipse down to project documentation and deployment.
+  The first section provides steps to use the Trident Genesis application archetype, and is followed by sections discussing the details of all the features of the generated project covering everything from importing the generated project into Eclipse down to project documentation and deployment.
 
 \section{Create new project from an archetype}
 
@@ -216,7 +216,7 @@ Choose a number or apply filter (format: [groupId:]artifactId, case sensitive co
   \end{notebox}
 
   Before delving into the details of enhancing the generated project with additional functionality that would address the business requirements, the next section outlines the build and deployment process.
-  This process is identical for every TG-based application, and once learned it will allways be easily reused.
+  This process is identical for every TG-based application, and once learned it will always be easily reused.
 
 \section{Build, Deploy, Run}
   Maven is used to fully manage the project, which includes its build and deployment process.
@@ -269,7 +269,7 @@ user@workstation:~/workspace-tg-apps/coolapp$
 
   The application server is represented by the \emph{Cool App Web Server Module}, which is located in directory \texttt{coolapp-web-server}.
   The build process compiles project modules and automatically collects all dependencies, executions scripts, a sample database, configuration into the deployment directory \texttt{coolapp-web-server/target/deployment}.
-  It also packages this directory as a zip arhive file \texttt{coolapp-web-server-1.0-SNAPSHOT-distribution.zip} located under \texttt{coolapp-web-server/target}, which is ready for distibution.
+  It also packages this directory as a zip archive file \texttt{coolapp-web-server-1.0-SNAPSHOT-distribution.zip} located under \texttt{coolapp-web-server/target}, which is ready for distribution.
   Listing \ref{lst:app_server} outlines the structure of this directory.
 
   \begin{code}{Application server directories}{\label{lst:app_server}}{terminalbgcolor}
@@ -292,7 +292,7 @@ coolapp-web-server/target/deployment/
   Once started it listens on port \texttt{8091} for incoming connections.
   Now it's time to install the client application.
 
-\subsection{Client}
+\subsection{Client}\label{ch00:02:client}
   \sloppypar
   If an application server is up and running then a new terminal window (or a tab) should be open to start client application installation.
   The client application is represented by module \emph{Cool App Web Client Module}, which is located in directory \texttt{coolapp-web-client}.
@@ -367,11 +367,11 @@ user@workstation:~/workspace-tg-apps/coolapp$ java -jar \
 	Sets the \texttt{M2\_REPO} classpath variable pointing to a local Maven repository, which otherwise needs to be created manually.
     \item[\href{http://www.eclipse.org/egit/}{EGit}] \hfill \\
 	Provides Git SCM integration with Eclipse. 
-	Git is recommended as the preveffered source control management system. 
+	Git is recommended as the preferred source control management system. 
 	This plugin ensures correct recognition of various refactorings (e.g. class name refactoring) by Git.
   \end{description}
 
-  In case where for some reason it was decided not to install the M2E plugin, please ensure that the \texttt{M2\_REPO} classpath variable needs to be created in order to properly resolve locations of prject dependencies. 
+  In case where for some reason it was decided not to install the M2E plugin, please ensure that the \texttt{M2\_REPO} classpath variable needs to be created in order to properly resolve locations of project dependencies. 
   Figure~\ref{img:ch00:02:m2_repo} depicts such configuration.
 
   \begin{image}{Setting Eclipse \texttt{M2\_REPO} classpath variable}{\label{img:ch00:02:m2_repo}}    
@@ -380,7 +380,7 @@ user@workstation:~/workspace-tg-apps/coolapp$ java -jar \
 
 \subsection{Generating Eclipse Project}
 
-  In order to make the genereated \emph{Cool App} project recongisable by Eclipse IDE, it is necessary to created Eclipse specific project files.
+  In order to make the generated \emph{Cool App} project recognisable by Eclipse IDE, it is necessary to created Eclipse specific project files.
   Conveniently Maven also automates this process.
   Navigate to the project directory \emph{coolapp}, and run the command in listing~\ref{lst:gen_eclipse} to produce all necessary Eclipse files.
   
@@ -396,11 +396,11 @@ user@workstation:~/workspace-tg-apps/coolapp$ mvn -DdownloadSources="true" \
   Also, having the source code of project dependencies is crucial in some cases for debugging purposes.
 
   If the command executed successfully then it should end with the result depicted in listing~\ref{lst:mvn_eclipse_eclipse_completed}. 
-  The generated Eclipse project files contain references to all declated in POM dependencies, which use the \texttt{M2\_REPO} classpath variable value to ensure relative paths.
+  The generated Eclipse project files contain references to all declared in POM dependencies, which use the \texttt{M2\_REPO} classpath variable value to ensure relative paths.
 
   \begin{notebox}{Project Object Model is primary.}{\label{mb:maven_primary}}
-    Remember that POM is the primary source of informaton for governing the project.
-    Therefore, any changes to project dependencies must be done by manipulating project POM files, which may requre regeneration of the Eclipse specific files by running the same single command.
+    Remember that POM is the primary source of information for governing the project.
+    Therefore, any changes to project dependencies must be done by manipulating project POM files, which may require regeneration of the Eclipse specific files by running the same single command.
   \end{notebox}
   
   \begin{code}{Successful Eclipse project generation}{\label{lst:mvn_eclipse_eclipse_completed}}{terminalbgcolor}
@@ -431,7 +431,7 @@ user@workstation:~/workspace-tg-apps/coolapp$
 
 \subsection{Importing Project into Eclipse}
 
-  Firts what needs to be done is to start Eclipse IDE with workspace directory pointing to \texttt{$\sim$/workspace-tg-apps/} where the generated \texttt{coolapp} project is located.
+  First what needs to be done is to start Eclipse IDE with workspace directory pointing to \texttt{$\sim$/workspace-tg-apps/} where the generated \texttt{coolapp} project is located.
   Figure~\ref{img:ch00:02:eclipse_workspace} depicts selection of directory \texttt{$\sim$/workspace-tg-apps} as the workspace.  
 
   \begin{image}{Eclipse Workspace}{\label{img:ch00:02:eclipse_workspace}}    
@@ -457,11 +457,11 @@ user@workstation:~/workspace-tg-apps/coolapp$
      \vspace*{-10pt} 
   \end{wrapfigure}
 
-  In the next fialog \emph{Brows\ldots} to select \texttt{coolapp} directory as root.
+  In the next dialog \emph{Brows\ldots} to select \texttt{coolapp} directory as root.
   The result of this action should be the appearance of all project modules in the \emph{Projects} list as depicted in Fig.~\ref{img:ch00:02:eclipse_importing_root}.  
   Therefore, each project module is recognised by Eclipse IDE as a separate project.
   
-  Eclipse supports the notion of project dependencies where different projects may have other porjects in their class path.
+  Eclipse supports the notion of project dependencies where different projects may have other projects in their class path.
   This is the mechanism by which Maven resolves the dependencies between project modules at the source code level.
   So any design time changes in any module are immediately visible to any other project module that depends on the changed one.
 
@@ -484,7 +484,7 @@ user@workstation:~/workspace-tg-apps/coolapp$
 \subsection{Setting up Run Configurations}
 
   In order to run application server and client from Eclipse, there is no need to build and package project modules.
-  The compilation process is fully incremental in Eclipse, wich makes every change to the source code affective almost instantaneously.
+  The compilation process is fully incremental in Eclipse, which makes every change to the source code affective almost instantaneously.
   And packaging is not needed as there is no need to deploy anything.
 
   \subsubsection*{Server}
@@ -502,10 +502,12 @@ user@workstation:~/workspace-tg-apps/coolapp$
     \includegraphics[width=0.75\textwidth]{parts/00-part/chapters/01-application-modules/images/13-server-module-run-config-main-tab.png}
   \end{image}
 
-  The application server needs requires a number of settings such as what database should be used, on port to lisnet and more.
-  The generated project contains all of these settigs as part of file \emph{application.properties} located at the root of the module.
+  The application server needs requires a number of settings such as what database should be used, on port to listen and more.
+  The generated project contains all of these settings as part of file \emph{application.properties} located at the root of the module.
   In order to specify this file select tabsheet \emph{Arguments} and set the value of \emph{Program arguments} to \emph{application.properties} as depicted in Fig.~\ref{img:ch00:02:server-module-run-config-args-tab}.
   Once that is done press the \emph{Run} button in the bottom right corner of the dialog to start the server.
+  As the result, the \emph{Console} tabsheet of the Java perspective in Eclipse IDE should contain an output, which indicates a successful server launch.
+  
   The next step is to run the client application.
 
   \begin{image}{Cool App Server Run Configuration (Arguments)}{\label{img:ch00:02:server-module-run-config-args-tab}}    
@@ -514,14 +516,35 @@ user@workstation:~/workspace-tg-apps/coolapp$
   
 
   \subsubsection*{Client}
-
+  
+  The client application is represented by project \texttt{coolapp-web-client}.
+  Setting up a \emph{Run} configuration for it is very similar to the above.
+  Navigate to the main menu item \emph{Run} and select \emph{Run Configurations\ldots} to start the configuration dialog.
+  Select item \emph{Java Application} in the tree on the left-hand side of the dialog and click the \emph{New launch configuration} (\tikz[baseline=-5pt]\node (V) {\includegraphics{parts/00-part/chapters/01-application-modules/images/12-server-module-run-config-new-button.png}};) button located as before.
+  Provide the configuration with sensible name such as \emph{Cool App Client}.
+  Specify value \emph{coolapp-web-client} for the \emph{Project} field (or select is from the list provided once the \emph{Browse\ldots} button is clicked).
+  The \emph{Main class} value should be set to \emph{fielden.client.web.ApplicationWebClient}.
+  Figure~\ref{img:ch00:02:client-module-run-config-main-tab} depicts such configuration.  
 
   \begin{image}{Cool App Client Run Configuration (Main)}{\label{img:ch00:02:client-module-run-config-main-tab}}    
     \includegraphics[width=0.75\textwidth]{parts/00-part/chapters/01-application-modules/images/15-client-module-run-config-main-tab.png}
   \end{image}
 
+  The client application also requires a number of settings such as application server URI, a directory for persisting client specific data and more.
+  The generated project contains all of these settings as part of file \emph{application.properties} located at the root of the client application module.
+  Please note that this is a different file to the one used for an application server albeit its identical name.
+  As before select tabsheet \emph{Arguments} and set the value of \emph{Program arguments} to \emph{application.properties} as depicted in Fig.~\ref{img:ch00:02:client-module-run-config-arguments-tab}.
+  Additionally, the client module is provided with branding support, which includes a splash screen.
+  The splash screen should be specified as value \emph{-splash:src/main/resources/images/splash.jpg} for \emph{VM Arguments} on the same \emph{Arguments} tabsheet.
+  Once all these settings are provided, press the \emph{Run} button in the bottom right corner of the dialog to start the client.
+  If everything was configured correctly and the application server is running, then first a splash screen should appear on the screen followed by the login prompt.
+  The client application itself is identical to the one observed in section~\ref{ch00:02:client}.
+
   \begin{image}{Cool App Client Run Configuration (Arguments)}{\label{img:ch00:02:client-module-run-config-arguments-tab}}    
     \includegraphics[width=0.75\textwidth]{parts/00-part/chapters/01-application-modules/images/16-client-module-run-config-arguments-tab.png}
   \end{image}
 
-  Once that is done press the \emph{Run} button in the bottom right corner of the dialog to start the client.
+  Hopefully by now the reader could see how quickly it was to start a TG-based project with a complete automation of the processes to build and deploy the application as well as to configure the development environment.
+  
+  It's about time to make some project changes and see easy it is.
+  These discussed changes are trivial for the purpose of keep the quick start\ldots well\ldots quick, and a more elaborate discussion of various platform approaches to domain modelling, UI construction and more will be presented in later chapters of the book.
