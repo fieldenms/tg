@@ -30,6 +30,3 @@
 <!ENTITY Advice "ua.com.fielden.platform.test.domain.entities.Advice">
 <!ENTITY AdvicePosition "ua.com.fielden.platform.test.domain.entities.AdvicePosition">
 <!ENTITY RotableStatusType "ua.com.fielden.platform.test.types.RotableStatusType">
-
-<!ENTITY Person "ua.com.fielden.platform.test.domain.entities.Person">
-<!ENTITY UserAndRoleAssociation "ua.com.fielden.platform.security.user.UserAndRoleAssociation">

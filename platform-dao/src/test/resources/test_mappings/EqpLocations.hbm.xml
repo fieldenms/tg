@@ -45,7 +45,6 @@
 			</any>
 			<many-to-one name="sendingWorkshop" class="&Workshop;" column="SENDING_WORKSHOP"/>
 			<many-to-one name="receivingWorkshop" class="&Workshop;" column="RECEIVING_WORKSHOP"/>
-			<many-to-one name="placedBy" class="&Person;" column="PLACED_BY"/>
 			<property name="placementDate" column="PLACEMENT_DATE" type="timestamp"/>
 			<property name="received" column="IS_RECEIVED" type="yes_no"/>			
 			<property name="receivedDate" column="RECEIVED_DATE" type="timestamp"/>

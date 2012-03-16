@@ -27,7 +27,6 @@
 		<mapping resource="test_mappings/WorkOrder.hbm.xml"/>
 		<mapping resource="test_mappings/Advice.hbm.xml"/>
 		
-		<mapping resource="test_mappings/Person.hbm.xml"/>
 	</session-factory>
 	
 </hibernate-configuration>

@@ -1,16 +1,19 @@
 package ua.com.fielden.platform.dao;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.equery.fetch;
 import ua.com.fielden.platform.equery.interfaces.IQueryModel;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
+import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
-import ua.com.fielden.platform.test.domain.entities.Person;
-import ua.com.fielden.platform.test.domain.entities.daos.IPersonDao;
 
 import static ua.com.fielden.platform.equery.equery.select;
 
@@ -21,42 +24,39 @@ import static ua.com.fielden.platform.equery.equery.select;
  *
  */
 public class UserUserRoleTestCase extends DbDrivenTestCase {
-    private final IPersonDao personDao = injector.getInstance(IPersonDao.class);
     private final IUserRoleDao userRoleDao = injector.getInstance(IUserRoleDao.class);
     private final IUserAndRoleAssociationDao userAssociationDao = injector.getInstance(IUserAndRoleAssociationDao.class);
     private final ISecurityRoleAssociationDao securityDao = injector.getInstance(ISecurityRoleAssociationDao.class);
+    private final IUserController userDao = injector.getInstance(IUserController.class);
 
     public void test_retrieval_of_user_role_associations() {
 	final IQueryModel<UserAndRoleAssociation> associationModel = select(UserAndRoleAssociation.class).model();
-	assertEquals("Incorrect number of user role associations.", 8, userAssociationDao.firstPage(associationModel, new fetch(UserAndRoleAssociation.class).with("user", new fetch(Person.class)), 10).data().size());
+	assertEquals("Incorrect number of user role associations.", 8, userAssociationDao.firstPage(associationModel, new fetch(UserAndRoleAssociation.class).with("user", new fetch(User.class)), 10).data().size());
     }
 
-    //TODO fix
-//    public void test_retrieval_of_users() {
-//	final List<Person> persons = personDao.retrieveAllPersonsWithRoles();
-//	assertEquals("the number of retrieved persons is incorrect. Please check the testThatTheUsersWereRetrievedCorrectly", 4, persons.size());
-//
-//	for (int personIndex = 0; personIndex < 4; personIndex++) {
-//	    final Person person = persons.get(personIndex);
-//	    assertEquals("incorrect id of the " + personIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", personIndex + 1, person.getId().intValue());
-//	    assertEquals("incorrect key of the " + personIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "user" + Integer.toString(personIndex + 1), person.getKey());
-//	    assertEquals("incorrect description of the " + personIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "user desc "
-//		    + Integer.toString(personIndex + 1), person.getDesc());
-//	    assertEquals("incorrect password of the " + personIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "userpass" + Integer.toString(personIndex + 1), person.getPassword());
-//
-//	    final Set<UserAndRoleAssociation> userRolesAssociation = person.getRoles();
-//	    final Set<UserRole> userRoles = new HashSet<UserRole>();
-//	    for (final UserAndRoleAssociation userAssociation : userRolesAssociation) {
-//		userRoles.add(userAssociation.getUserRole());
-//	    }
-//	    assertEquals("the " + personIndex + "-th person has wrong number of user roles, please check the testThatTheUsersWereRetrievedCorrectly", 2, userRoles.size());
-//	    for (int userRoleIndex = 0; userRoleIndex < 2; userRoleIndex++) {
-//		final int userRoleGlobalIndex = 2 * personIndex + userRoleIndex;
-//		final UserRole userRole = new UserRole("role" + Integer.toString(userRoleGlobalIndex + 1), "");
-//		assertTrue("the " + personIndex + "-th person doesn't have the " + Integer.toString(userRoleGlobalIndex + 1) + "-th user role", userRoles.contains(userRole));
-//	    }
-//	}
-//    }
+    public void test_retrieval_of_users() {
+	final List<User> users = userDao.findAllUsersWithRoles();
+	assertEquals("the number of retrieved persons is incorrect. Please check the testThatTheUsersWereRetrievedCorrectly", 4, users.size());
+
+	for (int userIndex = 0; userIndex < 4; userIndex++) {
+	    final User user = users.get(userIndex);
+	    assertEquals("incorrect id of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", userIndex + 1, user.getId().intValue());
+	    assertEquals("incorrect key of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "user" + Integer.toString(userIndex + 1), user.getKey());
+	    assertEquals("incorrect password of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "userpass" + Integer.toString(userIndex + 1), user.getPassword());
+
+	    final Set<UserAndRoleAssociation> userRolesAssociation = user.getRoles();
+	    final Set<UserRole> userRoles = new HashSet<UserRole>();
+	    for (final UserAndRoleAssociation userAssociation : userRolesAssociation) {
+		userRoles.add(userAssociation.getUserRole());
+	    }
+	    assertEquals("the " + userIndex + "-th person has wrong number of user roles, please check the testThatTheUsersWereRetrievedCorrectly", 2, userRoles.size());
+	    for (int userRoleIndex = 0; userRoleIndex < 2; userRoleIndex++) {
+		final int userRoleGlobalIndex = 2 * userIndex + userRoleIndex;
+		final UserRole userRole = new UserRole("role" + Integer.toString(userRoleGlobalIndex + 1), "");
+		assertTrue("the " + userIndex + "-th person doesn't have the " + Integer.toString(userRoleGlobalIndex + 1) + "-th user role", userRoles.contains(userRole));
+	    }
+	}
+    }
 
     public void test_user_role_retrieval() {
 	final List<UserRole> userRoles = userRoleDao.findAll();
@@ -76,78 +76,74 @@ public class UserUserRoleTestCase extends DbDrivenTestCase {
 	assertEquals("Incorrect number of user roles.", 2, userRoles.size());
     }
 
-    //TODO fix
-//    public void test_that_save_for_users() {
-//	config.getHibernateUtil().getSessionFactory().getCurrentSession().close();
-//	// retrieving the user, modifying it's password and saving changes
-//	Person person = personDao.findPersonByIdWithRoles(Long.valueOf(1));
-//	person.setPassword("new password");
-//	UserAndRoleAssociation userAssociation = entityFactory.newByKey(UserAndRoleAssociation.class, person, new UserRole("role1", ""));
-//	final List<UserAndRoleAssociation> associations = new ArrayList<UserAndRoleAssociation>();
-//	for (final UserAndRoleAssociation roleAssociation : person.getRoles()) {
-//	    if (roleAssociation.equals(userAssociation)) {
-//		associations.add(roleAssociation);
-//	    }
-//	}
-//	userAssociationDao.removeAssociation(associations);
-//	personDao.save(person);
-//
-//	// retrieving saved person and checking it
-//	person = personDao.findPersonByIdWithRoles(Long.valueOf(1));
-//	assertEquals("incorrect id of the first person in the testWhetherTheSaveWorksProperlyForUsers", 1, person.getId().intValue());
-//	assertEquals("incorrect key of the first person in the testWhetherTheSaveWorksProperlyForUsers", "user" + Integer.toString(1), person.getKey());
-//	assertEquals("incorrect description of the first person in the testWhetherTheSaveWorksProperlyForUsers", "user desc " + Integer.toString(1), person.getDesc());
-//	assertEquals("incorrect password of the first person in the testWhetherTheSaveWorksProperlyForUsers", "new password", person.getPassword());
-//
-//	// checking whether the user role1 was removed or not
-//	final Set<UserAndRoleAssociation> userRoleAssociations = person.getRoles();
-//	assertEquals("the first person has wrong number of user roles, please check the testWhetherTheSaveWorksProperlyForUsers", 1, userRoleAssociations.size());
-//	userAssociation = entityFactory.newByKey(UserAndRoleAssociation.class, person, new UserRole("role2", ""));
-//	assertTrue("the " + 1 + "-th person doesn't have the second user role", userRoleAssociations.contains(userAssociation));
-//
-//    }
+    public void test_that_save_for_users() {
+	config.getHibernateUtil().getSessionFactory().getCurrentSession().close();
+	// retrieving the user, modifying it's password and saving changes
+	User user = userDao.findUserByIdWithRoles(1L);
+	user.setPassword("new password");
+	UserAndRoleAssociation userAssociation = entityFactory.newByKey(UserAndRoleAssociation.class, user, new UserRole("role1", ""));
+	final List<UserAndRoleAssociation> associations = new ArrayList<UserAndRoleAssociation>();
+	for (final UserAndRoleAssociation roleAssociation : user.getRoles()) {
+	    if (roleAssociation.equals(userAssociation)) {
+		associations.add(roleAssociation);
+	    }
+	}
+	userAssociationDao.removeAssociation(associations);
+	userDao.save(user);
 
-    //TODO fix
-//    public void test_whether_the_created_user_were_correctly_saved() {
-//	config.getHibernateUtil().getSessionFactory().getCurrentSession().close();
-//
-//	// creating new person and user roles for it. Saving person
-//	final UserRole userRole1 = entityFactory.newEntity(UserRole.class, "nrole1", "nrole desc 1");
-//	userRoleDao.save(userRole1);
-//	final UserRole userRole2 = entityFactory.newEntity(UserRole.class, "nrole2", "nrole desc 2");
-//	userRoleDao.save(userRole2);
-//	final UserRole userRole3 = entityFactory.newEntity(UserRole.class, "nrole3", "nrole desc 3");
-//	userRoleDao.save(userRole3);
-//
-//	Person person = entityFactory.newEntity(Person.class, "new user", "new user desc");
-//	person.setPassword("new user password");
-//	personDao.save(person);
-//
-//	Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<UserAndRoleAssociation>();
-//	userRolesAssociation.add(entityFactory.newByKey(UserAndRoleAssociation.class, person, userRole1));
-//	userRolesAssociation.add(entityFactory.newByKey(UserAndRoleAssociation.class, person, userRole2));
-//	userRolesAssociation.add(entityFactory.newByKey(UserAndRoleAssociation.class, person, userRole3));
-//	person.setRoles(userRolesAssociation);
-//
-//	for (final UserAndRoleAssociation association : userRolesAssociation) {
-//	    userAssociationDao.save(association);
-//	}
-//
-//	// final checking weather the final person was saved final correctly with user final roles
-//	person = personDao.findPersonByKeyWithUserRoles("new user");
-//	assertEquals("incorrect description of the 'new user' person in the testWhetherTheCreatedUserWereCorrectlySaved", "new user desc", person.getDesc());
-//	assertEquals("incorrect password of the 'new user' person in the testWhetherTheCreatedUserWereCorrectlySaved", "new user password", person.getPassword());
-//
-//	// checking whether the user roles were saved correctly
-//	userRolesAssociation = person.getRoles();
-//	assertEquals("the 'new user' person has wrong number of user roles, please check the testWhetherTheCreatedUserWereCorrectlySaved", 3, userRolesAssociation.size());
-//	for (int userRoleIndex = 0; userRoleIndex < 3; userRoleIndex++) {
-//	    final UserAndRoleAssociation userRoleAssociation = entityFactory.newByKey(UserAndRoleAssociation.class, person, new UserRole("nrole"
-//		    + Integer.toString(userRoleIndex + 1), ""));
-//	    assertTrue("the 'new user'-th person doesn't have the " + userRoleAssociation.getUserRole().getKey() + "-th user role", userRolesAssociation.contains(userRoleAssociation));
-//	}
-//
-//    }
+	// retrieving saved user and checking it
+	user = userDao.findUserByIdWithRoles(1L);
+	assertEquals("incorrect id of the first person in the testWhetherTheSaveWorksProperlyForUsers", 1, user.getId().intValue());
+	assertEquals("incorrect key of the first person in the testWhetherTheSaveWorksProperlyForUsers", "user" + Integer.toString(1), user.getKey());
+	assertEquals("incorrect password of the first person in the testWhetherTheSaveWorksProperlyForUsers", "new password", user.getPassword());
+
+	// checking whether the user role1 was removed or not
+	final Set<UserAndRoleAssociation> userRoleAssociations = user.getRoles();
+	assertEquals("the first person has wrong number of user roles, please check the testWhetherTheSaveWorksProperlyForUsers", 1, userRoleAssociations.size());
+	userAssociation = entityFactory.newByKey(UserAndRoleAssociation.class, user, new UserRole("role2", ""));
+	assertTrue("the " + 1 + "-th person doesn't have the second user role", userRoleAssociations.contains(userAssociation));
+
+    }
+
+    public void test_whether_the_created_user_were_correctly_saved() {
+	config.getHibernateUtil().getSessionFactory().getCurrentSession().close();
+
+	// creating new person and user roles for it. Saving person
+	final UserRole userRole1 = entityFactory.newEntity(UserRole.class, "nrole1", "nrole desc 1");
+	userRoleDao.save(userRole1);
+	final UserRole userRole2 = entityFactory.newEntity(UserRole.class, "nrole2", "nrole desc 2");
+	userRoleDao.save(userRole2);
+	final UserRole userRole3 = entityFactory.newEntity(UserRole.class, "nrole3", "nrole desc 3");
+	userRoleDao.save(userRole3);
+
+	User user = entityFactory.newEntity(User.class, "new user", "new user desc");
+	user.setPassword("new user password");
+	userDao.save(user);
+
+	Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<UserAndRoleAssociation>();
+	userRolesAssociation.add(entityFactory.newByKey(UserAndRoleAssociation.class, user, userRole1));
+	userRolesAssociation.add(entityFactory.newByKey(UserAndRoleAssociation.class, user, userRole2));
+	userRolesAssociation.add(entityFactory.newByKey(UserAndRoleAssociation.class, user, userRole3));
+	user.setRoles(userRolesAssociation);
+
+	for (final UserAndRoleAssociation association : userRolesAssociation) {
+	    userAssociationDao.save(association);
+	}
+
+	// final checking weather the final person was saved final correctly with user final roles
+	user = userDao.findUserByKeyWithRoles("new user");
+	assertNotNull("Saved user should have been found.", user);
+	assertEquals("incorrect password of the 'new user' person in the testWhetherTheCreatedUserWereCorrectlySaved", "new user password", user.getPassword());
+
+	// checking whether the user roles were saved correctly
+	userRolesAssociation = user.getRoles();
+	assertEquals("the 'new user' person has wrong number of user roles, please check the testWhetherTheCreatedUserWereCorrectlySaved", 3, userRolesAssociation.size());
+	for (int userRoleIndex = 0; userRoleIndex < 3; userRoleIndex++) {
+	    final UserAndRoleAssociation userRoleAssociation = entityFactory.newByKey(UserAndRoleAssociation.class, user, new UserRole("nrole"
+		    + Integer.toString(userRoleIndex + 1), ""));
+	    assertTrue("the 'new user'-th person doesn't have the " + userRoleAssociation.getUserRole().getKey() + "-th user role", userRolesAssociation.contains(userRoleAssociation));
+	}
+    }
 
     public void test_that_security_associations_can_be_retrieved() {
 	final IQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();

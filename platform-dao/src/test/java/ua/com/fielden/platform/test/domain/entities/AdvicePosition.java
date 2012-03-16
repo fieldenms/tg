@@ -37,8 +37,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
     @IsProperty
     private Workshop receivingWorkshop;
     @IsProperty
-    private Person placedBy;
-    @IsProperty
     private Date placementDate;
     @IsProperty
     private boolean received = false;
@@ -134,19 +132,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
 	return this;
     }
 
-    public Person getPlacedBy() {
-	return placedBy;
-    }
-
-    @NotNull
-    @Final
-    @EntityExists(Person.class)
-    @Observable
-    public AdvicePosition setPlacedBy(final Person placedBy) {
-	this.placedBy = placedBy;
-	return this;
-    }
-
     public Date getPlacementDate() {
 	return placementDate;
     }
@@ -189,7 +174,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
 	rotable = null;
 	sendingWorkshop = null;
 	receivingWorkshop = null;
-	placedBy = null;
 	placementDate = null;
 	received = false;
 	receivedDate = null;
@@ -216,8 +200,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
 		errorMessage = "Position " + getPosition() + " contains no rotable but 'Sending workshop' is set to " + sendingWorkshop.getKey();
 	    } else if (receivingWorkshop != null) {
 		errorMessage = "Position " + getPosition() + " contains no rotable but 'Receiving workshop' is set to " + receivingWorkshop.getKey();
-	    } else if (placedBy != null) {
-		errorMessage = "Position " + getPosition() + " contains no rotable but 'Placed by' is set to " + placedBy.getKey();;
 	    } else if (placementDate != null) {
 		errorMessage = "Position " + getPosition() + " contains no rotable but 'Placement date' is set";
 	    } else if (received) {

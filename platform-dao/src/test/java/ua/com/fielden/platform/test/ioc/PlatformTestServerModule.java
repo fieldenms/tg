@@ -28,7 +28,6 @@ import ua.com.fielden.platform.test.domain.entities.daos.BogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IAdviceDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IBogieClassDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IBogieDao;
-import ua.com.fielden.platform.test.domain.entities.daos.IPersonDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IRotableClassDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IRotableDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWagonClassDao;
@@ -38,7 +37,6 @@ import ua.com.fielden.platform.test.domain.entities.daos.IWheelsetClassDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWheelsetDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWorkorderDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWorkshopDao;
-import ua.com.fielden.platform.test.domain.entities.daos.PersonDao;
 import ua.com.fielden.platform.test.domain.entities.daos.RotableClassDao;
 import ua.com.fielden.platform.test.domain.entities.daos.RotableDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgMeterReadingDao;
@@ -89,7 +87,6 @@ public class PlatformTestServerModule extends BasicWebServerModule {
     protected void configure() {
 	super.configure();
 	// bind DAO
-	bind(IPersonDao.class).to(PersonDao.class);
 	bind(IBogieDao.class).to(BogieDao.class);
 	bind(IWheelsetDao.class).to(WheelsetDao.class);
 	bind(IRotableDao.class).to(RotableDao.class);
