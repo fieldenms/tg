@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.Function;
@@ -890,7 +889,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 
     private static int i, j;
 
-    @Test @Ignore
+    @Test
     public void test_that_PropertyListeners_work() {
 	i = 0; j = 0;
 	final IPropertyListener listener = new IPropertyListener() {

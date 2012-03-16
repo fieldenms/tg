@@ -458,4 +458,8 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
 	dtm().getRepresentation().getSecondTick().setOrderedPropertiesByDefault(MasterEntity.class, ordering);
 	assertEquals("Default value is incorrect.", ordering, dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(MasterEntity.class));
     }
+
+    @Override
+    public void test_that_PropertyListeners_work() {
+    }
 }
