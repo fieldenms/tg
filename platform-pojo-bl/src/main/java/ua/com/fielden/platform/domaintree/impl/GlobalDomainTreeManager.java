@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import static ua.com.fielden.platform.equery.equery.select;
+import static ua.com.fielden.platform.entity.query.fluent.query.from;
+import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;
@@ -16,17 +17,17 @@ import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAnd
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.domaintree.master.impl.MasterDomainTreeManager;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController2;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController2;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -43,9 +44,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final EntityFactory factory;
     private final IUserProvider userProvider;
     private final IGlobalDomainTreeRepresentation gdtr;
-    private final IMainMenuItemController mainMenuItemController;
-    private final IEntityCentreConfigController entityCentreConfigController;
-    private final IEntityMasterConfigController entityMasterConfigController;
+    private final IMainMenuItemController2 mainMenuItemController;
+    private final IEntityCentreConfigController2 entityCentreConfigController;
+    private final IEntityMasterConfigController2 entityMasterConfigController;
 
     private final EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> persistentCentres;
     private final transient EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> currentCentres;
@@ -56,7 +57,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final transient EnhancementRootsMap<IMasterDomainTreeManager> currentMasters;
 
     @Inject
-    public GlobalDomainTreeManager(final ISerialiser serialiser, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfigController entityCentreConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {
+    public GlobalDomainTreeManager(final ISerialiser serialiser, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController2 mainMenuItemController, final IEntityCentreConfigController2 entityCentreConfigController, final IEntityMasterConfigController2 entityMasterConfigController, final IEntityLocatorConfigController2 entityLocatorConfigController) {
 	super(serialiser);
 	this.factory = factory;
 	this.userProvider = userProvider;
@@ -117,7 +118,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	}
 	final String rootName = root.getName();
 	final String title = title(root, name);
-	final IQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(rootName, title);
+	final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(rootName, title);
 	final int count = entityCentreConfigController.count(model);
 	if (count == 1) { // the persistence layer contains a entity-centre, so it should be retrieved and deserialised
 	    retrieveAndInit(root, name, model);
@@ -137,7 +138,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 		error("Unable to initialise a non-existent entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    }
 	} else if (count == 2) {
-	    final IQueryModel<EntityCentreConfig> model1 = modelForCurrentUser(rootName, title);
+	    final EntityResultQueryModel<EntityCentreConfig> model1 = modelForCurrentUser(rootName, title);
 	    final int count1 = entityCentreConfigController.count(model1);
 	    if (count1 == 1) { // for current user => 1 entity-centre, for base => another one with same title
 		// initialise an instance for current user (base configuration will be ignored)
@@ -157,8 +158,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param title
      * @return
      */
-    private IQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsers(final String rootName, final String title) {
-	final IQueryModel<EntityCentreConfig> model =
+    private EntityResultQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsers(final String rootName, final String title) {
+	final EntityResultQueryModel<EntityCentreConfig> model =
 	    /*    */select(EntityCentreConfig.class).where().//
 	    /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
 	    /*    */prop("title").eq().val(title).and().//
@@ -173,8 +174,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param title
      * @return
      */
-    private IQueryModel<EntityCentreConfig> modelForCurrentUser(final String rootName, final String title) {
-	final IQueryModel<EntityCentreConfig> model1 =
+    private EntityResultQueryModel<EntityCentreConfig> modelForCurrentUser(final String rootName, final String title) {
+	final EntityResultQueryModel<EntityCentreConfig> model1 =
 	    /*    */select(EntityCentreConfig.class).where().//
 	    /*    */prop("owner").eq().val(currentUser()).and().// look for entity-centres for only current user
 	    /*    */prop("title").eq().val(title).and().//
@@ -188,8 +189,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param rootName
      * @return
      */
-    private IQueryModel<EntityMasterConfig> masterModelForCurrentUser(final String rootName) {
-	final IQueryModel<EntityMasterConfig> model =
+    private EntityResultQueryModel<EntityMasterConfig> masterModelForCurrentUser(final String rootName) {
+	final EntityResultQueryModel<EntityMasterConfig> model =
 	    /*    */select(EntityMasterConfig.class).where().//
 	    /*    */prop("owner").eq().val(currentUser()).and().// look for entity-masters for only current user
 	    /*    */prop("masterType").eq().val(rootName).model();
@@ -202,8 +203,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param rootName
      * @return
      */
-    private IQueryModel<EntityMasterConfig> masterModelForBaseUser(final String rootName) {
-	final IQueryModel<EntityMasterConfig> model =
+    private EntityResultQueryModel<EntityMasterConfig> masterModelForBaseUser(final String rootName) {
+	final EntityResultQueryModel<EntityMasterConfig> model =
 	    /*    */select(EntityMasterConfig.class).where().//
 	    /*    */prop("owner").eq().val(baseOfTheCurrentUser()).and().// look for entity-masters for only base of the current user
 	    /*    */prop("masterType").eq().val(rootName).model();
@@ -227,8 +228,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param name
      * @param model
      */
-    private void retrieveAndInit(final Class<?> root, final String name, final IQueryModel<EntityCentreConfig> model) {
-	final EntityCentreConfig ecc = entityCentreConfigController.getEntity(model);
+    private void retrieveAndInit(final Class<?> root, final String name, final EntityResultQueryModel<EntityCentreConfig> model) {
+	final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).build());
 	final boolean owning = ecc.getOwner().equals(currentUser());
 	try {
 	    init(root, name, getSerialiser().deserialise(ecc.getConfigBody(), ICentreDomainTreeManagerAndEnhancer.class), owning);
@@ -247,8 +248,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param name
      * @param model
      */
-    private void retrieveAndInitMaster(final Class<?> root, final IQueryModel<EntityMasterConfig> model) {
-	final EntityMasterConfig emc = entityMasterConfigController.getEntity(model);
+    private void retrieveAndInitMaster(final Class<?> root, final EntityResultQueryModel<EntityMasterConfig> model) {
+	final EntityMasterConfig emc = entityMasterConfigController.getEntity(from(model).build());
 	try {
 	    initMaster(root, getSerialiser().deserialise(emc.getConfigBody(), IMasterDomainTreeManager.class));
 	    return;
@@ -416,10 +417,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    // save an instance of EntityCentreConfig with overridden body, which should exist in DB
 	    final String title = title(root, name);
 
-	    final IQueryModel<EntityCentreConfig> model = modelForCurrentUser(root.getName(), title);
+	    final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(root.getName(), title);
 	    final int count = entityCentreConfigController.count(model);
 	    if (count == 1) { // for current user => 1 entity-centre
-		final EntityCentreConfig ecc = entityCentreConfigController.getEntity(model);
+		final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).build());
 		ecc.setConfigBody(getSerialiser().serialise(currentMgr));
 		entityCentreConfigController.save(ecc);
 
@@ -487,7 +488,13 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final String rootName = root.getName();
 	final String newTitle = title(root, newName);
 
-	final IQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(rootName, newTitle);
+	final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(rootName, newTitle);
+	System.out.println("////////////////////////////////////////////////////////");
+
+	entityCentreConfigController.getEntities(from(model).build());
+
+	System.out.println("////////////////////////////////////////////////////////");
+
 	final int count = entityCentreConfigController.count(model);
 	if (count == 0) { // for current user or its base => there are no entity-centres, so persist a copy with a new title
 	    final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, currentUser(), newTitle, mainMenuItemController.findByKey(rootName));
@@ -567,7 +574,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     @Override
     public void initEntityMasterManager(final Class<?> root) {
 	final String rootName = root.getName();
-	final IQueryModel<EntityMasterConfig> model = masterModelForCurrentUser(rootName);
+	final EntityResultQueryModel<EntityMasterConfig> model = masterModelForCurrentUser(rootName);
 	final int count = entityMasterConfigController.count(model);
 	if (count == 1) { // the persistence layer contains an entity-master, so it should be retrieved and deserialised
 	    retrieveAndInitMaster(root, model);
@@ -584,7 +591,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	masterNotInitiliasedError(persistentMasters.get(root), root);
 
 	final String rootName = root.getName();
-	final IQueryModel<EntityMasterConfig> model = masterModelForCurrentUser(rootName);
+	final EntityResultQueryModel<EntityMasterConfig> model = masterModelForCurrentUser(rootName);
 	final int count = entityMasterConfigController.count(model);
 	if (count == 1) { // the persistence layer contains own entity-master, so the changes should be rejected
 	    currentMasters.put(root, initMasterManagerCrossReferences(EntityUtils.deepCopy(persistentMasters.get(root), getSerialiser())));
@@ -603,10 +610,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	masterPrepareInstanceBeforeSave(currentMgr);
 
 	// save an instance of EntityMasterConfig with overridden body
-	final IQueryModel<EntityMasterConfig> model = masterModelForCurrentUser(root.getName());
+	final EntityResultQueryModel<EntityMasterConfig> model = masterModelForCurrentUser(root.getName());
 	final int count = entityMasterConfigController.count(model);
 	if (count == 1) { // for current user => 1 entity-centre
-	    final EntityMasterConfig emc = entityMasterConfigController.getEntity(model);
+	    final EntityMasterConfig emc = entityMasterConfigController.getEntity(from(model).build());
 	    emc.setConfigBody(getSerialiser().serialise(currentMgr));
 	    entityMasterConfigController.save(emc);
 
@@ -632,7 +639,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     @Override
     public void initEntityMasterManagerByDefault(final Class<?> root) {
 	final String rootName = root.getName();
-	final IQueryModel<EntityMasterConfig> model = masterModelForBaseUser(rootName);
+	final EntityResultQueryModel<EntityMasterConfig> model = masterModelForBaseUser(rootName);
 	final int count = entityMasterConfigController.count(model);
 	if (count == 1) { // the persistence layer contains an entity-master for base user, so it should be retrieved and deserialised
 	    retrieveAndInitMaster(root, model);

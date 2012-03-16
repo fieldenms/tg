@@ -4,17 +4,17 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 import ua.com.fielden.platform.domaintree.testing.TgKryo1;
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.security.user.IUserDao2;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController2;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController2;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
@@ -22,9 +22,9 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
  * @author TG Team
  *
  */
-public class GlobalDomainTreeRepresentationTest extends DbDrivenTestCase {
+public class GlobalDomainTreeRepresentationTest extends DbDrivenTestCase2 {
     protected final ISerialiser serialiser = new TgKryo1(entityFactory, new ProvidedSerialisationClassProvider());
-    protected final IUserDao userDao = injector.getInstance(IUserDao.class);
+    protected final IUserDao2 userDao = injector.getInstance(IUserDao2.class);
     protected final IUserProvider baseUserProvider = new IUserProvider() {
 	@Override
 	public User getUser() {
@@ -43,10 +43,10 @@ public class GlobalDomainTreeRepresentationTest extends DbDrivenTestCase {
 	    return userDao.findById(2L, new fetchAll<User>(User.class));
 	}
     };
-    protected final IMainMenuItemController mainMenuItemController = injector.getInstance(IMainMenuItemController.class);
-    protected final IEntityCentreConfigController entityCentreConfigController = injector.getInstance(IEntityCentreConfigController.class);
-    protected final IEntityMasterConfigController entityMasterConfigController = injector.getInstance(IEntityMasterConfigController.class);
-    protected final IEntityLocatorConfigController entityLocatorConfigController = injector.getInstance(IEntityLocatorConfigController.class);
+    protected final IMainMenuItemController2 mainMenuItemController = injector.getInstance(IMainMenuItemController2.class);
+    protected final IEntityCentreConfigController2 entityCentreConfigController = injector.getInstance(IEntityCentreConfigController2.class);
+    protected final IEntityMasterConfigController2 entityMasterConfigController = injector.getInstance(IEntityMasterConfigController2.class);
+    protected final IEntityLocatorConfigController2 entityLocatorConfigController = injector.getInstance(IEntityLocatorConfigController2.class);
 
     public void test_that_default_locators_representation_works_for_non_base_user() {
 	final IGlobalDomainTreeManager managerForNonBaseUser = new GlobalDomainTreeManager(serialiser, entityFactory, nonBaseUserProvider, mainMenuItemController, entityCentreConfigController, entityMasterConfigController, entityLocatorConfigController);
