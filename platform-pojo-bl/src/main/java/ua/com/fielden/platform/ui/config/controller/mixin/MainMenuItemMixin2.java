@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -17,6 +16,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.entity.query.fluent.query.from;
 import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
@@ -72,14 +72,14 @@ public final class MainMenuItemMixin2 {
 	// get all items
 	final EntityResultQueryModel<MainMenuItem> model = select(MainMenuItem.class).model();
 	final OrderingModel orderBy = orderBy().prop("order").asc().model();
-	final List<MainMenuItem> allItemsAsLinearList = mmiController.getEntities(new QueryExecutionModel.Builder<MainMenuItem>(model).fetchModel(new fetchAll<MainMenuItem>(MainMenuItem.class)).orderModel(orderBy).build());
+	final List<MainMenuItem> allItemsAsLinearList = mmiController.getEntities(from(model).with(new fetchAll<MainMenuItem>(MainMenuItem.class)).with(orderBy).build());
 
 	// get those that are marked as invisible
 	final EntityResultQueryModel<MainMenuItem> invisibleItemsModel = select(MainMenuItem.class).as("mm").join(MainMenuItemInvisibility.class).as("viz").on() //
 	.prop("mm").eq().prop("viz.menuItem")//
 	.where().prop("viz.owner").eq().val(ownerId).model();
 	final OrderingModel invisibleItemsOrderBy = orderBy().prop("mm.order").asc().model();
-	final List<MainMenuItem> invisibleItems = mmiController.getEntities(new QueryExecutionModel.Builder<MainMenuItem>(invisibleItemsModel).fetchModel(new fetchAll<MainMenuItem>(MainMenuItem.class)).orderModel(invisibleItemsOrderBy).build()); // could be optimized by not fetching all
+	final List<MainMenuItem> invisibleItems = mmiController.getEntities(from(invisibleItemsModel).with(new fetchAll<MainMenuItem>(MainMenuItem.class)).with(invisibleItemsOrderBy).build()); // could be optimized by not fetching all
 
 	if (user.isBase()) { // set visibility property for menu items, which does not take into account hierarchical structure
 	    for (final MainMenuItem item : allItemsAsLinearList) {
@@ -118,7 +118,7 @@ public final class MainMenuItemMixin2 {
 
 	final OrderingModel orderBy = orderBy().prop("menuItem.order").asc().model();
 
-	final List<EntityCentreConfig> eccs = eccController.getEntities(new QueryExecutionModel.Builder<EntityCentreConfig>(model).orderModel(orderBy).build());
+	final List<EntityCentreConfig> eccs = eccController.getEntities(from(model).with(orderBy).build());
 
 	// iterate through the list of configurations and make new non-persistent instances of type MainMenuItem
 	// representing non-principal (i.e. save as) menu items of the same type as the referenced by the configuration menu item.

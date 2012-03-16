@@ -10,12 +10,12 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 
 import ua.com.fielden.platform.dao.MappingsGenerator;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.utils.EntityUtils;
+import static ua.com.fielden.platform.entity.query.fluent.query.from;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 public class EntityEnhancer<E extends AbstractEntity<?>> {
@@ -163,7 +163,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	    @SuppressWarnings("unchecked")
 	    final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(ID_PROPERTY_NAME).in().values(batch).model()/*.getModelWithAbstractEntities()*/;
 	    @SuppressWarnings("unchecked")
-	    final List<EntityContainer<T>> properties = new EntityFetcher<T>(session, entityFactory, mappingsGenerator, dbVersion, filter, username).listContainers(new QueryExecutionModel.Builder<T>(currTypePropertyModel).fetchModel(fetchModel).build(), null, null);
+	    final List<EntityContainer<T>> properties = new EntityFetcher<T>(session, entityFactory, mappingsGenerator, dbVersion, filter, username).listContainers(from(currTypePropertyModel).with(fetchModel).build(), null, null);
 	    result.addAll(properties);
 	    from = to;
 	    to = to + batchSize;

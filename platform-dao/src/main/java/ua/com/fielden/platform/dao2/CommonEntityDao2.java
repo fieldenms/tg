@@ -49,6 +49,7 @@ import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.entity.query.fluent.query.from;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 /**
@@ -300,6 +301,10 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	return evalNumOfPages(model, paramValues, 1);
     }
 
+    public int count(final EntityResultQueryModel<T> model) {
+	return count(model, Collections.<String, Object> emptyMap());
+    }
+
     /**
      * Fetches the results of the specified page based on the request of the given instance of {@link QueryExecutionModel}.
      *
@@ -524,7 +529,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	    throw new Result(new IllegalArgumentException("Null is not an acceptable value for eQuery model."));
 	}
 
-	final List<T> toBeDeleted = getEntities(new QueryExecutionModel.Builder(model).paramValues(paramValues).lightweight(true).build());
+	final List<T> toBeDeleted = getEntities(from(model).with(paramValues).lightweight(true).build());
 
 	for (final T entity : toBeDeleted) {
 	    defaultDelete(entity);

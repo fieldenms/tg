@@ -232,6 +232,8 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
      */
     int count(final EntityResultQueryModel<T> model, Map<String, Object> paramValues);
 
+    int count(final EntityResultQueryModel<T> model);
+
     /**
      * Returns all entities produced by the provided query.
      *

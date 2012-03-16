@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
-public class QueryExecutionModel<T extends AbstractEntity<?>> {
+public final class QueryExecutionModel<T extends AbstractEntity<?>> {
     private final EntityResultQueryModel<T> queryModel;
     private final OrderingModel orderModel;
     private final fetch<T> fetchModel;
@@ -43,6 +43,10 @@ public class QueryExecutionModel<T extends AbstractEntity<?>> {
         return lightweight;
     }
 
+    public static <E extends AbstractEntity<?>> Builder<E> from(final EntityResultQueryModel<E> queryModel) {
+	return new Builder<E>(queryModel);
+    }
+
     public static class Builder<T extends AbstractEntity<?>> {
 	    private EntityResultQueryModel<T> queryModel;
 	    private OrderingModel orderModel;
@@ -54,26 +58,26 @@ public class QueryExecutionModel<T extends AbstractEntity<?>> {
 	    return new QueryExecutionModel<T>(this);
 	}
 
-	public Builder(final EntityResultQueryModel<T> queryModel) {
+	private Builder(final EntityResultQueryModel<T> queryModel) {
 	    this.queryModel = queryModel;
 	}
 
-	public Builder<T> orderModel(final OrderingModel val) {
+	public Builder<T> with(final OrderingModel val) {
 	    orderModel = val;
 	    return this;
 	}
 
-	public Builder<T> fetchModel(final fetch<T> val) {
+	public Builder<T> with(final fetch<T> val) {
 	    fetchModel = val;
 	    return this;
 	}
 
-	public Builder<T> paramValues(final Map<String, Object> val) {
+	public Builder<T> with(final Map<String, Object> val) {
 	    paramValues.putAll(val);
 	    return this;
 	}
 
-	public Builder<T> paramValue(final String name, final Object value) {
+	public Builder<T> with(final String name, final Object value) {
 	    paramValues.put(name, value);
 	    return this;
 	}

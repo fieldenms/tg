@@ -7,7 +7,6 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao2.CommonEntityDao2;
 import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserRoleDao2;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.fetchAll;
@@ -20,6 +19,7 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.entity.query.fluent.query.from;
 import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
@@ -36,8 +36,7 @@ public class UserController2 extends CommonEntityDao2<User> implements IUserCont
     private final IUserRoleDao2 userRoleDao;
     private final IUserAndRoleAssociationDao2 userAssociationDao;
 
-    @SuppressWarnings("unchecked")
-    private final fetch<User> fetchModel = new fetch(User.class).with("roles", new fetch(UserAndRoleAssociation.class).with("userRole"));
+    private final fetch<User> fetchModel = new fetch<User>(User.class).with("roles", new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class).with("userRole"));
 
     @Inject
     public UserController2(final IUserRoleDao2 userRoleDao, final IUserAndRoleAssociationDao2 userAssociationDao, final IFilter filter) {
@@ -93,15 +92,15 @@ public class UserController2 extends CommonEntityDao2<User> implements IUserCont
 
     @Override
     public User findUserByKeyWithRoles(final String key) {
-	final EntityResultQueryModel<User> model = select(User.class).where().prop("key").eq().val(key).model();
-	return getEntity(new QueryExecutionModel.Builder<User>(model).fetchModel(fetchModel).build());
+	final EntityResultQueryModel<User> query = select(User.class).where().prop("key").eq().val(key).model();
+	return getEntity(from(query).with(fetchModel).build());
     }
 
     @Override
     public List<User> findAllUsersWithRoles() {
 	final EntityResultQueryModel<User> model = select(User.class).where().prop("key").isNotNull().model();
 	final OrderingModel orderBy = orderBy().prop("key").asc().model();
-	return getEntities(new QueryExecutionModel.Builder<User>(model).fetchModel(fetchModel).orderModel(orderBy).build());
+	return getEntities(from(model).with(fetchModel).with(orderBy).build());
     }
 
     @Override

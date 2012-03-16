@@ -7,12 +7,12 @@ import java.util.List;
 
 import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.dao2.IEntityDao2;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import static ua.com.fielden.platform.entity.query.fluent.query.from;
 import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
@@ -67,12 +67,12 @@ public class EntityQueryValueMatcher2<T extends AbstractEntity<?>> implements IV
 
     @Override
     public List<T> findMatches(final String value) {
-	return dao.getPage(new QueryExecutionModel.Builder<T>(defaultModel).orderModel(defaultOrdering).paramValue(propertyParamName, value).build(), 0, pageSize).data();
+	return dao.getPage(from(defaultModel).with(defaultOrdering).with(propertyParamName, value).build(), 0, pageSize).data();
     }
 
     @Override
     public List<T> findMatchesWithModel(final String value) {
-	return dao.getPage(new QueryExecutionModel.Builder<T>(defaultModel).orderModel(defaultOrdering).paramValue(propertyParamName, value).fetchModel(fetchModel).build(), 0, pageSize).data();
+	return dao.getPage(from(defaultModel).with(defaultOrdering).with(propertyParamName, value).with(fetchModel).build(), 0, pageSize).data();
     }
 
     public EntityQueryValueMatcher2<T> setPageSize(final int pageSize) {

@@ -20,12 +20,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.fetch;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 
 import com.google.inject.Injector;
@@ -216,17 +211,5 @@ public abstract class DbDrivenTestCase2 extends TestCase {
 	localTransaction.commit();
 	hibernateUtil.getSessionFactory().getCurrentSession().close();
 	super.tearDown();
-    }
-
-    public <E extends AbstractEntity<?>> QueryExecutionModel<E> query(final EntityResultQueryModel<E> query) {
-	return new QueryExecutionModel.Builder<E>(query).build();
-    }
-
-    public <E extends AbstractEntity<?>> QueryExecutionModel<E> query(final EntityResultQueryModel<E> query, final fetch<E> fetchModel) {
-	return new QueryExecutionModel.Builder<E>(query).fetchModel(fetchModel).build();
-    }
-
-    public <E extends AbstractEntity<?>> QueryExecutionModel<E> query(final EntityResultQueryModel<E> query, final OrderingModel orderBy, final fetch<E> fetchModel) {
-	return new QueryExecutionModel.Builder<E>(query).fetchModel(fetchModel).orderModel(orderBy).build();
     }
 }

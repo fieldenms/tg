@@ -6,7 +6,6 @@ import java.util.List;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao2.CommonEntityDao2;
 import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -18,6 +17,7 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.entity.query.fluent.query.from;
 import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
@@ -43,7 +43,7 @@ public class SecurityRoleAssociationDao2 extends CommonEntityDao2<SecurityRoleAs
     public List<SecurityRoleAssociation> findAssociationsFor(final  Class<? extends ISecurityToken> securityToken) {
 	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).where().prop("securityToken").eq().val(securityToken.getName()).model();
 	final OrderingModel orderBy = orderBy().prop("role").asc().model();
-	return getEntities(new QueryExecutionModel.Builder<SecurityRoleAssociation>(model).fetchModel(new fetchAll(SecurityRoleAssociation.class)).orderModel(orderBy).build());
+	return getEntities(from(model).with(new fetchAll<SecurityRoleAssociation>(SecurityRoleAssociation.class)).with(orderBy).build());
     }
 
     @Override

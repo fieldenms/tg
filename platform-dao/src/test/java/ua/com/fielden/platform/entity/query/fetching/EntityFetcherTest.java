@@ -8,7 +8,6 @@ import org.hibernate.Session;
 import ua.com.fielden.platform.dao.FirstLevelSecurityToken1;
 import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao2.AggregatesQueryExecutionModel;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.AggregatesFetcher;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -24,6 +23,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.types.Money;
+import static ua.com.fielden.platform.entity.query.fluent.query.from;
 import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
@@ -37,7 +37,7 @@ public class EntityFetcherTest extends DbDrivenTestCase2 {
 
     public void test_vehicle_model_retrieval0() {
 	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("key").eq().val("316").model();
-	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel.Builder(model).build());
+	final List<TgVehicleModel> models = fetcher().list(from(model).build());
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", null, vehModel.getMake());
@@ -54,7 +54,7 @@ public class EntityFetcherTest extends DbDrivenTestCase2 {
 		yield().prop("make.key").as("make.key").
 		yield().prop("make.desc").as("make.desc").
 		modelAsEntity(TgVehicleModel.class);
-	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel.Builder(model).build());
+	final List<TgVehicleModel> models = fetcher().list(from(model).build());
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
@@ -71,7 +71,7 @@ public class EntityFetcherTest extends DbDrivenTestCase2 {
 		yield().prop("make.key").as("make.key").
 		yield().prop("make.desc").as("make.desc").
 		modelAsEntity(TgVehicleModel.class);
-	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel.Builder(model).build());
+	final List<TgVehicleModel> models = fetcher().list(from(model).build());
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
@@ -80,7 +80,7 @@ public class EntityFetcherTest extends DbDrivenTestCase2 {
     public void test_vehicle_model_retrieval3() {
 	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("make").eq().val(1). //
 		modelAsEntity(TgVehicleModel.class);
-	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel.Builder<TgVehicleModel>(model).fetchModel(new fetch<TgVehicleModel>(TgVehicleModel.class).with("make")).build());
+	final List<TgVehicleModel> models = fetcher().list(from(model).with(new fetch<TgVehicleModel>(TgVehicleModel.class).with("make")).build());
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
@@ -88,7 +88,7 @@ public class EntityFetcherTest extends DbDrivenTestCase2 {
 
     public void test_vehicle_model_retrieval4() {
 	final EntityResultQueryModel<TgVehicleMake> model = select(TgVehicleMake.class).where().prop("key").in().params("param1", "param2").model();
-	final List<TgVehicleModel> models = fetcher().list(new QueryExecutionModel.Builder(model).paramValue("param1", "MERC").paramValue("param2", "BMW").build());
+	final List<TgVehicleModel> models = fetcher().list(from(model).with("param1", "MERC").with("param2", "BMW").build());
     	assertEquals("Incorrect count", 2, models.size());
     }
 
@@ -101,7 +101,7 @@ public class EntityFetcherTest extends DbDrivenTestCase2 {
 
     public void test_vehicle_model_retrieval6() {
 	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("price.amount").ge().val(100).model();
-	final List<TgVehicle> values = fetcher().list(new QueryExecutionModel.Builder(model).build());
+	final List<TgVehicle> values = fetcher().list(from(model).build());
     	assertEquals("Incorrect count", 1, values.size());
     	assertEquals("Incorrect count", new Money("100.00"), values.get(0).getPurchasePrice());
     }
@@ -207,7 +207,7 @@ public class EntityFetcherTest extends DbDrivenTestCase2 {
     public void test_ordered_vehicle_retrieval16() {
 	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).model();
 	final OrderingModel ordering = orderBy().prop("model.make.key").desc().model();
-	final List<TgVehicle> models = fetcher().list(new QueryExecutionModel.Builder(qry).orderModel(ordering).build());
+	final List<TgVehicle> models = fetcher().list(from(qry).with(ordering).build());
     	final TgVehicle veh = models.get(0);
 	assertEquals("Incorrect key", "CAR2", veh.getKey());
     }
@@ -238,18 +238,18 @@ public class EntityFetcherTest extends DbDrivenTestCase2 {
 
     public void test_vehile_18() {
 	final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicleMake.class).where().prop("key").eq().val("MERC").model();
-	final List<TgVehicleMake> makes = fetcher().list(new QueryExecutionModel.Builder(qry).build());
+	final List<TgVehicleMake> makes = fetcher().list(from(qry).build());
     	final TgVehicleMake make = makes.get(0);
 
 	final EntityResultQueryModel<TgVehicle> qry2 = select(TgVehicle.class).where().prop("model.make").eq().val(make).model();
-	final List<TgVehicle> models = fetcher().list(new QueryExecutionModel.Builder(qry2).build());
+	final List<TgVehicle> models = fetcher().list(from(qry2).build());
 	assertEquals("Incorrect key", "CAR2", models.get(0).getKey());
     }
 
     public void test_19() {
 	final EntityResultQueryModel<SecurityRoleAssociation> associationModel = select(SecurityRoleAssociation.class). //
 		where().prop("securityToken").eq().val(FirstLevelSecurityToken1.class.getName()).model();
-	final List<SecurityRoleAssociation> entities = fetcher().list(new QueryExecutionModel.Builder(associationModel).build());
+	final List<SecurityRoleAssociation> entities = fetcher().list(from(associationModel).build());
 	assertEquals("Incorrect count", 2, entities.size());
 	assertEquals("Incorrect key", FirstLevelSecurityToken1.class, entities.get(0).getSecurityToken());
 
@@ -257,7 +257,7 @@ public class EntityFetcherTest extends DbDrivenTestCase2 {
 
     public void test_vehile_20() {
 	final EntityResultQueryModel<TgVehicle> qry2 = select(TgVehicle.class).where().prop("model.make.key").iLike().val("me%").and().prop("key").iLike().val("%2").model();
-	final List<TgVehicle> models = fetcher().list(new QueryExecutionModel.Builder(qry2).build());
+	final List<TgVehicle> models = fetcher().list(from(qry2).build());
 	assertEquals("Incorrect key", "CAR2", models.get(0).getKey());
     }
 

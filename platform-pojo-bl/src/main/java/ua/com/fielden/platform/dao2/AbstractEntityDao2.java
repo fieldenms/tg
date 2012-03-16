@@ -50,7 +50,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     protected QueryExecutionModel<T> produceDefaultQueryExecutionModel(final Class<T> entityType) {
 	final EntityResultQueryModel<T> query = select(entityType).model();
 	final OrderingModel orderBy = orderBy().prop(ID_PROPERTY_NAME).asc().model();
-	return new QueryExecutionModel.Builder<T>(query).orderModel(orderBy).build();
+	return QueryExecutionModel.<T>from(query).with(orderBy).build();
     }
 
     protected QueryExecutionModel<T> getDefaultQueryExecutionModel() {
@@ -80,7 +80,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
 	try {
 	    final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(ID_PROPERTY_NAME).eq().val(id).model();
-	    return getEntity(new QueryExecutionModel.Builder<T>(query).fetchModel(fetchModel).build());
+	    return getEntity(QueryExecutionModel.<T>from(query).with(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
@@ -107,7 +107,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     @Override
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
 	try {
-	    return getEntity(new QueryExecutionModel.Builder<T>(createQueryByKey(keyValues)).fetchModel(fetchModel).build());
+	    return getEntity(QueryExecutionModel.<T>from((createQueryByKey(keyValues))).with(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
