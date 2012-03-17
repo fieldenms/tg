@@ -182,7 +182,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	    } else if (!entity.getDirtyProperties().isEmpty()) {
 		// let's also make sure that duplicate entities are not allowed
 		final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop("id").as("id").modelAsAggregate();
-		final List<EntityAggregates> ids = new AggregatesFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, null, null).list(new AggregatesQueryExecutionModel.Builder(model).build());
+		final List<EntityAggregates> ids = new AggregatesFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, null, null).list(from(model).build());
 		final int count = ids.size();
 		if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get("id")).longValue())) {
 		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " entity already exists."));
@@ -397,7 +397,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	final DateTime st = new DateTime();
 	int resultSize = 0;
 	final AggregatedResultQueryModel countQuery = select(model).yield().countAll().as("count").modelAsAggregate();
-	final AggregatesQueryExecutionModel countModel = new AggregatesQueryExecutionModel.Builder(countQuery).paramValues(paramValues).lightweight(true).build();
+	final AggregatesQueryExecutionModel countModel = from(countQuery).with(paramValues).lightweight(true).build();
 	final List<EntityAggregates> counts = new AggregatesFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()). //
 		list(countModel, null, null);
 

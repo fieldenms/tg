@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.dao2.AggregatesQueryExecutionModel;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.dao2.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -38,4 +39,7 @@ public class query {
 	return QueryExecutionModel.from(queryModel);
     }
 
+    public static ua.com.fielden.platform.dao2.AggregatesQueryExecutionModel.Builder from(final AggregatedResultQueryModel queryModel) {
+	return AggregatesQueryExecutionModel.from(queryModel);
+    }
 }

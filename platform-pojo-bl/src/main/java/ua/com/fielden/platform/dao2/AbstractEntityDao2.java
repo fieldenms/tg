@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.dao2;
 
-import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
-
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +16,9 @@ import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import static ua.com.fielden.platform.entity.query.fluent.query.from;
+import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 /**
  * Provides common implementation shared between Hibernate and REST implementation of DAOs.
@@ -52,7 +52,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     protected QueryExecutionModel<T> produceDefaultQueryExecutionModel(final Class<T> entityType) {
 	final EntityResultQueryModel<T> query = select(entityType).model();
 	final OrderingModel orderBy = orderBy().prop(ID_PROPERTY_NAME).asc().model();
-	return QueryExecutionModel.<T>from(query).with(orderBy).build();
+	return from(query).with(orderBy).build();
     }
 
     protected QueryExecutionModel<T> getDefaultQueryExecutionModel() {
@@ -82,7 +82,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
 	try {
 	    final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(ID_PROPERTY_NAME).eq().val(id).model();
-	    return getEntity(QueryExecutionModel.<T>from(query).with(fetchModel).build());
+	    return getEntity(from(query).with(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
@@ -109,7 +109,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     @Override
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
 	try {
-	    return getEntity(QueryExecutionModel.<T>from((createQueryByKey(keyValues))).with(fetchModel).build());
+	    return getEntity(from((createQueryByKey(keyValues))).with(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}

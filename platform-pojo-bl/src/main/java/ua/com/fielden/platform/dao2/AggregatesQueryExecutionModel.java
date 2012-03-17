@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
-public class AggregatesQueryExecutionModel {
+public final class AggregatesQueryExecutionModel {
     private final AggregatedResultQueryModel queryModel;
     private final OrderingModel orderModel;
     private final fetch<EntityAggregates> fetchModel;
@@ -43,6 +43,10 @@ public class AggregatesQueryExecutionModel {
         return lightweight;
     }
 
+    public static Builder from(final AggregatedResultQueryModel queryModel) {
+	return new Builder(queryModel);
+    }
+
     public static class Builder {
 	    private AggregatedResultQueryModel queryModel;
 	    private OrderingModel orderModel;
@@ -58,22 +62,22 @@ public class AggregatesQueryExecutionModel {
 	    this.queryModel = queryModel;
 	}
 
-	public Builder orderModel(final OrderingModel val) {
+	public Builder with(final OrderingModel val) {
 	    orderModel = val;
 	    return this;
 	}
 
-	public Builder fetchModel(final fetch<EntityAggregates> val) {
+	public Builder with(final fetch<EntityAggregates> val) {
 	    fetchModel = val;
 	    return this;
 	}
 
-	public Builder paramValues(final Map<String, Object> val) {
+	public Builder with(final Map<String, Object> val) {
 	    paramValues.putAll(val);
 	    return this;
 	}
 
-	public Builder paramValue(final String name, final Object value) {
+	public Builder with(final String name, final Object value) {
 	    paramValues.put(name, value);
 	    return this;
 	}
