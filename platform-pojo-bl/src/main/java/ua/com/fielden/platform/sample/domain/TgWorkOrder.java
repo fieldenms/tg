@@ -10,6 +10,8 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 
 @KeyType(String.class)
@@ -38,6 +40,12 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Yearly Cost", desc = "Yearly Cost")
     private Money yearlyCost;
+
+    @IsProperty(TgWorkOrder.class)
+    @MapTo
+    @Title(value = "Important Property", desc = "Property that has a special meaning")
+    private PropertyDescriptor<TgWorkOrder> importantProperty;
+
 
     @Observable
     public TgWorkOrder setYearlyCost(final Money yearlyCost) {
@@ -71,11 +79,28 @@ public class TgWorkOrder extends AbstractEntity<String> {
 	return actCost;
     }
 
+    public PropertyDescriptor<TgWorkOrder> getImportantProperty() {
+        return importantProperty;
+    }
 
+    @Observable
+    public void setImportantProperty(final PropertyDescriptor<TgWorkOrder> importantProperty) {
+        this.importantProperty = importantProperty;
+    }
 
     /**
      * Constructor for (@link EntityFactory}.
      */
     protected TgWorkOrder() {
+    }
+
+    public TgVehicle getVehicle() {
+        return vehicle;
+    }
+
+    @Observable
+    @EntityExists(TgVehicle.class)
+    public void setVehicle(final TgVehicle vehicle) {
+        this.vehicle = vehicle;
     }
 }

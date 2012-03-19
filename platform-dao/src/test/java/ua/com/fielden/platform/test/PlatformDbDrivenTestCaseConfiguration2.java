@@ -16,6 +16,7 @@ import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
+import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
@@ -40,10 +42,10 @@ import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntityKey;
-import ua.com.fielden.platform.test.ioc.DaoTestHibernateModule;
 import ua.com.fielden.platform.test.ioc.DaoTestHibernateModule2;
 import ua.com.fielden.platform.types.Money;
 
@@ -53,7 +55,7 @@ import com.google.inject.Provider;
 
 
 /**
- * Provides platform specific implementation of {@link IDbDrivenTestCaseConfiguration}, which is mainly related to the use of {@link DaoTestHibernateModule}.
+ * Provides platform specific implementation of {@link IDbDrivenTestCaseConfiguration}, which is mainly related to the use of {@link DaoTestHibernateModule2}.
  *
  * @author TG Team
  *
@@ -78,6 +80,7 @@ public class PlatformDbDrivenTestCaseConfiguration2 implements IDbDrivenTestCase
 	hibTypeDefaults.put(Boolean.class, YesNoType.class);
 	hibTypeDefaults.put(Date.class, DateTimeType.class);
 	hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+	hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
 	testDomain.addAll(PlatformDomainTypes.types);
 	testDomain.add(CompositeEntity.class);
 	testDomain.add(CompositeEntityKey.class);
@@ -97,7 +100,7 @@ public class PlatformDbDrivenTestCaseConfiguration2 implements IDbDrivenTestCase
 	testDomain.add(TgOrgUnit3.class);
 	testDomain.add(TgOrgUnit4.class);
 	testDomain.add(TgOrgUnit5.class);
-	//testDomain.add(Person.class);
+	testDomain.add(TgWorkOrder.class);
     }
 
 

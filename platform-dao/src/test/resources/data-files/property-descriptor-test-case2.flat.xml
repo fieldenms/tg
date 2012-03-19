@@ -1,0 +1,7 @@
+<dataset>
+	<UNIQUE_ID _ID="1" NEXT_VALUE="501"  _VERSION="0"/>
+
+	<TGWORKORDER_ _ID="1" KEY_="WO_001" ACTCOST_="0" ESTCOST_="0" YEARLYCOST_="0" IMPORTANTPROPERTY_="ua.com.fielden.platform.sample.domain.TgWorkOrder:vehicle"/>
+	<TGWORKORDER_ _ID="2" KEY_="WO_002" ACTCOST_="0" ESTCOST_="0" YEARLYCOST_="0"/>
+			
+</dataset>	

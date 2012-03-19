@@ -10,7 +10,7 @@ import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserRoleDao2;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
+import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao2;
 import ua.com.fielden.platform.security.provider.IUserController2;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
@@ -22,7 +22,7 @@ import static ua.com.fielden.platform.entity.query.fluent.query.select;
 
 
 /**
- * Test case for the {@link IPersonDao}, {@link IUserRoleDao}, {@link IUserAndRoleAssociationDao}, and {@link SecurityRoleAssociationDao} classes
+ * Test case for the {@link IUserRoleDao2}, {@link IUserAndRoleAssociationDao2}, and {@link SecurityRoleAssociationDao2} classes
  *
  * @author TG Team
  *
@@ -179,7 +179,6 @@ public class UserUserRoleTestCase2 extends DbDrivenTestCase2 {
 	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 0, roles.size());
     }
 
-    //TODO fix
     public void test_count_association_between_user_and_token() {
 	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", FirstLevelSecurityToken1.class));
 	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", ThirdLevelSecurityToken1.class));
@@ -190,5 +189,4 @@ public class UserUserRoleTestCase2 extends DbDrivenTestCase2 {
     protected String[] getDataSetPathsForInsert() {
 	return new String[] { "src/test/resources/data-files/user-user_role-test-case.flat.xml" };
     }
-
 }

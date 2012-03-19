@@ -49,6 +49,10 @@ public class PropertyDescriptorType implements UserType, IPropertyDescriptorType
 
     @Override
     public Object instantiate(final Object argument, final EntityFactory factory) {
+	if (argument == null) {
+	    return null;
+	}
+
 	try {
 	    return PropertyDescriptor.fromString((String) argument, factory);
 	} catch (final Exception e) {
