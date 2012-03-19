@@ -6,12 +6,14 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrderingListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager.IPropertyUsageListener;
@@ -308,5 +310,39 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 	dtm().getRepresentation().warmUp(MasterEntity.class, "entityProp.entityProp.slaveEntityProp");
 	assertEquals("Incorrect value 'i'.", 1, i);
 	assertEquals("Incorrect value 'j'.", 1, j);
+    }
+
+    @Test
+    public void test_that_PropertyOrderingListeners_work() {
+	i = 0;
+	final IPropertyOrderingListener listener = new IPropertyOrderingListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final List<Pair<String, Ordering>> newOrderedProperties, final List<Pair<String, Ordering>> oldState) {
+		i++;
+	    }
+	};
+	dtm().getSecondTick().addPropertyOrderingListener(listener);
+
+	assertEquals("Incorrect value 'i'.", 0, i);
+
+	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+
+	assertEquals("Incorrect value 'i'.", 1, i);
+
+	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+
+	assertEquals("Incorrect value 'i'.", 2, i);
+
+	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
+	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+
+	assertEquals("Incorrect value 'i'.", 3, i);
+
+	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+
+	assertEquals("Incorrect value 'i'.", 4, i);
     }
 }

@@ -101,4 +101,8 @@ public class AnalysisDomainTreeManagerTest extends AbstractAnalysisDomainTreeMan
     @Override
     public void test_that_PropertyUsageListeners_work() {
     }
+
+    @Override
+    public void test_that_PropertyOrderingListeners_work() {
+    }
 }

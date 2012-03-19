@@ -105,4 +105,8 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
     @Override
     public void test_that_PropertyUsageListeners_work() {
     }
+
+    @Override
+    public void test_that_PropertyOrderingListeners_work() {
+    }
 }

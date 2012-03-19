@@ -601,6 +601,18 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
+	public boolean addPropertyOrderingListener(final IPropertyOrderingListener listener) {
+	    // TODO Auto-generated method stub
+	    throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
+	}
+
+	@Override
+	public boolean removePropertyOrderingListener(final IPropertyOrderingListener listener) {
+	    // TODO Auto-generated method stub
+	    throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
+	}
+
+	@Override
 	public int getWidth(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a 'width' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return (propertiesWidths.containsKey(key(root, property))) ? propertiesWidths.get(key(root, property)) : tr().getWidthByDefault(root, property);

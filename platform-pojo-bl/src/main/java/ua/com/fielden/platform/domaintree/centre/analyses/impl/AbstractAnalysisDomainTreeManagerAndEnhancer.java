@@ -162,6 +162,16 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
 	public boolean removePropertyUsageListener(final IPropertyUsageListener listener) {
 	    return base().removePropertyUsageListener(listener);
 	}
+
+	@Override
+	public boolean addPropertyOrderingListener(final IPropertyOrderingListener listener) {
+	    return base().addPropertyOrderingListener(listener);
+	}
+
+	@Override
+	public boolean removePropertyOrderingListener(final IPropertyOrderingListener listener) {
+	    return base().removePropertyOrderingListener(listener);
+	}
     }
 
     /**

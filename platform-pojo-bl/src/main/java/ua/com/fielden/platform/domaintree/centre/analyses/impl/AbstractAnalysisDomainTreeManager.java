@@ -194,6 +194,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
 	private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
 	private final transient List<IPropertyUsageListener> propertyUsageListeners;
+	private final transient List<IPropertyOrderingListener> propertyOrderingListeners;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
@@ -204,6 +205,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    rootsListsOfOrderings = createRootsMap();
 	    rootsListsOfUsedProperties = createRootsMap();
 	    propertyUsageListeners = new ArrayList<IPropertyUsageListener>();
+	    propertyOrderingListeners = new ArrayList<IPropertyOrderingListener>();
 	}
 
 	@Override
@@ -284,10 +286,27 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 		    } else { // Ordering.DESCENDING
 			rootsListsOfOrderings.get(root).remove(index);
 		    }
+		    for (final IPropertyOrderingListener listener : propertyOrderingListeners) {
+			listener.propertyStateChanged(root, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(root)), null);
+		    }
 		    return;
 		}
 	    } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
 	    rootsListsOfOrderings.get(root).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
+
+	    for (final IPropertyOrderingListener listener : propertyOrderingListeners) {
+		listener.propertyStateChanged(root, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(root)), null);
+	    }
+	}
+
+	@Override
+	public boolean addPropertyOrderingListener(final IPropertyOrderingListener listener) {
+	    return propertyOrderingListeners.add(listener);
+	}
+
+	@Override
+	public boolean removePropertyOrderingListener(final IPropertyOrderingListener listener) {
+	    return propertyOrderingListeners.remove(listener);
 	}
 
 	@Override

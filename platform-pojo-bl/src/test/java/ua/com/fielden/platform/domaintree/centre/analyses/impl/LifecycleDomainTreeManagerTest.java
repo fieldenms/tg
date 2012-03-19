@@ -147,4 +147,8 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
     @Override
     public void test_that_PropertyUsageListeners_work() {
     }
+
+    @Override
+    public void test_that_PropertyOrderingListeners_work() {
+    }
 }

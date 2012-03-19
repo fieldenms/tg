@@ -334,6 +334,18 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
+	public boolean addPropertyOrderingListener(final IPropertyOrderingListener listener) {
+	    // TODO Auto-generated method stub
+	    throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
+	}
+
+	@Override
+	public boolean removePropertyOrderingListener(final IPropertyOrderingListener listener) {
+	    // TODO Auto-generated method stub
+	    throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
+	}
+
+	@Override
 	public int getWidth(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    return base().getWidth(enhancer().getManagedType(root), property);
