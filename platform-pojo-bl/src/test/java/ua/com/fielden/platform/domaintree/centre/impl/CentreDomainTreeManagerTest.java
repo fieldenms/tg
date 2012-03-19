@@ -849,4 +849,8 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     @Override
     public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
     }
+
+    @Override
+    public void test_that_PropertyCheckingListeners_work() {
+    }
 }

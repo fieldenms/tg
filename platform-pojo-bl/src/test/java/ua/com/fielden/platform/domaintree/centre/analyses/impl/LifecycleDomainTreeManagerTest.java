@@ -14,8 +14,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeManager.ILifecycleDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -144,5 +142,9 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 	// Alter and check //
 	assertTrue("The first tick reference should be the same.", dtm() == dtm().setTotal(true));
 	assertEquals("The IsTotal value should be adjusted.", true, dtm().isTotal());
+    }
+
+    @Override
+    public void test_that_PropertyUsageListeners_work() {
     }
 }

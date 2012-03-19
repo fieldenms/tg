@@ -93,6 +93,16 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
 	    // inject an enhanced type into method implementation
 	    return base().usedProperties(enhancer().getManagedType(root));
 	}
+
+	@Override
+	public boolean addPropertyUsageListener(final IPropertyUsageListener listener) {
+	    return base().addPropertyUsageListener(listener);
+	}
+
+	@Override
+	public boolean removePropertyUsageListener(final IPropertyUsageListener listener) {
+	    return base().removePropertyUsageListener(listener);
+	}
     }
 
     /**
@@ -141,6 +151,16 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
 	public void toggleOrdering(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    base().toggleOrdering(enhancer().getManagedType(root), property);
+	}
+
+	@Override
+	public boolean addPropertyUsageListener(final IPropertyUsageListener listener) {
+	    return base().addPropertyUsageListener(listener);
+	}
+
+	@Override
+	public boolean removePropertyUsageListener(final IPropertyUsageListener listener) {
+	    return base().removePropertyUsageListener(listener);
 	}
     }
 

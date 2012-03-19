@@ -101,6 +101,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	private static final long serialVersionUID = 4659406246345595522L;
 
 	private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
+	private final transient List<IPropertyUsageListener> propertyUsageListeners;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
@@ -109,6 +110,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	public AbstractAnalysisAddToDistributionTickManager() {
 	    super();
 	    rootsListsOfUsedProperties = createRootsMap();
+	    propertyUsageListeners = new ArrayList<IPropertyUsageListener>();
 	}
 
 	@Override
@@ -125,6 +127,19 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    } else if (!check) {
 		listOfUsedProperties.remove(property);
 	    }
+	    for (final IPropertyUsageListener listener : propertyUsageListeners) {
+		listener.propertyStateChanged(root, property, check, null);
+	    }
+	}
+
+	@Override
+	public boolean addPropertyUsageListener(final IPropertyUsageListener listener) {
+	    return propertyUsageListeners.add(listener);
+	}
+
+	@Override
+	public boolean removePropertyUsageListener(final IPropertyUsageListener listener) {
+	    return propertyUsageListeners.remove(listener);
 	}
 
 	protected List<String> getAndInitUsedProperties(final Class<?> root, final String property) {
@@ -178,6 +193,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 
 	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
 	private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
+	private final transient List<IPropertyUsageListener> propertyUsageListeners;
 
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
@@ -187,6 +203,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    super();
 	    rootsListsOfOrderings = createRootsMap();
 	    rootsListsOfUsedProperties = createRootsMap();
+	    propertyUsageListeners = new ArrayList<IPropertyUsageListener>();
 	}
 
 	@Override
@@ -208,6 +225,19 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    } else if (!check) {
 		listOfUsedProperties.remove(property);
 	    }
+	    for (final IPropertyUsageListener listener : propertyUsageListeners) {
+		listener.propertyStateChanged(root, property, check, null);
+	    }
+	}
+
+	@Override
+	public boolean addPropertyUsageListener(final IPropertyUsageListener listener) {
+	    return propertyUsageListeners.add(listener);
+	}
+
+	@Override
+	public boolean removePropertyUsageListener(final IPropertyUsageListener listener) {
+	    return propertyUsageListeners.remove(listener);
 	}
 
 	protected List<String> getAndInitUsedProperties(final Class<?> root, final String property) {

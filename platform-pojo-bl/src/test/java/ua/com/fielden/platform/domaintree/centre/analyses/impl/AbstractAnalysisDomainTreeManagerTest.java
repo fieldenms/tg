@@ -14,6 +14,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager.IPropertyUsageListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
@@ -265,5 +266,47 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 
     @Override
     public void test_that_CHECKed_properties_order_is_correct_and_can_be_altered() throws Exception {
+    }
+
+    @Override
+    public void test_that_PropertyCheckingListeners_work() {
+    }
+
+    private static int i, j;
+
+    @Test
+    public void test_that_PropertyUsageListeners_work() {
+	i = 0; j = 0;
+	final IPropertyUsageListener listener = new IPropertyUsageListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
+		if (hasBeenUsed == null) {
+		    throw new IllegalArgumentException("'hasBeenUsed' cannot be null.");
+		}
+		if (hasBeenUsed) {
+		    i++;
+		} else {
+		    j++;
+		}
+	    }
+	};
+	dtm().getFirstTick().addPropertyUsageListener(listener);
+
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	final String property = "booleanProp";
+	dtm().getFirstTick().check(MasterEntity.class, property, true);
+	dtm().getFirstTick().use(MasterEntity.class, property, true);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getFirstTick().use(MasterEntity.class, property, false);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
+
+	dtm().getRepresentation().warmUp(MasterEntity.class, "entityProp.entityProp.slaveEntityProp");
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
     }
 }

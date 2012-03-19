@@ -17,6 +17,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager.IPropertyCheckingListener;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
@@ -467,5 +468,41 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	assertFalse("The calculated property with the same name should 'become' disabled.", copy.getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
 	assertFalse("The calculated property with the same name should 'become' immutably unchecked.", copy.getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
 	assertFalse("The calculated property with the same name should 'become' checked.", copy.getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
+    }
+
+    private static int i, j;
+
+    @Test
+    public void test_that_PropertyCheckingListeners_work() {
+	i = 0; j = 0;
+	final IPropertyCheckingListener listener = new IPropertyCheckingListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState) {
+		if (hasBeenChecked == null) {
+		    throw new IllegalArgumentException("'hasBeenChecked' cannot be null.");
+		}
+		if (hasBeenChecked) {
+		    i++;
+		} else {
+		    j++;
+		}
+	    }
+	};
+	dtm().getFirstTick().addPropertyCheckingListener(listener);
+
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getRepresentation().getFirstTick().checkImmutably(MasterEntity.class, "bigDecimalProp");
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getFirstTick().check(MasterEntity.class, "integerProp", true);
+	assertEquals("Incorrect value 'i'.", 2, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getRepresentation().warmUp(MasterEntity.class, "entityProp.entityProp.slaveEntityProp");
+	assertEquals("Incorrect value 'i'.", 2, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
     }
 }

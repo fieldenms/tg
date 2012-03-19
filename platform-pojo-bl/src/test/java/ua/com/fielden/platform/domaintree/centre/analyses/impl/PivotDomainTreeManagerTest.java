@@ -8,8 +8,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 
 
@@ -102,5 +100,9 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
 	checkOrSetMethodValues(95, "dateProp", dtm().getFirstTick(), "setWidth", int.class);
 
 	checkOrSetMethodValues(95, "dateProp", dtm().getFirstTick(), "getWidth");
+    }
+
+    @Override
+    public void test_that_PropertyUsageListeners_work() {
     }
 }

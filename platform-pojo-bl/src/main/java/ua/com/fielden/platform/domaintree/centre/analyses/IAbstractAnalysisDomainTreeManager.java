@@ -4,6 +4,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyStateListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
 
 /**
@@ -96,6 +97,36 @@ public interface IAbstractAnalysisDomainTreeManager extends IDomainTreeManager {
          * @return
          */
         List<String> usedProperties(final Class<?> root);
+
+        /**
+         * A post-successful listener for property usage.
+         *
+         * @author TG Team
+         *
+         */
+        public interface IPropertyUsageListener extends IPropertyStateListener<Boolean> {
+	    /**
+	     * @param hasBeenUsed -- <code>true</code> to indicate that property was successfully "used", <code>false</code> to indicate that it was successfully unused.
+	     */
+	    @Override
+	    void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState);
+        }
+
+        /**
+         * Adds a {@link IPropertyUsageListener} listener.
+         *
+         * @param listener
+         * @return
+         */
+        boolean addPropertyUsageListener(final IPropertyUsageListener listener);
+
+        /**
+         * Removes a {@link IPropertyUsageListener} listener.
+         *
+         * @param listener
+         * @return
+         */
+        boolean removePropertyUsageListener(final IPropertyUsageListener listener);
     }
 
     /**

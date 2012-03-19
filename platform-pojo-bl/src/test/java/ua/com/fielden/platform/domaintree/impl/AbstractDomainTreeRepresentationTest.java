@@ -962,5 +962,4 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 	assertEquals("Incorrect value 'i'.", 2, i);
 	assertEquals("Incorrect value 'j'.", 0, j);
     }
-
 }

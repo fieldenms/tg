@@ -187,12 +187,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    if (hasBeenAdded == null) {
 		throw new IllegalArgumentException("'hasBeenAdded' cannot be 'null'.");
 	    }
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
-	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
 	    if (hasBeenAdded) { // property has been ADDED
 		if (!isDummyMarker(property)) {
 		    final String reflectionProperty = reflectionProperty(property);

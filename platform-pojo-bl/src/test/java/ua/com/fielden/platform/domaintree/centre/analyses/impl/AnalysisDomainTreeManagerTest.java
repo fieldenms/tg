@@ -11,8 +11,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 
 /**
@@ -98,5 +96,9 @@ public class AnalysisDomainTreeManagerTest extends AbstractAnalysisDomainTreeMan
 	// Alter and check //
 	assertTrue("The first tick reference should be the same", dtm() == dtm().setVisibleDistributedValuesNumber(3));
 	assertEquals("The VisibleDistributedValuesNumber should be 3.", 3, dtm().getVisibleDistributedValuesNumber());
+    }
+
+    @Override
+    public void test_that_PropertyUsageListeners_work() {
     }
 }
