@@ -365,17 +365,15 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	// enhance domain with new calculated property
 	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2 * integerProp", "Calc prop1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dtm().getEnhancer().apply();
-
+	assertFalse("The brand new calculated property should be included.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	dtm().getRepresentation().excludeImmutably(MasterEntity.class, "calcProp1");
-	assertTrue("The brand new calculated property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
+	assertTrue("The brand new calculated property should become excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 
 	// enhance domain with new calculated property
 	final String calcProp2 = "calcProp2"; // "entityProp.calcProp2";
 	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "MAX(1 * 2.5 * moneyProp)", "Calc prop2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
 	dtm().getEnhancer().apply();
-
 	assertFalse("The calculated property should 'be' enabled at first.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
-
 	dtm().getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, calcProp2);
 	assertTrue("The brand new calculated property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
@@ -383,7 +381,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	// enhance domain with new calculated property
 	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2.5 * moneyProp", "Calc prop3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
 	dtm().getEnhancer().apply();
-
+	assertFalse("The brand new calculated property should be immutable unchecked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
 	dtm().getRepresentation().getSecondTick().checkImmutably(MasterEntity.class, "calcProp3");
 	assertTrue("The brand new calculated property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
@@ -396,7 +394,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	// enhance domain with new calculated property
 	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(1 * 2.5 * bigDecimalProp)", "Calc prop5", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
 	dtm().getEnhancer().apply();
-
+	assertFalse("The brand new calculated property should be unchecked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
 	dtm().getSecondTick().check(MasterEntity.class, "calcProp5", true);
 	assertTrue("The brand new calculated property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
@@ -407,7 +405,6 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	dtm().getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp1").setDesc("new desc");
 	dtm().getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp1").setContextualExpression("56 * 78 / integerProp");
 	dtm().getEnhancer().apply();
-
 	assertTrue("The brand new calculated property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
 	assertTrue("The brand new calculated property should be immutable checked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
@@ -453,10 +450,9 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	dtm().getEnhancer().addCalculatedProperty(calc4);
 	dtm().getEnhancer().addCalculatedProperty(calc5);
 	dtm().getEnhancer().apply();
-
-	assertTrue("The calculated property with the same name should 'remain' excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
+	assertFalse("The calculated property with the same name should 'become' included.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertFalse("The calculated property with the same name should 'become' enabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
-	assertTrue("The calculated property with the same name should 'remain' immutably checked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
+	assertFalse("The calculated property with the same name should 'become' immutably unchecked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
 	assertFalse("The calculated property with the same name should 'become' unchecked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -467,9 +463,9 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, calcProp2));
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp3"));
 	assertNotNull("", copy.getEnhancer().getCalculatedProperty(MasterEntity.class, "calcProp5"));
-	assertTrue("The calculated property with the same name should 'remain' excluded.", copy.getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
+	assertFalse("The calculated property with the same name should 'become' excluded.", copy.getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
 	assertFalse("The calculated property with the same name should 'become' disabled.", copy.getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
-	assertTrue("The calculated property with the same name should 'remain' immutably checked.", copy.getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
+	assertFalse("The calculated property with the same name should 'become' immutably unchecked.", copy.getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
 	assertFalse("The calculated property with the same name should 'become' checked.", copy.getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
     }
 }

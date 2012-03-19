@@ -101,7 +101,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	}
 
 	// the below listener is intended to update checked properties for both ticks when the skeleton of included properties has been changed
-	listener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick());
+	listener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick(), dtr);
 	this.getRepresentation().addPropertyListener(listener);
     }
 
@@ -147,6 +147,14 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	 * @return
 	 */
 	EnhancementSet disabledManuallyPropertiesMutable();
+
+	/**
+	 * Getter of mutable "checked manually properties" cache for internal purposes.
+	 *
+	 * @param root
+	 * @return
+	 */
+	EnhancementSet checkedManuallyPropertiesMutable();
     }
 
     /**
@@ -158,6 +166,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     protected static class IncludedAndCheckedPropertiesSynchronisationListener implements IPropertyListener {
 	private final ITickManagerWithMutability firstTickManager, secondTickManager;
 	private final ITickRepresentationWithMutability firstTickRepresentation, secondTickRepresentation;
+	private final IDomainTreeRepresentationWithMutability domainTreeRepresentation;
 
 	/**
 	 * A constructor that requires two ticks and two tick representations for synchronisation.
@@ -165,11 +174,12 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	 * @param firstTick
 	 * @param secondTick
 	 */
-	protected IncludedAndCheckedPropertiesSynchronisationListener(final ITickManagerWithMutability firstTick, final ITickManagerWithMutability secondTick, final ITickRepresentationWithMutability firstTickRepresentation, final ITickRepresentationWithMutability secondTickRepresentation) {
+	protected IncludedAndCheckedPropertiesSynchronisationListener(final ITickManagerWithMutability firstTick, final ITickManagerWithMutability secondTick, final ITickRepresentationWithMutability firstTickRepresentation, final ITickRepresentationWithMutability secondTickRepresentation, final IDomainTreeRepresentationWithMutability domainTreeRepresentation) {
 	    this.firstTickManager = firstTick;
 	    this.secondTickManager = secondTick;
 	    this.firstTickRepresentation = firstTickRepresentation;
 	    this.secondTickRepresentation = secondTickRepresentation;
+	    this.domainTreeRepresentation = domainTreeRepresentation;
 	}
 
 	@Override
@@ -183,7 +193,18 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
 	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
 	    // TODO do we need to do smth. (after the property has been added / removed) with Enablement? -- the answer is no, due to dynamic (contract) nature of disablement. With Usage of the property? Not only with Checking!
-	    if (!hasBeenAdded) { // property has been REMOVED
+	    if (hasBeenAdded) { // property has been ADDED
+		if (!isDummyMarker(property)) {
+		    final String reflectionProperty = reflectionProperty(property);
+		    // update checked properties
+		    if (firstTickManager.isCheckedNaturally(root, reflectionProperty) && !firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+			firstTickManager.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
+		    }
+		    if (secondTickManager.isCheckedNaturally(root, reflectionProperty) && !secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+			secondTickManager.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
+		    }
+		}
+	    } else { // property has been REMOVED
 		if (!isDummyMarker(property)) {
 		    final String reflectionProperty = reflectionProperty(property);
 		    // update checked properties
@@ -201,16 +222,13 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		    if (secondTickRepresentation.disabledManuallyPropertiesMutable().contains(key(root, reflectionProperty))) {
 			secondTickRepresentation.disabledManuallyPropertiesMutable().remove(key(root, reflectionProperty));
 		    }
-		}
-	    } else { // property has been ADDED
-		if (!isDummyMarker(property)) {
-		    final String reflectionProperty = reflectionProperty(property);
-		    // update checked properties
-		    if (firstTickManager.isCheckedNaturally(root, reflectionProperty) && !firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-			firstTickManager.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
+
+		    // update manually immutably checked properties
+		    if (firstTickRepresentation.checkedManuallyPropertiesMutable().contains(key(root, reflectionProperty))) {
+			firstTickRepresentation.checkedManuallyPropertiesMutable().remove(key(root, reflectionProperty));
 		    }
-		    if (secondTickManager.isCheckedNaturally(root, reflectionProperty) && !secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-			secondTickManager.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
+		    if (secondTickRepresentation.checkedManuallyPropertiesMutable().contains(key(root, reflectionProperty))) {
+			secondTickRepresentation.checkedManuallyPropertiesMutable().remove(key(root, reflectionProperty));
 		    }
 		}
 	    }

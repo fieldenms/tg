@@ -175,6 +175,10 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 		// this is a removed property. "includedProperties" should be updated (the removed property should be removed in incl properties).
 		logger.info("The property to be removed: root == " + root + ", property == " + removedProperty);
 		dtr.includedPropertiesMutable(root).remove(removedProperty);
+		// the "excludedProperties" set should be updated after the property has been physically removed from domain
+		if (dtr.excludedPropertiesMutable().contains(AbstractDomainTree.key(root, removedProperty))) {
+		    dtr.excludedPropertiesMutable().remove(AbstractDomainTree.key(root, removedProperty));
+		}
 	    }
 
 	    // TODO update retained calc properties in included properties list? Will their places be changed? Will excludement logic be changed after that?
@@ -243,7 +247,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	enhancerWithPropertiesPopulation = new DomainTreeEnhancerWithPropertiesPopulation((DomainTreeEnhancer) this.enhancer, dtr);
 
 	final IPropertyListener oldListener = this.base.listener();
-	final IPropertyListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick());
+	final IPropertyListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick(), (IDomainTreeRepresentationWithMutability) this.getRepresentation());
 	this.base.getRepresentation().removePropertyListener(oldListener);
 	this.getRepresentation().addPropertyListener(newListener);
     }
@@ -365,7 +369,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
      * @author TG Team
      *
      */
-    protected class DomainTreeRepresentationAndEnhancer implements IDomainTreeRepresentation {
+    protected class DomainTreeRepresentationAndEnhancer implements IDomainTreeRepresentationWithMutability {
 	private static final long serialVersionUID = 7828017670201120912L;
 	private final AbstractDomainTreeRepresentation base;
 	private final ITickRepresentation firstTick;
@@ -400,8 +404,13 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	 * @param root
 	 * @return
 	 */
-	protected List<String> includedPropertiesMutable(final Class<?> root) {
+	public List<String> includedPropertiesMutable(final Class<?> root) {
 	    return this.base.includedPropertiesMutable(enhancerWithPropertiesPopulation.getManagedType(root));
+	}
+
+	@Override
+	public Set<Pair<Class<?>, String>> excludedPropertiesMutable() {
+	    return this.base.excludedPropertiesMutable();
 	}
 
 	protected ITickRepresentation createFirstTick(final AbstractTickRepresentation base) {
@@ -469,6 +478,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    @Override
 	    public EnhancementSet disabledManuallyPropertiesMutable() {
 	        return base.disabledManuallyPropertiesMutable();
+	    }
+
+	    @Override
+	    public EnhancementSet checkedManuallyPropertiesMutable() {
+	        return base.checkedManuallyPropertiesMutable();
 	    }
 	}
 

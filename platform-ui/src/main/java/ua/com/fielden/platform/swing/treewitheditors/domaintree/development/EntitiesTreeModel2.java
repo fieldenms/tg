@@ -97,11 +97,10 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    // load checked properties for both ticks to make ticks fully operational before the user check any property
 	    this.manager.getFirstTick().checkedProperties(root);
 	    this.manager.getSecondTick().checkedProperties(root);
-	    
+
 	    final List<String> properties = this.manager.getRepresentation().includedProperties(root);
 	    for (final String property : properties) {
 		createAndAddNode(root, property);
-		// updateNodeState(manager, root, property, ChangedAction.ADDED);
 		if (isNotDummyAndNotCommonProperty(property)) { // Update the state of newly created node according to a property state in manager (ignore "dummy" due to its temporal nature)
 		    provideNodeState(this.manager, root, AbstractDomainTree.reflectionProperty(property));
 		}
@@ -123,10 +122,10 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 
 	this.filterableModel = createFilteringModel(this);
     }
-    
+
     /**
      * A listener of manager's representation that correctly reflects 'structural' changes (property added / removed) in this {@link EntitiesTreeModel2}.
-     * 
+     *
      * @author TG Team
      *
      */
@@ -144,16 +143,16 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    }
 	}
     }
-    
+
     /**
-     * A listener of manager's representation's tick that correctly reflects 'disablement' changes (property disabled / enabled) in this {@link EntitiesTreeModel2}. 
-     * 
+     * A listener of manager's representation's tick that correctly reflects 'disablement' changes (property disabled / enabled) in this {@link EntitiesTreeModel2}.
+     *
      * @author TG Team
      *
      */
     private class PropertyDisablementListener implements IPropertyDisablementListener {
 	private final int modelIndex;
-	
+
 	/** Creates a listener of manager's representation's tick that correctly reflects 'disablement' changes (property disabled / enabled) in this {@link EntitiesTreeModel2}. */
 	public PropertyDisablementListener(final int modelIndex) {
 	    this.modelIndex = modelIndex;
@@ -161,19 +160,19 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 
 	@Override
 	public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
-	    getCheckingModel(modelIndex).setPathEnabled(path(root, AbstractDomainTree.reflectionProperty(property)), !hasBeenDisabled);
+	    provideEnablementForPath(getCheckingModel(modelIndex), path(root, AbstractDomainTree.reflectionProperty(property)), !hasBeenDisabled);
 	}
     }
-    
+
     /**
-     * A listener of manager's tick that correctly reflects 'checking' changes (property checked / unchecked) in this {@link EntitiesTreeModel2}. 
-     * 
+     * A listener of manager's tick that correctly reflects 'checking' changes (property checked / unchecked) in this {@link EntitiesTreeModel2}.
+     *
      * @author TG Team
      *
      */
     private class PropertyCheckingListener implements IPropertyCheckingListener {
 	private final int modelIndex;
-	
+
 	/** Creates a listener of manager's tick that correctly reflects 'checking' changes (property checked / unchecked) in this {@link EntitiesTreeModel2}. */
 	public PropertyCheckingListener(final int modelIndex) {
 	    this.modelIndex = modelIndex;
@@ -181,10 +180,10 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 
 	@Override
 	public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState) {
-	    provideCheckingPath(getCheckingModel(modelIndex), path(root, AbstractDomainTree.reflectionProperty(property)), hasBeenChecked);
+	    provideCheckingForPath(getCheckingModel(modelIndex), path(root, AbstractDomainTree.reflectionProperty(property)), hasBeenChecked);
 	}
     }
-    
+
     /**
      * Finds a path corresponding to a property (without any "dummy" naming).
      *
@@ -242,27 +241,41 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
     }
 
     /**
-     * Provides a checking path in a model.
+     * Provides a checking for path in a {@link EntitiesTreeModel2}.
      *
      * @param model
      * @param path
-     * @param checked
+     * @param newChecked
      */
-    private void provideCheckingPath(final TreeCheckingModel model, final TreePath path, final boolean checked) {
-	final List<TreePath> currentPaths = Arrays.asList(model.getCheckingPaths());
-	if (checked) {
-	    if (!currentPaths.contains(path)) {
+    private void provideCheckingForPath(final TreeCheckingModel model, final TreePath path, final boolean newChecked) {
+	// it is very important to determine whether UI is synchronized with Domain Tree model not to cycle change events firing
+	final boolean isSynchronized = newChecked == Arrays.asList(model.getCheckingPaths()).contains(path);
+	if (!isSynchronized) {
+	    if (newChecked) {
 		model.addCheckingPath(path);
-	    }
-	} else {
-	    if (currentPaths.contains(path)) {
+	    } else {
 		model.removeCheckingPath(path);
 	    }
 	}
     }
 
     /**
-     * Provides a state for a node corresponding to a property.
+     * Provides an enablement for path in a {@link EntitiesTreeModel2}.
+     *
+     * @param model
+     * @param path
+     * @param newEnabled
+     */
+    private void provideEnablementForPath(final TreeCheckingModel model, final TreePath path, final boolean newEnabled) {
+	// it is very important to determine whether UI is synchronized with Domain Tree model not to cycle change events firing
+	final boolean isSynchronized = newEnabled == model.isPathEnabled(path);
+	if (!isSynchronized) {
+	    model.setPathEnabled(path, newEnabled);
+	}
+    }
+
+    /**
+     * Provides a state for a node corresponding to a property (checking and enablement for both ticks).
      *
      * @param manager
      * @param root
@@ -270,13 +283,14 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      */
     protected void provideNodeState(final IDomainTreeManagerAndEnhancer manager, final Class<?> root, final String property) {
 	final TreePath path = new TreePath(getPathToRoot(node(root, property, false)));
-	final int firstIndex = EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex();
-	final int secondIndex = EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex();
+	final TreeCheckingModel firstCheckingModel = getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex());
+	final TreeCheckingModel secondCheckingModel = getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex());
 
-	provideCheckingPath(getCheckingModel(firstIndex), path, manager.getFirstTick().isChecked(root, property));
-	provideCheckingPath(getCheckingModel(secondIndex), path, manager.getSecondTick().isChecked(root, property));
-	getCheckingModel(firstIndex).setPathEnabled(path, !manager.getRepresentation().getFirstTick().isDisabledImmutably(root, property));
-	getCheckingModel(secondIndex).setPathEnabled(path, !manager.getRepresentation().getSecondTick().isDisabledImmutably(root, property));
+	provideCheckingForPath(firstCheckingModel, path, manager.getFirstTick().isChecked(root, property));
+	provideCheckingForPath(secondCheckingModel, path, manager.getSecondTick().isChecked(root, property));
+
+	provideEnablementForPath(firstCheckingModel, path, !manager.getRepresentation().getFirstTick().isDisabledImmutably(root, property));
+	provideEnablementForPath(secondCheckingModel, path, !manager.getRepresentation().getSecondTick().isDisabledImmutably(root, property));
     }
 
     /**
@@ -324,13 +338,17 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    @Override
 	    public void valueChanged(final TreeCheckingEvent checkingEvent) {
 		final EntitiesTreeNode2 node = (EntitiesTreeNode2) checkingEvent.getPath().getLastPathComponent();
-		final Pair<Class<?>, String> userObject = node.getUserObject();
+		final EntitiesTreeUserObject userObject = node.getUserObject();
 		final Class<?> root = userObject.getKey();
 		final String property = userObject.getValue();
 		if (!isNotDummyAndNotCommonProperty(property)) {
 		    throw new IllegalArgumentException("The dummy / common property [" + property + "] for type [" + root.getSimpleName() + "] can not be [un]checked.");
 		}
-		tickManager.check(root, AbstractDomainTree.reflectionProperty(property), checkingEvent.isCheckedPath());
+		// it is very important to determine whether UI is synchronized with Domain Tree model not to cycle change events firing
+		final boolean isSynchronized = checkingEvent.isCheckedPath() == tickManager.isChecked(root, AbstractDomainTree.reflectionProperty(property));
+		if (!isSynchronized) {
+		    tickManager.check(root, AbstractDomainTree.reflectionProperty(property), checkingEvent.isCheckedPath());
+		}
 	    }
 	};
     }
@@ -347,7 +365,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	final EnhancementPropertiesMap<EntitiesTreeNode2> cache = withDummyNaming ? nodesCache : nodesForSimplePropertiesCache;
 	return cache.get(AbstractDomainTree.key(root, property));
     }
-    
+
     /**
      * Creates a {@link TreeWillExpandListener} that "warms up" the manager's property (loads children), which node is trying to be expanded.
      *

@@ -45,9 +45,9 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentation {
+public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentationWithMutability {
     private final EnhancementLinkedRootsSet rootTypes;
-    private final EnhancementSet excludedProperties;
+    private final EnhancementSet manuallyExcludedProperties;
     private final AbstractTickRepresentation firstTick;
     private final AbstractTickRepresentation secondTick;
     /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
@@ -63,8 +63,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	super(serialiser);
 	this.rootTypes = new EnhancementLinkedRootsSet();
 	this.rootTypes.addAll(rootTypes);
-	this.excludedProperties = createSet();
-	this.excludedProperties.addAll(excludedProperties);
+	this.manuallyExcludedProperties = createSet();
+	this.manuallyExcludedProperties.addAll(excludedProperties);
 	this.firstTick = firstTick;
 	this.secondTick = secondTick;
 
@@ -153,6 +153,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    }
 	}
 	return newIncludedProps;
+    }
+
+    @Override
+    public Set<Pair<Class<?>, String>> excludedPropertiesMutable() {
+        return manuallyExcludedProperties;
     }
 
     /**
@@ -270,7 +275,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determineClass(penultType, lastPropertyName, true, true);
 	final Field field = isEntityItself ? null : Finder.getFieldByName(penultType, lastPropertyName);
 
-	return 	(excludedProperties.contains(key(root, property))) || // exclude manually excluded properties
+	return 	(manuallyExcludedProperties.contains(key(root, property))) || // exclude manually excluded properties
 		(!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null) || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
 		(!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresent(KeyTitle.class, penultType)) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
 		(!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType)) || // exclude "key" -- "key" is not of entity type
@@ -329,7 +334,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     @Override
     public final void excludeImmutably(final Class<?> root, final String property) {
-	excludedProperties.add(key(root, property));
+	manuallyExcludedProperties.add(key(root, property));
 
 	if (includedProperties.get(root) != null) { // not yet loaded
 	    includedPropertiesMutable(root).remove(property);
@@ -422,7 +427,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param root
      * @return
      */
-    protected List<String> includedPropertiesMutable(final Class<?> root1) {
+    @Override
+    public List<String> includedPropertiesMutable(final Class<?> root1) {
 	final Class<?> root = DynamicEntityClassLoader.getOriginalType(root1);
 	if (includedProperties.get(root) == null) { // not yet loaded
 	    final Date st = new Date();
@@ -542,7 +548,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     public static abstract class AbstractTickRepresentation implements ITickRepresentationWithMutability {
 	private final EnhancementSet disabledManuallyProperties;
-	private final Set<Pair<Class<?>, String>> checkedProperties;
+	private final EnhancementSet checkedManuallyProperties;
 	private final transient AbstractDomainTreeRepresentation dtr;
 	private final transient TickManager tickManager;
 
@@ -553,7 +559,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	 */
 	protected AbstractTickRepresentation() {
 	    this.disabledManuallyProperties = createSet();
-	    this.checkedProperties = createSet();
+	    this.checkedManuallyProperties = createSet();
 
 	    this.propertyDisablementListeners = new ArrayList<IPropertyDisablementListener>();
 
@@ -602,14 +608,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	@Override
 	public boolean isCheckedImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return (checkedProperties.contains(key(root, property))); // check+disable manually checked properties
+	    return (checkedManuallyProperties.contains(key(root, property))); // check+disable manually checked properties
 	}
 
 	@Override
 	public final void checkImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not check immutably already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    tickManager.checkSimply(root, property, true);
-	    checkedProperties.add(key(root, property));
+	    checkedManuallyProperties.add(key(root, property));
 
 	    fireDisablingEvent(root, property);
 	}
@@ -622,7 +628,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	public int hashCode() {
 	    final int prime = 31;
 	    int result = 1;
-	    result = prime * result + ((checkedProperties == null) ? 0 : checkedProperties.hashCode());
+	    result = prime * result + ((checkedManuallyProperties == null) ? 0 : checkedManuallyProperties.hashCode());
 	    result = prime * result + ((disabledManuallyProperties == null) ? 0 : disabledManuallyProperties.hashCode());
 	    return result;
 	}
@@ -636,10 +642,10 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    if (getClass() != obj.getClass())
 		return false;
 	    final AbstractTickRepresentation other = (AbstractTickRepresentation) obj;
-	    if (checkedProperties == null) {
-		if (other.checkedProperties != null)
+	    if (checkedManuallyProperties == null) {
+		if (other.checkedManuallyProperties != null)
 		    return false;
-	    } else if (!checkedProperties.equals(other.checkedProperties))
+	    } else if (!checkedManuallyProperties.equals(other.checkedManuallyProperties))
 		return false;
 	    if (disabledManuallyProperties == null) {
 		if (other.disabledManuallyProperties != null)
@@ -652,6 +658,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	@Override
 	public EnhancementSet disabledManuallyPropertiesMutable() {
 	    return disabledManuallyProperties;
+	}
+
+	@Override
+	public EnhancementSet checkedManuallyPropertiesMutable() {
+	    return checkedManuallyProperties;
 	}
     }
 
@@ -783,7 +794,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	@Override
 	public void write(final ByteBuffer buffer, final T representation) {
 	    writeValue(buffer, representation.rootTypes);
-	    writeValue(buffer, representation.excludedProperties);
+	    writeValue(buffer, representation.manuallyExcludedProperties);
 	    writeValue(buffer, representation.firstTick);
 	    writeValue(buffer, representation.secondTick);
 	    writeValue(buffer, representation.includedProperties);
@@ -794,7 +805,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	result = prime * result + ((excludedProperties == null) ? 0 : excludedProperties.hashCode());
+	result = prime * result + ((manuallyExcludedProperties == null) ? 0 : manuallyExcludedProperties.hashCode());
 	result = prime * result + ((firstTick == null) ? 0 : firstTick.hashCode());
 	result = prime * result + ((includedProperties == null) ? 0 : includedProperties.hashCode());
 	result = prime * result + ((rootTypes == null) ? 0 : rootTypes.hashCode());
@@ -811,10 +822,10 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	if (getClass() != obj.getClass())
 	    return false;
 	final AbstractDomainTreeRepresentation other = (AbstractDomainTreeRepresentation) obj;
-	if (excludedProperties == null) {
-	    if (other.excludedProperties != null)
+	if (manuallyExcludedProperties == null) {
+	    if (other.manuallyExcludedProperties != null)
 		return false;
-	} else if (!excludedProperties.equals(other.excludedProperties))
+	} else if (!manuallyExcludedProperties.equals(other.manuallyExcludedProperties))
 	    return false;
 	if (firstTick == null) {
 	    if (other.firstTick != null)
