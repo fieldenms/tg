@@ -259,6 +259,24 @@ public class EntityFetcherTest extends DbDrivenTestCase2 {
 	assertEquals("Incorrect key", "CAR2", models.get(0).getKey());
     }
 
+    public void test_vehicle_fetching() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
+	final fetch<TgVehicle> fetchModel = new fetch<TgVehicle>(TgVehicle.class).with("model", new fetch<TgVehicleModel>(TgVehicleModel.class).with("make"));
+	final List<TgVehicle> vehicles = fetcher().getEntities(from(qry).with(fetchModel).build());
+	final TgVehicle vehicle = vehicles.get(0);
+	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+	assertEquals("Incorrect key", "316", vehicle.getModel().getKey());
+	assertEquals("Incorrect key", "MERC", vehicle.getModel().getMake().getKey());
+    }
+
+//    public void test_aggregates_fetching() {
+//	final AggregatedResultQueryModel model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").yield().prop("model").as("model").modelAsAggregate();
+//	final fetch<EntityAggregates> fetchModel = new fetch<EntityAggregates>(EntityAggregates.class).with("model", new fetch<TgVehicleModel>(TgVehicleModel.class).with("make"));
+//	final EntityAggregates value = aggregatesFetcher().list(from(model).with(fetchModel).build()).get(0);
+//	assertEquals("Incorrect key", "316", ((TgVehicleModel) value.get("model")).getKey());
+//	assertEquals("Incorrect key", "MERC", ((TgVehicleModel) value.get("model")).getMake().getKey());
+//    }
+
     @Override
     protected String[] getDataSetPathsForInsert() {
 	return new String[] { "src/test/resources/data-files/entity-fetcher-test.flat.xml",  "src/test/resources/data-files/user-user_role-test-case.flat.xml"};

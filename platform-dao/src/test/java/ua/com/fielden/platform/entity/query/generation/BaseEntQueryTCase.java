@@ -21,10 +21,10 @@ import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.P
 import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
-import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
 import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
-import ua.com.fielden.platform.entity.query.generation.elements.ISource;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
+import ua.com.fielden.platform.entity.query.generation.elements.ISource;
+import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
@@ -187,9 +187,7 @@ public class BaseEntQueryTCase {
     }
 
     public static void assertModelsEqualsAccordingUserDataFiltering(final QueryModel shortcutModel, final QueryModel explicitModel) {
-	System.out.println("11111111111111111111111111111111111111");
 	final EntQuery shortcutQry = entResultQryWithUserFilter(shortcutModel);
-	System.out.println("22222222222222222222222222222222222222");
 	final EntQuery explicitQry = entResultQry(explicitModel);
 	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
 
