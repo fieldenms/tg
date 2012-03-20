@@ -138,6 +138,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
 	private final LocatorManager locatorManager;
 
+	private final transient List<IPropertyValueListener> propertyValueListeners, propertyValue2Listeners;
+
 	/**
 	 * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr", "tr" and "serialiser" fields.
 	 */
@@ -176,6 +178,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    this.columnsNumber = columnsNumber;
 
 	    this.locatorManager = locatorManager;
+
+	    this.propertyValueListeners = new ArrayList<IPropertyValueListener>();
+	    this.propertyValue2Listeners = new ArrayList<IPropertyValueListener>();
 	}
 
 	@Override
@@ -278,7 +283,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	@Override
 	public IAddToCriteriaTickManager setValue(final Class<?> root, final String property, final Object value) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'value' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    final Object oldValue = getValue(root, property);
 	    propertiesValues1.put(key(root, property), value);
+	    for (final IPropertyValueListener listener : propertyValueListeners) {
+		listener.propertyStateChanged(root, property, value, oldValue);
+	    }
 	    return this;
 	}
 
@@ -298,8 +307,32 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	@Override
 	public IAddToCriteriaTickManager setValue2(final Class<?> root, final String property, final Object value2) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'value' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    final Object oldValue2 = getValue2(root, property);
 	    propertiesValues2.put(key(root, property), value2);
+	    for (final IPropertyValueListener listener : propertyValue2Listeners) {
+		listener.propertyStateChanged(root, property, value2, oldValue2);
+	    }
 	    return this;
+	}
+
+	@Override
+	public boolean addPropertyValueListener(final IPropertyValueListener listener) {
+	    return propertyValueListeners.add(listener);
+	}
+
+	@Override
+	public boolean removePropertyValueListener(final IPropertyValueListener listener) {
+	    return propertyValueListeners.remove(listener);
+	}
+
+	@Override
+	public boolean addPropertyValue2Listener(final IPropertyValueListener listener) {
+	    return propertyValue2Listeners.add(listener);
+	}
+
+	@Override
+	public boolean removePropertyValue2Listener(final IPropertyValueListener listener) {
+	    return propertyValue2Listeners.remove(listener);
 	}
 
 	@Override

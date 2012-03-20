@@ -21,6 +21,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerA
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.IPropertyValueListener;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAnalysisListener;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
@@ -932,5 +933,45 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 
     @Override
     public void test_that_PropertyCheckingListeners_work() {
+    }
+
+    @Test
+    public void test_that_PropertyValue1And2Listeners_work() {
+	i = 0; j = 0;
+	final IPropertyValueListener listener1 = new IPropertyValueListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState) {
+		i++;
+	    }
+	};
+	dtm().getFirstTick().addPropertyValueListener(listener1);
+	final IPropertyValueListener listener2 = new IPropertyValueListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState) {
+		j++;
+	    }
+	};
+	dtm().getFirstTick().addPropertyValue2Listener(listener2);
+
+	final String prop = "booleanProp";
+	dtm().getFirstTick().check(MasterEntity.class, prop, true);
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getFirstTick().setValue(MasterEntity.class, prop, true);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getFirstTick().setValue2(MasterEntity.class, prop, true);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
+
+	dtm().getFirstTick().setValue(MasterEntity.class, prop, false);
+	assertEquals("Incorrect value 'i'.", 2, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
+
+	dtm().getFirstTick().setValue2(MasterEntity.class, prop, false);
+	assertEquals("Incorrect value 'i'.", 2, i);
+	assertEquals("Incorrect value 'j'.", 2, j);
     }
 }

@@ -206,6 +206,27 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
+	public boolean addPropertyValueListener(final IPropertyValueListener listener) {
+	    return base().addPropertyValueListener(listener);
+	}
+
+	@Override
+	public boolean removePropertyValueListener(final IPropertyValueListener listener) {
+	    return base().removePropertyValueListener(listener);
+	}
+
+	@Override
+	public boolean addPropertyValue2Listener(final IPropertyValueListener listener) {
+	    return base().addPropertyValue2Listener(listener);
+	}
+
+	@Override
+	public boolean removePropertyValue2Listener(final IPropertyValueListener listener) {
+	    return base().removePropertyValue2Listener(listener);
+	}
+
+
+	@Override
 	public Boolean getExclusive(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
 	    return base().getExclusive(enhancer().getManagedType(root), property);

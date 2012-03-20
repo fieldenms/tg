@@ -299,6 +299,52 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	 */
 	IAddToCriteriaTickManager setValue(final Class<?> root, final String property, final Object value);
 
+        /**
+         * A post-successful listener for property Value changes.
+         *
+         * @author TG Team
+         *
+         */
+        public interface IPropertyValueListener extends IPropertyStateListener<Object> {
+	    /**
+	     * @param newValue -- a new Value of the property that was successfully changed.
+	     */
+	    @Override
+	    void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState);
+        }
+
+        /**
+         * Adds a {@link IPropertyValueListener} listener for main "Value".
+         *
+         * @param listener
+         * @return
+         */
+        boolean addPropertyValueListener(final IPropertyValueListener listener);
+
+        /**
+         * Removes a {@link IPropertyValueListener} listener for main "value".
+         *
+         * @param listener
+         * @return
+         */
+        boolean removePropertyValueListener(final IPropertyValueListener listener);
+
+        /**
+         * Adds a {@link IPropertyValueListener} listener for secondary "Value".
+         *
+         * @param listener
+         * @return
+         */
+        boolean addPropertyValue2Listener(final IPropertyValueListener listener);
+
+        /**
+         * Removes a {@link IPropertyValueListener} listener for secondary "value".
+         *
+         * @param listener
+         * @return
+         */
+        boolean removePropertyValue2Listener(final IPropertyValueListener listener);
+
 	/**
 	 * Returns value that indicates whether <i>secondary</i> value of a criteria property is empty or not. <br><br>
 	 *
@@ -309,7 +355,6 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	 * @return
 	 */
 	boolean is2ValueEmpty(final Class<?> root, final String property);
-
 
 	/**
 	 * Gets a <i>secondary</i> value of a criteria property. <br><br>
