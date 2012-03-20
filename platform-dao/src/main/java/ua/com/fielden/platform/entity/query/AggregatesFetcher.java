@@ -51,6 +51,6 @@ public class AggregatesFetcher extends AbstractFetcher<EntityAggregates> {
     protected List<EntityContainer<EntityAggregates>> listContainers(final AggregatesQueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final QueryModelResult<EntityAggregates> modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getMappingsGenerator(), getFilter(), getUsername());
 	final List<EntityContainer<EntityAggregates>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
-	return getEntityEnhancer().enhance(result, queryModel.getFetchModel(), modelResult.getResultType());
+	return getEntityEnhancer().enhance(result, queryModel.getFetchModel());
     }
 }

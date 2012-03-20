@@ -11,6 +11,8 @@ import org.junit.Test;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserRole;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -56,6 +58,19 @@ public class MappingsGeneratorPPIsTest extends BaseEntQueryTCase {
 
 	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
 	actual.addAll(MAPPINGS_GENERATOR.getEntityPPIs(VEHICLE));
+	assertTrue(actual.containsAll(expected));
+    }
+
+    @Test
+    public void test4() {
+	final SortedSet<PropertyPersistenceInfo> expected = new TreeSet<PropertyPersistenceInfo>();
+	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyPersistenceType.ID));
+	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyPersistenceType.VERSION));
+	expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyPersistenceType.PRIMITIVE_KEY));
+	expected.add(ppi("roles", UserRole.class, false, hibType("long"), "ID_CRAFT", PropertyPersistenceType.COLLECTIONAL));
+
+	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
+	actual.addAll(MAPPINGS_GENERATOR.getEntityPPIs(User.class));
 	assertTrue(actual.containsAll(expected));
     }
 

@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.security.provider;
 
-import static ua.com.fielden.platform.equery.equery.select;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +19,8 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.equery.equery.select;
+
 /**
  * Implementation of the user controller, which should be used managing system user information.
  *
@@ -34,7 +34,7 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
     private final IUserAndRoleAssociationDao userAssociationDao;
 
     @SuppressWarnings("unchecked")
-    private final fetch<User> fetchModel = new fetch(User.class).with("roles", new fetch(UserAndRoleAssociation.class).with("userRole"));
+    private final fetch<User> fetchModel = new fetch(User.class).with("roles", new fetch(UserAndRoleAssociation.class));
 
     @Inject
     public UserController(final IUserRoleDao userRoleDao, final IUserAndRoleAssociationDao userAssociationDao, final IFilter filter) {

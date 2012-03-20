@@ -23,7 +23,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 
 /**
- * This class contains the Hibernate driven implementation of getting results from the provided IQueryOrderedModel.
+ * This class contains the Hibernate driven implementation of getting results from the provided QueryModel.
  *
  * @author TG Team
  *
@@ -81,26 +81,6 @@ public class AbstractFetcher<E extends AbstractEntity<?>> {
 	return q;
     }
 
-    public Session getSession() {
-        return session;
-    }
-
-    public EntityFactory getEntityFactory() {
-        return entityFactory;
-    }
-
-    public Logger getLogger() {
-        return logger;
-    }
-
-    public MappingsGenerator getMappingsGenerator() {
-        return mappingsGenerator;
-    }
-
-    public DbVersion getDbVersion() {
-        return dbVersion;
-    }
-
     protected List<Pair<String, Type>> getScalarFromValueTree(final ValueTree tree) {
 	final List<Pair<String, Type>> result = new ArrayList<Pair<String, Type>>();
 
@@ -109,14 +89,6 @@ public class AbstractFetcher<E extends AbstractEntity<?>> {
 	}
 
 	return result;
-    }
-
-    public IFilter getFilter() {
-        return filter;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     protected List<Pair<String, Type>> getScalarFromEntityTree(final EntityTree<? extends AbstractEntity<?>> tree) {
@@ -155,10 +127,6 @@ public class AbstractFetcher<E extends AbstractEntity<?>> {
 	return result;
     }
 
-    public EntityEnhancer<E> getEntityEnhancer() {
-        return entityEnhancer;
-    }
-
     /**
      * Executes query and produces its result in the form of entity containers; no additional fetching to match provided fetch model is performed.
      * @param modelResult
@@ -188,5 +156,37 @@ public class AbstractFetcher<E extends AbstractEntity<?>> {
 	getLogger().info("Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + list.size());
 
 	return list;
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public EntityFactory getEntityFactory() {
+        return entityFactory;
+    }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public MappingsGenerator getMappingsGenerator() {
+        return mappingsGenerator;
+    }
+
+    public DbVersion getDbVersion() {
+        return dbVersion;
+    }
+
+    public IFilter getFilter() {
+        return filter;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public EntityEnhancer<E> getEntityEnhancer() {
+        return entityEnhancer;
     }
 }

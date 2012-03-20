@@ -14,13 +14,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 
-/**
- * This class contains the Hibernate driven implementation of getting results from the provided IQueryOrderedModel.
- *
- * @author TG Team
- *
- * @param <E>
- */
 public class EntityFetcher<E extends AbstractEntity<?>> extends AbstractFetcher<E> {
 
 
@@ -54,7 +47,7 @@ public class EntityFetcher<E extends AbstractEntity<?>> extends AbstractFetcher<
     protected List<EntityContainer<E>> listContainers(final QueryExecutionModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final QueryModelResult<E> modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getMappingsGenerator(), getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
-	return getEntityEnhancer().enhance(result, enhanceFetchModelWithKeyProperties(queryModel.getFetchModel(), modelResult.getResultType()), modelResult.getResultType());
+	return getEntityEnhancer().enhance(result, enhanceFetchModelWithKeyProperties(queryModel.getFetchModel(), modelResult.getResultType()));
     }
 
     private fetch<E> enhanceFetchModelWithKeyProperties(final fetch<E> fetchModel, final Class<E> entitiesType) {

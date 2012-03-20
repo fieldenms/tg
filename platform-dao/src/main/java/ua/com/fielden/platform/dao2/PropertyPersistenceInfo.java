@@ -45,7 +45,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     }
 
     public boolean isEntity() {
-	return EntityUtils.isPersistedEntityType(javaType);
+	return EntityUtils.isPersistedEntityType(javaType) && !isCollection();
     }
 
     public boolean isCollection() {

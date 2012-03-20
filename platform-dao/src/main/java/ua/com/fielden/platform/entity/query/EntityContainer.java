@@ -5,24 +5,21 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-public class EntityContainer<R extends AbstractEntity<?>> {
+public final class EntityContainer<R extends AbstractEntity<?>> {
     private final static String ID_PROPERTY_NAME = "id";
 
-    private final Class<R> resultType; // should also cover marker interfaces for TgCompositeUserType
+    private final Class<R> resultType;
     private R entity;
     private boolean shouldBeFetched;
     private final Map<String, Object> primitives = new HashMap<String, Object>();
     private final Map<String, ValueContainer> composites = new HashMap<String, ValueContainer>();
     private final Map<String, EntityContainer<? extends AbstractEntity<?>>> entities = new HashMap<String, EntityContainer<? extends AbstractEntity<?>>>();
-    private final Map<String, Collection<EntityContainer<AbstractEntity<?>>>> collections = new HashMap<String, Collection<EntityContainer<AbstractEntity<?>>>>();
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Map<String, Collection<EntityContainer<? extends AbstractEntity<?>>>> collections = new HashMap<String, Collection<EntityContainer<? extends AbstractEntity<?>>>>();
 
     public EntityContainer(final Class<R> resultType, final boolean shouldBeFetched) {
 	this.resultType = resultType;
@@ -51,7 +48,6 @@ public class EntityContainer<R extends AbstractEntity<?>> {
     }
 
     public R instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
-	logger.info("instantiating: " + resultType.getName() + " for id = " + getId() + " lightWeight = " + userViewOnly);
 	entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
 	entity.setInitialising(true);
 	for (final Map.Entry<String, Object> primPropEntry : primitives.entrySet()) {
@@ -83,10 +79,10 @@ public class EntityContainer<R extends AbstractEntity<?>> {
 	    }
 	}
 
-	for (final Map.Entry<String, Collection<EntityContainer<AbstractEntity<?>>>> entityEntry : collections.entrySet()) {
+	for (final Map.Entry<String, Collection<EntityContainer<? extends AbstractEntity<?>>>> entityEntry : collections.entrySet()) {
 	    Collection<AbstractEntity<?>> collectionalProp = null;
 	    try {
-		collectionalProp = entityEntry.getValue().getClass().newInstance();
+		collectionalProp = entityEntry.getValue().getClass().newInstance(); // instantiating collection (Set or List)
 	    } catch (final Exception e) {
 		throw new RuntimeException("COULD NOT EXECUTE [collectionalProp = entityEntry.getValue().getClass().newInstance();] due to: " + e);
 	    }
@@ -138,7 +134,7 @@ public class EntityContainer<R extends AbstractEntity<?>> {
         return entities;
     }
 
-    public Map<String, Collection<EntityContainer<AbstractEntity<?>>>> getCollections() {
+    public Map<String, Collection<EntityContainer<? extends AbstractEntity<?>>>> getCollections() {
         return collections;
     }
 

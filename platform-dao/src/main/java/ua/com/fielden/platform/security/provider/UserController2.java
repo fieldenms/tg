@@ -36,7 +36,7 @@ public class UserController2 extends CommonEntityDao2<User> implements IUserCont
     private final IUserRoleDao2 userRoleDao;
     private final IUserAndRoleAssociationDao2 userAssociationDao;
 
-    private final fetch<User> fetchModel = new fetch<User>(User.class).with("roles", new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class).with("userRole"));
+    private final fetch<User> fetchModel = new fetch<User>(User.class).with("roles", new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class));
 
     @Inject
     public UserController2(final IUserRoleDao2 userRoleDao, final IUserAndRoleAssociationDao2 userAssociationDao, final IFilter filter) {
