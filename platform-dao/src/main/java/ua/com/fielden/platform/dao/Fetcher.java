@@ -81,7 +81,7 @@ class Fetcher<E extends AbstractEntity> {
     /**
      * Executes the Hibernate query derived from the provided equery model "AS IS" (without fetching via models) and returns the results of the specified page.
      *
-     * @param query
+     * @param Equery
      * @param pageNumber
      * @param pageCapacity
      * @return
@@ -110,7 +110,7 @@ class Fetcher<E extends AbstractEntity> {
     /**
      * A helper method to create and set parameters values for Hibernate Query based on the provided instance of {@link IQueryOrderedModel}.
      *
-     * @param query
+     * @param Equery
      * @param hql
      * @return
      */

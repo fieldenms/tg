@@ -14,7 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.MappingExtractor;
-import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.interfaces.IMain.ICompleted;
 import ua.com.fielden.platform.equery.interfaces.IMain.IJoin;

@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class QuerySourcesFinalPropertiesAssociationTest extends BaseEntQueryTCase {
 

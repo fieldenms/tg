@@ -7,8 +7,8 @@ import java.util.Properties;
 import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.dao.MappingExtractor;
-import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
+import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import static ua.com.fielden.platform.entity.query.fluent.query.from;
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;

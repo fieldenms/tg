@@ -3,7 +3,6 @@ package ua.com.fielden.platform.test.ioc;
 import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.dao.EntityWithMoneyDao2;
-import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.filtering.DataFilter2;
 import ua.com.fielden.platform.dao2.EntityAggregatesDao2;
 import ua.com.fielden.platform.dao2.IDaoFactory2;
@@ -12,6 +11,7 @@ import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserRoleDao2;
+import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.CommonFactoryModule2;
 import ua.com.fielden.platform.keygen.IKeyNumberGenerator;

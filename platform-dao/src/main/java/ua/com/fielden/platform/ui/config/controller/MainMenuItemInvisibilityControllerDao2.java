@@ -15,7 +15,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * DAO implementation of {@link IMainMenuItemInvisibilityController2}.

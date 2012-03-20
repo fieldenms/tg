@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao2.AggregatesQueryExecutionModel;
+import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -34,7 +34,6 @@ public class ModelResultProducer {
     private SortedSet<PropertyPersistenceInfo> getResultPropsInfos(final Yields model) {
 	final SortedSet<PropertyPersistenceInfo> result = new TreeSet<PropertyPersistenceInfo>();
 	for (final Map.Entry<String, Yield> yieldEntry : model.getYields().entrySet()) {
-	    //result.add(new ResultPropertyInfo(yieldEntry.getKey(), yieldEntry.getValue().getInfo().getColumn(), yieldEntry.getValue().getInfo().getJavaType()));
 	    result.add(new PropertyPersistenceInfo.Builder(yieldEntry.getKey(), yieldEntry.getValue().getInfo().getJavaType(), false/*?*/). //
 		    column(yieldEntry.getValue().getInfo().getColumn()). //
 		    hibType(yieldEntry.getValue().getInfo().getHibType()). //

@@ -15,7 +15,7 @@ import ua.com.fielden.platform.test.domain.entities.daos.IWorkshopDao2;
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * This is a filter providing a mock implementation to be used for testing purposes.

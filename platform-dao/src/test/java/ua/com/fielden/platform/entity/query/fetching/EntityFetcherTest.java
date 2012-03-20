@@ -6,7 +6,7 @@ import java.util.List;
 import org.hibernate.Session;
 
 import ua.com.fielden.platform.dao.FirstLevelSecurityToken1;
-import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.AggregatesFetcher;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -22,17 +22,16 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.types.Money;
-import static ua.com.fielden.platform.entity.query.fluent.query.from;
-import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class EntityFetcherTest extends DbDrivenTestCase2 {
-
     private static final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private static final EntityFetcher fetcher() {return new EntityFetcher(session(), factory, injector.getInstance(MappingsGenerator.class), null, null, null); }
-    private static final AggregatesFetcher aggregatesFetcher() {return new AggregatesFetcher(session(), factory, injector.getInstance(MappingsGenerator.class), null, null, null); }
 
     private static final Session session() {return hibernateUtil.getSessionFactory().getCurrentSession();}
+    private static final EntityFetcher fetcher() {return new EntityFetcher(session(), factory, injector.getInstance(MappingsGenerator.class), null, null, null); }
+    private static final AggregatesFetcher aggregatesFetcher() {return new AggregatesFetcher(session(), factory, injector.getInstance(MappingsGenerator.class), null, null, null); }
 
     public void test_vehicle_model_retrieval0() {
 	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("key").eq().val("316").model();
@@ -87,7 +86,7 @@ public class EntityFetcherTest extends DbDrivenTestCase2 {
 
     public void test_vehicle_model_retrieval4() {
 	final EntityResultQueryModel<TgVehicleMake> model = select(TgVehicleMake.class).where().prop("key").in().params("param1", "param2").model();
-	final List<TgVehicleModel> models = fetcher().list(from(model).with("param1", "MERC").with("param2", "BMW").build());
+	final List<TgVehicleMake> models = fetcher().list(from(model).with("param1", "MERC").with("param2", "BMW").build());
     	assertEquals("Incorrect count", 2, models.size());
     }
 

@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.utils.Pair;
 

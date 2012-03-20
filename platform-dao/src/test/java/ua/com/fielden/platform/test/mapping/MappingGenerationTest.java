@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import static org.junit.Assert.assertEquals;

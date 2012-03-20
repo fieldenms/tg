@@ -6,7 +6,7 @@ import java.util.Properties;
 
 import org.hibernate.cfg.Configuration;
 
-import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 import com.google.inject.Guice;

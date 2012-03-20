@@ -21,9 +21,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import org.joda.time.DateTime;
-import org.joda.time.Period;
 
-import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.UsernameSetterMixin;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -49,8 +47,8 @@ import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.entity.query.fluent.query.from;
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao2}.
@@ -315,12 +313,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
      */
     @SessionRequired
     protected List<T> list(final QueryExecutionModel<T> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-	final DateTime st = new DateTime();
-	final List<T> result = new EntityFetcher<T>(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()).list(queryModel, pageNumber, pageCapacity);
-	final Period pd = new Period(st, new DateTime());
-	//logger.info("\nFetch model tree: " + fetchModel);
-	logger.info("Total data retrieval time: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Results count: " + result.size());
-	return result;
+	return new EntityFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()).list(queryModel, pageNumber, pageCapacity);
     }
 
     @Override
@@ -394,19 +387,11 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
      */
     @SessionRequired
     protected int evalNumOfPages(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
-	final DateTime st = new DateTime();
-	int resultSize = 0;
 	final AggregatedResultQueryModel countQuery = select(model).yield().countAll().as("count").modelAsAggregate();
 	final AggregatesQueryExecutionModel countModel = from(countQuery).with(paramValues).lightweight(true).build();
 	final List<EntityAggregates> counts = new AggregatesFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()). //
 		list(countModel, null, null);
-
-	for (final EntityAggregates count : counts) {
-	    resultSize = resultSize + ((Number) count.get("count")).intValue();
-	}
-
-	final Period pd = new Period(st, new DateTime());
-	logger.info("Count query duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms.");
+	final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 
 	return resultSize % pageCapacity == 0 ? resultSize / pageCapacity : resultSize / pageCapacity + 1;
     }
@@ -649,5 +634,9 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
     @Override
     public User getUser() {
 	return userDao.findByKey(getUsername());
+    }
+
+    public IFilter getFilter() {
+        return filter;
     }
 }

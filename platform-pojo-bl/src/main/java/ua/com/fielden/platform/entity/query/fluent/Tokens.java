@@ -404,7 +404,7 @@ final class Tokens {
 	}
     }
 
-    public Tokens from(final EntityResultQueryModel<? extends AbstractEntity<?>>... sourceModels) {
+    public <T extends AbstractEntity<?>> Tokens from(final EntityResultQueryModel<T>... sourceModels) {
 	if (sourceModels.length >= 1) {
 	    return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
@@ -420,7 +420,7 @@ final class Tokens {
 	return add(TokenCategory.JOIN_TYPE, JoinType.LJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
-    public <E extends AbstractEntity<?>> Tokens innerJoin(final AggregatedResultQueryModel... sourceModels) {
+    public Tokens innerJoin(final AggregatedResultQueryModel... sourceModels) {
 	if (sourceModels.length >= 1) {
 	    return add(TokenCategory.JOIN_TYPE, JoinType.IJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {
@@ -436,7 +436,7 @@ final class Tokens {
 	}
     }
 
-    public <E extends AbstractEntity<?>> Tokens leftJoin(final AggregatedResultQueryModel... sourceModels) {
+    public Tokens leftJoin(final AggregatedResultQueryModel... sourceModels) {
 	if (sourceModels.length >= 1) {
 	    return add(TokenCategory.JOIN_TYPE, JoinType.LJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
 	} else {

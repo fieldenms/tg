@@ -493,7 +493,7 @@ public class DynamicQueryBuilder {
      * Helper method to form IWhereAtGroup1 instance from "compoundConditionAtGroup1" and "whereAtGroup1".
      *
      * @param compoundConditionAtGroup1
-     * @param query
+     * @param Equery
      * @return
      */
     private static IWhereAtGroup1 getWhereAtGroup1(final ICompoundConditionAtGroup1 compoundConditionAtGroup1, final IWhereAtGroup1 whereAtGroup1) {
@@ -504,7 +504,7 @@ public class DynamicQueryBuilder {
      * Helper method to form IWhereAtGroup2 instance from "compoundConditionAtGroup2" and "whereAtGroup2".
      *
      * @param compoundConditionAtGroup1
-     * @param query
+     * @param Equery
      * @return
      */
     private static IOthers.IWhereAtGroup2 getWhereAtGroup2(final IOthers.ICompoundConditionAtGroup2 compoundConditionAtGroup2, final IOthers.IWhereAtGroup2 whereAtGroup2) {

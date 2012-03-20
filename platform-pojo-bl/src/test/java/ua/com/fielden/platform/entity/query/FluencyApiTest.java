@@ -9,7 +9,7 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 
 public class FluencyApiTest extends TestCase {

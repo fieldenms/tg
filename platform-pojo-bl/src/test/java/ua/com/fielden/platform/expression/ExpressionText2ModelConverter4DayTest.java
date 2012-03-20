@@ -2,7 +2,7 @@ package ua.com.fielden.platform.expression;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.query.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.SUPER;
 import static ua.com.fielden.platform.expression.ast.visitor.CollectionalContextVisitor.THIS;
 

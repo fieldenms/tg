@@ -5,13 +5,13 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.fluent.query;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class CollectingQueryModelPropertiesTest extends BaseEntQueryTCase {
 
@@ -54,7 +54,7 @@ public class CollectingQueryModelPropertiesTest extends BaseEntQueryTCase {
 
     @Test
     public void test_prop_collector_with_correlates_subquery() {
-	final EntityResultQueryModel<TgVehicleModel> vehModelSubQry = query.select(MODEL).where().prop("make").isNotNull().and().prop("id").eq().prop("model").model();
+	final EntityResultQueryModel<TgVehicleModel> vehModelSubQry = EntityQueryUtils.select(MODEL).where().prop("make").isNotNull().and().prop("id").eq().prop("model").model();
 	final AggregatedResultQueryModel qry = select(VEHICLE).where().exists(vehModelSubQry).
 	groupBy().prop("model.desc").
 	yield().beginExpr().yearOf().prop("initDate").add().monthOf().prop("initDate").endExpr().as("calc").modelAsAggregate();

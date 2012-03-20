@@ -16,9 +16,9 @@ import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-import static ua.com.fielden.platform.entity.query.fluent.query.from;
-import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Provides common implementation shared between Hibernate and REST implementation of DAOs.

@@ -55,9 +55,9 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.query.expr;
-import static ua.com.fielden.platform.entity.query.fluent.query.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 
 public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.dao2;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -17,7 +17,6 @@ import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
 
-import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -56,8 +55,8 @@ public class MappingsGenerator {
     private final Map<Class, Class> hibTypesDefaults = new HashMap<Class, Class>();
     private Injector hibTypesInjector;
     private final DdlGenerator ddlGenerator = new DdlGenerator();
-    private Map<Class, SortedMap<String, PropertyPersistenceInfo>> hibTypeInfosMap = new HashMap<Class, SortedMap<String, PropertyPersistenceInfo>>();
-    final List<Class<? extends AbstractEntity>> entityTypes;
+    private final Map<Class, SortedMap<String, PropertyPersistenceInfo>> hibTypeInfosMap = new HashMap<Class, SortedMap<String, PropertyPersistenceInfo>>();
+    private final List<Class<? extends AbstractEntity>> entityTypes;
 
     public MappingsGenerator(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity>> entityTypes) {
 	if (hibTypesDefaults != null) {

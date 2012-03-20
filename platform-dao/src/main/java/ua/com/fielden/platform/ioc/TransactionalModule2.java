@@ -7,10 +7,10 @@ import java.util.Properties;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.annotations.Transactional;
 import ua.com.fielden.platform.dao2.CommonEntityDao2;
+import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Proxy;
 import ua.com.fielden.platform.entity.ioc.EntityModule;

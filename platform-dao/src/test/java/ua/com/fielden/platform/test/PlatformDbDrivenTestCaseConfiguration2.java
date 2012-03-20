@@ -11,7 +11,7 @@ import java.util.Map;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.YesNoType;
 
-import ua.com.fielden.platform.dao.MappingsGenerator;
+import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;

@@ -1,18 +1,21 @@
 package ua.com.fielden.platform.dao;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserRoleDao2;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao2;
 import ua.com.fielden.platform.security.provider.IUserController2;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 
 /**
@@ -27,11 +30,11 @@ public class UserUserRoleTestCase2 extends DbDrivenTestCase2 {
     private final ISecurityRoleAssociationDao2 securityDao = injector.getInstance(ISecurityRoleAssociationDao2.class);
     private final IUserController2 userDao = injector.getInstance(IUserController2.class);
 
-//    public void test_retrieval_of_user_role_associations() {
-//	final EntityResultQueryModel<UserAndRoleAssociation> associationModel = select(UserAndRoleAssociation.class).model();
-//	assertEquals("Incorrect number of user role associations.", 8, userAssociationDao.firstPage(from(associationModel).with(new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class).with("user", new fetch<User>(User.class))).build(), 10).data().size());
-//    }
-//
+    public void test_retrieval_of_user_role_associations() {
+	final EntityResultQueryModel<UserAndRoleAssociation> associationModel = select(UserAndRoleAssociation.class).model();
+	assertEquals("Incorrect number of user role associations.", 8, userAssociationDao.firstPage(from(associationModel).with(new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class).with("user", new fetch<User>(User.class))).build(), 10).data().size());
+    }
+
 //    public void test_retrieval_of_users() {
 //	final List<User> users = userDao.findAllUsersWithRoles();
 //	assertEquals("the number of retrieved persons is incorrect. Please check the testThatTheUsersWereRetrievedCorrectly", 4, users.size());
@@ -55,25 +58,25 @@ public class UserUserRoleTestCase2 extends DbDrivenTestCase2 {
 //	    }
 //	}
 //    }
-//
-//    public void test_user_role_retrieval() {
-//	final List<UserRole> userRoles = userRoleDao.findAll();
-//	assertEquals("the number of retrieved user roles is incorrect. Please check the testThatUserRolesWereRetrievedCorrectly", 8, userRoles.size());
-//
-//	for (int userRoleIndex = 0; userRoleIndex < 8; userRoleIndex++) {
-//	    final UserRole userRole = userRoles.get(userRoleIndex);
-//	    assertEquals("incorrect id of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", userRoleIndex + 1, userRole.getId().intValue());
-//	    assertEquals("incorrect key of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", "role" + Integer.toString(userRoleIndex + 1), userRole.getKey());
-//	    assertEquals("incorrect description of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", "role desc "
-//		    + Integer.toString(userRoleIndex + 1), userRole.getDesc());
-//	}
-//    }
-//
-//    public void test_user_role_retrieval_by_ids() {
-//	final List<UserRole> userRoles = userRoleDao.findByIds(1L, 4L);
-//	assertEquals("Incorrect number of user roles.", 2, userRoles.size());
-//    }
-//
+
+    public void test_user_role_retrieval() {
+	final List<UserRole> userRoles = userRoleDao.findAll();
+	assertEquals("the number of retrieved user roles is incorrect. Please check the testThatUserRolesWereRetrievedCorrectly", 8, userRoles.size());
+
+	for (int userRoleIndex = 0; userRoleIndex < 8; userRoleIndex++) {
+	    final UserRole userRole = userRoles.get(userRoleIndex);
+	    assertEquals("incorrect id of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", userRoleIndex + 1, userRole.getId().intValue());
+	    assertEquals("incorrect key of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", "role" + Integer.toString(userRoleIndex + 1), userRole.getKey());
+	    assertEquals("incorrect description of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", "role desc "
+		    + Integer.toString(userRoleIndex + 1), userRole.getDesc());
+	}
+    }
+
+    public void test_user_role_retrieval_by_ids() {
+	final List<UserRole> userRoles = userRoleDao.findByIds(1L, 4L);
+	assertEquals("Incorrect number of user roles.", 2, userRoles.size());
+    }
+
 //    public void test_that_save_for_users() {
 //	config.getHibernateUtil().getSessionFactory().getCurrentSession().close();
 //	// retrieving the user, modifying it's password and saving changes
@@ -142,42 +145,42 @@ public class UserUserRoleTestCase2 extends DbDrivenTestCase2 {
 //	    assertTrue("the 'new user'-th person doesn't have the " + userRoleAssociation.getUserRole().getKey() + "-th user role", userRolesAssociation.contains(userRoleAssociation));
 //	}
 //    }
-//
-//    public void test_that_security_associations_can_be_retrieved() {
-//	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
-//	final List<SecurityRoleAssociation> associations = securityDao.firstPage(from(model).with(new fetch<SecurityRoleAssociation>(SecurityRoleAssociation.class).with("role")).build(), Integer.MAX_VALUE).data();
-//	assertEquals("incorrect number of security token - role associations", 12, associations.size());
-//	final List<SecurityRoleAssociation> roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
-//	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());
-//	UserRole role = config.getEntityFactory().newByKey(UserRole.class, "role1");
-//	assertEquals("incorrect first role of the association", role, roles.get(0).getRole());
-//	role = config.getEntityFactory().newByKey(UserRole.class, "role2");
-//	assertEquals("incorrect second role of the association", role, roles.get(1).getRole());
-//    }
-//
-//    public void test_that_new_security_role_association_can_be_saved() {
-//	final UserRole role = config.getEntityFactory().newEntity(UserRole.class, "role56", "role56 desc");
-//	final SecurityRoleAssociation association = config.getEntityFactory().newByKey(SecurityRoleAssociation.class, FirstLevelSecurityToken1.class, role);
-//	userRoleDao.save(role);
-//	securityDao.save(association);
-//	final List<SecurityRoleAssociation> roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
-//	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 3, roles.size());
-//	assertTrue("The " + FirstLevelSecurityToken1.class.getName() + " security token doesn't have a role56 user role", roles.contains(association));
-//    }
-//
-//    public void test_that_security_role_association_can_be_removed() {
-//	List<SecurityRoleAssociation> roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
-//	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());
-//	securityDao.removeAssociationsFor(FirstLevelSecurityToken1.class);
-//	roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
-//	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 0, roles.size());
-//    }
-//
-//    public void test_count_association_between_user_and_token() {
-//	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", FirstLevelSecurityToken1.class));
-//	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", ThirdLevelSecurityToken1.class));
-//	assertEquals("Incorrect number of associations between user and token.", 0, securityDao.countAssociations("user1", ThirdLevelSecurityToken2.class));
-//    }
+
+    public void test_that_security_associations_can_be_retrieved() {
+	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
+	final List<SecurityRoleAssociation> associations = securityDao.firstPage(from(model).with(new fetch<SecurityRoleAssociation>(SecurityRoleAssociation.class).with("role")).build(), Integer.MAX_VALUE).data();
+	assertEquals("incorrect number of security token - role associations", 12, associations.size());
+	final List<SecurityRoleAssociation> roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
+	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());
+	UserRole role = config.getEntityFactory().newByKey(UserRole.class, "role1");
+	assertEquals("incorrect first role of the association", role, roles.get(0).getRole());
+	role = config.getEntityFactory().newByKey(UserRole.class, "role2");
+	assertEquals("incorrect second role of the association", role, roles.get(1).getRole());
+    }
+
+    public void test_that_new_security_role_association_can_be_saved() {
+	final UserRole role = config.getEntityFactory().newEntity(UserRole.class, "role56", "role56 desc");
+	final SecurityRoleAssociation association = config.getEntityFactory().newByKey(SecurityRoleAssociation.class, FirstLevelSecurityToken1.class, role);
+	userRoleDao.save(role);
+	securityDao.save(association);
+	final List<SecurityRoleAssociation> roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
+	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 3, roles.size());
+	assertTrue("The " + FirstLevelSecurityToken1.class.getName() + " security token doesn't have a role56 user role", roles.contains(association));
+    }
+
+    public void test_that_security_role_association_can_be_removed() {
+	List<SecurityRoleAssociation> roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
+	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());
+	securityDao.removeAssociationsFor(FirstLevelSecurityToken1.class);
+	roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
+	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 0, roles.size());
+    }
+
+    public void test_count_association_between_user_and_token() {
+	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", FirstLevelSecurityToken1.class));
+	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", ThirdLevelSecurityToken1.class));
+	assertEquals("Incorrect number of associations between user and token.", 0, securityDao.countAssociations("user1", ThirdLevelSecurityToken2.class));
+    }
 
     @Override
     protected String[] getDataSetPathsForInsert() {

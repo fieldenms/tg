@@ -6,33 +6,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Session;
-
-import ua.com.fielden.platform.dao.MappingsGenerator;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.generation.DbVersion;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import static ua.com.fielden.platform.entity.query.fluent.query.from;
-import static ua.com.fielden.platform.entity.query.fluent.query.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class EntityEnhancer<E extends AbstractEntity<?>> {
     private final static String ID_PROPERTY_NAME = "id";
-    private Session session;
-    private EntityFactory entityFactory;
-    private MappingsGenerator mappingsGenerator;
-    private DbVersion dbVersion;
-    private final IFilter filter;
-    private final String username;
+    private final EntityFetcher fetcher;
 
-    protected EntityEnhancer(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion, final IFilter filter, final String username) {
-	this.session = session;
-	this.entityFactory = entityFactory;
-	this.mappingsGenerator = mappingsGenerator;
-	this.dbVersion = dbVersion;
-	this.filter = filter;
-	this.username = username;
+    protected EntityEnhancer(final EntityFetcher fetcher) {
+	this.fetcher = fetcher;
     }
 
     /**
@@ -52,7 +37,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	    for (final Map.Entry<String, fetch<?>> entry : propertiesFetchModels.entrySet()) {
 		final String propName = entry.getKey();
 		final fetch<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
-		final PropertyPersistenceInfo ppi = mappingsGenerator.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
+		final PropertyPersistenceInfo ppi = fetcher.getMappingsGenerator().getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
 
 		if (/*!EntityUtils.isPersistedEntityType(entitiesType) || //*/ppi.isEntity() || ppi.isOne2OneId()) {
 		    enhanceProperty(entities, propName, propFetchModel);
@@ -108,7 +93,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	    final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
 	    final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
 		getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel) : //
-	    	new EntityEnhancer<T>(session, entityFactory, mappingsGenerator, dbVersion, filter, username).enhance(retrievedPropertyInstances, fetchModel);
+	    	new EntityEnhancer<T>(fetcher).enhance(retrievedPropertyInstances, fetchModel);
 
 	    // Replacing in entities the proxies of properties with properly enhanced property instances.
 	    for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -139,7 +124,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	    @SuppressWarnings("unchecked")
 	    final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(ID_PROPERTY_NAME).in().values(batch).model();
 	    @SuppressWarnings("unchecked")
-	    final List<EntityContainer<T>> properties = new EntityFetcher<T>(session, entityFactory, mappingsGenerator, dbVersion, filter, username).listContainers(from(currTypePropertyModel).with(fetchModel).build(), null, null);
+	    final List<EntityContainer<T>> properties = fetcher.listContainers(from(currTypePropertyModel).with(fetchModel).build(), null, null);
 	    result.addAll(properties);
 	    from = to;
 	    to = to + batchSize;

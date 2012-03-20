@@ -115,7 +115,7 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
      *
-     * @param query
+     * @param Equery
      * @param pageCapacity
      * @param pageNo
      * @return

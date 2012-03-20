@@ -6,7 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.dao.UsernameSetterMixin;
 import ua.com.fielden.platform.entity.query.AggregatesFetcher;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
@@ -24,42 +24,6 @@ public class EntityAggregatesDao2 implements IEntityAggregatesDao2 {
 	this.dao = dao;
     }
 
-//    @SessionRequired
-//    public List<EntityAggregates> listAggregates(final AggregatesQueryExecutionModel aggregatesQueryModel) {
-//	return dao.getEntities(aggregatesQueryModel);
-//    }
-//
-//    @Override
-//    public IPage<EntityAggregates> firstPage(final int pageCapacity) {
-//	return dao.firstPage(pageCapacity);
-//    }
-//
-//    @Override
-//    public IPage<EntityAggregates> firstPage(final IQueryOrderedModel<EntityAggregates> query, final fetch<EntityAggregates> fetchModel, final int pageCapacity) {
-//	return dao.firstPage(query, fetchModel, pageCapacity);
-//    }
-//
-//    @Override
-//    public IPage<EntityAggregates> getPage(final int pageNo, final int pageCapacity) {
-//	return dao.getPage(pageNo, pageCapacity);
-//    }
-//
-//    @Override
-//    public IPage<EntityAggregates> getPage(final IQueryOrderedModel<EntityAggregates> query, final fetch<EntityAggregates> fetchModel, final int pageNo, final int pageCapacity) {
-//	return getPage(query, fetchModel, pageNo, 0, pageCapacity);
-//    }
-//
-//    @Override
-//    public IPage<EntityAggregates> getPage(final IQueryOrderedModel<EntityAggregates> model, final fetch<EntityAggregates> fetchModel, final int pageNo, final int pageCount, final int pageCapacity) {
-//	return dao.getPage(model, fetchModel, pageNo, pageCount, pageCapacity);
-//    }
-//
-//
-//    @Override
-//    public byte[] export(final IQueryOrderedModel<EntityAggregates> query, final fetch<EntityAggregates> fetchModel, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-//	return dao.export(query, fetchModel, propertyNames, propertyTitles);
-//    }
-
     @Override
     public final void setUsername(final String username) {
 	try {
@@ -75,36 +39,30 @@ public class EntityAggregatesDao2 implements IEntityAggregatesDao2 {
     }
 
     @Override
-    public List<EntityAggregates> listAggregates(final AggregatesQueryExecutionModel aggregatesQueryModel) {
-	return new AggregatesFetcher(dao.getSession(), dao.getEntityFactory(), dao.getMappingsGenerator(), null, null, getUsername()).list(aggregatesQueryModel, null, null);
+    public List<EntityAggregates> getAggregates(final AggregatesQueryExecutionModel aggregatesQueryModel) {
+	return new AggregatesFetcher(dao.getSession(), dao.getEntityFactory(), dao.getMappingsGenerator(), null, dao.getFilter(), getUsername()).list(aggregatesQueryModel);
     }
 
     @Override
-    public IPage<EntityAggregates> firstPage(final int pageCapacity) {
+    public IPage2<EntityAggregates> firstPage(final AggregatesQueryExecutionModel query, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage<EntityAggregates> firstPage(final AggregatesQueryExecutionModel query, final int pageCapacity) {
+    public IPage2<EntityAggregates> firstPage(final AggregatesQueryExecutionModel model, final AggregatesQueryExecutionModel summaryModel, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage<EntityAggregates> getPage(final int pageNo, final int pageCapacity) {
+    public IPage2<EntityAggregates> getPage(final AggregatesQueryExecutionModel model, final int pageNo, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage<EntityAggregates> getPage(final AggregatesQueryExecutionModel model, final int pageNo, final int pageCapacity) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public IPage<EntityAggregates> getPage(final AggregatesQueryExecutionModel model, final int pageNo, final int pageCount, final int pageCapacity) {
+    public IPage2<EntityAggregates> getPage(final AggregatesQueryExecutionModel model, final int pageNo, final int pageCount, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
@@ -114,4 +72,5 @@ public class EntityAggregatesDao2 implements IEntityAggregatesDao2 {
 	// TODO Auto-generated method stub
 	return null;
     }
+
 }

@@ -10,9 +10,13 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-public class query {
+public class EntityQueryUtils {
     public static <T extends AbstractEntity<?>> IFromAlias select(final Class<T> entityType) {
 	return new FromAlias((new Tokens()).from(entityType));
+    }
+
+    public static <T extends AbstractEntity<?>> IFromAlias select(final EntityResultQueryModel<T> sourceQueryModel) {
+	return new FromAlias((new Tokens()).from(sourceQueryModel));
     }
 
     public static <T extends AbstractEntity<?>> IFromAlias select(final EntityResultQueryModel<T>... sourceQueryModels) {
