@@ -173,7 +173,28 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     }
 
     @Test
-    public void test_that_orderings_for_second_tick_are_default_and_can_be_altered(){
+    public void test_that_unused_properties_ToggleOrdering_action_for_second_tick_cause_exception() {
+	final String message = "Unused property should cause IllegalArgument exception.";
+	oneLevel(new IAction() {
+	    public void action(final String name) {
+		// SECOND TICK
+		// ordering
+		try {
+		    dtm().getSecondTick().toggleOrdering(MasterEntity.class, name);
+		    fail(message);
+		} catch (final IllegalArgumentException e) {
+		}
+	    }
+	}, "intAggExprProp", "bigDecimalAggExprProp", "moneyAggExprProp");
+    }
+
+    @Test
+    public void test_that_orderings_for_second_tick_are_default_and_can_be_altered() {
+	// it is necessary to make properties "used" to be able to toggle ordering
+	dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", true);
+	dtm().getSecondTick().use(MasterEntity.class, "bigDecimalAggExprProp", true);
+	dtm().getSecondTick().use(MasterEntity.class, "moneyAggExprProp", true);
+
 	// THE FIRST TIME -- returns DEFAULT VALUES //
 	// Default ordering for the analysis's second tick should be empty.
 	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
@@ -203,7 +224,7 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     }
 
     @Test
-    public void test_that_usage_management_works_correctly_for_first_tick(){
+    public void test_that_usage_management_works_correctly_for_first_tick() {
 	// At the beginning the list of used properties should be empty.
 	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getFirstTick().usedProperties(MasterEntity.class));
 
@@ -229,7 +250,7 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     }
 
     @Test
-    public void test_that_usage_management_works_correctly_for_second_tick(){
+    public void test_that_usage_management_works_correctly_for_second_tick() {
 	// At the beginning the list of used properties should be empty.
 	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().usedProperties(MasterEntity.class));
 
@@ -314,6 +335,9 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 
     @Test
     public void test_that_PropertyOrderingListeners_work() {
+	// it is necessary to make properties "used" to be able to toggle ordering
+	dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", true);
+
 	i = 0;
 	final IPropertyOrderingListener listener = new IPropertyOrderingListener() {
 	    @Override

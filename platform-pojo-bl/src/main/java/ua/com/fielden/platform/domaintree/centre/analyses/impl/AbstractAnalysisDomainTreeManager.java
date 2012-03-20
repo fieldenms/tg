@@ -273,7 +273,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 
 	@Override
 	public void toggleOrdering(final Class<?> root, final String property) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not toggle 'ordering' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not toggle 'ordering' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    if (!rootsListsOfOrderings.containsKey(root)) {
 		rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(tr().orderedPropertiesByDefault(root)));
 	    }

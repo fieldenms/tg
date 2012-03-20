@@ -17,6 +17,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
@@ -155,6 +156,20 @@ public abstract class AbstractDomainTree {
      */
     protected static void illegalUncheckedProperties(final ITickManager tm, final Class<?> root, final String property, final String message) {
         if (!tm.isChecked(root, property)) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    /**
+     * Throws an {@link IllegalArgumentException} if the property is unused.
+     *
+     * @param tm
+     * @param root
+     * @param property
+     * @param message
+     */
+    protected static void illegalUnusedProperties(final IUsageManager um, final Class<?> root, final String property, final String message) {
+        if (!um.isUsed(root, property)) {
             throw new IllegalArgumentException(message);
         }
     }
