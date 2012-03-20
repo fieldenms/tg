@@ -5,6 +5,7 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyStateListener;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
@@ -75,6 +76,36 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     public enum AnalysisType {
 	SIMPLE, PIVOT, LIFECYCLE
     }
+
+    /**
+     * A post-successful listener for analysis adding / removal.
+     *
+     * @author TG Team
+     *
+     */
+    public interface IAnalysisListener extends IPropertyStateListener<Boolean> {
+	/**
+	 * @param hasBeenInitialised -- <code>true</code> to indicate that analysis with <i>name</i> was successfully initialised, <code>false</code> to indicate that it has been ceased to exist successfully.
+	 */
+	@Override
+	void propertyStateChanged(final Class<?> nothing, final String name, final Boolean hasBeenInitialised, final Boolean oldState);
+    }
+
+    /**
+     * Adds a {@link IAnalysisListener} listener.
+     *
+     * @param listener
+     * @return
+     */
+    boolean addAnalysisListener(final IAnalysisListener listener);
+
+    /**
+     * Removes a {@link IAnalysisListener} listener.
+     *
+     * @param listener
+     * @return
+     */
+    boolean removeAnalysisListener(final IAnalysisListener listener);
 
     /**
      * Initialises a brand new <b>analysis manager</b> with specified <code>name</code> and <code>analysisType</code>. The initialisation uses raw instance creation. <br><br>

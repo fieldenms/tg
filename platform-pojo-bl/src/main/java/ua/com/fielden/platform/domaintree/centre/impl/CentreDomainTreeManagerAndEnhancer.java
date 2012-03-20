@@ -544,6 +544,16 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
     @Override
+    public boolean addAnalysisListener(final IAnalysisListener listener) {
+	return base().addAnalysisListener(listener);
+    }
+
+    @Override
+    public boolean removeAnalysisListener(final IAnalysisListener listener) {
+	return base().removeAnalysisListener(listener);
+    }
+
+    @Override
     public IAbstractAnalysisDomainTreeManagerAndEnhancer getAnalysisManager(final String name) {
 	return base().getAnalysisManager(name);
     }

@@ -57,6 +57,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> freezedAnalyses;
     private Boolean runAutomatically;
 
+    private final transient List<IAnalysisListener> analysisListeners;
+
     /**
      * A <i>manager</i> constructor for the first time instantiation.
      *
@@ -86,6 +88,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    currentAnalyses.put(entry.getKey(), EntityUtils.deepCopy(entry.getValue(), getSerialiser())); // should be initialised with copies of persistent analyses
 	}
 	freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
+
+	this.analysisListeners = new ArrayList<IAnalysisListener>();
     }
 
     @Override
@@ -672,6 +676,16 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     }
 
     @Override
+    public boolean addAnalysisListener(final IAnalysisListener listener) {
+	return analysisListeners.add(listener);
+    }
+
+    @Override
+    public boolean removeAnalysisListener(final IAnalysisListener listener) {
+	return analysisListeners.remove(listener);
+    }
+
+    @Override
     public void initAnalysisManagerByDefault(final String name, final AnalysisType analysisType) {
 	if (isFreezed(name)) {
 	    error("Unable to Init analysis instance if it is freezed for title [" + name + "].");
@@ -687,10 +701,17 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	} if (AnalysisType.LIFECYCLE.equals(analysisType)) {
 	    currentAnalyses.put(name, new LifecycleDomainTreeManagerAndEnhancer(getSerialiser(), getRepresentation().rootTypes()));
 	}
+	// fire "initialised" event
+	if (getAnalysisManager(name) != null) {
+	    for (final IAnalysisListener listener : analysisListeners) {
+		listener.propertyStateChanged(null, name, true, null);
+	    }
+	}
     }
 
     @Override
     public void discardAnalysisManager(final String name) {
+	final boolean wasInitialised = getAnalysisManager(name) != null;
 	final IAbstractAnalysisDomainTreeManagerAndEnhancer dtm = EntityUtils.deepCopy(persistentAnalyses.get(name), getSerialiser());
 	if (dtm != null) {
 	    currentAnalyses.put(name, dtm);
@@ -700,6 +721,12 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
 	if (isFreezed(name)) {
 	    unfreeze(name);
+	}
+	// fire "removed" event
+	if (wasInitialised && (getAnalysisManager(name) == null)) {
+	    for (final IAnalysisListener listener : analysisListeners) {
+		listener.propertyStateChanged(null, name, false, null);
+	    }
 	}
     }
 
@@ -733,6 +760,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 	currentAnalyses.remove(name);
 	acceptAnalysisManager(name);
+
+	// fire "removed" event
+	if (getAnalysisManager(name) == null) {
+	    for (final IAnalysisListener listener : analysisListeners) {
+		listener.propertyStateChanged(null, name, false, null);
+	    }
+	}
     }
 
     @Override

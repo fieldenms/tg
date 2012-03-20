@@ -36,7 +36,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     private final AbstractDomainTreeRepresentation dtr;
     private final TickManager firstTick;
     private final TickManager secondTick;
-    private final transient IPropertyListener listener;
+    private final transient IPropertyListener includedPropertiesSynchronisationListener;
 
     /**
      * A <i>manager</i> constructor.
@@ -101,8 +101,8 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	}
 
 	// the below listener is intended to update checked properties for both ticks when the skeleton of included properties has been changed
-	listener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick(), dtr);
-	this.getRepresentation().addPropertyListener(listener);
+	includedPropertiesSynchronisationListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick(), dtr);
+	this.getRepresentation().addPropertyListener(includedPropertiesSynchronisationListener);
     }
 
     /**
@@ -230,7 +230,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     }
 
     protected IPropertyListener listener() {
-	return listener;
+	return includedPropertiesSynchronisationListener;
     }
 
     /**

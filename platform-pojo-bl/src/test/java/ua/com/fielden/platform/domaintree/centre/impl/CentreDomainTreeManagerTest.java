@@ -21,6 +21,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerA
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAnalysisListener;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -702,6 +703,85 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	assertNotNull("Should be not null after accept operation.", dtm().getAnalysisManager(name));
 	assertTrue("Should be checked.", dtm().getAnalysisManager(name).getFirstTick().isChecked(MasterEntity.class, "simpleEntityProp"));
 	assertFalse("Should be unchecked after discarding.", dtm().getAnalysisManager(name).getFirstTick().isChecked(MasterEntity.class, "booleanProp"));
+
+	// remove just accepted analysis
+	dtm().removeAnalysisManager(name);
+	assertNull("Should be null after removal.", dtm().getAnalysisManager(name));
+	assertFalse("The instance should be 'unchanged' after removal.", dtm().isChangedAnalysisManager(name));
+
+	// initialise a brand new instance of analysis in order to test removal of the changed instance
+	dtm().initAnalysisManagerByDefault(name, analysisType);
+	assertTrue("The instance should be 'changed' after initialisation.", dtm().isChangedAnalysisManager(name));
+	analysisMgr = dtm().getAnalysisManager(name);
+	analysisMgr.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	assertTrue("The instance should remain 'changed' after some operations.", dtm().isChangedAnalysisManager(name));
+	dtm().removeAnalysisManager(name);
+	assertNull("Should be null after removal.", dtm().getAnalysisManager(name));
+	assertFalse("The instance should be 'unchanged' after removal.", dtm().isChangedAnalysisManager(name));
+    }
+
+    private static int i, j;
+
+    @Test
+    public void test_that_AnalysisListeners_work() {
+	i = 0; j = 0;
+	final IAnalysisListener listener = new IAnalysisListener() {
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenInitialised, final Boolean oldState) {
+		if (hasBeenInitialised == null) {
+		    throw new IllegalArgumentException("'hasBeenInitialised' cannot be null.");
+		}
+		if (hasBeenInitialised) {
+		    i++;
+		} else {
+		    j++;
+		}
+	    }
+	};
+	dtm().addAnalysisListener(listener);
+
+	assertEquals("Incorrect value 'i'.", 0, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	final String name = "Analysis";
+	final AnalysisType analysisType = AnalysisType.SIMPLE;
+	// initialisation
+	dtm().initAnalysisManagerByDefault(name, analysisType);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	dtm().getAnalysisManager(name).getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 0, j);
+
+	// discarding
+	dtm().discardAnalysisManager(name);
+	assertEquals("Incorrect value 'i'.", 1, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
+
+	// initialisation again
+	dtm().initAnalysisManagerByDefault(name, analysisType);
+	assertEquals("Incorrect value 'i'.", 2, i);
+	assertEquals("Incorrect value 'j'.", 1, j);
+
+	// removal (not accepted)
+	dtm().removeAnalysisManager(name);
+	assertEquals("Incorrect value 'i'.", 2, i);
+	assertEquals("Incorrect value 'j'.", 2, j);
+
+	// initialisation again
+	dtm().initAnalysisManagerByDefault(name, analysisType);
+	assertEquals("Incorrect value 'i'.", 3, i);
+	assertEquals("Incorrect value 'j'.", 2, j);
+
+	dtm().acceptAnalysisManager(name);
+	assertEquals("Incorrect value 'i'.", 3, i);
+	assertEquals("Incorrect value 'j'.", 2, j);
+
+	// removal (accepted)
+	dtm().removeAnalysisManager(name);
+	assertEquals("Incorrect value 'i'.", 3, i);
+	assertEquals("Incorrect value 'j'.", 3, j);
     }
 
     @Test
