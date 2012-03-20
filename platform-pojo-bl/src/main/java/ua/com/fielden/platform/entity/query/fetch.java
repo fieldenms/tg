@@ -24,6 +24,17 @@ public class fetch<T extends AbstractEntity<?>> {
 
     public fetch(final Class<T> entityType) {
 	this.entityType = entityType;
+	enhanceFetchModelWithKeyProperties();
+    }
+
+    private void enhanceFetchModelWithKeyProperties() {
+	final List<String> keyMemberNames = Finder.getFieldNames(Finder.getKeyMembers(entityType));
+	for (final String keyProperty : keyMemberNames) {
+	    final Class propType = PropertyTypeDeterminator.determinePropertyType(entityType, keyProperty);
+	    if (AbstractEntity.class.isAssignableFrom(propType)) {
+		with(keyProperty, new fetch(propType));
+	    }
+	}
     }
 
     protected void withAll() {

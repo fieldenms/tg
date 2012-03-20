@@ -37,7 +37,7 @@ public class UserRoleDao2 extends CommonEntityDao2<UserRole> implements IUserRol
     public List<UserRole> findAll() {
 	final EntityResultQueryModel<UserRole> model = select(UserRole.class).model();
 	final OrderingModel orderBy = orderBy().prop("key").asc().model();
-	return getEntities(from(model).with(orderBy).build());
+	return getAllEntities(from(model).with(orderBy).build());
     }
 
     @Override
@@ -48,6 +48,6 @@ public class UserRoleDao2 extends CommonEntityDao2<UserRole> implements IUserRol
 
 	final EntityResultQueryModel<UserRole> model = select(UserRole.class).where().prop("id").in().values(ids).model();
 	final OrderingModel orderBy = orderBy().prop("key").asc().model();
-	return getEntities(from(model).with(orderBy).build());
+	return getAllEntities(from(model).with(orderBy).build());
     }
 }

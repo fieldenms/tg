@@ -312,13 +312,13 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
      * @return
      */
     @SessionRequired
-    protected List<T> list(final QueryExecutionModel<T> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-	return new EntityFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()).list(queryModel, pageNumber, pageCapacity);
+    protected List<T> getEntitiesOnPage(final QueryExecutionModel<T> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+	return new EntityFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
     }
 
     @Override
-    public List<T> getEntities(final QueryExecutionModel<T> query) {
-	return list(query, null, null);
+    public List<T> getAllEntities(final QueryExecutionModel<T> query) {
+	return getEntitiesOnPage(query, null, null);
     }
 
     /**
@@ -440,7 +440,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	final HSSFCellStyle dataCellStyle = wb.createCellStyle();
 	dataCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
 	// run the query and iterate through result exporting the data
-	final List<T> result = list(query, null, null);
+	final List<T> result = getEntitiesOnPage(query, null, null);
 	for (int index = 0; index < result.size(); index++) {
 	    final HSSFRow row = sheet.createRow(index + 1); // new row starting with 1
 	    // iterate through values in the current table row and populate the sheet row
@@ -514,7 +514,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	    throw new Result(new IllegalArgumentException("Null is not an acceptable value for eQuery model."));
 	}
 
-	final List<T> toBeDeleted = getEntities(from(model).with(paramValues).lightweight(true).build());
+	final List<T> toBeDeleted = getAllEntities(from(model).with(paramValues).lightweight(true).build());
 
 	for (final T entity : toBeDeleted) {
 	    defaultDelete(entity);
@@ -547,7 +547,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	    this.pageCapacity = pageCapacity;
 	    this.numberOfPages = numberOfPages == 0 ? 1 : numberOfPages;
 	    this.queryModel = queryModel;
-	    data = list(queryModel, pageNumber, pageCapacity);
+	    data = getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
 	}
 
 	@Override

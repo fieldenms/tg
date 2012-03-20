@@ -491,7 +491,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(rootName, newTitle);
 	System.out.println("////////////////////////////////////////////////////////");
 
-	entityCentreConfigController.getEntities(from(model).build());
+	entityCentreConfigController.getAllEntities(from(model).build());
 
 	System.out.println("////////////////////////////////////////////////////////");
 

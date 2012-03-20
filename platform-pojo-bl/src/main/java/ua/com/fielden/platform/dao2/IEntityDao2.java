@@ -240,7 +240,7 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
      * @param quert
      * @return
      */
-    List<T> getEntities(final QueryExecutionModel<T> query);
+    List<T> getAllEntities(final QueryExecutionModel<T> query);
 
     /**
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.

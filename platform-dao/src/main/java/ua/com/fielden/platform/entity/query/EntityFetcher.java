@@ -17,8 +17,6 @@ import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 
 public class EntityFetcher {
@@ -39,7 +37,7 @@ public class EntityFetcher {
     }
 
     @SessionRequired
-    public <E extends AbstractEntity<?>> List<E> list(final QueryExecutionModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+    public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity) {
 	try {
 	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight());
 	} catch (final Exception e) {
@@ -48,27 +46,16 @@ public class EntityFetcher {
 	}
     }
 
-    public <E extends AbstractEntity<?>> List<E> list(final QueryExecutionModel<E> queryModel) {
-	return list(queryModel, null, null);
+    public <E extends AbstractEntity<?>> List<E> getEntities(final QueryExecutionModel<E> queryModel) {
+	return getEntitiesOnPage(queryModel, null, null);
     }
 
     @SessionRequired
     protected <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainers(final QueryExecutionModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final QueryModelResult<E> modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getMappingsGenerator(), getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
-	return new EntityEnhancer<E>(this).enhance(result, enhanceFetchModelWithKeyProperties(queryModel.getFetchModel(), modelResult.getResultType()));
-    }
-
-    private <E extends AbstractEntity<?>> fetch<E> enhanceFetchModelWithKeyProperties(final fetch<E> fetchModel, final Class<E> entitiesType) {
-	final fetch<E> enhancedFetchModel = fetchModel != null ? fetchModel : new fetch<E>(entitiesType);
-	final List<String> keyMemberNames = Finder.getFieldNames(Finder.getKeyMembers(entitiesType));
-	for (final String keyProperty : keyMemberNames) {
-	    final Class propType = PropertyTypeDeterminator.determinePropertyType(entitiesType, keyProperty);
-	    if (AbstractEntity.class.isAssignableFrom(propType) && !enhancedFetchModel.getFetchModels().containsKey(keyProperty)) {
-		enhancedFetchModel.with(keyProperty, new fetch(propType));
-	    }
-	}
-	return enhancedFetchModel;
+	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : new fetch<E>(modelResult.getResultType());
+	return new EntityEnhancer<E>(this).enhance(result, fetchModel);
     }
 
     protected Query produceHibernateQuery(final String sql, final List<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams) {

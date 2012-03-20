@@ -121,9 +121,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 		to = allParentIds.length;
 	    }
 	    final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
-	    @SuppressWarnings("unchecked")
 	    final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(ID_PROPERTY_NAME).in().values(batch).model();
-	    @SuppressWarnings("unchecked")
 	    final List<EntityContainer<T>> properties = fetcher.listContainers(from(currTypePropertyModel).with(fetchModel).build(), null, null);
 	    result.addAll(properties);
 	    from = to;

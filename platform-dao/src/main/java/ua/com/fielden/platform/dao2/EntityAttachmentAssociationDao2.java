@@ -45,7 +45,7 @@ public class EntityAttachmentAssociationDao2 extends CommonEntityDao2<EntityAtta
     public IPage2<EntityAttachmentAssociation> findDetails(final AbstractEntity<?> masterEntity, final fetch<EntityAttachmentAssociation> model, final int pageCapacity) {
 	final EntityResultQueryModel<EntityAttachmentAssociation> q = select(EntityAttachmentAssociation.class).where().prop("entityId").eq().val(masterEntity).model();
 	final OrderingModel ordering = orderBy().prop("attachment.key").asc().model();
-	return new SinglePage2<EntityAttachmentAssociation>(getEntities(from(q).with(ordering).with(new fetchAll<EntityAttachmentAssociation>(EntityAttachmentAssociation.class)).build()));
+	return new SinglePage2<EntityAttachmentAssociation>(getAllEntities(from(q).with(ordering).with(new fetchAll<EntityAttachmentAssociation>(EntityAttachmentAssociation.class)).build()));
     }
 
     @Override

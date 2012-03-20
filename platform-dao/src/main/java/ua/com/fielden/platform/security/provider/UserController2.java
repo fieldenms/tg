@@ -100,7 +100,7 @@ public class UserController2 extends CommonEntityDao2<User> implements IUserCont
     public List<User> findAllUsersWithRoles() {
 	final EntityResultQueryModel<User> model = select(User.class).where().prop("key").isNotNull().model();
 	final OrderingModel orderBy = orderBy().prop("key").asc().model();
-	return getEntities(from(model).with(fetchModel).with(orderBy).build());
+	return getAllEntities(from(model).with(fetchModel).with(orderBy).build());
     }
 
     @Override

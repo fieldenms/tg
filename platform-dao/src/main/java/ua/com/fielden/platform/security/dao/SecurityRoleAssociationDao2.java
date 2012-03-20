@@ -43,7 +43,7 @@ public class SecurityRoleAssociationDao2 extends CommonEntityDao2<SecurityRoleAs
     public List<SecurityRoleAssociation> findAssociationsFor(final  Class<? extends ISecurityToken> securityToken) {
 	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).where().prop("securityToken").eq().val(securityToken.getName()).model();
 	final OrderingModel orderBy = orderBy().prop("role").asc().model();
-	return getEntities(from(model).with(new fetchAll<SecurityRoleAssociation>(SecurityRoleAssociation.class)).with(orderBy).build());
+	return getAllEntities(from(model).with(new fetchAll<SecurityRoleAssociation>(SecurityRoleAssociation.class)).with(orderBy).build());
     }
 
     @Override
