@@ -6,7 +6,7 @@ import java.util.SortedSet;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public class QueryModelResult<T extends AbstractEntity<?>> {
+public final class QueryModelResult<T extends AbstractEntity<?>> {
     private Class<T> resultType;
     private String sql;
     private Map<String, Object> paramValues;

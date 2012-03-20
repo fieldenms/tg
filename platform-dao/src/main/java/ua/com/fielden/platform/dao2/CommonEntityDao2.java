@@ -106,7 +106,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
     }
 
     /**
-     * A separate setter is used in order to avoid enforcement of providing mapping extractor as one of constructor parameter in descendant classes.
+     * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
      *
      * @param mappingExtractor
      */
