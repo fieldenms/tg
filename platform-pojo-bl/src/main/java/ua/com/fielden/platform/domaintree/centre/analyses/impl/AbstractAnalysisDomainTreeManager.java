@@ -224,12 +224,26 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	    final List<String> listOfUsedProperties = getAndInitUsedProperties(root, property);
 	    if (check && !listOfUsedProperties.contains(property)) {
 		listOfUsedProperties.add(property);
-	    } else if (!check) {
+	    } else if (!check && listOfUsedProperties.contains(property)) {
+		// before successful removal of the Usage -- the Ordering should be removed
+		while (isOrdered(property, orderedProperties(root))) {
+		    toggleOrdering(root, property);
+		}
+		// perform actual removal
 		listOfUsedProperties.remove(property);
 	    }
 	    for (final IPropertyUsageListener listener : propertyUsageListeners) {
 		listener.propertyStateChanged(root, property, check, null);
 	    }
+	}
+
+	private static boolean isOrdered(final String property, final List<Pair<String, Ordering>> orderedProperties) {
+	    for (final Pair<String, Ordering> pair : orderedProperties) {
+		if (property.equals(pair.getKey())) {
+		    return true;
+		}
+	    }
+	    return false;
 	}
 
 	@Override

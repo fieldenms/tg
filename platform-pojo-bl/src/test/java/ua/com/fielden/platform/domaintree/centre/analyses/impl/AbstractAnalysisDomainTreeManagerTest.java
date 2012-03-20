@@ -224,6 +224,31 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     }
 
     @Test
+    public void test_that_Orderings_for_second_tick_can_be_changed_based_on_Usage_changes() {
+	// it is necessary to make properties "used" to be able to toggle ordering
+	dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", true);
+	dtm().getSecondTick().use(MasterEntity.class, "bigDecimalAggExprProp", true);
+	dtm().getSecondTick().use(MasterEntity.class, "moneyAggExprProp", true);
+	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
+	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
+	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
+	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "moneyAggExprProp");
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING), new Pair<String, Ordering>("bigDecimalAggExprProp", Ordering.DESCENDING), new Pair<String, Ordering>("moneyAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+
+	// un-use middle property
+	dtm().getSecondTick().use(MasterEntity.class, "bigDecimalAggExprProp", false);
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING), new Pair<String, Ordering>("moneyAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+
+	// un-use right property
+	dtm().getSecondTick().use(MasterEntity.class, "moneyAggExprProp", false);
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+
+	// un-use last property
+	dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", false);
+	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+    }
+
+    @Test
     public void test_that_usage_management_works_correctly_for_first_tick() {
 	// At the beginning the list of used properties should be empty.
 	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getFirstTick().usedProperties(MasterEntity.class));
