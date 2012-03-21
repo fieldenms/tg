@@ -446,9 +446,11 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
 	baseMgr.initEntityCentreManager(MasterEntity.class, null);
 	baseMgr.saveAsEntityCentreManager(MasterEntity.class, null, "BASE SAVE AS REPORT");
+	assertEquals("Incorrect names of entity-centres.", new HashSet<String>() {{ add(null); add("BASE SAVE AS REPORT"); }}, baseMgr.entityCentreNames(MasterEntity.class));
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
 	nonBaseMgr.initEntityCentreManager(MasterEntity.class, "BASE SAVE AS REPORT");
 	nonBaseMgr.saveAsEntityCentreManager(MasterEntity.class, "BASE SAVE AS REPORT", "NON-BASE SAVE AS REPORT");
+	assertEquals("Incorrect names of entity-centres.", new HashSet<String>() {{ add("BASE SAVE AS REPORT"); add("NON-BASE SAVE AS REPORT"); }}, nonBaseMgr.entityCentreNames(MasterEntity.class));
 
 	// check init methods for another instance of application for user USER2
 	final IGlobalDomainTreeManager newNonBaseMgr = createManagerForNonBaseUser();
@@ -458,6 +460,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityCentreManager(MasterEntity.class, "BASE SAVE AS REPORT"));
 	newNonBaseMgr.initEntityCentreManager(MasterEntity.class, "NON-BASE SAVE AS REPORT");
 	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityCentreManager(MasterEntity.class, "NON-BASE SAVE AS REPORT"));
+	assertEquals("Incorrect names of entity-centres.", new HashSet<String>() {{ add(null); add("BASE SAVE AS REPORT"); add("NON-BASE SAVE AS REPORT"); }}, newNonBaseMgr.entityCentreNames(MasterEntity.class));
     }
 
     @Test

@@ -4,7 +4,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -561,6 +563,18 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    // remove an instance of EntityCentreConfig which should exist in DB
 	    entityCentreConfigController.delete(modelForCurrentUser(root.getName(), title(root, name)));
 	}
+    }
+
+    @Override
+    public Set<String> entityCentreNames(final Class<?> root) {
+	AbstractDomainTree.validateRootType(root);
+	final Set<String> names = new HashSet<String>();
+	for (final Pair<Class<?>, String> key : currentCentres.keySet()) {
+	    if (root.equals(key.getKey())) {
+		names.add(key.getValue());
+	    }
+	}
+	return Collections.unmodifiableSet(names);
     }
 
     /////////////////////////////////////////////////////////////////////////////////

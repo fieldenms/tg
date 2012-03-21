@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.domaintree;
 
+import java.util.Set;
+
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -183,6 +185,23 @@ public interface IGlobalDomainTreeManager {
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
     void removeEntityCentreManager(final Class<?> root, final String name);
+
+    /**
+     * Returns unordered names of current versions of <b>entity-centre managers</b> for domain type <b>root</b>.
+     * The <b>name</b> could represent a non-empty name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
+     *
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
+     * Non-base users can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but cannot save/remove base user's reports (throws {@link IllegalArgumentException}).
+     * Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br><br>
+     *
+     * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}),
+     * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
+     * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
+     *
+     * @param root -- a domain type relevant to an entity-centre manager.
+     * @return
+     */
+    Set<String> entityCentreNames(final Class<?> root);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////// ENTITY MASTER MANAGERS //////////////////////////////////////////////
