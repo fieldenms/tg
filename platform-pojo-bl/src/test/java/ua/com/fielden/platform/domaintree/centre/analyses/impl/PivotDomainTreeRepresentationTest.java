@@ -8,7 +8,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 
 /**
@@ -70,6 +69,17 @@ public class PivotDomainTreeRepresentationTest extends AbstractAnalysisDomainTre
 		}
 		try {
 		    dtm().getRepresentation().getSecondTick().setWidthByDefault(MasterEntity.class, name, 85);
+		    fail(message);
+		} catch (final IllegalArgumentException e) {
+		}
+		// get/set width by default
+		try {
+		    dtm().getRepresentation().getFirstTick().getWidthByDefault(MasterEntity.class, name);
+		    fail(message);
+		} catch (final IllegalArgumentException e) {
+		}
+		try {
+		    dtm().getRepresentation().getFirstTick().setWidthByDefault(MasterEntity.class, name, 85);
 		    fail(message);
 		} catch (final IllegalArgumentException e) {
 		}

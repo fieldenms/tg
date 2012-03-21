@@ -7,6 +7,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManage
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRepresentation.PivotAddToAggregationTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRepresentation.PivotAddToDistributionTickRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
@@ -72,11 +73,13 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
 	@Override
 	public int getWidth(final Class<?> root, final String property) {
+	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not get a 'width' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return PivotDomainTreeRepresentation.getWidthByDefault(tr().getDtr(), root, property, propertiesWidths, tr().getWidthByDefault(root, property));
 	}
 
 	@Override
 	public void setWidth(final Class<?> root, final String property, final int width) {
+	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not set a 'width' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    PivotDomainTreeRepresentation.setWidthByDefault(tr().getDtr(), root, property, width, propertiesWidths);
 	}
 
@@ -126,11 +129,13 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 
 	@Override
 	public int getWidth(final Class<?> root, final String property) {
+	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not get a 'width' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return PivotDomainTreeRepresentation.getWidthByDefault(tr().getDtr(), root, property, propertiesWidths, tr().getWidthByDefault(root, property));
 	}
 
 	@Override
 	public void setWidth(final Class<?> root, final String property, final int width) {
+	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not set a 'width' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    PivotDomainTreeRepresentation.setWidthByDefault(tr().getDtr(), root, property, width, propertiesWidths);
 	}
 

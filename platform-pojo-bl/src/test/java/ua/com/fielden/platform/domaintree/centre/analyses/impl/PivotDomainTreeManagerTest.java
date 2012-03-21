@@ -55,11 +55,28 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     @Test
-    public void test_that_excluded_properties_actions_for_second_ticks_cause_exceptions_for_all_specific_logic() {
-	final String message = "Excluded property should cause IllegalArgument exception.";
+    public void test_that_unused_properties_actions_for_both_ticks_cause_exceptions_for_all_specific_logic() {
+	final String message = "Unused property should cause IllegalArgument exception.";
+
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		// get/set width by default
+		// get/set width
+		try {
+		    dtm().getFirstTick().getWidth(MasterEntity.class, name);
+		    fail(message);
+		} catch (final IllegalArgumentException e) {
+		}
+		try {
+		    dtm().getFirstTick().setWidth(MasterEntity.class, name, 85);
+		    fail(message);
+		} catch (final IllegalArgumentException e) {
+		}
+	    }
+	}, "excludedManuallyProp", "dateProp", "integerProp", "booleanProp", "intAggExprProp");
+
+	allLevels(new IAction() {
+	    public void action(final String name) {
+		// get/set width
 		try {
 		    dtm().getSecondTick().getWidth(MasterEntity.class, name);
 		    fail(message);
@@ -71,35 +88,53 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
 		} catch (final IllegalArgumentException e) {
 		}
 	    }
-	}, "excludedManuallyProp");
-    }
-
-    @Test
-    public void test_that_Widths_for_second_tick_are_default_for_the_first_time_and_can_be_altered() {
-	// THE FIRST TIME -- returns DEFAULT VALUES //
-	// default value should be 80
-	checkOrSetMethodValues(80, "dateProp", dtm().getSecondTick(), "getWidth");
-	checkOrSetMethodValues(85, "dateProp", dtm().getRepresentation().getSecondTick(), "setWidthByDefault", int.class);
-	checkOrSetMethodValues(85, "dateProp", dtm().getSecondTick(), "getWidth");
-
-	// Alter and check //
-	checkOrSetMethodValues(95, "dateProp", dtm().getSecondTick(), "setWidth", int.class);
-
-	checkOrSetMethodValues(95, "dateProp", dtm().getSecondTick(), "getWidth");
+	}, "excludedManuallyProp", "dateProp", "integerProp", "booleanProp", "intAggExprProp");
     }
 
     @Test
     public void test_that_Widths_for_first_tick_are_default_for_the_first_time_and_can_be_altered() {
+	final String property = "booleanProp";
+
+	allLevelsWithoutCollections(new IAction() {
+	    public void action(final String name) {
+		dtm().getFirstTick().check(MasterEntity.class, name, true);
+		dtm().getFirstTick().use(MasterEntity.class, name, true);
+	    }
+	}, property);
+
 	// THE FIRST TIME -- returns DEFAULT VALUES //
 	// default value should be 80
-	checkOrSetMethodValues(80, "dateProp", dtm().getFirstTick(), "getWidth");
-	checkOrSetMethodValues(85, "dateProp", dtm().getRepresentation().getFirstTick(), "setWidthByDefault", int.class);
-	checkOrSetMethodValues(85, "dateProp", dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForNonCollectional(80, property, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForNonCollectional(85, property, dtm().getRepresentation().getFirstTick(), "setWidthByDefault", int.class);
+	checkOrSetMethodValuesForNonCollectional(85, property, dtm().getFirstTick(), "getWidth");
 
 	// Alter and check //
-	checkOrSetMethodValues(95, "dateProp", dtm().getFirstTick(), "setWidth", int.class);
+	checkOrSetMethodValuesForNonCollectional(95, property, dtm().getFirstTick(), "setWidth", int.class);
 
-	checkOrSetMethodValues(95, "dateProp", dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForNonCollectional(95, property, dtm().getFirstTick(), "getWidth");
+    }
+
+    @Test
+    public void test_that_Widths_for_second_tick_are_default_for_the_first_time_and_can_be_altered() {
+	final String property = "intAggExprProp";
+
+	oneLevel(new IAction() {
+	    public void action(final String name) {
+		dtm().getSecondTick().check(MasterEntity.class, name, true);
+		dtm().getSecondTick().use(MasterEntity.class, name, true);
+	    }
+	}, property);
+
+	// THE FIRST TIME -- returns DEFAULT VALUES //
+	// default value should be 80
+	checkOrSetMethodValuesForOneLevel(80, property, dtm().getSecondTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(85, property, dtm().getRepresentation().getSecondTick(), "setWidthByDefault", int.class);
+	checkOrSetMethodValuesForOneLevel(85, property, dtm().getSecondTick(), "getWidth");
+
+	// Alter and check //
+	checkOrSetMethodValuesForOneLevel(95, property, dtm().getSecondTick(), "setWidth", int.class);
+
+	checkOrSetMethodValuesForOneLevel(95, property, dtm().getSecondTick(), "getWidth");
     }
 
     @Override

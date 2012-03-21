@@ -34,6 +34,23 @@ public interface IPivotDomainTreeManager extends IAbstractAnalysisDomainTreeMana
      *
      */
     public interface IPivotAddToDistributionTickManager extends IAbstractAnalysisAddToDistributionTickManager, IWidthManager {
+	/**
+	 * A bunch of used properties for {@link IPivotAddToDistributionTickManager} should be treated as single "entity" (e.g. UI column)
+	 * in terms of {@link IWidthManager}. So, please use one of "used" properties to determine the width of that single "column entity".
+	 * <p>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getWidth(final Class<?> root, final String property);
+
+	/**
+	 * A bunch of used properties for {@link IPivotAddToDistributionTickManager} should be treated as single "entity" (e.g. UI column)
+	 * in terms of {@link IWidthManager}. So, please use one of "used" properties to set the width of that single "column entity".
+	 * <p>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void setWidth(Class<?> root, String property, int width);
     }
 
     /**

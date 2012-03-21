@@ -193,6 +193,23 @@ public abstract class AbstractDomainTreeTest {
 	}, property);
     }
 
+    protected void checkOrSetMethodValuesForOneLevel(final Object value, final String property, final Object instance, final String methodName, final Class<?> ... setterArg) {
+	oneLevel(new IAction() {
+	    public void action(final String name) {
+		try {
+		    if (methodName.startsWith("set")) {
+			Reflector.getMethod(instance.getClass(), methodName, Class.class, String.class, (setterArg.length <= 0 ? Object.class : setterArg[0])).invoke(instance, MasterEntity.class, name, value);
+		    } else {
+			assertEquals("Value is incorrect.", value, Reflector.getMethod(instance.getClass(), methodName, Class.class, String.class).invoke(instance, MasterEntity.class, name));
+		    }
+		} catch (final Exception e) {
+		    e.printStackTrace();
+		    throw new RuntimeException(e);
+		}
+	    }
+	}, property);
+    }
+
     /**
      * Just an action.
      *

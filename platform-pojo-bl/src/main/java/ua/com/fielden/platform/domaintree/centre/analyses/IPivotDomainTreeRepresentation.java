@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.centre.analyses;
 
+import ua.com.fielden.platform.domaintree.centre.IWidthManager;
 import ua.com.fielden.platform.domaintree.centre.IWidthRepresentation;
 
 /**
@@ -24,6 +25,23 @@ public interface IPivotDomainTreeRepresentation extends IAbstractAnalysisDomainT
      *
      */
     public interface IPivotAddToDistributionTickRepresentation extends IAbstractAnalysisAddToDistributionTickRepresentation, IWidthRepresentation {
+	/**
+	 * A bunch of used properties for {@link IPivotAddToDistributionTickRepresentation} should be treated as single "entity" (e.g. UI column)
+	 * in terms of {@link IWidthManager}. So, please use one of "used" properties to determine default width for that single "column entity".
+	 * <p>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getWidthByDefault(final Class<?> root, final String property);
+
+	/**
+	 * A bunch of used properties for {@link IPivotAddToDistributionTickRepresentation} should be treated as single "entity" (e.g. UI column)
+	 * in terms of {@link IWidthManager}. So, please use one of "used" properties to set the default width for that single "column entity".
+	 * <p>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void setWidthByDefault(Class<?> root, String property, int width);
     }
 
     /**
