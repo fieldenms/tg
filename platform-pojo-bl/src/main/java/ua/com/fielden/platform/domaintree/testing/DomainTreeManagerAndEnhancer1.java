@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
@@ -17,7 +18,7 @@ public class DomainTreeManagerAndEnhancer1 extends AbstractDomainTreeManagerAndE
      * A <i>manager with enhancer</i> constructor for the first time instantiation.
      */
     public DomainTreeManagerAndEnhancer1(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new DomainTreeManager1(serialiser, rootTypes), new DomainTreeEnhancer(serialiser, rootTypes));
+	this(new DomainTreeManager1(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)));
     }
 
     protected DomainTreeManagerAndEnhancer1(final AbstractDomainTreeManager base, final IDomainTreeEnhancer enhancer) {

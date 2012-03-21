@@ -14,6 +14,7 @@ import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -81,7 +82,8 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	AbstractDomainTree.illegalType(root, property, "Could not init a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-	return globalRepresentation.getLocatorManagerByDefault(propertyType);
+        final Class<?> notEnhancedPropertyType = DynamicEntityClassLoader.getOriginalType(propertyType);
+	return globalRepresentation.getLocatorManagerByDefault(notEnhancedPropertyType);
     }
 
     private void init(final Class<?> root, final String property, final ILocatorDomainTreeManagerAndEnhancer mgr) {
@@ -135,7 +137,8 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	AbstractDomainTree.illegalType(root, property, "Could not save globally a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-	globalRepresentation.setLocatorManagerByDefault(propertyType, getLocatorManager(root, property));
+        final Class<?> notEnhancedPropertyType = DynamicEntityClassLoader.getOriginalType(propertyType);
+	globalRepresentation.setLocatorManagerByDefault(notEnhancedPropertyType, getLocatorManager(root, property));
     }
 
     @Override

@@ -8,6 +8,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManage
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager.PivotAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager.PivotAddToDistributionTickManager;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
@@ -19,7 +20,7 @@ import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer
 
 public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTreeManagerAndEnhancer implements IPivotDomainTreeManagerAndEnhancer {
     public PivotDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new PivotDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(serialiser, rootTypes));
+	this(new PivotDomainTreeManager(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)));
     }
 
     protected PivotDomainTreeManagerAndEnhancer(final AbstractAnalysisDomainTreeManager base, final IDomainTreeEnhancer enhancer) {

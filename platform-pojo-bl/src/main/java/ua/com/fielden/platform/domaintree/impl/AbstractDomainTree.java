@@ -3,6 +3,7 @@ package ua.com.fielden.platform.domaintree.impl;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -24,9 +25,11 @@ import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -93,6 +96,32 @@ public abstract class AbstractDomainTree {
      */
     protected EntityFactory getFactory() {
 	return serialiser.factory();
+    }
+
+    /**
+     * Validates root types for raw domain tree creation. Root types should be 1) {@link AbstractEntity} descendants 2) NOT enhanced types.
+     *
+     * @param rootTypes
+     */
+    public static Set<Class<?>> validateRootTypes(final Set<Class<?>> rootTypes) {
+        for (final Class<?> klass : rootTypes) {
+            validateRootType(klass);
+        }
+        return rootTypes;
+    }
+
+    /**
+     * Validates root type for raw domain tree creation. Root types should be 1) {@link AbstractEntity} descendants 2) NOT enhanced types.
+     *
+     * @param rootTypes
+     */
+    public static void validateRootType(final Class<?> klass) {
+	if (!EntityUtils.isEntityType(klass)) {
+	    throw new IllegalArgumentException("Raw domain tree creation should use entity-typed root types. Current == [" + klass + "].");
+	}
+	if (DynamicEntityClassLoader.isEnhanced(klass)) {
+	    throw new IllegalArgumentException("Raw domain tree creation should use NOT ENHANCED root types. Current == [" + klass + "].");
+	}
     }
 
     /**

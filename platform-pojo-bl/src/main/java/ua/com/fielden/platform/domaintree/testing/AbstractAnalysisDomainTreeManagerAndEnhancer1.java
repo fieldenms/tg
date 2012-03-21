@@ -8,6 +8,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomai
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
@@ -19,7 +20,7 @@ import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer
 
 public class AbstractAnalysisDomainTreeManagerAndEnhancer1 extends AbstractAnalysisDomainTreeManagerAndEnhancer implements IAbstractAnalysisDomainTreeManagerAndEnhancer {
     public AbstractAnalysisDomainTreeManagerAndEnhancer1(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new AbstractAnalysisDomainTreeManager1(serialiser, rootTypes), new DomainTreeEnhancer(serialiser, rootTypes));
+	this(new AbstractAnalysisDomainTreeManager1(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)));
     }
 
     protected AbstractAnalysisDomainTreeManagerAndEnhancer1(final AbstractAnalysisDomainTreeManager base, final IDomainTreeEnhancer enhancer) {

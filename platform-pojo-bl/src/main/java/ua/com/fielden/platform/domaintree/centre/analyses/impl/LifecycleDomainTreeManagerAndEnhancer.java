@@ -11,6 +11,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeMa
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager.LifecycleAddToCategoriesTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager.LifecycleAddToDistributionTickManager;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
@@ -22,7 +23,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class LifecycleDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTreeManagerAndEnhancer implements ILifecycleDomainTreeManagerAndEnhancer {
     public LifecycleDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(new LifecycleDomainTreeManager(serialiser, rootTypes), new DomainTreeEnhancer(serialiser, rootTypes));
+	this(new LifecycleDomainTreeManager(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)));
     }
 
     protected LifecycleDomainTreeManagerAndEnhancer(final LifecycleDomainTreeManager base, final IDomainTreeEnhancer enhancer) {

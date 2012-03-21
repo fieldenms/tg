@@ -113,6 +113,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public void initEntityCentreManager(final Class<?> root, final String name) {
+	AbstractDomainTree.validateRootType(root);
 	if (isFreezed(root, name)) {
 	    error("Unable to Init the 'freezed' entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
 	}

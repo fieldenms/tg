@@ -35,6 +35,7 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
 
     @Override
     public ILocatorDomainTreeManagerAndEnhancer getLocatorManagerByDefault(final Class<?> propertyType) {
+	AbstractDomainTree.validateRootType(propertyType);
 	// only base users have default locators assigned:
 	final User currentUser = userProvider.getUser();
 	final User baseOfTheCurrentUser = currentUser.isBase() ? currentUser : currentUser.getBasedOnUser();
@@ -58,6 +59,7 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
 
     @Override
     public void setLocatorManagerByDefault(final Class<?> propertyType, final ILocatorDomainTreeManagerAndEnhancer locatorManager) {
+	AbstractDomainTree.validateRootType(propertyType);
 	// only base users have default locators assigned:
 	final User currentUser = userProvider.getUser();
 	final User baseOfTheCurrentUser = currentUser.isBase() ? currentUser : currentUser.getBasedOnUser();
