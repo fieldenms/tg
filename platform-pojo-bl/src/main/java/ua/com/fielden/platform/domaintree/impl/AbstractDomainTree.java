@@ -70,6 +70,10 @@ public abstract class AbstractDomainTree {
         return logger;
     }
 
+    protected static String getDummySuffix() {
+	return DUMMY_SUFFIX;
+    }
+
     /**
      * Constructs base domain tree with a <code>serialiser</code> and <code>factory</code> instances.
      *

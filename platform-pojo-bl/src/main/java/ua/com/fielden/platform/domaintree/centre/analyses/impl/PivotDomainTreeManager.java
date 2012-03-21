@@ -74,13 +74,16 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	@Override
 	public int getWidth(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not get a 'width' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return PivotDomainTreeRepresentation.getWidthByDefault(tr().getDtr(), root, property, propertiesWidths, tr().getWidthByDefault(root, property));
+	    return PivotDomainTreeRepresentation.getWidth(tr().getDtr(), root, property, propertiesWidths, tr().getWidthByDefault(root, property));
 	}
 
 	@Override
 	public void setWidth(final Class<?> root, final String property, final int width) {
 	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not set a 'width' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    PivotDomainTreeRepresentation.setWidthByDefault(tr().getDtr(), root, property, width, propertiesWidths);
+	    // update ALL existing widths for used properties with the same value (single column "treatment")
+	    for (final String usedProperty : usedProperties(root)) {
+		PivotDomainTreeRepresentation.setWidth(tr().getDtr(), root, usedProperty, width, propertiesWidths);
+	    }
 	}
 
 	@Override
@@ -130,13 +133,13 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
 	@Override
 	public int getWidth(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not get a 'width' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return PivotDomainTreeRepresentation.getWidthByDefault(tr().getDtr(), root, property, propertiesWidths, tr().getWidthByDefault(root, property));
+	    return PivotDomainTreeRepresentation.getWidth(tr().getDtr(), root, property, propertiesWidths, tr().getWidthByDefault(root, property));
 	}
 
 	@Override
 	public void setWidth(final Class<?> root, final String property, final int width) {
 	    AbstractDomainTree.illegalUnusedProperties(this, root, property, "Could not set a 'width' for 'unused' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    PivotDomainTreeRepresentation.setWidthByDefault(tr().getDtr(), root, property, width, propertiesWidths);
+	    PivotDomainTreeRepresentation.setWidth(tr().getDtr(), root, property, width, propertiesWidths);
 	}
 
 	@Override

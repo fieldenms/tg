@@ -92,8 +92,10 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
     }
 
     @Test
-    public void test_that_Widths_for_first_tick_are_default_for_the_first_time_and_can_be_altered() {
+    public void test_that_Widths_for_first_tick_are_default_for_the_first_time_and_can_be_altered_and_are_treated_as_single_column() {
 	final String property = "booleanProp";
+	final String property2 = "entityProp.booleanProp";
+	final String property3 = "entityProp.entityProp.booleanProp";
 
 	allLevelsWithoutCollections(new IAction() {
 	    public void action(final String name) {
@@ -102,16 +104,37 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
 	    }
 	}, property);
 
+	// There are three "used" properties "booleanProp", "entityProp.booleanProp", "entityProp.entityProp.booleanProp".
+	// They should be used as a couple for setting / determining a width.
+
 	// THE FIRST TIME -- returns DEFAULT VALUES //
 	// default value should be 80
-	checkOrSetMethodValuesForNonCollectional(80, property, dtm().getFirstTick(), "getWidth");
-	checkOrSetMethodValuesForNonCollectional(85, property, dtm().getRepresentation().getFirstTick(), "setWidthByDefault", int.class);
-	checkOrSetMethodValuesForNonCollectional(85, property, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(80, property, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(80, property2, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(80, property3, dtm().getFirstTick(), "getWidth");
+
+	checkOrSetMethodValuesForOneLevel(85, property, dtm().getRepresentation().getFirstTick(), "setWidthByDefault", int.class);
+	checkOrSetMethodValuesForOneLevel(85, property, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(85, property2, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(85, property3, dtm().getFirstTick(), "getWidth");
+
+	checkOrSetMethodValuesForOneLevel(87, property2, dtm().getRepresentation().getFirstTick(), "setWidthByDefault", int.class);
+	checkOrSetMethodValuesForOneLevel(87, property, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(87, property2, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(87, property3, dtm().getFirstTick(), "getWidth");
 
 	// Alter and check //
-	checkOrSetMethodValuesForNonCollectional(95, property, dtm().getFirstTick(), "setWidth", int.class);
+	checkOrSetMethodValuesForOneLevel(95, property, dtm().getFirstTick(), "setWidth", int.class);
 
-	checkOrSetMethodValuesForNonCollectional(95, property, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(95, property, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(95, property2, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(95, property3, dtm().getFirstTick(), "getWidth");
+
+	checkOrSetMethodValuesForOneLevel(97, property3, dtm().getFirstTick(), "setWidth", int.class);
+
+	checkOrSetMethodValuesForOneLevel(97, property, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(97, property2, dtm().getFirstTick(), "getWidth");
+	checkOrSetMethodValuesForOneLevel(97, property3, dtm().getFirstTick(), "getWidth");
     }
 
     @Test

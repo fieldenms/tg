@@ -91,12 +91,20 @@ public class PivotDomainTreeRepresentationTest extends AbstractAnalysisDomainTre
     public void test_that_widths_by_default_for_first_tick_are_desired_and_can_be_altered() {
 	// DEFAULT CONTRACT //
 	// default width should be 80
-	checkOrSetMethodValues(80, "dateProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
-	checkOrSetMethodValues(80, "integerProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
+	checkOrSetMethodValuesForOneLevel(80, "dateProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
+	checkOrSetMethodValuesForOneLevel(80, "integerProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
+	checkOrSetMethodValuesForOneLevel(80, "booleanProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
 
 	// Alter DEFAULT and check //
-	checkOrSetMethodValues(85, "dateProp", dtm().getRepresentation().getFirstTick(), "setWidthByDefault", int.class);
-	checkOrSetMethodValues(85, "dateProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
+	checkOrSetMethodValuesForOneLevel(85, "dateProp", dtm().getRepresentation().getFirstTick(), "setWidthByDefault", int.class);
+	checkOrSetMethodValuesForOneLevel(85, "dateProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
+	checkOrSetMethodValuesForOneLevel(85, "integerProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
+	checkOrSetMethodValuesForOneLevel(85, "booleanProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
+
+	checkOrSetMethodValuesForOneLevel(95, "booleanProp", dtm().getRepresentation().getFirstTick(), "setWidthByDefault", int.class);
+	checkOrSetMethodValuesForOneLevel(95, "dateProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
+	checkOrSetMethodValuesForOneLevel(95, "integerProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
+	checkOrSetMethodValuesForOneLevel(95, "booleanProp", dtm().getRepresentation().getFirstTick(), "getWidthByDefault");
     }
 
     @Test
