@@ -11,9 +11,11 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.BasicWebServerModule2;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.controller.ITgTimesheet;
+import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake2;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel2;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleMakeDao2;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleModelDao2;
 import ua.com.fielden.platform.test.entities.daos.TgTimesheetDao;
 
@@ -67,7 +69,7 @@ public class PlatformTestServerModule2 extends BasicWebServerModule2 {
 
 	bind(ITgTimesheet.class).to(TgTimesheetDao.class);
 	bind(ITgVehicleModel2.class).to(TgVehicleModelDao2.class);
-//	bind(ITgVehicleMake.class).to(TgVehicleMakeDao.class);
+	bind(ITgVehicleMake2.class).to(TgVehicleMakeDao2.class);
 //	bind(ITgMeterReading.class).to(TgMeterReadingDao.class);
 //	bind(IMigrationErrorDao.class).to(MigrationErrorDao.class);
 //	bind(IMigrationRunDao.class).to(MigrationRunDao.class);

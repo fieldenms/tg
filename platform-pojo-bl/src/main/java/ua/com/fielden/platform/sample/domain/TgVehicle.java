@@ -48,6 +48,10 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty @MapTo @Title(value = "Leased", desc = "Leased?")
     private boolean leased;
 
+//    @IsProperty(TgFuelUsage.class)  @MapTo("_ID") @Title(value = "Fuel usages", desc = "Fuel usages")
+//    private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
+//    public Set<TgFuelUsage> getFuelUsages() { return fuelUsages; }
+
     @Observable
     public TgVehicle setLeased(final boolean leased) {
 	this.leased = leased;

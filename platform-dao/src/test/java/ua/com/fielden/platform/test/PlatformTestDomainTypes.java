@@ -5,6 +5,12 @@ import java.util.List;
 
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
+import ua.com.fielden.platform.persistence.types.EntityWithExTaxAndTaxMoney;
+import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
+import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
+import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgModelCount;
 import ua.com.fielden.platform.sample.domain.TgModelYearCount;
@@ -18,6 +24,9 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
+import ua.com.fielden.platform.test.entities.CompositeEntity;
+import ua.com.fielden.platform.test.entities.CompositeEntityKey;
 
 /**
  * A class to enlist platform test domain entities. Should be replaced with runtime generation via reflection.
@@ -47,5 +56,14 @@ public class PlatformTestDomainTypes {
 	    add(TgFuelUsage.class);
 	    add(TgModelCount.class);
 	    add(TgModelYearCount.class);
+	    add(CompositeEntity.class);
+	    add(CompositeEntityKey.class);
+	    add(ComplexKeyEntity.class);
+	    add(EntityWithMoney.class);
+	    add(EntityWithTaxMoney.class);
+	    add(EntityWithExTaxAndTaxMoney.class);
+	    add(EntityWithSimpleTaxMoney.class);
+	    add(EntityWithSimpleMoney.class);
+	    add(EntityWithDynamicCompositeKey.class);
     }
 }
