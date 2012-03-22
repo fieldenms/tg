@@ -13,12 +13,12 @@ import ua.com.fielden.platform.entity.query.fetch;
  *
  * @param <T>
  */
-public interface IValueMatcher2<T extends AbstractEntity<?>> {
+public interface IValueMatcher2<T> {
     /**
      * Returns query model used for fetching matching entities using method {@link #findMatchesWithModel(String)}.
      *
      */
-    fetch<T> getFetchModel();
+    <FT extends AbstractEntity<?>> fetch<FT> getFetchModel();
 
     /**
      * Define a way to specify query model used for fetching matching entities using method {@link #findMatchesWithModel(String)}.
@@ -26,7 +26,7 @@ public interface IValueMatcher2<T extends AbstractEntity<?>> {
      * @param join
      *            -- join is used instead of an actual model in order to be able to introduce additional conditions ad hoc as part of method implementation.
      */
-    void setFetchModel(final fetch<T> fetchModel);
+    <FT extends AbstractEntity<?>> void setFetchModel(final fetch<FT> fetchModel);
 
     /**
      * Should provide matching logic using the passed value.

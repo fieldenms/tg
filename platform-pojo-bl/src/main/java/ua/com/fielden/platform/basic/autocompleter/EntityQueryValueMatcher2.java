@@ -85,17 +85,17 @@ public class EntityQueryValueMatcher2<T extends AbstractEntity<?>> implements IV
 	return pageSize;
     }
 
-    @Override
-    public void setFetchModel(final fetch<T> fetchModel) {
-	this.fetchModel = fetchModel;
-    }
-
     public String getPropertyName() {
 	return propertyName;
     }
 
     @Override
-    public fetch<T> getFetchModel() {
-	return fetchModel;
+    public <FT extends AbstractEntity<?>> fetch<FT> getFetchModel() {
+	return (fetch<FT>) fetchModel;
+    }
+
+    @Override
+    public <FT extends AbstractEntity<?>> void setFetchModel(final fetch<FT> fetchModel) {
+	this.fetchModel = (fetch<T>) fetchModel;
     }
 }

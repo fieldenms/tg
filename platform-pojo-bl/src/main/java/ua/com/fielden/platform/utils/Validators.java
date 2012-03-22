@@ -1,15 +1,19 @@
 package ua.com.fielden.platform.utils;
 
-import static ua.com.fielden.platform.equery.equery.select;
-
 import java.util.List;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.interfaces.IOthers.ICompoundCondition;
-import ua.com.fielden.platform.equery.interfaces.IOthers.IWhere;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+
 
 public final class Validators {
     private Validators() {
@@ -31,19 +35,19 @@ public final class Validators {
      *            Could be empty, which would mean that overlapping happens against all existing entities of this type.
      * @return <i>true</i> if there is at least one overlapped entity.
      */
-    public static <T extends AbstractEntity> boolean overlaps(//
+    public static <T extends AbstractEntity<?>> boolean overlaps(//
 	    final T entity, //
-	    final IEntityDao<T> controller, //
+	    final IEntityDao2<T> controller, //
 	    final String fromDateProperty, //
 	    final String toDateProperty, //
 	    final String... matchProperties) {
-	final IQueryOrderedModel<T> model = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, matchProperties);
+	final EntityResultQueryModel<T> model = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, matchProperties);
 	return controller.count(model) > 0;
     }
 
     /**
      * Returns the first overlapping entity if any, <code>null</code> value otherwise.
-     * 
+     *
      * @param entity
      * @param fetchModel
      *            -- the fetch model is used to initialise the overlapped entity
@@ -53,21 +57,24 @@ public final class Validators {
      * @param matchProperties
      * @return
      */
-    public static <T extends AbstractEntity> T findFirstOverlapping(//
+    public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
 	    final T entity, //
 	    final fetch<T> fetchModel,//
-	    final IEntityDao<T> controller, //
+	    final IEntityDao2<T> controller, //
 	    final String fromDateProperty, //
 	    final String toDateProperty, //
 	    final String... matchProperties) {
-	final IQueryOrderedModel<T> model = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, matchProperties);
-	final List<T> result = fetchModel != null ? controller.firstPage(model, fetchModel, 1).data() : controller.firstPage(model, 1).data();
+	final EntityResultQueryModel<T> model = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, matchProperties);
+	final OrderingModel orderBy = orderBy().prop(fromDateProperty).asc().model();
+
+	final fetch<T> runFetch = fetchModel != null ? fetchModel : new fetch<T>((Class<T>) entity.getType());
+	final List<T> result = controller.firstPage(from(model).with(runFetch).with(orderBy).build(), 1).data();
 	return result.size() > 0 ? result.get(0) : null;
     }
 
     /**
      * Returns the first overlapping entity if any, <code>null</code> value otherwise. Default entity query fetch model is used for initialising the overlapped entity.
-     * 
+     *
      * @param entity
      * @param controller
      * @param fromDateProperty
@@ -75,9 +82,9 @@ public final class Validators {
      * @param matchProperties
      * @return
      */
-    public static <T extends AbstractEntity> T findFirstOverlapping(//
+    public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
 	    final T entity, //
-	    final IEntityDao<T> controller, //
+	    final IEntityDao2<T> controller, //
 	    final String fromDateProperty, //
 	    final String toDateProperty, //
 	    final String... matchProperties) {
@@ -86,14 +93,14 @@ public final class Validators {
 
     /**
      * A helper method, which produces query model for overlapping validation.
-     * 
+     *
      * @param entity
      * @param fromDateProperty
      * @param toDateProperty
      * @param matchProperties
      * @return
      */
-    private static <T extends AbstractEntity> IQueryOrderedModel<T> composeOverlappingCheckQueryModel(final T entity, final String fromDateProperty, final String toDateProperty, final String... matchProperties) {
+    private static <T extends AbstractEntity<?>> EntityResultQueryModel<T> composeOverlappingCheckQueryModel(final T entity, final String fromDateProperty, final String toDateProperty, final String... matchProperties) {
 	// check preconditions
 	if (entity.get(fromDateProperty) == null) {
 	    throw new IllegalArgumentException("Property \"" + fromDateProperty + "\" should have a value.");
@@ -101,10 +108,10 @@ public final class Validators {
 
 	/////////////// start query composition ///////////////////
 	// add matching conditions
-	final IWhere where = select(entity.getType()).where();
+	final IWhere0 where = select((Class<T>) entity.getType()).where();
 	// if the entity being checked for overlapping has already been persisted it would most likely overlap itself
 	// thus, need to exclude entity itself
-	ICompoundCondition cc = where.prop("id").ne().val(entity.getId()); // should be ignore if id is null
+	ICompoundCondition0 cc = where.prop("id").ne().iVal(entity.getId()); // should be ignore if id is null
 	// now the matching properties
 	for (final String matchProperty : matchProperties) {
 	    final Object value = entity.get(matchProperty);
@@ -141,7 +148,6 @@ public final class Validators {
 	}
 
 	// make a model with result ordered by fromDateProperty, which is only required if at some stage it would be used for selecting overlapped entities.
-	final IQueryOrderedModel<T> model = cc.orderBy(fromDateProperty).model();
-	return model;
+	return cc.model();
     }
 }

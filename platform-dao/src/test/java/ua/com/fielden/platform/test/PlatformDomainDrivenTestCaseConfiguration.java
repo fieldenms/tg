@@ -6,12 +6,12 @@ import org.apache.log4j.xml.DOMConfigurator;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
+import ua.com.fielden.platform.entity.query.DefaultFilter;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
-import ua.com.fielden.platform.equery.DefaultFilter;
 import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.impl.DefaultSerialisationClassProvider;
-import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
+import ua.com.fielden.platform.test.ioc.PlatformTestServerModule2;
 
 import com.google.inject.Injector;
 
@@ -24,7 +24,7 @@ import com.google.inject.Injector;
 public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
     private final EntityFactory entityFactory;
     private final Injector injector;
-    private final PlatformTestServerModule hibernateModule;
+    private final PlatformTestServerModule2 hibernateModule;
 
     /**
      * Required for dynamic instantiation by {@link DbDrivenTestCase}
@@ -48,7 +48,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
 	    props.setProperty("hibernate.show_sql", "false");
 	    props.setProperty("hibernate.format_sql", "true");
 
-	    hibernateModule = new PlatformTestServerModule(
+	    hibernateModule = new PlatformTestServerModule2(
 		    PlatformTestHibernateSetup.getHibernateTypes(),
 		    PlatformTestDomainTypes.entityTypes,
 		    DefaultSerialisationClassProvider.class,
@@ -73,7 +73,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
      *
      * @param hibernateUtil
      */
-    private void bindDomainMetaProperty(final PlatformTestServerModule hibernateModule) {
+    private void bindDomainMetaProperty(final PlatformTestServerModule2 hibernateModule) {
 	// TODO Add domain meta property binding if needed
     }
 
@@ -82,7 +82,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
      *
      * @param hibernateUtil
      */
-    private void bindDomainValidation(final PlatformTestServerModule hibernateModule) {
+    private void bindDomainValidation(final PlatformTestServerModule2 hibernateModule) {
 	// TODO Add domain validation binding if needed
     }
 

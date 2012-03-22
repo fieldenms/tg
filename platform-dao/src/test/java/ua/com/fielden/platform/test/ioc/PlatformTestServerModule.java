@@ -17,9 +17,7 @@ import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.controller.ITgMeterReading;
-import ua.com.fielden.platform.sample.domain.controller.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
-import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.test.domain.entities.daos.AdviceDao;
@@ -41,7 +39,6 @@ import ua.com.fielden.platform.test.domain.entities.daos.RotableClassDao;
 import ua.com.fielden.platform.test.domain.entities.daos.RotableDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgMeterReadingDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleMakeDao;
-import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleModelDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WagonClassDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WagonDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WagonSlotDao;
@@ -50,7 +47,6 @@ import ua.com.fielden.platform.test.domain.entities.daos.WheelsetDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WorkorderDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WorkshopDao;
 import ua.com.fielden.platform.test.entities.daos.IWorkorderableDao;
-import ua.com.fielden.platform.test.entities.daos.TgTimesheetDao;
 import ua.com.fielden.platform.test.entities.daos.WorkorderableDao;
 
 import com.google.inject.TypeLiteral;
@@ -101,8 +97,6 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 	bind(IAdviceDao.class).to(AdviceDao.class);
 	bind(IRotableClassDao.class).to(RotableClassDao.class);
 
-	bind(ITgTimesheet.class).to(TgTimesheetDao.class);
-	bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
 	bind(ITgVehicleMake.class).to(TgVehicleMakeDao.class);
 	bind(ITgMeterReading.class).to(TgMeterReadingDao.class);
 	bind(IMigrationErrorDao.class).to(MigrationErrorDao.class);

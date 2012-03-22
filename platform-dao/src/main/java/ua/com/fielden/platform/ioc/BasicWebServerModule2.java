@@ -17,8 +17,8 @@ import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserRoleDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
-import ua.com.fielden.platform.entity.matcher.development.ValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
+import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory2;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumberGenerator;
 import ua.com.fielden.platform.keygen.KeyNumberDao2;
@@ -59,7 +59,7 @@ import com.google.inject.name.Names;
  * <ul>
  * <li>Applications settings (refer {@link IApplicatonSettings});
  * <li>Serialisation mechanism;
- * <li>All essential DAO interfaces such as {@link IFilter}, {@link IUserController2}, {@link IDaoFactory2}, {@link IValueMatcherFactory}, {@link IUserDao2}, {@link IAuthorisationModel} and more;
+ * <li>All essential DAO interfaces such as {@link IFilter}, {@link IUserController2}, {@link IDaoFactory2}, {@link IValueMatcherFactory2}, {@link IUserDao2}, {@link IAuthorisationModel} and more;
  * <li>Provides application main menu configuration related DAO bindings.
  * </ul>
  *
@@ -136,7 +136,7 @@ public class BasicWebServerModule2 extends CommonFactoryModule2 {
 
 	// bind value matcher factory to support autocompleters
 	bind(IDaoFactory2.class).toInstance(getDaoFactory());
-	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
+	bind(IValueMatcherFactory2.class).to(ValueMatcherFactory2.class).in(Scopes.SINGLETON);
 
     }
 

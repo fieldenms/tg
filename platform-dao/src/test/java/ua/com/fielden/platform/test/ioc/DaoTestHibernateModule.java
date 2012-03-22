@@ -27,7 +27,6 @@ import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.controller.ITgMeterReading;
-import ua.com.fielden.platform.sample.domain.controller.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
@@ -64,7 +63,6 @@ import ua.com.fielden.platform.test.domain.entities.daos.WheelsetDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WorkorderDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WorkshopDao;
 import ua.com.fielden.platform.test.entities.daos.IWorkorderableDao;
-import ua.com.fielden.platform.test.entities.daos.TgTimesheetDao;
 import ua.com.fielden.platform.test.entities.daos.WorkorderableDao;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
@@ -125,7 +123,6 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 	bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
 	bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
 
-	bind(ITgTimesheet.class).to(TgTimesheetDao.class);
 	bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
 	bind(ITgVehicleMake.class).to(TgVehicleMakeDao.class);
 	bind(ITgMeterReading.class).to(TgMeterReadingDao.class);
