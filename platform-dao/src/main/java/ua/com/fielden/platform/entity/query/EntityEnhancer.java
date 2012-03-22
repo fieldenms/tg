@@ -46,7 +46,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 		if (/*!EntityUtils.isPersistedEntityType(entitiesType) || //*/ppi.isEntity() || ppi.isOne2OneId()) {
 		    enhanceProperty(entities, propName, propFetchModel);
 		} else if (ppi.isCollection()) {
-		    enhanceCollectional(entities, propName, HashSet.class, "vehicle", null, propFetchModel);
+		    //enhanceCollectional(entities, propName, HashSet.class, "user", null, propFetchModel);
 		}
 	    }
 	}
