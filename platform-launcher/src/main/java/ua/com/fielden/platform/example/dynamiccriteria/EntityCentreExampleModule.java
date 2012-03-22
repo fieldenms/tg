@@ -9,20 +9,20 @@ import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.example.dynamiccriteria.ao.NestedEntityDao;
 import ua.com.fielden.platform.example.dynamiccriteria.ao.SimpleCompositeEntityDao;
 import ua.com.fielden.platform.example.dynamiccriteria.ao.SimpleECEEntityDao;
 import ua.com.fielden.platform.example.dynamiccriteria.iao.INestedEntityDao;
 import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleCompositeEntityDao;
 import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleECEEntityDao;
-import ua.com.fielden.platform.ioc.development.BasicWebServerModule;
+import ua.com.fielden.platform.ioc.BasicWebServerModule2;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 
 import com.google.inject.Scopes;
 
-public class EntityCentreExampleModule extends BasicWebServerModule{
+public class EntityCentreExampleModule extends BasicWebServerModule2{
 
 
     public EntityCentreExampleModule(//
