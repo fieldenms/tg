@@ -188,7 +188,7 @@ public class MappingsGenerator {
 	sb.append("</hibernate-mapping>");
 
 	final String result = sb.toString();
-	System.out.println(result);
+	//System.out.println(result);
 	return result;
     }
 

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.sample.domain;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Ignore;
 
@@ -13,7 +15,9 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
@@ -21,6 +25,7 @@ import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 @MapEntityTo
 @DescTitle("Description")
 @Ignore
+@DefaultController2(ITgVehicle.class)
 public class TgVehicle extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
@@ -48,9 +53,14 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty @MapTo @Title(value = "Leased", desc = "Leased?")
     private boolean leased;
 
-//    @IsProperty(TgFuelUsage.class)  @MapTo("_ID") @Title(value = "Fuel usages", desc = "Fuel usages")
-//    private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
-//    public Set<TgFuelUsage> getFuelUsages() { return fuelUsages; }
+    @IsProperty(TgFuelUsage.class)  @MapTo("VEHICLE_") @Title(value = "Fuel usages", desc = "Fuel usages")
+    private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
+    public Set<TgFuelUsage> getFuelUsages() { return fuelUsages; }
+
+    @Observable
+    public void setFuelUsages(final Set<TgFuelUsage> fuelUsages) {
+	this.fuelUsages = fuelUsages;
+    }
 
     @Observable
     public TgVehicle setLeased(final boolean leased) {

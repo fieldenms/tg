@@ -10,14 +10,18 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.BasicWebServerModule2;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgTimesheet;
+import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake2;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel2;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleMakeDao2;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleModelDao2;
+import ua.com.fielden.platform.test.entities.daos.TgFuelUsageDao;
 import ua.com.fielden.platform.test.entities.daos.TgTimesheetDao;
+import ua.com.fielden.platform.test.entities.daos.TgVehicleDao;
 
 import com.google.inject.TypeLiteral;
 
@@ -68,6 +72,8 @@ public class PlatformTestServerModule2 extends BasicWebServerModule2 {
 //	bind(IRotableClassDao.class).to(RotableClassDao.class);
 
 	bind(ITgTimesheet.class).to(TgTimesheetDao.class);
+	bind(ITgVehicle.class).to(TgVehicleDao.class);
+	bind(ITgFuelUsage.class).to(TgFuelUsageDao.class);
 	bind(ITgVehicleModel2.class).to(TgVehicleModelDao2.class);
 	bind(ITgVehicleMake2.class).to(TgVehicleMakeDao2.class);
 //	bind(ITgMeterReading.class).to(TgMeterReadingDao.class);

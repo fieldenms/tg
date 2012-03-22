@@ -60,6 +60,7 @@ public class EntityFetcher {
 
     protected Query produceHibernateQuery(final String sql, final List<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams) {
 	final SQLQuery q = session.createSQLQuery(sql);
+	System.out.println("   SQL: " + sql);
 
 	for (final HibernateScalar aliasEntry : retrievedColumns) {
 	    if (aliasEntry.hasHibType()) {
@@ -69,6 +70,7 @@ public class EntityFetcher {
 	    }
 	}
 
+	System.out.println("   PARAMS: " + queryParams);
 	for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {
 	    if (paramEntry.getValue() instanceof Collection) {
 		q.setParameterList(paramEntry.getKey(), (Collection<?>) paramEntry.getValue());

@@ -33,6 +33,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
 import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
+import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
@@ -95,6 +96,7 @@ public class PlatformDbDrivenTestCaseConfiguration2 implements IDbDrivenTestCase
 	testDomain.add(TgVehicleMake.class);
 	testDomain.add(TgVehicleModel.class);
 	testDomain.add(TgVehicle.class);
+	testDomain.add(TgFuelUsage.class);
 	testDomain.add(TgOrgUnit1.class);
 	testDomain.add(TgOrgUnit2.class);
 	testDomain.add(TgOrgUnit3.class);
