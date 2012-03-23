@@ -6,7 +6,7 @@ import java.util.Map;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
 import com.google.inject.Inject;
 
 @KeyType(String.class)
-public abstract class EntityQueryCriteria<C extends IDomainTreeManager, T extends AbstractEntity, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
+public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
 
     private static final long serialVersionUID = 9154466083364529734L;
 
@@ -24,7 +24,7 @@ public abstract class EntityQueryCriteria<C extends IDomainTreeManager, T extend
     private final DAO dao;
     private final IEntityAggregatesDao entityAggregatesDao;
 
-    private final C dtm;
+    private final C cdtme;
 
     @Inject
     public EntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IEntityAggregatesDao entityAggregatesDao){
@@ -33,7 +33,7 @@ public abstract class EntityQueryCriteria<C extends IDomainTreeManager, T extend
 
 	//This values should be initialized through reflection.
 	this.dao = null;
-	this.dtm = null;
+	this.cdtme = null;
     }
 
     //    public DAO getDao() {
@@ -48,8 +48,8 @@ public abstract class EntityQueryCriteria<C extends IDomainTreeManager, T extend
     //	return valueMatcherFactory;
     //    }
 
-    public C getDomainTreeManger(){
-	return dtm;
+    public C getCentreDomainTreeMangerAndEnhancer(){
+	return cdtme;
     }
 
     //TODO What entity class it should return entity class or enhanced entity class? Please consider that.

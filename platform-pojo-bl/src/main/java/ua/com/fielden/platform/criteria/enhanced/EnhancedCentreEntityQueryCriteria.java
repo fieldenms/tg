@@ -2,7 +2,7 @@ package ua.com.fielden.platform.criteria.enhanced;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
@@ -18,7 +18,7 @@ import com.google.inject.Inject;
  * @param <T>
  * @param <DAO>
  */
-public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManager, T, DAO> {
+public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
 
     private static final long serialVersionUID = -5189571197523084383L;
 

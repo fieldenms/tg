@@ -3,6 +3,7 @@ package ua.com.fielden.platform.swing.review.report.centre;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.awt.Dimension;
+import java.awt.IllegalComponentStateException;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
@@ -25,24 +26,38 @@ import net.miginfocom.swing.MigLayout;
 import org.jvnet.flamingo.common.ElementState;
 import org.jvnet.flamingo.common.icon.EmptyResizableIcon;
 
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.actions.ActionChanger;
+import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.ActionChangeButton;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
+import ua.com.fielden.platform.swing.egi.EntityGridInspector;
+import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.pagination.development.Paginator;
 import ua.com.fielden.platform.swing.pagination.development.Paginator.IPageChangeFeedback;
 import ua.com.fielden.platform.swing.pagination.model.development.IPageHolderManager;
 import ua.com.fielden.platform.swing.pagination.model.development.PaginatorModel;
+import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.taskpane.TaskPanel;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
+import ua.com.fielden.platform.utils.ResourceLoader;
+
+import com.jidesoft.grid.TableModelWrapperUtils;
 
 /**
  * Implements common functionality for all types of entity centres: entity centre with single analysis, entity locators, entity centres with multiple analysis.
@@ -52,7 +67,7 @@ import ua.com.fielden.platform.swing.taskpane.TaskPanel;
  *
  * @param <T>
  */
-public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractEntityReview<T, DTM> {
+public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityReview<T, CDTME> implements IUmViewOwner{
 
     private static final long serialVersionUID = -6079569752962700417L;
 
@@ -76,7 +91,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
     private final Action runAction;
 
     //Holds current operable analysis report.
-    private AbstractAnalysisConfigurationView<T, DTM, ?, ?, ?, ?> currentAnalysisConfigurationView;
+    private AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?> currentAnalysisConfigurationView;
 
     /**
      * Initiates this {@link AbstractEntityCentre}. Creates all parts and components of entity centre.
@@ -84,7 +99,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
      * @param model
      * @param progressLayer
      */
-    public AbstractEntityCentre(final AbstractEntityCentreModel<T, DTM> model, final BlockingIndefiniteProgressLayer progressLayer) {
+    public AbstractEntityCentre(final AbstractEntityCentreModel<T, CDTME> model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	//Initiates the paginator related properties.
 	final PaginatorModel paginatorModel = new PaginatorModel();
@@ -106,21 +121,67 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
     }
 
     @Override
-    public AbstractEntityCentreModel<T, DTM> getModel() {
-	return (AbstractEntityCentreModel<T, DTM>)super.getModel();
+    public AbstractEntityCentreModel<T, CDTME> getModel() {
+	return (AbstractEntityCentreModel<T, CDTME>)super.getModel();
     }
+
+    /**
+     * Returns the component that might be a {@link JButton} or {@link ActionChangeButton} instance. This component allows user to save or modify entity centre.
+     * 
+     * @return
+     */
+    public JComponent getCustomActionChanger() {
+	return customActionChanger;
+    }
+
+    /**
+     * Updates the entity in the grid analysis.
+     */
+    public <E extends AbstractEntity> void notifyEntityChange(final E entity) {
+	if (entity.isPersisted()) {
+	    SwingUtilitiesEx.invokeLater(new Runnable() {
+		@Override
+		public void run() {
+		    getEntityGridInspector(AbstractEntityCentre.this).getActualModel().refresh((T) entity);
+		    getProgressLayer().setLocked(false);
+		}
+	    });
+	}
+    };
 
     /**
      * Returns the currently operable analysis report.
      * 
      * @return
      */
-    public final AbstractAnalysisConfigurationView<T, DTM, ?, ?, ?, ?> getCurrentAnalysisConfigurationView() {
+    public final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?> getCurrentAnalysisConfigurationView() {
 	return currentAnalysisConfigurationView;
     }
 
     /**
+     * Returns the list of available analysis associated with this entity centre.
      * 
+     * @return
+     */
+    public abstract List<AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?>> getAnalysisList();
+
+    /**
+     * Adds new analysis specified with name and {@link AnalysisType} instance to this centre.
+     * 
+     * @param name
+     * @param analysisType
+     */
+    public abstract void addAnalysis(String name, AnalysisType analysisType);
+
+    /**
+     * Removes the analysis specified with the name.
+     * 
+     * @param name
+     */
+    public abstract void removeAnalysis(String name);
+
+    /**
+     * Returns the {@link IPageHolderManager} for this entity centre.
      * 
      * @return
      */
@@ -135,15 +196,6 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
      */
     public final Action getDefaultAction() {
 	return defaultAction;
-    }
-
-    /**
-     * Returns the component that might be a {@link JButton} or {@link ActionChangeButton} instance. This component allows user to save or modify entity centre.
-     * 
-     * @return
-     */
-    public JComponent getCustomActionChanger() {
-	return customActionChanger;
     }
 
     /**
@@ -217,12 +269,40 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
     public abstract JComponent getReviewPanel();
 
     /**
+     * Returns the list of selected entities.
+     * 
+     * @return
+     */
+    public List<T> getSelectedEntities() {
+	final EntityGridInspector<T> egi = getEntityGridInspector(this);
+	final PropertyTableModel<T> tableModel = egi.getActualModel();
+	final List<T> selectedEntities = new ArrayList<T>();
+	if(tableModel.instances().size() <= 0){
+	    return selectedEntities;
+	}
+	final int selectedRows[] = egi.getSelectedRows();
+	for(final int rowNumber : selectedRows){
+	    final int selectedRow = TableModelWrapperUtils.getActualRowAt(egi.getModel(), rowNumber);
+	    if (selectedRow >= 0) {
+		selectedEntities.add(tableModel.instance(selectedRow));
+	    }
+	}
+	return selectedEntities;
+    }
+
+    /**
      * Override this to provide custom tool bar.
      * 
      * @return
      */
     protected JToolBar createToolBar() {
-	return null;
+	if(getModel().getMasterManager() != null){
+	    return new ActionPanelBuilder()//
+	    .addButton(createOpenMasterWithNewCommand())//
+	    .addButton(createOpenMasterCommand())//
+	    .buildActionPanel();
+	}
+	return null ;
     }
 
     /**
@@ -234,7 +314,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
     protected StubCriteriaPanel createCriteriaPanel() {
 	final Map<String, IPropertyEditor> editors = getModel().getEntityInspectorModel().getEditors();
 	if(!editors.isEmpty()){
-	    return new CriteriaDndPanel((EntityQueryCriteria<ICentreDomainTreeManager, ?, ?>) getModel().getCriteria(), getModel().getEntityInspectorModel().getEditors());
+	    return new CriteriaDndPanel((EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>) getModel().getCriteria(), getModel().getEntityInspectorModel().getEditors());
 	}
 	return null;
     }
@@ -253,8 +333,8 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
      * 
      * @param currentAnalysisConfigurationView
      */
-    protected final void setCurrentAnalysisConfigurationView(final AbstractAnalysisConfigurationView<T, DTM, ?, ?, ?, ?> currentAnalysisConfigurationView) {
-	final AbstractAnalysisConfigurationView<T, DTM, ?, ?, ?, ?> oldAnalysisConfigurationView = this.currentAnalysisConfigurationView;
+    protected final void setCurrentAnalysisConfigurationView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?> currentAnalysisConfigurationView) {
+	final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?> oldAnalysisConfigurationView = this.currentAnalysisConfigurationView;
 	this.currentAnalysisConfigurationView = currentAnalysisConfigurationView;
 	firePropertyChange("currentAnalysisConfigurationView", oldAnalysisConfigurationView, this.currentAnalysisConfigurationView);
     }
@@ -293,12 +373,112 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
 	add(components.get(components.size()-1));
     }
 
-    protected String addToComponents(final List<JComponent> components, final String constraint, final JComponent component) {
+    /**
+     * A command that creates and opens an entity master frame for the new entity.
+     * 
+     * @return
+     */
+    protected Command<T> createOpenMasterWithNewCommand() {
+	final Command<T> action = new Command<T>("New") {
+	    private static final long serialVersionUID = 1L;
+
+	    private IEntityProducer<T> entityProducer;
+	    private IEntityMasterManager masterManager;
+
+	    @Override
+	    protected boolean preAction() {
+		if (super.preAction()) {
+		    masterManager = getModel().getMasterManager();
+		    final Class<T> entityType = getModel().getCriteria().getEntityClass();
+		    entityProducer = masterManager != null ? masterManager.getEntityProducer(entityType) : null;
+		    return entityProducer != null;
+		}
+		return false;
+	    }
+
+	    @Override
+	    protected T action(final ActionEvent event) throws Exception {
+		return entityProducer.newEntity();
+	    }
+
+	    @Override
+	    protected void postAction(final T entity) {
+		masterManager.<T, IEntityDao<T>> showMaster(entity, AbstractEntityCentre.this);
+		super.postAction(entity);
+	    }
+	};
+	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_1);
+	action.putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/document-new.png"));
+	action.putValue(Action.SMALL_ICON, ResourceLoader.getIcon("images/document-new.png"));
+	action.putValue(Action.SHORT_DESCRIPTION, "New");
+	action.setEnabled(true);
+	return action;
+    }
+
+    /**
+     * A command that creates and opens an entity master frame for the selected in the EGI entity.
+     * 
+     * @return
+     */
+    protected Command<T> createOpenMasterCommand() {
+	final Command<T> action = new BlockingLayerCommand<T>("Edit", getProgressLayer()) {
+	    private static final long serialVersionUID = 1L;
+
+	    private IEntityMasterManager masterManager;
+
+	    @Override
+	    protected boolean preAction() {
+		setMessage("Opening...");
+		if (super.preAction()) {
+		    masterManager = getModel().getMasterManager();
+		    return masterManager != null && getSelectedEntities().size() == 1;
+		}
+		return false;
+	    }
+
+	    @Override
+	    protected T action(final ActionEvent event) throws Exception {
+		return getSelectedEntities().get(0);
+	    }
+
+	    @Override
+	    protected void postAction(final T entity) {
+		super.postAction(entity);
+		if (entity != null) {
+		    masterManager.<T, IEntityDao<T>> showMaster(entity, AbstractEntityCentre.this);
+		}
+	    }
+	};
+	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_2);
+	action.putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/document-edit.png"));
+	action.putValue(Action.SMALL_ICON, ResourceLoader.getIcon("images/document-edit.png"));
+	action.putValue(Action.SHORT_DESCRIPTION, "Edit");
+	action.setEnabled(true);
+	return action;
+    }
+
+    protected static String addToComponents(final List<JComponent> components, final String constraint, final JComponent component) {
 	if(component != null){
 	    components.add(component);
 	    return constraint;
 	}
 	return "";
+    }
+
+    /**
+     * Returns the {@link EntityGridInspector} of the single analysis that this centre owns.
+     * 
+     * @return
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    protected static <E extends AbstractEntity, MAE extends ICentreDomainTreeManagerAndEnhancer> EntityGridInspector<E> getEntityGridInspector(final AbstractEntityCentre<E, MAE> entityCentre){
+	for(final AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?, ?> analysis : entityCentre.getAnalysisList()){
+	    if(analysis instanceof GridConfigurationView){
+		final GridConfigurationView<E, MAE> gridConfigPanel = (GridConfigurationView<E, MAE>)analysis;
+		return gridConfigPanel.getPreviousView().getEgiPanel().getEgi();
+	    }
+	}
+	throw new IllegalComponentStateException("The centre doesn't contain the main detais analysis!");
     }
 
     /**
@@ -451,12 +631,30 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
     }
 
     /**
+     * Creates property change listener for the currentAnalysisConfigurationView property. This listener selects new analysis set as the current one.
+     * 
+     * @return
+     */
+    private PropertyChangeListener createCurrentAnalysisChangeListener() {
+	return new PropertyChangeListener() {
+
+	    @SuppressWarnings("rawtypes")
+	    @Override
+	    public void propertyChange(final PropertyChangeEvent evt) {
+		if("currentAnalysisConfigurationView".equals(evt.getPropertyName())){
+		    ((AbstractAnalysisConfigurationView)evt.getNewValue()).select();
+		}
+	    }
+	};
+    }
+
+    /**
      * Returns the button that may contain custom actions: configure, save, save as, remove and other actions)
      * @param customActionList
      * 
      * @return
      */
-    private JComponent createCustomActionButton(final List<Action> customActionList) {
+    private static JComponent createCustomActionButton(final List<Action> customActionList) {
 	//Initiates the list of all review actions (i.e. configure, save, save as, save as default, and remove actions)
 	final List<Action> actionList = new ArrayList<Action>();
 	for(final Action action : (customActionList == null ? new ArrayList<Action>() : customActionList)){
@@ -533,23 +731,5 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, DTM extends
 	final JButton button = new JButton(action);
 	button.setFocusable(false);
 	return button;
-    }
-
-    /**
-     * Creates property change listener for the currentAnalysisConfigurationView property. This listener selects new analysis set as the current one.
-     * 
-     * @return
-     */
-    private PropertyChangeListener createCurrentAnalysisChangeListener() {
-	return new PropertyChangeListener() {
-
-	    @SuppressWarnings("rawtypes")
-	    @Override
-	    public void propertyChange(final PropertyChangeEvent evt) {
-		if("currentAnalysisConfigurationView".equals(evt.getPropertyName())){
-		    ((AbstractAnalysisConfigurationView)evt.getNewValue()).select();
-		}
-	    }
-	};
     }
 }

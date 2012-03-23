@@ -4,7 +4,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -17,17 +17,17 @@ import ua.com.fielden.platform.swing.review.report.interfaces.IReviewEventListen
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
-public abstract class AbstractEntityReview<T extends AbstractEntity, DTM extends IDomainTreeManager> extends BasePanel implements IReview {
+public abstract class AbstractEntityReview<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends BasePanel implements IReview {
 
     private static final long serialVersionUID = -8984113615241551583L;
 
-    private final AbstractEntityReviewModel<T, DTM> model;
+    private final AbstractEntityReviewModel<T, CDTME> model;
 
     private final BlockingIndefiniteProgressLayer progressLayer;
 
     private final Action configureAction/*, saveAction, saveAsAction, saveAsDefaultAction, loadDefaultAction, removeAction*/;
 
-    public AbstractEntityReview(final AbstractEntityReviewModel<T, DTM> model, final BlockingIndefiniteProgressLayer progressLayer){
+    public AbstractEntityReview(final AbstractEntityReviewModel<T, CDTME> model, final BlockingIndefiniteProgressLayer progressLayer){
 	this.model = model;
 	this.progressLayer = progressLayer;
 	this.configureAction = createConfigureAction();
@@ -104,7 +104,7 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, DTM extends
      * 
      * @return
      */
-    public AbstractEntityReviewModel<T, DTM> getModel() {
+    public AbstractEntityReviewModel<T, CDTME> getModel() {
 	return model;
     }
 

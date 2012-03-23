@@ -5,7 +5,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.Action;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
@@ -15,9 +15,9 @@ import ua.com.fielden.platform.swing.review.report.events.AnalysisConfigurationE
 import ua.com.fielden.platform.swing.review.report.events.AnalysisConfigurationEvent.AnalysisConfigurationAction;
 import ua.com.fielden.platform.swing.review.report.interfaces.IAnalysisConfigurationEventListener;
 
-public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractConfigurationModel {
+public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractConfigurationModel {
 
-    private final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria;
+    private final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria;
 
     /**
      * The page holder for this analysis.
@@ -39,7 +39,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
      */
     private final String name;
 
-    public AbstractAnalysisConfigurationModel(final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria, final String name){
+    public AbstractAnalysisConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final String name){
 	this.criteria = criteria;
 	this.name = name;
 	this.pageHolder = new PageHolder();
@@ -75,7 +75,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
      * 
      * @return
      */
-    public EntityQueryCriteria<DTM, T, IEntityDao<T>> getCriteria() {
+    public EntityQueryCriteria<CDTME, T, IEntityDao<T>> getCriteria() {
 	return criteria;
     }
 
@@ -122,7 +122,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
-		getCriteria().getDomainTreeManger().acceptAnalysisManager(getName());
+		getCriteria().getCentreDomainTreeMangerAndEnhancer().acceptAnalysisManager(getName());
 		fireAnalysisConfigurationEvent(new AnalysisConfigurationEvent(AbstractAnalysisConfigurationModel.this, AnalysisConfigurationAction.SAVE));
 		return null;
 	    }
@@ -157,7 +157,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
-		getCriteria().getDomainTreeManger().removeAnalysisManager(getName());
+		getCriteria().getCentreDomainTreeMangerAndEnhancer().removeAnalysisManager(getName());
 		fireAnalysisConfigurationEvent(new AnalysisConfigurationEvent(AbstractAnalysisConfigurationModel.this, AnalysisConfigurationAction.REMOVE));
 		return null;
 	    }

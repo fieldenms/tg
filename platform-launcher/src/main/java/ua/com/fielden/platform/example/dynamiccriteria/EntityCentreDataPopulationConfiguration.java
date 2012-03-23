@@ -38,6 +38,10 @@ public class EntityCentreDataPopulationConfiguration implements IDomainDrivenTes
 	}
     }
 
+    public Injector getInjector() {
+	return injector;
+    }
+
     @Override
     public EntityFactory getEntityFactory() {
 	return entityFactory;

@@ -6,9 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.EntityAggregates;
 import ua.com.fielden.platform.error.Result;
@@ -22,11 +21,11 @@ import ua.com.fielden.platform.swing.review.report.analysis.configuration.Abstra
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.types.Money;
 
-public class ChartAnalysisModel<T extends AbstractEntity> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManager ,IAnalysisDomainTreeManager, Void> {
+public class ChartAnalysisModel<T extends AbstractEntity> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer ,IAnalysisDomainTreeManager, Void> {
 
     private final ChartAnalysisDataProvider chartAnalysisDataProvider = new ChartAnalysisDataProvider();
 
-    public ChartAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManager> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final AnalysisDomainTreeManager adtm, final PageHolder pageHolder) {
+    public ChartAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisDomainTreeManager adtm, final PageHolder pageHolder) {
 	super(configurationModel, criteria, adtm, pageHolder);
 	getPageHolder().addPageChangedListener(new IPageChangedListener() {
 

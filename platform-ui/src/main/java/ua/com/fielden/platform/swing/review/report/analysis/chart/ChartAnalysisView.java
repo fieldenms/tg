@@ -2,7 +2,6 @@ package ua.com.fielden.platform.swing.review.report.analysis.chart;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -37,7 +36,7 @@ import net.miginfocom.swing.MigLayout;
 import org.jfree.chart.ChartMouseEvent;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
@@ -65,7 +64,7 @@ import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
-public class ChartAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, ICentreDomainTreeManager ,IAnalysisDomainTreeManager, Void> {
+public class ChartAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer ,IAnalysisDomainTreeManager, Void> {
 
     private static final long serialVersionUID = -6505281133387254406L;
 
@@ -106,7 +105,7 @@ public class ChartAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
      */
     private boolean split = false;
 
-    public ChartAnalysisView(final ChartAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, ICentreDomainTreeManager> owner) {
+    public ChartAnalysisView(final ChartAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner) {
 	super(model, progressLayer, owner);
 	this.dataModel = new CategoryDataModel(getModel().getChartAnalysisDataProvider());
 	this.chartPanel = new MultipleChartPanel<List<EntityAggregates>, CategoryChartTypes>();
@@ -115,8 +114,9 @@ public class ChartAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
 	this.aggregationList = createAggregationList();
 	this.spinner = createColumnCounterSpinner();
 	this.switchChartModel = new SwitchChartsModel<List<EntityAggregates>, CategoryChartTypes>(chartPanel);
-	updateChart(new ArrayList<EntityAggregates>(), null);
+	//	updateChart(new ArrayList<EntityAggregates>(), null);
 	this.toolBar = createChartTypeBar();
+	layoutComponents();
 
 
 	//DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), new AnalysisChartDragToSupport<T, DAO, IAggregatedProperty, List<EntityAggregates>, CategoryChartTypes>(aggregationList, chartPanel, reportView.getModel()), true);
@@ -466,9 +466,9 @@ public class ChartAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
 	return chartPanel;
     }
 
-    private void layoutComponents(final Container container) {
-	container.removeAll();
-	container.setLayout(new MigLayout("fill, insets 0", "[fill,grow]", "[fill,grow]"));
+    private void layoutComponents() {
+	removeAll();
+	setLayout(new MigLayout("fill, insets 0", "[fill,grow]", "[fill,grow]"));
 	final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 	final JSplitPane leftPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 	//	final TaskPanel leftPanel = new TaskPanel(new MigLayout("insets 3, fill", "[fill,grow,:190:]", "[:230:]"));
@@ -505,9 +505,9 @@ public class ChartAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
 	splitPane.setLeftComponent(leftPane);
 	splitPane.setRightComponent(rightPanel);
 
-	container.add(splitPane);
-	container.invalidate();
-	container.validate();
-	container.repaint();
+	add(splitPane);
+	invalidate();
+	validate();
+	repaint();
     }
 }

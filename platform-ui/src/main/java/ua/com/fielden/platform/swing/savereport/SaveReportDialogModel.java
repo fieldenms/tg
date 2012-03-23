@@ -10,8 +10,8 @@ import javax.swing.ListModel;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.swing.actions.Command;
-import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
 
 /**
  * Model for the {@link SaveReportDialog}.
@@ -21,9 +21,9 @@ import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationCon
  */
 public class SaveReportDialogModel {
 
-    private final String principleKey;
+    private final Class<?> rootType;
 
-    private final ICenterConfigurationController centerController;
+    private final IGlobalDomainTreeManager gdtm;
 
     private SaveReportOptions returnValue;
 
@@ -33,10 +33,10 @@ public class SaveReportDialogModel {
      * @param directoryForReports
      *            - the directory where removable reports must be saved.
      */
-    public SaveReportDialogModel(final String principleKey, final ICenterConfigurationController centerController) {
-	this.principleKey = principleKey;
-	this.centerController = centerController;
-	returnValue = SaveReportOptions.CANCEL;
+    public SaveReportDialogModel(final Class<?> rootType, final IGlobalDomainTreeManager gdtm) {
+	this.rootType = rootType;
+	this.gdtm = gdtm;
+	this.returnValue = SaveReportOptions.CANCEL;
     }
 
     /**
@@ -46,9 +46,10 @@ public class SaveReportDialogModel {
      */
     public ListModel getAvailableReports() {
 	final DefaultListModel listModel = new DefaultListModel();
-	for (final String centerName : centerController.getNonPrincipleCenters(principleKey)) {
-	    listModel.addElement(centerName);
-	}
+	//TODO must provide list of available entity centres. Implementation must be based on global domain tree manager instance.
+	//	for (final String centerName : centerController.getNonPrincipleCenters(principleKey)) {
+	//	    listModel.addElement(centerName);
+	//	}
 	return listModel;
     }
 
@@ -80,7 +81,8 @@ public class SaveReportDialogModel {
 		} else if (!saveReportDialog.isNameAvailable(reportTitle)) {
 		    saveReportDialog.selectItem(reportTitle);
 		    JOptionPane.showMessageDialog(saveReportDialog, "Report with this title already exists.", "Save Report Warning", JOptionPane.WARNING_MESSAGE);
-		} else if (!centerController.isNonPrincipleCenterNameValid(principleKey, reportTitle)) {
+		} else if (false //TODO Global domain tree manager must provide ability to determine whether this
+			/*!centerController.isNonPrincipleCenterNameValid(principleKey, reportTitle)*/) {
 		    JOptionPane.showMessageDialog(saveReportDialog, "The title contains illegal characters. Please change the title and try again.", "Save Report Warning", JOptionPane.WARNING_MESSAGE);
 		} else {
 		    return true;

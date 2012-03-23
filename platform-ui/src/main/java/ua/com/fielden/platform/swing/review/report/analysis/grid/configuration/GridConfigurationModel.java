@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.analysis.grid.configuration;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
@@ -9,11 +9,11 @@ import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisModel;
 
-public class GridConfigurationModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractAnalysisConfigurationModel<T, DTM> {
+public class GridConfigurationModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisConfigurationModel<T, CDTME> {
 
 
-    public GridConfigurationModel(final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria){
-	super(criteria, null);
+    public GridConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria){
+	super(criteria, "Main details");
     }
 
     @Override
@@ -25,8 +25,8 @@ public class GridConfigurationModel<T extends AbstractEntity, DTM extends ICentr
 	return Result.successful(this);
     }
 
-    public GridAnalysisModel<T, DTM> createGridAnalysisModel() {
-	return new GridAnalysisModel<T, DTM>(this, getCriteria(), getPageHolder());
+    final GridAnalysisModel<T, CDTME> createGridAnalysisModel() {
+	return new GridAnalysisModel<T, CDTME>(this, getCriteria(), getPageHolder());
     }
 
 }

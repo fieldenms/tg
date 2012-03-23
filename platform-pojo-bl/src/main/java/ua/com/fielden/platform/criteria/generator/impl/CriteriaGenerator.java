@@ -12,9 +12,10 @@ import ua.com.fielden.platform.criteria.enhanced.EnhancedLocatorEntityQueryCrite
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -58,26 +59,26 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     @Override
-    public <T extends AbstractEntity> EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManager cdtm) {
-	return generateQueryCriteria(root, cdtm, EnhancedCentreEntityQueryCriteria.class);
+    public <T extends AbstractEntity> EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme) {
+	return generateQueryCriteria(root, cdtme, EnhancedCentreEntityQueryCriteria.class);
     }
 
     @Override
-    public <T extends AbstractEntity> EntityQueryCriteria<ILocatorDomainTreeManager, T, IEntityDao<T>> generateLocatorQueryCriteria(final Class<T> root, final ILocatorDomainTreeManager ldtm) {
-	return generateQueryCriteria(root, ldtm, EnhancedLocatorEntityQueryCriteria.class);
+    public <T extends AbstractEntity> EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>> generateLocatorQueryCriteria(final Class<T> root, final ILocatorDomainTreeManagerAndEnhancer ldtme) {
+	return generateQueryCriteria(root, ldtme, EnhancedLocatorEntityQueryCriteria.class);
     }
 
-    private <T extends AbstractEntity, DTM extends IDomainTreeManager> EntityQueryCriteria<DTM, T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final DTM dtm, final Class<? extends EntityQueryCriteria> entityClass) {
+    private <T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> EntityQueryCriteria<CDTME, T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final CDTME cdtme, final Class<? extends EntityQueryCriteria> entityClass) {
 	final List<NewProperty> newProperties = new ArrayList<NewProperty>();
-	for(final String propertyName : dtm.getFirstTick().checkedProperties(root)){
-	    newProperties.addAll(generateCriteriaProperties(root, propertyName));
+	for(final String propertyName : cdtme.getFirstTick().checkedProperties(root)){
+	    newProperties.addAll(generateCriteriaProperties(root, cdtme.getEnhancer(), propertyName));
 	}
 
 	final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 
 	try {
-	    final Class<? extends EntityQueryCriteria<DTM, T, IEntityDao<T>>> queryCriteriaClass = (Class<? extends EntityQueryCriteria<DTM, T, IEntityDao<T>>>) cl.startModification(entityClass.getName()).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
-	    final EntityQueryCriteria<DTM, T, IEntityDao<T>> entity = entityFactory.newByKey(queryCriteriaClass, "not required");
+	    final Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>> queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) cl.startModification(entityClass.getName()).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
+	    final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity = entityFactory.newByKey(queryCriteriaClass, "not required");
 
 	    //Set dao for generated entity query criteria.
 	    final Field daoField = Finder.findFieldByName(EntityQueryCriteria.class, "dao");
@@ -87,11 +88,11 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	    daoField.setAccessible(isDaoAccessible);
 
 	    //Set domain tree manager for entity query criteria.
-	    final Field dtmField = Finder.findFieldByName(EntityQueryCriteria.class, "dtm");
-	    final boolean isDtmAccessible = dtmField.isAccessible();
+	    final Field dtmField = Finder.findFieldByName(EntityQueryCriteria.class, "cdtme");
+	    final boolean isCdtmeAccessible = dtmField.isAccessible();
 	    dtmField.setAccessible(true);
-	    dtmField.set(entity, dtm);
-	    dtmField.setAccessible(isDtmAccessible);
+	    dtmField.set(entity, cdtme);
+	    dtmField.setAccessible(isCdtmeAccessible);
 
 	    return entity;
 	} catch (final Exception e) {
@@ -108,19 +109,28 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param propertyName
      * @return
      */
-    private static List<NewProperty> generateCriteriaProperties(final Class<?> root, final String propertyName) {
+    private static List<NewProperty> generateCriteriaProperties(final Class<?> root, final IDomainTreeEnhancer enhancer, final String propertyName) {
+	ICalculatedProperty calculatedProperty = null;
+	boolean isCalculated = false;
+	try{
+	    calculatedProperty = enhancer.getCalculatedProperty(root, propertyName);
+	    isCalculated = true;
+	}catch(final Exception e){
 
+	}
+	final Class<?> inspectedType = isCalculated ? enhancer.getManagedType(root) : root;
 	final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
-	final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, propertyName);
-	final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName);
+	final Class<?> propertyType = isEntityItself ? inspectedType : PropertyTypeDeterminator.determinePropertyType(inspectedType, propertyName);
+	final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, inspectedType, propertyName);
+	final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(inspectedType, propertyName);
 
 	final List<NewProperty> generatedProperties = new ArrayList<NewProperty>();
 
 	if((EntityUtils.isRangeType(propertyType) || isBoolean(propertyType)) //
 		&& !(critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value()))){
-	    generatedProperties.addAll(generateRangeCriteriaProperties(root, propertyType, propertyName));
+	    generatedProperties.addAll(generateRangeCriteriaProperties(root, propertyType, propertyName, titleAndDesc));
 	}else{
-	    generatedProperties.add(generateSingleCriteriaProperty(root, propertyType, propertyName, critOnlyAnnotation));
+	    generatedProperties.add(generateSingleCriteriaProperty(root, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
 	}
 	return generatedProperties;
     }
@@ -134,18 +144,17 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param critOnlyAnnotation
      * @return
      */
-    private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> propertyType, final String propertyName, final CritOnly critOnlyAnnotation) {
+    private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
 	final boolean isEntity = EntityUtils.isEntityType(propertyType);
 	final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
 	final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (isBoolean(propertyType) ? Boolean.class : propertyType);
-	final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(root, propertyName);
 
 	final List<Annotation> annotations = new ArrayList<Annotation>(){{
 	    if(isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)){
 		add(new IsPropertyAnnotation(String.class).newInstance());
 		add(new EntityTypeAnnotation((Class<? extends AbstractEntity>) propertyType).newInstance());
 	    }
-	    add(new CriteriaPropertyAnnotation(root, propertyName).newInstance());
+	    add(new CriteriaPropertyAnnotation(propertyName).newInstance());
 	}};
 
 	return new NewProperty(CriteriaReflector.generateCriteriaPropertyName(root, propertyName, ""), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
@@ -159,16 +168,15 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param propertyName
      * @return
      */
-    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> propertyType, final String propertyName) {
+    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc) {
 	final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, isBoolean(propertyType) ? _IS : _FROM);
 	final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, isBoolean(propertyType) ? _NOT : _TO);
 	final Class<?> newPropertyType = isBoolean(propertyType) ? Boolean.class : propertyType;
-	final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(root, propertyName);
 
 	final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		new CriteriaPropertyAnnotation(root, propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance());
+		new CriteriaPropertyAnnotation(propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance());
 	final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		new CriteriaPropertyAnnotation(root, propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance());
+		new CriteriaPropertyAnnotation(propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance());
 
 	return new ArrayList<NewProperty>() {{ add(firstProperty); add(secondProperty); }};
     }

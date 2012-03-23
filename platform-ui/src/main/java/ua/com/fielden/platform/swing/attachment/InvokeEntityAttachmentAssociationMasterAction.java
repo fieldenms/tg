@@ -14,6 +14,8 @@ import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
  */
 public abstract class InvokeEntityAttachmentAssociationMasterAction extends BlockingLayerCommand<Void> {
 
+    private static final long serialVersionUID = 5494880216646898554L;
+
     private final AttachmentEntityAssociationMasterFactory factory;
 
     public InvokeEntityAttachmentAssociationMasterAction(final String name, final AttachmentEntityAssociationMasterFactory factory, final IBlockingLayerProvider provider) {

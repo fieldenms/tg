@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -17,7 +18,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Editor for ranges or boolean properties that consists of range-specific label and double-editor ("from" -> "to" or "is" -> "is not").
@@ -27,8 +27,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class RangePropertyEditor implements IPropertyEditor {
 
-    private AbstractEntity<?> entity;
-    private final Class<?> root;
+    private EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> entity;
     private final String propertyName;
 
     private final JLabel label;
@@ -45,11 +44,10 @@ public class RangePropertyEditor implements IPropertyEditor {
 	if (!fe.equals(te) || !fe.getPropertyType(fromEditor.getPropertyName()).equals(te.getPropertyType(toEditor.getPropertyName()))) {
 	    throw new RuntimeException("Entity or propertyType is not exactly the same for two editors that form Range/Boolean editor.");
 	}
-	this.entity = fromEditor.getEntity();
-	final Pair<Class<?>, String> criteriaParameters = CriteriaReflector.getCriteriaProperty((Class<? extends EntityQueryCriteria>)entity.getType(), fromEditor.getPropertyName());
+	this.entity = (EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>)fromEditor.getEntity();
+	final String criteriaParameters = CriteriaReflector.getCriteriaProperty((Class<? extends EntityQueryCriteria>)entity.getType(), fromEditor.getPropertyName());
 
-	this.root = criteriaParameters.getKey();
-	this.propertyName = CriteriaReflector.generateCriteriaPropertyName(root, criteriaParameters.getValue(), null);
+	this.propertyName = CriteriaReflector.generateCriteriaPropertyName(entity.getEntityClass(), criteriaParameters, null);
 
 	this.fromEditor = fromEditor;
 	this.toEditor = toEditor;
@@ -60,7 +58,7 @@ public class RangePropertyEditor implements IPropertyEditor {
 	final Class<?> propertyType = fromEditor.getEntity().getPropertyType(fromEditor.getPropertyName());
 	bool = (Boolean.class == propertyType) || (boolean.class == propertyType);
 	date = (Date.class.isAssignableFrom(propertyType));
-	editor = createEditor(bool, root, criteriaParameters.getValue());
+	editor = createEditor(bool, entity.getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(entity.getEntityClass()), criteriaParameters);
     }
 
     @SuppressWarnings("unchecked")
@@ -129,7 +127,7 @@ public class RangePropertyEditor implements IPropertyEditor {
 
     @Override
     public void bind(final AbstractEntity<?> entity) {
-	this.entity = entity;
+	this.entity = (EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>)entity;
 	fromEditor.bind(entity);
 	toEditor.bind(entity);
     }

@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.example.dynamiccriteria;
 
-import java.io.FileInputStream;
 import java.util.List;
-import java.util.Properties;
-
-import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleECEEntity;
 import ua.com.fielden.platform.security.user.IUserDao2;
 import ua.com.fielden.platform.security.user.User;
@@ -22,26 +19,26 @@ public class PopulateDbForEntityCentreExample extends DomainDrivenDataPopulation
 	// TODO Auto-generated constructor stub
     }
 
-    public static void initDb(final String arg) throws Exception{
-	//TODO please review entity_centre_example.properties and correct appropriate properties.
-	final String configFileName = !StringUtils.isEmpty(arg) ? arg : "src/main/resources/entity_centre_example.properties";
-	final FileInputStream in = new FileInputStream(configFileName);
-	final Properties props = IDomainDrivenTestCaseConfiguration.hbc;
-	props.load(in);
-	in.close();
-
-	// override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
-	props.put("hibernate.show_sql", "false");
-	props.put("hibernate.format_sql", "true");
-	props.put("hibernate.hbm2ddl.auto", "create");
-
-
-	final IDomainDrivenTestCaseConfiguration config = new EntityCentreDataPopulationConfiguration();
-
-
-	final PopulateDbForEntityCentreExample popDb = new PopulateDbForEntityCentreExample(config);
-	popDb.createAndPopulate();
-    }
+    //    public static void initDb(final String arg) throws Exception{
+    //	//TODO please review entity_centre_example.properties and correct appropriate properties.
+    //	final String configFileName = !StringUtils.isEmpty(arg) ? arg : "src/main/resources/entity_centre_example.properties";
+    //	final FileInputStream in = new FileInputStream(configFileName);
+    //	final Properties props = IDomainDrivenTestCaseConfiguration.hbc;
+    //	props.load(in);
+    //	in.close();
+    //
+    //	// override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
+    //	props.put("hibernate.show_sql", "false");
+    //	props.put("hibernate.format_sql", "true");
+    //	props.put("hibernate.hbm2ddl.auto", "create");
+    //
+    //
+    //	final IDomainDrivenTestCaseConfiguration config = new EntityCentreDataPopulationConfiguration();
+    //
+    //
+    //	final PopulateDbForEntityCentreExample popDb = new PopulateDbForEntityCentreExample(config);
+    //	popDb.createAndPopulate();
+    //    }
 
     @Override
     protected void populateDomain() {
@@ -58,9 +55,10 @@ public class PopulateDbForEntityCentreExample extends DomainDrivenDataPopulation
 
 	//Configure main menu.
 	final MainMenuItem menuItem = new_(MainMenuItem.class, SimpleECEEntity.class.getName());
+	final MainMenuItem menuItem2 = new_(MainMenuItem.class, SimpleCompositeEntity.class.getName());
 	final IMainMenuItemController2 menuItemDao = ao(MainMenuItem.class);
 	menuItemDao.save(menuItem);
-
+	menuItemDao.save(menuItem2);
     }
 
     @Override

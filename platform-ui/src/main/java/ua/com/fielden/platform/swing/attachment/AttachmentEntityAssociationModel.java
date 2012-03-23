@@ -10,21 +10,20 @@ import javax.swing.Action;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
-import ua.com.fielden.platform.dao.IDaoFactory;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.actions.custom.AbstractDownloadAttachmentAction;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
-import ua.com.fielden.platform.swing.ei.PropertyBinderWithDynamicAutocompleter;
-import ua.com.fielden.platform.swing.locator.ILocatorConfigurationRetriever;
+import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
 import ua.com.fielden.platform.swing.model.FrameTitleUpdater;
 import ua.com.fielden.platform.swing.model.UmDetailsWithCrudAndUpdaterMany;
 import ua.com.fielden.platform.swing.model.UmState;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
-import ua.com.fielden.platform.ui.config.api.interaction.ILocatorConfigurationController;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
@@ -39,18 +38,21 @@ public class AttachmentEntityAssociationModel extends UmDetailsWithCrudAndUpdate
     private final Command<File> downloadAttachment;
 
     public AttachmentEntityAssociationModel(//
-    final AbstractEntity<?> master, //
-    final IEntityAttachmentAssociationController controller,//
-    final IValueMatcherFactory valueMatcherFactory, //
-    final IEntityMasterManager entityMasterFactory,//
-    final IDaoFactory daoFactory,//
-    final FrameTitleUpdater titleUpdater,//
-    final ILocatorConfigurationController locatorController, final ILocatorConfigurationRetriever locatorRetriever) {
-	super(master, controller, new PropertyBinderWithDynamicAutocompleter<EntityAttachmentAssociation>(//
-	valueMatcherFactory, //
-	entityMasterFactory,//
-	daoFactory, locatorController,//
-	locatorRetriever, "entityId"), null, produceEgiModel(), titleUpdater, false);
+	    final AbstractEntity<?> master, //
+	    final IEntityAttachmentAssociationController controller,//
+	    final IValueMatcherFactory valueMatcherFactory, //
+	    final IEntityMasterManager entityMasterFactory,//
+	    //final IDaoFactory daoFactory,//
+	    final FrameTitleUpdater titleUpdater,//
+	    final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator) {
+	super(master, controller, MasterPropertyBinder.<EntityAttachmentAssociation>createPropertyBinderWithLocatorSupport(//
+		valueMatcherFactory, //
+		//entityMasterFactory,//
+		//daoFactory, locatorController,//
+		//locatorRetriever,
+		masterManager,//
+		criteriaGenerator,//
+		"entityId"), null, produceEgiModel(), titleUpdater, false);
 
 	this.entityMasterFactory = entityMasterFactory;
 	this.downloadAttachment = createDownloadAttachmentCommand();
@@ -82,9 +84,9 @@ public class AttachmentEntityAssociationModel extends UmDetailsWithCrudAndUpdate
 
     private static PropertyTableModel<EntityAttachmentAssociation> produceEgiModel() {
 	return new PropertyTableModelBuilder<EntityAttachmentAssociation>(EntityAttachmentAssociation.class).//
-	addReadonly("attachment", 100).//
-	addReadonly("attachment.desc", 300).//
-	build(new ArrayList<EntityAttachmentAssociation>());
+		addReadonly("attachment", 100).//
+		addReadonly("attachment.desc", 300).//
+		build(new ArrayList<EntityAttachmentAssociation>());
     }
 
     @Override

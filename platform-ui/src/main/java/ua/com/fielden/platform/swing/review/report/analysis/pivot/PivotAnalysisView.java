@@ -2,14 +2,12 @@ package ua.com.fielden.platform.swing.review.report.analysis.pivot;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -22,13 +20,14 @@ import javax.swing.SortOrder;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToDistributionTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
+import ua.com.fielden.platform.swing.checkboxlist.CheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingListener;
 import ua.com.fielden.platform.swing.checkboxlist.SortObject;
@@ -48,7 +47,7 @@ import ua.com.fielden.platform.swing.treetable.FilterableTreeTablePanel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 
-public class PivotAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, ICentreDomainTreeManager, IPivotDomainTreeManager, Void> {
+public class PivotAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void> {
 
     private static final long serialVersionUID = 8295216779213506230L;
 
@@ -67,7 +66,7 @@ public class PivotAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
 
 
 
-    public PivotAnalysisView(final PivotAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, ICentreDomainTreeManager> owner) {
+    public PivotAnalysisView(final PivotAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner) {
 	super(model, progressLayer, owner);
 
 	this.distributionList = createDistributionList();
@@ -77,6 +76,7 @@ public class PivotAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
 
 	//DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), new PivotListDragToSupport<IDistributedProperty>(distributionList, createDistributionSwapper()), true);
 	//DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), new PivotListDragToSupport<IAggregatedProperty>(aggregationList, createAggregationSwapper()), true);
+	layoutComponents();
     }
 
     @Override
@@ -100,9 +100,10 @@ public class PivotAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
 	    listModel.addElement(distributionProperty);
 	}
 	final CheckboxList<String> distributionList = new CheckboxList<String>(listModel);
-	distributionList.setCellRenderer(new DefaultListCellRenderer() {
+	distributionList.setCellRenderer(new CheckboxListCellRenderer<String>(new JCheckBox()) {
 
 	    private static final long serialVersionUID = 7712966992046861840L;
+
 
 	    @Override
 	    public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
@@ -308,9 +309,9 @@ public class PivotAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
     //
     //    }
 
-    private void layoutComponents(final Container container) {
-	container.removeAll();
-	container.setLayout(new MigLayout("fill, insets 0", "[fill,grow]", "[fill,grow]"));
+    private void layoutComponents() {
+	removeAll();
+	setLayout(new MigLayout("fill, insets 0", "[fill,grow]", "[fill,grow]"));
 	final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 	final JSplitPane leftPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
@@ -340,10 +341,7 @@ public class PivotAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
 	splitPane.setLeftComponent(leftPane);
 	splitPane.setRightComponent(rightPanel);
 
-	container.add(splitPane);
-	container.invalidate();
-	container.validate();
-	container.repaint();
+	add(splitPane);
     }
 
 

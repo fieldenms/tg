@@ -26,7 +26,7 @@ import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IPropertyEnum;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.Secrete;
@@ -71,7 +71,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
      * @param propertyName
      * @return
      */
-    public static OrdinaryPropertyEditor createOrdinaryPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> criteria, final String propertyName){
+    public static OrdinaryPropertyEditor createOrdinaryPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, final String propertyName){
 	final Class<?> type = PropertyTypeDeterminator.determinePropertyType(criteria.getType(), propertyName);
 	final Long defaultTimePortionMillis = (Date.class.isAssignableFrom(type) && CriteriaReflector.isSecondParam((Class<EntityQueryCriteria>)criteria.getType(), propertyName)) ? DatePickerLayer.defaultTimePortionMillisForTheEndOfDay() : 0L;
 	return new OrdinaryPropertyEditor(criteria, propertyName, defaultTimePortionMillis);

@@ -1,21 +1,22 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.ei.EntityInspectorModel;
+import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationModel;
 
 //TODO consider necessity of the entity centre model existence.
-public class EntityCentreModel<T extends AbstractEntity> extends AbstractEntityCentreModel<T, ICentreDomainTreeManager> {
+public class EntityCentreModel<T extends AbstractEntity> extends AbstractEntityCentreModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     //TODO is result view model is needed?
     //private AbstractAnalysisConfigurationModel resultViewModel;
 
 
-    public EntityCentreModel(final CentreConfigurationModel<T> configurationModel, final EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>>> entityInspectorModel, final String name){
-	super(configurationModel, entityInspectorModel, name);
+    public EntityCentreModel(final CentreConfigurationModel<T> configurationModel, final EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> entityInspectorModel, final IEntityMasterManager masterManager, final String name){
+	super(configurationModel, entityInspectorModel, masterManager, name);
     }
 
     @Override

@@ -8,11 +8,11 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 
-public class SingleAnalysisEntityCentre<T extends AbstractEntity> extends AbstractSingleAnalysisEntityCentre<T, ICentreDomainTreeManager> {
+public class SingleAnalysisEntityCentre<T extends AbstractEntity> extends AbstractSingleAnalysisEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> {
 
     private static final long serialVersionUID = -4025190200012481751L;
 
@@ -30,6 +30,12 @@ public class SingleAnalysisEntityCentre<T extends AbstractEntity> extends Abstra
     @Override
     public JComponent getReviewPanel() {
 	return getReviewProgressLayer();
+    }
+
+    @Override
+    public List<T> getSelectedEntities() {
+	// TODO Auto-generated method stub
+	return null;
     }
 
     @Override

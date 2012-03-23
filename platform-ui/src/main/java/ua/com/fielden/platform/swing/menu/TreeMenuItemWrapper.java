@@ -3,11 +3,8 @@ package ua.com.fielden.platform.swing.menu;
 import javax.swing.JPanel;
 import javax.swing.tree.MutableTreeNode;
 
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.api.IItemSelector;
-import ua.com.fielden.platform.swing.review.DynamicEntityReview;
-import ua.com.fielden.platform.swing.review.DynamicEntityReviewWithTabs;
 
 /**
  * {@link TreeMenuItem} that wraps it's parent {@link MiSaveAsConfiguration} node.
@@ -18,7 +15,7 @@ import ua.com.fielden.platform.swing.review.DynamicEntityReviewWithTabs;
  * @param <DAO>
  * @param <R>
  */
-public class TreeMenuItemWrapper<T extends AbstractEntity, DAO extends IEntityDao<T>, R extends AbstractEntity> extends TreeMenuItem<DynamicReportWrapper<T, DAO, R>> implements IItemSelector {
+public class TreeMenuItemWrapper<T extends AbstractEntity> extends TreeMenuItem<DynamicReportWrapper<T>> implements IItemSelector {
 
     private static final long serialVersionUID = -5587449424202672352L;
 
@@ -28,8 +25,8 @@ public class TreeMenuItemWrapper<T extends AbstractEntity, DAO extends IEntityDa
      * @param title
      * @param removableDynamicItem
      */
-    public TreeMenuItemWrapper(final String title, final boolean isGroup) {
-	super(null, title, null, isGroup);
+    public TreeMenuItemWrapper(final String title) {
+	super(null, title, null, false);
     }
 
     @Override
@@ -41,7 +38,7 @@ public class TreeMenuItemWrapper<T extends AbstractEntity, DAO extends IEntityDa
     }
 
     @Override
-    public DynamicReportWrapper<T, DAO, R> getView() {
+    public DynamicReportWrapper<T> getView() {
 	if (getParent() != null) {
 	    return getParent().getView();
 	}
@@ -72,7 +69,7 @@ public class TreeMenuItemWrapper<T extends AbstractEntity, DAO extends IEntityDa
     }
 
     @Override
-    public TreeMenuItem<DynamicReportWrapper<T, DAO, R>> addItem(final TreeMenuItem<?> item) {
+    public TreeMenuItem<DynamicReportWrapper<T>> addItem(final TreeMenuItem<?> item) {
 	throw new UnsupportedOperationException("It's impossible to add new child node to this tree menu item wrapper");
     }
 
@@ -85,9 +82,10 @@ public class TreeMenuItemWrapper<T extends AbstractEntity, DAO extends IEntityDa
 	}
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public MiSaveAsConfiguration<T, DAO, R> getParent() {
-	return (MiSaveAsConfiguration<T, DAO, R>) super.getParent();
+    public MiSaveAsConfiguration<T> getParent() {
+	return (MiSaveAsConfiguration<T>) super.getParent();
     }
 
     /**
@@ -95,7 +93,7 @@ public class TreeMenuItemWrapper<T extends AbstractEntity, DAO extends IEntityDa
      * 
      * @return
      */
-    public MiSaveAsConfiguration<T, DAO, R> getWrappedTreeMenuItem() {
+    public MiSaveAsConfiguration<T> getWrappedTreeMenuItem() {
 	return getParent();
     }
 
@@ -106,11 +104,12 @@ public class TreeMenuItemWrapper<T extends AbstractEntity, DAO extends IEntityDa
      */
     @Override
     public void selectTreeMenuItem(final String name) {
-	final DynamicEntityReview<T, DAO, R> view = getView().getView();
-	if (view instanceof DynamicEntityReviewWithTabs) {
-	    final DynamicEntityReviewWithTabs<T, DAO, R> viewWithTabs = (DynamicEntityReviewWithTabs<T, DAO, R>) view;
-	    viewWithTabs.selectTab(name);
-	}
+	//TODO must be implemented later after entity centre modifications.
+	//	final DynamicEntityReview<T> view = getView().getView();
+	//	if (view instanceof DynamicEntityReviewWithTabs) {
+	//	    final DynamicEntityReviewWithTabs<T, DAO, R> viewWithTabs = (DynamicEntityReviewWithTabs<T, DAO, R>) view;
+	//	    viewWithTabs.selectTab(name);
+	//	}
     }
 
     @Override

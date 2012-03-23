@@ -19,6 +19,10 @@ import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleECEEntityDao;
 import ua.com.fielden.platform.ioc.BasicWebServerModule2;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.swing.review.EntityMasterManager;
+import ua.com.fielden.platform.swing.review.IEntityMasterManager;
+import ua.com.fielden.platform.ui.config.api.interaction.IMasterConfigurationController;
+import ua.com.fielden.platform.ui.config.impl.interaction.RemoteMasterConfigurationController;
 
 import com.google.inject.Scopes;
 
@@ -41,8 +45,10 @@ public class EntityCentreExampleModule extends BasicWebServerModule2{
 	bind(IUserProvider.class).to(BaseUserProvider.class).in(Scopes.SINGLETON);
 	bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
 	bind(IGlobalDomainTreeManager.class).to(GlobalDomainTreeManager.class).in(Scopes.SINGLETON);
+	bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
 	bind(ISimpleECEEntityDao.class).to(SimpleECEEntityDao.class);
 	bind(INestedEntityDao.class).to(NestedEntityDao.class);
+	bind(IMasterConfigurationController.class).to(RemoteMasterConfigurationController.class).in(Scopes.SINGLETON);
 	bind(ISimpleCompositeEntityDao.class).to(SimpleCompositeEntityDao.class);
     }
 

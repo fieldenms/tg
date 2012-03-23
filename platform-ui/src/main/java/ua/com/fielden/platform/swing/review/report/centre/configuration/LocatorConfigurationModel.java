@@ -20,13 +20,12 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityLocatorModel;
 import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder;
-import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder.EntityCentreType;
 import ua.com.fielden.platform.swing.review.report.events.LocatorConfigurationEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorConfigurationEvent.LocatorConfigurationAction;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorConfigurationEventListener;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
-public class LocatorConfigurationModel<T extends AbstractEntity, R extends AbstractEntity> extends AbstractCentreConfigurationModel<T, ILocatorDomainTreeManager> {
+public class LocatorConfigurationModel<T extends AbstractEntity, R extends AbstractEntity> extends AbstractCentreConfigurationModel<T, ILocatorDomainTreeManagerAndEnhancer> {
 
     /**
      * The class where the property specified with propertyName was declared.
@@ -47,7 +46,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
      * @param entityFactory - {@link EntityFactory} needed for wizard model creation.
      */
     public LocatorConfigurationModel( final Class<T> entityType, final Class<R> rootType, final String propertyName, final ILocatorManager locatorManager, final EntityFactory entityFactory, final ICriteriaGenerator criteriaGenerator){
-	super(entityType, propertyName, entityFactory, criteriaGenerator);
+	super(entityType, propertyName, entityFactory, null, criteriaGenerator);
 	this.rootType = rootType;
 	this.locatorManager = locatorManager;
 	this.save = createSaveAction();
@@ -106,7 +105,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
 		return new Result(this, new Exception("The locator manager must be initialised"));
 	    }
 	    if(ldtm.getSecondTick().checkedProperties(entityType).isEmpty()){
-		return new Result(this, new CanNotSetModeException("This report is opened for the first time!"));
+		return new Result(this, new CanNotSetModeException("Please choose properties to add to the result set!"));
 	    }
 	}
 	return Result.successful(this);
@@ -114,11 +113,11 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
 
     @Override
     protected EntityLocatorModel<T> createEntityCentreModel() {
-	final ILocatorDomainTreeManager ldtm = locatorManager.getLocatorManager(rootType, name);
-	if(ldtm == null || ldtm.getSecondTick().checkedProperties(entityType).isEmpty()){
+	final ILocatorDomainTreeManagerAndEnhancer ldtme = locatorManager.getLocatorManager(rootType, name);
+	if(ldtme == null || ldtme.getSecondTick().checkedProperties(entityType).isEmpty()){
 	    throw new IllegalStateException("The locator manager is not specified correctly!");
 	}
-	return new EntityLocatorModel<T>(this, createInspectorModel(criteriaGenerator.generateLocatorQueryCriteria(entityType, ldtm)), name);
+	return new EntityLocatorModel<T>(this, createInspectorModel(criteriaGenerator.generateLocatorQueryCriteria(entityType, ldtme)), name);
     }
 
     @Override
@@ -136,9 +135,9 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
      * @param criteria
      * @return
      */
-    private EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManager,T,IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ILocatorDomainTreeManager,T,IEntityDao<T>> criteria){
-	return new EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManager,T,IEntityDao<T>>>(criteria,//
-		new CentrePropertyBinder<EntityQueryCriteria<ILocatorDomainTreeManager,T,IEntityDao<T>>>(EntityCentreType.LOCATOR, criteriaGenerator));
+    private EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer,T,IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer,T,IEntityDao<T>> criteria){
+	return new EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer,T,IEntityDao<T>>>(criteria,//
+		CentrePropertyBinder.<T>createLocatorPropertyBinder());
     }
 
     private Action createSaveAction() {

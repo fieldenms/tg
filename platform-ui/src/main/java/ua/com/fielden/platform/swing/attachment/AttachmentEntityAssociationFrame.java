@@ -3,16 +3,15 @@ package ua.com.fielden.platform.swing.attachment;
 import org.jfree.ui.RefineryUtilities;
 
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
-import ua.com.fielden.platform.dao.IDaoFactory;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
-import ua.com.fielden.platform.swing.locator.ILocatorConfigurationRetriever;
 import ua.com.fielden.platform.swing.model.FrameTitleUpdater;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.view.BaseFrame;
-import ua.com.fielden.platform.ui.config.api.interaction.ILocatorConfigurationController;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
@@ -28,14 +27,14 @@ public class AttachmentEntityAssociationFrame extends BaseFrame {
     private final AttachmentEntityAssociationView view;
 
     public AttachmentEntityAssociationFrame(final AbstractEntity<?> entity, //
-    final IEntityAttachmentAssociationController controller, //
-    final IValueMatcherFactory valueMatcherFactory,//
-    final IEntityMasterManager entityMasterFactory,//
-    final IDaoFactory daoFactory,//
-    final ILocatorConfigurationController locatorController, final ILocatorConfigurationRetriever locatorRetriever) {
+	    final IEntityAttachmentAssociationController controller, //
+	    final IValueMatcherFactory valueMatcherFactory,//
+	    final IEntityMasterManager entityMasterFactory,//
+	    //final IDaoFactory daoFactory,//
+	    final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator) {
 	setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
 
-	model = new AttachmentEntityAssociationModel(entity, controller, valueMatcherFactory, entityMasterFactory, daoFactory, new FrameTitleUpdater(this), locatorController, locatorRetriever);
+	model = new AttachmentEntityAssociationModel(entity, controller, valueMatcherFactory, entityMasterFactory,  new FrameTitleUpdater(this), masterManager, criteriaGenerator);
 	add(view = new AttachmentEntityAssociationView(model));
 
 	setTitle(model.toString());

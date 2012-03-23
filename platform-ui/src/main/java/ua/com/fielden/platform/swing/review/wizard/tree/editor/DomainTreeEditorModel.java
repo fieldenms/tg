@@ -16,7 +16,7 @@ import ua.com.fielden.platform.expression.editor.ExpressionEditorModel;
 import ua.com.fielden.platform.expression.editor.IPropertySelectionListener;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.actions.Command;
-import ua.com.fielden.platform.swing.ei.development.LightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.model.UmState;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2;
@@ -53,7 +53,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	this.dtme = dtme;
 	this.factory = factory;
 	final CalculatedProperty entity = CalculatedProperty.createEmpty(factory, rootType, "", dtme.getEnhancer());
-	this.expressionModel = new ExpressionEditorModelForWizard(entity, new LightweightPropertyBinder<CalculatedProperty>(null, null/*, "key", "name"*/));
+	this.expressionModel = new ExpressionEditorModelForWizard(entity, MasterPropertyBinder.<CalculatedProperty>createPropertyBinderWithoutLocatorSupport(null));
 	this.listenerList = new EventListenerList();
 	this.propertySelectionModel = new CalculatedPropertySelectModel();
 	this.propertySelectionModel.addPropertySelectionListener(createPropertySelectedListener());

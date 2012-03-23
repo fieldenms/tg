@@ -16,13 +16,6 @@ import java.lang.annotation.Target;
 public @interface CriteriaProperty {
 
     /**
-     * Returns original root type for generated criteria property.
-     * 
-     * @return
-     */
-    Class<?> rootType();
-
-    /**
      * Returns the property name for which criteria property was generated.
      * 
      * @return

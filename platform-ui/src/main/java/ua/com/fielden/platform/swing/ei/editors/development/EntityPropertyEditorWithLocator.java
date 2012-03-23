@@ -7,7 +7,7 @@ import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -21,7 +21,6 @@ import ua.com.fielden.platform.swing.ei.editors.LabelAndTooltipExtractor;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationModel;
-import ua.com.fielden.platform.utils.Pair;
 
 public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEditor {
 
@@ -32,24 +31,24 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
      * 
      * @return
      */
-    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForCentre(final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> criteria, final String propertyName, final ICriteriaGenerator criteriaGenerator){
-	final Pair<Class<?>, String> criteriaParameters = CriteriaReflector.getCriteriaProperty(criteria.getClass(), propertyName);
+    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, final String propertyName, final ICriteriaGenerator criteriaGenerator){
+	final String criteriaPropertyName = CriteriaReflector.getCriteriaProperty(criteria.getClass(), propertyName);
 	final IValueMatcher<?> valueMatcher = criteria.getValueMatcher(propertyName);
 	final MetaProperty metaProp = criteria.getProperty(propertyName);
 
 	return createEntityPropertyEditorWithLocator(//
 		criteria,//
 		propertyName,//
-		criteriaParameters.getKey(),//
-		criteriaParameters.getValue(),//
-		criteria.getDomainTreeManger().getFirstTick(),//
+		criteria.getEntityClass(),//
+		criteriaPropertyName,//
+		criteria.getCentreDomainTreeMangerAndEnhancer().getFirstTick(),//
 		criteriaGenerator,//
 		valueMatcher,//
 		LabelAndTooltipExtractor.createCaption(metaProp.getTitle()),//
 		LabelAndTooltipExtractor.createTooltip(metaProp.getDesc()));
     }
 
-    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForMaster(final AbstractEntity<?> entity, final String propertyName, final ILocatorManager locatorManager, final ICriteriaGenerator criteriaGenerator, final IValueMatcher<?> valueMatcher, final boolean isSingle){
+    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForMaster(final AbstractEntity<?> entity, final String propertyName, final ILocatorManager locatorManager, final ICriteriaGenerator criteriaGenerator, final IValueMatcher<?> valueMatcher){
 	//createEditor(entity, propertyName, property.getType(), "", property.getDesc(), entity.getEntityFactory(), entityMasterFactory, vmf, daoFactory, locatorController, locatorRetriever);
 	final MetaProperty metaProp = entity.getProperty(propertyName);
 	final String toolTip = metaProp.getDesc();

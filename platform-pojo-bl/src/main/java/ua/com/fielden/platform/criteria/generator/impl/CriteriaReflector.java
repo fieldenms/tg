@@ -43,7 +43,7 @@ public class CriteriaReflector {
      * @return
      */
     public static String generateCriteriaPropertyName(final Class<?> root, final String propertyName, final String suffix){
-	return root.getSimpleName() + ("".equals(propertyName) ? "" : "_") + propertyName.replaceAll(Reflector.DOT_SPLITTER, "_") + (suffix == null? "" : suffix);
+	return root.getSimpleName() + "_" + propertyName.replaceAll(Reflector.DOT_SPLITTER, "_") + (suffix == null? "" : suffix);
     }
 
 
@@ -53,8 +53,8 @@ public class CriteriaReflector {
      * @param criteriaClass
      * @return
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static List<Field> getCriteriaProperties(final Class<? extends EntityQueryCriteria> criteriaClass) {
+    @SuppressWarnings("unchecked")
+    public static List<Field> getCriteriaProperties(final Class<?> criteriaClass) {
 	return Finder.findProperties(criteriaClass, IsProperty.class, CriteriaProperty.class);
     }
 
@@ -65,8 +65,7 @@ public class CriteriaReflector {
      * @param propertyName
      * @return
      */
-    @SuppressWarnings("rawtypes")
-    public static boolean isSecondParam(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
+    public static boolean isSecondParam(final Class<?> criteriaClass, final String propertyName){
 	return AnnotationReflector.isPropertyAnnotationPresent(SecondParam.class, criteriaClass, propertyName);
     }
 
@@ -77,8 +76,7 @@ public class CriteriaReflector {
      * @param propertyName
      * @return
      */
-    @SuppressWarnings("rawtypes")
-    public static boolean isFirstParam(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
+    public static boolean isFirstParam(final Class<?> criteriaClass, final String propertyName){
 	return AnnotationReflector.isPropertyAnnotationPresent(FirstParam.class, criteriaClass, propertyName);
     }
 
@@ -89,8 +87,7 @@ public class CriteriaReflector {
      * @param propertyName
      * @return
      */
-    @SuppressWarnings("rawtypes")
-    public static String getSecondParamFor(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
+    public static String getSecondParamFor(final Class<?> criteriaClass, final String propertyName){
 	final FirstParam firstParam = AnnotationReflector.getPropertyAnnotation(FirstParam.class, criteriaClass, propertyName);
 	if(firstParam != null){
 	    return firstParam.secondParam();
@@ -105,8 +102,7 @@ public class CriteriaReflector {
      * @param propertyName
      * @return
      */
-    @SuppressWarnings("rawtypes")
-    public static String getFirstParamFor(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
+    public static String getFirstParamFor(final Class<?> criteriaClass, final String propertyName){
 	final SecondParam secondParam = AnnotationReflector.getPropertyAnnotation(SecondParam.class, criteriaClass, propertyName);
 	if(secondParam != null){
 	    return secondParam.firstParam();
@@ -121,12 +117,11 @@ public class CriteriaReflector {
      * @param propertyName
      * @return
      */
-    @SuppressWarnings("rawtypes")
-    public static Pair<Class<?>, String> getCriteriaProperty(final Class<? extends EntityQueryCriteria> criteriaClass, final String propertyName){
+    public static String getCriteriaProperty(final Class<?> criteriaClass, final String propertyName){
 	final CriteriaProperty annotation = AnnotationReflector.getPropertyAnnotation(CriteriaProperty.class, criteriaClass, propertyName);
 	if(annotation != null){
-	    return new Pair<Class<?>, String>(annotation.rootType(), annotation.propertyName());
+	    return annotation.propertyName();
 	}
-	return new Pair<Class<?>, String>(null, null);
+	return null;
     }
 }

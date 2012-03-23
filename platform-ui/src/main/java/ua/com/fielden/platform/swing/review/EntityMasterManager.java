@@ -6,18 +6,18 @@ import java.util.Map;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.swing.locator.ILocatorConfigurationRetriever;
 import ua.com.fielden.platform.swing.model.DefaultEntityProducer;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.review.factory.IEntityMasterFactory;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 import ua.com.fielden.platform.swing.view.WeakEntityMasterCache;
-import ua.com.fielden.platform.ui.config.api.interaction.IMasterConfigurationController;
 
 import com.google.inject.Inject;
 
@@ -35,23 +35,21 @@ public class EntityMasterManager implements IEntityMasterManager {
 
     private final IValueMatcherFactory vmf;
 
-    private final IMasterConfigurationController masterController;
+    private final IGlobalDomainTreeManager gdtm;
 
     private final Map<Class<? extends AbstractEntity>, IEntityMasterFactory> factories = new HashMap<Class<? extends AbstractEntity>, IEntityMasterFactory>();
 
     private final Map<Class<? extends AbstractEntity>, IEntityProducer> entityProducers = new HashMap<Class<? extends AbstractEntity>, IEntityProducer>();
 
-    private final Map<Class<? extends AbstractEntity>, ILocatorConfigurationRetriever> locatorRetrievers = new HashMap<Class<? extends AbstractEntity>, ILocatorConfigurationRetriever>();
-
     @Inject
     public EntityMasterManager(//
-    final EntityFactory entityFactory, //
-    final IValueMatcherFactory vmf,//
-    final IMasterConfigurationController masterController//
-    ) {
+	    final EntityFactory entityFactory, //
+	    final IValueMatcherFactory vmf,//
+	    final IGlobalDomainTreeManager gdtm//
+	    ) {
 	this.entityFactory = entityFactory;
 	this.vmf = vmf;
-	this.masterController = masterController;
+	this.gdtm = gdtm;
     }
 
     /**
@@ -108,17 +106,17 @@ public class EntityMasterManager implements IEntityMasterManager {
 	    if (factory == null) {
 		throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " domain entity.");
 	    }
-	    ILocatorConfigurationRetriever locatorRetriever = locatorRetrievers.get(entity.getType());
-	    if (locatorRetriever == null) {
-		locatorRetriever = new LocatorMasterRetriever(masterController, entity.getType());
-		locatorRetrievers.put(entity.getType(), locatorRetriever);
+	    IMasterDomainTreeManager masterManager = gdtm.getEntityMasterManager(entity.getType());
+	    if (masterManager == null) {
+		gdtm.initEntityMasterManager(entity.getType());
+		masterManager = gdtm.getEntityMasterManager(entity.getType());
 	    }
 	    frame = factory.createMasterFrame(getEntityProducer(entity.getType()), //
-	    cache, //
-	    entity, //
-	    vmf, //
-	    locatorRetriever, //
-	    owner);
+		    cache, //
+		    entity, //
+		    vmf, //
+		    masterManager, //
+		    owner);
 	    cache.put(frame, entity.getId());
 	}
 	// bringing BaseFrame to front in this manner, because simple call won't do the trick

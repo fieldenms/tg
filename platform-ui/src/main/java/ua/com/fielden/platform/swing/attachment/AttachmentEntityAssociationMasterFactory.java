@@ -2,13 +2,11 @@ package ua.com.fielden.platform.swing.attachment;
 
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
-import ua.com.fielden.platform.dao.IDaoFactory;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
-import ua.com.fielden.platform.swing.review.LocatorMasterRetriever;
-import ua.com.fielden.platform.ui.config.api.interaction.ILocatorConfigurationController;
-import ua.com.fielden.platform.ui.config.api.interaction.IMasterConfigurationController;
 
 import com.google.inject.Inject;
 
@@ -23,22 +21,24 @@ public class AttachmentEntityAssociationMasterFactory {
     private final IEntityAttachmentAssociationController attachmentEntityAssociationController;
     private final IEntityMasterManager entityMasterFactory;
     private final IValueMatcherFactory valueMatcherFactory;
-    private final IDaoFactory daoFactory;
-    private final LocatorMasterRetriever locatorRetriever;
-    private final ILocatorConfigurationController locatorController;
+    private final ICriteriaGenerator criteriaGenerator;
+    private final IGlobalDomainTreeManager gdtm;
+    //private final IDaoFactory daoFactory;
 
     @Inject
-    public AttachmentEntityAssociationMasterFactory(final ILocatorConfigurationController locatorController, final IEntityAttachmentAssociationController attachmentEntityAssociationController, final IEntityMasterManager entityMasterFactory, //
-    final IValueMatcherFactory valueMatcherFactory,//
-    final IDaoFactory daoFactory,//
-    final IMasterConfigurationController masterController) {
+    public AttachmentEntityAssociationMasterFactory(final IEntityAttachmentAssociationController attachmentEntityAssociationController, final IEntityMasterManager entityMasterFactory, //
+	    final IValueMatcherFactory valueMatcherFactory,//
+	    final ICriteriaGenerator criteriaGenerator,//
+	    final IGlobalDomainTreeManager gdtm//
+	    //final IDaoFactory daoFactory,
+	    ) {
 
 	this.attachmentEntityAssociationController = attachmentEntityAssociationController;
 	this.entityMasterFactory = entityMasterFactory;
 	this.valueMatcherFactory = valueMatcherFactory;
-	this.daoFactory = daoFactory;
-	this.locatorController = locatorController;
-	locatorRetriever = new LocatorMasterRetriever(masterController, EntityAttachmentAssociation.class);
+	this.criteriaGenerator = criteriaGenerator;
+	this.gdtm = gdtm;
+	//this.daoFactory = daoFactory;
     }
 
     public final AttachmentEntityAssociationFrame createAndMakeVisible(final AbstractEntity<?> entity) {
@@ -51,10 +51,10 @@ public class AttachmentEntityAssociationMasterFactory {
 
     public final AttachmentEntityAssociationFrame create(final AbstractEntity<?> entity) {
 	return new AttachmentEntityAssociationFrame(entity, //
-	attachmentEntityAssociationController, //
-	valueMatcherFactory,//
-	entityMasterFactory,//
-	daoFactory, //
-	locatorController, locatorRetriever);
+		attachmentEntityAssociationController, //
+		valueMatcherFactory,//
+		entityMasterFactory,//
+		//daoFactory, //
+		gdtm.getEntityMasterManager(EntityAttachmentAssociation.class), criteriaGenerator);
     }
 }

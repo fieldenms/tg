@@ -34,22 +34,37 @@ public class CentreConfigurationEvent extends EventObject {
     private final String saveAsName;
 
     /**
+     * Represents the exception that occurred during one of the centre configuration actions.
+     */
+    private final Throwable exception;
+
+    /**
      * Initiates this {@link CentreConfigurationEvent} with instance of {@link CentreConfigurationModel} where the event was generated and the {@link CentreConfigurationAction}.
      * 
      * @param source
      * @param eventAction
      */
-    public CentreConfigurationEvent(final CentreConfigurationModel<?> source, final String saveAsName,final CentreConfigurationAction eventAction) {
+    public CentreConfigurationEvent(final CentreConfigurationModel<?> source, final String saveAsName, final Throwable exception, final CentreConfigurationAction eventAction) {
 	super(source);
 	this.eventAction = eventAction;
 	switch(eventAction){
 	case PRE_SAVE_AS:
 	case SAVE:
 	case POST_SAVE_AS:
+	    this.saveAsName = saveAsName;
+	    this.exception = null;
+	    break;
+	case SAVE_FAILED:
+	case REMOVE_FAILED:
+	    this.saveAsName = null;
+	    this.exception = exception;
+	    break;
 	case SAVE_AS_FAILED:
 	    this.saveAsName = saveAsName;
+	    this.exception = exception;
 	    break;
 	default:
+	    this.exception = null;
 	    this.saveAsName = null;
 	}
     }
@@ -75,5 +90,14 @@ public class CentreConfigurationEvent extends EventObject {
      */
     public String getSaveAsName() {
 	return saveAsName;
+    }
+
+    /**
+     * Returns the exception that occurred during one of the centre configuration actions
+     * 
+     * @return
+     */
+    public Throwable getException() {
+	return exception;
     }
 }

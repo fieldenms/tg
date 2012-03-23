@@ -11,11 +11,9 @@ import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
  */
 public class CriteriaPropertyAnnotation {
 
-    private final Class<?> rootType;
     private final String propertyType;
 
-    public CriteriaPropertyAnnotation(final Class<?> rootType, final String propertyType) {
-	this.rootType = rootType;
+    public CriteriaPropertyAnnotation(final String propertyType) {
 	this.propertyType = propertyType;
     }
 
@@ -27,10 +25,6 @@ public class CriteriaPropertyAnnotation {
 		return CriteriaProperty.class;
 	    }
 
-	    @Override
-	    public Class<?> rootType() {
-		return rootType;
-	    }
 
 	    @Override
 	    public String propertyName() {
@@ -46,11 +40,6 @@ public class CriteriaPropertyAnnotation {
 	    @Override
 	    public Class<CriteriaProperty> annotationType() {
 		return CriteriaProperty.class;
-	    }
-
-	    @Override
-	    public Class<?> rootType() {
-		return original.rootType();
 	    }
 
 	    @Override

@@ -33,8 +33,8 @@ import javax.swing.event.EventListenerList;
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2.DragFromSupport;
@@ -58,7 +58,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
     /**
      * {@link EntityQueryCriteria} for which this {@link CriteriaDndPanel} is created.
      */
-    private final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> eqc;
+    private final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> eqc;
 
     /**
      * Contains editors those should be placed on this panel.
@@ -92,14 +92,14 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     private final Map<IPropertyEditor, CriteriaModificationLayer> layers = new HashMap<IPropertyEditor, CriteriaModificationLayer>();
 
-    public CriteriaDndPanel(final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> eqc, final Map<String, IPropertyEditor> editors, final MigLayout layout) {
+    public CriteriaDndPanel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> eqc, final Map<String, IPropertyEditor> editors, final MigLayout layout) {
 	super(layout);
 	this.eqc = eqc;
 	this.editors.clear();
 	if(editors != null){
 	    this.editors.putAll(editors);
 	}
-	final IAddToCriteriaTickManager firstTick = eqc.getDomainTreeManger().getFirstTick();
+	final IAddToCriteriaTickManager firstTick = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	final int elementsNumber = firstTick.checkedProperties(eqc.getEntityClass()).size();
 	this.columns = firstTick.getColumnsNumber();
 	if(elementsNumber % columns != 0){
@@ -112,13 +112,13 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 	toggleAction = createToggleAction();
     }
 
-    public CriteriaDndPanel(final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> eqc, final Map<String, IPropertyEditor> editors) {
+    public CriteriaDndPanel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> eqc, final Map<String, IPropertyEditor> editors) {
 	this(eqc, editors, (MigLayout)null);
 
 	final int maxRow = getRows() - 1; // should return max row index occupied by some criteria
 
 	final BoolMatrix posMatrix = maxRow > -1 ? new BoolMatrix(maxRow + 1, getColumns()) : new BoolMatrix(getColumns());
-	final List<String> checkedElements = eqc.getDomainTreeManger().getFirstTick().checkedProperties(eqc.getEntityClass());
+	final List<String> checkedElements = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(eqc.getEntityClass());
 	posMatrix.fillMatrix(checkedElements);
 
 	setLayout(new MigLayout("fill, insets 5", createMigColumnsString(getColumns(), maxLabelWidth(editors.values()), getMaxFromMinPossibleEditorWidth()), "[align center, :"
@@ -526,13 +526,13 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     @SuppressWarnings("rawtypes")
     private void swapProperties(final LinkedComponentCopy compCopy1, final LinkedComponentCopy compCopy2) {
-	final IAddToCriteriaTickManager firstTick = eqc.getDomainTreeManger().getFirstTick();
+	final IAddToCriteriaTickManager firstTick = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	final String propName1 = compCopy1.getPropEditor() instanceof RangePropertyEditor ? ((RangePropertyEditor)compCopy1.getPropEditor()).getFromEditor().getPropertyName() : compCopy1.getPropEditor().getPropertyName();
 	final String propName2 = compCopy2.getPropEditor() instanceof RangePropertyEditor ? ((RangePropertyEditor)compCopy2.getPropEditor()).getFromEditor().getPropertyName() : compCopy2.getPropEditor().getPropertyName();
 	final Class<? extends EntityQueryCriteria> entityType = eqc.getClass();
-	final Pair<Class<?>, String> firstProperty = CriteriaReflector.getCriteriaProperty(entityType, propName1);
-	final Pair<Class<?>, String> secondProperty = CriteriaReflector.getCriteriaProperty(entityType, propName2);
-	firstTick.swap(firstProperty.getKey(), firstProperty.getValue(), secondProperty.getValue());
+	final String firstProperty = CriteriaReflector.getCriteriaProperty(entityType, propName1);
+	final String secondProperty = CriteriaReflector.getCriteriaProperty(entityType, propName2);
+	firstTick.swap(eqc.getEntityClass(), firstProperty, secondProperty);
     }
 
     /**
@@ -825,7 +825,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void layoutEditors() {
 	final Class<? extends EntityQueryCriteria> criteriaClass = (Class<? extends EntityQueryCriteria>) eqc.getType();
-	final List<String> checkedProperties = eqc.getDomainTreeManger().getFirstTick().checkedProperties(eqc.getEntityClass());
+	final List<String> checkedProperties = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(eqc.getEntityClass());
 	for(final Entry<String, IPropertyEditor> entry : editors.entrySet()){
 	    final String propertyName = entry.getKey();
 	    if(!CriteriaReflector.isSecondParam(criteriaClass, propertyName)){
@@ -836,8 +836,8 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 		}else{
 		    editor = entry.getValue();
 		}
-		final Pair<Class<?>, String> criteriaParameters = CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
-		final int index = checkedProperties.indexOf(criteriaParameters.getValue());
+		final String criteriaParameters = CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
+		final int index = checkedProperties.indexOf(criteriaParameters);
 		addDraggable(editor, (index / getRows()) * 2, index % getRows());
 	    }
 	}

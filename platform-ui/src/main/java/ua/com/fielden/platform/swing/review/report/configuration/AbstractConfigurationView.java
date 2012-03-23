@@ -11,18 +11,14 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
-import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel.CanNotSetModeException;
-import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel.UndefinedFormatException;
 import ua.com.fielden.platform.swing.review.report.events.ReviewEvent;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
-import ua.com.fielden.platform.swing.review.report.events.WizardCancelledEvent;
 import ua.com.fielden.platform.swing.review.report.events.WizardEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReviewEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectable;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
-import ua.com.fielden.platform.swing.review.report.interfaces.IWizardCancelledEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizardEventListener;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
@@ -57,7 +53,6 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 	this.model = model;
 	this.progressLayer = progressLayer;
 	model.addPropertyChangeListener(createModeChangeListener());
-	model.addWizardCancelledEventListener(createWizardCancelledListener());
     }
 
     /**
@@ -117,16 +112,15 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
      * Opens this {@link AbstractConfigurationView}. First it tries to open this in {@link ReportMode#REPORT} mode, if it fails, then it opens in {@link ReportMode#WIZARD} mode.
      */
     public final void open(){
-	try{
-	    getModel().setMode(ReportMode.REPORT);
-	    return;
-	}catch(final UndefinedFormatException e){
-	    //TODO this is optional. This type of exception might be removed later.
-	    JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-	}catch (final CanNotSetModeException e){
-	    //Doesn't do anything: opened for the first time.
-	}catch(final Exception e){
-	    new DialogWithDetails(null, "Exception while opening report view", e).setVisible(true);
+
+	final Result res = getModel().canSetMode(ReportMode.REPORT);
+	if(res.isSuccessful()){
+	    try{
+		getModel().setMode(ReportMode.REPORT);
+		return;
+	    }catch(final Exception e){
+		new DialogWithDetails(null, "Exception while opening report view", e).setVisible(true);
+	    }
 	}
 	try{
 	    getModel().setMode(ReportMode.WIZARD);
@@ -180,14 +174,14 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 	    public boolean configureActionPerformed(final ReviewEvent e) {
 		switch(e.getReviewAction()){
 		case PRE_CONFIGURE:
+		    final Result res = getModel().canSetMode(ReportMode.WIZARD);
+		    if(res.isSuccessful()){
+			return true;
+		    } else {
+			new DialogWithDetails(null, "Exception while opening wizard view", res.getEx()).setVisible(true);
+			return false;
+		    }
 		    //TODO Must implement logic that determines whether entiy centre can be configured or not.
-		    //		    final int option = JOptionPane.showConfirmDialog(AbstractConfigurationView.this, "Would you like to save this configuration, before continue?", "Save confirmation", JOptionPane.YES_NO_CANCEL_OPTION);
-		    //		    if(option == JOptionPane.CANCEL_OPTION){
-		    //			return false;
-		    //		    }else if(option == JOptionPane.YES_OPTION){
-		    //
-		    //		    }
-		    break;
 		case POST_CONFIGURE:
 		    try {
 			getModel().setMode(ReportMode.WIZARD);
@@ -208,17 +202,19 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
      */
     private IWizardEventListener createWizardListener() {
 	return new IWizardEventListener() {
-
+	    //TODO Must implement logic that determines whether entiy centre can be configured or not.
 	    @Override
 	    public boolean wizardActionPerformed(final WizardEvent e) {
 		switch (e.getWizardAction()) {
 		case PRE_BUILD:
+		case PRE_CANCEL:
 		    final Result setModeRes = getModel().canSetMode(ReportMode.REPORT);
 		    if(setModeRes.isSuccessful()){
 			return true;
 		    }
 		    JOptionPane.showMessageDialog(AbstractConfigurationView.this, setModeRes.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
 		    return false;
+		case POST_CANCEL:
 		case POST_BUILD:
 		    try {
 			getModel().setMode(ReportMode.REPORT);
@@ -226,31 +222,8 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 			e1.printStackTrace();
 		    }
 		    break;
-		case PRE_CANCEL:
-		    if(getPreviousView() == null){
-			JOptionPane.showMessageDialog(AbstractConfigurationView.this, "This modification can not be cancelled!", "Warning", JOptionPane.WARNING_MESSAGE);
-			return false;
-		    }
-		    return true;
-		case POST_CANCEL:
-		    try {
-			getModel().cancelWizardModification();
-		    } catch (final Exception e1) {
-			e1.printStackTrace();
-		    }
-		    break;
 		}
 		return true;
-	    }
-	};
-    }
-
-    private IWizardCancelledEventListener createWizardCancelledListener() {
-	return new IWizardCancelledEventListener() {
-
-	    @Override
-	    public void wizardCancelled(final WizardCancelledEvent e) {
-		setView(getPreviousView());
 	    }
 	};
     }

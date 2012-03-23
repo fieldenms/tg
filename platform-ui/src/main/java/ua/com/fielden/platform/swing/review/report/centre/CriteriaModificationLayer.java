@@ -27,8 +27,8 @@ import org.jdesktop.jxlayer.JXLayer;
 import org.jdesktop.jxlayer.plaf.AbstractLayerUI;
 
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.error.Result;
@@ -42,7 +42,6 @@ import ua.com.fielden.platform.swing.ei.editors.development.RangePropertyEditor;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.utils.Utils2D;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -71,7 +70,8 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     private final BoundedValidationLayer<?> leftValidationLayer, rightValidationLayer;
     private final String propertyName;
     private final Class<?> rootType;
-    private final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> eqc;
+    private final Class<?> managedType;
+    private final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> eqc;
     private final IPropertyEditor propertyEditor;
 
     // menu related items:
@@ -196,19 +196,19 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 
 	this.propertyEditor = propertyEditor;
 
-	this.eqc = (EntityQueryCriteria<ICentreDomainTreeManager, ?, ?>) this.propertyEditor.getEntity();
+	this.eqc = (EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>) this.propertyEditor.getEntity();
 	final IPropertyEditor leftPropertyEditor = (this.propertyEditor instanceof RangePropertyEditor) ? ((RangePropertyEditor) this.propertyEditor).getFromEditor()
 		: this.propertyEditor;
 	final IPropertyEditor rightPropertyEditor = (this.propertyEditor instanceof RangePropertyEditor) ? ((RangePropertyEditor) this.propertyEditor).getToEditor() : null;
-	final Pair<Class<?>, String> critProperty = CriteriaReflector.getCriteriaProperty((Class<? extends EntityQueryCriteria>)eqc.getType(), leftPropertyEditor.getPropertyName());
-	propertyName = critProperty.getValue();
-	rootType = critProperty.getKey();
-	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? rootType : PropertyTypeDeterminator.determineClass(rootType, propertyName, true, true);
+	propertyName = CriteriaReflector.getCriteriaProperty((Class<? extends EntityQueryCriteria>)eqc.getType(), leftPropertyEditor.getPropertyName());
+	rootType = eqc.getEntityClass();
+	managedType = eqc.getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(rootType);
+	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determineClass(managedType, propertyName, true, true);
 	leftValidationLayer = (BoundedValidationLayer<?>) leftPropertyEditor.getEditor();
 	rightValidationLayer = rightPropertyEditor != null ? (BoundedValidationLayer<?>) rightPropertyEditor.getEditor() : null;
 
 	// update an initial state of criteria modification layer:
-	final IAddToCriteriaTickManager ftm = eqc.getDomainTreeManger().getFirstTick();
+	final IAddToCriteriaTickManager ftm = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	not = ftm.getNot(rootType, propertyName); // update Not state
 	orNull = ftm.getOrNull(rootType, propertyName); // update OrNull state
 	if(EntityUtils.isRangeType(propertyType)){
@@ -473,7 +473,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
     }
 
     private boolean isPropertyIgnored(final boolean first){
-	final IAddToCriteriaTickManager ftm= eqc.getDomainTreeManger().getFirstTick();
+	final IAddToCriteriaTickManager ftm= eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	return first ? ftm.isValueEmpty(rootType, propertyName) : ftm.is2ValueEmpty(rootType, propertyName);
     }
 
@@ -721,9 +721,9 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
      * Updates a {@link IAddToCriteriaTickManager} model with corresponding emptiness/negation/exclusiveness/dateValue.
      */
     private void updateDynamicPropertiesState() {
-	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? rootType : PropertyTypeDeterminator.determineClass(rootType, propertyName, true, true);
+	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determineClass(managedType, propertyName, true, true);
 	// update an initial state of criteria modification layer:
-	final IAddToCriteriaTickManager ftm = eqc.getDomainTreeManger().getFirstTick();
+	final IAddToCriteriaTickManager ftm = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	ftm.setNot(rootType, propertyName, not); // update Not state
 	ftm.setOrNull(rootType, propertyName, orNull); // update "or null" parameter
 	if(EntityUtils.isRangeType(propertyType)){

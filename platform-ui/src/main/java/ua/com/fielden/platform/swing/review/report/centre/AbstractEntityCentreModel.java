@@ -1,30 +1,35 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.ei.EntityInspectorModel;
+import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.AbstractCentreConfigurationModel;
 
-public class AbstractEntityCentreModel<T extends AbstractEntity, DTM extends ICentreDomainTreeManager> extends AbstractEntityReviewModel<T, DTM> {
+public class AbstractEntityCentreModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityReviewModel<T, CDTME> {
 
     private final String name;
-    private final EntityInspectorModel<EntityQueryCriteria<DTM, T, IEntityDao<T>>> entityInspectorModel;
+    private final EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityInspectorModel;
+    private final IEntityMasterManager masterManager;
 
-    public AbstractEntityCentreModel(final AbstractCentreConfigurationModel<T, DTM> configurationModel, final EntityInspectorModel<EntityQueryCriteria<DTM, T, IEntityDao<T>>> entityInspectorModel, final String name) {
+
+    public AbstractEntityCentreModel(final AbstractCentreConfigurationModel<T, CDTME> configurationModel, final EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityInspectorModel, final IEntityMasterManager masterManager, final String name) {
 	super(configurationModel, entityInspectorModel.getEntity());
 	this.entityInspectorModel = entityInspectorModel;
+	this.masterManager = masterManager;
 	this.name = name;
+
 	// TODO Auto-generated constructor stub
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public AbstractCentreConfigurationModel<T, DTM> getConfigurationModel() {
-	return (AbstractCentreConfigurationModel<T, DTM>)super.getConfigurationModel();
+    public AbstractCentreConfigurationModel<T, CDTME> getConfigurationModel() {
+	return (AbstractCentreConfigurationModel<T, CDTME>)super.getConfigurationModel();
     }
 
     /**
@@ -41,8 +46,17 @@ public class AbstractEntityCentreModel<T extends AbstractEntity, DTM extends ICe
      * 
      * @return
      */
-    public EntityInspectorModel<EntityQueryCriteria<DTM, T, IEntityDao<T>>> getEntityInspectorModel() {
+    public EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> getEntityInspectorModel() {
 	return entityInspectorModel;
+    }
+
+    /**
+     * Returns the {@link IEntityMasterManager} for this centre model.
+     * 
+     * @return
+     */
+    public IEntityMasterManager getMasterManager() {
+	return masterManager;
     }
 
     /**

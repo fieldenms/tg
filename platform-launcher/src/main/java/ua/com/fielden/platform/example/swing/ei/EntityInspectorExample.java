@@ -17,7 +17,7 @@ import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.example.ioc.ExampleRmaHibernateModule;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -25,7 +25,7 @@ import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.swing.ei.CrudEntityInspectorModel;
 import ua.com.fielden.platform.swing.ei.CrudEntityInspectorModel.IAfterActions;
-import ua.com.fielden.platform.swing.ei.LightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
@@ -82,7 +82,7 @@ public class EntityInspectorExample extends AbstractUiApplication {
 	// Entity Inspector model creation //
 	/////////////////////////////////////
 	//final IValueMatcherFactory valueMatcherFactory = new ValueMatcherFactory(hibernateUtil.getSessionFactory());
-	final IPropertyBinder propertyBinder = new LightweightPropertyBinder(injector.getInstance(IValueMatcherFactory.class), null);
+	final IPropertyBinder propertyBinder = MasterPropertyBinder.<InspectedEntity>createPropertyBinderWithoutLocatorSupport(injector.getInstance(IValueMatcherFactory.class));
 	final InspectedEntityDao dao = injector.getInstance(InspectedEntityDao.class);
 
 	final InspectedEntity entity = dao.findByKey("VALUE1") == null ? entityFactory.newEntity(InspectedEntity.class, "VALUE-X", "entity description") : dao.findByKey("VALUE1");

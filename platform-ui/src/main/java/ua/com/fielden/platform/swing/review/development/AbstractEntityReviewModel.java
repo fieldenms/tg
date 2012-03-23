@@ -1,25 +1,25 @@
 package ua.com.fielden.platform.swing.review.development;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel;
 
-public abstract class AbstractEntityReviewModel<T extends AbstractEntity, DTM extends IDomainTreeManager> {
+public abstract class AbstractEntityReviewModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> {
 
-    private final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria;
+    private final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria;
 
     private final AbstractConfigurationModel configurationModel;
 
     //private final EventListenerList listenerList;
 
-    public AbstractEntityReviewModel(final AbstractConfigurationModel configurationModel, final EntityQueryCriteria<DTM, T, IEntityDao<T>> criteria){
+    public AbstractEntityReviewModel(final AbstractConfigurationModel configurationModel, final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria){
 	//this.listenerList = new EventListenerList();
 	this.configurationModel = configurationModel;
 	this.criteria = criteria;
     }
 
-    public EntityQueryCriteria<DTM, T, IEntityDao<T>> getCriteria() {
+    public EntityQueryCriteria<CDTME, T, IEntityDao<T>> getCriteria() {
 	return criteria;
     }
 

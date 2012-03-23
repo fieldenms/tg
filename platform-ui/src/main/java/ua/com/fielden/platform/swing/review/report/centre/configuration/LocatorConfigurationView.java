@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.centre.SingleAnalysisEntityLocator;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorEventListener;
 
-public class LocatorConfigurationView<T extends AbstractEntity, R extends AbstractEntity> extends AbstractCentreConfigurationView<T, ILocatorDomainTreeManager, SingleAnalysisEntityLocator<T>> {
+public class LocatorConfigurationView<T extends AbstractEntity, R extends AbstractEntity> extends AbstractCentreConfigurationView<T, ILocatorDomainTreeManagerAndEnhancer, SingleAnalysisEntityLocator<T>> {
 
     private static final long serialVersionUID = 7422543091832971730L;
 

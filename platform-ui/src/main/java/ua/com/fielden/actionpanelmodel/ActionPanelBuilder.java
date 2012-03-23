@@ -42,6 +42,19 @@ public class ActionPanelBuilder {
     }
 
     /**
+     * Adds new sub tool bar to the list of {@link IActionItem}. The specified sub tool bar must be null
+     * 
+     * @param toolBar - specified sub tool bar to be added.
+     * @return
+     */
+    public ActionPanelBuilder addSubToolBar(final JToolBar toolBar){
+	if(toolBar != null){
+	    itemList.add(new ToolBarItem(toolBar));
+	}
+	return this;
+    }
+
+    /**
      * adds new {@link DefaultButtonItem} instance to the list {@link IActionItem}
      * 
      * @param action

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.swing.ei.editors.development;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -43,7 +43,7 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
      * @param propertyName
      * @return
      */
-    public static EntityPropertyEditor createEntityPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManager, ?, ?> criteria, final String propertyName){
+    public static EntityPropertyEditor createEntityPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, final String propertyName){
 	final MetaProperty metaProp = criteria.getProperty(propertyName);
 	final IValueMatcher<?> valueMatcher = criteria.getValueMatcher(propertyName);
 	return new EntityPropertyEditor(criteria, propertyName, LabelAndTooltipExtractor.createCaption(metaProp.getTitle()), LabelAndTooltipExtractor.createTooltip(metaProp.getDesc()), valueMatcher);

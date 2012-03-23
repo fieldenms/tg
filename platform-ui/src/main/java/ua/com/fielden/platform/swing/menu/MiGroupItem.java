@@ -6,9 +6,9 @@ package ua.com.fielden.platform.swing.menu;
  * @author TG Team
  *
  */
-public class MiGroupItem extends TreeMenuItem {
+public class MiGroupItem extends MiWithVisibilityProvider {
 
-    private final ITreeMenuItemVisibilityProvider visibilityProvider;
+    private static final long serialVersionUID = -589961357292227245L;
 
     /**
      * Principle constructor.
@@ -18,20 +18,6 @@ public class MiGroupItem extends TreeMenuItem {
      * @param info -- information displayed in the information panel of the menu item.
      */
     public MiGroupItem(final ITreeMenuItemVisibilityProvider visibilityProvider, final String title, final String info) {
-	super(title, info);
-	this.visibilityProvider = visibilityProvider;
-	super.setVisible(visibilityProvider != null ? visibilityProvider.isVisible() : true);
-    }
-
-    @Override
-    public void setVisible(final boolean visible) {
-	if (isVisible() == visible) {
-	    return;
-	}
-	if (visibilityProvider != null) {
-	    visibilityProvider.setVisible(visible);
-	}
-	super.setVisible(visible);
-
+	super(visibilityProvider, title, info);
     }
 }

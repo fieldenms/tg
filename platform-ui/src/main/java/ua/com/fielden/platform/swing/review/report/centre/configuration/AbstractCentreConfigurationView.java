@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigu
  *
  * @param <T>
  */
-public abstract class AbstractCentreConfigurationView<T extends AbstractEntity, DTM extends ICentreDomainTreeManager, C extends AbstractEntityCentre<T, DTM>> extends AbstractConfigurationView<C, EntityCentreWizard<T>> {
+public abstract class AbstractCentreConfigurationView<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer, C extends AbstractEntityCentre<T, CDTME>> extends AbstractConfigurationView<C, EntityCentreWizard<T>> {
 
     private static final long serialVersionUID = -5187097528373828177L;
 
@@ -23,14 +23,14 @@ public abstract class AbstractCentreConfigurationView<T extends AbstractEntity, 
      * 
      * @param model
      */
-    public AbstractCentreConfigurationView(final AbstractCentreConfigurationModel<T, DTM> model, final BlockingIndefiniteProgressLayer progressLayer) {
+    public AbstractCentreConfigurationView(final AbstractCentreConfigurationModel<T, CDTME> model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public AbstractCentreConfigurationModel<T, DTM> getModel() {
-	return (AbstractCentreConfigurationModel<T, DTM>)super.getModel();
+    public AbstractCentreConfigurationModel<T, CDTME> getModel() {
+	return (AbstractCentreConfigurationModel<T, CDTME>)super.getModel();
     }
 
     @Override

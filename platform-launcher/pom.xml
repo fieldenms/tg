@@ -36,6 +36,11 @@
 			<artifactId>platform-rao</artifactId>
 			<version>${version}</version>
 		</dependency>
+		<dependency>
+			<groupId>fielden</groupId>
+			<artifactId>platform-web-client-utils</artifactId>
+			<version>${version}</version>
+		</dependency>
 		<!-- C3P0 dependencies, which is the default database connection pooling facility -->
 		<dependency>
 			<groupId>c3p0</groupId>

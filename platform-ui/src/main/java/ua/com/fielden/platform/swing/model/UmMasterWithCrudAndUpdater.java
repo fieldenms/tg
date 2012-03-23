@@ -8,7 +8,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.swing.ei.PropertyBinderWithDynamicAutocompleter;
+import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 
 /**
@@ -24,13 +24,13 @@ public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity, C ext
     private final FrameTitleUpdater titleUpdater;
     private final IUmViewOwner owner;
 
-    protected UmMasterWithCrudAndUpdater(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C controller, final PropertyBinderWithDynamicAutocompleter<T> propertyBinder, final fetch<T> fm, final FrameTitleUpdater titleUpdater, final IUmViewOwner owner, final boolean lazy) {
+    protected UmMasterWithCrudAndUpdater(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C controller, final MasterPropertyBinder<T> propertyBinder, final fetch<T> fm, final FrameTitleUpdater titleUpdater, final IUmViewOwner owner, final boolean lazy) {
 	super(entityProducer, cache, entity, controller, propertyBinder, fm, lazy);
 	this.titleUpdater = titleUpdater;
 	this.owner = owner;
     }
 
-    protected UmMasterWithCrudAndUpdater(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C controller, final PropertyBinderWithDynamicAutocompleter<T> propertyBinder, final fetch<T> fm, final FrameTitleUpdater titleUpdater, final boolean lazy) {
+    protected UmMasterWithCrudAndUpdater(final IEntityProducer<T> entityProducer, final IEntityMasterCache cache, final T entity, final C controller, final MasterPropertyBinder<T> propertyBinder, final fetch<T> fm, final FrameTitleUpdater titleUpdater, final boolean lazy) {
 	this(entityProducer, cache, entity, controller, propertyBinder, fm, titleUpdater, null, lazy);
     }
 

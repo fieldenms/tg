@@ -2,7 +2,6 @@ package ua.com.fielden.platform.swing.review.report.centre;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
-import java.awt.IllegalComponentStateException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -23,13 +22,12 @@ import javax.swing.event.ListSelectionListener;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
-import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
-import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationPanel;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent.LocatorAction;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorEventListener;
@@ -38,7 +36,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 import com.jidesoft.grid.TableModelWrapperUtils;
 
-public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends AbstractSingleAnalysisEntityCentre<T, ILocatorDomainTreeManager> {
+public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends AbstractSingleAnalysisEntityCentre<T, ILocatorDomainTreeManagerAndEnhancer> {
 
     private static final long serialVersionUID = 8426409155798286535L;
 
@@ -53,16 +51,16 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
 	this.closeAction = createCloseAction();
 	this.selectAction = createSelectAction();
 	this.locatorPanel = createLocatorPanel();
-	final EntityGridInspector<T> egi = getEntityGridInspector();
+	final EntityGridInspector<T> egi = getEntityGridInspector(this);
 	final ListSelectionListener listener = createEgiSelectionListener(egi, isMultipleSelection);
 	egi.setSelectionMode(isMultipleSelection ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
 	egi.getSelectionModel().addListSelectionListener(listener);
 	egi.getColumnModel().getSelectionModel().addListSelectionListener(listener);
-	getEntityGridInspector().addMouseListener(new MouseAdapter() {
+	egi.addMouseListener(new MouseAdapter() {
 	    @Override
 	    public void mouseClicked(final MouseEvent e) {
 		if (e.getClickCount() == 2) {
-		    final int row = getEntityGridInspector().rowAtPoint(e.getPoint());
+		    final int row = egi.rowAtPoint(e.getPoint());
 		    if (row >= 0) {
 			selectAction.actionPerformed(null);
 		    }
@@ -77,6 +75,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
 	return (EntityLocatorModel<T>)super.getModel();
     }
 
+    @Override
     public List<T> getSelectedEntities() {
 	return Collections.unmodifiableList(selectedEntities);
     }
@@ -200,16 +199,6 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
 	};
     }
 
-    @SuppressWarnings("unchecked")
-    private EntityGridInspector<T> getEntityGridInspector(){
-	final AbstractAnalysisConfigurationView<T, ILocatorDomainTreeManager, ?, ?, ?, ?> analysis = getCurrentAnalysisConfigurationView();
-	if(!(analysis instanceof GridConfigurationPanel)){
-	    throw new IllegalComponentStateException("The currently selected analysis is not grid analysis!");
-	}
-	final GridConfigurationPanel<T, ILocatorDomainTreeManager> gridConfigPanel = (GridConfigurationPanel<T, ILocatorDomainTreeManager>)analysis;
-	return gridConfigPanel.getPreviousView().getEgiPanel().getEgi();
-    }
-
     private void fireLocatorEvent(final LocatorEvent event){
 	for(final ILocatorEventListener listener : listenerList.getListeners(ILocatorEventListener.class)){
 	    listener.locatorActionPerformed(event);
@@ -220,7 +209,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
 	final JPanel locatorPanel = new JPanel(new MigLayout("fill, insets 0", "[fill][fill]push[][]", "[fill,grow][fill,grow]"));
 
 	final Class<T> entityType = getModel().getCriteria().getEntityClass();
-	final ILocatorDomainTreeManager ldtm = getModel().getCriteria().getDomainTreeManger();
+	final ILocatorDomainTreeManager ldtm = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
 
 	final Pair<String, String> keyTitle = TitlesDescsGetter.getTitleAndDesc("key", entityType);
 	final Pair<String, String> descTitle = TitlesDescsGetter.getTitleAndDesc("desc", entityType);
@@ -333,7 +322,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends Abstr
     }
 
     private void updateModel(final boolean searchByDesc, final boolean searchByKeyAndDesc) {
-	final ILocatorDomainTreeManager ldtm = getModel().getCriteria().getDomainTreeManger();
+	final ILocatorDomainTreeManager ldtm = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
 	if (searchByDesc) {
 	    ldtm.setSearchBy(SearchBy.DESC);
 	} else if (searchByKeyAndDesc) {

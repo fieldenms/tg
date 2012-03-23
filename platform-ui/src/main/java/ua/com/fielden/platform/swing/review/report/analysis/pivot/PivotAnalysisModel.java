@@ -11,7 +11,7 @@ import java.util.Map;
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
@@ -26,11 +26,11 @@ import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysi
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 
-public class PivotAnalysisModel<T extends AbstractEntity> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManager, IPivotDomainTreeManager, Void> {
+public class PivotAnalysisModel<T extends AbstractEntity> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void> {
 
     private final PivotTreeTableModel pivotModel;
 
-    public PivotAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManager> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManager, T, IEntityDao<T>> criteria, final IPivotDomainTreeManager adtm, final PageHolder pageHolder) {
+    public PivotAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IPivotDomainTreeManager adtm, final PageHolder pageHolder) {
 	super(configurationModel, criteria, adtm, pageHolder);
 	pivotModel = new PivotTreeTableModelEx();
     }
