@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -20,7 +16,7 @@ import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.FirstParam;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -33,6 +29,10 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 public class CriteriaGeneratorTest {
     private final CriteriaGeneratorTestModule module = new CriteriaGeneratorTestModule();
@@ -246,7 +246,7 @@ public class CriteriaGeneratorTest {
 
     @Test
     public void test_that_criteria_generation_works_correctly(){
-	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(TopLevelEntity.class, cdtm);
+	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao2<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(TopLevelEntity.class, cdtm);
 	assertNotNull("The centre domain tree manager can not be null", criteriaEntity.getCentreDomainTreeMangerAndEnhancer());
 	final List<Field> criteriaProperties = CriteriaReflector.getCriteriaProperties(criteriaEntity.getClass());
 	assertEquals("The number of criteria properties is incorrect", propertyNames.size(), criteriaProperties.size());

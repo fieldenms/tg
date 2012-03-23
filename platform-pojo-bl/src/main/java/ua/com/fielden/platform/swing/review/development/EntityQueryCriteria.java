@@ -3,31 +3,31 @@ package ua.com.fielden.platform.swing.review.development;
 import java.util.HashMap;
 import java.util.Map;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.dao2.IEntityAggregatesDao2;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
 
 import com.google.inject.Inject;
 
 @KeyType(String.class)
-public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
+public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity, DAO extends IEntityDao2<T>> extends AbstractEntity<String> {
 
     private static final long serialVersionUID = 9154466083364529734L;
 
-    private final Map<String, IValueMatcher> valueMatchers = new HashMap<String, IValueMatcher>();
-    private final IValueMatcherFactory valueMatcherFactory;
+    private final Map<String, IValueMatcher2> valueMatchers = new HashMap<String, IValueMatcher2>();
+    private final IValueMatcherFactory2 valueMatcherFactory;
 
     private final DAO dao;
-    private final IEntityAggregatesDao entityAggregatesDao;
+    private final IEntityAggregatesDao2 entityAggregatesDao;
 
     private final C cdtme;
 
     @Inject
-    public EntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IEntityAggregatesDao entityAggregatesDao){
+    public EntityQueryCriteria(final IValueMatcherFactory2 valueMatcherFactory, final IEntityAggregatesDao2 entityAggregatesDao){
 	this.valueMatcherFactory = valueMatcherFactory;
 	this.entityAggregatesDao = entityAggregatesDao;
 
@@ -69,7 +69,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Determines whether default values can be set or not.
-     * 
+     *
      * @return
      */
     public boolean isDefaultEnabled(){
@@ -78,9 +78,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public IValueMatcher<?> getValueMatcher(final String propertyName) {
+    public IValueMatcher2<?> getValueMatcher(final String propertyName) {
 	if (valueMatchers.get(propertyName) == null) {
-	    valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher((Class<? extends EntityQueryCriteria>)getType(), propertyName));
+	    valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher((Class<? extends AbstractEntity<?>>) getType(), propertyName));
 	}
 	return valueMatchers.get(propertyName);
     }
