@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.example.components.dnd;
 
-import static ua.com.fielden.platform.swing.utils.SimpleLauncher.show;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 
@@ -22,15 +20,17 @@ import ua.com.fielden.platform.example.ioc.ExampleRmaHibernateModule;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory.EditorCase;
-import ua.com.fielden.platform.swing.review.CriteriaDndPanel;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase;
+import ua.com.fielden.platform.swing.review.report.centre.CriteriaDndPanel;
 import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 import com.google.inject.Injector;
 import com.jidesoft.plaf.LookAndFeelFactory;
+
+import static ua.com.fielden.platform.swing.utils.SimpleLauncher.show;
 
 public class LabelEditorsDndExample extends AbstractUiApplication {
 

@@ -26,8 +26,8 @@ import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.swing.ei.CrudEntityInspectorModel;
 import ua.com.fielden.platform.swing.ei.CrudEntityInspectorModel.IAfterActions;
 import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyBinder;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyBinder;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
 import com.google.inject.Injector;

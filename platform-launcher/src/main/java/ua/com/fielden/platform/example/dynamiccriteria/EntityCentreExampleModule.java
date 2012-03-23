@@ -21,8 +21,6 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
-import ua.com.fielden.platform.ui.config.api.interaction.IMasterConfigurationController;
-import ua.com.fielden.platform.ui.config.impl.interaction.RemoteMasterConfigurationController;
 
 import com.google.inject.Scopes;
 
@@ -48,7 +46,7 @@ public class EntityCentreExampleModule extends BasicWebServerModule2{
 	bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
 	bind(ISimpleECEEntityDao.class).to(SimpleECEEntityDao.class);
 	bind(INestedEntityDao.class).to(NestedEntityDao.class);
-	bind(IMasterConfigurationController.class).to(RemoteMasterConfigurationController.class).in(Scopes.SINGLETON);
+	//bind(IMasterConfigurationController.class).to(RemoteMasterConfigurationController.class).in(Scopes.SINGLETON);
 	bind(ISimpleCompositeEntityDao.class).to(SimpleCompositeEntityDao.class);
     }
 

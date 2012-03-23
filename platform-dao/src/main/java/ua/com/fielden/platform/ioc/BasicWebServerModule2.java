@@ -137,7 +137,5 @@ public class BasicWebServerModule2 extends CommonFactoryModule2 {
 	// bind value matcher factory to support autocompleters
 	bind(IDaoFactory2.class).toInstance(getDaoFactory());
 	bind(IValueMatcherFactory2.class).to(ValueMatcherFactory2.class).in(Scopes.SINGLETON);
-
     }
-
 }

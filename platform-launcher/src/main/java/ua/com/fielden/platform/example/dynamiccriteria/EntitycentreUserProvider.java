@@ -1,16 +1,16 @@
 package ua.com.fielden.platform.example.dynamiccriteria;
 
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUserDao2;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 
 public abstract class EntitycentreUserProvider implements IUserProvider {
 
-    protected final IUserDao userDao;
+    protected final IUserDao2 userDao;
 
     private User user = null;
 
-    public EntitycentreUserProvider(final IUserDao userDao){
+    public EntitycentreUserProvider(final IUserDao2 userDao){
 	this.userDao = userDao;
     }
 

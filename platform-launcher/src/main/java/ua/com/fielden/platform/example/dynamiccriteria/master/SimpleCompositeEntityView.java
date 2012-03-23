@@ -8,7 +8,7 @@ import javax.swing.JPanel;
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 
 public class SimpleCompositeEntityView extends BaseNotifPanel<SimpleCompositeEntityModel> {

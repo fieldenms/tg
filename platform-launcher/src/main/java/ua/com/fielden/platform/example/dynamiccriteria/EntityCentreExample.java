@@ -55,12 +55,12 @@ public class EntityCentreExample extends AbstractUiApplication {
 	// override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
 	props.put("hibernate.show_sql", "false");
 	props.put("hibernate.format_sql", "true");
-	//props.put("hibernate.hbm2ddl.auto", "create");
+	props.put("hibernate.hbm2ddl.auto", "create");
 
 	final EntityCentreDataPopulationConfiguration config = new EntityCentreDataPopulationConfiguration();
 
-	//	final PopulateDbForEntityCentreExample popDb = new PopulateDbForEntityCentreExample(config);
-	//	popDb.createAndPopulate();
+	final PopulateDbForEntityCentreExample popDb = new PopulateDbForEntityCentreExample(config);
+	popDb.createAndPopulate();
 
 	entityFactory = config.getEntityFactory();
 	masterManager = config.getInstance(IEntityMasterManager.class);
