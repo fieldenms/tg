@@ -18,6 +18,7 @@ import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
 import javax.swing.text.JTextComponent;
 
+import ua.com.fielden.platform.swing.components.smart.development.AbstractIntelliHints;
 import ua.com.fielden.platform.swing.components.smart.development.Hover;
 
 import com.jidesoft.swing.JideScrollPane;
