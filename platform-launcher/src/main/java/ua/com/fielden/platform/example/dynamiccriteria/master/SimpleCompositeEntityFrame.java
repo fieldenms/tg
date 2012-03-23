@@ -5,7 +5,7 @@ import org.jfree.ui.RefineryUtilities;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
-import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleCompositeEntityDao;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -28,7 +28,7 @@ public class SimpleCompositeEntityFrame extends BaseFrame {
 	    final IEntityMasterCache cache,//
 	    final SimpleCompositeEntity entity, //
 	    final ISimpleCompositeEntityDao controller,//
-	    final IValueMatcherFactory valueMatcherFactory,//
+	    final IValueMatcherFactory2 valueMatcherFactory,//
 	    //final IEntityMasterManager entityMasterFactory,//
 	    //final IDaoFactory daoFactory, //
 	    final IUmViewOwner owner,//

@@ -11,13 +11,13 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher2;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.actions.Command;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.AutocompleterTextFieldLayer;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.TwoPropertyListCellRenderer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
 import ua.com.fielden.platform.swing.components.textfield.caption.CaptionTextFieldLayer;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
@@ -40,7 +40,7 @@ public class AutocompleterForPropertyDescriptorsMultiExample {
 		final List<PropertyDescriptor<DemoEntity>> acceptableValues = Finder.getPropertyDescriptors(DemoEntity.class);
 
 		// create an instance of the overlayable text field, which bill be used for attaching overlay components
-		final IValueMatcher<PropertyDescriptor<DemoEntity>> matcher = new PojoValueMatcher<PropertyDescriptor<DemoEntity>>(acceptableValues, "key", 10) {
+		final IValueMatcher2<PropertyDescriptor<DemoEntity>> matcher = new PojoValueMatcher2<PropertyDescriptor<DemoEntity>>(acceptableValues, "key", 10) {
 		    @Override
 		    public List<PropertyDescriptor<DemoEntity>> findMatches(final String value) {
 			try {

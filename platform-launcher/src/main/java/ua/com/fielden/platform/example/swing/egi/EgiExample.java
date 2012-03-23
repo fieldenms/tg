@@ -31,7 +31,7 @@ import javax.swing.table.TableColumn;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.application.AbstractUiApplication;
-import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher2;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -77,34 +77,34 @@ public class EgiExample extends AbstractUiApplication {
 	final Action dummyEntity2ClickAction = createDummyEntity2ClickAction(), dummyEntitiesCountClickAction = createDummyEntitiesCountClickAction();
 
 	dummyEntityTableModel = new PropertyTableModelBuilder<DummyEntity>(DummyEntity.class)//
-	.addReadonly("key", (Integer) null)//
-	.addEditableString("desc", null)//
-	.addEditable("dummyEntity2Ref", "DummyEntity2Ref", "DummyEntity2 String reference", new PojoValueMatcher<DummyEntity2>(dummyEntities2, "key", 10))//
-	.addEditable("dummyEntity2", "DummyEntity2", null, "DummyEntity2 reference", new PojoValueMatcher<DummyEntity2>(dummyEntities2, "key", 10), dummyEntity2ClickAction).addEditable("key", 30)
-	//////////////  this should be failed (do not uncomment following lines) : //////////////
-	//         .addEditable("dummyEntity2.key", 30)
-	//         .addEditable("getKey()", 30)
-	//	   .addEditable("dummyEntity2.getKey()", 30)
-	//         .addEditable("", 30)
-	// this one should be mapped using PropertyColumnMappingByExpression
-	.addReadonly("dummyEntity2.getMoneyField()", "DE2 moneyField", null, "DummyEntity2 money field", createMoneyFieldColoring())//
-	.addReadonly("dummyEntity2.boolField", "DE2 boolField", null, "DummyEntity2 boolean field", createBoolFieldColoring())//
-	.addReadonly("dummyEntity2.dateField", "DE2 dateField", null, "DummyEntity2 date field")//
-	.addReadonly("dummyEntity2.intField", "DE2 intField", null, "DummyEntity2 int field")//
+		.addReadonly("key", (Integer) null)//
+		.addEditableString("desc", null)//
+		.addEditable("dummyEntity2Ref", "DummyEntity2Ref", "DummyEntity2 String reference", new PojoValueMatcher2<DummyEntity2>(dummyEntities2, "key", 10))//
+		.addEditable("dummyEntity2", "DummyEntity2", null, "DummyEntity2 reference", new PojoValueMatcher2<DummyEntity2>(dummyEntities2, "key", 10), dummyEntity2ClickAction).addEditable("key", 30)
+		//////////////  this should be failed (do not uncomment following lines) : //////////////
+		//         .addEditable("dummyEntity2.key", 30)
+		//         .addEditable("getKey()", 30)
+		//	   .addEditable("dummyEntity2.getKey()", 30)
+		//         .addEditable("", 30)
+		// this one should be mapped using PropertyColumnMappingByExpression
+		.addReadonly("dummyEntity2.getMoneyField()", "DE2 moneyField", null, "DummyEntity2 money field", createMoneyFieldColoring())//
+		.addReadonly("dummyEntity2.boolField", "DE2 boolField", null, "DummyEntity2 boolean field", createBoolFieldColoring())//
+		.addReadonly("dummyEntity2.dateField", "DE2 dateField", null, "DummyEntity2 date field")//
+		.addReadonly("dummyEntity2.intField", "DE2 intField", null, "DummyEntity2 int field")//
 
-	.setRowColoringScheme(createRowColoringScheme())//
-	.build(dummyEntities);
+		.setRowColoringScheme(createRowColoringScheme())//
+		.build(dummyEntities);
 
 	dummyEntity2TableModel = new PropertyTableModelBuilder<DummyEntity2>(DummyEntity2.class)//
-	.addReadonly("key", "Number", null, "DummyEntity2 number")//
-	.addEditableString("desc", "Description", null, "DummyEntity2 description")//
-	.addEditable("moneyField", "Money field", "Money field")//
-	.addEditable("boolField", "Bool field", "Boolean field")//
-	.addEditable("dateField", "Date field", null, "Date field")//
-	.addEditable("intField", "Int field", null, "Integer field")//
-	.addReadonly("getDummyEntitiesCount()", "Dummy Entities Count", null, "Dummy Entities count", dummyEntitiesCountClickAction)//
-	//.addReadonly("dummyEntities.size()", "Dummy Entities Count()", null, "Dummy Entities count")// FIXME This causes failure...
-	.build(dummyEntities2);
+		.addReadonly("key", "Number", null, "DummyEntity2 number")//
+		.addEditableString("desc", "Description", null, "DummyEntity2 description")//
+		.addEditable("moneyField", "Money field", "Money field")//
+		.addEditable("boolField", "Bool field", "Boolean field")//
+		.addEditable("dateField", "Date field", null, "Date field")//
+		.addEditable("intField", "Int field", null, "Integer field")//
+		.addReadonly("getDummyEntitiesCount()", "Dummy Entities Count", null, "Dummy Entities count", dummyEntitiesCountClickAction)//
+		//.addReadonly("dummyEntities.size()", "Dummy Entities Count()", null, "Dummy Entities count")// FIXME This causes failure...
+		.build(dummyEntities2);
     }
 
     private IColouringScheme<DummyEntity> createRowColoringScheme() {

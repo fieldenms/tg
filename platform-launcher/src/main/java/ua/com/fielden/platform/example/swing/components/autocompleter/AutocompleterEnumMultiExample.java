@@ -10,11 +10,12 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.basic.autocompleter.EnumValueMatcher;
+import ua.com.fielden.platform.basic.autocompleter.EnumValueMatcher2;
 import ua.com.fielden.platform.swing.actions.Command;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.AutocompleterTextFieldLayer;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.TwoPropertyListCellRenderer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
 import ua.com.fielden.platform.swing.components.textfield.UpperCaseTextField;
 import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
@@ -35,7 +36,7 @@ public class AutocompleterEnumMultiExample {
 	    public void run() {
 
 		// create an instance of the overlayable text field, which bill be used for attaching overlay components
-		final IValueMatcher<DemoEnum> matcher = new EnumValueMatcher<DemoEnum>(DemoEnum.class) {
+		final IValueMatcher2<DemoEnum> matcher = new EnumValueMatcher2<DemoEnum>(DemoEnum.class) {
 		    @Override
 		    public List<DemoEnum> findMatches(final String value) {
 			try {
