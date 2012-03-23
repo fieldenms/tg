@@ -11,17 +11,17 @@ import javax.swing.JOptionPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import ua.com.fielden.platform.dao.IMasterDetailsDao;
+import ua.com.fielden.platform.dao2.IMasterDetailsDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
+import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
-import ua.com.fielden.platform.swing.components.bind.Binder;
+import ua.com.fielden.platform.swing.components.bind.development.Binder;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 
 import com.jidesoft.grid.TableModelWrapperUtils;
 
@@ -41,7 +41,7 @@ import com.jidesoft.grid.TableModelWrapperUtils;
  * @param <D>
  * @param <C>
  */
-public abstract class UmDetailsWithCrudMany<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao<M, D>> extends UmDetailsWithCrud<M, D, C> {
+public abstract class UmDetailsWithCrudMany<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao2<M, D>> extends UmDetailsWithCrud<M, D, C> {
     /** Table model representing all instances of details entities. */
     private final PropertyTableModel<D> tableModel;
 

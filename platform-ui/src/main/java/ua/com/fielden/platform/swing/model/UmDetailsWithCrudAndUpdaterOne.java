@@ -4,10 +4,10 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import ua.com.fielden.platform.dao.IMasterDetailsDao;
+import ua.com.fielden.platform.dao2.IMasterDetailsDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 
 /**
  * This class is a very simple addition to functionality already present in {@link UmDetailsWithCrudOne}. Specifically, it provide support for {@link FrameTitleUpdater} with
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
  * @param <D>
  * @param <C>
  */
-public abstract class UmDetailsWithCrudAndUpdaterOne<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao<M, D>> extends UmDetailsWithCrudOne<M, D, C> {
+public abstract class UmDetailsWithCrudAndUpdaterOne<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao2<M, D>> extends UmDetailsWithCrudOne<M, D, C> {
     private final FrameTitleUpdater titleUpdater;
 
     protected UmDetailsWithCrudAndUpdaterOne(final M entity, final C controller, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm, final FrameTitleUpdater titleUpdater) {

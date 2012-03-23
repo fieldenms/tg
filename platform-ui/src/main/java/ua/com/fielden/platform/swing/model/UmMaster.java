@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.swing.model;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 
 /**
  * This is convenient UI model based on {@link UModel} simplifying model creation of a single stand alone (or simply master) entity. In this model the entity and managed entity is

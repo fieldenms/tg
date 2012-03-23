@@ -39,7 +39,6 @@ import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRendere
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.menu.filter.IFilter;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
-import ua.com.fielden.platform.swing.pivot.analysis.treetable.PivotTreeTable;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTableModel;

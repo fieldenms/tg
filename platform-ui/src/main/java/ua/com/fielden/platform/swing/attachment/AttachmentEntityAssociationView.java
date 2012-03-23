@@ -12,7 +12,7 @@ import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.review.OpenMasterClickAction;
 import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 

@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.swing.ei.editors.development;
 
-import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.MIXED_CASE;
-import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.UPPER_CASE;
-
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -24,7 +21,7 @@ import javax.swing.KeyStroke;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IPropertyEnum;
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -38,14 +35,14 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.components.smart.datepicker.DatePickerLayer;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
-import ua.com.fielden.platform.swing.ei.editors.LabelAndTooltipExtractor;
 import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.swing.utils.TabAction;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.MIXED_CASE;
+import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.UPPER_CASE;
 
 /**
  * Editor for an entity property of ordinary types (i.e. not entity and non-collectional).
@@ -66,20 +63,20 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 
     /**
      * Creates {@link OrdinaryPropertyEditor} for the entity centre and binds it to the specified property.
-     * 
+     *
      * @param criteria
      * @param propertyName
      * @return
      */
     public static OrdinaryPropertyEditor createOrdinaryPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, final String propertyName){
 	final Class<?> type = PropertyTypeDeterminator.determinePropertyType(criteria.getType(), propertyName);
-	final Long defaultTimePortionMillis = (Date.class.isAssignableFrom(type) && CriteriaReflector.isSecondParam((Class<EntityQueryCriteria>)criteria.getType(), propertyName)) ? DatePickerLayer.defaultTimePortionMillisForTheEndOfDay() : 0L;
+	final Long defaultTimePortionMillis = (Date.class.isAssignableFrom(type) && CriteriaReflector.isSecondParam(criteria.getType(), propertyName)) ? DatePickerLayer.defaultTimePortionMillisForTheEndOfDay() : 0L;
 	return new OrdinaryPropertyEditor(criteria, propertyName, defaultTimePortionMillis);
     }
 
     /**
      * Creates {@link OrdinaryPropertyEditor} and binds it to the specified property.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -90,7 +87,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 
     /**
      * Creates {@link OrdinaryPropertyEditor} and binds it to the specified property in the given entity.
-     * 
+     *
      * @param entity
      * @param propertyName
      * TODO
@@ -250,7 +247,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
     }
 
     @Override
-    public IValueMatcher<?> getValueMatcher() {
+    public IValueMatcher2<?> getValueMatcher() {
 	throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
     }
 

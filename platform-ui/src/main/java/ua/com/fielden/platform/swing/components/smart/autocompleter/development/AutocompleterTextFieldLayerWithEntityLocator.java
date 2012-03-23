@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.components.smart.autocompleter.development
 
 import javax.swing.JTextField;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.EntityLocatorDialog;
@@ -22,7 +22,7 @@ public class AutocompleterTextFieldLayerWithEntityLocator<T extends AbstractEnti
 	    final EntityLocatorDialog<T, ?> entityLocatorDialog,//
 	    final Class<T> lookUpClass,
 	    final JTextField textComponent,//
-	    final IValueMatcher<T> valueMatcher,//
+	    final IValueMatcher2<T> valueMatcher,//
 	    final String expression,//
 	    final TwoPropertyListCellRenderer<T> cellRenderer, //
 	    final String caption,//
@@ -52,7 +52,7 @@ public class AutocompleterTextFieldLayerWithEntityLocator<T extends AbstractEnti
 	    final EntityLocatorDialog<T, ?> entityLocatorDialog,//
 	    final Class<T> lookUpClass,
 	    final JTextField textComponent,//
-	    final IValueMatcher<T> valueMatcher,//
+	    final IValueMatcher2<T> valueMatcher,//
 	    final String expression,//
 	    final TwoPropertyListCellRenderer<T> cellRenderer, //
 	    final String caption,//

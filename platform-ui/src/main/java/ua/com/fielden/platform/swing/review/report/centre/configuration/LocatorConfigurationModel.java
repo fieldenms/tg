@@ -5,7 +5,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.Action;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.Command;
-import ua.com.fielden.platform.swing.ei.EntityInspectorModel;
+import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityLocatorModel;
@@ -39,7 +39,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
     private final Action save, saveAsDefault, loadDefault;
     /**
      * Initiates this {@link LocatorConfigurationModel} with instance of {@link IGlobalDomainTreeRepresentation}, entity type and {@link EntityFactory}.
-     * 
+     *
      * @param entityType - The entity type for which this {@link CentreConfigurationModel} will be created.
      * @param rootType - The entity type where the property specified with property name was declared.
      * @param gdtr - Associated {@link GlobalDomainTreeRepresentation} instance.
@@ -77,7 +77,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
 
     /**
      * Registers the {@link ILocatorConfigurationEventListener} to listen the locator configuration event.
-     * 
+     *
      * @param l
      */
     public void addLocatorConfigurationEventListener(final ILocatorConfigurationEventListener l){
@@ -86,7 +86,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
 
     /**
      * Removes the specified {@link ILocatorConfigurationEventListener} from the list of registered listeners.
-     * 
+     *
      * @param l
      */
     public void removeLocatorConfigurationEventListener(final ILocatorConfigurationEventListener l){
@@ -131,13 +131,13 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
 
     /**
      * Creates the {@link EntityInspectorModel} for the specified criteria
-     * 
+     *
      * @param criteria
      * @return
      */
-    private EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer,T,IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer,T,IEntityDao<T>> criteria){
-	return new EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer,T,IEntityDao<T>>>(criteria,//
-		CentrePropertyBinder.<T>createLocatorPropertyBinder());
+    private EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao2<T>>> createInspectorModel(final EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> criteria) {
+	return new EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao2<T>>>(criteria,//
+	CentrePropertyBinder.<T> createLocatorPropertyBinder());
     }
 
     private Action createSaveAction() {
@@ -250,9 +250,9 @@ public class LocatorConfigurationModel<T extends AbstractEntity, R extends Abstr
 
     /**
      * Iterates through the list of {@link ILocatorConfigurationEventListener} listeners and delegates the event to every listener.
-     * 
+     *
      * @param event
-     * 
+     *
      * @return
      */
     private boolean fireLocatorConfigurationEvent(final LocatorConfigurationEvent event){

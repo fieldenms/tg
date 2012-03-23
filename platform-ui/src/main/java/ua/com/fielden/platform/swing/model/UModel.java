@@ -13,13 +13,13 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingCommand;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.blocking.AdhocBlockingLayerProvider;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
-import ua.com.fielden.platform.swing.ei.editors.ReadonlyEntityPropertyViewer;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
+import ua.com.fielden.platform.swing.ei.editors.development.ReadonlyEntityPropertyViewer;
 import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 
 /**

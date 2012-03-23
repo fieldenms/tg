@@ -20,7 +20,7 @@ import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
@@ -33,9 +33,9 @@ import ua.com.fielden.platform.swing.components.bind.development.ComponentFactor
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
-import ua.com.fielden.platform.swing.ei.editors.LabelAndTooltipExtractor;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
+import ua.com.fielden.platform.swing.ei.editors.development.LabelAndTooltipExtractor;
 import ua.com.fielden.platform.swing.model.UModel;
 import ua.com.fielden.platform.swing.model.UmState;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
@@ -507,7 +507,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	/**
 	 * Returns the toggle button that is associated with this property editor.
-	 * 
+	 *
 	 * @return
 	 */
 	public JToggleButton getEditButton() {
@@ -516,7 +516,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	/**
 	 * Returns the value that indicates whether this property editor is selected to receive input.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isChecked(){
@@ -532,7 +532,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	}
 
 	@Override
-	public IValueMatcher<?> getValueMatcher() {
+	public IValueMatcher2<?> getValueMatcher() {
 	    throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
 	}
 
@@ -632,7 +632,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	/**
 	 * Returns the toggle button that is associated with this property editor.
-	 * 
+	 *
 	 * @return
 	 */
 	public JToggleButton getEditButton() {
@@ -641,7 +641,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	/**
 	 * Returns the value that indicates whether this property editor is selected to receive input.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isChecked(){
@@ -657,7 +657,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	}
 
 	@Override
-	public IValueMatcher<?> getValueMatcher() {
+	public IValueMatcher2<?> getValueMatcher() {
 	    throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
 	}
 
@@ -670,7 +670,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
     /**
      * Wraps the specific {@link BoundedValidationLayer} with text component and provides API to set text manually.
-     * 
+     *
      * @author TG Team
      *
      */
@@ -723,7 +723,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	/**
 	 * Initiates this {@link ManualTextSetter} with specified {@link BoundedValidationLayer} instance.
-	 * 
+	 *
 	 * @param textComponent
 	 */
 	public ManualTextSetter(final BoundedValidationLayer<JTextField> textComponent, final boolean triggerCommitOnTextInsertion){
@@ -738,7 +738,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	/**
 	 * Set the specified caret position for wrapped text component.
-	 * 
+	 *
 	 * @param position
 	 */
 	public void setCaretPosition(final int position){
@@ -833,7 +833,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	/**
 	 * Returns the {@link FocusListener} that listens the focus gained event for the specified {@link JTextField} instance.
 	 * This event handler also performs specific actions: text insert or caret position change.
-	 * 
+	 *
 	 * @param textField
 	 * @return
 	 */

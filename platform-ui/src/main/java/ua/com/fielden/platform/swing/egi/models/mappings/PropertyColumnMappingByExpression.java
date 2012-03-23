@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.egi.EditorComponent;
 import ua.com.fielden.platform.swing.egi.models.mappings.simplified.ITooltipGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -21,7 +21,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 /**
  * This class represents read-only mapping to non-existent properties (i.e. having only getter) or properties not annotated with {@link Observable}. In such cases binding couldn't
  * be used, so the only way is just to display actual value (using Jexl).
- * 
+ *
  * @author TG Team
  */
 @SuppressWarnings("unchecked")

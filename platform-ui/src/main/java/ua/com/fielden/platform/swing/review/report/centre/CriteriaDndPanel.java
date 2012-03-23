@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
-import static java.awt.Cursor.DEFAULT_CURSOR;
-import static java.awt.Cursor.MOVE_CURSOR;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.swing.utils.DummyBuilder.invokeWhenGainedFocus;
-
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Point;
@@ -31,7 +25,7 @@ import javax.swing.JToggleButton;
 import javax.swing.event.EventListenerList;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -40,16 +34,21 @@ import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2.DragFromSupport;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2.DragToSupport;
 import ua.com.fielden.platform.swing.dnd.DndPanel.ComponentCopy;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.ei.editors.development.RangePropertyEditor;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
+import static java.awt.Cursor.DEFAULT_CURSOR;
+import static java.awt.Cursor.MOVE_CURSOR;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.swing.utils.DummyBuilder.invokeWhenGainedFocus;
 
 /**
  * Panel, which provides drag'n'drop support for label-editor pairs.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CriteriaDndPanel extends StubCriteriaPanel {
 
@@ -131,7 +130,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Returns the number of columns.
-     * 
+     *
      * @return
      */
     public int getColumns() {
@@ -140,7 +139,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Returns the number of rows.
-     * 
+     *
      * @return
      */
     public int getRows() {
@@ -149,7 +148,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Returns the maximum label width among specified collection of property editors.
-     * 
+     *
      * @param editors
      * @return
      */
@@ -157,7 +156,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
     private static int maxLabelWidth(final Collection<IPropertyEditor> editors) {
 	int maxLabelWidth = -1;
 	for (final IPropertyEditor editor : editors) {
-	    final boolean isNotSecondLabel = editor instanceof RangePropertyEditor ? true : !CriteriaReflector.isSecondParam((Class<? extends EntityQueryCriteria>)editor.getEntity().getClass(), editor.getPropertyName());
+	    final boolean isNotSecondLabel = editor instanceof RangePropertyEditor ? true : !CriteriaReflector.isSecondParam(editor.getEntity().getClass(), editor.getPropertyName());
 	    if (isNotSecondLabel && editor.getLabel().getPreferredSize().getWidth() > maxLabelWidth) {
 		maxLabelWidth = (int) editor.getLabel().getPreferredSize().getWidth();
 	    }
@@ -183,7 +182,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Merges two editors into single using one of labels and two editors separated by "TO" label.
-     * 
+     *
      * @param doubleEditor
      * @return
      */
@@ -421,7 +420,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Registers the listener that listens the "layout change" events.
-     * 
+     *
      * @see CriteriaLayoutListener
      * @param listener
      */
@@ -431,7 +430,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Removes the specified {@link CriteriaLayoutListener} from the list of registered listeners.
-     * 
+     *
      * @see CriteriaLayoutListener
      * @param listener
      */
@@ -456,7 +455,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Adds draggable label and editor at the specified position.
-     * 
+     *
      * @param label
      * @param editor
      * @param position
@@ -474,7 +473,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Adds placeholder at the specified position.
-     * 
+     *
      * @param column
      * @param row
      */
@@ -492,7 +491,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Swaps positions of the specified component copies.
-     * 
+     *
      * @param compCopy1
      * @param compCopy2
      */
@@ -537,9 +536,9 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Class, representing position of a cell as row and column.
-     * 
+     *
      * @author yura
-     * 
+     *
      */
     public static class CellPosition {
 	private final int column;
@@ -562,9 +561,9 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Class encapsulating positions of label and editor on the {@link CriteriaDndPanel}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     private static class Position extends CellPosition {
 	private final String labelConstr;
@@ -574,7 +573,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 	/**
 	 * Creates {@link Position} instance with specified column and row of label component (editor component should be placed at cell with coordinates (column + 1;row)). Also
 	 * additional label and editor layout constraints may be specified.
-	 * 
+	 *
 	 * @param column
 	 * @param row
 	 * @param labelConstr
@@ -606,9 +605,9 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
     /**
      * Represents visual copy of {@link JComponent}, which contains link to another {@link LinkedComponentCopy} instance. This was done in order to keep references between label
      * and editor copies.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class LinkedComponentCopy extends ComponentCopy {
 
@@ -622,7 +621,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
 	/**
 	 * In case of {@link JLabel}, sets minimum size of this component to size of original component.
-	 * 
+	 *
 	 * @param original
 	 */
 	public LinkedComponentCopy(final IPropertyEditor propEditor, final JComponent component, final boolean isLabel) {
@@ -633,7 +632,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
 	/**
 	 * Sets cross-references between this instance and the specified one.
-	 * 
+	 *
 	 * @param compCopy
 	 */
 	public void linkWith(final LinkedComponentCopy compCopy) {
@@ -658,8 +657,8 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
 	/**
 	 * Used for correct painting of component copy. (without black bounds)
-	 * 
-	 * 
+	 *
+	 *
 	 * @param propertyEditor
 	 * @return
 	 */
@@ -692,9 +691,9 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Listener which is notified whenever layout is changed (criteria order has been changed via drag-n-drop) on the {@link CriteriaDndPanel}, to which this listener is attached.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static interface CriteriaLayoutListener extends EventListener{
 	void layoutChanged();
@@ -703,9 +702,9 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
     /**
      * Represents boolean matrix, which is used to represent positions on the {@link CriteriaDndPanel}. If cell at some row and column holds value of {@link Boolean#TRUE} it means
      * this cell is occupied.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     private static class BoolMatrix {
 
@@ -715,7 +714,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
 	/**
 	 * Creates matrix with the specified number of columns and no rows.
-	 * 
+	 *
 	 * @param columns
 	 */
 	public BoolMatrix(final int columns) {
@@ -724,7 +723,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
 	/**
 	 * Creates matrix with the specified number of rows and columns filled with {@link Boolean#FALSE} values.
-	 * 
+	 *
 	 * @param rows
 	 * @param columns
 	 */
@@ -749,7 +748,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
 	/**
 	 * Iterates over the elements of this boolean matrix and sets value of {@link Boolean#TRUE} for the occupied value.
-	 * 
+	 *
 	 * @param checkedElements - the list of elements those identify the occupied cells.
 	 */
 	public void fillMatrix(final List<String> checkedElements) {
@@ -769,7 +768,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
 	/**
 	 * Mark cells column-by-column in the same row with the specified value (occupied) starting from column till column + editorSize.
-	 * 
+	 *
 	 * @param row
 	 * @param column
 	 * @param editorSize
@@ -783,7 +782,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
 	/**
 	 * Returns true if in the specified row all cells between column inclusively and column + editorSize exclusively are free.
-	 * 
+	 *
 	 * @param row
 	 * @param column
 	 * @param editorSize
@@ -804,7 +803,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
     // adding empty editors:
     /**
      * Fills unoccupied cells with place-holders.
-     * 
+     *
      * @param panel
      * @param posMatrix
      */
@@ -845,7 +844,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 
     /**
      * Creates string for mig layout of columns.
-     * 
+     *
      * @param columns
      * @return
      */
@@ -902,7 +901,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 	}
 
 	@Override
-	public IValueMatcher<?> getValueMatcher() {
+	public IValueMatcher2<?> getValueMatcher() {
 	    throw new UnsupportedOperationException();
 	}
 

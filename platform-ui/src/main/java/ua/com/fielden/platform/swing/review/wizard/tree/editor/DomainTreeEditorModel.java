@@ -17,7 +17,7 @@ import ua.com.fielden.platform.expression.editor.IPropertySelectionListener;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.model.UmState;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2;
 import ua.com.fielden.platform.utils.EntityUtils;

@@ -14,7 +14,7 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.actions.custom.AbstractDownloadAttachmentAction;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
@@ -28,9 +28,9 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
  * A model for attachment/entity association UI.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AttachmentEntityAssociationModel extends UmDetailsWithCrudAndUpdaterMany<AbstractEntity<?>, EntityAttachmentAssociation, IEntityAttachmentAssociationController> {
 
@@ -40,7 +40,7 @@ public class AttachmentEntityAssociationModel extends UmDetailsWithCrudAndUpdate
     public AttachmentEntityAssociationModel(//
 	    final AbstractEntity<?> master, //
 	    final IEntityAttachmentAssociationController controller,//
-	    final IValueMatcherFactory valueMatcherFactory, //
+	    final IValueMatcherFactory2 valueMatcherFactory, //
 	    final IEntityMasterManager entityMasterFactory,//
 	    //final IDaoFactory daoFactory,//
 	    final FrameTitleUpdater titleUpdater,//

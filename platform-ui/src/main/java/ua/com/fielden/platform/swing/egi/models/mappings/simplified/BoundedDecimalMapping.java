@@ -13,8 +13,8 @@ import javax.swing.SwingConstants;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.ValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.egi.EditorComponent;
 import ua.com.fielden.platform.swing.egi.models.mappings.AbstractLabelPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.models.mappings.AggregationFunction;
@@ -22,9 +22,9 @@ import ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals;
 
 /**
  * Mapping for properties of type BigDecimal and Money.
- * 
+ *
  * @author 01es, Yura
- * 
+ *
  * @param <T>
  */
 @SuppressWarnings("unchecked")

@@ -6,7 +6,7 @@ import javax.swing.Action;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 
 /**
  * This UI model should be used only in cases where no real model is required, but it is necessary to use a view that by design requires some model.

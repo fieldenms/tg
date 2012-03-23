@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.egi.models.mappings;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Rectangle;
@@ -17,11 +15,11 @@ import javax.swing.SwingConstants;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.components.ValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.EditorComponent;
 import ua.com.fielden.platform.swing.egi.models.mappings.simplified.ITooltipGetter;
@@ -30,13 +28,14 @@ import ua.com.fielden.platform.utils.ConverterFactory;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.EntityUtils.ShowingStrategy;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * Read-only mapping for {@link AbstractEntity} properties.
  * <p>
- * 
+ *
  * @author 01es, Yura
- * 
+ *
  * @param <T>
  * @param <K>
  * @param <ColumnType>
@@ -111,7 +110,7 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
 
     /**
      * Creates {@link RendererValidationLayer} instance with no view set
-     * 
+     *
      * @see javax.swing.table.DefaultTableCellRenderer
      * @return
      */
@@ -121,7 +120,7 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
 
     /**
      * Creates view for {@link ValidationLayer} (either {@link RendererLabel} or {@link RendererCheckBox})
-     * 
+     *
      * @param isCheckBox
      *            - determines whether {@link JCheckBox} or {@link JLabel} should be created
      * @param valueClass
@@ -143,7 +142,7 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
 
     /**
      * Returns cell renderer component in case when entity is not instance of {@link EntityAggregates}.
-     * 
+     *
      * @param entity
      * @param value
      * @param isSelected
@@ -192,7 +191,7 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
 
     /**
      * Returns cell renderer component for rendering {@link AbstractEntity}s or {@link EntityAggregates}.
-     * 
+     *
      * @param entity
      * @param value
      * @param isSelected
@@ -254,10 +253,10 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
 
     /**
      * Optimised {@link ValidationLayer} for rendering.
-     * 
+     *
      * @see javax.swing.table.DefaultTableCellRenderer
      * @author Yura
-     * 
+     *
      * @param <T>
      */
     public static class RendererValidationLayer<T extends JComponent> extends ValidationLayer<T> {
@@ -317,7 +316,7 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
 
     /**
      * Optimised {@link JLabel} for rendering
-     * 
+     *
      * @see javax.swing.table.DefaultTableCellRenderer
      * @author Yura
      */
@@ -327,7 +326,7 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
 
 	/**
 	 * If <code>valueClass</code> represents number, then horizontal alignment is set to right
-	 * 
+	 *
 	 * @param valueClass
 	 */
 	public RendererLabel(final Class<?> valueClass) {
@@ -399,7 +398,7 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
 
     /**
      * Optimised {@link JCheckBox} for rendering
-     * 
+     *
      * @see javax.swing.table.DefaultTableCellRenderer
      * @author Yura
      */

@@ -9,12 +9,11 @@ import java.awt.event.KeyEvent;
 import javax.swing.Action;
 import javax.swing.JTextField;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.IBindingEntity;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.AutocompleterTextFieldLayer;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
 import ua.com.fielden.platform.swing.egi.EditorComponent;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
@@ -24,12 +23,12 @@ import ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals;
 
 /**
  * Class, representing mapping of some {@link String} property of some {@link AbstractEntity} class to column of related {@link EntityGridInspector}. Uses
- * {@link ComponentFactory#createOnFocusLostAutocompleter(AbstractEntity, String, String, Class, String, String, String, ua.com.fielden.platform.basic.IValueMatcher, String, boolean, ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction...)}
+ * {@link ComponentFactory#createOnFocusLostAutocompleter(AbstractEntity, String, String, Class, String, String, String, ua.com.fielden.platform.basic.IValueMatcher2, String, boolean, ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction...)}
  * method to bound editors to properties. Extends and reuses functionality from {@link AbstractLabelPropertyColumnMapping}, so in order to provide custom logic, one may override
  * particular methods.
- * 
+ *
  * @author Yura
- * 
+ *
  * @param <T>
  * @param <K>
  * @param <PropertyClass>
@@ -45,7 +44,7 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
 
     private final Class valueClass;
 
-    private final IValueMatcher valueMatcher;
+    private final IValueMatcher2 valueMatcher;
 
     private final IOnCommitAction<T>[] onCommitActions;
 
@@ -53,14 +52,14 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
 
     /**
      * Creates instance of mapping, where editors are bounded to properties using
-     * {@link ComponentFactory#createOnFocusLostAutocompleter(AbstractEntity, String, String, Class, String, String, String, ua.com.fielden.platform.basic.IValueMatcher, String, boolean, ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction...)}
+     * {@link ComponentFactory#createOnFocusLostAutocompleter(AbstractEntity, String, String, Class, String, String, String, ua.com.fielden.platform.basic.IValueMatcher2, String, boolean, ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction...)}
      * method. Most of the properties are used directly in that method, so view JavaDocs for it please. Array of {@link IOnCommitAction}s would be added to each created
      * autocompleter. Please note, that {@link IOnCommitAction} is just a wrapper around {@link ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction} that
      * provides implementing classes with additional information.<br>
      * <br>
      * Note : much more preferred is usage of {@link PropertyTableModelBuilder} class as it requires less parameters and resolves a lot of them by itself avoiding inconsistency
      * between parameters
-     * 
+     *
      * @param columnName
      * @param prefSize
      * @param headerTooltip
@@ -73,7 +72,7 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
      *            - true should be passed here if one needs mapping from {@link String} property to column, but with enabled auto-completer selection
      * @param onCommitActions
      */
-    public BoundedStringMapping(final Class<T> entityClass, final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final Class valueClass, final IValueMatcher valueMatcher, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final boolean stringBinding, final IOnCommitAction<T>... onCommitActions) {
+    public BoundedStringMapping(final Class<T> entityClass, final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final Class valueClass, final IValueMatcher2 valueMatcher, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final boolean stringBinding, final IOnCommitAction<T>... onCommitActions) {
 	super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction);
 
 	originalPropertyName = propertyName;
@@ -87,7 +86,7 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
     public EditorComponent<BoundedValidationLayer<AutocompleterTextFieldLayer>, JTextField> createBoundedEditorFor(final T entity) {
 	final ComponentFactory.IOnCommitAction[] onCommitActionWrappers = EgiUtilities.convert(entity, getEntityGridInspector(), onCommitActions);
 
-	final BoundedValidationLayer<AutocompleterTextFieldLayer> boundedLayer = ComponentFactory.createOnFocusLostAutocompleter((IBindingEntity) entity, originalPropertyName, "", valueClass, "key", "desc", (String) null, valueMatcher, (String) null, stringBinding, onCommitActionWrappers); // 
+	final BoundedValidationLayer<AutocompleterTextFieldLayer> boundedLayer = ComponentFactory.createOnFocusLostAutocompleter(entity, originalPropertyName, "", valueClass, "key", "desc", (String) null, valueMatcher, (String) null, stringBinding, onCommitActionWrappers); //
 	boundedLayer.getView().getView().addKeyListener(new KeyAdapter() {
 	    @Override
 	    public void keyReleased(final KeyEvent e) {

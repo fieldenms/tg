@@ -8,7 +8,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -38,7 +38,7 @@ public class Paginator {
      *
      */
     public static interface IPageChangeFeedback {
-	void feedback(IPage<?> page);
+	void feedback(IPage2<?> page);
 
 	void enableFeedback(boolean enable);
     }

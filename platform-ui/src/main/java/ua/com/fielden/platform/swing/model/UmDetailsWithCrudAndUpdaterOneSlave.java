@@ -6,17 +6,17 @@ import java.util.Map;
 
 import javax.swing.Action;
 
-import ua.com.fielden.platform.dao.IMasterDetailsDao;
+import ua.com.fielden.platform.dao2.IMasterDetailsDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
-import ua.com.fielden.platform.swing.components.bind.Binder;
+import ua.com.fielden.platform.swing.components.bind.development.Binder;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 
 /**
  * This is a CRUD UI model representing one-to-one association, which acts as a slave model the the model passed into the constructor.
@@ -26,14 +26,14 @@ import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
  * <p>
  * IMPORTANT: In most cases it is best to split a complex entity requiring multiple views into several smaller entity classes, which can be managed view ordinary one-to-one CRUD
  * model.
- * 
+ *
  * @author TG Team
- * 
+ *
  * @param <M>
  * @param <D>
  * @param <C>
  */
-public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao<M, D>> extends UmDetailsWithCrudAndUpdaterOne<M, D, C> {
+public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao2<M, D>> extends UmDetailsWithCrudAndUpdaterOne<M, D, C> {
 
     private final UmDetailsWithCrudAndUpdaterOne<M, D, C> masterModel;
 
@@ -43,6 +43,7 @@ public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEnti
     }
 
     /** A convenient method for loading details entity. Could potentially be overridden, but unlikely there should be a reason for that. */
+    @Override
     protected D loadDetails() {
 	return getMasterModel().loadDetails();
     }
@@ -130,6 +131,7 @@ public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEnti
 	return getMasterModel().getEditors();
     }
 
+    @Override
     protected void disableEditors(final boolean flag) {
 	// do not do anything because editors are disabled at the master model level
     }

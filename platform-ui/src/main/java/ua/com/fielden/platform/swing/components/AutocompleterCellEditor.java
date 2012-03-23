@@ -19,14 +19,14 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.table.TableCellEditor;
 import javax.swing.tree.TreeCellEditor;
 
-import ua.com.fielden.platform.swing.components.smart.autocompleter.AutocompleterTextFieldLayer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
 
 import com.jidesoft.grid.JideCellEditorAdapter;
 import com.jidesoft.grid.JideTable;
 
 /**
  * This is a cell editor, which provides Autocompleter support.
- * 
+ *
  * @author 01es
  */
 
@@ -48,7 +48,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Constructs a <code>DefaultCellEditor</code> that uses an Autocompleter.
-     * 
+     *
      * @param autocompleter
      *            -- a <code>Autocompleter</code> instance
      * @param tble
@@ -82,6 +82,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
 	// JTable keeps the focus at all times therefore it is necessary to programmatically change autocompleter state
 	table.addCellEditorListener(new JideCellEditorAdapter() {
+	    @Override
 	    public void editingStarted(final ChangeEvent e) {
 		if (e.getSource() instanceof AutocompleterCellEditor) {
 		    autocompleter.getAutocompleter().focusGained(null);
@@ -106,7 +107,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Returns a reference to the editor component.
-     * 
+     *
      * @return the editor <code>Component</code>
      */
     public Component getComponent() {
@@ -119,7 +120,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Specifies the number of clicks needed to start editing.
-     * 
+     *
      * @param count
      *            an int specifying the number of clicks needed to start editing
      * @see #getClickCountToStart
@@ -130,7 +131,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Returns the number of clicks needed to start editing.
-     * 
+     *
      * @return the number of clicks needed to start editing
      */
     public int getClickCountToStart() {
@@ -144,7 +145,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Forwards the message from the <code>CellEditor</code> to the <code>delegate</code>.
-     * 
+     *
      * @see EditorDelegate#getCellEditorValue
      */
     public Object getCellEditorValue() {
@@ -153,7 +154,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Forwards the message from the <code>CellEditor</code> to the <code>delegate</code>.
-     * 
+     *
      * @see EditorDelegate#isCellEditable(EventObject)
      */
     @Override
@@ -163,7 +164,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Forwards the message from the <code>CellEditor</code> to the <code>delegate</code>.
-     * 
+     *
      * @see EditorDelegate#shouldSelectCell(EventObject)
      */
     @Override
@@ -173,7 +174,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Forwards the message from the <code>CellEditor</code> to the <code>delegate</code>.
-     * 
+     *
      * @see EditorDelegate#stopCellEditing
      */
     @Override
@@ -183,7 +184,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
     /**
      * Forwards the message from the <code>CellEditor</code> to the <code>delegate</code>.
-     * 
+     *
      * @see EditorDelegate#cancelCellEditing
      */
     @Override
@@ -227,7 +228,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
 	/**
 	 * Returns the value of this cell.
-	 * 
+	 *
 	 * @return the value of this cell
 	 */
 	public Object getCellEditorValue() {
@@ -236,7 +237,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
 	/**
 	 * Sets the value of this cell.
-	 * 
+	 *
 	 * @param value
 	 *            the new value of this cell
 	 */
@@ -247,7 +248,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 	/**
 	 * Returns true if <code>anEvent</code> is <b>not</b> a <code>MouseEvent</code>. Otherwise, it returns true if the necessary number of clicks have occurred, and returns
 	 * false otherwise.
-	 * 
+	 *
 	 * @param anEvent
 	 *            the event
 	 * @return true if cell is ready for editing, false otherwise
@@ -263,7 +264,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
 	/**
 	 * Returns true to indicate that the editing cell may be selected.
-	 * 
+	 *
 	 * @param anEvent
 	 *            the event
 	 * @return true
@@ -275,7 +276,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
 	/**
 	 * Returns true to indicate that editing has begun.
-	 * 
+	 *
 	 * @param anEvent
 	 *            the event
 	 */
@@ -285,7 +286,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
 	/**
 	 * Stops editing and returns true to indicate that editing has stopped. This method calls <code>fireEditingStopped</code>.
-	 * 
+	 *
 	 * @return true
 	 */
 	public boolean stopCellEditing() {
@@ -302,7 +303,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
 	/**
 	 * When an action is performed, editing is ended.
-	 * 
+	 *
 	 * @param e
 	 *            the action event
 	 * @see #stopCellEditing
@@ -313,7 +314,7 @@ public class AutocompleterCellEditor extends AbstractCellEditor implements Table
 
 	/**
 	 * When an item's state changes, editing is ended.
-	 * 
+	 *
 	 * @param e
 	 *            the action event
 	 * @see #stopCellEditing

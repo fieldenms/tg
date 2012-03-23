@@ -9,8 +9,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.DefaultUiModel;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
-import ua.com.fielden.platform.swing.review.DynamicCriteriaModelBuilder;
-import ua.com.fielden.platform.swing.review.DynamicEntityReview;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.MultipleAnalysisEntityCentreConfigurationView;
@@ -20,9 +18,9 @@ import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 
 /**
  * Ad hoc report wrapper. See {@link BaseNotifPanel} for more information.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DynamicReportWrapper<T extends AbstractEntity> extends BaseNotifPanel<DefaultUiModel> {
 
@@ -39,7 +37,7 @@ public class DynamicReportWrapper<T extends AbstractEntity> extends BaseNotifPan
 
     /**
      * Creates new {@link DynamicReportWrapper} for the given {@link DynamicCriteriaModelBuilder} and with specified title and information about the wrapped report.
-     * 
+     *
      * @param caption
      * @param description
      * @param modelBuilder
@@ -93,14 +91,14 @@ public class DynamicReportWrapper<T extends AbstractEntity> extends BaseNotifPan
 	return description;
     }
 
-    /**
-     * Returns value that indicates whether wrapper holds review or wizard model.
-     * 
-     * @return
-     */
-    public boolean isReview() {
-	return getHoldingPanel().getComponent(0) instanceof DynamicEntityReview ? true : false;
-    }
+    //    /**
+    //     * Returns value that indicates whether wrapper holds review or wizard model.
+    //     *
+    //     * @return
+    //     */
+    //    public boolean isReview() {
+    //	return getHoldingPanel().getComponent(0) instanceof DynamicEntityReview ? true : false;
+    //    }
 
     @Override
     public ICloseGuard canClose() {

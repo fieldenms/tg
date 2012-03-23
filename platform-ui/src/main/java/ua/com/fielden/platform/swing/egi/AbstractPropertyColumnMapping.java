@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.swing.egi;
 
-import static com.jidesoft.grid.TableModelWrapperUtils.getActualRowAt;
-import static javax.swing.SwingUtilities.invokeLater;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.swing.utils.DummyBuilder.invokeWhenGainedFocus;
-import static ua.com.fielden.platform.swing.utils.Utils2D.blend;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.KeyAdapter;
@@ -30,8 +24,8 @@ import javax.swing.table.TableCellRenderer;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.ValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.egi.models.mappings.AggregationFunction;
 import ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals;
@@ -40,6 +34,12 @@ import ua.com.fielden.platform.swing.egi.models.mappings.simplified.ITooltipGett
 import ua.com.fielden.platform.swing.utils.RenderingDecorator;
 
 import com.jidesoft.grid.TableModelWrapperUtils;
+
+import static com.jidesoft.grid.TableModelWrapperUtils.getActualRowAt;
+import static javax.swing.SwingUtilities.invokeLater;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.swing.utils.DummyBuilder.invokeWhenGainedFocus;
+import static ua.com.fielden.platform.swing.utils.Utils2D.blend;
 
 /**
  * Represents mapping between column and some read/write access property of class T.<br>

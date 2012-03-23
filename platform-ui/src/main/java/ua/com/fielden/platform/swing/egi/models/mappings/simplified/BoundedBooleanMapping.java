@@ -11,8 +11,8 @@ import javax.swing.JCheckBox;
 import javax.swing.SwingConstants;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.egi.EditorComponent;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.models.mappings.AggregationFunction;
@@ -24,9 +24,9 @@ import ua.com.fielden.platform.swing.egi.models.mappings.ReadonlyPropertyColumnM
  * AbstractEntity} class to {@link EntityGridInspector}'s column. Uses
  * {@link ComponentFactory#createCheckBox(AbstractEntity, String, String, String, ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction...)} method to
  * create bounded {@link JCheckBox}. Methods could be overridden to provide custom functionality.
- * 
+ *
  * @author Yura
- * 
+ *
  * @param <T>
  * @param <K>
  */
@@ -37,7 +37,7 @@ public class BoundedBooleanMapping<T extends AbstractEntity> extends ReadonlyPro
 
     /**
      * Creates instance of mapping, that automatically bounds editors to specified properties of entities in related {@link EntityGridInspector}
-     * 
+     *
      * @param columnName
      * @param prefSize
      * @param headerTooltip
@@ -81,7 +81,7 @@ public class BoundedBooleanMapping<T extends AbstractEntity> extends ReadonlyPro
 
     /**
      * Should select check box on the first click
-     * 
+     *
      * @param e
      * @return
      */

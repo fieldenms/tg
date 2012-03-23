@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.analysis.view;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -16,7 +16,7 @@ public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity, CDTM
 
     private final PageHolder pageHolder;
 
-    public AbstractAnalysisReviewModel(final AbstractAnalysisConfigurationModel<T, CDTME> configurationModel, final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final ADTM adtm, final PageHolder pageHolder) {
+    public AbstractAnalysisReviewModel(final AbstractAnalysisConfigurationModel<T, CDTME> configurationModel, final EntityQueryCriteria<CDTME, T, IEntityDao2<T>> criteria, final ADTM adtm, final PageHolder pageHolder) {
 	super(configurationModel, criteria);
 	this.adtm = adtm;
 	this.pageHolder = pageHolder;
@@ -44,7 +44,7 @@ public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity, CDTM
 
     /**
      * Returns the associated {@link IAbstractAnalysisDomainTreeManager}.
-     * 
+     *
      * @return
      */
     public final ADTM adtm(){
@@ -53,7 +53,7 @@ public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity, CDTM
 
     /**
      * Returns the {@link PageHolder} instance, that is associated with this analysis model.
-     * 
+     *
      * @return
      */
     public final PageHolder getPageHolder(){
@@ -62,14 +62,14 @@ public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity, CDTM
 
     /**
      * Executes analysis query, and returns the result set of the query execution.
-     * 
+     *
      * @return
      */
     abstract protected LDT executeAnalysisQuery();
 
     /**
      * Determines whether this analysis can load data, and returns {@link Result} instance with exception, warning, or successful result.
-     * 
+     *
      * @return
      */
     abstract protected Result canLoadData();

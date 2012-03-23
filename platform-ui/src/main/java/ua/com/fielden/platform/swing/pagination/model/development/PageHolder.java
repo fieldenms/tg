@@ -3,13 +3,13 @@ package ua.com.fielden.platform.swing.pagination.model.development;
 import javax.swing.event.EventListenerList;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.swing.pagination.model.development.IPaginatorModel.PageNavigationPhases;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
  * Holds the page and allows to change page and provides ability to listen page changing events.
- * 
+ *
  * @author TG Team
  *
  * @param <T>
@@ -18,14 +18,14 @@ public class PageHolder{
 
     private final EventListenerList listenerList = new EventListenerList();
 
-    private IPage<? extends AbstractEntity> page;
+    private IPage2<? extends AbstractEntity> page;
 
     /**
      * Sets the new page for this page holder. This method also fires page changed event. Please note that the event processing will be performed on EDT.
-     * 
+     *
      * @param newPage
      */
-    public void newPage(final IPage<? extends AbstractEntity> newPage) {
+    public void newPage(final IPage2<? extends AbstractEntity> newPage) {
 	this.page = newPage;
 	SwingUtilitiesEx.invokeLater(new Runnable() {
 
@@ -38,16 +38,16 @@ public class PageHolder{
 
     /**
      * Returns the current page.
-     * 
+     *
      * @return
      */
-    public IPage<? extends AbstractEntity> getPage() {
+    public IPage2<? extends AbstractEntity> getPage() {
 	return page;
     }
 
     /**
      * Adds the specified {@link IPageChangedListener} that listens the page changed events.
-     * 
+     *
      * @param l
      */
     public void addPageChangedListener(final IPageChangedListener l) {
@@ -56,7 +56,7 @@ public class PageHolder{
 
     /**
      * Removes the specified {@link IPageChangedListener} that listens the page changed events.
-     * 
+     *
      * @param l
      */
     public void removePageChangedListener(final IPageChangedListener l) {
@@ -65,7 +65,7 @@ public class PageHolder{
 
     /**
      * Adds the specified {@link IPageNavigationListener} that listens the page navigation events.
-     * 
+     *
      * @param l
      */
     public void addPageNavigationListener(final IPageNavigationListener l){
@@ -74,7 +74,7 @@ public class PageHolder{
 
     /**
      * Removes the specified {@link IPageNavigationListener} that listens the page navigation events.
-     * 
+     *
      * @param l
      */
     public void removePageNavigationListener(final IPageNavigationListener l) {
@@ -83,7 +83,7 @@ public class PageHolder{
 
     /**
      * Fires the {@link PageChangedEvent} that indicates the page changing event.
-     * 
+     *
      * @param pageChangedEvent
      */
     private void firePageChanged(final PageChangedEvent pageChangedEvent) {
@@ -96,7 +96,7 @@ public class PageHolder{
 
     /**
      * Processes some actions during page navigation phases.
-     * 
+     *
      * @param pageNavigationPhases
      */
     public void pageNavigated(final PageNavigationPhases pageNavigationPhases) {

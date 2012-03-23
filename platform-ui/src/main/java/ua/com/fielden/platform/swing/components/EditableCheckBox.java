@@ -2,7 +2,8 @@ package ua.com.fielden.platform.swing.components;
 
 import javax.swing.JCheckBox;
 
-import ua.com.fielden.platform.swing.components.bind.ToggleButtonAdapter;
+import ua.com.fielden.platform.swing.components.bind.development.ToggleButtonAdapter;
+
 
 /**
  * A checkbox UI control with property <code>editable</code>. This property ensures that while control is enabled its content cannot be changed.

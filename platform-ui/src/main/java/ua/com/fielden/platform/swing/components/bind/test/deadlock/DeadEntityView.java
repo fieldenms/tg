@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.components.bind.test.deadlock;
 
-import static ua.com.fielden.platform.swing.components.bind.ComponentFactory.EditorCase.MIXED_CASE;
-
 import java.awt.Dimension;
 import java.awt.GridLayout;
 
@@ -15,14 +13,16 @@ import org.jdesktop.swingx.VerticalLayout;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory.ReadOnlyLabel;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.ReadOnlyLabel;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.smart.datepicker.DatePickerLayer;
 
 import com.jidesoft.plaf.LookAndFeelFactory;
+
+import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.MIXED_CASE;
 
 /**
  * This is the Entity view representation with 3 types of the components (used for testing and demo purposes) : CommitOnKeyTyped, CommitOnFocusLost, CommitOnTriggerCommit. Missing
@@ -69,16 +69,16 @@ public class DeadEntityView {
 	    final BoundedValidationLayer<JTextField> stringFieldOFL = ComponentFactory.createStringTextField(entity, DeadEntity.PROPERTY_VEHICLE, true, "string text field OFL", MIXED_CASE);
 	    final BoundedValidationLayer<ReadOnlyLabel> label1 = ComponentFactory.createLabel(entity, DeadEntity.PROPERTY_VEHICLE, "PROPERTY_STRING");
 	    panel.add(createPropertyPanel(null, stringFieldOFL, null, label1));
-	    
+
 	    // integer formatted field
 	    final BoundedValidationLayer<JFormattedTextField> numberFieldOFL = ComponentFactory.createIntegerTextField(entity, DeadEntity.PROPERTY_ODOMETER, true, "integer text field OFL");
 	    final BoundedValidationLayer<ReadOnlyLabel> label2 = ComponentFactory.createLabel(entity, DeadEntity.PROPERTY_ODOMETER, "PROPERTY_NUMBER");
 	    panel.add(createPropertyPanel(null, numberFieldOFL, null, label2));
-	    
+
 	    final BoundedValidationLayer<DatePickerLayer> datePickerLayerOKT = ComponentFactory.createDatePickerLayer(entity, DeadEntity.PROPERTY_ACT_ST, "enter date (toolTip)", "enter date (caption)", true, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()); // , new SimpleOnCommitSysoutMessageAction("onKeyTyped OnCommitAction for date date picker layer")
 	    final BoundedValidationLayer<ReadOnlyLabel> label42 = ComponentFactory.createLabel(entity, DeadEntity.PROPERTY_ACT_ST, "PROPERTY_NUMBER");
 	    panel.add(createPropertyPanel(null, datePickerLayerOKT, null, label42));
-	    
+
 	    final BoundedValidationLayer<DatePickerLayer> datePickerLayerOKT2 = ComponentFactory.createDatePickerLayer(entity, DeadEntity.PROPERTY_ACT_FIN, "enter date (toolTip)", "enter date (caption)", true, DatePickerLayer.defaultTimePortionMillisForTheEndOfDay()); // , new SimpleOnCommitSysoutMessageAction("onKeyTyped OnCommitAction for date date picker layer")
 	    final BoundedValidationLayer<ReadOnlyLabel> label43 = ComponentFactory.createLabel(entity, DeadEntity.PROPERTY_ACT_ST, "PROPERTY_NUMBER");
 	    panel.add(createPropertyPanel(null, datePickerLayerOKT2, null, label43));

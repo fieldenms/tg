@@ -7,15 +7,15 @@ import java.util.Map;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 
 /**
- * 
+ *
  * Panel for radio buttons created with ordinary property editor for the enumeration type property. That panel doesn't add radio buttons directly to it's container. It add radio
  * buttons to map. Then user can set the layout for this panel and add radio buttons directly to this container with layoutEditor method
- * 
+ *
  * @author oleh
- * 
+ *
  */
 public class RadioButtonPanel extends JPanel {
 
@@ -35,7 +35,7 @@ public class RadioButtonPanel extends JPanel {
 
     /**
      * Returns the editor for the given enumeration type key
-     * 
+     *
      * @param key
      * @return
      */
@@ -46,7 +46,7 @@ public class RadioButtonPanel extends JPanel {
 
     /**
      * Add the editor (i.e. radio button) associated with the enumeration type key to the map
-     * 
+     *
      * @param key
      * @param radioButton
      */
@@ -57,7 +57,7 @@ public class RadioButtonPanel extends JPanel {
 
     /**
      * Add the radio button associated with the key to the container if it's not yet added with the specified constrained for the layout manager
-     * 
+     *
      * @param key
      * @param constrained
      */
@@ -71,7 +71,7 @@ public class RadioButtonPanel extends JPanel {
 
     /**
      * Add the radio button associated with the key to the container if it's not yet added.
-     * 
+     *
      * @param key
      */
     @SuppressWarnings("rawtypes")
@@ -84,7 +84,7 @@ public class RadioButtonPanel extends JPanel {
 
     /**
      * removes the editor associated with the key from the panle's container
-     * 
+     *
      * @param key
      * @return
      */
@@ -100,7 +100,7 @@ public class RadioButtonPanel extends JPanel {
 
     /**
      * removes the editor (i. e. radio button) from the container and map
-     * 
+     *
      * @param key
      * @return
      */
@@ -112,7 +112,7 @@ public class RadioButtonPanel extends JPanel {
 
     /**
      * Returns all available radio buttons for this panel.
-     * 
+     *
      * @return
      */
     public Collection<BoundedValidationLayer<JRadioButton>> getEditors() {

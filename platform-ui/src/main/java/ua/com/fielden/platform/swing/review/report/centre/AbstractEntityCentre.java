@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
 import java.awt.Dimension;
 import java.awt.IllegalComponentStateException;
 import java.awt.event.ActionEvent;
@@ -27,12 +25,12 @@ import org.jvnet.flamingo.common.ElementState;
 import org.jvnet.flamingo.common.icon.EmptyResizableIcon;
 
 import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.swing.actions.ActionChanger;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -41,7 +39,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.pagination.development.Paginator;
 import ua.com.fielden.platform.swing.pagination.development.Paginator.IPageChangeFeedback;
@@ -59,10 +57,12 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 
 import com.jidesoft.grid.TableModelWrapperUtils;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 /**
  * Implements common functionality for all types of entity centres: entity centre with single analysis, entity locators, entity centres with multiple analysis.
  * When extending this class one must remember to layout components. It may be done using utility methods of the {@link EntityCentreLayoutUtility} class.
- * 
+ *
  * @author TG Team
  *
  * @param <T>
@@ -95,7 +95,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Initiates this {@link AbstractEntityCentre}. Creates all parts and components of entity centre.
-     * 
+     *
      * @param model
      * @param progressLayer
      */
@@ -127,7 +127,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns the component that might be a {@link JButton} or {@link ActionChangeButton} instance. This component allows user to save or modify entity centre.
-     * 
+     *
      * @return
      */
     public JComponent getCustomActionChanger() {
@@ -151,7 +151,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns the currently operable analysis report.
-     * 
+     *
      * @return
      */
     public final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?> getCurrentAnalysisConfigurationView() {
@@ -160,14 +160,14 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns the list of available analysis associated with this entity centre.
-     * 
+     *
      * @return
      */
     public abstract List<AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?>> getAnalysisList();
 
     /**
      * Adds new analysis specified with name and {@link AnalysisType} instance to this centre.
-     * 
+     *
      * @param name
      * @param analysisType
      */
@@ -175,14 +175,14 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Removes the analysis specified with the name.
-     * 
+     *
      * @param name
      */
     public abstract void removeAnalysis(String name);
 
     /**
      * Returns the {@link IPageHolderManager} for this entity centre.
-     * 
+     *
      * @return
      */
     public final IPageHolderManager getPageHolderManager() {
@@ -191,7 +191,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns action for the button that allows one to set default values.
-     * 
+     *
      * @return
      */
     public final Action getDefaultAction() {
@@ -200,7 +200,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns an action that initiates data loading process.
-     * 
+     *
      * @return
      */
     public final Action getRunAction() {
@@ -209,7 +209,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns an action that initiates data exporting process.
-     * 
+     *
      * @return
      */
     public final Action getExportAction() {
@@ -218,7 +218,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns the {@link Paginator} associated with this entity review.
-     * 
+     *
      * @return
      */
     public final Paginator getPaginator() {
@@ -227,7 +227,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns the progress layer for the review panel.
-     * 
+     *
      * @return
      */
     public final BlockingIndefiniteProgressLayer getReviewProgressLayer() {
@@ -236,7 +236,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns tool bar for entity centre.
-     * 
+     *
      * @return
      */
     public final JToolBar getToolBar() {
@@ -245,7 +245,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns the selection criteria panel.
-     * 
+     *
      * @return
      */
     public final StubCriteriaPanel getCriteriaPanel() {
@@ -254,7 +254,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns the control panel with controls those are used for data loading, exporting and configuring the whole centre.
-     * 
+     *
      * @return
      */
     public final JPanel getActionPanel() {
@@ -263,14 +263,14 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns the review panel of the entity centre. This panel must displays the data loading result.
-     * 
+     *
      * @return
      */
     public abstract JComponent getReviewPanel();
 
     /**
      * Returns the list of selected entities.
-     * 
+     *
      * @return
      */
     public List<T> getSelectedEntities() {
@@ -292,7 +292,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Override this to provide custom tool bar.
-     * 
+     *
      * @return
      */
     protected JToolBar createToolBar() {
@@ -307,7 +307,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Override this to provide custom criteria panel (i.e. panel with controls binded to the entity, that specifies the criteria).
-     * 
+     *
      * @return
      */
     @SuppressWarnings("unchecked")
@@ -321,7 +321,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Creates list of actions for action change button.
-     * 
+     *
      * @return
      */
     protected List<Action> createCustomActionList() {
@@ -330,7 +330,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Set the analysis report that must be operable.
-     * 
+     *
      * @param currentAnalysisConfigurationView
      */
     protected final void setCurrentAnalysisConfigurationView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?> currentAnalysisConfigurationView) {
@@ -341,7 +341,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Layouts the main parts and components of this entity centre.
-     * 
+     *
      */
     protected void layoutComponents(){
 	final List<JComponent> components = new ArrayList<JComponent>();
@@ -375,7 +375,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * A command that creates and opens an entity master frame for the new entity.
-     * 
+     *
      * @return
      */
     protected Command<T> createOpenMasterWithNewCommand() {
@@ -403,7 +403,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
 	    @Override
 	    protected void postAction(final T entity) {
-		masterManager.<T, IEntityDao<T>> showMaster(entity, AbstractEntityCentre.this);
+		masterManager.<T, IEntityDao2<T>> showMaster(entity, AbstractEntityCentre.this);
 		super.postAction(entity);
 	    }
 	};
@@ -417,7 +417,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * A command that creates and opens an entity master frame for the selected in the EGI entity.
-     * 
+     *
      * @return
      */
     protected Command<T> createOpenMasterCommand() {
@@ -445,7 +445,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 	    protected void postAction(final T entity) {
 		super.postAction(entity);
 		if (entity != null) {
-		    masterManager.<T, IEntityDao<T>> showMaster(entity, AbstractEntityCentre.this);
+		    masterManager.<T, IEntityDao2<T>> showMaster(entity, AbstractEntityCentre.this);
 		}
 	    }
 	};
@@ -467,7 +467,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns the {@link EntityGridInspector} of the single analysis that this centre owns.
-     * 
+     *
      * @return
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -483,7 +483,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns action for the button that allows one to set default values.
-     * 
+     *
      * @return
      */
     private Action createDefaultAction(){
@@ -516,7 +516,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns an action that initiates data loading process.
-     * 
+     *
      * @return
      */
     private Action createRunAction(){
@@ -546,7 +546,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns an action that initiates data exporting process.
-     * 
+     *
      * @return
      */
     private Action createExportAction(){
@@ -577,7 +577,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Creates and returns the panel that contains default, run, export and other buttons those operate on criteria or review panel.
-     * 
+     *
      * @return
      */
     private JPanel createControlPanel() {
@@ -613,13 +613,13 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Creates and returns the {@link IPageChangeFeedback} implementation for this entity centre needed
-     * 
+     *
      * @return
      */
     private IPageChangeFeedback createPaginatorFeedback() {
 	return new IPageChangeFeedback() {
 	    @Override
-	    public void feedback(final IPage<?> page) {
+	    public void feedback(final IPage2<?> page) {
 		feedBack.setText(page != null ? page.toString() : "Page 0 of 0");
 	    }
 
@@ -632,7 +632,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Creates property change listener for the currentAnalysisConfigurationView property. This listener selects new analysis set as the current one.
-     * 
+     *
      * @return
      */
     private PropertyChangeListener createCurrentAnalysisChangeListener() {
@@ -651,7 +651,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
     /**
      * Returns the button that may contain custom actions: configure, save, save as, remove and other actions)
      * @param customActionList
-     * 
+     *
      * @return
      */
     private static JComponent createCustomActionButton(final List<Action> customActionList) {
@@ -682,7 +682,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Wraps the action in the {@link ActionChanger} class and returns it. Throws {@link NullPointerException} if the specified action is null.
-     * 
+     *
      * @param action - specified action to be wrapped around {@link ActionChanger}, can not be null.
      * @return
      */
@@ -711,7 +711,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
 
     /**
      * Adds the specified action to the list of actions if the action is not null.
-     * 
+     *
      * @param actionList - specified list of actions to which specified action must be added.
      * @param action - specified action to be added.
      */

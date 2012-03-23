@@ -8,7 +8,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 
 /**
@@ -45,7 +44,7 @@ public class RangePropertyEditor implements IPropertyEditor {
 	    throw new RuntimeException("Entity or propertyType is not exactly the same for two editors that form Range/Boolean editor.");
 	}
 	this.entity = (EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?>)fromEditor.getEntity();
-	final String criteriaParameters = CriteriaReflector.getCriteriaProperty((Class<? extends EntityQueryCriteria>)entity.getType(), fromEditor.getPropertyName());
+	final String criteriaParameters = CriteriaReflector.getCriteriaProperty(entity.getType(), fromEditor.getPropertyName());
 
 	this.propertyName = CriteriaReflector.generateCriteriaPropertyName(entity.getEntityClass(), criteriaParameters, null);
 
@@ -159,7 +158,7 @@ public class RangePropertyEditor implements IPropertyEditor {
     }
 
     @Override
-    public IValueMatcher<?> getValueMatcher() {
+    public IValueMatcher2<?> getValueMatcher() {
 	throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
     }
 

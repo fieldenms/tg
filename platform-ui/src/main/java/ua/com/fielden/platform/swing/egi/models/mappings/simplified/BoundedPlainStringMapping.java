@@ -8,9 +8,9 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JTextField;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory.EditorCase;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase;
 import ua.com.fielden.platform.swing.egi.EditorComponent;
 import ua.com.fielden.platform.swing.egi.models.mappings.AbstractLabelPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.models.mappings.AggregationFunction;
@@ -18,9 +18,9 @@ import ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals;
 
 /**
  * Creates bounded mapping for plain {@link String} property of {@link AbstractEntity} class. This mapping uses {@link JFormattedTextField} as editor.
- * 
+ *
  * @author Yura
- * 
+ *
  * @param <T>
  * @param <K>
  */

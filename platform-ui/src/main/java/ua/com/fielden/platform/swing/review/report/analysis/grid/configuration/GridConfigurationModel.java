@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.analysis.grid.configuration;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
@@ -12,7 +12,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisMod
 public class GridConfigurationModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisConfigurationModel<T, CDTME> {
 
 
-    public GridConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria){
+    public GridConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao2<T>> criteria){
 	super(criteria, "Main details");
     }
 

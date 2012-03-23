@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.swing.components.bind;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -10,7 +7,10 @@ import java.util.Date;
 import org.jdesktop.swingx.calendar.DateUtils;
 import org.junit.Test;
 
+import ua.com.fielden.platform.swing.components.bind.development.BoundedJXDatePicker;
 import ua.com.fielden.platform.swing.components.smart.datepicker.DatePickerLayer;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class BoundedJXDatePickerTest {
 

@@ -4,13 +4,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.model.DefaultEntityProducer;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
@@ -23,9 +23,9 @@ import com.google.inject.Inject;
 
 /**
  * {@link IEntityMasterManager} implementation for TG platform.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EntityMasterManager implements IEntityMasterManager {
 
@@ -33,7 +33,7 @@ public class EntityMasterManager implements IEntityMasterManager {
 
     private final Map<Class<? extends AbstractEntity>, IEntityMasterCache> entityMasterCaches = Collections.synchronizedMap(new HashMap<Class<? extends AbstractEntity>, IEntityMasterCache>());
 
-    private final IValueMatcherFactory vmf;
+    private final IValueMatcherFactory2 vmf;
 
     private final IGlobalDomainTreeManager gdtm;
 
@@ -44,7 +44,7 @@ public class EntityMasterManager implements IEntityMasterManager {
     @Inject
     public EntityMasterManager(//
 	    final EntityFactory entityFactory, //
-	    final IValueMatcherFactory vmf,//
+	    final IValueMatcherFactory2 vmf,//
 	    final IGlobalDomainTreeManager gdtm//
 	    ) {
 	this.entityFactory = entityFactory;
@@ -55,14 +55,14 @@ public class EntityMasterManager implements IEntityMasterManager {
     /**
      * Associates specified {@code entityClass} with the specified {@link IEntityMasterFactory} instance in this manager. When this manager will need to create new master frame for
      * entity with such {@code entityClass} it will use this factory.
-     * 
+     *
      * @param <T>
      * @param <DAO>
      * @param entityClass
      * @param factory
      * @return
      */
-    public <T extends AbstractEntity, DAO extends IEntityDao<T>> EntityMasterManager addFactory(final Class<T> entityClass, final IEntityMasterFactory<T, DAO> factory) {
+    public <T extends AbstractEntity, DAO extends IEntityDao2<T>> EntityMasterManager addFactory(final Class<T> entityClass, final IEntityMasterFactory<T, DAO> factory) {
 	factories.put(entityClass, factory);
 	return this;
     }
@@ -70,7 +70,7 @@ public class EntityMasterManager implements IEntityMasterManager {
     /**
      * Associates specified {@code entityClass} with the specified {@link IEntityProducer} instance. When this manager will need to produce entity of the specified
      * {@code entityClass}, it will use specified {@link IEntityProducer} instance.
-     * 
+     *
      * @param <T>
      * @param entityClass
      * @param entityProducer
@@ -91,7 +91,7 @@ public class EntityMasterManager implements IEntityMasterManager {
 	return cache;
     }
 
-    public <T extends AbstractEntity, DAO extends IEntityDao<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner) {
+    public <T extends AbstractEntity, DAO extends IEntityDao2<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner) {
 	// let's be defencive...
 	if (entity == null) {
 	    throw new IllegalArgumentException("<html>Master cannot be displayed for <b>null</b> domain entity.</html>");
@@ -137,7 +137,7 @@ public class EntityMasterManager implements IEntityMasterManager {
 
     /**
      * Returns {@link IEntityMasterCache} used by this manager.
-     * 
+     *
      * @return
      */
     public Map<Class<? extends AbstractEntity>, IEntityMasterCache> getEntityMasterCache() {

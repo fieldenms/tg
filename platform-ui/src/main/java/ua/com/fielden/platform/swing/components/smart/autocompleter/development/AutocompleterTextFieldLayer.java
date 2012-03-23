@@ -11,21 +11,21 @@ import javax.swing.ListCellRenderer;
 import org.apache.commons.lang.StringUtils;
 import org.jdesktop.jxlayer.JXLayer;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
 
 /**
  * This an autocompleter component, which is a JTextField wrapped into JXLayer. It utilises an instance of ValueMatcher to search for matching values.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
     /**
      * Enumeration that defines autocompletion parameters.
-     * 
+     *
      * @author 01es
-     * 
+     *
      */
     public static enum Settings {
 	CASE_SENSISTIVE {
@@ -47,16 +47,16 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
     private static final long serialVersionUID = 1L;
 
     private final AutocompleterLogic<T> autocompleter;
-    private final IValueMatcher<T> valueMatcher;
+    private final IValueMatcher2<T> valueMatcher;
     private final String valueSeparator;
 
     /**
      * Instantiates case sensitive autocompleter with wild card support. Please note that case sensitivity should be take into account by the valueMatcher.
-     * 
+     *
      */
     public AutocompleterTextFieldLayer(//
 	    final JTextField textComponent,//
-	    final IValueMatcher<T> valueMatcher,//
+	    final IValueMatcher2<T> valueMatcher,//
 	    final Class<T> lookupClass, //
 	    final String expression, //
 	    final ListCellRenderer cellRenderer,//
@@ -67,7 +67,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 
     /**
      * The most comprehensive constructor, which accepts the widest range of autocompleter parameters.
-     * 
+     *
      * @param textComponent
      *            -- used as a holder for selected values
      * @param valueMatcher
@@ -85,7 +85,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
      */
     public AutocompleterTextFieldLayer(//
 	    final JTextField textComponent,//
-	    final IValueMatcher<T> valueMatcher,//
+	    final IValueMatcher2<T> valueMatcher,//
 	    final Class<T> lookupClass, //
 	    final String expression, //
 	    final ListCellRenderer cellRenderer,//
@@ -124,14 +124,14 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 	return autocompleter;
     }
 
-    protected IValueMatcher<T> getValueMatcher() {
+    protected IValueMatcher2<T> getValueMatcher() {
 	return valueMatcher;
     }
 
     /**
      * Retrieves actual values based on the typed/selected text using the provided value matcher. The logic is as follows: if autocompleter supports wildcards then replace all
      * <code>*</code> with <code>%</code>; if there was no <code>*</code> then use value as is regardless of the whildcard support.
-     * 
+     *
      * @return
      */
     public List<T> values() {
@@ -140,7 +140,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 
     /**
      * Returns a list of values for the given matching value.
-     * 
+     *
      * @return
      */
     public List<T> values(final String forValue) {
@@ -157,7 +157,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 
     /**
      * Returns <code>true</code> if autocompleter supports entry of multiple values.
-     * 
+     *
      * @return
      */
     public boolean isMulti() {

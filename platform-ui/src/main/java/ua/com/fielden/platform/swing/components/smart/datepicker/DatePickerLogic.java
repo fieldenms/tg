@@ -9,7 +9,7 @@ import java.util.Locale;
 
 import javax.swing.JTextField;
 
-import ua.com.fielden.platform.swing.components.smart.State;
+import ua.com.fielden.platform.swing.components.smart.development.State;
 
 public class DatePickerLogic extends AbstractMonthViewIntelliHints implements FocusListener {
 

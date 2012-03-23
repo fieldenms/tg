@@ -3,7 +3,7 @@ package ua.com.fielden.platform.swing.ei.editors.development;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
@@ -12,12 +12,11 @@ import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.equery.fetch;
+import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
-import ua.com.fielden.platform.swing.ei.editors.LabelAndTooltipExtractor;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationModel;
@@ -28,12 +27,12 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
     /**
      * Creates standard {@link EntityPropertyEditorWithLocator} editor with entity locator for entity centre.
-     * 
+     *
      * @return
      */
     public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, final String propertyName, final ICriteriaGenerator criteriaGenerator){
 	final String criteriaPropertyName = CriteriaReflector.getCriteriaProperty(criteria.getClass(), propertyName);
-	final IValueMatcher<?> valueMatcher = criteria.getValueMatcher(propertyName);
+	final IValueMatcher2<?> valueMatcher = criteria.getValueMatcher(propertyName);
 	final MetaProperty metaProp = criteria.getProperty(propertyName);
 
 	return createEntityPropertyEditorWithLocator(//
@@ -48,7 +47,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 		LabelAndTooltipExtractor.createTooltip(metaProp.getDesc()));
     }
 
-    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForMaster(final AbstractEntity<?> entity, final String propertyName, final ILocatorManager locatorManager, final ICriteriaGenerator criteriaGenerator, final IValueMatcher<?> valueMatcher){
+    public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForMaster(final AbstractEntity<?> entity, final String propertyName, final ILocatorManager locatorManager, final ICriteriaGenerator criteriaGenerator, final IValueMatcher2<?> valueMatcher){
 	//createEditor(entity, propertyName, property.getType(), "", property.getDesc(), entity.getEntityFactory(), entityMasterFactory, vmf, daoFactory, locatorController, locatorRetriever);
 	final MetaProperty metaProp = entity.getProperty(propertyName);
 	final String toolTip = metaProp.getDesc();
@@ -71,7 +70,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	    final String locatorName, //
 	    final ILocatorManager locatorManager, //
 	    final ICriteriaGenerator criteriaGenerator, //
-	    final IValueMatcher<?> valueMatcher, //
+	    final IValueMatcher2<?> valueMatcher, //
 	    final String caption, //
 	    final String toolTip){
 	final MetaProperty metaProp = entity.getProperty(propertyName);
@@ -108,7 +107,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public EntityPropertyEditorWithLocator(final AbstractEntity<?> entity, final String propertyName, final LocatorConfigurationModel locatorConfigurationModel, final Class<?> elementType, final IValueMatcher<?> valueMatcher, final String caption, final String toolTip) {
+    public EntityPropertyEditorWithLocator(final AbstractEntity<?> entity, final String propertyName, final LocatorConfigurationModel locatorConfigurationModel, final Class<?> elementType, final IValueMatcher2<?> valueMatcher, final String caption, final String toolTip) {
 	super(entity, propertyName, new EntityLocatorValueMatcher(valueMatcher, locatorConfigurationModel.locatorManager, locatorConfigurationModel.rootType, locatorConfigurationModel.name));
 	getValueMatcher().setBindedEntity(entity);
 	editor = createEditorWithLocator(entity, propertyName, locatorConfigurationModel, elementType,//
@@ -155,9 +154,9 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	return ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, locatorConfigurationModel, entityType, getValueMatcher(), "key", "desc", caption, isSingle ? null : ",", toolTip, stringBinding);
     }
 
-    public static class EntityLocatorValueMatcher<T extends AbstractEntity, R extends AbstractEntity> implements IValueMatcher<T>{
+    public static class EntityLocatorValueMatcher<T extends AbstractEntity, R extends AbstractEntity> implements IValueMatcher2<T>{
 
-	private final IValueMatcher<T> autocompleterValueMatcher;
+	private final IValueMatcher2<T> autocompleterValueMatcher;
 
 	private final ILocatorManager locatorManager;
 
@@ -170,7 +169,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	private AbstractEntity<?> bindedEntity;
 
 	public EntityLocatorValueMatcher(//
-		final IValueMatcher<T> autocompleterValueMatcher,//
+		final IValueMatcher2<T> autocompleterValueMatcher,//
 		final ILocatorManager locatorManager,//
 		//	final Class<T> entityType,//
 		final Class<R> rootType,//
@@ -191,12 +190,12 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	}
 
 	@Override
-	public fetch<?> getFetchModel() {
+	public <FT extends AbstractEntity<?>> fetch<FT> getFetchModel() {
 	    return autocompleterValueMatcher.getFetchModel();
 	}
 
 	@Override
-	public void setFetchModel(final fetch<?> fetchModel) {
+	public <FT extends AbstractEntity<?>> void setFetchModel(final fetch<FT> fetchModel) {
 	    autocompleterValueMatcher.setFetchModel(fetchModel);
 	}
 

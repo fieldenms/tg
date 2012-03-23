@@ -8,7 +8,7 @@ import javax.swing.JOptionPane;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -18,7 +18,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.actions.Command;
-import ua.com.fielden.platform.swing.ei.EntityInspectorModel;
+import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
@@ -34,7 +34,7 @@ import ua.com.fielden.platform.swing.savereport.SaveReportOptions;
 
 /**
  * Model for entity centre. This model allows one to configure and view report.
- * 
+ *
  * @author TG Team
  *
  * @param <DTME>
@@ -57,7 +57,7 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 
     /**
      * Initiates this {@link CentreConfigurationModel} with instance of {@link IGlobalDomainTreeManager}, entity type and {@link EntityFactory}.
-     * 
+     *
      * @param entityType - the entity type for which this {@link CentreConfigurationModel} will be created.
      * @param gdtm - Associated {@link GlobalDomainTreeManager} instance.
      * @param entityFactory - {@link EntityFactory} needed for wizard model creation.
@@ -93,7 +93,7 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 
     /**
      * Registers the {@link ICentreConfigurationEventListener} to listen the centre configuration event.
-     * 
+     *
      * @param l
      */
     public void addCentreConfigurationEventListener(final ICentreConfigurationEventListener l){
@@ -102,7 +102,7 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 
     /**
      * Removes the specified {@link ICentreConfigurationEventListener} from the list of registered listeners.
-     * 
+     *
      * @param l
      */
     public void removeCentreConfigurationEventListener(final ICentreConfigurationEventListener l){
@@ -111,7 +111,7 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 
     /**
      * Returns value that indicates whether this configuration model can be close or not.
-     * 
+     *
      * @return
      */
     final boolean canClose() {
@@ -189,12 +189,12 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 
     /**
      * Creates the {@link EntityInspectorModel} for the specified criteria
-     * 
+     *
      * @param criteria
      * @return
      */
-    private EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao<T>> criteria){
-	return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao<T>>>(criteria,//
+    private EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao2<T>>> createInspectorModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao2<T>> criteria){
+	return new EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer,T,IEntityDao2<T>>>(criteria,//
 		CentrePropertyBinder.<T>createCentrePropertyBinder(criteriaGenerator));
     }
 
@@ -319,9 +319,9 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 
     /**
      * Iterates through the list of {@link ICentreConfigurationEventListener} listeners and delegates the event to every listener.
-     * 
+     *
      * @param event
-     * 
+     *
      * @return
      */
     private boolean fireCentreConfigurationEvent(final CentreConfigurationEvent event){
@@ -334,7 +334,7 @@ public class CentreConfigurationModel<T extends AbstractEntity> extends Abstract
 
     /**
      * Represents the centre closing options;
-     * 
+     *
      * @author TG Team
      *
      */

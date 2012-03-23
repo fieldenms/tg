@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorM
 
 public class PivotAnalysisConfigurationModel<T extends AbstractEntity> extends AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
-    public PivotAnalysisConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final String name) {
+    public PivotAnalysisConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> criteria, final String name) {
 	super(criteria, name);
     }
 

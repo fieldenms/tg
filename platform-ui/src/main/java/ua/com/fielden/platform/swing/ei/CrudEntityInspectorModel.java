@@ -6,31 +6,32 @@ import java.awt.event.KeyEvent;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.Command;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyBinder;
+import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyBinder;
 
 /**
  * A model for {@link EntityInspector}.
- * 
+ *
  * Provides three actions -- save, cancel (reload), delete.
  * <p>
  * <p>
  * <b>IMPORTANT:</b> EI has a mutable state, which is an entity instance represented by EI. The originally passed into the EI constructor reference to entity instance gets changed.
  * </p>
  * <p>
- * 
+ *
  * TODO provide support for post action events such as afterSave, afterCancel etc.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 @SuppressWarnings("rawtypes")
 public class CrudEntityInspectorModel<T extends AbstractEntity> extends EntityInspectorModel<T> {
 
-    private final IEntityDao<T> dao;
+    private final IEntityDao2<T> dao;
 
     private final Action save;
     private final Action cancel;
@@ -39,7 +40,7 @@ public class CrudEntityInspectorModel<T extends AbstractEntity> extends EntityIn
 
     /**
      * EI model constructor.
-     * 
+     *
      * @param entity
      *            -- an entity instance that is being represented by EI, which can be a brand new instance not yet persisted.
      * @param dao
@@ -47,7 +48,7 @@ public class CrudEntityInspectorModel<T extends AbstractEntity> extends EntityIn
      * @param valueMatcherFactory
      *            -- required to obtain value matchers for autocompleter-based editors used for properties of entity types.
      */
-    public CrudEntityInspectorModel(final T entity, final IPropertyBinder binder, final IEntityDao<T> dao, final IAfterActions afterActions) {
+    public CrudEntityInspectorModel(final T entity, final IPropertyBinder binder, final IEntityDao2<T> dao, final IAfterActions afterActions) {
 	super(entity, binder);
 	this.dao = dao;
 	this.afterActions = afterActions;
@@ -59,12 +60,12 @@ public class CrudEntityInspectorModel<T extends AbstractEntity> extends EntityIn
 
     /**
      * Similar to the above, but with no {@link IAfterActions} instance.
-     * 
+     *
      * @param entity
      * @param binder
      * @param dao
      */
-    public CrudEntityInspectorModel(final T entity, final IPropertyBinder binder, final IEntityDao<T> dao) {
+    public CrudEntityInspectorModel(final T entity, final IPropertyBinder binder, final IEntityDao2<T> dao) {
 	this(entity, binder, dao, null);
     }
 
@@ -169,9 +170,9 @@ public class CrudEntityInspectorModel<T extends AbstractEntity> extends EntityIn
 
     /**
      * Represents the actions that would invoke after SUCCESSFUL save/cancel/delete action.
-     * 
+     *
      * @author Jhou
-     * 
+     *
      */
     public interface IAfterActions {
 	/**
@@ -190,7 +191,7 @@ public class CrudEntityInspectorModel<T extends AbstractEntity> extends EntityIn
 	void afterDelete();
     }
 
-    public IEntityDao<T> getDao() {
+    public IEntityDao2<T> getDao() {
 	return dao;
     }
 

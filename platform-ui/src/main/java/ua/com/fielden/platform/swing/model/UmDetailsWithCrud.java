@@ -2,24 +2,24 @@ package ua.com.fielden.platform.swing.model;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.IMasterDetailsDao;
+import ua.com.fielden.platform.dao2.IMasterDetailsDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 
 /**
  * This is a UI model, which serves as the basis for implementing UI models to manage one-to-many and one-to-one associations representing aggregations. The implementation enforces
  * that this kind of model must be lazy.
- * 
+ *
  * @author TG Team
- * 
+ *
  * @param <M>
  * @param <D>
  * @param <C>
  */
-public abstract class UmDetailsWithCrud<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao<M, D>> extends UmDetails<M, D, C> {
+public abstract class UmDetailsWithCrud<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao2<M, D>> extends UmDetails<M, D, C> {
 
     /**
      * Represents a current managed entity instance.
@@ -34,7 +34,7 @@ public abstract class UmDetailsWithCrud<M extends AbstractEntity, D extends Abst
      * A factory method for creation of new entity instances.
      * <p>
      * This method should be implemented in descendant models since there is no possibility to provide a common implementation due to the nature of master/details relationship.
-     * 
+     *
      * @return a new entity instance
      */
     protected abstract D newEntity(final EntityFactory factory);

@@ -7,16 +7,16 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
-import ua.com.fielden.platform.dao.IMasterDetailsDao;
+import ua.com.fielden.platform.dao2.IMasterDetailsDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
+import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
-import ua.com.fielden.platform.swing.components.bind.Binder;
+import ua.com.fielden.platform.swing.components.bind.development.Binder;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 
 /**
  * This is a CRUD UI model representing one-to-one master/details association.
@@ -27,7 +27,7 @@ import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
  * @param <D>
  * @param <C>
  */
-public abstract class UmDetailsWithCrudOne<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao<M, D>> extends UmDetailsWithCrud<M, D, C> {
+public abstract class UmDetailsWithCrudOne<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao2<M, D>> extends UmDetailsWithCrud<M, D, C> {
 
     protected UmDetailsWithCrudOne(final M entity, final C controller, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm) {
 	super(entity, controller, propertyBinder, fm, true);

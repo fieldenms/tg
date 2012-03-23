@@ -12,11 +12,6 @@ import ua.com.fielden.platform.reportquery.IDistributedProperty;
 import ua.com.fielden.platform.serialisation.impl.DefaultSerialisationClassProvider;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.models.mappings.simplified.DefaultTooltipGetter;
-import ua.com.fielden.platform.swing.review.AnalysisPersistentObject;
-import ua.com.fielden.platform.swing.review.DynamicCriteriaPersistentObjectUi;
-import ua.com.fielden.platform.swing.review.LifecycleAnalysisPersistentObject;
-import ua.com.fielden.platform.swing.review.LocatorPersistentObject;
-import ua.com.fielden.platform.swing.review.PropertyColumnMappingsPersistentObject;
 import ua.com.fielden.platform.swing.review.PropertyPersistentObject;
 import ua.com.fielden.platform.types.Ordering;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
@@ -30,9 +25,6 @@ public class DefaultUiSerialisationClassProvider extends DefaultSerialisationCla
     public DefaultUiSerialisationClassProvider(final IApplicationSettings settings) throws Exception {
 	super(settings);
 
-	types.add(DynamicCriteriaPersistentObjectUi.class);
-	types.add(LocatorPersistentObject.class);
-	types.add(PropertyColumnMappingsPersistentObject.class);
 	types.addAll(ClassesRetriever.getAllNonAbstractClassesInPackageDerivedFrom("../platform-ui/target/classes", "ua.com.fielden.platform.swing.egi", AbstractPropertyColumnMapping.class));
 	types.add(PropertyPersistentObject.class);
 	types.addAll(ClassesRetriever.getAllNonAbstractClassesInPackageDerivedFrom("../platform-pojo-bl/target/classes", "ua.com.fielden.platform.utils", Converter.class));
@@ -41,8 +33,6 @@ public class DefaultUiSerialisationClassProvider extends DefaultSerialisationCla
 	types.add(SortKey.class);
 	types.add(SortOrder.class);
 	types.add(boolean[].class);
-	types.add(LifecycleAnalysisPersistentObject.class);
-	types.add(AnalysisPersistentObject.class);
 	types.addAll(ClassesRetriever.getAllNonAbstractClassesInPackageDerivedFrom("../platform-pojo-bl/target/classes", "ua.com.fielden.platform.reportquery", IDistributedProperty.class));
 	types.add(Ordering.class);
 	types.add(AnalysisPropertyAggregationFunction.class);

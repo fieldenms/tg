@@ -4,7 +4,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -17,7 +17,7 @@ import ua.com.fielden.platform.swing.review.report.interfaces.IAnalysisConfigura
 
 public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractConfigurationModel {
 
-    private final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria;
+    private final EntityQueryCriteria<CDTME, T, IEntityDao2<T>> criteria;
 
     /**
      * The page holder for this analysis.
@@ -30,7 +30,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
      * <li> save - saves the analysis configuration.</li>
      * <li> remove - removes the analysis configuration.</li>
      * </ul>
-     * 
+     *
      */
     private final Action save, remove;
 
@@ -39,7 +39,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
      */
     private final String name;
 
-    public AbstractAnalysisConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final String name){
+    public AbstractAnalysisConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao2<T>> criteria, final String name){
 	this.criteria = criteria;
 	this.name = name;
 	this.pageHolder = new PageHolder();
@@ -63,7 +63,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
 
     /**
      * Returns the {@link PageHolder} instance for this analysis configuration view.
-     * 
+     *
      * @return
      */
     public PageHolder getPageHolder() {
@@ -72,16 +72,16 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
 
     /**
      * Returns the centres {@link EntityQueryCriteria} instance.
-     * 
+     *
      * @return
      */
-    public EntityQueryCriteria<CDTME, T, IEntityDao<T>> getCriteria() {
+    public EntityQueryCriteria<CDTME, T, IEntityDao2<T>> getCriteria() {
 	return criteria;
     }
 
     /**
      * Returns the name for this analysis.
-     * 
+     *
      * @return
      */
     public String getName() {
@@ -90,7 +90,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
 
     /**
      * Registers the {@link IAnalysisConfigurationEventListener} to listen the analysis configuration event.
-     * 
+     *
      * @param l
      */
     public void addAnalysisConfigurationEventListener(final IAnalysisConfigurationEventListener l){
@@ -99,7 +99,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
 
     /**
      * Removes the specified {@link IAnalysisConfigurationEventListener} from the list of registered listeners.
-     * 
+     *
      * @param l
      */
     public void removeCentreConfigurationEventListener(final IAnalysisConfigurationEventListener l){
@@ -178,9 +178,9 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
 
     /**
      * Iterates through the list of {@link IAnalysisConfigurationEventListener} listeners and delegates the event to every listener.
-     * 
+     *
      * @param event
-     * 
+     *
      * @return
      */
     private boolean fireAnalysisConfigurationEvent(final AnalysisConfigurationEvent event){

@@ -10,18 +10,18 @@ import java.util.SortedSet;
 
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.swing.ei.editors.CollectionalPropertyEditor;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.swing.ei.editors.development.CollectionalPropertyEditor;
 import ua.com.fielden.platform.swing.ei.editors.development.EntityPropertyEditor;
 import ua.com.fielden.platform.swing.ei.editors.development.EntityPropertyEditorWithLocator;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.ei.editors.development.OrdinaryPropertyEditor;
 import ua.com.fielden.platform.swing.review.report.centre.binder.PropertyBinderEnhancer;
 
@@ -33,7 +33,7 @@ import ua.com.fielden.platform.swing.review.report.centre.binder.PropertyBinderE
  */
 public class MasterPropertyBinder<T extends AbstractEntity> implements ILightweightPropertyBinder<T> {
 
-    private final IValueMatcherFactory valueMatcherFactory;
+    private final IValueMatcherFactory2 valueMatcherFactory;
     private final List<String> propertiesToIgnor = new ArrayList<String>();
     private final PropertyBinderType propertyBinderType;
     //private final IEntityMasterManager entityMasterFactory;
@@ -43,15 +43,15 @@ public class MasterPropertyBinder<T extends AbstractEntity> implements ILightwei
 
     private final Logger logger = Logger.getLogger(getClass());
 
-    public static <T extends AbstractEntity> MasterPropertyBinder<T> createPropertyBinderWithLocatorSupport(final IValueMatcherFactory valueMatcherFactory, final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, final String... propetiesToIgnor){
+    public static <T extends AbstractEntity> MasterPropertyBinder<T> createPropertyBinderWithLocatorSupport(final IValueMatcherFactory2 valueMatcherFactory, final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, final String... propetiesToIgnor){
 	return new MasterPropertyBinder<T>(PropertyBinderType.WITH_LOCATOR, valueMatcherFactory, masterManager, criteriaGenerator, propetiesToIgnor);
     }
 
-    public static <T extends AbstractEntity> MasterPropertyBinder<T> createPropertyBinderWithoutLocatorSupport(final IValueMatcherFactory valueMatcherFactory, final String... propetiesToIgnor){
+    public static <T extends AbstractEntity> MasterPropertyBinder<T> createPropertyBinderWithoutLocatorSupport(final IValueMatcherFactory2 valueMatcherFactory, final String... propetiesToIgnor){
 	return new MasterPropertyBinder<T>(PropertyBinderType.WITHOUT_LOCATOR, valueMatcherFactory, null, null, propetiesToIgnor);
     }
 
-    private MasterPropertyBinder(final PropertyBinderType propertyBinderType, final IValueMatcherFactory valueMatcherFactory, final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, /*final IEntityMasterManager entityMasterFactory,*/ final String... propetiesToIgnor) {
+    private MasterPropertyBinder(final PropertyBinderType propertyBinderType, final IValueMatcherFactory2 valueMatcherFactory, final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator, /*final IEntityMasterManager entityMasterFactory,*/ final String... propetiesToIgnor) {
 	this.propertyBinderType = propertyBinderType;
 	this.valueMatcherFactory = valueMatcherFactory;
 	this.masterManager = masterManager;
@@ -100,7 +100,7 @@ public class MasterPropertyBinder<T extends AbstractEntity> implements ILightwei
 	return new CollectionalPropertyEditor(entity, name);
     }
 
-    protected IPropertyEditor createEntityPropertyEditor(final T entity, final String name, final IValueMatcher<?> valueMatcher) {
+    protected IPropertyEditor createEntityPropertyEditor(final T entity, final String name, final IValueMatcher2<?> valueMatcher) {
 	if(PropertyBinderType.WITH_LOCATOR == propertyBinderType){
 	    return EntityPropertyEditorWithLocator.createEntityPropertyEditorWithLocatorForMaster(entity, name, masterManager, criteriaGenerator, valueMatcherFactory.getValueMatcher(entity.getType(), name));
 	}else if(PropertyBinderType.WITHOUT_LOCATOR == propertyBinderType)

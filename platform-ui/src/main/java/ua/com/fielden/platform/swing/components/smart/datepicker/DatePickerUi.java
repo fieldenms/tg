@@ -14,9 +14,9 @@ import javax.swing.border.Border;
 
 import org.jdesktop.swingx.util.Contract;
 
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory.SpecialFormattedField;
-import ua.com.fielden.platform.swing.components.smart.SmartComponentUi;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.SpecialFormattedField;
+import ua.com.fielden.platform.swing.components.smart.development.SmartComponentUi;
 
 /**
  * Implements Ui logic for date picker layer.

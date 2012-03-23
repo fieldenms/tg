@@ -13,7 +13,8 @@ import javax.swing.text.JTextComponent;
 import javax.swing.text.NavigationFilter;
 import javax.swing.text.Position;
 
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory.SpecialFormattedField;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.SpecialFormattedField;
+
 
 /**
  * <code>DefaultFormatter</code> formats aribtrary objects. Formatting is done by invoking the <code>toString</code> method. In order to convert the value back to a String, your
@@ -26,9 +27,9 @@ import ua.com.fielden.platform.swing.components.bind.ComponentFactory.SpecialFor
  * <strong>Warning:</strong> Serialized objects of this class will not be compatible with future Swing releases. The current serialization support is appropriate for short term
  * storage or RMI between applications running the same version of Swing. As of 1.4, support for long term storage of all JavaBeans<sup><font size="-2">TM</font></sup> has been
  * added to the <code>java.beans</code> package. Please see {@link java.beans.XMLEncoder}.
- * 
+ *
  * @see javax.swing.JFormattedTextField.AbstractFormatter
- * 
+ *
  * @version 1.14 11/17/05
  * @since 1.4
  */
@@ -74,7 +75,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * <p>
      * While this is a public method, this is typically only useful for subclassers of <code>JFormattedTextField</code>. <code>JFormattedTextField</code> will invoke this method at
      * the appropriate times when the value changes, or its internal state changes.
-     * 
+     *
      * @param ftf
      *            JFormattedTextField to format for, may be null indicating uninstall from current JFormattedTextField.
      */
@@ -89,7 +90,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * On the other hand, if this is false than the <code>DefaultFormatter</code> does not publish edits back to the <code>JFormattedTextField</code>. As such, the only time the
      * value of the <code>JFormattedTextField</code> will change is when <code>commitEdit</code> is invoked on <code>JFormattedTextField</code>, typically when enter is pressed or
      * focus leaves the <code>JFormattedTextField</code>.
-     * 
+     *
      * @param commit
      *            Used to indicate when edits are commited back to the JTextComponent
      */
@@ -99,7 +100,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
 
     /**
      * Returns when edits are published back to the <code>JFormattedTextField</code>.
-     * 
+     *
      * @return true if edits are commited after evey valid edit
      */
     public boolean getCommitsOnValidEdit() {
@@ -108,7 +109,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
 
     /**
      * Configures the behavior when inserting characters. If <code>overwriteMode</code> is true (the default), new characters overwrite existing characters in the model.
-     * 
+     *
      * @param overwriteMode
      *            Indicates if overwrite or overstrike mode is used
      */
@@ -118,7 +119,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
 
     /**
      * Returns the behavior when inserting characters.
-     * 
+     *
      * @return true if newly inserted characters overwrite existing characters
      */
     public boolean getOverwriteMode() {
@@ -128,7 +129,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
     /**
      * Sets whether or not the value being edited is allowed to be invalid for a length of time (that is, <code>stringToValue</code> throws a <code>ParseException</code>). It is
      * often convenient to allow the user to temporarily input an invalid value.
-     * 
+     *
      * @param allowsInvalid
      *            Used to indicate if the edited value must always be valid
      */
@@ -138,7 +139,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
 
     /**
      * Returns whether or not the value being edited is allowed to be invalid for a length of time.
-     * 
+     *
      * @return false if the edited value must always be valid
      */
     public boolean getAllowsInvalid() {
@@ -147,7 +148,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
 
     /**
      * Sets that class that is used to create new Objects. If the passed in class does not have a single argument constructor that takes a String, String values will be used.
-     * 
+     *
      * @param valueClass
      *            Class used to construct return value from stringToValue
      */
@@ -157,7 +158,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
 
     /**
      * Returns that class that is used to create new Objects.
-     * 
+     *
      * @return Class used to constuct return value from stringToValue
      */
     public Class<?> getValueClass() {
@@ -168,7 +169,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
      * Converts the passed in String into an instance of <code>getValueClass</code> by way of the constructor that takes a String argument. If <code>getValueClass</code> returns
      * null, the Class of the current value in the <code>JFormattedTextField</code> will be used. If this is null, a String will be returned. If the constructor thows an exception,
      * a <code>ParseException</code> will be thrown. If there is no single argument String constructor, <code>string</code> will be returned.
-     * 
+     *
      * @throws ParseException
      *             if there is an error in the conversion
      * @param string
@@ -210,7 +211,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
 
     /**
      * Converts the passed in Object into a String by way of the <code>toString</code> method.
-     * 
+     *
      * @throws ParseException
      *             if there is an error in the conversion
      * @param value
@@ -227,7 +228,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
 
     /**
      * Returns the <code>DocumentFilter</code> used to restrict the characters that can be input into the <code>JFormattedTextField</code>.
-     * 
+     *
      * @return DocumentFilter to restrict edits
      */
     @Override
@@ -240,7 +241,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
 
     /**
      * Returns the <code>NavigationFilter</code> used to restrict where the cursor can be placed.
-     * 
+     *
      * @return NavigationFilter to restrict navigation
      */
     @Override
@@ -253,7 +254,7 @@ public class DefaultFormatter1 extends JFormattedTextField.AbstractFormatter imp
 
     /**
      * Creates a copy of the DefaultFormatter.
-     * 
+     *
      * @return copy of the DefaultFormatter
      */
     @Override

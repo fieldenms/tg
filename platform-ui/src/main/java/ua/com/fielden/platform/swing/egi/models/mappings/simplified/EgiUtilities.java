@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.swing.egi.models.mappings.simplified;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 
 /**
  * Class, holding static utility methods for EGI-related classes.
- * 
+ *
  * @author yura
- * 
+ *
  */
 public class EgiUtilities {
 

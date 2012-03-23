@@ -14,11 +14,6 @@ import ua.com.fielden.platform.reportquery.IDistributedProperty;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.models.mappings.simplified.DefaultTooltipGetter;
-import ua.com.fielden.platform.swing.review.AnalysisPersistentObject;
-import ua.com.fielden.platform.swing.review.DynamicCriteriaPersistentObjectUi;
-import ua.com.fielden.platform.swing.review.LifecycleAnalysisPersistentObject;
-import ua.com.fielden.platform.swing.review.LocatorPersistentObject;
-import ua.com.fielden.platform.swing.review.PropertyColumnMappingsPersistentObject;
 import ua.com.fielden.platform.swing.review.PropertyPersistentObject;
 import ua.com.fielden.platform.types.Ordering;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
@@ -32,9 +27,6 @@ public class DynamicCriteriaSerialisationClassProvider implements ISerialisation
 
     public DynamicCriteriaSerialisationClassProvider() {
 	try {
-	    types.add(DynamicCriteriaPersistentObjectUi.class);
-	    types.add(LocatorPersistentObject.class);
-	    types.add(PropertyColumnMappingsPersistentObject.class);
 	    types.addAll(ClassesRetriever.getAllNonAbstractClassesInPackageDerivedFrom("../platform-ui/target/classes", "ua.com.fielden.platform.swing.egi", AbstractPropertyColumnMapping.class));
 	    types.add(PropertyPersistentObject.class);
 	    types.addAll(ClassesRetriever.getAllNonAbstractClassesInPackageDerivedFrom("../platform-pojo-bl/target/classes", "ua.com.fielden.platform.utils", Converter.class));
@@ -43,8 +35,6 @@ public class DynamicCriteriaSerialisationClassProvider implements ISerialisation
 	    types.add(SortKey.class);
 	    types.add(SortOrder.class);
 	    types.add(boolean[].class);
-	    types.add(LifecycleAnalysisPersistentObject.class);
-	    types.add(AnalysisPersistentObject.class);
 	    types.addAll(ClassesRetriever.getAllNonAbstractClassesInPackageDerivedFrom("../platform-pojo-bl/target/classes", "ua.com.fielden.platform.reportquery", IDistributedProperty.class));
 	    types.add(CategoryForTesting.class);
 	    types.add(Ordering.class);

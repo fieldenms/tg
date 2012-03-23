@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.swing.model;
 
-import ua.com.fielden.platform.dao.IMasterDetailsDao;
+import ua.com.fielden.platform.dao2.IMasterDetailsDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 
 /**
  * This is a UI model based on {@link UModel}, which enforces master/details relationship.
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
  * @param <C>
  *            -- controller type.
  */
-public abstract class UmDetails<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao<M, D>> extends UModel<M, D, C> {
+public abstract class UmDetails<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao2<M, D>> extends UModel<M, D, C> {
     /** Represents an entity model used for details entity fetching and initialisation. */
     private final fetch<D> fm;
 

@@ -12,7 +12,8 @@ import javax.swing.text.BadLocationException;
 
 import org.jdesktop.swingx.calendar.DateUtils;
 
-import ua.com.fielden.platform.swing.components.bind.BoundedJXDatePicker;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedJXDatePicker;
+
 
 /**
  * This is EmptyDateFormatter descendant overridden in order to support "time portion" independence from entire date. "Independence" means that when we manipulate time portion

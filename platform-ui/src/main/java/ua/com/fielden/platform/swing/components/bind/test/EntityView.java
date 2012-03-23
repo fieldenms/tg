@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.components.bind.test;
 
-import static ua.com.fielden.platform.swing.components.bind.ComponentFactory.EditorCase.MIXED_CASE;
-
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -32,20 +30,20 @@ import net.miginfocom.swing.MigLayout;
 import org.jdesktop.swingx.VerticalLayout;
 import org.joda.time.DateTime;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher2;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.swing.components.bind.Binder;
-import ua.com.fielden.platform.swing.components.bind.BoundedJXDatePicker;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.BufferedPropertyWrapper;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory.ReadOnlyLabel;
+import ua.com.fielden.platform.swing.components.bind.development.Binder;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedJXDatePicker;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.BufferedPropertyWrapper;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.ReadOnlyLabel;
 import ua.com.fielden.platform.swing.components.bind.test.Entity.Strategy;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
-import ua.com.fielden.platform.swing.components.smart.autocompleter.AutocompleterTextFieldLayer;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
 import ua.com.fielden.platform.swing.components.smart.datepicker.DatePickerLayer;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
@@ -53,6 +51,8 @@ import ua.com.fielden.platform.types.Money;
 
 import com.jgoodies.binding.value.Trigger;
 import com.jidesoft.plaf.LookAndFeelFactory;
+
+import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.MIXED_CASE;
 
 /**
  * This is the Entity view representation with 3 types of the components (used for testing and demo purposes) : CommitOnKeyTyped, CommitOnFocusLost, CommitOnTriggerCommit. Missing
@@ -326,7 +326,7 @@ public class EntityView {
 	    panel.add(createPropertyPanel(commitOnValidRadioButtonOKT, null, commitOnValidRadioButtonOTC, new JLabel("")));
 
 	    final String keyExpression = "key";
-	    final IValueMatcher<DemoAbstractEntity> matcher = new PojoValueMatcher<DemoAbstractEntity>(Arrays.asList(acceptableValues), keyExpression, 10) {
+	    final IValueMatcher2<DemoAbstractEntity> matcher = new PojoValueMatcher2<DemoAbstractEntity>(Arrays.asList(acceptableValues), keyExpression, 10) {
 		@Override
 		public List<DemoAbstractEntity> findMatches(final String value) {
 		    try {

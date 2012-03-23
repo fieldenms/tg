@@ -10,13 +10,13 @@ import java.util.Map;
 
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
@@ -30,7 +30,7 @@ public class PivotAnalysisModel<T extends AbstractEntity> extends AbstractAnalys
 
     private final PivotTreeTableModel pivotModel;
 
-    public PivotAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IPivotDomainTreeManager adtm, final PageHolder pageHolder) {
+    public PivotAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> criteria, final IPivotDomainTreeManager adtm, final PageHolder pageHolder) {
 	super(configurationModel, criteria, adtm, pageHolder);
 	pivotModel = new PivotTreeTableModelEx();
     }
@@ -203,7 +203,7 @@ public class PivotAnalysisModel<T extends AbstractEntity> extends AbstractAnalys
 
 	    /**
 	     * Sort children of this node, using comparator defined in the model.
-	     * 
+	     *
 	     * @param treeTableSorter
 	     */
 	    @SuppressWarnings("unchecked")

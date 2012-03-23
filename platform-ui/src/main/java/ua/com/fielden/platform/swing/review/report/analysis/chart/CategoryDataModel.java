@@ -2,16 +2,16 @@ package ua.com.fielden.platform.swing.review.report.analysis.chart;
 
 import java.util.List;
 
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
 
 //TODO this class should be removed later on.
 class CategoryDataModel {
 
-    private final ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage<EntityAggregates>> dataProvider;
+    private final ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage2<EntityAggregates>> dataProvider;
 
-    public CategoryDataModel(final ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage<EntityAggregates>> dataProvider) {
+    public CategoryDataModel(final ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage2<EntityAggregates>> dataProvider) {
 	this.dataProvider = dataProvider;
     }
 

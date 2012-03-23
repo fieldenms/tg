@@ -3,21 +3,20 @@
  */
 package ua.com.fielden.platform.swing.egi.models.mappings.simplified;
 
-import static ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals.NO_TOTALS;
-
 import javax.swing.JTextField;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.components.bind.BoundedValidationLayer;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory;
-import ua.com.fielden.platform.swing.components.bind.ComponentFactory.EditorCase;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
+import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase;
 import ua.com.fielden.platform.swing.egi.EditorComponent;
+import static ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals.NO_TOTALS;
 
 /**
  * Not tested
- * 
+ *
  * @author Yura
- * 
+ *
  * @param <T>
  */
 @SuppressWarnings("unchecked")

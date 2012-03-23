@@ -7,18 +7,18 @@ import java.util.Map;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.fetch;
+import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
-import ua.com.fielden.platform.swing.components.bind.Binder;
+import ua.com.fielden.platform.swing.components.bind.development.Binder;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
-import ua.com.fielden.platform.swing.ei.editors.ILightweightPropertyBinder;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
+import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
+import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.swing.view.IEntityMasterCache;
 
@@ -38,7 +38,7 @@ import ua.com.fielden.platform.swing.view.IEntityMasterCache;
  * @param <C>
  *            -- controller type.
  */
-public abstract class UmMasterWithCrud<T extends AbstractEntity, C extends IEntityDao<T>> extends UmMaster<T, C> {
+public abstract class UmMasterWithCrud<T extends AbstractEntity, C extends IEntityDao2<T>> extends UmMaster<T, C> {
 
     /** Is used in situation where user invokes action new and then cancel */
     private T prevEntity;

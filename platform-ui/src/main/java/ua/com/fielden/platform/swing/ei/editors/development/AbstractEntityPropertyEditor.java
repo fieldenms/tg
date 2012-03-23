@@ -7,12 +7,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
-import ua.com.fielden.platform.swing.ei.editors.IPropertyEditor;
-import ua.com.fielden.platform.swing.ei.editors.LabelAndTooltipExtractor;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -26,11 +24,11 @@ public abstract class AbstractEntityPropertyEditor implements IPropertyEditor {
     private AbstractEntity<?> entity;
     private final String propertyName;
 
-    private final IValueMatcher<?> valueMatcher;
+    private final IValueMatcher2<?> valueMatcher;
 
     private final JLabel label;
 
-    public AbstractEntityPropertyEditor(final AbstractEntity<?> entity, final String propertyName, final IValueMatcher<?> valueMatcher) {
+    public AbstractEntityPropertyEditor(final AbstractEntity<?> entity, final String propertyName, final IValueMatcher2<?> valueMatcher) {
 	this.entity = entity;
 	this.propertyName = propertyName;
 	this.valueMatcher = valueMatcher;
@@ -72,7 +70,7 @@ public abstract class AbstractEntityPropertyEditor implements IPropertyEditor {
     }
 
     @Override
-    public IValueMatcher<?> getValueMatcher() {
+    public IValueMatcher2<?> getValueMatcher() {
 	return valueMatcher;
     }
 

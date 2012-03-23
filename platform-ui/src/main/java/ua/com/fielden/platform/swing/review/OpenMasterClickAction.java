@@ -1,24 +1,23 @@
 package ua.com.fielden.platform.swing.review;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-
 import java.awt.event.ActionEvent;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
-import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
+import ua.com.fielden.platform.swing.model.IUmViewOwner;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
 /**
  * Click action for {@link EntityGridInspector} that attempts to open master frame for the clicked cell if one represents an entity or entity's key.
- * 
+ *
  * @author yura
- * 
+ *
  */
 public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity> {
 
@@ -30,17 +29,17 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity> 
 
     private final IEntityMasterManager entityMasterFactory;
 
-    private final EntityReview ownerView;
+    private final IUmViewOwner ownerView;
 
     /**
      * Principle constructor.
-     * 
+     *
      * @param entityMasterFactory
      * @param propertyName
      * @param ownerView
      * @param provider
      */
-    private OpenMasterClickAction(final IEntityMasterManager entityMasterFactory, final String propertyName, final EntityReview ownerView, final IBlockingLayerProvider provider) {
+    private OpenMasterClickAction(final IEntityMasterManager entityMasterFactory, final String propertyName, final IUmViewOwner ownerView, final IBlockingLayerProvider provider) {
 	super("Double-click facility", provider);
 	this.propertyName = propertyName;
 	this.entityMasterFactory = entityMasterFactory;
@@ -58,26 +57,11 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity> 
 	}
     }
 
-    /**
-     * Convenient constructor.
-     * 
-     * @param entityMasterFactory
-     * @param propertyName
-     * @param ownerView
-     */
-    private OpenMasterClickAction(final IEntityMasterManager entityMasterFactory, final String propertyName, final EntityReview ownerView) {
-	this(entityMasterFactory, propertyName, ownerView, new IBlockingLayerProvider() {
-	    @Override
-	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
-		return ownerView != null ? ownerView.getReviewContract().getBlockingLayer() : null;
-	    }
 
-	});
-    }
 
     /**
      * Convenient constructor.
-     * 
+     *
      * @param entityMasterFactory
      * @param propertyName
      * @param provider
@@ -109,7 +93,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity> 
     protected void postAction(final AbstractEntity clickedEntity) {
 	super.postAction(clickedEntity);
 	if (clickedEntity != null) {
-	    entityMasterFactory.<AbstractEntity, IEntityDao<AbstractEntity>> showMaster(clickedEntity, ownerView);
+	    entityMasterFactory.<AbstractEntity, IEntityDao2<AbstractEntity>> showMaster(clickedEntity, ownerView);
 	}
     }
 
@@ -127,20 +111,12 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity> 
 
     /**
      * This method will enhance {@link AbstractPropertyColumnMapping}s (but only those that show entities, not simple properties) with sole {@link OpenMasterClickAction} instances.
-     * 
+     *
      * @param mappings
      * @param entityClass
      * @param entityMasterFactory
      * @param ownerView
      */
-    public static void enhanceWithClickAction(final Iterable<? extends AbstractPropertyColumnMapping> mappings, final Class entityClass, final IEntityMasterManager entityMasterFactory, final EntityReview ownerView) {
-	for (final AbstractPropertyColumnMapping mapping : mappings) {
-	    if (propertyIsOfAbstractEntityType(entityClass, mapping.getPropertyName())) {
-		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, mapping.getPropertyName(), ownerView));
-	    }
-	}
-    }
-
     public static void enhanceWithBlockingLayer(final Iterable<? extends AbstractPropertyColumnMapping> mappings, final Class entityClass, final IEntityMasterManager entityMasterFactory, final IBlockingLayerProvider provider) {
 	for (final AbstractPropertyColumnMapping mapping : mappings) {
 	    if (propertyIsOfAbstractEntityType(entityClass, mapping.getPropertyName())) {
@@ -151,7 +127,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity> 
 
     /**
      * Returns true if property name represents either key of or entity itself, false otherwise.
-     * 
+     *
      * @param entityClass
      * @param propertyName
      * @return

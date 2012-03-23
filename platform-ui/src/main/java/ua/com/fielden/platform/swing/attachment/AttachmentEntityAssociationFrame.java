@@ -6,7 +6,7 @@ import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.model.FrameTitleUpdater;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
@@ -16,9 +16,9 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
  * A convenience frame for holding attachment/entity association master view.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AttachmentEntityAssociationFrame extends BaseFrame {
     private static final long serialVersionUID = 1L;
@@ -28,7 +28,7 @@ public class AttachmentEntityAssociationFrame extends BaseFrame {
 
     public AttachmentEntityAssociationFrame(final AbstractEntity<?> entity, //
 	    final IEntityAttachmentAssociationController controller, //
-	    final IValueMatcherFactory valueMatcherFactory,//
+	    final IValueMatcherFactory2 valueMatcherFactory,//
 	    final IEntityMasterManager entityMasterFactory,//
 	    //final IDaoFactory daoFactory,//
 	    final IMasterDomainTreeManager masterManager, final ICriteriaGenerator criteriaGenerator) {

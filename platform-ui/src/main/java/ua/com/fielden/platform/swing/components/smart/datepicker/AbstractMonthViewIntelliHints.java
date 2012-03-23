@@ -33,8 +33,8 @@ import org.jdesktop.swingx.JXPanel;
 import org.jdesktop.swingx.painter.MattePainter;
 import org.jdesktop.swingx.plaf.UIManagerExt;
 
-import ua.com.fielden.platform.swing.components.bind.BoundedJXDatePicker;
-import ua.com.fielden.platform.swing.components.smart.AbstractIntelliHints;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedJXDatePicker;
+import ua.com.fielden.platform.swing.components.smart.development.AbstractIntelliHints;
 
 /**
  * <code>AbstractMonthViewIntelliHints</code> extends AbstractIntelliHints and further implement most of the methods in interface {@link com.jidesoft.hints.IntelliHints}. In this

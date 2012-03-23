@@ -35,14 +35,14 @@ import net.miginfocom.swing.MigLayout;
 
 import org.jfree.chart.ChartMouseEvent;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToDistributionTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 import ua.com.fielden.platform.swing.categorychart.ActionChartPanel;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
@@ -424,7 +424,7 @@ public class ChartAnalysisView<T extends AbstractEntity> extends AbstractAnalysi
 
 
     private ActionChartPanel<List<EntityAggregates>, CategoryChartTypes> createChartPanel(final boolean all, final int... indexes) {
-	final ActionChartPanel<List<EntityAggregates>, CategoryChartTypes> chartPanel = new ActionChartPanel<List<EntityAggregates>, CategoryChartTypes>(new CategoryChartFactory<T, IEntityDao<T>>(getModel().getChartAnalysisDataProvider(), dataModel, all, indexes), new IBlockingLayerProvider() {
+	final ActionChartPanel<List<EntityAggregates>, CategoryChartTypes> chartPanel = new ActionChartPanel<List<EntityAggregates>, CategoryChartTypes>(new CategoryChartFactory<T, IEntityDao2<T>>(getModel().getChartAnalysisDataProvider(), dataModel, all, indexes), new IBlockingLayerProvider() {
 	    @Override
 	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
 		return getProgressLayer();
