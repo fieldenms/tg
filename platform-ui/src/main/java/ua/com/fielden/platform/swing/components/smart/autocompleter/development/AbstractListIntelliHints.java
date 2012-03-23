@@ -18,15 +18,14 @@ import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
 import javax.swing.text.JTextComponent;
 
-import ua.com.fielden.platform.swing.components.smart.AbstractIntelliHints;
-import ua.com.fielden.platform.swing.components.smart.Hover;
+import ua.com.fielden.platform.swing.components.smart.development.Hover;
 
 import com.jidesoft.swing.JideScrollPane;
 
 /**
  * <code>AbstractListIntelliHints</code> extends AbstractIntelliHints and further implement most of the methods in interface {@link com.jidesoft.hints.IntelliHints}. In this class,
  * it assumes the hints can be represented as a JList, so it used JList in the hints popup.
- * 
+ *
  * @author Santhosh Kumar T - santhosh@in.fiorano.com
  * @author JIDE Software, Inc.
  */
@@ -37,7 +36,7 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
 
     /**
      * Creates a Completion for JTextComponent
-     * 
+     *
      * @param textComponent
      */
     public AbstractListIntelliHints(final JTextComponent textComponent, final ListCellRenderer cellRenderer) {
@@ -79,7 +78,7 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
      *     }
      * };
      * </pre></code>
-     * 
+     *
      * @return the list.
      */
     protected JList createList(final ListCellRenderer cellRenderer) {
@@ -105,7 +104,7 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
 
     /**
      * Returns the {@link ListCellRenderer} associated with hints pop up component.
-     * 
+     *
      * @return
      */
     protected ListCellRenderer getHintsCellRenderer() {
@@ -114,7 +113,7 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
 
     /**
      * Gets the list.
-     * 
+     *
      * @return the list.
      */
     protected JList getList() {
@@ -123,7 +122,7 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
 
     /**
      * Sets the list data.
-     * 
+     *
      * @param objects
      */
     protected void setListData(final Object[] objects) {
@@ -139,7 +138,7 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
 
     /**
      * Sets the list data.
-     * 
+     *
      * @param objects
      */
     protected void setListData(final Vector<?> objects) {
@@ -169,7 +168,7 @@ public abstract class AbstractListIntelliHints extends AbstractIntelliHints {
     /**
      * Gets the delegate keystrokes. Since we know the hints popup is a JList, we return eight keystrokes so that they can be delegate to the JList. Those keystrokes are DOWN, UP,
      * PAGE_DOWN, PAGE_UP, HOME and END.
-     * 
+     *
      * @return the keystokes that will be delegated to the JList when hints popup is visible.
      */
     @Override
