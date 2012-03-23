@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.EntityLocatorDialog;
 
-public class AutocompleterTextFieldLayerWithEntityLocator<T extends AbstractEntity> extends AutocompleterTextFieldLayer<T> {
+public class AutocompleterTextFieldLayerWithEntityLocator<T extends AbstractEntity<?>> extends AutocompleterTextFieldLayer<T> {
 
     private static final long serialVersionUID = -5362041101618177143L;
 

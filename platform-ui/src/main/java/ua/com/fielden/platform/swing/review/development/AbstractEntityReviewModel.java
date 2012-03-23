@@ -5,7 +5,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel;
 
-public abstract class AbstractEntityReviewModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> {
+public abstract class AbstractEntityReviewModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> {
 
     private final EntityQueryCriteria<CDTME, T, IEntityDao2<T>> criteria;
 

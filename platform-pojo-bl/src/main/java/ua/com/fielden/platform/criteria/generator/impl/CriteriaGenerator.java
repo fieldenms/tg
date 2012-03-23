@@ -59,12 +59,12 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     @Override
-    public <T extends AbstractEntity> EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme) {
+    public <T extends AbstractEntity<?>> EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme) {
 	return generateQueryCriteria(root, cdtme, EnhancedCentreEntityQueryCriteria.class);
     }
 
     @Override
-    public <T extends AbstractEntity> EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> generateLocatorQueryCriteria(final Class<T> root, final ILocatorDomainTreeManagerAndEnhancer ldtme) {
+    public <T extends AbstractEntity<?>> EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> generateLocatorQueryCriteria(final Class<T> root, final ILocatorDomainTreeManagerAndEnhancer ldtme) {
 	return generateQueryCriteria(root, ldtme, EnhancedLocatorEntityQueryCriteria.class);
     }
 

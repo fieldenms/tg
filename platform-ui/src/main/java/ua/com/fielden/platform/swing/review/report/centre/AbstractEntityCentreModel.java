@@ -10,7 +10,7 @@ import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewMode
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.AbstractCentreConfigurationModel;
 
-public class AbstractEntityCentreModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityReviewModel<T, CDTME> {
+public class AbstractEntityCentreModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityReviewModel<T, CDTME> {
 
     private final String name;
     private final EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao2<T>>> entityInspectorModel;

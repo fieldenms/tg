@@ -7,7 +7,7 @@ import ua.com.fielden.platform.swing.review.report.centre.SingleAnalysisEntityLo
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorEventListener;
 
-public class LocatorConfigurationView<T extends AbstractEntity, R extends AbstractEntity> extends AbstractCentreConfigurationView<T, ILocatorDomainTreeManagerAndEnhancer, SingleAnalysisEntityLocator<T>> {
+public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends AbstractEntity<?>> extends AbstractCentreConfigurationView<T, ILocatorDomainTreeManagerAndEnhancer, SingleAnalysisEntityLocator<T>> {
 
     private static final long serialVersionUID = 7422543091832971730L;
 

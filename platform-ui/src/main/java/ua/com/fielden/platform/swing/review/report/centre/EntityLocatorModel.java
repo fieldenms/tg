@@ -7,7 +7,7 @@ import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationModel;
 
-public class EntityLocatorModel<T extends AbstractEntity> extends AbstractEntityCentreModel<T, ILocatorDomainTreeManagerAndEnhancer> {
+public class EntityLocatorModel<T extends AbstractEntity<?>> extends AbstractEntityCentreModel<T, ILocatorDomainTreeManagerAndEnhancer> {
 
     public EntityLocatorModel(final LocatorConfigurationModel<T, ?> configurationModel, final EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao2<T>>> entityInspectorModel, final String name) {
 	super(configurationModel, entityInspectorModel, null, name);

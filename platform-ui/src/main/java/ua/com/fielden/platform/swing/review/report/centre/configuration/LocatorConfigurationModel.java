@@ -25,7 +25,7 @@ import ua.com.fielden.platform.swing.review.report.events.LocatorConfigurationEv
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorConfigurationEventListener;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
-public class LocatorConfigurationModel<T extends AbstractEntity, R extends AbstractEntity> extends AbstractCentreConfigurationModel<T, ILocatorDomainTreeManagerAndEnhancer> {
+public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ILocatorDomainTreeManagerAndEnhancer> {
 
     /**
      * The class where the property specified with propertyName was declared.

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentreMo
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
-public abstract class AbstractCentreConfigurationModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractConfigurationModel {
+public abstract class AbstractCentreConfigurationModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractConfigurationModel {
 
     /**
      * The entity type for which this {@link AbstractCentreConfigurationModel} was created.
@@ -38,7 +38,7 @@ public abstract class AbstractCentreConfigurationModel<T extends AbstractEntity,
 
     /**
      * Initiates this {@link AbstractCentreConfigurationModel} with appropriate entity type, name/propertyName, entity factory and criteria generator.
-     * 
+     *
      * @param entityType
      * @param name
      * @param entityFactory

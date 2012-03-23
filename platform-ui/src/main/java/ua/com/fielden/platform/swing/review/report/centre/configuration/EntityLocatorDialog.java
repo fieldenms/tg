@@ -26,7 +26,7 @@ import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorConfigurat
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorEventListener;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
-public class EntityLocatorDialog<VT extends AbstractEntity, RT extends AbstractEntity> extends JDialog {
+public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends AbstractEntity<?>> extends JDialog {
 
     private static final long serialVersionUID = 7943323636459934782L;
 
@@ -89,7 +89,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity, RT extends AbstractE
 
     /**
      * Returns the list of selected entities.
-     * 
+     *
      * @return
      */
     public List<VT> getSelectedEntities(){
@@ -102,7 +102,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity, RT extends AbstractE
     /**
      * Determines the type of loaded locator. It might be Default or Local.
      * TODO This might be removed after the ILocatorManager will allow one to determine the locator type.
-     * 
+     *
      * @param locatorConfigurationModel
      * @return
      */
@@ -120,7 +120,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity, RT extends AbstractE
 
     /**
      * Creates the {@link WindowListener} that handles entity locator's close event.
-     * 
+     *
      * @return
      */
     private WindowListener createWindowCloseHandler() {
@@ -155,7 +155,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity, RT extends AbstractE
 
     /**
      * Returns the {@link ILocatorConfigurationEventListener} that handles the POST_SAVE, POST_SAVE_AS_DEFAULT and LOAD_DEFAULT events and changes the loaded locator type according to the generated event.
-     * 
+     *
      * @return
      */
     private ILocatorConfigurationEventListener createLocatorConfigurationListener() {
@@ -202,7 +202,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity, RT extends AbstractE
 
     /**
      * Determines the locator's loaded configuration: Default or Local.
-     * 
+     *
      * @author TG Team
      *
      */

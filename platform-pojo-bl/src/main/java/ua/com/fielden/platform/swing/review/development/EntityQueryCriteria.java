@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
 import com.google.inject.Inject;
 
 @KeyType(String.class)
-public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity, DAO extends IEntityDao2<T>> extends AbstractEntity<String> {
+public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> extends AbstractEntity<String> {
 
     private static final long serialVersionUID = 9154466083364529734L;
 

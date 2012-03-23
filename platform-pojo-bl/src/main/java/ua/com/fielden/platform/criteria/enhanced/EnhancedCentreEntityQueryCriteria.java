@@ -19,7 +19,7 @@ import com.google.inject.Inject;
  * @param <T>
  * @param <DAO>
  */
-public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity, DAO extends IEntityDao2<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
+public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
 
     private static final long serialVersionUID = -5189571197523084383L;
 

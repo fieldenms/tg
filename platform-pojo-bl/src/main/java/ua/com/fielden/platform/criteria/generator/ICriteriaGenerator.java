@@ -22,7 +22,7 @@ public interface ICriteriaGenerator {
      * @param cdtm
      * @return
      */
-    public <T extends AbstractEntity> EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> generateCentreQueryCriteria(Class<T> root, ICentreDomainTreeManagerAndEnhancer cdtm);
+    public <T extends AbstractEntity<?>> EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> generateCentreQueryCriteria(Class<T> root, ICentreDomainTreeManagerAndEnhancer cdtm);
 
-    public <T extends AbstractEntity> EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> generateLocatorQueryCriteria(Class<T> root, ILocatorDomainTreeManagerAndEnhancer ldtm);
+    public <T extends AbstractEntity<?>> EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> generateLocatorQueryCriteria(Class<T> root, ILocatorDomainTreeManagerAndEnhancer ldtm);
 }
