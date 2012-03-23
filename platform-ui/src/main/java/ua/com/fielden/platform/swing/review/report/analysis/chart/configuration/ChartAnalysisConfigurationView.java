@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.configuration.Abstra
 import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
-public class ChartAnalysisConfigurationView<T extends AbstractEntity> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager, Void, ChartAnalysisView<T>, AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer>> {
+public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager, Void, ChartAnalysisView<T>, AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer>> {
 
     private static final long serialVersionUID = -44217633254876740L;
 

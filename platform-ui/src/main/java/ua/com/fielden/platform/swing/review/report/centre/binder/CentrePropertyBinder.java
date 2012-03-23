@@ -29,7 +29,7 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
  *
  * @param <T> - The centre's entity type.
  */
-public class CentrePropertyBinder<T extends AbstractEntity> implements ILightweightPropertyBinder<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>>> {
+public class CentrePropertyBinder<T extends AbstractEntity<?>> implements ILightweightPropertyBinder<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>>> {
 
     private final EntityCentreType entityCentreType;
 
@@ -41,7 +41,7 @@ public class CentrePropertyBinder<T extends AbstractEntity> implements ILightwei
      * @param criteriaGenerator
      * @return
      */
-    public static <T extends AbstractEntity> CentrePropertyBinder<T> createCentrePropertyBinder(final ICriteriaGenerator criteriaGenerator){
+    public static <T extends AbstractEntity<?>> CentrePropertyBinder<T> createCentrePropertyBinder(final ICriteriaGenerator criteriaGenerator){
 	return new CentrePropertyBinder<T>(EntityCentreType.CENTRE, criteriaGenerator);
     }
 
@@ -50,7 +50,7 @@ public class CentrePropertyBinder<T extends AbstractEntity> implements ILightwei
      *
      * @return
      */
-    public static <T extends AbstractEntity> CentrePropertyBinder<T> createLocatorPropertyBinder(){
+    public static <T extends AbstractEntity<?>> CentrePropertyBinder<T> createLocatorPropertyBinder(){
 	return new CentrePropertyBinder<T>(EntityCentreType.LOCATOR, null);
     }
 

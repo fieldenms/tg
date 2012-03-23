@@ -20,11 +20,11 @@ public class UndockTreeMenuItemFrame extends BaseFrame {
 
     private final BaseNotifPanel<?> view;
 
-    public UndockTreeMenuItemFrame(final String title, final ICloseHook<UndockTreeMenuItemFrame> hook, final BaseNotifPanel<?> view, final Map<Class<? extends AbstractEntity>, IEntityMasterCache> cache) {
+    public UndockTreeMenuItemFrame(final String title, final ICloseHook<UndockTreeMenuItemFrame> hook, final BaseNotifPanel<?> view, final Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> cache) {
 	this(title, new MigLayout("fill, insets 0", "[fill,grow]", "[fill, grow]"), hook, view, cache);
     }
 
-    public UndockTreeMenuItemFrame(final String title, final LayoutManager layoutManager, final ICloseHook<UndockTreeMenuItemFrame> hook, final BaseNotifPanel<?> view, final Map<Class<? extends AbstractEntity>, IEntityMasterCache> cache) {
+    public UndockTreeMenuItemFrame(final String title, final LayoutManager layoutManager, final ICloseHook<UndockTreeMenuItemFrame> hook, final BaseNotifPanel<?> view, final Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> cache) {
 	super(title, layoutManager, hook, cache);
 	blockingPane = new BlockingIndefiniteProgressPane(this);
 	setIconImage(ResourceLoader.getImage("images/tg-icon.png"));

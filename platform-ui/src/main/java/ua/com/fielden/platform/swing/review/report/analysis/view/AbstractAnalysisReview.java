@@ -16,7 +16,7 @@ import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.utils.Pair;
 
-public abstract class AbstractAnalysisReview<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTM extends IAbstractAnalysisDomainTreeManager, LDT> extends AbstractEntityReview<T, CDTME> {
+public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTM extends IAbstractAnalysisDomainTreeManager, LDT> extends AbstractEntityReview<T, CDTME> {
 
     private static final long serialVersionUID = -1195915524813089236L;
 
@@ -116,7 +116,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity, CDTME ext
     /**
      * Enables or disables actions related to this analysis (run, export, paginator actions e.t.c.). The second parameter determines
      * whether this method was invoked after page navigation or after the data loading.
-     * 
+     *
      * @param enable
      * @param navigate
      */

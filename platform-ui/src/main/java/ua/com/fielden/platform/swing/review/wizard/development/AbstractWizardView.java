@@ -24,12 +24,12 @@ import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
  * Generic implementation for domain tree wizard. This wizard defines basic user interface and functionality that might be extended only for configuring purposes.
- * 
+ *
  * @author TG Team
  *
  * @param <T>
  */
-public abstract class AbstractWizardView<T extends AbstractEntity> extends BasePanel implements IWizard{
+public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends BasePanel implements IWizard{
 
     private static final long serialVersionUID = 268187881676011630L;
 
@@ -45,7 +45,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     /**
      * Initiates this {@link AbstractWizardView} and creates main parts of the entity review wizard (domain tree editor and action panel).
-     * 
+     *
      * @param treeEditorModel
      * @param progressLayer
      */
@@ -61,7 +61,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     /**
      * Returns the domain tree editor for this {@link AbstractWizardView}.
-     * 
+     *
      * @return
      */
     public final DomainTreeEditorView<T> getTreeEditorView() {
@@ -70,7 +70,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     /**
      * Returns the action panel for this {@link AbstractWizardView}.
-     * 
+     *
      * @return
      */
     public final JPanel getActionPanel() {
@@ -79,7 +79,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     /**
      * Returns action that allows one to cancel changes made in the domain tree editor view and switch back to report view.
-     * 
+     *
      * @return
      */
     public final Action getCancelAction() {
@@ -88,7 +88,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     /**
      * Returns an action that allows one to apply changes made in the domain tree editor and build report view.
-     * 
+     *
      * @return
      */
     public final Action getBuildAction() {
@@ -129,7 +129,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     /**
      * Might be overridden to provide custom build action (see {@link #getBuildAction()} for more information about the purpose of this action).
-     * 
+     *
      * @return
      */
     protected Action createBuildAction(){
@@ -138,7 +138,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     /**
      * Might be overridden to provide custom cancel action (see {@link #getCancelAction()} for more information about the purpose of this action).
-     * 
+     *
      * @return
      */
     protected Action createCancelAction(){
@@ -147,7 +147,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     /**
      * Might be overridden if there is need to add some other controls to the action panel.
-     * 
+     *
      * @return
      */
     protected JPanel createActionPanel() {
@@ -170,7 +170,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     /**
      * Notifies all the registered listeners with specified {@link WizardEvent} instance.
-     * 
+     *
      * @param ev
      * @return
      */
@@ -189,7 +189,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     /**
      * Notifies all registered {@link ISelectionEventListener} that this configuration model was selected.
-     * 
+     *
      * @param event
      */
     protected final void fireSelectionEvent(final SelectionEvent event){
@@ -200,7 +200,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity> extends BaseP
 
     /**
      * Creates an specific wizard's action (i.e. creates build or cancel actions).
-     * 
+     *
      * @param build
      * @param name
      * @return

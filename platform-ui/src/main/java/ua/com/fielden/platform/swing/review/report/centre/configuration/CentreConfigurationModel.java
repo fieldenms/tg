@@ -41,7 +41,7 @@ import ua.com.fielden.platform.swing.savereport.SaveReportOptions;
  * @param <T>
  * @param <DAO>
  */
-public class CentreConfigurationModel<T extends AbstractEntity> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>{
+public class CentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>{
 
     /**
      * The associated {@link GlobalDomainTreeManager} instance.

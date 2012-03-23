@@ -10,7 +10,7 @@ import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewMode
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 
-public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTM extends IAbstractAnalysisDomainTreeManager, LDT> extends AbstractEntityReviewModel<T, CDTME> {
+public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTM extends IAbstractAnalysisDomainTreeManager, LDT> extends AbstractEntityReviewModel<T, CDTME> {
 
     private final ADTM adtm;
 

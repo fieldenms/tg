@@ -24,7 +24,7 @@ public interface IEntityMasterManager {
      *            - view that requested this master and should be notified of entity changes, it may have a different type parameter.
      * @return
      */
-    <T extends AbstractEntity, DAO extends IEntityDao2<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner);
+    <T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner);
 
     /**
      * This method should return entity producer, that is used by this manager to produce instances of {@code entityClass}
@@ -33,6 +33,6 @@ public interface IEntityMasterManager {
      * @param entityClass
      * @return
      */
-    <T extends AbstractEntity> IEntityProducer<T> getEntityProducer(Class<T> entityClass);
+    <T extends AbstractEntity<?>> IEntityProducer<T> getEntityProducer(Class<T> entityClass);
 
 }

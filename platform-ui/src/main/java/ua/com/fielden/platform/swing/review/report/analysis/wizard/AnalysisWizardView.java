@@ -8,7 +8,7 @@ import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardVie
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
 
-public class AnalysisWizardView<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractWizardView<T> {
+public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractWizardView<T> {
 
     private final AbstractEntityCentre<T, CDTME> owner;
 

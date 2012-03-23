@@ -25,7 +25,7 @@ import ua.com.fielden.platform.swing.model.ICloseGuard;
 public class BaseFrame extends JFrame implements ICloseGuard {
     private static final long serialVersionUID = 1L;
 
-    private final Map<Class<? extends AbstractEntity>, IEntityMasterCache> cache;
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> cache;
     private boolean disposed = false;
 
     public BaseFrame() {
@@ -40,7 +40,7 @@ public class BaseFrame extends JFrame implements ICloseGuard {
 	this(title, null, null, null);
     }
 
-    public BaseFrame(final String title, final Map<Class<? extends AbstractEntity>, IEntityMasterCache> cache) {
+    public BaseFrame(final String title, final Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> cache) {
 	this(title, null, null, cache);
     }
 
@@ -52,7 +52,7 @@ public class BaseFrame extends JFrame implements ICloseGuard {
 	this(title, layoutManager, null, null);
     }
 
-    public BaseFrame(final String title, final LayoutManager layoutManager, final ICloseHook hook, final Map<Class<? extends AbstractEntity>, IEntityMasterCache> cache) {
+    public BaseFrame(final String title, final LayoutManager layoutManager, final ICloseHook hook, final Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> cache) {
 	super(title);
 	this.cache = cache;
 	if (layoutManager != null) {

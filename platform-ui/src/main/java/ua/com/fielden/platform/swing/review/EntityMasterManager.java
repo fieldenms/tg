@@ -31,15 +31,15 @@ public class EntityMasterManager implements IEntityMasterManager {
 
     private final EntityFactory entityFactory;
 
-    private final Map<Class<? extends AbstractEntity>, IEntityMasterCache> entityMasterCaches = Collections.synchronizedMap(new HashMap<Class<? extends AbstractEntity>, IEntityMasterCache>());
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> entityMasterCaches = Collections.synchronizedMap(new HashMap<Class<? extends AbstractEntity<?>>, IEntityMasterCache>());
 
     private final IValueMatcherFactory2 vmf;
 
     private final IGlobalDomainTreeManager gdtm;
 
-    private final Map<Class<? extends AbstractEntity>, IEntityMasterFactory> factories = new HashMap<Class<? extends AbstractEntity>, IEntityMasterFactory>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityMasterFactory> factories = new HashMap<Class<? extends AbstractEntity<?>>, IEntityMasterFactory>();
 
-    private final Map<Class<? extends AbstractEntity>, IEntityProducer> entityProducers = new HashMap<Class<? extends AbstractEntity>, IEntityProducer>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityProducer> entityProducers = new HashMap<Class<? extends AbstractEntity<?>>, IEntityProducer>();
 
     @Inject
     public EntityMasterManager(//
@@ -62,7 +62,7 @@ public class EntityMasterManager implements IEntityMasterManager {
      * @param factory
      * @return
      */
-    public <T extends AbstractEntity, DAO extends IEntityDao2<T>> EntityMasterManager addFactory(final Class<T> entityClass, final IEntityMasterFactory<T, DAO> factory) {
+    public <T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> EntityMasterManager addFactory(final Class<T> entityClass, final IEntityMasterFactory<T, DAO> factory) {
 	factories.put(entityClass, factory);
 	return this;
     }
@@ -76,12 +76,12 @@ public class EntityMasterManager implements IEntityMasterManager {
      * @param entityProducer
      * @return
      */
-    public <T extends AbstractEntity> EntityMasterManager addEntityProducer(final Class<T> entityClass, final IEntityProducer<T> entityProducer) {
+    public <T extends AbstractEntity<?>> EntityMasterManager addEntityProducer(final Class<T> entityClass, final IEntityProducer<T> entityProducer) {
 	entityProducers.put(entityClass, entityProducer);
 	return this;
     }
 
-    private IEntityMasterCache getEntityMasterCache(final Class<? extends AbstractEntity> entityType) {
+    private IEntityMasterCache getEntityMasterCache(final Class<? extends AbstractEntity<?>> entityType) {
 	final IEntityMasterCache cache = entityMasterCaches.get(entityType);
 	if (cache == null) {
 	    final IEntityMasterCache newCache = new WeakEntityMasterCache();
@@ -91,14 +91,14 @@ public class EntityMasterManager implements IEntityMasterManager {
 	return cache;
     }
 
-    public <T extends AbstractEntity, DAO extends IEntityDao2<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner) {
-	// let's be defencive...
+    public <T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner) {
+	// let's be defensive...
 	if (entity == null) {
 	    throw new IllegalArgumentException("<html>Master cannot be displayed for <b>null</b> domain entity.</html>");
 	}
 	// searching in cache first ...
 
-	final IEntityMasterCache cache = getEntityMasterCache(entity.getType());
+	final IEntityMasterCache cache = getEntityMasterCache((Class<T>) entity.getType());
 	BaseFrame frame = cache.get(entity.getId());
 	if (frame == null) {
 	    // if not found in cache, then creating new master frame and putting it to the cache
@@ -111,7 +111,7 @@ public class EntityMasterManager implements IEntityMasterManager {
 		gdtm.initEntityMasterManager(entity.getType());
 		masterManager = gdtm.getEntityMasterManager(entity.getType());
 	    }
-	    frame = factory.createMasterFrame(getEntityProducer(entity.getType()), //
+	    frame = factory.createMasterFrame(getEntityProducer((Class<T>) entity.getType()), //
 		    cache, //
 		    entity, //
 		    vmf, //
@@ -130,7 +130,7 @@ public class EntityMasterManager implements IEntityMasterManager {
      * {@link #addEntityProducer(Class, IEntityProducer)} method) or {@link DefaultEntityProducer} instance otherwise.
      */
     @Override
-    public <T extends AbstractEntity> IEntityProducer<T> getEntityProducer(final Class<T> entityClass) {
+    public <T extends AbstractEntity<?>> IEntityProducer<T> getEntityProducer(final Class<T> entityClass) {
 	final IEntityProducer<T> entityProducer = entityProducers.get(entityClass);
 	return entityProducer != null ? entityProducer : new DefaultEntityProducer<T>(entityFactory, entityClass);
     }
@@ -140,7 +140,7 @@ public class EntityMasterManager implements IEntityMasterManager {
      *
      * @return
      */
-    public Map<Class<? extends AbstractEntity>, IEntityMasterCache> getEntityMasterCache() {
+    public Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> getEntityMasterCache() {
 	return Collections.unmodifiableMap(entityMasterCaches);
     }
 

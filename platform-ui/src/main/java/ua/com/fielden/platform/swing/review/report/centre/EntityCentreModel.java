@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationModel;
 
 //TODO consider necessity of the entity centre model existence.
-public class EntityCentreModel<T extends AbstractEntity> extends AbstractEntityCentreModel<T, ICentreDomainTreeManagerAndEnhancer> {
+public class EntityCentreModel<T extends AbstractEntity<?>> extends AbstractEntityCentreModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     //TODO is result view model is needed?
     //private AbstractAnalysisConfigurationModel resultViewModel;

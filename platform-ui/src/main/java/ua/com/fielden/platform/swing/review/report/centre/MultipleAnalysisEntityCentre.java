@@ -39,12 +39,12 @@ import com.jidesoft.swing.JideTabbedPane;
 
 /**
  * {@link AbstractEntityCentre} with more then one analysis view.
- * 
+ *
  * @author TG Team
  *
  * @param <T>
  */
-public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> {
+public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> {
 
     private static final long serialVersionUID = -5686015614708868918L;
 
@@ -148,7 +148,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
 
     /**
      * Creates main details analysis configuration view.
-     * 
+     *
      * @return
      */
     private GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createGridAnalysis(){
@@ -160,7 +160,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
 
     /**
      * Creates simple chart analysis configuration view with specified name.
-     * 
+     *
      * @param name
      * @return
      */
@@ -172,7 +172,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
 
     /**
      * Creates pivot analysis configuration view with specified name.
-     * 
+     *
      * @param name
      * @return
      */
@@ -263,7 +263,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity> extends Abst
 
 	/**
 	 * Returns the index of the tab with specified name. If tab with specified name doesn't exists then returns negative number.
-	 * 
+	 *
 	 * @param name - the specified tab name.
 	 * @return
 	 */

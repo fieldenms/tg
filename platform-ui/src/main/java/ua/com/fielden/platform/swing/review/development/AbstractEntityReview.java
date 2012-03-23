@@ -17,7 +17,7 @@ import ua.com.fielden.platform.swing.review.report.interfaces.IReviewEventListen
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.view.BasePanel;
 
-public abstract class AbstractEntityReview<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends BasePanel implements IReview {
+public abstract class AbstractEntityReview<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends BasePanel implements IReview {
 
     private static final long serialVersionUID = -8984113615241551583L;
 
@@ -101,7 +101,7 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, CDTME exten
 
     /**
      * Returns the {@link AbstractEntityReviewModel} for this entity review.
-     * 
+     *
      * @return
      */
     public AbstractEntityReviewModel<T, CDTME> getModel() {
@@ -145,7 +145,7 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, CDTME exten
 
     /**
      * Notifies all registered {@link ISelectionEventListener} that this configuration model was selected.
-     * 
+     *
      * @param event
      */
     protected final void fireSelectionEvent(final SelectionEvent event){
@@ -156,7 +156,7 @@ public abstract class AbstractEntityReview<T extends AbstractEntity, CDTME exten
 
     /**
      * Creates on of the review action: configure, save, save as or remove.
-     * 
+     *
      * @param name - the caption for action.
      * @param preAction
      * @param action

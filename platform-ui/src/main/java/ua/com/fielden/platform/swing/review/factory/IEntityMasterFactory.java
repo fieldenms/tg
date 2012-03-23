@@ -20,7 +20,7 @@ import ua.com.fielden.platform.swing.view.IEntityMasterCache;
  * @param <T>
  * @param <DAO>
  */
-public interface IEntityMasterFactory<T extends AbstractEntity, DAO extends IEntityDao2<T>> {
+public interface IEntityMasterFactory<T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> {
 
     /**
      * This method should create and return master frame for the specified {@code entity}. Other parameters may be used for specific purposes in different masters.

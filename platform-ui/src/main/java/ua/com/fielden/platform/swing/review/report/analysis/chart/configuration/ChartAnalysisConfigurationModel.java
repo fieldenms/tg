@@ -12,7 +12,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.chart.ChartAnalysisM
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
-public class ChartAnalysisConfigurationModel<T extends AbstractEntity> extends AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
+public class ChartAnalysisConfigurationModel<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     public ChartAnalysisConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> criteria, final String name) {
 	super(criteria, name);

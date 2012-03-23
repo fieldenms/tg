@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.pivot.PivotAnalysisV
 import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
-public class PivotAnalysisConfigurationView<T extends AbstractEntity> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void, PivotAnalysisView<T>, AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer>> {
+public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void, PivotAnalysisView<T>, AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer>> {
 
     private static final long serialVersionUID = -1464413279095086886L;
 

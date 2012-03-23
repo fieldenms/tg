@@ -4,7 +4,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReviewEventListener;
 
-public abstract class AbstractConfigurableEntityCentreMixin<T extends AbstractEntity, DTM extends IDomainTreeManager> {
+public abstract class AbstractConfigurableEntityCentreMixin<T extends AbstractEntity<?>, DTM extends IDomainTreeManager> {
 
     private final CentreConfigurationModel<T> centreConfigurationModel;
 

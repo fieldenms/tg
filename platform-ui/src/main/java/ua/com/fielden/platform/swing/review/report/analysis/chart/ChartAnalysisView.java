@@ -64,7 +64,7 @@ import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
-public class ChartAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer ,IAnalysisDomainTreeManager, Void> {
+public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer ,IAnalysisDomainTreeManager, Void> {
 
     private static final long serialVersionUID = -6505281133387254406L;
 

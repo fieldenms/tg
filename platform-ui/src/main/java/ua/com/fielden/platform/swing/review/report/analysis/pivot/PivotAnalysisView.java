@@ -46,7 +46,7 @@ import ua.com.fielden.platform.swing.treetable.FilterableTreeTablePanel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 
-public class PivotAnalysisView<T extends AbstractEntity> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void> {
+public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void> {
 
     private static final long serialVersionUID = 8295216779213506230L;
 

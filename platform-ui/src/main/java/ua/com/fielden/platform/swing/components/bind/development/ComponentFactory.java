@@ -367,7 +367,7 @@ public class ComponentFactory {
      * @return
      */
     @SuppressWarnings("rawtypes")
-    private static <VT extends AbstractEntity, RT extends AbstractEntity> AutocompleterTextFieldLayerWithEntityLocator<VT> createUnBoundAutocompleterWithEntityLocator(//
+    private static <VT extends AbstractEntity<?>, RT extends AbstractEntity<?>> AutocompleterTextFieldLayerWithEntityLocator<VT> createUnBoundAutocompleterWithEntityLocator(//
 	    final LocatorConfigurationModel<VT, RT> locatorConfigurationModel,//
 	    final IValueMatcher2<VT> valueMatcher,//
 	    final Class<VT> entityType,//
@@ -821,7 +821,7 @@ public class ComponentFactory {
      * @param actions
      * @return
      */
-    public static <VT extends AbstractEntity, RT extends AbstractEntity> BoundedValidationLayer<AutocompleterTextFieldLayerWithEntityLocator<VT>> createOnFocusLostAutocompleterWithEntityLocator(//
+    public static <VT extends AbstractEntity<?>, RT extends AbstractEntity<?>> BoundedValidationLayer<AutocompleterTextFieldLayerWithEntityLocator<VT>> createOnFocusLostAutocompleterWithEntityLocator(//
 	    //Autocomplter related parameters
 	    final IBindingEntity entity,//
 	    final String propertyName,//

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisModel;
 
-public class GridConfigurationModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisConfigurationModel<T, CDTME> {
+public class GridConfigurationModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisConfigurationModel<T, CDTME> {
 
 
     public GridConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao2<T>> criteria){

@@ -67,7 +67,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  *
  * @param <T>
  */
-public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityReview<T, CDTME> implements IUmViewOwner{
+public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityReview<T, CDTME> implements IUmViewOwner{
 
     private static final long serialVersionUID = -6079569752962700417L;
 
@@ -137,7 +137,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
     /**
      * Updates the entity in the grid analysis.
      */
-    public <E extends AbstractEntity> void notifyEntityChange(final E entity) {
+    public <E extends AbstractEntity<?>> void notifyEntityChange(final E entity) {
 	if (entity.isPersisted()) {
 	    SwingUtilitiesEx.invokeLater(new Runnable() {
 		@Override
@@ -471,7 +471,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity, CDTME exten
      * @return
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected static <E extends AbstractEntity, MAE extends ICentreDomainTreeManagerAndEnhancer> EntityGridInspector<E> getEntityGridInspector(final AbstractEntityCentre<E, MAE> entityCentre){
+    protected static <E extends AbstractEntity<?>, MAE extends ICentreDomainTreeManagerAndEnhancer> EntityGridInspector<E> getEntityGridInspector(final AbstractEntityCentre<E, MAE> entityCentre){
 	for(final AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?, ?> analysis : entityCentre.getAnalysisList()){
 	    if(analysis instanceof GridConfigurationView){
 		final GridConfigurationView<E, MAE> gridConfigPanel = (GridConfigurationView<E, MAE>)analysis;

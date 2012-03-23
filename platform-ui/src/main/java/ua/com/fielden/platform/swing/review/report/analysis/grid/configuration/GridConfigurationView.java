@@ -10,7 +10,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisVie
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardView;
 
-public class GridConfigurationView<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisConfigurationView<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage2<T>, GridAnalysisView<T, CDTME>, AbstractWizardView<T>> {
+public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisConfigurationView<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage2<T>, GridAnalysisView<T, CDTME>, AbstractWizardView<T>> {
 
     private static final long serialVersionUID = -7385497832761082274L;
 

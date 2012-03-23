@@ -15,7 +15,7 @@ import ua.com.fielden.platform.swing.review.report.events.AnalysisConfigurationE
 import ua.com.fielden.platform.swing.review.report.events.AnalysisConfigurationEvent.AnalysisConfigurationAction;
 import ua.com.fielden.platform.swing.review.report.interfaces.IAnalysisConfigurationEventListener;
 
-public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractConfigurationModel {
+public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractConfigurationModel {
 
     private final EntityQueryCriteria<CDTME, T, IEntityDao2<T>> criteria;
 

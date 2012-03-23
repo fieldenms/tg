@@ -13,7 +13,7 @@ import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardVie
 
 /**
  * The base class for all type of analysis.
- * 
+ *
  * @author TG Team
  *
  * @param <T> - The entity type for which this analysis was created.
@@ -23,7 +23,7 @@ import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardVie
  * @param <VT> - The type of {@link AbstractAnalysisReview} that represent the analysis view.
  * @param <WT> - The type of {@link AbstractWizardView} that represent the analysis wizard.
  */
-public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTM extends IAbstractAnalysisDomainTreeManager, LDT, VT extends AbstractAnalysisReview<T, CDTME, ADTM, LDT>, WT extends AbstractWizardView<T>> extends AbstractConfigurationView<VT, WT> {
+public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTM extends IAbstractAnalysisDomainTreeManager, LDT, VT extends AbstractAnalysisReview<T, CDTME, ADTM, LDT>, WT extends AbstractWizardView<T>> extends AbstractConfigurationView<VT, WT> {
 
     private static final long serialVersionUID = -7493238859906828458L;
 
@@ -56,7 +56,7 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 
     /**
      * Returns the entity centre that owns this analysis.
-     * 
+     *
      * @return
      */
     protected final AbstractEntityCentre<T, CDTME> getOwner() {

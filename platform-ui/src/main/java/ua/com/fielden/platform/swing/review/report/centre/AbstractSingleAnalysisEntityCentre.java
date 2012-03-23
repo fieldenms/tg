@@ -13,7 +13,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.configuration.Abstra
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 
-public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityCentre<T, CDTME> {
+public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityCentre<T, CDTME> {
 
     private static final long serialVersionUID = -7393061848126429375L;
 

@@ -12,7 +12,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.configuration.Abstra
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.PivotAnalysisModel;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
-public class PivotAnalysisConfigurationModel<T extends AbstractEntity> extends AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
+public class PivotAnalysisConfigurationModel<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> {
 
     public PivotAnalysisConfigurationModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> criteria, final String name) {
 	super(criteria, name);

@@ -9,18 +9,18 @@ import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigu
 
 /**
  * The holder for centrre's wizard and view panels.
- * 
+ *
  * @author TG Team
  *
  * @param <T>
  */
-public abstract class AbstractCentreConfigurationView<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer, C extends AbstractEntityCentre<T, CDTME>> extends AbstractConfigurationView<C, EntityCentreWizard<T>> {
+public abstract class AbstractCentreConfigurationView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, C extends AbstractEntityCentre<T, CDTME>> extends AbstractConfigurationView<C, EntityCentreWizard<T>> {
 
     private static final long serialVersionUID = -5187097528373828177L;
 
     /**
      * Initiates this {@link AbstractCentreConfigurationView} with appropriate {@link CentreConfigurationModel} instance.
-     * 
+     *
      * @param model
      */
     public AbstractCentreConfigurationView(final AbstractCentreConfigurationModel<T, CDTME> model, final BlockingIndefiniteProgressLayer progressLayer) {

@@ -12,7 +12,7 @@ import ua.com.fielden.platform.swing.egi.EgiPanel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
-public class GridAnalysisView<T extends AbstractEntity, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage2<T>> {
+public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage2<T>> {
 
     private static final long serialVersionUID = 8538099803371092525L;
 

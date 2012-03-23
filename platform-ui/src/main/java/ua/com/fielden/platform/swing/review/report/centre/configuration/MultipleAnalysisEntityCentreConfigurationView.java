@@ -6,7 +6,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.report.centre.MultipleAnalysisEntityCentre;
 
-public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEntity> extends AbstractCentreConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, MultipleAnalysisEntityCentre<T>> {
+public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEntity<?>> extends AbstractCentreConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, MultipleAnalysisEntityCentre<T>> {
 
     private static final long serialVersionUID = -6434256458143463705L;
 

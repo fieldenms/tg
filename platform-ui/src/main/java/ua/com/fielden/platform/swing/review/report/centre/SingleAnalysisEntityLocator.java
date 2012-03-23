@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -36,7 +34,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 import com.jidesoft.grid.TableModelWrapperUtils;
 
-public class SingleAnalysisEntityLocator<T extends AbstractEntity> extends AbstractSingleAnalysisEntityCentre<T, ILocatorDomainTreeManagerAndEnhancer> {
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
+public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends AbstractSingleAnalysisEntityCentre<T, ILocatorDomainTreeManagerAndEnhancer> {
 
     private static final long serialVersionUID = 8426409155798286535L;
 
