@@ -1,5 +1,12 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.HashSet;
 
 import org.junit.Test;
@@ -11,11 +18,9 @@ import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
@@ -25,28 +30,6 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
  */
 public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationTest {
     private final String NON_BASE_USERS_SAVE_AS = "NON_BASE_USER'S_SAVE_AS";
-
-    private IGlobalDomainTreeManager createManagerForNonBaseUser2() {
-	return new GlobalDomainTreeManager(serialiser, entityFactory, nonBaseUserProvider2, mainMenuItemController, entityCentreConfigController, entityMasterConfigController, entityLocatorConfigController);
-    }
-
-    private IGlobalDomainTreeManager createManagerForNonBaseUser() {
-	return new GlobalDomainTreeManager(serialiser, entityFactory, nonBaseUserProvider, mainMenuItemController, entityCentreConfigController, entityMasterConfigController, entityLocatorConfigController);
-    }
-
-    private IGlobalDomainTreeManager createManagerForBaseUser() {
-	return new GlobalDomainTreeManager(serialiser, entityFactory, baseUserProvider, mainMenuItemController, entityCentreConfigController, entityMasterConfigController, entityLocatorConfigController);
-    }
-
-    private ILocatorDomainTreeManagerAndEnhancer initDefaultLocatorForSomeTestType(final IGlobalDomainTreeManager managerForNonBaseUser) {
-	// initialise a default locator for type EntityWithStringKeyType which will affect initialisation of [MasterEntity.entityProp.simpleEntityProp] property.
-	final ILocatorDomainTreeManagerAndEnhancer ldtmae = new LocatorDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {{ add(EntityWithStringKeyType.class); }});
-	ldtmae.getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
-	managerForNonBaseUser.getGlobalRepresentation().setLocatorManagerByDefault(EntityWithStringKeyType.class, ldtmae);
-	assertFalse("Should not be the same instance, it should be retrived every time.", ldtmae == managerForNonBaseUser.getGlobalRepresentation().getLocatorManagerByDefault(EntityWithStringKeyType.class));
-	assertTrue("Should be equal instance, because no one has been changed default locator.", ldtmae.equals(managerForNonBaseUser.getGlobalRepresentation().getLocatorManagerByDefault(EntityWithStringKeyType.class)));
-	return ldtmae;
-    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////// ENTITY-CENTRES/MASTERS LOCATORS MANAGEMENT /////////////////////////////

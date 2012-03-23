@@ -129,8 +129,9 @@ public class User extends AbstractEntity<String> {
 
     @Observable
     @NotNull
-    public void setPassword(final String password) {
+    public User setPassword(final String password) {
 	this.password = password;
+	return this;
     }
 
     public Set<UserAndRoleAssociation> getRoles() {
@@ -151,8 +152,9 @@ public class User extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setRoles(final Set<UserAndRoleAssociation> roles) {
+    public User setRoles(final Set<UserAndRoleAssociation> roles) {
 	this.roles = roles;
+	return this;
     }
 
     public String getPublicKey() {
@@ -160,8 +162,9 @@ public class User extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setPublicKey(final String publicKey) {
+    public User setPublicKey(final String publicKey) {
 	this.publicKey = publicKey;
+	return this;
     }
 
     public boolean isBase() {
@@ -169,7 +172,7 @@ public class User extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setBase(final boolean base) {
+    public User setBase(final boolean base) {
 	this.base = base;
 	if (base) {
 	    setBasedOnUser(null);
@@ -177,6 +180,7 @@ public class User extends AbstractEntity<String> {
 	    throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and should remain a base user."));
 	}
 	getProperty("basedOnUser").setRequired(!base);
+	return this;
     }
 
     public User getBasedOnUser() {
@@ -185,7 +189,7 @@ public class User extends AbstractEntity<String> {
 
     @Observable
     @EntityExists(User.class)
-    public void setBasedOnUser(final User basedOnUser) {
+    public User setBasedOnUser(final User basedOnUser) {
 	if (basedOnUser == this) {
 	    throw new Result(this, new IllegalArgumentException("Self reference is not permitted."));
 	}
@@ -202,6 +206,7 @@ public class User extends AbstractEntity<String> {
 	if (basedOnUser != null) {
 	    setBase(false);
 	}
+	return this;
     }
 
     @Override

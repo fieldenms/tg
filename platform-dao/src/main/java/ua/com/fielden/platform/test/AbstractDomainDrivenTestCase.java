@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.test;
 
+import static java.lang.String.format;
+
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -24,7 +26,6 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider2;
 import ua.com.fielden.platform.persistence.DdlGenerator;
-import static java.lang.String.format;
 
 
 /**
@@ -112,11 +113,13 @@ public abstract class AbstractDomainDrivenTestCase {
 	    final Statement st = conn.createStatement();
 	    final ResultSet set = st.executeQuery("SCRIPT");
 	    while (set.next()) {
-		final String result = set.getString(1).toUpperCase().trim();
-		if (!result.startsWith("INSERT INTO PUBLIC.UNIQUE_ID") && (result.startsWith("INSERT") || result.startsWith("UPDATE") || result.startsWith("DELETE"))) {
+		final String result = set.getString(1).trim();
+		final String upperCasedResult = result.toUpperCase();
+		if (!upperCasedResult.startsWith("INSERT INTO PUBLIC.UNIQUE_ID") && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {
+		    // resultant script should NOT be UPPERCASED in order not to upperCase for e.g. values,
+		    // that was perhaps lover cased while populateDomain() invocation was performed
 		    dataScript.add(result);
 		}
-
 	    }
 	    set.close();
 	    st.close();

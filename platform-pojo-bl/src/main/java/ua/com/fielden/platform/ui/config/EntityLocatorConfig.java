@@ -10,12 +10,14 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController2;
 
 /**
  * This is a class to persist configuration of an individual entity locator.
@@ -29,6 +31,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity locator configuration")
 @DefaultController(IEntityLocatorConfigController.class)
+@DefaultController2(IEntityLocatorConfigController2.class)
 @MapEntityTo("ENTITY_LOCATOR_CONFIG")
 public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;

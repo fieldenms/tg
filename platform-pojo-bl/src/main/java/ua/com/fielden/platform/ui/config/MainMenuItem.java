@@ -66,8 +66,9 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
      *
      * @param menuItemType
      */
-    public void setMenuItemType(final Class<?> menuItemType) {
+    public MainMenuItem setMenuItemType(final Class<?> menuItemType) {
 	setKey(PropertyTypeDeterminator.stripIfNeeded(menuItemType).getName());
+	return this;
     }
 
     /**
@@ -89,8 +90,9 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
 
     @Observable
     @EntityExists(MainMenuItem.class)
-    public void setParent(final MainMenuItem parent) {
+    public MainMenuItem setParent(final MainMenuItem parent) {
 	this.parent = parent;
+	return this;
     }
 
     public List<MainMenuItem> getChildren() {
@@ -135,24 +137,27 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
     }
 
     @Observable
-    public void setOrder(final int order) {
+    public MainMenuItem setOrder(final int order) {
 	this.order = order;
+	return this;
     }
 
     public boolean isVisible() {
 	return visible;
     }
 
-    public void setVisible(final boolean visible) {
+    public MainMenuItem setVisible(final boolean visible) {
 	this.visible = visible;
+	return this;
     }
 
     public boolean isPrincipal() {
 	return principal;
     }
 
-    public void setPrincipal(final boolean principal) {
+    public MainMenuItem setPrincipal(final boolean principal) {
 	this.principal = principal;
+	return this;
     }
 
     public String getTitle() {
@@ -160,16 +165,18 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
     }
 
     @Observable
-    public void setTitle(final String title) {
+    public MainMenuItem setTitle(final String title) {
 	this.title = title;
+	return this;
     }
 
     public EntityCentreConfig getConfig() {
 	return config;
     }
 
-    public void setConfig(final EntityCentreConfig config) {
+    public MainMenuItem setConfig(final EntityCentreConfig config) {
 	this.config = config;
+	return this;
     }
 
     @Override
