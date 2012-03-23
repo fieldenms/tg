@@ -9,7 +9,7 @@ import javax.swing.Action;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
-import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
+import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController2;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -32,14 +32,14 @@ import ua.com.fielden.platform.utils.ResourceLoader;
  * @author TG Team
  *
  */
-public class AttachmentEntityAssociationModel extends UmDetailsWithCrudAndUpdaterMany<AbstractEntity<?>, EntityAttachmentAssociation, IEntityAttachmentAssociationController> {
+public class AttachmentEntityAssociationModel extends UmDetailsWithCrudAndUpdaterMany<AbstractEntity<?>, EntityAttachmentAssociation, IEntityAttachmentAssociationController2> {
 
     private final IEntityMasterManager entityMasterFactory;
     private final Command<File> downloadAttachment;
 
     public AttachmentEntityAssociationModel(//
 	    final AbstractEntity<?> master, //
-	    final IEntityAttachmentAssociationController controller,//
+	    final IEntityAttachmentAssociationController2 controller,//
 	    final IValueMatcherFactory2 valueMatcherFactory, //
 	    final IEntityMasterManager entityMasterFactory,//
 	    //final IDaoFactory daoFactory,//

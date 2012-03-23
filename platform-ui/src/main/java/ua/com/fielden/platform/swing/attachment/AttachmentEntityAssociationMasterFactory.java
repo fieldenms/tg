@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.swing.attachment;
 
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
-import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
+import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController2;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -18,7 +18,7 @@ import com.google.inject.Inject;
  */
 public class AttachmentEntityAssociationMasterFactory {
 
-    private final IEntityAttachmentAssociationController attachmentEntityAssociationController;
+    private final IEntityAttachmentAssociationController2 attachmentEntityAssociationController;
     private final IEntityMasterManager entityMasterFactory;
     private final IValueMatcherFactory2 valueMatcherFactory;
     private final ICriteriaGenerator criteriaGenerator;
@@ -26,7 +26,7 @@ public class AttachmentEntityAssociationMasterFactory {
     //private final IDaoFactory daoFactory;
 
     @Inject
-    public AttachmentEntityAssociationMasterFactory(final IEntityAttachmentAssociationController attachmentEntityAssociationController, final IEntityMasterManager entityMasterFactory, //
+    public AttachmentEntityAssociationMasterFactory(final IEntityAttachmentAssociationController2 attachmentEntityAssociationController, final IEntityMasterManager entityMasterFactory, //
 	    final IValueMatcherFactory2 valueMatcherFactory,//
 	    final ICriteriaGenerator criteriaGenerator,//
 	    final IGlobalDomainTreeManager gdtm//

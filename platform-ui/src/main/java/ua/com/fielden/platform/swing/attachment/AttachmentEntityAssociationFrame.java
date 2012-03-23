@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.attachment;
 
 import org.jfree.ui.RefineryUtilities;
 
-import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
+import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController2;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -27,7 +27,7 @@ public class AttachmentEntityAssociationFrame extends BaseFrame {
     private final AttachmentEntityAssociationView view;
 
     public AttachmentEntityAssociationFrame(final AbstractEntity<?> entity, //
-	    final IEntityAttachmentAssociationController controller, //
+	    final IEntityAttachmentAssociationController2 controller, //
 	    final IValueMatcherFactory2 valueMatcherFactory,//
 	    final IEntityMasterManager entityMasterFactory,//
 	    //final IDaoFactory daoFactory,//
