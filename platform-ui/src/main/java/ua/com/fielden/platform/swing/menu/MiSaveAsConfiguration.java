@@ -10,7 +10,7 @@ import ua.com.fielden.platform.swing.menu.api.IItemSelector;
  * @author TG Team
  *
  */
-public final class MiSaveAsConfiguration<T extends AbstractEntity> extends TreeMenuItem<DynamicReportWrapper<T>> implements IItemSelector {
+public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends TreeMenuItem<DynamicReportWrapper<T>> implements IItemSelector {
 
     private static final long serialVersionUID = 1628351742425600699L;
 

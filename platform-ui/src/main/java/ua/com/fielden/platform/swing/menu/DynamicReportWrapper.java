@@ -22,7 +22,7 @@ import ua.com.fielden.platform.swing.view.BaseNotifPanel;
  * @author TG Team
  *
  */
-public class DynamicReportWrapper<T extends AbstractEntity> extends BaseNotifPanel<DefaultUiModel> {
+public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotifPanel<DefaultUiModel> {
 
     private static final long serialVersionUID = 1655601830703524962L;
 

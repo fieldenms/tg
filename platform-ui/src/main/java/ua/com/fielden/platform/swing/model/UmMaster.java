@@ -18,13 +18,13 @@ import ua.com.fielden.platform.swing.ei.editors.development.ILightweightProperty
  * @param <C>
  *            -- controller type.
  */
-public abstract class UmMaster<T extends AbstractEntity, C> extends UModel<T, T, C> {
+public abstract class UmMaster<T extends AbstractEntity<?>, C> extends UModel<T, T, C> {
     /** Represents an entity model used for entity fetching and initialisation. */
     private final fetch<T> fm;
 
     protected UmMaster(final T entity, final C controller, final ILightweightPropertyBinder<T> propertyBinder, final fetch<T> fm, final boolean lazy) {
 	super(entity, controller, propertyBinder, lazy);
-	this.fm = fm != null ? fm : new fetchAll<T>(entity.getType());
+	this.fm = fm != null ? fm : new fetchAll<T>((Class<T>)entity.getType());
 	if (shouldEnforceEntityLoadingDuringInstantiation()) {
 	    setEntity(findById(entity.getId(), true));
 	}

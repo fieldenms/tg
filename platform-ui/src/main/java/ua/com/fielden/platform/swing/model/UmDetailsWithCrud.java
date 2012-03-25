@@ -19,7 +19,7 @@ import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
  * @param <D>
  * @param <C>
  */
-public abstract class UmDetailsWithCrud<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao2<M, D>> extends UmDetails<M, D, C> {
+public abstract class UmDetailsWithCrud<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C extends IMasterDetailsDao2<M, D>> extends UmDetails<M, D, C> {
 
     /**
      * Represents a current managed entity instance.

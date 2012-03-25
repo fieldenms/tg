@@ -41,7 +41,7 @@ import com.jidesoft.grid.TableModelWrapperUtils;
  * @param <D>
  * @param <C>
  */
-public abstract class UmDetailsWithCrudMany<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao2<M, D>> extends UmDetailsWithCrud<M, D, C> {
+public abstract class UmDetailsWithCrudMany<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C extends IMasterDetailsDao2<M, D>> extends UmDetailsWithCrud<M, D, C> {
     /** Table model representing all instances of details entities. */
     private final PropertyTableModel<D> tableModel;
 

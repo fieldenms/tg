@@ -33,7 +33,7 @@ import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
  * @param <D>
  * @param <C>
  */
-public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao2<M, D>> extends UmDetailsWithCrudAndUpdaterOne<M, D, C> {
+public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C extends IMasterDetailsDao2<M, D>> extends UmDetailsWithCrudAndUpdaterOne<M, D, C> {
 
     private final UmDetailsWithCrudAndUpdaterOne<M, D, C> masterModel;
 

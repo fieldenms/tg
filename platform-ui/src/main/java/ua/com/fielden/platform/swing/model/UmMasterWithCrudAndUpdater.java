@@ -20,7 +20,7 @@ import ua.com.fielden.platform.swing.view.IEntityMasterCache;
  * @param <T>
  * @param <C>
  */
-public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity, C extends IEntityDao2<T>> extends UmMasterWithCrud<T, C> {
+public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity<?>, C extends IEntityDao2<T>> extends UmMasterWithCrud<T, C> {
     private final FrameTitleUpdater titleUpdater;
     private final IUmViewOwner owner;
 

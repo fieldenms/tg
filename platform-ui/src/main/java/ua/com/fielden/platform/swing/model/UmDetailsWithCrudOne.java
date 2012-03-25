@@ -27,7 +27,7 @@ import ua.com.fielden.platform.swing.ei.editors.development.ILightweightProperty
  * @param <D>
  * @param <C>
  */
-public abstract class UmDetailsWithCrudOne<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao2<M, D>> extends UmDetailsWithCrud<M, D, C> {
+public abstract class UmDetailsWithCrudOne<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C extends IMasterDetailsDao2<M, D>> extends UmDetailsWithCrud<M, D, C> {
 
     protected UmDetailsWithCrudOne(final M entity, final C controller, final ILightweightPropertyBinder<D> propertyBinder, final fetch<D> fm) {
 	super(entity, controller, propertyBinder, fm, true);

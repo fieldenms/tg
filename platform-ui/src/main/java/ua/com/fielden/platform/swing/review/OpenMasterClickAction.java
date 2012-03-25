@@ -19,7 +19,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
  * @author yura
  *
  */
-public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity> {
+public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?>> {
 
     private static final long serialVersionUID = -641888610365274514L;
 
@@ -93,7 +93,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity> 
     protected void postAction(final AbstractEntity clickedEntity) {
 	super.postAction(clickedEntity);
 	if (clickedEntity != null) {
-	    entityMasterFactory.<AbstractEntity, IEntityDao2<AbstractEntity>> showMaster(clickedEntity, ownerView);
+	    entityMasterFactory.<AbstractEntity<?>, IEntityDao2<AbstractEntity<?>>> showMaster(clickedEntity, ownerView);
 	}
     }
 

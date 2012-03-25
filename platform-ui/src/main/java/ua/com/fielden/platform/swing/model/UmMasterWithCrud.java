@@ -38,7 +38,7 @@ import ua.com.fielden.platform.swing.view.IEntityMasterCache;
  * @param <C>
  *            -- controller type.
  */
-public abstract class UmMasterWithCrud<T extends AbstractEntity, C extends IEntityDao2<T>> extends UmMaster<T, C> {
+public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IEntityDao2<T>> extends UmMaster<T, C> {
 
     /** Is used in situation where user invokes action new and then cancel */
     private T prevEntity;

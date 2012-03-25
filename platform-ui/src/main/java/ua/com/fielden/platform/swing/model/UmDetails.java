@@ -15,7 +15,7 @@ import ua.com.fielden.platform.swing.ei.editors.development.ILightweightProperty
  * @param <C>
  *            -- controller type.
  */
-public abstract class UmDetails<M extends AbstractEntity, D extends AbstractEntity, C extends IMasterDetailsDao2<M, D>> extends UModel<M, D, C> {
+public abstract class UmDetails<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C extends IMasterDetailsDao2<M, D>> extends UModel<M, D, C> {
     /** Represents an entity model used for details entity fetching and initialisation. */
     private final fetch<D> fm;
 

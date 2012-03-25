@@ -76,7 +76,7 @@ public class DummyBuilder {
     /**
      * Creates single-value autocompleter
      */
-    public static <T extends AbstractEntity> AutocompleterTextFieldLayer<T> svac(final String caption, final Class<T> entityClass, final IValueMatcher2<T> valueMatcher) {
+    public static <T extends AbstractEntity<?>> AutocompleterTextFieldLayer<T> svac(final String caption, final Class<T> entityClass, final IValueMatcher2<T> valueMatcher) {
 	final TwoPropertyListCellRenderer<T> cellRenderer = new TwoPropertyListCellRenderer<T>("key", "desc");
 	final AutocompleterTextFieldLayer<T> ac = new AutocompleterTextFieldLayer<T>(new UpperCaseTextField(), valueMatcher, entityClass, "key", cellRenderer, caption, null);
 	cellRenderer.setAuto(ac.getAutocompleter());
@@ -163,7 +163,7 @@ public class DummyBuilder {
      * separated with comma).
      */
     @SuppressWarnings("unchecked")
-    public static <T extends AbstractEntity> IValueMatcher2<T> multiValuePojoMatcher(final List<T> instances, final String expression) {
+    public static <T extends AbstractEntity<?>> IValueMatcher2<T> multiValuePojoMatcher(final List<T> instances, final String expression) {
 	// TODO method findMatches(String) takes more than O(n) time to find matches, thus it should be optimised
 	return new PojoValueMatcher2<T>(instances, expression, Integer.MAX_VALUE) {
 	    private final String valueSeparator = ",";

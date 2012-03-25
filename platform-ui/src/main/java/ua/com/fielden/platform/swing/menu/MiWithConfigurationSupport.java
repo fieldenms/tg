@@ -12,7 +12,7 @@ import ua.com.fielden.platform.swing.review.IEntityMasterManager;
  * @author TG Team
  *
  */
-public class MiWithConfigurationSupport<T extends AbstractEntity> extends MiWithVisibilityProvider<DynamicReportWrapper<T>> {
+public class MiWithConfigurationSupport<T extends AbstractEntity<?>> extends MiWithVisibilityProvider<DynamicReportWrapper<T>> {
 
     private static final long serialVersionUID = -4608369671314218118L;
 
@@ -28,7 +28,7 @@ public class MiWithConfigurationSupport<T extends AbstractEntity> extends MiWith
 
     /**
      * Creates new {@link MiWithConfigurationSupport} instance and generates all his children reports. Unlike parent report, Children reports can be remove.
-     * 
+     *
      * @param visibilityProvider
      * @param entityType
      * @param name

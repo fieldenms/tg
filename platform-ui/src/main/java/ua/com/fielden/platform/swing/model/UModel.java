@@ -57,7 +57,7 @@ import ua.com.fielden.platform.swing.view.BaseNotifPanel;
  * @author TG Team
  *
  */
-public abstract class UModel<M extends AbstractEntity, D extends AbstractEntity, C> implements ICloseGuard, IOpenGuard {
+public abstract class UModel<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C> implements ICloseGuard, IOpenGuard {
 
     private Logger logger = Logger.getLogger(this.getClass());
 

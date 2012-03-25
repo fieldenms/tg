@@ -8,20 +8,20 @@ import ua.com.fielden.platform.swing.menu.api.IItemSelector;
 
 /**
  * {@link TreeMenuItem} that wraps it's parent {@link MiSaveAsConfiguration} node.
- * 
+ *
  * @author oleh
- * 
+ *
  * @param <T>
  * @param <DAO>
  * @param <R>
  */
-public class TreeMenuItemWrapper<T extends AbstractEntity> extends TreeMenuItem<DynamicReportWrapper<T>> implements IItemSelector {
+public class TreeMenuItemWrapper<T extends AbstractEntity<?>> extends TreeMenuItem<DynamicReportWrapper<T>> implements IItemSelector {
 
     private static final long serialVersionUID = -5587449424202672352L;
 
     /**
      * Creates new {@link TreeMenuItemWrapper} instance with specified title and {@link MiSaveAsConfiguration} that must be wrapped.
-     * 
+     *
      * @param title
      * @param removableDynamicItem
      */
@@ -90,7 +90,7 @@ public class TreeMenuItemWrapper<T extends AbstractEntity> extends TreeMenuItem<
 
     /**
      * Returns wrapped {@link MiSaveAsConfiguration} instance.
-     * 
+     *
      * @return
      */
     public MiSaveAsConfiguration<T> getWrappedTreeMenuItem() {
@@ -99,7 +99,7 @@ public class TreeMenuItemWrapper<T extends AbstractEntity> extends TreeMenuItem<
 
     /**
      * Activates items view.
-     * 
+     *
      * @param name
      */
     @Override

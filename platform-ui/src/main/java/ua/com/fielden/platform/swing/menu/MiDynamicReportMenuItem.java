@@ -17,7 +17,7 @@ import com.google.inject.Injector;
  * @param <DAO>
  * @param <R>
  */
-public abstract class MiDynamicReportMenuItem<T extends AbstractEntity> extends MiWithConfigurationSupport<T> {
+public abstract class MiDynamicReportMenuItem<T extends AbstractEntity<?>> extends MiWithConfigurationSupport<T> {
 
     private static final long serialVersionUID = 8838631121425630548L;
 

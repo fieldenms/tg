@@ -19,7 +19,7 @@ import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardVie
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 
-public class EntityCentreWizard<T extends AbstractEntity> extends AbstractWizardView<T> {
+public class EntityCentreWizard<T extends AbstractEntity<?>> extends AbstractWizardView<T> {
 
     private static final long serialVersionUID = -1304048423695832696L;
 

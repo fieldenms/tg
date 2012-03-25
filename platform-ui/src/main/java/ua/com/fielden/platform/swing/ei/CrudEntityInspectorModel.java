@@ -29,7 +29,7 @@ import ua.com.fielden.platform.swing.ei.editors.development.IPropertyBinder;
  *
  */
 @SuppressWarnings("rawtypes")
-public class CrudEntityInspectorModel<T extends AbstractEntity> extends EntityInspectorModel<T> {
+public class CrudEntityInspectorModel<T extends AbstractEntity<?>> extends EntityInspectorModel<T> {
 
     private final IEntityDao2<T> dao;
 

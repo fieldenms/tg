@@ -50,7 +50,7 @@ import ua.com.fielden.platform.swing.categorychart.IChartFactory;
 import ua.com.fielden.platform.swing.chartscroll.ScrollableCategoryPlot;
 
 //TODO this class should be removed later on.
-class CategoryChartFactory<T extends AbstractEntity, DAO extends IEntityDao2<T>> implements IChartFactory<List<EntityAggregates>, CategoryChartTypes> {
+class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> implements IChartFactory<List<EntityAggregates>, CategoryChartTypes> {
 
     private static final CommonCategoryRenderer commonRenderer = new CommonCategoryRenderer();
 

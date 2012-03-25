@@ -1,7 +1,14 @@
 package ua.com.fielden.platform.swing.review.configuration.persistens;
 
+import org.junit.Test;
+
 
 public class DynamicCriteriaKryoSerialisationTest {
+
+    @Test
+    public void test_stub() {
+
+    }
 
 //    static {
 //	com.jidesoft.utils.Lm.verifyLicense("Fielden Management Services", "Rollingstock Management System", "xBMpKdqs3vWTvP9gxUR4jfXKGNz9uq52");
