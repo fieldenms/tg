@@ -14,7 +14,7 @@ import org.jdesktop.jxlayer.JXLayer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.EntityLocatorDialog;
 
-public class AutocompleterUiWithEntityLocator<T extends AbstractEntity> extends AutocompleterUi {
+public class AutocompleterUiWithEntityLocator<T extends AbstractEntity<?>> extends AutocompleterUi {
 
     /**
      * The associated entity locator dialog.
