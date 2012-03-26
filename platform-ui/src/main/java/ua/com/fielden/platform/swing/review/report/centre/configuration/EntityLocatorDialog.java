@@ -15,7 +15,6 @@ import javax.swing.SwingUtilities;
 import org.jfree.ui.RefineryUtilities;
 
 import ua.com.fielden.platform.domaintree.ILocatorManager;
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -34,7 +33,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 
     private AutocompleterTextFieldLayerWithEntityLocator<VT> autocompleter;
 
-    private LoadedLocatorType locatorType = LoadedLocatorType.LOCAL;
+    private LoadedLocatorType locatorType = null;
 
     public EntityLocatorDialog(final LocatorConfigurationModel<VT, RT> locatorConfigurationModel, final boolean isMulti){
 	//	this.textFieldLayer = new AutocompleterTextFieldLayerWithEntityLocator<VT>(entity, locatorConfigurationModel.name, //
@@ -42,7 +41,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	//		expression, cellRenderer, caption, valueSeparator);
 	super(null, "", ModalityType.APPLICATION_MODAL);
 	//TODO must be changed later, when the locatorManager will allow one to determine the type of locator: default or local.
-	locatorType = defineLocatorType(locatorConfigurationModel);
+	//locatorType = defineLocatorType(locatorConfigurationModel);
 
 	//Configuring locator configuration mode. Add save, save as default and load default listeners those change the locator type.
 	locatorConfigurationModel.addLocatorConfigurationEventListener(createLocatorConfigurationListener());
@@ -59,7 +58,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	setIconImage(ResourceLoader.getImage("images/tg-icon.png"));
 	setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 	addWindowListener(createWindowCloseHandler());
-	setTitle(generateTitle(locatorType, locatorConfigurationModel.entityType, locatorConfigurationModel.name));
+	//setTitle(generateTitle(locatorType, locatorConfigurationModel.entityType, locatorConfigurationModel.name));
 
     }
 
@@ -107,15 +106,16 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
      * @return
      */
     private LoadedLocatorType defineLocatorType(final LocatorConfigurationModel<VT, RT> locatorConfigurationModel) {
-	final ILocatorManager locatorManager = locatorConfigurationModel.locatorManager;
-	final Class<RT> entityType = locatorConfigurationModel.rootType;
-	final String propertyName = locatorConfigurationModel.name;
-	final ILocatorDomainTreeManager ldtm = locatorManager.getLocatorManager(entityType, propertyName);
-	if(ldtm == null){
-	    locatorManager.initLocatorManagerByDefault(entityType, propertyName);
-	    return LoadedLocatorType.DEFAULT;
-	}
-	return LoadedLocatorType.LOCAL;
+	//	final ILocatorManager locatorManager = locatorConfigurationModel.locatorManager;
+	//	final Class<RT> entityType = locatorConfigurationModel.rootType;
+	//	final String propertyName = locatorConfigurationModel.name;
+	//	final ILocatorDomainTreeManager ldtm = locatorManager.getLocatorManager(entityType, propertyName);
+	//	if(ldtm == null){
+	//	    locatorManager.initLocatorManagerByDefault(entityType, propertyName);
+	//	    return LoadedLocatorType.DEFAULT;
+	//	}
+	//	return LoadedLocatorType.LOCAL;
+	return null;
     }
 
     /**

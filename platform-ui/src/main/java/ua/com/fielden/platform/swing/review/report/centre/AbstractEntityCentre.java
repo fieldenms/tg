@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import java.awt.Dimension;
 import java.awt.IllegalComponentStateException;
 import java.awt.event.ActionEvent;
@@ -56,8 +58,6 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 import com.jidesoft.grid.TableModelWrapperUtils;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * Implements common functionality for all types of entity centres: entity centre with single analysis, entity locators, entity centres with multiple analysis.
@@ -470,7 +470,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      *
      * @return
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings( "unchecked")
     protected static <E extends AbstractEntity<?>, MAE extends ICentreDomainTreeManagerAndEnhancer> EntityGridInspector<E> getEntityGridInspector(final AbstractEntityCentre<E, MAE> entityCentre){
 	for(final AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?, ?> analysis : entityCentre.getAnalysisList()){
 	    if(analysis instanceof GridConfigurationView){

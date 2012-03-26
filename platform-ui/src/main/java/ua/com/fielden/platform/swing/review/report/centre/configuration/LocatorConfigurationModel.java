@@ -137,7 +137,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
      */
     private EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao2<T>>> createInspectorModel(final EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> criteria) {
 	return new EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao2<T>>>(criteria,//
-	CentrePropertyBinder.<T> createLocatorPropertyBinder());
+		CentrePropertyBinder.<T> createLocatorPropertyBinder());
     }
 
     private Action createSaveAction() {
@@ -156,7 +156,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
-		locatorManager.acceptLocatorManager(entityType, name);
+		locatorManager.acceptLocatorManager(rootType, name);
 		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.SAVE));
 		return null;
 	    }
@@ -191,8 +191,8 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
-		locatorManager.saveLocatorManagerGlobally(entityType, name);
-		locatorManager.acceptLocatorManager(entityType, name);
+		locatorManager.saveLocatorManagerGlobally(rootType, name);
+		locatorManager.acceptLocatorManager(rootType, name);
 		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.SAVE_AS_DEFAULT));
 		return null;
 	    }
@@ -227,7 +227,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
-		locatorManager.initLocatorManagerByDefault(entityType, name);
+		locatorManager.initLocatorManagerByDefault(rootType, name);
 		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.LOAD_DEFAULT));
 		return null;
 	    }

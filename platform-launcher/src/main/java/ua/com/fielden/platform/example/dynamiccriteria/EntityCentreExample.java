@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleECEEntity;
+import ua.com.fielden.platform.example.dynamiccriteria.master.SimpleCompositeEntityMasterFactory;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 
+import com.google.inject.Injector;
 import com.jidesoft.plaf.LookAndFeelFactory;
 
 public class EntityCentreExample extends AbstractUiApplication {
@@ -55,12 +57,14 @@ public class EntityCentreExample extends AbstractUiApplication {
 	// override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
 	props.put("hibernate.show_sql", "false");
 	props.put("hibernate.format_sql", "true");
-	props.put("hibernate.hbm2ddl.auto", "create");
+	//props.put("hibernate.hbm2ddl.auto", "create");
 
 	final EntityCentreDataPopulationConfiguration config = new EntityCentreDataPopulationConfiguration();
 
-	final PopulateDbForEntityCentreExample popDb = new PopulateDbForEntityCentreExample(config);
-	popDb.createAndPopulate();
+	//	final PopulateDbForEntityCentreExample popDb = new PopulateDbForEntityCentreExample(config);
+	//	popDb.createAndPopulate();
+
+	configEntityMasterManager(config.getInjector());
 
 	entityFactory = config.getEntityFactory();
 	masterManager = config.getInstance(IEntityMasterManager.class);
@@ -75,6 +79,11 @@ public class EntityCentreExample extends AbstractUiApplication {
     //    private void configValidation(final DomainValidationConfig dvc){
     //		dvc.setValidator(ExpressionEntity.class, "expression", new ExpressionValidator());
     //    }
+
+    private static void configEntityMasterManager(final Injector injector){
+	final EntityMasterManager entityMasterManager = (EntityMasterManager) injector.getInstance(IEntityMasterManager.class);
+	entityMasterManager.addFactory(SimpleCompositeEntity.class, injector.getInstance(SimpleCompositeEntityMasterFactory.class));
+    }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
