@@ -12,6 +12,8 @@ import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserRoleDao2;
 import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
+import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory2;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.CommonFactoryModule2;
 import ua.com.fielden.platform.keygen.IKeyNumberGenerator;
@@ -60,6 +62,7 @@ import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigController
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao2;
 import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder2;
 
+import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 
 
@@ -117,7 +120,7 @@ public class DaoTestHibernateModule2 extends CommonFactoryModule2 {
 	bind(IMigrationHistoryDao2.class).to(MigrationHistoryDao2.class);
 
 	bind(IDaoFactory2.class).toInstance(getDaoFactory());
-//	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
+	bind(IValueMatcherFactory2.class).to(ValueMatcherFactory2.class).in(Scopes.SINGLETON);
 
 	bind(new TypeLiteral<IEntityDao2<EntityWithMoney>>() {
 	}).to(EntityWithMoneyDao2.class);

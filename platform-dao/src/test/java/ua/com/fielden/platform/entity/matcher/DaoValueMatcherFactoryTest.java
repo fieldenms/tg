@@ -4,8 +4,6 @@ import java.util.List;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
-import ua.com.fielden.platform.entity.matcher.development.IValueMatcherFactory;
-import ua.com.fielden.platform.entity.matcher.development.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.equery.fetch;
 import ua.com.fielden.platform.test.DbDrivenTestCase;

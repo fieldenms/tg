@@ -81,15 +81,15 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
     }
 
-//    @Test
-//    public void test_vehicle_model_retrieval3() {
-//	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("make").eq().model(select(TgVehicleMake.class).where().prop("key").eq().val("MERC").model()). //
-//		modelAsEntity(TgVehicleModel.class);
-//	final List<TgVehicleModel> models = dao.getAllEntities(from(model).with(new fetch<TgVehicleModel>(TgVehicleModel.class).with("make")).build());
-//    	final TgVehicleModel vehModel = models.get(0);
-//	assertEquals("Incorrect key", "316", vehModel.getKey());
-//	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
-//    }
+    @Test
+    public void test_vehicle_model_retrieval3a() {
+        final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("make").eq().model(select(TgVehicleMake.class).where().prop("key").eq().val("MERC").yield().prop("id").modelAsPrimitive()). //
+                modelAsEntity(TgVehicleModel.class);
+        final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(model).with(new fetch<TgVehicleModel>(TgVehicleModel.class).with("make")).build());
+            final TgVehicleModel vehModel = models.get(0);
+        assertEquals("Incorrect key", "316", vehModel.getKey());
+        assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
+    }
 
     @Test
     public void test_vehicle_model_retrieval3() {
