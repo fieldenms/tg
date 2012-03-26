@@ -9,10 +9,8 @@ import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao2.AttachmentDao2;
-import ua.com.fielden.platform.dao2.EntityAggregatesDao2;
 import ua.com.fielden.platform.dao2.EntityAttachmentAssociationDao2;
 import ua.com.fielden.platform.dao2.IDaoFactory2;
-import ua.com.fielden.platform.dao2.IEntityAggregatesDao2;
 import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserRoleDao2;
@@ -108,7 +106,6 @@ public class BasicWebServerModule2 extends CommonFactoryModule2 {
 
 	// bind DAO and any other implementations of the required application controllers
 	bind(IFilter.class).to(automaticDataFilterType); // UserDrivenFilter.class
-	bind(IEntityAggregatesDao2.class).to(EntityAggregatesDao2.class);
 	bind(IKeyNumberGenerator.class).to(KeyNumberDao2.class);
 
 	bind(IAttachmentController2.class).to(AttachmentDao2.class);

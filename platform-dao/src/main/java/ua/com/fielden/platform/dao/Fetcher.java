@@ -24,7 +24,6 @@ import org.hibernate.usertype.UserType;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -86,7 +85,6 @@ class Fetcher<E extends AbstractEntity> {
      * @param pageCapacity
      * @return
      */
-    @SessionRequired
     private List<EntityContainer<E>> listAsIs(final ReturnedModelResult modelResult, final Integer pageNumber, final Integer pageCapacity) {
 	final Map<String, TypesInfo> aliases = modelResult.getScalarAliases();
 
@@ -356,7 +354,6 @@ class Fetcher<E extends AbstractEntity> {
      * @param pageCapacity
      * @return
      */
-    @SessionRequired
     public List<E> list(final Session session, final MappingExtractor mappingExtractor, final EntityFactory entityFactory, final IQueryOrderedModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity, final fetch<E> fetchModel) {
 	this.session = session;
 	this.mappingExtractor = mappingExtractor;
@@ -379,7 +376,6 @@ class Fetcher<E extends AbstractEntity> {
     }
 
 
-    @SessionRequired
     private List<EntityContainer<E>> listContainers(final IQueryOrderedModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity, final fetch<E> fetchModel) {
 
 	final ReturnedModelResult modelResult = queryModel.getFinalModelResult(mappingExtractor);

@@ -9,7 +9,7 @@ import org.hibernate.cfg.Configuration;
 
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.annotations.Transactional;
-import ua.com.fielden.platform.dao2.CommonEntityDao2;
+import ua.com.fielden.platform.dao2.ISessionEnabled;
 import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Proxy;
@@ -80,7 +80,7 @@ public abstract class TransactionalModule2 extends EntityModule {
 	new TransactionalInterceptor(sessionFactory) // the intercepter
 	);
 	// bind SessionRequired injector
-	bindInterceptor(subclassesOf(CommonEntityDao2.class), // match only DAO derived from  CommonEntityDao
+	bindInterceptor(subclassesOf(ISessionEnabled.class), // match only DAO derived from  CommonEntityDao
 	annotatedWith(SessionRequired.class), // having annotated methods
 	new SessionInterceptor2(sessionFactory) // the intercepter
 	);

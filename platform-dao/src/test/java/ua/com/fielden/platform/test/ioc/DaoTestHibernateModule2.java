@@ -4,9 +4,7 @@ import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.dao.EntityWithMoneyDao2;
 import ua.com.fielden.platform.dao.filtering.DataFilter2;
-import ua.com.fielden.platform.dao2.EntityAggregatesDao2;
 import ua.com.fielden.platform.dao2.IDaoFactory2;
-import ua.com.fielden.platform.dao2.IEntityAggregatesDao2;
 import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
@@ -83,7 +81,6 @@ public class DaoTestHibernateModule2 extends CommonFactoryModule2 {
 	super.configure();
 	// bind DAO
 	bind(IFilter.class).to(DataFilter2.class);
-	bind(IEntityAggregatesDao2.class).to(EntityAggregatesDao2.class);
 	bind(IKeyNumberGenerator.class).to(KeyNumberDao2.class);
 	bind(IBogieDao2.class).to(BogieDao2.class);
 //	bind(IWheelsetDao.class).to(WheelsetDao.class);

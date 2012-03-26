@@ -3,7 +3,6 @@ package ua.com.fielden.platform.dao;
 import java.io.IOException;
 import java.util.List;
 
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.equery.EntityAggregates;
 import ua.com.fielden.platform.equery.fetch;
 import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
@@ -25,7 +24,6 @@ public class EntityAggregatesDao implements IEntityAggregatesDao {
 	this.dao = dao;
     }
 
-    @SessionRequired
     public List<EntityAggregates> listAggregates(final IQueryOrderedModel<EntityAggregates> aggregatesQueryModel, final fetch<EntityAggregates> fetchModel) {
 	return dao.getEntities(aggregatesQueryModel, fetchModel);
     }

@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.basic.IValueMatcher2;
-import ua.com.fielden.platform.dao2.IEntityAggregatesDao2;
 import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -22,14 +21,12 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private final IValueMatcherFactory2 valueMatcherFactory;
 
     private final DAO dao;
-    private final IEntityAggregatesDao2 entityAggregatesDao;
 
     private final C cdtme;
 
     @Inject
-    public EntityQueryCriteria(final IValueMatcherFactory2 valueMatcherFactory, final IEntityAggregatesDao2 entityAggregatesDao){
+    public EntityQueryCriteria(final IValueMatcherFactory2 valueMatcherFactory){
 	this.valueMatcherFactory = valueMatcherFactory;
-	this.entityAggregatesDao = entityAggregatesDao;
 
 	//This values should be initialized through reflection.
 	this.dao = null;

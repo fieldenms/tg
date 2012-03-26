@@ -35,4 +35,8 @@ public @interface MapTo {
     Class userType() default Class.class; // represents hibernate type class
 
     long length() default 0;
+
+    long precision() default -1;
+
+    long scale() default -1;
 }

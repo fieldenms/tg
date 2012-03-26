@@ -8,7 +8,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao2.CommonEntityDao2;
+import ua.com.fielden.platform.dao2.ISessionEnabled;
 
 /**
  * Intercepts methods annotated with {@link SessionRequired} to inject Hibernate session before the actual method execution. Nested invocation of methods annotated with
@@ -39,7 +39,7 @@ public class SessionInterceptor2 implements MethodInterceptor {
 
     @Override
     public Object invoke(final MethodInvocation invocation) throws Throwable {
-	final CommonEntityDao2<?> dao = (CommonEntityDao2<?>) invocation.getThis();
+	final ISessionEnabled dao = (ISessionEnabled) invocation.getThis();
 	final Session session = sessionFactory.getCurrentSession();
 	dao.setSession(session);
 	final Transaction tr = session.getTransaction();

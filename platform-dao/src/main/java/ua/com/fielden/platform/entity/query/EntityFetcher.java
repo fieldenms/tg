@@ -10,7 +10,6 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.type.Type;
 
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
@@ -36,7 +35,6 @@ public class EntityFetcher {
 	this.username = username;
     }
 
-    @SessionRequired
     public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity) {
 	try {
 	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight());
@@ -50,7 +48,6 @@ public class EntityFetcher {
 	return getEntitiesOnPage(queryModel, null, null);
     }
 
-    @SessionRequired
     protected <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainers(final QueryExecutionModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final QueryModelResult<E> modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getMappingsGenerator(), getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
@@ -118,7 +115,6 @@ public class EntityFetcher {
 	return result;
     }
 
-    @SessionRequired
     protected <E extends AbstractEntity<?>>List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final EntityTree<E> resultTree = new EntityResultTreeBuilder(getMappingsGenerator()).buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
 

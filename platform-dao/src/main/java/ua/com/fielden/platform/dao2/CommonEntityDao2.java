@@ -65,7 +65,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  * @param <K>
  *            -- entitie's key type
  */
-public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends AbstractEntityDao2<T> {
+public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends AbstractEntityDao2<T> implements ISessionEnabled {
 
     private Logger logger = Logger.getLogger(this.getClass());
 
@@ -638,5 +638,41 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 
     public IFilter getFilter() {
         return filter;
+    }
+
+    @Override
+    @SessionRequired
+    public List<EntityAggregates> getAggregates(final AggregatesQueryExecutionModel aggregatesQueryModel) {
+	return new AggregatesFetcher(getSession(), getEntityFactory(), getMappingsGenerator(), null, getFilter(), getUsername()).list(aggregatesQueryModel);
+    }
+
+    @Override
+    public IPage2<EntityAggregates> firstPage(final AggregatesQueryExecutionModel query, final int pageCapacity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public IPage2<EntityAggregates> firstPage(final AggregatesQueryExecutionModel model, final AggregatesQueryExecutionModel summaryModel, final int pageCapacity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public IPage2<EntityAggregates> getPage(final AggregatesQueryExecutionModel model, final int pageNo, final int pageCapacity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public IPage2<EntityAggregates> getPage(final AggregatesQueryExecutionModel model, final int pageNo, final int pageCount, final int pageCapacity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public byte[] export(final AggregatesQueryExecutionModel query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
+	// TODO Auto-generated method stub
+	return null;
     }
 }

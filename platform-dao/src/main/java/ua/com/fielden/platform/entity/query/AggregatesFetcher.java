@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.hibernate.Session;
 
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao2.AggregatesQueryExecutionModel;
 import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -25,7 +24,6 @@ public final class AggregatesFetcher {
 	this.fetcher = new EntityFetcher(session, entityFactory, mappingsGenerator, dbVersion, filter, username);
     }
 
-    @SessionRequired
     public List<EntityAggregates> list(final AggregatesQueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) {
 	try {
 	    return fetcher.instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight());
@@ -39,7 +37,6 @@ public final class AggregatesFetcher {
 	return list(queryModel, null, null);
     }
 
-    @SessionRequired
     protected List<EntityContainer<EntityAggregates>> listContainers(final AggregatesQueryExecutionModel queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final QueryModelResult<EntityAggregates> modelResult = new ModelResultProducer().getModelResult(queryModel, fetcher.getDbVersion(), fetcher.getMappingsGenerator(), fetcher.getFilter(), fetcher.getUsername());
 	final List<EntityContainer<EntityAggregates>> result = fetcher.listContainersAsIs(modelResult, pageNumber, pageCapacity);

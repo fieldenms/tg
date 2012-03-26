@@ -116,6 +116,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("purchasePrice.amount").as("purchasePrice.amount"). //
 		yield().prop("active").as("active"). //
 		yield().prop("leased").as("leased"). //
+		yield().prop("lastMeterReading").as("lastMeterReading"). //
 		modelAsEntity(VEHICLE));
     }
 
@@ -140,6 +141,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("purchasePrice.amount").as("purchasePrice.amount"). //
 		yield().prop("active").as("active"). //
 		yield().prop("leased").as("leased"). //
+		yield().prop("lastMeterReading").as("lastMeterReading"). //
 		modelAsEntity(VEHICLE));
     }
 
@@ -350,6 +352,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("purchasePrice.amount").as("purchasePrice.amount"). //
 		yield().prop("active").as("active"). //
 		yield().prop("leased").as("leased"). //
+		yield().prop("lastMeterReading").as("lastMeterReading"). //
 		modelAsEntity(VEHICLE);
     }
 

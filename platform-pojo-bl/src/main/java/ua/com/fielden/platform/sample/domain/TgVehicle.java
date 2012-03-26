@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -56,6 +57,21 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty(TgFuelUsage.class)  @MapTo("VEHICLE_") @Title(value = "Fuel usages", desc = "Fuel usages")
     private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
     public Set<TgFuelUsage> getFuelUsages() { return fuelUsages; }
+
+    @IsProperty
+    @MapTo(length = 10, precision = 3, scale = 10)
+    @Title(value = "Last Meter Reading", desc = "Last meter reading")
+    private BigDecimal lastMeterReading;
+
+    @Observable
+    public TgVehicle setLastMeterReading(final BigDecimal lastMeterReading) {
+	this.lastMeterReading = lastMeterReading;
+	return this;
+    }
+
+    public BigDecimal getLastMeterReading() {
+	return lastMeterReading;
+    }
 
     @Observable
     public void setFuelUsages(final Set<TgFuelUsage> fuelUsages) {

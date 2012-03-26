@@ -188,7 +188,7 @@ public class MappingsGenerator {
 	sb.append("</hibernate-mapping>");
 
 	final String result = sb.toString();
-	//System.out.println(result);
+	System.out.println(result);
 	return result;
     }
 
@@ -244,14 +244,16 @@ public class MappingsGenerator {
 	return "\t<one-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" constrained=\"true\"/>\n";
     }
 
-    private String getPropMappingString(final String propName, final List<String> propColumns, final String hibTypeName, final Long length) {
+    private String getPropMappingString(final String propName, final List<String> propColumns, final String hibTypeName, final Long length, final Long precision, final Long scale) {
 	final String propNameClause = "\t<property name=\"" + propName + "\"";
 	final String typeClause = hibTypeName == null ? "" : " type=\"" + hibTypeName + "\"";
 	final String lengthClause = length == null ? "" : " length=\"" + length + "\"";
+	final String precisionClause = precision == null ? "" : " precision=\"" + precision + "\"";
+	final String scaleClause = scale == null ? "" : " scale=\"" + scale + "\"";
 	final String endClause = "/>\n";
 	if (propColumns.size() == 1) {
 	    final String columnClause = " column=\"" + propColumns.get(0) + "\"";
-	    return propNameClause + columnClause + typeClause + lengthClause + endClause;
+	    return propNameClause + columnClause + typeClause + lengthClause + precisionClause + scaleClause + endClause;
 	} else {
 	    final StringBuffer sb = new StringBuffer();
 	    sb.append(propNameClause + typeClause + ">\n");
@@ -342,7 +344,7 @@ public class MappingsGenerator {
 	case ONE2ONE_ID:
 	    return getOneToOneEntityId(info.getName(), info.getColumn(), info.getTypeString());
 	default:
-	    return getPropMappingString(info.getName(), info.getColumns(), info.getTypeString(), info.getLength());
+	    return getPropMappingString(info.getName(), info.getColumns(), info.getTypeString(), info.getLength(), info.getPrecision(), info.getScale());
 	}
     }
 
@@ -417,10 +419,12 @@ public class MappingsGenerator {
 	final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
 	final Class javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	final long length = mapTo.length();
+	final long precision = mapTo.precision();
+	final long scale = mapTo.scale();
 	final boolean nullable = !isRequired(entityType, propName);
 
 	final Object hibernateType = getHibernateType(javaType, mapTo.typeName(), mapTo.userType(), isCollectional, isEntity);
-	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, nullable).length(length);
+	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, nullable).length(length).precision(precision).scale(scale);
 	if (isCollectional) {
 	    builder.type(PropertyPersistenceType.COLLECTIONAL);
 	}

@@ -20,6 +20,8 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     private final List<String> columns;
     private final PropertyPersistenceType type;
     private final Long length;
+    private final Long precision;
+    private final Long scale;
     private final boolean nullable;
 
     public Type getHibTypeAsType() {
@@ -96,6 +98,8 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     private PropertyPersistenceInfo(final Builder builder) {
 	type = builder.type;
 	length = builder.length > 0 ? new Long(builder.length) : null;
+	precision = builder.precision >= 0 ? new Long(builder.precision) : null;
+	scale = builder.scale >= 0 ? new Long(builder.scale) : null;
 	name = builder.name;
 	javaType = builder.javaType;
 	hibType = builder.hibType;
@@ -105,6 +109,14 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
     public Long getLength() {
 	return length;
+    }
+
+    public Long getPrecision() {
+	return precision;
+    }
+
+    public Long getScale() {
+	return scale;
     }
 
     public String getName() {
@@ -140,6 +152,8 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	private List<String> columns = new ArrayList<String>();
 	private PropertyPersistenceType type = PropertyPersistenceType.PROP;
 	private long length = 0;
+	private long precision = -1;
+	private long scale = -1;
 
 	public PropertyPersistenceInfo build() {
 	    return new PropertyPersistenceInfo(this);
@@ -154,6 +168,16 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
 	public Builder length(final long val) {
 	    length = val;
+	    return this;
+	}
+
+	public Builder precision(final long val) {
+	    precision = val;
+	    return this;
+	}
+
+	public Builder scale(final long val) {
+	    scale = val;
 	    return this;
 	}
 
