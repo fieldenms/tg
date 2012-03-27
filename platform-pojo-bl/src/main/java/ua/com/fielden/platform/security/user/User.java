@@ -75,7 +75,7 @@ public class User extends AbstractEntity<String> {
     @Invisible
     @MapTo("USER_PASSWORD")
     private String password;
-    @IsProperty(UserAndRoleAssociation.class)
+    @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
     @MapTo("ID_CRAFT")
     private Set<UserAndRoleAssociation> roles = new HashSet<UserAndRoleAssociation>();
     @IsProperty

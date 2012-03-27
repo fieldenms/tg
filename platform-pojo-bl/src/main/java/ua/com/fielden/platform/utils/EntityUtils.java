@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
@@ -718,6 +719,25 @@ public class EntityUtils {
 
 	for (final Field propField : Finder.findRealProperties(entityType, MapTo.class)) {
 	    if (!((propField.getName().equals("key") && dynamicKey) || (propField.getName().equals("desc") && noDesc))) {
+		result.add(propField);
+	    }
+	}
+
+	return result;
+    }
+
+    /**
+     * Retrieves all collectional properties fields within given entity type
+     *
+     * @param entityType
+     * @return
+     */
+    public static List<Field> getCollectionalProperties(final Class entityType) {
+	final List<Field> result = new ArrayList<Field>();
+
+	for (final Field propField : Finder.findRealProperties(entityType)) {
+	    final IsProperty propAnnotation = propField.getAnnotation(IsProperty.class);
+	    if (!IsProperty.stubForLinkProperty.equals(propAnnotation.linkProperty())) {
 		result.add(propField);
 	    }
 	}

@@ -46,6 +46,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface IsProperty {
+    public static String stubForLinkProperty = "----dummy-property----";
+
     /**
      * This setting should be used to identify a type parameter of the property type. For example, it could indicate an element type for collectional properties.
      *
@@ -83,5 +85,5 @@ public @interface IsProperty {
      *
      * @return
      */
-   String linkProperty() default "----dummy-property----";
+   String linkProperty() default stubForLinkProperty;
 }
