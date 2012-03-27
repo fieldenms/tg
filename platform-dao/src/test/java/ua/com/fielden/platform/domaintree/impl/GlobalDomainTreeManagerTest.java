@@ -15,6 +15,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
+import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
@@ -44,7 +45,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	final String property = "entityProp.simpleEntityProp";
 	dtm.getFirstTick().check(MasterEntity.class, property, true);
 
-	final ILocatorManager locatorManager = dtm.getFirstTick();
+	final ILocatorManagerInner locatorManager = (ILocatorManagerInner) dtm.getFirstTick();
 
 	test_that_saving_works_fine_with_just_initialised_LOCATORS_from_raw_construction(property, locatorManager);
 
@@ -62,7 +63,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	final IMasterDomainTreeManager mdtm = managerForNonBaseUser.getEntityMasterManager(MasterEntity.class);
 	final String property = "entityProp.simpleEntityProp";
 
-	final ILocatorManager locatorManager = mdtm;
+	final ILocatorManagerInner locatorManager = (ILocatorManagerInner) mdtm;
 
 	test_that_saving_works_fine_with_just_initialised_LOCATORS_from_raw_construction(property, locatorManager);
 
@@ -73,7 +74,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertNull("Should be null after inteligent 'save' operation. It means that 'save' operation resets some instances to 'null' -- those instances that are fully equal to 'default' instances from 'produce' method.", inst3);
     }
 
-    private void test_that_saving_works_fine_with_just_initialised_LOCATORS_from_raw_construction(final String property, final ILocatorManager locatorManager) {
+    private void test_that_saving_works_fine_with_just_initialised_LOCATORS_from_raw_construction(final String property, final ILocatorManagerInner locatorManager) {
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////// INITIALISATION (from raw construction) /////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +105,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	final String property = "entityProp.simpleEntityProp";
 	dtm.getFirstTick().check(MasterEntity.class, property, true);
 
-	final ILocatorManager locatorManager = dtm.getFirstTick();
+	final ILocatorManagerInner locatorManager = (ILocatorManagerInner) dtm.getFirstTick();
 
 	test_that_saving_works_fine_with_just_initialised_LOCATORS_from_default_config(managerForNonBaseUser, property, locatorManager);
 
@@ -122,7 +123,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	final IMasterDomainTreeManager mdtm = managerForNonBaseUser.getEntityMasterManager(MasterEntity.class);
 	final String property = "entityProp.simpleEntityProp";
 
-	final ILocatorManager locatorManager = mdtm;
+	final ILocatorManagerInner locatorManager = (ILocatorManagerInner) mdtm;
 
 	test_that_saving_works_fine_with_just_initialised_LOCATORS_from_default_config(managerForNonBaseUser, property, locatorManager);
 
@@ -133,7 +134,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertNull("Should be null after inteligent 'save' operation. It means that 'save' operation resets some instances to 'null' -- those instances that are fully equal to 'default' instances from 'produce' method.", inst3);
     }
 
-    private void test_that_saving_works_fine_with_just_initialised_LOCATORS_from_default_config(final IGlobalDomainTreeManager managerForNonBaseUser, final String property, final ILocatorManager locatorManager) {
+    private void test_that_saving_works_fine_with_just_initialised_LOCATORS_from_default_config(final IGlobalDomainTreeManager managerForNonBaseUser, final String property, final ILocatorManagerInner locatorManager) {
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////// INITIALISATION (from default configuration) ////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -632,7 +633,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
 	final String property = "entityProp.simpleEntityProp";
 	dtm.getFirstTick().check(MasterEntity.class, property, true);
-	final ILocatorManager locatorManager = dtm.getFirstTick();
+	final ILocatorManagerInner locatorManager = (ILocatorManagerInner) dtm.getFirstTick();
 
 	// initialise a default locator for type EntityWithStringKeyType which will affect initialisation of [MasterEntity.entityProp.simpleEntityProp] property.
 	initDefaultLocatorForSomeTestType(managerForNonBaseUser);

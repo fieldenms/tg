@@ -19,6 +19,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.IPropertyValueListener;
@@ -139,7 +140,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 		} catch (final IllegalArgumentException e) {
 		}
 		try {
-		    dtm().getFirstTick().produceLocatorManagerByDefault(MasterEntity.class, name);
+		    ((ILocatorManagerInner) dtm().getFirstTick()).produceLocatorManagerByDefault(MasterEntity.class, name);
 		    fail(message);
 		} catch (final IllegalArgumentException e) {
 		}
@@ -308,7 +309,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 		} catch (final IllegalArgumentException e) {
 		}
 		try {
-		    dtm().getFirstTick().produceLocatorManagerByDefault(MasterEntity.class, name);
+		    ((ILocatorManagerInner) dtm().getFirstTick()).produceLocatorManagerByDefault(MasterEntity.class, name);
 		    fail(message);
 		} catch (final IllegalArgumentException e) {
 		}

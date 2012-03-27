@@ -14,41 +14,44 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public interface ILocatorManager extends IRootTyped {
-    /**
-     * Produces a brand new <b>locator manager</b> for <i>entity-typed</i> property. The initialisation uses "default" type-related configuration (if exists) or raw instance creation.<br><br>
-     *
-     * (implementation note) : there should be two sets of locators : persistentLocators and currentLocators. save = [persistentLocators <= currentLocators]. discard =
-     * [persistentLocators => currentLocators]. <br><br>
-     *
-     * This current version of a locator manager can be altered by its methods, and then saved ({@link #acceptLocatorManager(Class, String, boolean)} method) or discarded (
-     * {@link #discardLocatorManager(Class, String, boolean)} method). <br><br>
-     *
-     * TODO Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
-     * Throws {@link IllegalArgumentException} when the property is not of {@link AbstractEntity} type.
-     *
-     * @param root -- a root type that contains property.
-     * @param property -- a dot-notation expression that defines a property.
-     * @return
-     */
-    ILocatorDomainTreeManagerAndEnhancer produceLocatorManagerByDefault(final Class<?> root, final String property);
+    public interface ILocatorManagerInner extends ILocatorManager {
+	/**
+	 * Produces a brand new <b>locator manager</b> for <i>entity-typed</i> property. The initialisation uses "default" type-related configuration (if exists) or raw instance
+	 * creation.<br><br>
+	 *
+	 * (implementation note) : there should be two sets of locators : persistentLocators and currentLocators. save = [persistentLocators <= currentLocators]. discard =
+	 * [persistentLocators => currentLocators]. <br><br>
+	 *
+	 * This current version of a locator manager can be altered by its methods, and then saved ({@link #acceptLocatorManager(Class, String, boolean)} method) or discarded (
+	 * {@link #discardLocatorManager(Class, String, boolean)} method). <br><br>
+	 *
+	 * TODO Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+	 * Throws {@link IllegalArgumentException} when the property is not of {@link AbstractEntity} type.
+	 *
+	 * @param root -- a root type that contains property.
+	 * @param property -- a dot-notation expression that defines a property.
+	 * @return
+	 */
+	ILocatorDomainTreeManagerAndEnhancer produceLocatorManagerByDefault(final Class<?> root, final String property);
 
-    /**
-     * Resets a current version of locator manager to <code>null</code>. <br><br>
-     *
-     * (implementation note) : there should be two sets of locators : persistentLocators and currentLocators. save = [persistentLocators <= currentLocators]. discard =
-     * [persistentLocators => currentLocators]. <br><br>
-     *
-     * This current version of a locator manager can be altered by its methods, and then saved ({@link #acceptLocatorManager(Class, String, boolean)} method) or discarded (
-     * {@link #discardLocatorManager(Class, String, boolean)} method). <br><br>
-     *
-     * TODO Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
-     * Throws {@link IllegalArgumentException} when the property is not of {@link AbstractEntity} type.
-     *
-     * @param root -- a root type that contains property.
-     * @param property -- a dot-notation expression that defines a property.
-     * @return
-     */
-    void resetLocatorManager(final Class<?> root, final String property);
+	/**
+	 * Resets a current version of locator manager to <code>null</code>. <br><br>
+	 *
+	 * (implementation note) : there should be two sets of locators : persistentLocators and currentLocators. save = [persistentLocators <= currentLocators]. discard =
+	 * [persistentLocators => currentLocators]. <br><br>
+	 *
+	 * This current version of a locator manager can be altered by its methods, and then saved ({@link #acceptLocatorManager(Class, String, boolean)} method) or discarded (
+	 * {@link #discardLocatorManager(Class, String, boolean)} method). <br><br>
+	 *
+	 * TODO Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+	 * Throws {@link IllegalArgumentException} when the property is not of {@link AbstractEntity} type.
+	 *
+	 * @param root -- a root type that contains property.
+	 * @param property -- a dot-notation expression that defines a property.
+	 * @return
+	 */
+	void resetLocatorManager(final Class<?> root, final String property);
+    }
 
     /**
      * Initialises a brand new <b>locator manager</b> for <i>entity-typed</i> property. The initialisation uses "default" type-related configuration (if exists) or raw instance creation.

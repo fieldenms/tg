@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Set;
 
+import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.LocatorManager;
@@ -18,7 +19,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public class MasterDomainTreeManager extends AbstractDomainTree implements IMasterDomainTreeManager {
+public class MasterDomainTreeManager extends AbstractDomainTree implements IMasterDomainTreeManager, ILocatorManagerInner {
     private static final long serialVersionUID = 7832625541851145438L;
 
     private final LocatorManager locatorManager;

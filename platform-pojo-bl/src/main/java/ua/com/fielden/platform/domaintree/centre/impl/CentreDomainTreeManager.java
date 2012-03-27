@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
@@ -118,7 +119,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @author TG Team
      *
      */
-    public static class AddToCriteriaTickManager extends TickManager implements IAddToCriteriaTickManager {
+    public static class AddToCriteriaTickManager extends TickManager implements IAddToCriteriaTickManager, ILocatorManagerInner {
 
 	private final transient ISerialiser serialiser;
 	private final EnhancementPropertiesMap<Object> propertiesValues1;

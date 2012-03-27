@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
@@ -86,7 +87,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
      *
      */
     /* TODO reduce visibility */
-    public class AddToCriteriaTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAddToCriteriaTickManager {
+    public class AddToCriteriaTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAddToCriteriaTickManager, ILocatorManagerInner {
 
 	private AddToCriteriaTickManagerAndEnhancer(final TickManager base) {
 	    super(base);

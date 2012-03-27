@@ -74,7 +74,6 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	throw new IllegalArgumentException(message);
     }
 
-    @Override
     public ILocatorDomainTreeManagerAndEnhancer produceLocatorManagerByDefault(final Class<?> root, final String property) {
 	if (isFreezedLocatorManager(root, property)) {
 	    error("Unable to Produce locator instance if it is freezed for type [" + root + "] and property [" + property + "].");
@@ -101,7 +100,6 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	init(root, property, produceLocatorManagerByDefault(root, property));
     }
 
-    @Override
     public void resetLocatorManager(final Class<?> root, final String property) {
 	if (isFreezedLocatorManager(root, property)) {
 	    error("Unable to Reset locator instance if it is freezed for type [" + root + "] and property [" + property + "].");

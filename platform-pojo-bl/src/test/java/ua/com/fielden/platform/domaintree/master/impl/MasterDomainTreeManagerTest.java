@@ -6,9 +6,9 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeTest;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
-import ua.com.fielden.platform.domaintree.master.impl.MasterDomainTreeManager;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -44,7 +44,7 @@ public class MasterDomainTreeManagerTest extends AbstractDomainTreeTest {
 		} catch (final IllegalArgumentException e) {
 		}
 		try {
-		    mdtm().produceLocatorManagerByDefault(MasterEntity.class, name);
+		    ((ILocatorManagerInner) mdtm()).produceLocatorManagerByDefault(MasterEntity.class, name);
 		    fail(message);
 		} catch (final IllegalArgumentException e) {
 		}

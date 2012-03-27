@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
@@ -517,10 +518,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     private void prepareInstanceBeforeSave(final ICentreDomainTreeManagerAndEnhancer copyMgr) {
 	// let's iterate through all locators and make them 'null' in case when they are equal to 'default' produced instances
-	for (final Pair<Class<?>, String> locatorKey : copyMgr.getFirstTick().locatorKeys()) {
-	    final ILocatorDomainTreeManagerAndEnhancer producedLocatorManager = copyMgr.getFirstTick().produceLocatorManagerByDefault(locatorKey.getKey(), locatorKey.getValue());
-	    if (producedLocatorManager.equals(copyMgr.getFirstTick().getLocatorManager(locatorKey.getKey(), locatorKey.getValue()))) {
-		copyMgr.getFirstTick().resetLocatorManager(locatorKey.getKey(), locatorKey.getValue());
+	final ILocatorManagerInner firstTick = (ILocatorManagerInner) copyMgr.getFirstTick();
+	for (final Pair<Class<?>, String> locatorKey : firstTick.locatorKeys()) {
+	    final ILocatorDomainTreeManagerAndEnhancer producedLocatorManager = firstTick.produceLocatorManagerByDefault(locatorKey.getKey(), locatorKey.getValue());
+	    if (producedLocatorManager.equals(firstTick.getLocatorManager(locatorKey.getKey(), locatorKey.getValue()))) {
+		firstTick.resetLocatorManager(locatorKey.getKey(), locatorKey.getValue());
 	    }
 	}
     }
@@ -532,10 +534,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     private void masterPrepareInstanceBeforeSave(final IMasterDomainTreeManager copyMgr) {
 	// let's iterate through all locators and make them 'null' in case when they are equal to 'default' produced instances
-	for (final Pair<Class<?>, String> locatorKey : copyMgr.locatorKeys()) {
-	    final ILocatorDomainTreeManagerAndEnhancer producedLocatorManager = copyMgr.produceLocatorManagerByDefault(locatorKey.getKey(), locatorKey.getValue());
-	    if (producedLocatorManager.equals(copyMgr.getLocatorManager(locatorKey.getKey(), locatorKey.getValue()))) {
-		copyMgr.resetLocatorManager(locatorKey.getKey(), locatorKey.getValue());
+	final ILocatorManagerInner locatorMgr = (ILocatorManagerInner) copyMgr;
+	for (final Pair<Class<?>, String> locatorKey : locatorMgr.locatorKeys()) {
+	    final ILocatorDomainTreeManagerAndEnhancer producedLocatorManager = locatorMgr.produceLocatorManagerByDefault(locatorKey.getKey(), locatorKey.getValue());
+	    if (producedLocatorManager.equals(locatorMgr.getLocatorManager(locatorKey.getKey(), locatorKey.getValue()))) {
+		locatorMgr.resetLocatorManager(locatorKey.getKey(), locatorKey.getValue());
 	    }
 	}
     }
