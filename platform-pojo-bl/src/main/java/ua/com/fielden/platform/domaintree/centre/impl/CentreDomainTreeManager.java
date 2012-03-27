@@ -242,6 +242,12 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
+	public boolean isFreezedLocatorManager(final Class<?> root, final String property) {
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask whether a locator is in freezed state for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    return locatorManager.isFreezedLocatorManager(root, property);
+	}
+
+	@Override
 	public boolean isChangedLocatorManager(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask whether a locator has been changed for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return locatorManager.isChangedLocatorManager(root, property);
@@ -720,7 +726,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
     @Override
     public void initAnalysisManagerByDefault(final String name, final AnalysisType analysisType) {
-	if (isFreezed(name)) {
+	if (isFreezedAnalysisManager(name)) {
 	    error("Unable to Init analysis instance if it is freezed for title [" + name + "].");
 	}
 	if (getAnalysisManager(name) != null) {
@@ -752,7 +758,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    currentAnalyses.remove(name);
 	}
 
-	if (isFreezed(name)) {
+	if (isFreezedAnalysisManager(name)) {
 	    unfreeze(name);
 	}
 	// fire "removed" event
@@ -765,7 +771,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
     @Override
     public void acceptAnalysisManager(final String name) {
-	if (isFreezed(name)) {
+	if (isFreezedAnalysisManager(name)) {
 	    unfreeze(name);
 	} else {
 	    final IAbstractAnalysisDomainTreeManagerAndEnhancer dtm = EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser());
@@ -784,7 +790,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
     @Override
     public void removeAnalysisManager(final String name) {
-	if (isFreezed(name)) {
+	if (isFreezedAnalysisManager(name)) {
 	    error("Unable to remove analysis instance if it is freezed for title [" + name + "].");
 	}
 	final IAbstractAnalysisDomainTreeManager mgr = getAnalysisManager(name);
@@ -809,7 +815,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
     @Override
     public void freezeAnalysisManager(final String name) {
-	if (isFreezed(name)) {
+	if (isFreezedAnalysisManager(name)) {
 	    error("Unable to freeze the analysis instance more than once for title [" + name + "].");
 	}
 	notInitiliasedError(persistentAnalyses.get(name), name);
@@ -825,7 +831,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @param name
      * @return
      */
-    protected boolean isFreezed(final String name) {
+    @Override
+    public boolean isFreezedAnalysisManager(final String name) {
 	return freezedAnalyses.get(name) != null;
     }
 
@@ -836,7 +843,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @param name
      */
     protected void unfreeze(final String name) {
-	if (!isFreezed(name)) {
+	if (!isFreezedAnalysisManager(name)) {
 	    error("Unable to unfreeze the analysis instance that is not 'freezed' for title [" + name + "].");
 	}
 	final IAbstractAnalysisDomainTreeManagerAndEnhancer persistentAnalysis = freezedAnalyses.remove(name);

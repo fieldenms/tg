@@ -72,6 +72,27 @@ public interface IGlobalDomainTreeManager {
     void freezeEntityCentreManager(final Class<?> root, final String name);
 
     /**
+     * Returns <code>true</code> if the current version of <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b> is in freezed state.
+     * Use {@link #discardEntityCentreManager(Class, String)} or {@link #saveEntityCentreManager(Class, String)} to discard / accept the changes that were made after
+     * freezing (these actions trigger automatic unfreezing after that).
+     * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
+     *
+     * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
+     * Non-base users can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but cannot save/remove base user's reports (throws {@link IllegalArgumentException}).
+     * Base users can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports including principle), but cannot remove principle report (throws {@link IllegalArgumentException}). <br><br>
+     *
+     * Throws {@link IllegalArgumentException} when entity-centre was not initialised.<br><br>
+     *
+     * The current version of a entity-centre manager should be initialised before usage ({@link #initEntityCentreManager(Class, String)}),
+     * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
+     * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
+     *
+     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
+     */
+    boolean isFreezedEntityCentreManager(final Class<?> root, final String name);
+
+    /**
      * Initialises a brand new <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>.
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *

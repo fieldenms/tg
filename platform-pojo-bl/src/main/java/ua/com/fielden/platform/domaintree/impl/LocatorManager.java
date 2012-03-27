@@ -76,7 +76,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     @Override
     public ILocatorDomainTreeManagerAndEnhancer produceLocatorManagerByDefault(final Class<?> root, final String property) {
-	if (isFreezed(root, property)) {
+	if (isFreezedLocatorManager(root, property)) {
 	    error("Unable to Produce locator instance if it is freezed for type [" + root + "] and property [" + property + "].");
 	}
 	AbstractDomainTree.illegalType(root, property, "Could not init a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
@@ -95,7 +95,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     @Override
     public void initLocatorManagerByDefault(final Class<?> root, final String property) {
-	if (isFreezed(root, property)) {
+	if (isFreezedLocatorManager(root, property)) {
 	    error("Unable to Init locator instance if it is freezed for type [" + root + "] and property [" + property + "].");
 	}
 	init(root, property, produceLocatorManagerByDefault(root, property));
@@ -103,7 +103,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     @Override
     public void resetLocatorManager(final Class<?> root, final String property) {
-	if (isFreezed(root, property)) {
+	if (isFreezedLocatorManager(root, property)) {
 	    error("Unable to Reset locator instance if it is freezed for type [" + root + "] and property [" + property + "].");
 	}
 	init(root, property, null);
@@ -114,14 +114,14 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	AbstractDomainTree.illegalType(root, property, "Could not discard a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
 	currentLocators.put(key(root, property), EntityUtils.deepCopy(persistentLocators.get(key(root, property)), getSerialiser()));
 
-	if (isFreezed(root, property)) {
+	if (isFreezedLocatorManager(root, property)) {
 	    unfreeze(root, property);
 	}
     }
 
     @Override
     public void acceptLocatorManager(final Class<?> root, final String property) {
-	if (isFreezed(root, property)) {
+	if (isFreezedLocatorManager(root, property)) {
 	    unfreeze(root, property);
 	} else {
 	    AbstractDomainTree.illegalType(root, property, "Could not save a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
@@ -131,7 +131,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     @Override
     public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
-	if (isFreezed(root, property)) {
+	if (isFreezedLocatorManager(root, property)) {
 	    error("Unable to Save locator instance Globally if it is freezed for type [" + root + "] and property [" + property + "].");
 	}
 	AbstractDomainTree.illegalType(root, property, "Could not save globally a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
@@ -162,7 +162,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     @Override
     public void freezeLocatorManager(final Class<?> root, final String property) {
-	if (isFreezed(root, property)) {
+	if (isFreezedLocatorManager(root, property)) {
 	    error("Unable to freeze the locator instance more than once for type [" + root + "] and property [" + property + "].");
 	}
 	notInitiliasedError(persistentLocators.get(key(root, property)), root, property);
@@ -179,7 +179,8 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
      * @param property
      * @return
      */
-    protected boolean isFreezed(final Class<?> root, final String property) {
+    @Override
+    public boolean isFreezedLocatorManager(final Class<?> root, final String property) {
 	return freezedLocators.get(key(root, property)) != null;
     }
 
@@ -190,7 +191,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
      * @param property
      */
     protected void unfreeze(final Class<?> root, final String property) {
-	if (!isFreezed(root, property)) {
+	if (!isFreezedLocatorManager(root, property)) {
 	    error("Unable to unfreeze the locator instance that is not 'freezed' for type [" + root + "] and property [" + property + "].");
 	}
 	final ILocatorDomainTreeManagerAndEnhancer persistentLocator = freezedLocators.remove(key(root, property));

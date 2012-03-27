@@ -116,7 +116,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     @Override
     public void initEntityCentreManager(final Class<?> root, final String name) {
 	AbstractDomainTree.validateRootType(root);
-	if (isFreezed(root, name)) {
+	if (isFreezedEntityCentreManager(root, name)) {
 	    error("Unable to Init the 'freezed' entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
 	}
 	final String rootName = root.getName();
@@ -340,14 +340,14 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
 	currentCentres.put(key(root, name), initCriteriaManagerCrossReferences(EntityUtils.deepCopy(persistentCentres.get(key(root, name)), getSerialiser())));
 
-	if (isFreezed(root, name)) {
+	if (isFreezedEntityCentreManager(root, name)) {
 	    unfreeze(root, name);
 	}
     }
 
     @Override
     public void freezeEntityCentreManager(final Class<?> root, final String name) {
-	if (isFreezed(root, name)) {
+	if (isFreezedEntityCentreManager(root, name)) {
 	    error("Unable to freeze the entity-centre instance more than once for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
 	}
 	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
@@ -364,7 +364,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param name
      * @return
      */
-    protected boolean isFreezed(final Class<?> root, final String name) {
+    @Override
+    public boolean isFreezedEntityCentreManager(final Class<?> root, final String name) {
 	return freezedCentres.get(key(root, name)) != null;
     }
 
@@ -375,7 +376,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param name
      */
     protected void unfreeze(final Class<?> root, final String name) {
-	if (!isFreezed(root, name)) {
+	if (!isFreezedEntityCentreManager(root, name)) {
 	    error("Unable to unfreeze the entity-centre instance that is not 'freezed' for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
 	}
 	final ICentreDomainTreeManagerAndEnhancer persistentCentre = freezedCentres.remove(key(root, name));
@@ -410,7 +411,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public void saveEntityCentreManager(final Class<?> root, final String name) {
-	if (isFreezed(root, name)) {
+	if (isFreezedEntityCentreManager(root, name)) {
 	    unfreeze(root, name);
 	} else {
 	    final ICentreDomainTreeManagerAndEnhancer currentMgr = getEntityCentreManager(root, name);
@@ -478,7 +479,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public void saveAsEntityCentreManager(final Class<?> root, final String originalName, final String newName) {
-	if (isFreezed(root, originalName)) {
+	if (isFreezedEntityCentreManager(root, originalName)) {
 	    error("Unable to SaveAs the 'freezed' entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title(root, originalName) + "] for current user [" + currentUser() + "].");
 	}
 	final ICentreDomainTreeManagerAndEnhancer originationMgr = getEntityCentreManager(root, originalName);
@@ -547,7 +548,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public void removeEntityCentreManager(final Class<?> root, final String name) {
-	if (isFreezed(root, name)) {
+	if (isFreezedEntityCentreManager(root, name)) {
 	    error("Unable to Remove the 'freezed' entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
 	}
 	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);

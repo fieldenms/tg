@@ -803,11 +803,13 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 
 	assertTrue("Should be changed after modification.", dtm().isChangedAnalysisManager(name2));
 	assertFalse("Should be unchecked after modification.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertFalse("Should be NOT freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	// FREEEEEEEZEEEEEE all current changes
 	dtm().freezeAnalysisManager(name2);
 	assertFalse("Should not be changed after freezing.", dtm().isChangedAnalysisManager(name2));
 	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertTrue("Should be freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	////////////////////// Not permitted tasks after report has been freezed //////////////////////
 	try {
@@ -830,17 +832,20 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property1, true);
 	assertTrue("Should be changed after modification after freezing.", dtm().isChangedAnalysisManager(name2));
 	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertTrue("Should be freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	// discard after-freezing changes
 	dtm().discardAnalysisManager(name2);
 	assertTrue("Should be changed after discard after freezing (due to existence of before-freezing changes).", dtm().isChangedAnalysisManager(name2));
 	assertFalse("Should be unchecked after discard after freezing (according to before-freezing changes).", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertFalse("Should be NOT freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	// FREEEEEEEZEEEEEE all current changes (again)
 	dtm().freezeAnalysisManager(name2);
 	assertFalse("Should not be changed after freezing.", dtm().isChangedAnalysisManager(name2));
 	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
 	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property2));
+	assertTrue("Should be freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	// change smth.
 	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property2, true);
@@ -848,12 +853,14 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	assertTrue("Should be changed after modification after freezing.", dtm().isChangedAnalysisManager(name2));
 	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property2));
 	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertTrue("Should be freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	// apply after-freezing changes
 	dtm().acceptAnalysisManager(name2);
 	assertTrue("Should be changed after applying.", dtm().isChangedAnalysisManager(name2));
 	assertTrue("Should be checked after applying.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property2));
 	assertTrue("Should be checked after applying.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertFalse("Should be NOT freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	// return to the original version of the manager and check if it really is not changed
 	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property2, false);

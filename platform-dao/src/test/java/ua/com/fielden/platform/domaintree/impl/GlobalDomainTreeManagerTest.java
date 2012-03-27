@@ -549,11 +549,13 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 
 	assertTrue("Should be changed after modification.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
 	assertFalse("Should be unchecked after modification.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+	assertFalse("Should not be freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
 
 	// FREEEEEEEZEEEEEE all current changes
 	nonBaseMgr.freezeEntityCentreManager(MasterEntity.class, "REPORT");
 	assertFalse("Should not be changed after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
 	assertFalse("Should be unchecked after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+	assertTrue("Should be freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
 
 	////////////////////// Not permitted tasks after report has been freezed //////////////////////
 	try {
@@ -581,17 +583,20 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().check(MasterEntity.class, "integerProp", true);
 	assertTrue("Should be changed after modification after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
 	assertTrue("Should be checked after modification after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+	assertTrue("Should be freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
 
 	// discard after-freezing changes
 	nonBaseMgr.discardEntityCentreManager(MasterEntity.class, "REPORT");
 	assertTrue("Should be changed after discard after freezing (due to existence of before-freezing changes).", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
 	assertFalse("Should be unchecked after discard after freezing (according to before-freezing changes).", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+	assertFalse("Should be NOT freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
 
 	// FREEEEEEEZEEEEEE all current changes (again)
 	nonBaseMgr.freezeEntityCentreManager(MasterEntity.class, "REPORT");
 	assertFalse("Should not be changed after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
 	assertFalse("Should be unchecked after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
 	assertFalse("Should be unchecked after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "bigDecimalProp"));
+	assertTrue("Should be freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
 
 	// change smth.
 	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().check(MasterEntity.class, "bigDecimalProp", true);
@@ -599,17 +604,20 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertTrue("Should be changed after modification after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
 	assertTrue("Should be checked after modification after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "bigDecimalProp"));
 	assertTrue("Should be checked after modification after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+	assertTrue("Should be freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
 
 	// save (precisely "apply") after-freezing changes
 	nonBaseMgr.saveEntityCentreManager(MasterEntity.class, "REPORT");
 	assertTrue("Should be changed after applying.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
 	assertTrue("Should be checked after applying.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "bigDecimalProp"));
 	assertTrue("Should be checked after applying.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
+	assertFalse("Should be NOT freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
 
 	// return to the original version of the manager and check if it really is not changed
 	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().check(MasterEntity.class, "bigDecimalProp", false);
 
 	assertFalse("Should not be changed after returning to original version.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertFalse("Should be NOT freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
     }
 
     @Test
@@ -641,13 +649,15 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertFalse("Should not be changed.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
 	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
 
-	assertTrue("Should be changed after modification..", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
+	assertTrue("Should be changed after modification.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
 	assertTrue("Should be checked after modification.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertFalse("Should be NOT freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
 
 	// FREEEEEEEZEEEEEE all current changes
 	locatorManager.freezeLocatorManager(MasterEntity.class, property);
 	assertFalse("Should not be changed after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
 	assertTrue("Should be checked after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertTrue("Should be freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
 
 	////////////////////// Not permitted tasks after report has been freezed //////////////////////
 	try {
@@ -680,17 +690,20 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
 	assertTrue("Should be changed after modification after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
 	assertFalse("Should be unchecked after modification after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertTrue("Should be freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
 
 	// discard after-freezing changes
 	locatorManager.discardLocatorManager(MasterEntity.class, property);
 	assertTrue("Should be changed after discard after freezing (due to existence of before-freezing changes).", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
 	assertTrue("Should be checked after discard after freezing (according to before-freezing changes).", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertFalse("Should be NOT freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
 
 	// FREEEEEEEZEEEEEE all current changes (again)
 	locatorManager.freezeLocatorManager(MasterEntity.class, property);
 	assertFalse("Should not be changed after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
 	assertTrue("Should be checked after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	assertTrue("Should be checked after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "bigDecimalProp"));
+	assertTrue("Should be freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
 
 	// change smth.
 	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
@@ -698,12 +711,14 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertTrue("Should be changed after modification after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
 	assertFalse("Should be unchecked after modification after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	assertFalse("Should be unchecked after modification after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "bigDecimalProp"));
+	assertTrue("Should be freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
 
 	// save (precisely "apply") after-freezing changes
 	locatorManager.acceptLocatorManager(MasterEntity.class, property);
 	assertTrue("Should be changed after applying.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
 	assertFalse("Should be unchecked after applying.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	assertFalse("Should be unchecked after applying.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "bigDecimalProp"));
+	assertFalse("Should be NOT freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
 
 	// return to the original version of the manager and check if it really is not changed
 	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "bigDecimalProp", true);

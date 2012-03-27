@@ -211,6 +211,23 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     void freezeAnalysisManager(final String name);
 
     /**
+     * Returns <code>true</code> if the current version of analysis manager instance with specified <code>name</code> is in freezed state.
+     * Use {@link #discardAnalysisManager(String)} or {@link #acceptAnalysisManager(String)} to discard / accept the changes that were made after
+     * freezing (these actions trigger automatic unfreezing after that).
+     * <br><br>
+     *
+     * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
+     * [persistentAnalyses => currentAnalyses]. <br><br>
+     *
+     * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
+     * {@link #discardAnalysisManager(String)} method). <br><br>
+     *
+     * @param name -- a name that defines an analysis.
+     * @return
+     */
+    boolean isFreezedAnalysisManager(final String name);
+
+    /**
      * Returns an <b>ordered</b> list of existent analysis names (which are the keys, that can be used in {@link #getAnalysisManager(String)} method).
      *
      * @return

@@ -171,6 +171,27 @@ public interface ILocatorManager extends IRootTyped {
     void freezeLocatorManager(final Class<?> root, final String property);
 
     /**
+     * Returns <code>true</code> if the current version of locator manager instance for <i>entity-typed</i> property is in freezed state.
+     * Use {@link #discardLocatorManager(Class, String)} or {@link #acceptLocatorManager(Class, String)} to discard / accept the changes that were made after
+     * freezing (these actions trigger automatic unfreezing after that).
+     * <br><br>
+     *
+     * (implementation note) : there should be two sets of locators : persistentLocators and currentLocators. save = [persistentLocators <= currentLocators]. discard =
+     * [persistentLocators => currentLocators]. <br><br>
+     *
+     * This current version of a locator manager can be altered by its methods, and then saved ({@link #acceptLocatorManager(Class, String, boolean)} method) or discarded (
+     * {@link #discardLocatorManager(Class, String, boolean)} method). <br><br>
+     *
+     * TODO Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+     * Throws {@link IllegalArgumentException} when the property is not of {@link AbstractEntity} type.
+     *
+     * @param root -- a root type that contains property.
+     * @param property -- a dot-notation expression that defines a property.
+     * @return
+     */
+    boolean isFreezedLocatorManager(final Class<?> root, final String property);
+
+    /**
      * Returns <code>true</code> if the current version of locator manager instance for <i>entity-typed</i> property has been changed since last saving/discard (or since
      * the beginning of locator history). <br><br>
      *
