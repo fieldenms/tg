@@ -118,13 +118,6 @@
 			<artifactId>xercesImpl</artifactId>
 			<version>2.9.1</version>
 		</dependency>
-
-		<!-- Rule pojo-bl dependency -->
-		<dependency>
-			<groupId>fielden</groupId>
-			<artifactId>rule-pojo-bl</artifactId>
-			<version>1.1-SNAPSHOT</version>
-		</dependency>
 		<dependency>
 			<groupId>org.apache.ant</groupId>
 			<artifactId>ant</artifactId>
