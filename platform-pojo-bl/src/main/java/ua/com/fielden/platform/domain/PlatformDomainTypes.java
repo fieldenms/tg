@@ -21,7 +21,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 
 public class PlatformDomainTypes{
-    public static final List<Class<? extends AbstractEntity>> types = new ArrayList<Class<? extends AbstractEntity>>();
+    public static final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<Class<? extends AbstractEntity<?>>>();
 
     static {
 	types.add(MainMenuItem.class);

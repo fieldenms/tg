@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
@@ -16,14 +16,14 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
     private final DbVersion dbVersion;
-    private final MappingsGenerator mappingsGenerator;
+    private final DomainPersistenceMetadata domainPersistenceMetadata;
     private final IFilter filter;
     private final String username;
 
 
-    public EntQueryGenerator(final DbVersion dbVersion, final MappingsGenerator mappingsGenerator, final IFilter filter, final String username) {
+    public EntQueryGenerator(final DbVersion dbVersion, final DomainPersistenceMetadata domainPersistenceMetadata, final IFilter filter, final String username) {
 	this.dbVersion = dbVersion;
-	this.mappingsGenerator = mappingsGenerator;
+	this.domainPersistenceMetadata = domainPersistenceMetadata;
 	this.filter = filter;
 	this.username = username;
     }
@@ -116,14 +116,14 @@ public class EntQueryGenerator {
 	}
 
 	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), orderBy.getModel(), qryModel.getResultType(), category, //
-		mappingsGenerator, filter, username, this);
+		domainPersistenceMetadata, filter, username, this);
     }
 
     public DbVersion getDbVersion() {
         return dbVersion;
     }
 
-    public MappingsGenerator getMappingsGenerator() {
-        return mappingsGenerator;
+    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
+        return domainPersistenceMetadata;
     }
 }

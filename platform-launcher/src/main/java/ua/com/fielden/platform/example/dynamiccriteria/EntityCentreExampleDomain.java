@@ -11,9 +11,9 @@ import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleNestedEnti
 
 public class EntityCentreExampleDomain {
 
-    public static final List<Class<? extends AbstractEntity>> entityTypes = new ArrayList<Class<? extends AbstractEntity>>();
+    public static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
 
-    static void add(final Class<? extends AbstractEntity> domainType) {
+    static void add(final Class<? extends AbstractEntity<?>> domainType) {
 	entityTypes.add(domainType);
     }
 

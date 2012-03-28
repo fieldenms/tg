@@ -18,7 +18,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class MappingsGeneratorPPIsTest extends BaseEntQueryTCase {
+public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
     private static Type hibType(final String name) {
 	return TypeFactory.basic(name);
     }
@@ -41,7 +41,7 @@ public class MappingsGeneratorPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("make", MAKE, true, hibType("long"), "MAKE_", PropertyPersistenceType.ENTITY));
 
 	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
-	actual.addAll(MAPPINGS_GENERATOR.getEntityPPIs(MODEL));
+	actual.addAll(DOMAIN_PERSISTENCE_METADATA.getEntityPPIs(MODEL));
 	assertEquals("Incorrect result type", expected, actual);
     }
 
@@ -57,7 +57,7 @@ public class MappingsGeneratorPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PURCHASEPRICE_", PropertyPersistenceType.COMPOSITE_DETAILS));
 
 	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
-	actual.addAll(MAPPINGS_GENERATOR.getEntityPPIs(VEHICLE));
+	actual.addAll(DOMAIN_PERSISTENCE_METADATA.getEntityPPIs(VEHICLE));
 	assertTrue(actual.containsAll(expected));
     }
 
@@ -70,26 +70,26 @@ public class MappingsGeneratorPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("roles", UserRole.class, false, hibType("long"), "ID_CRAFT", PropertyPersistenceType.COLLECTIONAL));
 
 	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
-	actual.addAll(MAPPINGS_GENERATOR.getEntityPPIs(User.class));
+	actual.addAll(DOMAIN_PERSISTENCE_METADATA.getEntityPPIs(User.class));
 	assertTrue(actual.containsAll(expected));
     }
 
     @Test
     public void test3() {
-	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "station"));
-	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "station.key"));
+	assertTrue(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "station"));
+	assertTrue(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "station.key"));
 
-	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model"));
-	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.id"));
-	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.key"));
-	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.desc"));
-	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make"));
-	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make.id"));
-	assertFalse(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make.key"));
-	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "model.make.desc"));
-	assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "price.amount"));
+	assertFalse(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "model"));
+	assertFalse(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "model.id"));
+	assertFalse(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "model.key"));
+	assertTrue(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "model.desc"));
+	assertFalse(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "model.make"));
+	assertFalse(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "model.make.id"));
+	assertFalse(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "model.make.key"));
+	assertTrue(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "model.make.desc"));
+	assertTrue(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "price.amount"));
 	try {
-	    assertTrue(MAPPINGS_GENERATOR.isNullable(VEHICLE, "price.currency"));
+	    assertTrue(DOMAIN_PERSISTENCE_METADATA.isNullable(VEHICLE, "price.currency"));
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	}

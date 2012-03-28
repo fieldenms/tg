@@ -12,7 +12,7 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.filtering.DataFilter;
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.equery.interfaces.IFilter;
@@ -87,7 +87,7 @@ import com.google.inject.TypeLiteral;
  */
 public class DaoTestHibernateModule extends CommonFactoryModule {
 
-    public DaoTestHibernateModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator) {
+    public DaoTestHibernateModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final DomainPersistenceMetadata mappingsGenerator) {
 	super(sessionFactory, mappingExtractor, mappingsGenerator);
     }
 

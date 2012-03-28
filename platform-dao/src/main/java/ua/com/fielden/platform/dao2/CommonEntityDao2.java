@@ -71,7 +71,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 
     private ThreadLocal<Session> threadLocalSession = new ThreadLocal<Session>();
 
-    private MappingsGenerator mappingsGenerator;
+    private DomainPersistenceMetadata domainPersistenceMetadata;
 
     private EntityFactory entityFactory;
 
@@ -109,8 +109,8 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
      * @param mappingExtractor
      */
     @Inject
-    protected void setMappingsGenerator(final MappingsGenerator mappingsGenerator) {
-	this.mappingsGenerator = mappingsGenerator;
+    protected void setDomainPersistenceMetadata(final DomainPersistenceMetadata domainPersistenceMetadata) {
+	this.domainPersistenceMetadata = domainPersistenceMetadata;
     }
 
     @Override
@@ -180,7 +180,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	    } else if (!entity.getDirtyProperties().isEmpty()) {
 		// let's also make sure that duplicate entities are not allowed
 		final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop("id").as("id").modelAsAggregate();
-		final List<EntityAggregates> ids = new AggregatesFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, null, null).list(from(model).build());
+		final List<EntityAggregates> ids = new AggregatesFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, null, null).list(from(model).build());
 		final int count = ids.size();
 		if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get("id")).longValue())) {
 		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " entity already exists."));
@@ -313,7 +313,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
      */
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-	return new EntityFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+	return new EntityFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, filter, getUsername()).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
     }
 
     @Override
@@ -389,7 +389,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
     protected int evalNumOfPages(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
 	final AggregatedResultQueryModel countQuery = select(model).yield().countAll().as("count").modelAsAggregate();
 	final AggregatesQueryExecutionModel countModel = from(countQuery).with(paramValues).lightweight(true).build();
-	final List<EntityAggregates> counts = new AggregatesFetcher(getSession(), getEntityFactory(), mappingsGenerator, null, filter, getUsername()). //
+	final List<EntityAggregates> counts = new AggregatesFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, filter, getUsername()). //
 		list(countModel, null, null);
 	final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 
@@ -627,8 +627,8 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	return entityFactory;
     }
 
-    public MappingsGenerator getMappingsGenerator() {
-        return mappingsGenerator;
+    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
+        return domainPersistenceMetadata;
     }
 
     @Override
@@ -643,7 +643,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
     @Override
     @SessionRequired
     public List<EntityAggregates> getAggregates(final AggregatesQueryExecutionModel aggregatesQueryModel) {
-	return new AggregatesFetcher(getSession(), getEntityFactory(), getMappingsGenerator(), null, getFilter(), getUsername()).list(aggregatesQueryModel);
+	return new AggregatesFetcher(getSession(), getEntityFactory(), getDomainPersistenceMetadata(), null, getFilter(), getUsername()).list(aggregatesQueryModel);
     }
 
     @Override

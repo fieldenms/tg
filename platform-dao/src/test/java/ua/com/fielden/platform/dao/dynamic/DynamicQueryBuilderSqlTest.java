@@ -14,7 +14,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.MappingExtractor;
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao2.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.interfaces.IMain.ICompleted;
 import ua.com.fielden.platform.equery.interfaces.IMain.IJoin;
@@ -59,11 +60,11 @@ public class DynamicQueryBuilderSqlTest {
 	hibTypeMap.put(Boolean.class, YesNoType.class);
 	hibTypeMap.put(Date.class, DateTimeType.class);
 	hibTypeMap.put(Money.class, SimpleMoneyType.class);
-	final List<Class<? extends AbstractEntity>> domainTypes = new ArrayList<Class<? extends AbstractEntity>>();
+	final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
 	domainTypes.add(MasterEntity.class);
 	domainTypes.add(SlaveEntity.class);
 	domainTypes.add(EvenSlaverEntity.class);
-	hibConf.addXML((new MappingsGenerator(hibTypeMap, null, domainTypes)).generateMappings());
+	hibConf.addXML(new HibernateMappingsGenerator((new DomainPersistenceMetadata(hibTypeMap, null, domainTypes)).getHibTypeInfosMap()).generateMappings());
 	mappingExtractor = new MappingExtractor(hibConf);
 	final List<String> propertyNames = Arrays.asList(new String [] {
 		"integerProp",

@@ -5,7 +5,8 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao2.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import static org.junit.Assert.assertEquals;
@@ -14,10 +15,10 @@ import static org.junit.Assert.assertEquals;
 public class MappingGenerationTest {
     @Test
     public void dump_mapping_for_type_wity_byte_array_property() {
-	final List<Class<? extends AbstractEntity>> domainTypes = new ArrayList<Class<? extends AbstractEntity>>();
+	final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
 	domainTypes.add(EntityCentreConfig.class);
-	final MappingsGenerator mg = new MappingsGenerator(null, null, domainTypes);
-	final String tgModelMapping = mg.generateMappings();
+	final DomainPersistenceMetadata mg = new DomainPersistenceMetadata(null, null, domainTypes);
+	final String tgModelMapping = new HibernateMappingsGenerator(mg.getHibTypeInfosMap()).generateMappings();
 	final String expectedMapping =
 			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                         "<!DOCTYPE hibernate-mapping PUBLIC\n" +

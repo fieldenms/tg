@@ -9,8 +9,8 @@ import org.hibernate.cfg.Configuration;
 
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.annotations.Transactional;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao2.ISessionEnabled;
-import ua.com.fielden.platform.dao2.MappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Proxy;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
@@ -32,42 +32,42 @@ public abstract class TransactionalModule2 extends EntityModule {
     protected final SessionFactory sessionFactory;
     private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
-    private final MappingsGenerator mappingsGenerator;
+    private final DomainPersistenceMetadata domainPersistenceMetadata;
     protected final ProxyInterceptor interceptor;
     private final HibernateUtil hibernateUtil;
 
     /**
-     * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link MappingsGenerator}. All descending classes needs to provide those two
+     * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link DomainPersistenceMetadata}. All descending classes needs to provide those two
      * parameters.
      *
      * @param sessionFactory
      * @param mappingExtractor
      * @throws Exception
      */
-    public TransactionalModule2(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity>> applicationEntityTypes) throws Exception {
+    public TransactionalModule2(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) throws Exception {
 	final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(props, defaultHibernateTypes, applicationEntityTypes);
 	final Configuration hibernateConfig = hcf.build();
 	interceptor = new ProxyInterceptor();
 	hibernateUtil = new HibernateUtil(interceptor, hibernateConfig);
 
 	this.sessionFactory = hibernateUtil.getSessionFactory();
-	this.mappingsGenerator = hcf.getMappingsGenerator();
+	this.domainPersistenceMetadata = hcf.getDomainPersistenceMetadata();
     }
 
-    public TransactionalModule2(final SessionFactory sessionFactory, final MappingsGenerator mappingsGenerator) {
+    public TransactionalModule2(final SessionFactory sessionFactory, final DomainPersistenceMetadata domainPersistenceMetadata) {
 	interceptor = null;
 	hibernateUtil = null;
 
 	this.sessionFactory = sessionFactory;
-	this.mappingsGenerator = mappingsGenerator;
+	this.domainPersistenceMetadata = domainPersistenceMetadata;
     }
 
     @Override
     protected void configure() {
 	super.configure();
 	// entity aggregates transformer
-	if (mappingsGenerator != null) {
-	    bind(MappingsGenerator.class).toInstance(mappingsGenerator);
+	if (domainPersistenceMetadata != null) {
+	    bind(DomainPersistenceMetadata.class).toInstance(domainPersistenceMetadata);
 	}
 	// hibernate util
 	if (hibernateUtil != null) {
@@ -104,7 +104,7 @@ public abstract class TransactionalModule2 extends EntityModule {
 	return domainMetaPropertyConfig;
     }
 
-    public MappingsGenerator getMappingsGenerator() {
-	return mappingsGenerator;
+    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
+	return domainPersistenceMetadata;
     }
 }

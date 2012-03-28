@@ -35,9 +35,9 @@ import ua.com.fielden.platform.test.entities.CompositeEntityKey;
  *
  */
 public class PlatformTestDomainTypes {
-    public static final List<Class<? extends AbstractEntity>> entityTypes = new ArrayList<Class<? extends AbstractEntity>>();
+    public static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
 
-    static void add(final Class<? extends AbstractEntity> domainType) {
+    static void add(final Class<? extends AbstractEntity<?>> domainType) {
 	entityTypes.add(domainType);
     }
 

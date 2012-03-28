@@ -62,7 +62,7 @@ public class PopulateDbForEntityCentreExample extends DomainDrivenDataPopulation
     }
 
     @Override
-    protected List<Class<? extends AbstractEntity>> domainEntityTypes() {
+    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
 	return EntityCentreExampleDomain.entityTypes;
     }
 

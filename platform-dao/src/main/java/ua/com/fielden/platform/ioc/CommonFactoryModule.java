@@ -8,7 +8,7 @@ import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 
@@ -20,11 +20,11 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
  */
 public class CommonFactoryModule extends PropertyFactoryModule {
 
-    public CommonFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity>> applicationEntityTypes) throws Exception {
+    public CommonFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) throws Exception {
 	super(props, defaultHibernateTypes, applicationEntityTypes);
     }
 
-    public CommonFactoryModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator) {
+    public CommonFactoryModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final DomainPersistenceMetadata mappingsGenerator) {
 	super(sessionFactory, mappingExtractor, mappingsGenerator);
     }
 

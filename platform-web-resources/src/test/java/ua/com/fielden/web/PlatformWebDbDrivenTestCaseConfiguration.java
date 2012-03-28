@@ -11,7 +11,8 @@ import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.MappingExtractor;
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao2.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
@@ -65,15 +66,15 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
 	try {
 
 	    final Configuration cfg = new Configuration();
-		final List<Class<? extends AbstractEntity>> domainTypes = new ArrayList<Class<? extends AbstractEntity>>();
+		final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
 		domainTypes.add(User.class);
 		domainTypes.add(UserRole.class);
 		domainTypes.add(UserAndRoleAssociation.class);
 		domainTypes.add(SecurityRoleAssociation.class);
 		domainTypes.add(InspectedEntity.class);
 		domainTypes.add(Attachment.class);
-	    final MappingsGenerator mappingsGenerator = new MappingsGenerator(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes);
-	    cfg.addXML(mappingsGenerator.generateMappings());
+	    final DomainPersistenceMetadata domainPersistenceMetadata = new DomainPersistenceMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes);
+	    cfg.addXML(new HibernateMappingsGenerator(domainPersistenceMetadata.getHibTypeInfosMap()).generateMappings());
 
 	    cfg.setProperty("hibernate.current_session_context_class", "thread");
 	    cfg.setProperty("hibernate.show_sql", "false");
@@ -85,7 +86,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
 	    cfg.setProperty("hibernate.connection.password", "");
 
 	    hibernateUtil = new HibernateUtil(interceptor, cfg);
-	    hibernateModule = new WebHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()), mappingsGenerator);
+	    hibernateModule = new WebHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()), domainPersistenceMetadata);
 	    injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
 	    entityFactory = injector.getInstance(EntityFactory.class);
 	    interceptor.setFactory(entityFactory);

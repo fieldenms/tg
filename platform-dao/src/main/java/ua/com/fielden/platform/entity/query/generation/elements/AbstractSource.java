@@ -9,7 +9,7 @@ import java.util.TreeMap;
 
 import org.hibernate.Hibernate;
 
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
@@ -46,7 +46,7 @@ public abstract class AbstractSource implements ISource {
     /**
      * Reference to mappings generator instance - used for acquiring properties persistence infos.
      */
-    private final MappingsGenerator mappingsGenerator;
+    private final DomainPersistenceMetadata domainPersistenceMetadata;
 
     private boolean nullable;
 
@@ -59,9 +59,9 @@ public abstract class AbstractSource implements ISource {
 	this.sqlAlias = sqlAlias;
     }
 
-    public AbstractSource(final String alias, final MappingsGenerator mappingsGenerator) {
+    public AbstractSource(final String alias, final DomainPersistenceMetadata domainPersistenceMetadata) {
 	this.alias = alias;
-	this.mappingsGenerator = mappingsGenerator;
+	this.domainPersistenceMetadata = domainPersistenceMetadata;
     }
 
     @Override
@@ -309,7 +309,7 @@ public abstract class AbstractSource implements ISource {
 	final SortedMap<PurePropInfo, List<EntProp>> groups = determineGroups(refProps);
 
 	for (final Map.Entry<PurePropInfo, List<EntProp>> groupEntry : groups.entrySet()) {
-	    final TypeBasedSource qrySource = new TypeBasedSource(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, mappingsGenerator);
+	    final TypeBasedSource qrySource = new TypeBasedSource(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, domainPersistenceMetadata);
 	    qrySource.populateSourceItems(groupEntry.getKey().nullable);
 	    qrySource.assignNullability(groupEntry.getKey().nullable);
 	    result.add(new CompoundSource(qrySource, joinType(groupEntry.getKey().nullable), joinCondition(qrySource.getAlias(), qrySource.getAlias() + ".id")));
@@ -319,8 +319,8 @@ public abstract class AbstractSource implements ISource {
 	return result;
     }
 
-    public MappingsGenerator getMappingsGenerator() {
-        return mappingsGenerator;
+    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
+        return domainPersistenceMetadata;
     }
 
     /**

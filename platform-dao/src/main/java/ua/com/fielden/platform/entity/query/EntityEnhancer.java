@@ -41,7 +41,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	    for (final Map.Entry<String, fetch<?>> entry : propertiesFetchModels.entrySet()) {
 		final String propName = entry.getKey();
 		final fetch<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
-		final PropertyPersistenceInfo ppi = fetcher.getMappingsGenerator().getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
+		final PropertyPersistenceInfo ppi = fetcher.getDomainPersistenceMetadata().getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
 		//System.out.println(fetchModel.getEntityType() + " " + propName);
 		if (/*!EntityUtils.isPersistedEntityType(entitiesType) || //*/ppi.isEntity() || ppi.isOne2OneId()) {
 		    enhanceProperty(entities, propName, propFetchModel);

@@ -3,22 +3,22 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import java.util.Collections;
 import java.util.List;
 
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class TypeBasedSource extends AbstractSource {
-    private final Class<? extends AbstractEntity> entityType;
+    private final Class<? extends AbstractEntity<?>> entityType;
     private final boolean generated;
 
-    public TypeBasedSource(final Class<? extends AbstractEntity> entityType, final String alias, final MappingsGenerator mappingsGenerator) {
-	this(entityType, alias, false, mappingsGenerator);
+    public TypeBasedSource(final Class<? extends AbstractEntity<?>> entityType, final String alias, final DomainPersistenceMetadata domainPersistenceMetadata) {
+	this(entityType, alias, false, domainPersistenceMetadata);
     }
 
-    public TypeBasedSource(final Class<? extends AbstractEntity> entityType, final String alias, final boolean generated, final MappingsGenerator mappingsGenerator) {
-	super(alias, mappingsGenerator);
+    public TypeBasedSource(final Class<? extends AbstractEntity<?>> entityType, final String alias, final boolean generated, final DomainPersistenceMetadata domainPersistenceMetadata) {
+	super(alias, domainPersistenceMetadata);
 	if (entityType == null) {
 	    throw new IllegalArgumentException("Missing entity type!");
 	}
@@ -28,7 +28,7 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public void populateSourceItems(final boolean parentLeftJoinLegacy) {
-	for (final PropertyPersistenceInfo ppi : getMappingsGenerator().getEntityPPIs(sourceType())) {
+	for (final PropertyPersistenceInfo ppi : getDomainPersistenceMetadata().getEntityPPIs(sourceType())) {
 		// if parent nullability = false then take the one from ppi, else true
 	    sourceItems.put(ppi.getName(), new PropertyPersistenceInfo.Builder(ppi.getName(), ppi.getJavaType(), ppi.isNullable() || parentLeftJoinLegacy). //
 		    hibType(ppi.getHibType()).column(ppi.getColumn()).build());
@@ -37,20 +37,20 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     protected Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName) {
-	final PropertyPersistenceInfo finalPropInfo = getMappingsGenerator().getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
+	final PropertyPersistenceInfo finalPropInfo = getDomainPersistenceMetadata().getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
 
 	if (finalPropInfo != null) {
-	    final boolean finalPropNullability = getMappingsGenerator().isNullable(entityType, dotNotatedPropName);
+	    final boolean finalPropNullability = getDomainPersistenceMetadata().isNullable(entityType, dotNotatedPropName);
 	    final PurePropInfo ppi = new PurePropInfo(finalPropInfo.getName(), finalPropInfo.getJavaType(), finalPropInfo.getHibType(), finalPropNullability || isNullable());
 	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 	} else {
-	    final PropertyPersistenceInfo propInfo = getMappingsGenerator().getInfoForDotNotatedProp(entityType, dotNotatedPropName);
+	    final PropertyPersistenceInfo propInfo = getDomainPersistenceMetadata().getInfoForDotNotatedProp(entityType, dotNotatedPropName);
 	    if (propInfo == null) {
 		return null;
 	    } else {
-		final boolean propNullability = getMappingsGenerator().isNullable(entityType, dotNotatedPropName);
-		final PropertyPersistenceInfo explicitPartPropInfo = getMappingsGenerator().getPropPersistenceInfoExplicitly(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
-		final boolean explicitPropNullability = getMappingsGenerator().isNullable(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
+		final boolean propNullability = getDomainPersistenceMetadata().isNullable(entityType, dotNotatedPropName);
+		final PropertyPersistenceInfo explicitPartPropInfo = getDomainPersistenceMetadata().getPropPersistenceInfoExplicitly(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
+		final boolean explicitPropNullability = getDomainPersistenceMetadata().isNullable(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
 		return new Pair<PurePropInfo, PurePropInfo>( //
 		new PurePropInfo(explicitPartPropInfo.getName(), explicitPartPropInfo.getJavaType(), explicitPartPropInfo.getHibType(), explicitPropNullability || isNullable()), //
 		new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable()));
@@ -70,7 +70,7 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public String sql() {
-	return getMappingsGenerator().getTableClause(sourceType()) + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
+	return getDomainPersistenceMetadata().getTableClause(sourceType()) + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
     }
 
     @Override

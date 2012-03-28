@@ -362,7 +362,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Override
-    protected List<Class<? extends AbstractEntity>> domainEntityTypes() {
+    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
 	return PlatformTestDomainTypes.entityTypes;
     }
 }

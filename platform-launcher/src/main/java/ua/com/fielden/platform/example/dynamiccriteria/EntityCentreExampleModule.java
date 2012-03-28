@@ -29,7 +29,7 @@ public class EntityCentreExampleModule extends BasicWebServerModule2{
 
     public EntityCentreExampleModule(//
 	    final Map<Class, Class> defaultHibernateTypes, //
-	    final List<Class<? extends AbstractEntity>> applicationEntityTypes, //
+	    final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes, //
 	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
 	    final Class<? extends IFilter> automaticDataFilterType, //
 	    final Properties props) throws Exception {

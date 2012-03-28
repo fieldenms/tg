@@ -85,7 +85,7 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
     }
 
     @Override
-    protected List<Class<? extends AbstractEntity>> domainEntityTypes() {
+    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
 	return PlatformTestDomainTypes.entityTypes;
     }
 

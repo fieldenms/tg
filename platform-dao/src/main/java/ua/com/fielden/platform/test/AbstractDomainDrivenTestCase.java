@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.test;
 
-import static java.lang.String.format;
-
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -20,12 +18,13 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider2;
-import ua.com.fielden.platform.persistence.DdlGenerator;
+import static java.lang.String.format;
 
 
 /**
@@ -90,7 +89,7 @@ public abstract class AbstractDomainDrivenTestCase {
      *
      * @return
      */
-    protected abstract List<Class<? extends AbstractEntity>> domainEntityTypes();
+    protected abstract List<Class<? extends AbstractEntity<?>>> domainEntityTypes();
 
     @AfterClass
     public final static void removeDbSchema() {
@@ -125,9 +124,8 @@ public abstract class AbstractDomainDrivenTestCase {
 	    st.close();
 
 	    // create truncate statements
-	    final DdlGenerator ddlGen = new DdlGenerator();
-	    for (final Class<? extends AbstractEntity> entityType : domainEntityTypes()) {
-		final String tableName = ddlGen.getTableClause(entityType);
+	    for (final Class<? extends AbstractEntity<?>> entityType : domainEntityTypes()) {
+		final String tableName = DomainPersistenceMetadata.getTableClause(entityType);
 		truncateScript.add(format("TRUNCATE TABLE %s;", tableName));
 	    }
 

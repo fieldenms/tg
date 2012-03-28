@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.HashSet;
 import java.util.List;
 
@@ -30,6 +26,9 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController2;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController2;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
@@ -109,7 +108,7 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
     }
 
     @Override
-    protected List<Class<? extends AbstractEntity>> domainEntityTypes() {
+    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
         return PlatformDomainTypes.types;
     }
 

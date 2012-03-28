@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
@@ -30,7 +30,7 @@ public class EntQuery implements ISingleOperand {
     private final OrderBys orderings;
     private final Class resultType;
     private final QueryCategory category;
-    private final MappingsGenerator mappingsGenerator;
+    private final DomainPersistenceMetadata domainPersistenceMetadata;
 
     private EntQuery master;
 
@@ -114,7 +114,7 @@ public class EntQuery implements ISingleOperand {
 	    yields.getYields().put(idModel.getAlias(), idModel);
 	} else if (allPropsYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-	    for (final PropertyPersistenceInfo ppi : mappingsGenerator.getEntityPPIs(type())) {
+	    for (final PropertyPersistenceInfo ppi : domainPersistenceMetadata.getEntityPPIs(type())) {
 		if (!ppi.isCompositeProperty() && !ppi.isCollection()) {
 		    yields.getYields().put(ppi.getName(), new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName(), ppi));
 		}
@@ -138,7 +138,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Object determineYieldHibType(final Yield yield) {
-	final PropertyPersistenceInfo finalPropInfo = mappingsGenerator.getInfoForDotNotatedProp(type(), yield.getAlias());
+	final PropertyPersistenceInfo finalPropInfo = domainPersistenceMetadata.getInfoForDotNotatedProp(type(), yield.getAlias());
 	if (finalPropInfo != null) {
 	    return finalPropInfo.getHibType();
 	} else {
@@ -147,12 +147,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean determineYieldNullability(final Yield yield) {
-	final PropertyPersistenceInfo finalPropInfo = mappingsGenerator.getInfoForDotNotatedProp(type(), yield.getAlias());
-//	if (finalPropInfo != null) {
-//	    return mappingsGenerator.isNullable(type(), yield.getAlias());
-//	} else {
 	    return yield.getOperand().isNullable();
-//	}
     }
 
     private Class determineYieldJavaType(final Yield yield) {
@@ -194,17 +189,17 @@ public class EntQuery implements ISingleOperand {
     private Sources enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final Sources sources, final EntQueryGenerator generator) {
 	final ISource newMain =
 		(sources.getMain() instanceof TypeBasedSource && filter != null && filter.enhance(sources.getMain().sourceType(), username) != null) ?
-	    new QueryBasedSource(sources.getMain().getAlias(), mappingsGenerator, generator.generateEntQueryAsSourceQuery(filter.enhance(sources.getMain().sourceType(), username))) : null;
+	    new QueryBasedSource(sources.getMain().getAlias(), domainPersistenceMetadata, generator.generateEntQueryAsSourceQuery(filter.enhance(sources.getMain().sourceType(), username))) : null;
 
 	return newMain != null ? new Sources(newMain, sources.getCompounds()) : sources;
     }
 
     public EntQuery(final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
-	    final Class resultType, final QueryCategory category, final MappingsGenerator mappingsGenerator, //
+	    final Class resultType, final QueryCategory category, final DomainPersistenceMetadata domainPersistenceMetadata, //
 	    final IFilter filter, final String username, final EntQueryGenerator generator) {
 	super();
 	this.category = category;
-	this.mappingsGenerator = mappingsGenerator;
+	this.domainPersistenceMetadata = domainPersistenceMetadata;
 	this.sources = enhanceSourcesWithUserDataFiltering(filter, username, sources, generator);
 	this.conditions = conditions;
 	this.yields = yields;

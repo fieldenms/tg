@@ -74,7 +74,7 @@ public class BasicWebServerModule2 extends CommonFactoryModule2 {
 
     public BasicWebServerModule2(
 	    final Map<Class, Class> defaultHibernateTypes, //
-	    final List<Class<? extends AbstractEntity>> applicationEntityTypes,//
+	    final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes,//
 	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
 	    final Class<? extends IFilter> automaticDataFilterType, //
 	    final SecurityTokenProvider tokenProvider,//

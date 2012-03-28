@@ -12,7 +12,8 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.MappingExtractor;
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao2.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -76,7 +77,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 
     private final DaoTestHibernateModule hibernateModule;
 
-    public static final List<Class<? extends AbstractEntity>> testDomain = new ArrayList<Class<? extends AbstractEntity>>();
+    public static final List<Class<? extends AbstractEntity<?>>> testDomain = new ArrayList<Class<? extends AbstractEntity<?>>>();
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
 
@@ -116,9 +117,9 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 	// instantiate all the factories and Hibernate utility
 	final ProxyInterceptor interceptor = new ProxyInterceptor();
 	try {
-	    final MappingsGenerator mappingsGenerator = new MappingsGenerator(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain);
+	    final DomainPersistenceMetadata mappingsGenerator = new DomainPersistenceMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain);
 	    final Configuration cfg = new Configuration();
-	    cfg.addXML(mappingsGenerator.generateMappings());
+	    cfg.addXML(new HibernateMappingsGenerator(mappingsGenerator.getHibTypeInfosMap()).generateMappings());
 
 	    hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
 	    hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()), mappingsGenerator);

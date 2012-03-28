@@ -7,7 +7,7 @@ import java.util.Properties;
 import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.dao.factory.DaoFactory2;
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.DefaultConrollerProviderImpl2;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -30,7 +30,7 @@ public class PropertyFactoryModule2 extends TransactionalModule2 {
     protected final EntityFactory entityFactory;
     protected final DefaultConrollerProviderImpl2 defaultControllerProvider;
 
-    public PropertyFactoryModule2(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity>> applicationEntityTypes) throws Exception {
+    public PropertyFactoryModule2(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) throws Exception {
 	super(props, defaultHibernateTypes, applicationEntityTypes);
 	entityFactory = new EntityFactory() {};
 	daoFactory = new DaoFactory2() {};
@@ -38,8 +38,8 @@ public class PropertyFactoryModule2 extends TransactionalModule2 {
 	interceptor.setFactory(entityFactory);
     }
 
-    public PropertyFactoryModule2(final SessionFactory sessionFactory, final MappingsGenerator mappingsGenerator) {
-	super(sessionFactory, mappingsGenerator);
+    public PropertyFactoryModule2(final SessionFactory sessionFactory, final DomainPersistenceMetadata domainPersistenceMetadata) {
+	super(sessionFactory, domainPersistenceMetadata);
 	daoFactory = new DaoFactory2() {};
 	entityFactory = new EntityFactory() {};
 	defaultControllerProvider = new DefaultConrollerProviderImpl2();

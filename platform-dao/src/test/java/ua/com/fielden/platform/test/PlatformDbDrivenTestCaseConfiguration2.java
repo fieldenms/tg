@@ -11,7 +11,8 @@ import java.util.Map;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.YesNoType;
 
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao2.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -71,7 +72,7 @@ public class PlatformDbDrivenTestCaseConfiguration2 implements IDbDrivenTestCase
 
     private final DaoTestHibernateModule2 hibernateModule;
 
-    public static final List<Class<? extends AbstractEntity>> testDomain = new ArrayList<Class<? extends AbstractEntity>>();
+    public static final List<Class<? extends AbstractEntity<?>>> testDomain = new ArrayList<Class<? extends AbstractEntity<?>>>();
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
 
@@ -113,12 +114,12 @@ public class PlatformDbDrivenTestCaseConfiguration2 implements IDbDrivenTestCase
 	// instantiate all the factories and Hibernate utility
 	final ProxyInterceptor interceptor = new ProxyInterceptor();
 	try {
-	    final MappingsGenerator mappingsGenerator = new MappingsGenerator(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain);
+	    final DomainPersistenceMetadata domainPersistenceMetadata = new DomainPersistenceMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain);
 	    final Configuration cfg = new Configuration();
-	    cfg.addXML(mappingsGenerator.generateMappings());
+	    cfg.addXML(new HibernateMappingsGenerator(domainPersistenceMetadata.getHibTypeInfosMap()).generateMappings());
 
 	    hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
-	    hibernateModule = new DaoTestHibernateModule2(hibernateUtil.getSessionFactory(), mappingsGenerator);
+	    hibernateModule = new DaoTestHibernateModule2(hibernateUtil.getSessionFactory(), domainPersistenceMetadata);
 	    injector = new ApplicationInjectorFactory().add(hibernateModule).add(new LegacyConnectionModule(new Provider() {
 		@Override
 		public Object get() {

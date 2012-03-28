@@ -10,7 +10,7 @@ import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.MappingExtractor;
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
@@ -33,8 +33,8 @@ import ua.com.fielden.web.entities.InspectedEntityDao;
  */
 public class WebHibernateModule extends CommonFactoryModule {
 
-    public WebHibernateModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator) {
-	super(sessionFactory, mappingExtractor, mappingsGenerator);
+    public WebHibernateModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final DomainPersistenceMetadata domainPersistenceMetadata) {
+	super(sessionFactory, mappingExtractor, domainPersistenceMetadata);
     }
 
     @Override

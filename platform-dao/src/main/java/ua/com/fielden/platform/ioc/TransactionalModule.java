@@ -11,7 +11,7 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.annotations.Transactional;
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Proxy;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
@@ -34,7 +34,7 @@ public abstract class TransactionalModule extends EntityModule {
     private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
     private final MappingExtractor mappingExtractor;
-    private final MappingsGenerator mappingsGenerator;
+    private final DomainPersistenceMetadata mappingsGenerator;
     protected final ProxyInterceptor interceptor;
     private final HibernateUtil hibernateUtil;
 
@@ -46,7 +46,7 @@ public abstract class TransactionalModule extends EntityModule {
      * @param mappingExtractor
      * @throws Exception
      */
-    public TransactionalModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity>> applicationEntityTypes) throws Exception {
+    public TransactionalModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) throws Exception {
 	final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(props, defaultHibernateTypes, applicationEntityTypes);
 	final Configuration hibernateConfig = hcf.build();
 	interceptor = new ProxyInterceptor();
@@ -54,10 +54,10 @@ public abstract class TransactionalModule extends EntityModule {
 
 	this.sessionFactory = hibernateUtil.getSessionFactory();
 	this.mappingExtractor = new MappingExtractor(hibernateConfig);
-	this.mappingsGenerator = hcf.getMappingsGenerator();
+	this.mappingsGenerator = hcf.getDomainPersistenceMetadata();
     }
 
-    public TransactionalModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final MappingsGenerator mappingsGenerator) {
+    public TransactionalModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final DomainPersistenceMetadata mappingsGenerator) {
 	interceptor = null;
 	hibernateUtil = null;
 
@@ -75,7 +75,7 @@ public abstract class TransactionalModule extends EntityModule {
 	}
 	// entity aggregates transformer
 	if (mappingsGenerator != null) {
-	    bind(MappingsGenerator.class).toInstance(mappingsGenerator);
+	    bind(DomainPersistenceMetadata.class).toInstance(mappingsGenerator);
 	}
 	// hibernate util
 	if (hibernateUtil != null) {
@@ -116,7 +116,7 @@ public abstract class TransactionalModule extends EntityModule {
 	return mappingExtractor;
     }
 
-    public MappingsGenerator getMappingsGenerator() {
+    public DomainPersistenceMetadata getMappingsGenerator() {
 	return mappingsGenerator;
     }
 }

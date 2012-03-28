@@ -12,12 +12,12 @@ import java.util.List;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider2;
-import ua.com.fielden.platform.persistence.DdlGenerator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import static java.lang.String.format;
 
@@ -62,7 +62,7 @@ public abstract class DomainDrivenDataPopulation {
      *
      * @return
      */
-    protected abstract List<Class<? extends AbstractEntity>> domainEntityTypes();
+    protected abstract List<Class<? extends AbstractEntity<?>>> domainEntityTypes();
 
     public final void removeDbSchema() {
 	domainPopulated = false;
@@ -97,9 +97,8 @@ public abstract class DomainDrivenDataPopulation {
 	    st.close();
 
 	    // create truncate statements
-	    final DdlGenerator ddlGen = new DdlGenerator();
-	    for (final Class<? extends AbstractEntity> entityType : domainEntityTypes()) {
-		final String tableName = ddlGen.getTableClause(entityType);
+	    for (final Class<? extends AbstractEntity<?>> entityType : domainEntityTypes()) {
+		final String tableName = DomainPersistenceMetadata.getTableClause(entityType);
 		truncateScript.add(format("TRUNCATE TABLE %s;", tableName));
 	    }
 

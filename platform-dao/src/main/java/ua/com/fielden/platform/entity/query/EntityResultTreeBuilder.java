@@ -6,16 +6,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 final class EntityResultTreeBuilder {
-    private MappingsGenerator mappingsGenerator;
+    private DomainPersistenceMetadata domainPersistenceMetadata;
     private ResultIndex index = new ResultIndex();
 
-    protected EntityResultTreeBuilder(final MappingsGenerator mappingsGenerator) {
-	this.mappingsGenerator = mappingsGenerator;
+    protected EntityResultTreeBuilder(final DomainPersistenceMetadata domainPersistenceMetadata) {
+	this.domainPersistenceMetadata = domainPersistenceMetadata;
     }
 
     protected <E extends AbstractEntity<?>> EntityTree<E> buildEntityTree(final Class<E> resultType, final Collection<PropertyPersistenceInfo> properties) throws Exception {
@@ -34,13 +34,13 @@ final class EntityResultTreeBuilder {
 
 	for (final Map.Entry<String, Collection<PropertyPersistenceInfo>> propEntry : compositeValueProps.entrySet()) {
 	    final String subtreePropName = propEntry.getKey();
-	    final PropertyPersistenceInfo ppi = mappingsGenerator.getPropPersistenceInfoExplicitly(resultType, subtreePropName);
+	    final PropertyPersistenceInfo ppi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, subtreePropName);
 	    result.getCompositeValues().put(subtreePropName, buildValueTree(ppi.getHibTypeAsCompositeUserType(), propEntry.getValue()));
 	}
 
 	for (final Map.Entry<String, Collection<PropertyPersistenceInfo>> propEntry : compositeProps.entrySet()) {
 	    final String subtreePropName = propEntry.getKey();
-	    final PropertyPersistenceInfo ppi = mappingsGenerator.getPropPersistenceInfoExplicitly(resultType, subtreePropName);
+	    final PropertyPersistenceInfo ppi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, subtreePropName);
 	    result.getComposites().put(subtreePropName, buildEntityTree(ppi.getJavaType(), propEntry.getValue()));
 	}
 
@@ -88,7 +88,7 @@ final class EntityResultTreeBuilder {
 		final int firstDotIndex = prop.getName().indexOf(".");
 		final String group = prop.getName().substring(0, firstDotIndex);
 
-		final PropertyPersistenceInfo groupPpi = mappingsGenerator.getPropPersistenceInfoExplicitly(resultType, group);
+		final PropertyPersistenceInfo groupPpi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, group);
 
 		if (groupPpi.isEntity()) {
 			if (!result.containsKey(group)) {
@@ -121,7 +121,7 @@ final class EntityResultTreeBuilder {
 	    if (prop.getName().contains(".")) {
 		final int firstDotIndex = prop.getName().indexOf(".");
 		final String group = prop.getName().substring(0, firstDotIndex);
-		final PropertyPersistenceInfo groupPpi = mappingsGenerator.getPropPersistenceInfoExplicitly(resultType, group);
+		final PropertyPersistenceInfo groupPpi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, group);
 
 		if (groupPpi.isCompositeProperty()) {
 			if (!result.containsKey(group)) {

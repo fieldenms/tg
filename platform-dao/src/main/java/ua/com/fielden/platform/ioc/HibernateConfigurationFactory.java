@@ -6,7 +6,8 @@ import java.util.Properties;
 
 import org.hibernate.cfg.Configuration;
 
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao2.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 import com.google.inject.Guice;
@@ -37,14 +38,14 @@ import com.google.inject.Guice;
 public class HibernateConfigurationFactory {
 
     private final Properties props;
-    private final MappingsGenerator mappingsGenerator;
+    private final DomainPersistenceMetadata domainPersistenceMetadata;
     private final Configuration cfg = new Configuration();
 
-    public HibernateConfigurationFactory(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity>> applicationEntityTypes) throws Exception {
+    public HibernateConfigurationFactory(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) throws Exception {
 	this.props = props;
-	mappingsGenerator = new MappingsGenerator(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()), applicationEntityTypes);
-	if (mappingsGenerator != null) {
-	    cfg.addXML(mappingsGenerator.generateMappings());
+	domainPersistenceMetadata = new DomainPersistenceMetadata(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()), applicationEntityTypes);
+	if (domainPersistenceMetadata != null) {
+	    cfg.addXML(new HibernateMappingsGenerator(domainPersistenceMetadata.getHibTypeInfosMap()).generateMappings());
 	}
     }
 
@@ -72,8 +73,8 @@ public class HibernateConfigurationFactory {
 	return cfg;
     }
 
-    public MappingsGenerator getMappingsGenerator() {
-	return mappingsGenerator;
+    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
+	return domainPersistenceMetadata;
     }
 
     private Configuration setSafely(final String propertyName, final String defaultValue) {

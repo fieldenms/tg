@@ -10,7 +10,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.type.Type;
 
-import ua.com.fielden.platform.dao2.MappingsGenerator;
+import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -21,15 +21,15 @@ import ua.com.fielden.platform.entity.query.generation.DbVersion;
 public class EntityFetcher {
     private Session session;
     private EntityFactory entityFactory;
-    private MappingsGenerator mappingsGenerator;
+    private DomainPersistenceMetadata domainPersistenceMetadata;
     private DbVersion dbVersion;
     private final IFilter filter;
     private final String username;
 
-    public EntityFetcher(final Session session, final EntityFactory entityFactory, final MappingsGenerator mappingsGenerator, final DbVersion dbVersion, final IFilter filter, final String username) {
+    public EntityFetcher(final Session session, final EntityFactory entityFactory, final DomainPersistenceMetadata domainPersistenceMetadata, final DbVersion dbVersion, final IFilter filter, final String username) {
 	this.session = session;
 	this.entityFactory = entityFactory;
-	this.mappingsGenerator = mappingsGenerator;
+	this.domainPersistenceMetadata = domainPersistenceMetadata;
 	this.dbVersion = dbVersion;
 	this.filter = filter;
 	this.username = username;
@@ -49,7 +49,7 @@ public class EntityFetcher {
     }
 
     protected <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainers(final QueryExecutionModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-	final QueryModelResult<E> modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getMappingsGenerator(), getFilter(), getUsername());
+	final QueryModelResult<E> modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getDomainPersistenceMetadata(), getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
 	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : new fetch<E>(modelResult.getResultType());
 	return new EntityEnhancer<E>(this).enhance(result, fetchModel);
@@ -116,7 +116,7 @@ public class EntityFetcher {
     }
 
     protected <E extends AbstractEntity<?>>List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-	final EntityTree<E> resultTree = new EntityResultTreeBuilder(getMappingsGenerator()).buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
+	final EntityTree<E> resultTree = new EntityResultTreeBuilder(getDomainPersistenceMetadata()).buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
 
 	final Query query = produceHibernateQuery(modelResult.getSql(), getScalarFromEntityTree(resultTree), modelResult.getParamValues());
 	if (pageNumber != null && pageCapacity != null) {
@@ -137,8 +137,8 @@ public class EntityFetcher {
         return entityFactory;
     }
 
-    public MappingsGenerator getMappingsGenerator() {
-        return mappingsGenerator;
+    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
+        return domainPersistenceMetadata;
     }
 
     public DbVersion getDbVersion() {

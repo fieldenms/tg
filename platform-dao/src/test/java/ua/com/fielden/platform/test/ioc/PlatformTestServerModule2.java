@@ -36,7 +36,7 @@ public class PlatformTestServerModule2 extends BasicWebServerModule2 {
 
     public PlatformTestServerModule2(
 	    final Map<Class, Class> defaultHibernateTypes, //
-	    final List<Class<? extends AbstractEntity>> applicationEntityTypes,//
+	    final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes,//
 	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
 	    final Class<? extends IFilter> automaticDataFilterType, //
 	    final SecurityTokenProvider tokenProvider,//
@@ -46,7 +46,7 @@ public class PlatformTestServerModule2 extends BasicWebServerModule2 {
 
     public PlatformTestServerModule2(
 	    final Map<Class, Class> defaultHibernateTypes, //
-	    final List<Class<? extends AbstractEntity>> applicationEntityTypes,//
+	    final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes,//
 	    final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
 	    final Class<? extends IFilter> automaticDataFilterType, //
 	    final Properties props) throws Exception {
