@@ -81,7 +81,7 @@
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>rule-core</artifactId>
-			<version>1.0</version>
+			<version>1.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>fielden</groupId>

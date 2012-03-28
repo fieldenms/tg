@@ -123,7 +123,7 @@
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>rule-pojo-bl</artifactId>
-			<version>1.0</version>
+			<version>1.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.ant</groupId>
