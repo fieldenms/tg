@@ -8,7 +8,6 @@ import java.awt.Component;
 import javax.swing.JTree;
 import javax.swing.tree.TreePath;
 
-import ua.com.fielden.platform.snappy.EntitiesTreeCellRenderer;
 
 public class ConditionalTreeCellRenderer extends EntitiesTreeCellRenderer {
 

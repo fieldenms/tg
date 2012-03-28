@@ -53,7 +53,6 @@ import ua.com.fielden.platform.swing.components.smart.autocompleter.development.
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.CheckingStrategy;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
-import ua.com.fielden.snappy.model.properties.Property;
 
 import com.jgoodies.binding.value.BufferedValueModel;
 import com.jgoodies.binding.value.Trigger;

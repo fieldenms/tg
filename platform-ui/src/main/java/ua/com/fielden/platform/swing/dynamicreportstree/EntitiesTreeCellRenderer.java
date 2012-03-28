@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.snappy;
+package ua.com.fielden.platform.swing.dynamicreportstree;
 
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.CheckboxTree;
 import it.cnr.imaa.essi.lablib.gui.checkboxtree.CheckboxTreeCellRenderer;
