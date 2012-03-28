@@ -54,7 +54,7 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty @MapTo @Title(value = "Leased", desc = "Leased?")
     private boolean leased;
 
-    @IsProperty(TgFuelUsage.class)  @MapTo("VEHICLE_") @Title(value = "Fuel usages", desc = "Fuel usages")
+    @IsProperty(value = TgFuelUsage.class, linkProperty = "vehicle") @Title(value = "Fuel usages", desc = "Fuel usages")
     private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
     public Set<TgFuelUsage> getFuelUsages() { return fuelUsages; }
 

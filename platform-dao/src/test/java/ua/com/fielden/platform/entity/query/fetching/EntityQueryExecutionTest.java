@@ -302,7 +302,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
     public void test_vehicle_with_collection_fetching() {
 	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
 	final fetch<TgVehicle> fetchModel = new fetch<TgVehicle>(TgVehicle.class).with("model", new fetch<TgVehicleModel>(TgVehicleModel.class).with("make")).with("fuelUsages", new fetch<TgFuelUsage>(TgFuelUsage.class));
@@ -311,7 +310,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
 	assertEquals("Incorrect key", "316", vehicle.getModel().getKey());
 	assertEquals("Incorrect key", "MERC", vehicle.getModel().getMake().getKey());
-	assertEquals("Incorrect number of fuel-usages", 1, vehicle.getFuelUsages().size());
+	assertEquals("Incorrect number of fuel-usages", 2, vehicle.getFuelUsages().size());
     }
 
 
@@ -327,7 +326,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     @Ignore
-    public void test_19() {
+    public void test22() {
 	final EntityResultQueryModel<SecurityRoleAssociation> associationModel = select(SecurityRoleAssociation.class). //
 	where().prop("securityToken").eq().val(FirstLevelSecurityToken1.class.getName()).model();
 	final List<SecurityRoleAssociation> entities = secRolAssociationDao.getAllEntities(from(associationModel).build());

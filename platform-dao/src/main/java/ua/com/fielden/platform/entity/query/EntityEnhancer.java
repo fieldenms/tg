@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,8 +11,10 @@ import java.util.Set;
 
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.utils.EntityUtils;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -42,11 +45,18 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 		final String propName = entry.getKey();
 		final fetch<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
 		final PropertyPersistenceInfo ppi = fetcher.getDomainPersistenceMetadata().getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
-		//System.out.println(fetchModel.getEntityType() + " " + propName);
-		if (/*!EntityUtils.isPersistedEntityType(entitiesType) || //*/ppi.isEntity() || ppi.isOne2OneId()) {
+		if (ppi == null || ppi.isCollection()) {
+		    final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
+		    for (final Field field : collProps) {
+			if (field.getName().equals(propName)) {
+			    enhanceCollectional(entities, propName, HashSet.class, field.getAnnotation(IsProperty.class).linkProperty(), null, propFetchModel);
+			}
+		    }
+		    //
+		} else if (/*!EntityUtils.isPersistedEntityType(entitiesType) || //*/ppi.isEntity() || ppi.isOne2OneId()) {
 		    enhanceProperty(entities, propName, propFetchModel);
-		} else if (ppi.isCollection()) {
-		    //enhanceCollectional(entities, propName, HashSet.class, "user", null, propFetchModel);
+		} else  {
+		    // do nothing
 		}
 	    }
 	}
