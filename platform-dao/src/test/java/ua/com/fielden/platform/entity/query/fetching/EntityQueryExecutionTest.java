@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.dao.FirstLevelSecurityToken1;
 import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
+import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
+import ua.com.fielden.platform.dao2.IUserRoleDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
@@ -23,7 +25,11 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake2;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel2;
+import ua.com.fielden.platform.security.user.IUserDao2;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
@@ -37,6 +43,10 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgVehicleModel2 vehicleModelDao = getInstance(ITgVehicleModel2.class);
     private final ITgVehicleMake2 vehicleMakeDao = getInstance(ITgVehicleMake2.class);
     private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
+    private final IUserDao2 userDao = getInstance(IUserDao2.class);
+    private final IUserRoleDao2 userRoleDao = getInstance(IUserRoleDao2.class);
+    private final IUserAndRoleAssociationDao2 userAndRoleAssociationDao = getInstance(IUserAndRoleAssociationDao2.class);
+
     private final ISecurityRoleAssociationDao2 secRolAssociationDao = getInstance(ISecurityRoleAssociationDao2.class);
 
     @Test
@@ -313,7 +323,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Incorrect number of fuel-usages", 2, vehicle.getFuelUsages().size());
     }
 
-
     @Test
     @Ignore
     public void test_aggregates_fetching() {
@@ -332,7 +341,15 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final List<SecurityRoleAssociation> entities = secRolAssociationDao.getAllEntities(from(associationModel).build());
 	assertEquals("Incorrect count", 2, entities.size());
 	assertEquals("Incorrect key", FirstLevelSecurityToken1.class, entities.get(0).getSecurityToken());
+    }
 
+    @Test
+    @Ignore
+    public void test23() {
+	final EntityResultQueryModel<UserAndRoleAssociation> model = select(UserAndRoleAssociation.class).where().prop("user.key").eq().val("user1").and().prop("userRole.key").eq().val("MANAGER").model();
+	final List<UserAndRoleAssociation> entities = userAndRoleAssociationDao.getAllEntities(from(model).with(new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class)).build());
+	assertEquals("Incorrect count", 1, entities.size());
+	assertEquals("Incorrect user", "user1", entities.get(0).getUser().getKey());
     }
 
     @Override
@@ -357,6 +374,28 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	save(new_(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")));
 
 	save(new_(TgTimesheet.class, "USER1", date("2011-11-01 13:00:00")).setFinishDate(date("2011-11-01 15:00:00")).setIncident("002"));
+
+	final UserRole managerRole = save(new_(UserRole.class, "MANAGER", "Managerial role"));
+	final UserRole dataEntryRole = save(new_(UserRole.class, "DATAENTRY", "Data entry role"));
+	final UserRole analyticRole = save(new_(UserRole.class, "ANALYTIC", "Analytic role"));
+	final UserRole fleetOperatorRole = save(new_(UserRole.class, "FLEET_OPERATOR", "Fleet operator role"));
+	final UserRole workshopOperatorRole = save(new_(UserRole.class, "WORKSHOP_OPERATOR", "Workshop operator role"));
+	final UserRole warehouseOperatorRole = save(new_(UserRole.class, "WAREHOUSE_OPERATOR", "Warehouse operator role"));
+
+	final User baseUser1 = save(new_(User.class, "base_user1", "base user1").setBase(true).setPassword("password1"));
+	final User user1 = save(new_(User.class, "user1", "user1 desc").setBase(false).setBasedOnUser(baseUser1).setPassword("password1"));
+	final User user2 = save(new_(User.class, "user2", "user2 desc").setBase(false).setBasedOnUser(baseUser1).setPassword("password1"));
+	final User user3 = save(new_(User.class, "user3", "user3 desc").setBase(false).setBasedOnUser(baseUser1).setPassword("password1"));
+
+	save(new_(UserAndRoleAssociation.class, user1, managerRole));
+	save(new_(UserAndRoleAssociation.class, user1, analyticRole));
+	save(new_(UserAndRoleAssociation.class, user2, dataEntryRole));
+	save(new_(UserAndRoleAssociation.class, user2, fleetOperatorRole));
+	save(new_(UserAndRoleAssociation.class, user2, warehouseOperatorRole));
+	save(new_(UserAndRoleAssociation.class, user3, dataEntryRole));
+	save(new_(UserAndRoleAssociation.class, user3, fleetOperatorRole));
+	save(new_(UserAndRoleAssociation.class, user3, warehouseOperatorRole));
+
 	System.out.println("\n   DATA POPULATED SUCCESSFULLY\n\n\n");
     }
 

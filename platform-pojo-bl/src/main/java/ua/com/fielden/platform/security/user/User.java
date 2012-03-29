@@ -218,5 +218,4 @@ public class User extends AbstractEntity<String> {
 
 	return superResult;
     }
-
 }

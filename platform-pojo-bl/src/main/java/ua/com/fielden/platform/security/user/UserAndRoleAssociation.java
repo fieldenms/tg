@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.security.user;
 
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
+import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -10,6 +11,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
 
 /**
  * Entity that represents the association between {@link User} and {@link UserRole} entities.
@@ -20,6 +22,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("USER_ROLE_ASSOCIATION")
 @DefaultController(IUserAndRoleAssociationDao.class)
+@DefaultController2(IUserAndRoleAssociationDao2.class)
 public class UserAndRoleAssociation extends AbstractEntity<DynamicEntityKey> {
 
     private static final long serialVersionUID = 1L;
@@ -62,13 +65,14 @@ public class UserAndRoleAssociation extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public void setUser(final User user) {
+    public UserAndRoleAssociation setUser(final User user) {
 	this.user = user;
+	return this;
     }
 
     @Observable
-    public void setUserRole(final UserRole userRole) {
+    public UserAndRoleAssociation setUserRole(final UserRole userRole) {
 	this.userRole = userRole;
+	return this;
     }
-
 }
