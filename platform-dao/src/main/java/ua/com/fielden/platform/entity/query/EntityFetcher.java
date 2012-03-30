@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
@@ -55,7 +57,7 @@ public class EntityFetcher {
 	return new EntityEnhancer<E>(this).enhance(result, fetchModel);
     }
 
-    protected Query produceHibernateQuery(final String sql, final List<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams) {
+    protected Query produceHibernateQuery(final String sql, final SortedSet<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams) {
 	final SQLQuery q = session.createSQLQuery(sql);
 	System.out.println("   SQL: " + sql);
 
@@ -79,21 +81,21 @@ public class EntityFetcher {
 	return q;
     }
 
-    protected List<HibernateScalar> getScalarFromValueTree(final ValueTree tree) {
-	final List<HibernateScalar> result = new ArrayList<HibernateScalar>();
+    protected SortedSet<HibernateScalar> getScalarFromValueTree(final ValueTree tree) {
+	final SortedSet<HibernateScalar> result = new TreeSet<HibernateScalar>();
 
 	for (final Map.Entry<PropertyPersistenceInfo, Integer> single : tree.getSingles().entrySet()) {
-	    result.add(new HibernateScalar(single.getKey().getColumn(), single.getKey().getHibTypeAsType()));
+	    result.add(new HibernateScalar(single.getKey().getColumn(), single.getKey().getHibTypeAsType(), single.getValue()));
 	}
 
 	return result;
     }
 
-    protected List<HibernateScalar> getScalarFromEntityTree(final EntityTree<? extends AbstractEntity<?>> tree) {
-	final List<HibernateScalar> result = new ArrayList<HibernateScalar>();
+    protected SortedSet<HibernateScalar> getScalarFromEntityTree(final EntityTree<? extends AbstractEntity<?>> tree) {
+	final SortedSet<HibernateScalar> result = new TreeSet<HibernateScalar>();
 
 	for (final Map.Entry<PropertyPersistenceInfo, Integer> single : tree.getSingles().entrySet()) {
-	    result.add(new HibernateScalar(single.getKey().getColumn(), single.getKey().getHibTypeAsType()));
+	    result.add(new HibernateScalar(single.getKey().getColumn(), single.getKey().getHibTypeAsType(), single.getValue()));
 	}
 
 	for (final Map.Entry<String, ValueTree> composite : tree.getCompositeValues().entrySet()) {
@@ -153,17 +155,24 @@ public class EntityFetcher {
         return username;
     }
 
-    private static class HibernateScalar {
+    private static class HibernateScalar implements Comparable<HibernateScalar>{
 	private String columnName;
 	private Type hibType;
+	private Integer positionInResultList;
 
-	public HibernateScalar(final String columnName, final Type hibType) {
+	public HibernateScalar(final String columnName, final Type hibType, final Integer positionInResultList) {
 	    this.columnName = columnName;
 	    this.hibType = hibType;
+	    this.positionInResultList = positionInResultList;
 	}
 
 	public boolean hasHibType() {
 	    return hibType != null;
+	}
+
+	@Override
+	public int compareTo(final HibernateScalar o) {
+	    return positionInResultList.compareTo(o.positionInResultList);
 	}
     }
 }
