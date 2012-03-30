@@ -7,10 +7,10 @@ import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
+import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
-import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardView;
 
-public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisConfigurationView<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage2<T>, GridAnalysisView<T, CDTME>, AbstractWizardView<T>> {
+public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisConfigurationView<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage2<T>, GridAnalysisView<T, CDTME>> {
 
     private static final long serialVersionUID = -7385497832761082274L;
 
@@ -24,12 +24,12 @@ public class GridConfigurationView<T extends AbstractEntity<?>, CDTME extends IC
     }
 
     @Override
-    protected GridAnalysisView<T, CDTME> createConfigurableView() {
-	return new GridAnalysisView<T, CDTME>(getModel().createGridAnalysisModel(), getProgressLayer(), getOwner());
+    protected GridAnalysisView<T, CDTME> initConfigurableView(final GridAnalysisView<T, CDTME> configurableView) {
+	return super.initConfigurableView(new GridAnalysisView<T, CDTME>(getModel().createGridAnalysisModel(), getProgressLayer(), getOwner()));
     }
 
     @Override
-    protected AbstractWizardView<T> createWizardView() {
+    protected AnalysisWizardView<T, CDTME> initWizardView(final AnalysisWizardView<T, CDTME> wizardView) {
 	throw new UnsupportedOperationException("Main details can not be configured!");
     }
 

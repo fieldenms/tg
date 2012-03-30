@@ -25,7 +25,7 @@ public abstract class AbstractConfigurationModel {
      * Default constructor. Initiates with undefined {@link ReportMode}.
      */
     public AbstractConfigurationModel(){
-	this.mode = null;
+	this.mode = ReportMode.NOT_SPECIFIED;
 	listenerList = new EventListenerList();
     }
 

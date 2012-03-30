@@ -8,6 +8,8 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -15,8 +17,10 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.SortOrder;
+import javax.swing.border.EtchedBorder;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
@@ -45,6 +49,7 @@ import ua.com.fielden.platform.swing.treetable.FilterableTreeTableModel;
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTablePanel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.ResourceLoader;
 
 public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void> {
 
@@ -62,8 +67,10 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
      * Pivot table that displays the analysis result.
      */
     private final FilterableTreeTablePanel<PivotTreeTable> pivotTablePanel;
-
-
+    /**
+     * Tool bar that contain "configure analysis" button.
+     */
+    private final JToolBar toolBar;
 
     public PivotAnalysisView(final PivotAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner) {
 	super(model, progressLayer, owner);
@@ -71,7 +78,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	this.distributionList = createDistributionList();
 	this.aggregationList = createAggregationList();
 	this.pivotTablePanel = createPivotTreeTablePanel();
-
+	this.toolBar = createPivotToolBar();
 
 	//DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), new PivotListDragToSupport<IDistributedProperty>(distributionList, createDistributionSwapper()), true);
 	//DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), new PivotListDragToSupport<IAggregatedProperty>(aggregationList, createAggregationSwapper()), true);
@@ -261,6 +268,23 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	};
     }
 
+    /**
+     * Creates the tool bar with "configure analysis" button.
+     * 
+     * @return
+     */
+    private JToolBar createPivotToolBar() {
+	final JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
+	toolBar.setFloatable(false);
+	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+
+	getConfigureAction().putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/configure.png"));
+	getConfigureAction().putValue(Action.SHORT_DESCRIPTION, "Configure analysis");
+
+	toolBar.add(getConfigureAction());
+	return toolBar;
+    }
+
 
     //////////////////////Refactor code below//////////////////////////////////
     //Used for creating view in AnalysisReportMode.REPORT mode.
@@ -326,8 +350,9 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	leftDownPanel.add(aggregationLabel, "wrap");
 	leftDownPanel.add(new JScrollPane(aggregationList));
 
-	//Configuring controls for chart review panel.
-	final JPanel rightPanel = new JPanel(new MigLayout("fill, insets 3", "[fill,grow]", "[fill,grow]"));
+	//Configuring controls for pivot tree table.
+	final JPanel rightPanel = new JPanel(new MigLayout("fill, insets 3", "[fill,grow]", "[][fill,grow]"));
+	rightPanel.add(toolBar, "wrap");
 	rightPanel.add(pivotTablePanel);
 
 	//Configuring left panel with distribution and aggregation list properties.

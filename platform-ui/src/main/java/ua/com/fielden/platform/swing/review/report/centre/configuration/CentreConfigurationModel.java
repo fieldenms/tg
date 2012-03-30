@@ -140,9 +140,15 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     final void close(){
 	switch(closeOption){
 	case SAVE:
+	    if(gdtm.isFreezedEntityCentreManager(entityType, name)){
+		gdtm.saveEntityCentreManager(entityType, name);
+	    }
 	    save();
 	    break;
 	case DISCARD:
+	    if(gdtm.isFreezedEntityCentreManager(entityType, name)){
+		gdtm.discardEntityCentreManager(entityType, name);
+	    }
 	    gdtm.discardEntityCentreManager(entityType, name);
 	    break;
 	case CANCEL:
@@ -344,25 +350,4 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 	NO_OPTION,
 	CANCEL;
     }
-    //    /**
-    //     * Returns the {@link IGlobalDomainTreeManager} instance associated with this centre configuration model.
-    //     *
-    //     * @return
-    //     */
-    //    public GlobalDomainTreeManager gdtm(){
-    //	return gdtm;
-    //    }
-    //
-    //    /**
-    //     * Returns value that indicates the current centre's mode: WIZARD or REPORT.
-    //     *
-    //     * @return
-    //     */
-    //    public ReportMode getMode() {
-    //	return mode;
-    //    }
-
-    //    public void open(){
-    //
-    //    }
 }

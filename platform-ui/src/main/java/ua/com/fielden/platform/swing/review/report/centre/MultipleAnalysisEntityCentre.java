@@ -16,6 +16,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JToolBar;
 import javax.swing.SingleSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EtchedBorder;
 
 import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
@@ -80,7 +81,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 		.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
 		.buildActionPanel();
 	toolBar.setFloatable(false);
-	toolBar.setBorder(BorderFactory.createEmptyBorder());
+	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 	return toolBar;
     }
 
@@ -136,7 +137,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    public void setSelectedIndex(final int index) {
 		if(!getReviewProgressLayer().isLocked()){
 		    super.setSelectedIndex(index);
-		    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView)tabPane.getSelectedComponent();
+		    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView)tabPane.getSelectedComponent();
 		    setCurrentAnalysisConfigurationView(analysis);
 		}else{
 		    JOptionPane.showMessageDialog(tabPane, "The " + tabPane.getTitleAt(index) + " analysis can not be selected right now, " +
@@ -280,25 +281,28 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?, ?>> getAnalysisList() {
-	final List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?, ?>> analysisList = new ArrayList<AbstractAnalysisConfigurationView<T,ICentreDomainTreeManagerAndEnhancer,?,?,?,?>>();
+    public List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> getAnalysisList() {
+	final List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> analysisList = new ArrayList<AbstractAnalysisConfigurationView<T,ICentreDomainTreeManagerAndEnhancer,?,?,?>>();
 	for(final Component component : tabPanel.getComponents()){
-	    analysisList.add((AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?, ?>)component);
+	    analysisList.add((AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)component);
 	}
 	return analysisList;
     }
 
     @Override
     public void addAnalysis(final String name, final AnalysisType analysisType) {
-	AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?, ?> analysis = null;
+	AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = null;
 	switch(analysisType){
 	case SIMPLE:
 	    analysis = createChartAnalysis(name);
+	    break;
 	case PIVOT:
 	    analysis = createPivotAnalysis(name);
+	    break;
 	}
 	if(analysis != null){
 	    tabPanel.addTab(analysis.getModel().getName(), analysis);
+	    tabPanel.setSelectedComponent(analysis);
 	    analysis.open();
 	}
     }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.interfaces;
 
+import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
+
 /**
  * Contract for anything that is interested in receiving selection events.
  * 
@@ -8,6 +10,10 @@ package ua.com.fielden.platform.swing.review.report.interfaces;
  */
 public interface ISelectable {
 
+    /**
+     * Performs selection and fires {@link SelectionEvent}.
+     */
+    public void select();
     /**
      * Adds {@link ISelectionEventListener} instance to listen selection events.
      * 

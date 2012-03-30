@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.review;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -117,6 +119,16 @@ public class EntityMasterManager implements IEntityMasterManager {
 		    vmf, //
 		    masterManager, //
 		    owner);
+	    //TODO should be removed later.
+	    frame.addWindowListener(new WindowAdapter() {
+
+		@Override
+		public void windowClosed(final WindowEvent e) {
+		    super.windowClosed(e);
+		    gdtm.saveEntityMasterManager(entity.getType());
+		}
+
+	    });
 	    cache.put(frame, entity.getId());
 	}
 	// bringing BaseFrame to front in this manner, because simple call won't do the trick

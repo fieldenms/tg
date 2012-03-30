@@ -61,6 +61,15 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
     }
 
     /**
+     * Returns the {@link IDomainTreeManagerAndEnhancer} instance associated with this {@link DomainTreeEditorModel}.
+     * 
+     * @return
+     */
+    public IDomainTreeManagerAndEnhancer getDomainTreeManagerAndEnhancer(){
+	return dtme;
+    }
+
+    /**
      * Returns the action that copy the selected calculated property.
      *
      * @return

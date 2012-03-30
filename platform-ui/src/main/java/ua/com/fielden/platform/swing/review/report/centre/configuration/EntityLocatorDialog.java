@@ -74,9 +74,8 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	//Configuring the entity locator title.
 	final LocatorConfigurationModel<VT, RT> locatorConfigurationModel = locatorConfigurationView.getModel();
 	final Class<VT> entityType = locatorConfigurationModel.entityType;
-	final String name = locatorConfigurationModel.name;
 	locatorType = defineLocatorType(locatorConfigurationView.getModel());
-	setTitle(generateTitle(locatorType, entityType, name));
+	setTitle(generateTitle(locatorType, entityType));
 
 	//Configuring the content and size of the entity locator and display it.
 	locatorConfigurationView.open();
@@ -128,20 +127,30 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	    @Override
 	    public void windowClosing(final WindowEvent e) {
 		final ILocatorManager locatorManager = locatorConfigurationView.getModel().locatorManager;
-		final Class<RT> entityType = locatorConfigurationView.getModel().rootType;
-		final String propertyName = locatorConfigurationView.getModel().name;
-		//		if(locatorConfigurationView.getPreviousView() == null){
-		//		    return;
-		//		}
-		if (locatorManager.isChangedLocatorManager(entityType, propertyName)) {
+		final Class<RT> root = locatorConfigurationView.getModel().rootType;
+		final String name = locatorConfigurationView.getModel().name;
+		if (locatorManager.isChangedLocatorManager(root, name)) {
+		    final boolean isFreezed = locatorManager.isFreezedLocatorManager(root, name);
 		    final Object options[] = { "Save", "Save as default", "No" };
 		    final int chosenOption = JOptionPane.showOptionDialog(EntityLocatorDialog.this, "This locator has been changed, would you like to save it?", "Save entity locator configuration", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 		    switch (chosenOption) {
 		    case JOptionPane.YES_OPTION:
+			if(isFreezed){
+			    locatorManager.acceptLocatorManager(root, name);
+			}
 			locatorConfigurationView.getModel().save();
 			break;
 		    case JOptionPane.NO_OPTION:
+			if(isFreezed){
+			    locatorManager.acceptLocatorManager(root, name);
+			}
 			locatorConfigurationView.getModel().saveAsDefault();
+			break;
+		    case JOptionPane.CANCEL_OPTION:
+			if(isFreezed){
+			    locatorManager.discardLocatorManager(root, name);
+			}
+			locatorManager.discardLocatorManager(root, name);
 			break;
 		    }
 		}
@@ -164,7 +173,6 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	    @Override
 	    public boolean locatorConfigurationEventPerformed(final LocatorConfigurationEvent event) {
 		final Class<VT> entityType = locatorConfigurationView.getModel().entityType;
-		final String name = locatorConfigurationView.getModel().name;
 		switch(event.getEventAction()){
 		case POST_SAVE:
 		    locatorType = LoadedLocatorType.LOCAL;
@@ -176,7 +184,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 		default:
 		    return true;
 		}
-		setTitle(generateTitle(locatorType, entityType, name));
+		setTitle(generateTitle(locatorType, entityType));
 		return true;
 	    }
 
@@ -195,7 +203,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	};
     }
 
-    private static <VT extends AbstractEntity> String generateTitle(final LoadedLocatorType locatorType, final Class<VT> entityType, final String name) {
+    private static <VT extends AbstractEntity<?>> String generateTitle(final LoadedLocatorType locatorType, final Class<VT> entityType) {
 	return TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey()
 		+ locatorType + " entity locator";
     }

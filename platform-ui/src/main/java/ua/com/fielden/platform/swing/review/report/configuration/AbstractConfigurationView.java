@@ -3,7 +3,6 @@ package ua.com.fielden.platform.swing.review.report.configuration;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 
 import net.miginfocom.swing.MigLayout;
@@ -82,13 +81,9 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 	return model;
     }
 
-    /**
-     * Returns the progress layer for the associated {@link AbstractConfigurationView}.
-     * 
-     * @return
-     */
-    public final BlockingIndefiniteProgressLayer getProgressLayer() {
-	return progressLayer;
+    @Override
+    public String getInfo() {
+        return "Abstract configuration panel";
     }
 
     @Override
@@ -109,6 +104,15 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
     }
 
     /**
+     * Returns the progress layer for the associated {@link AbstractConfigurationView}.
+     * 
+     * @return
+     */
+    public final BlockingIndefiniteProgressLayer getProgressLayer() {
+        return progressLayer;
+    }
+
+    /**
      * Opens this {@link AbstractConfigurationView}. First it tries to open this in {@link ReportMode#REPORT} mode, if it fails, then it opens in {@link ReportMode#WIZARD} mode.
      */
     public final void open(){
@@ -124,9 +128,53 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 	}
 	try{
 	    getModel().setMode(ReportMode.WIZARD);
+	    return;
 	}catch(final Exception e){
 	    new DialogWithDetails(null, "Exception while opening wizard view", e).setVisible(true);
+
 	}
+	try {
+	    getModel().setMode(ReportMode.NOT_SPECIFIED);
+	} catch (final Exception e) {
+	    new DialogWithDetails(null, "Exception while opening wizard view", e).setVisible(true);
+	}
+    }
+
+    /**
+     * Notifies all registered {@link ISelectionEventListener} that this configuration model was selected.
+     * 
+     * @param event
+     */
+    protected final void fireSelectionEvent(final SelectionEvent event){
+        for(final ISelectionEventListener listener : listenerList.getListeners(ISelectionEventListener.class)){
+            listener.viewWasSelected(event);
+        }
+    }
+
+    /**
+     * Override this to provide custom report view.
+     * 
+     * @param configurableView - view to configure.
+     * @return
+     */
+    protected VT initConfigurableView(final VT configurableView){
+        if(configurableView != null){
+            configurableView.addReviewEventListener(createReviewListener());
+        }
+        return configurableView;
+    }
+
+    /**
+     * Override this to provide custom wizard to configure report.
+     * 
+     * @param wizardView - wizard view to configure
+     * @return
+     */
+    protected WT initWizardView(final WT wizardView){
+        if(wizardView != null){
+            wizardView.addWizardEventListener(createWizardListener());
+        }
+        return wizardView;
     }
 
     /**
@@ -143,14 +191,15 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 		    final ReportMode mode = (ReportMode)evt.getNewValue();
 		    switch(mode){
 		    case WIZARD:
-			previousWizard = createWizardView();
-			previousWizard.addWizardEventListener(createWizardListener());
+			previousWizard = initWizardView(null);
 			setView(previousWizard);
 			break;
 		    case REPORT:
-			previousView = createConfigurableView();
-			previousView.addReviewEventListener(createReviewListener());
+			previousView = initConfigurableView(null);
 			setView(previousView);
+			break;
+		    case NOT_SPECIFIED:
+			setView(null);
 			break;
 		    }
 		}
@@ -181,7 +230,6 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 			new DialogWithDetails(null, "Exception while opening wizard view", res.getEx()).setVisible(true);
 			return false;
 		    }
-		    //TODO Must implement logic that determines whether entiy centre can be configured or not.
 		case POST_CONFIGURE:
 		    try {
 			getModel().setMode(ReportMode.WIZARD);
@@ -202,18 +250,16 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
      */
     private IWizardEventListener createWizardListener() {
 	return new IWizardEventListener() {
-	    //TODO Must implement logic that determines whether entiy centre can be configured or not.
 	    @Override
 	    public boolean wizardActionPerformed(final WizardEvent e) {
 		switch (e.getWizardAction()) {
 		case PRE_BUILD:
-		case PRE_CANCEL:
 		    final Result setModeRes = getModel().canSetMode(ReportMode.REPORT);
-		    if(setModeRes.isSuccessful()){
-			return true;
+		    if(!setModeRes.isSuccessful()){
+			JOptionPane.showMessageDialog(AbstractConfigurationView.this, setModeRes.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
+			return false;
 		    }
-		    JOptionPane.showMessageDialog(AbstractConfigurationView.this, setModeRes.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
-		    return false;
+		    break;
 		case POST_CANCEL:
 		case POST_BUILD:
 		    try {
@@ -229,46 +275,19 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
     }
 
     /**
-     * Notifies all registered {@link ISelectionEventListener} that this configuration model was selected.
-     * 
-     * @param event
-     */
-    protected final void fireSelectionEvent(final SelectionEvent event){
-	for(final ISelectionEventListener listener : listenerList.getListeners(ISelectionEventListener.class)){
-	    listener.viewWasSelected(event);
-	}
-    }
-
-    /**
-     * Override this to provide custom report view.
-     * 
-     * @return
-     */
-    protected abstract VT createConfigurableView();
-
-    /**
-     * Override this to provide custom wizard to configure report.
-     * 
-     * @return
-     */
-    protected abstract WT createWizardView();
-
-    /**
      * Set the current view for this panel: wizard or configurable review.
      * 
      * @param component
      */
-    private void setView(final JComponent component){
+    private <ST extends BasePanel & ISelectable> void setView(final ST component){
 	removeAll();
-	add(component);
+	if(component != null){
+	    add(component);
+	    component.select();
+	}
 	invalidate();
 	validate();
 	repaint();
-    }
-
-    @Override
-    public String getInfo() {
-	return "Abstract configuration panel";
     }
 
 }

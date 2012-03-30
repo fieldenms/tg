@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
@@ -115,7 +116,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	this.spinner = createColumnCounterSpinner();
 	this.switchChartModel = new SwitchChartsModel<List<EntityAggregates>, CategoryChartTypes>(chartPanel);
 	//	updateChart(new ArrayList<EntityAggregates>(), null);
-	this.toolBar = createChartTypeBar();
+	this.toolBar = createChartToolBar();
 	layoutComponents();
 
 
@@ -287,10 +288,14 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	return true;
     }
 
-    private JToolBar createChartTypeBar() {
+    private JToolBar createChartToolBar() {
 	final JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
 	toolBar.setFloatable(false);
 	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+
+	getConfigureAction().putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/configure.png"));
+	getConfigureAction().putValue(Action.SHORT_DESCRIPTION, "Configure analysis");
+
 	final ButtonGroup group = new ButtonGroup();
 	final JToggleButton barChart = createToggleButtonFor(switchChartModel, CategoryChartTypes.BAR_CHART, "Show bar chart", ResourceLoader.getIcon("images/chart_bar.png"));
 	final JToggleButton stackedBarChart = createToggleButtonFor(switchChartModel, CategoryChartTypes.STACKED_BAR_CHART, "Show stacked bar chart", ResourceLoader.getIcon("images/chart_stacked_bar.png"));
@@ -317,6 +322,8 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	group.add(barChart);
 	group.add(stackedBarChart);
 	group.add(lineChart);
+	toolBar.add(getConfigureAction());
+	toolBar.addSeparator();
 	toolBar.add(barChart);
 	toolBar.add(stackedBarChart);
 	toolBar.add(lineChart);

@@ -28,8 +28,8 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
     }
 
     @Override
-    public List<AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?>> getAnalysisList() {
-	final List<AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?>> analysisList = new ArrayList<AbstractAnalysisConfigurationView<T,CDTME,?,?,?,?>>();
+    public List<AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?>> getAnalysisList() {
+	final List<AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?>> analysisList = new ArrayList<AbstractAnalysisConfigurationView<T,CDTME,?,?,?>>();
 	analysisList.add(gridConfigurationView);
 	return analysisList;
     }

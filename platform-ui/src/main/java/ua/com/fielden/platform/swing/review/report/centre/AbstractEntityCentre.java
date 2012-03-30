@@ -5,6 +5,8 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import java.awt.Dimension;
 import java.awt.IllegalComponentStateException;
 import java.awt.event.ActionEvent;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -14,12 +16,15 @@ import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EtchedBorder;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -91,7 +96,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     private final Action runAction;
 
     //Holds current operable analysis report.
-    private AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?> currentAnalysisConfigurationView;
+    private AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> currentAnalysisConfigurationView;
 
     /**
      * Initiates this {@link AbstractEntityCentre}. Creates all parts and components of entity centre.
@@ -116,8 +121,38 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	this.toolBar = createToolBar();
 	this.criteriaPanel = createCriteriaPanel();
 	this.actionPanel = createControlPanel();
-
+	//Adds listener that listens the current analysis change events.
 	addPropertyChangeListener(createCurrentAnalysisChangeListener());
+	//If "run automatically" parameter is set to true then load data after the centre has become visible.
+	if (getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().isRunAutomatically()) {
+	    //handle first component-showed event
+	    addHierarchyListener(new HierarchyListener() {
+
+		boolean handleComponentResizedEvent = true;
+
+		@Override
+		public void hierarchyChanged(final HierarchyEvent e) {
+		    // should hierarchy change event be handled?
+		    if (((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED)
+			    && handleComponentResizedEvent) {
+			// yes, so this one is first, lets handle it and set flag
+			// to indicate that we won't handle any more
+			// hierarchy changed events
+			handleComponentResizedEvent = false;
+			//The components are resized so lets load data for the current analysis.
+			getRunAction().actionPerformed(null);
+			// after this handler end its execution, lets remove it
+			// from component because it is already not-useful
+			final HierarchyListener refToThis = this;
+			SwingUtilities.invokeLater(new Runnable() {
+			    public void run() {
+				removeHierarchyListener(refToThis);
+			    }
+			});
+		    }
+		}
+	    });
+	}
     }
 
     @Override
@@ -154,7 +189,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      *
      * @return
      */
-    public final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?> getCurrentAnalysisConfigurationView() {
+    public final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> getCurrentAnalysisConfigurationView() {
 	return currentAnalysisConfigurationView;
     }
 
@@ -163,7 +198,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      *
      * @return
      */
-    public abstract List<AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?>> getAnalysisList();
+    public abstract List<AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?>> getAnalysisList();
 
     /**
      * Adds new analysis specified with name and {@link AnalysisType} instance to this centre.
@@ -297,10 +332,13 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      */
     protected JToolBar createToolBar() {
 	if(getModel().getMasterManager() != null){
-	    return new ActionPanelBuilder()//
+	    final JToolBar toolbar = new ActionPanelBuilder()//
 	    .addButton(createOpenMasterWithNewCommand())//
 	    .addButton(createOpenMasterCommand())//
 	    .buildActionPanel();
+	    toolbar.setFloatable(false);
+	    toolbar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+	    return toolbar;
 	}
 	return null ;
     }
@@ -333,8 +371,8 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      *
      * @param currentAnalysisConfigurationView
      */
-    protected final void setCurrentAnalysisConfigurationView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?> currentAnalysisConfigurationView) {
-	final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?, ?> oldAnalysisConfigurationView = this.currentAnalysisConfigurationView;
+    protected final void setCurrentAnalysisConfigurationView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> currentAnalysisConfigurationView) {
+	final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> oldAnalysisConfigurationView = this.currentAnalysisConfigurationView;
 	this.currentAnalysisConfigurationView = currentAnalysisConfigurationView;
 	firePropertyChange("currentAnalysisConfigurationView", oldAnalysisConfigurationView, this.currentAnalysisConfigurationView);
     }
@@ -472,7 +510,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      */
     @SuppressWarnings( "unchecked")
     protected static <E extends AbstractEntity<?>, MAE extends ICentreDomainTreeManagerAndEnhancer> EntityGridInspector<E> getEntityGridInspector(final AbstractEntityCentre<E, MAE> entityCentre){
-	for(final AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?, ?> analysis : entityCentre.getAnalysisList()){
+	for(final AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?> analysis : entityCentre.getAnalysisList()){
 	    if(analysis instanceof GridConfigurationView){
 		final GridConfigurationView<E, MAE> gridConfigPanel = (GridConfigurationView<E, MAE>)analysis;
 		return gridConfigPanel.getPreviousView().getEgiPanel().getEgi();
@@ -534,7 +572,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	    public void actionPerformed(final ActionEvent e) {
 		try{
 		    if(ReportMode.REPORT != getCurrentAnalysisConfigurationView().getModel().getMode()){
-			throw new IllegalStateException("This action shouldn't be invoked when analysis is in WIZARD or not specified mode.");
+			throw new IllegalStateException("This action shouldn't be invoked when analysis is not in REPORT or not specified mode.");
 		    }
 		    getCurrentAnalysisConfigurationView().getPreviousView().loadData();
 		}catch(final IllegalStateException exception){

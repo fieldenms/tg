@@ -15,7 +15,12 @@ public enum ReportMode {
     /**
      * Represents report view mode.
      */
-    REPORT("Review");
+    REPORT("Review"),
+
+    /**
+     * Represents report with not specified mode, this report mode is used only when report is closed.
+     */
+    NOT_SPECIFIED("Not specified");
 
     private final String modeDescription;
 

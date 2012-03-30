@@ -13,6 +13,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardView;
@@ -29,6 +31,11 @@ public class EntityCentreWizard<T extends AbstractEntity<?>> extends AbstractWiz
     }
 
     @Override
+    public ICentreDomainTreeManager getDomainTreeManager() {
+	return (ICentreDomainTreeManager)super.getDomainTreeManager();
+    }
+
+    @Override
     protected JPanel createActionPanel() {
 	final JPanel actionPanel = new JPanel(new MigLayout("fill, insets 10", "[][][]30:push[fill, :100:][fill, :100:]", "[c]"));
 	actionPanel.add(DummyBuilder.label("Columns"));
@@ -40,18 +47,18 @@ public class EntityCentreWizard<T extends AbstractEntity<?>> extends AbstractWiz
     }
 
     private JCheckBox createAutoRunCheckBox() {
-	//TODO implement item listener for the auto run check box.
+	final ICentreDomainTreeManager centreManager = getDomainTreeManager();
 	final JCheckBox autoRunCheckBox = new JCheckBox("Run automatically");
-	//autoRunCheckBox.setSelected(getWizardModel().isAutoRun());
+	autoRunCheckBox.setSelected(centreManager.isRunAutomatically());
 	autoRunCheckBox.addItemListener(new ItemListener() {
 
 	    @Override
 	    public void itemStateChanged(final ItemEvent e) {
 		final int state = e.getStateChange();
 		if (state == ItemEvent.SELECTED) {
-		    //	    getWizardModel().setAutoRun(true);
+		    centreManager.setRunAutomatically(true);
 		} else {
-		    //	    getWizardModel().setAutoRun(false);
+		    centreManager.setRunAutomatically(false);
 		}
 
 	    }
@@ -61,12 +68,13 @@ public class EntityCentreWizard<T extends AbstractEntity<?>> extends AbstractWiz
     }
 
     private SpinnerModel createSpinnerModel() {
-	final SpinnerModel spinnerModel = new SpinnerNumberModel(1, 1, 4, 1);
+	final IAddToCriteriaTickManager tickManager = getDomainTreeManager().getFirstTick();
+	final SpinnerNumberModel spinnerModel = new SpinnerNumberModel(tickManager.getColumnsNumber(), 1, 4, 1);
 	spinnerModel.addChangeListener(new ChangeListener() {
 
 	    @Override
 	    public void stateChanged(final ChangeEvent e) {
-		//TODO implement this spinner model
+		tickManager.setColumnsNumber(spinnerModel.getNumber().intValue());
 	    }
 	});
 	return spinnerModel;

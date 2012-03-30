@@ -7,6 +7,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -57,6 +58,15 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Ba
 	this.buildAction = createBuildAction();
 	this.cancelAction = createCancelAction();
 	this.actionPanel = createActionPanel();
+    }
+
+    /**
+     * Returns the {@link IDomainTreeManager} associated with {@link DomainTreeEditorModel}.
+     * 
+     * @return
+     */
+    public IDomainTreeManager getDomainTreeManager(){
+	return getTreeEditorView().getModel().getDomainTreeManagerAndEnhancer();
     }
 
     /**

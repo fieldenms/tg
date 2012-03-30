@@ -18,9 +18,8 @@ public class GridConfigurationModel<T extends AbstractEntity<?>, CDTME extends I
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
-	switch(mode){
-	case REPORT : return Result.successful(this);
-	case WIZARD : return new Result(new UnsupportedOperationException("The WIZARD mode is not supported for this type of analysis"));
+	if(ReportMode.WIZARD.equals(mode)){
+	    return new Result(new UnsupportedOperationException("The WIZARD mode is not supported for this type of analysis"));
 	}
 	return Result.successful(this);
     }

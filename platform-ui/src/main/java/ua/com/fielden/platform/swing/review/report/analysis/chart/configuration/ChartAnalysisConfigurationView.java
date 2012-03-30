@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.configuration.Abstra
 import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
-public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager, Void, ChartAnalysisView<T>, AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer>> {
+public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager, Void, ChartAnalysisView<T>> {
 
     private static final long serialVersionUID = -44217633254876740L;
 
@@ -23,13 +23,13 @@ public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends
     }
 
     @Override
-    protected ChartAnalysisView<T> createConfigurableView() {
-	return new ChartAnalysisView<T>(getModel().createChartAnalysisModel(), getProgressLayer(), getOwner());
+    protected ChartAnalysisView<T> initConfigurableView(final ChartAnalysisView<T> configurableView) {
+	return super.initConfigurableView(new ChartAnalysisView<T>(getModel().createChartAnalysisModel(), getProgressLayer(), getOwner()));
     }
 
     @Override
-    protected AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer> createWizardView() {
-	return new AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer>(getOwner(), getModel().createDomainTreeEditorModel(), getProgressLayer());
+    protected AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer> initWizardView(final AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer> wizardView) {
+	return super.initWizardView(new AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer>(getOwner(), getModel().createDomainTreeEditorModel(), getProgressLayer()));
     }
 
 }

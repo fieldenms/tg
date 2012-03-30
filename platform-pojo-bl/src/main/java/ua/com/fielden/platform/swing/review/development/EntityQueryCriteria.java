@@ -74,7 +74,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	return false;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings("unchecked")
     public IValueMatcher2<?> getValueMatcher(final String propertyName) {
 	if (valueMatchers.get(propertyName) == null) {
 	    valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher((Class<? extends AbstractEntity<?>>) getType(), propertyName));

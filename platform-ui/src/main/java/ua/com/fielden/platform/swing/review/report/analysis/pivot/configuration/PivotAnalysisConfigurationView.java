@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.pivot.PivotAnalysisV
 import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
-public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void, PivotAnalysisView<T>, AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer>> {
+public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void, PivotAnalysisView<T>> {
 
     private static final long serialVersionUID = -1464413279095086886L;
 
@@ -23,13 +23,13 @@ public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends
     }
 
     @Override
-    protected PivotAnalysisView<T> createConfigurableView() {
-	return new PivotAnalysisView<T>(getModel().createPivotAnalysisModel(), getProgressLayer(), getOwner());
+    protected PivotAnalysisView<T> initConfigurableView(final PivotAnalysisView<T> configurableView) {
+	return super.initConfigurableView(new PivotAnalysisView<T>(getModel().createPivotAnalysisModel(), getProgressLayer(), getOwner()));
     }
 
     @Override
-    protected AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer> createWizardView() {
-	return new AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer>(getOwner(), getModel().createDomainTreeEditorModel(), getProgressLayer());
+    protected AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer> initWizardView(final AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer> wizardView) {
+	return super.initWizardView(new AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer>(getOwner(), getModel().createDomainTreeEditorModel(), getProgressLayer()));
     }
 
 }
