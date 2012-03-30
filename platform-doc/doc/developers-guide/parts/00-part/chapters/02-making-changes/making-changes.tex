@@ -1,6 +1,71 @@
 \chapter{The World Needs Changes or Application Customisation}\label{ch00:03}
 
-  Before making any changes we should discussed the modules that comprise the genereated project and their interdependencies.
+\myepigraph{Technical skill is mastery of complexity, while creativity is mastery of simplicity.}{Erik Christopher Zeeman}
+
+  Before making any changes we should discussed the modules that comprise every TG-based application project, their roles and interdependencies.
 
 \section{Project Modules}
-  There are six modules with dependencies depicted in Fig.~\ref{}
+  The generated application consists of six modules with interdependencies depicted in Fig.~\ref{img:ch00:03:project_module_dependencies}.
+  These modules are grouped into three independent groups: Server Modules, Client Modules and Shared Module.
+  
+  \begin{description}
+    \item[\textbf{Shared Module.}] Includes a single module \texttt{coolapp-pojo-bl}, which is independent from other application modules, and is shared between the other two groups.
+	This module represents the very core of the application where the business domain model is defined.   
+    \item[\textbf{Server Modules.}] Include two modules -- \texttt{coolapp-dao} and \texttt{coolapp-web-server} -- that together define application web server.	
+      \begin{itemize}
+	\item \texttt{coolapp-dao} 
+	\item \texttt{coolapp-web-server}
+      \end{itemize}
+    \item[\textbf{Client Modules.}] Include three modules~--~\texttt{coolapp-rao}, \texttt{coolapp-ui} and \texttt{coolapp-web-client}~--~that together define application web client.
+      \begin{itemize}
+	\item \texttt{coolapp-rao} 
+	\item \texttt{coolapp-ui}
+	\item \texttt{coolapp-web-client}
+      \end{itemize}
+   \end{description}
+
+
+  
+  
+ 
+  \begin{image}{Dependencies between Project Modules}{\label{img:ch00:03:project_module_dependencies}}    
+    \scalebox{1.0} {
+  \begin{tikzpicture}
+    \draw[very thick, dashed, color=blue!50!black, rounded corners] (-2.3, 1.8) rectangle (10.7,-1.2);
+    \node[rotate=90,color=blue!50!black] at (-2.6, 0.25) {\small Server Modules};
+
+    \umlbasiccomponent[x=0, y=0, fill=blue!10]{coolapp-dao}
+    \umlbasiccomponent[x=8, y=0, fill=blue!10]{coolapp-web-server}
+
+    \draw[very thick, dashed, color=red!50!black, rounded corners] (1.8, -3.3) rectangle (6.2,-6.1);
+    \node[color=red!50!black] at (4.9, -3) {\small Share Module};
+    \umlbasiccomponent[x=4, y=-5]{coolapp-pojo-bl}
+    
+    \umlnote[x=-2, y=3.5, width=5.5cm, fill=annotationbgcolor]{coolapp-dao}{\scriptsize Date Access Objecs layer, which provides RDBMS-based implementation for domain controllers.}
+    \umlnote[x=-2, y=-3.5, width=5.5cm, fill=annotationbgcolor]{coolapp-pojo-bl}{\scriptsize Defines business domain model (entities and controllers), shared between client and server tiers.}
+
+    \umluniassoc{coolapp-dao}{coolapp-pojo-bl}
+    \umluniassoc[name=w2d]{coolapp-web-server}{coolapp-dao}
+    \umlnote[x=5, y=3.5, width=5.5cm, fill=annotationbgcolor]{w2d-1}{\scriptsize Web resources use DB driven implementation of domain controllers} 
+
+    \draw[very thick, dashed, color=green!50!black, rounded corners] (-1, -8.1) rectangle (8.9,-15.2);
+    \node[rotate=90,color=green!50!black] at (-1.3, -9.7) {\small Client Modules};
+
+    \umlbasiccomponent[x=7, y=-10, fill=green!30]{coolapp-ui}
+    \umlbasiccomponent[x=1, y=-10, fill=green!30]{coolapp-rao}
+    \umlbasiccomponent[x=4, y=-14, fill=green!30]{coolapp-web-client}   
+
+    \umlnote[x=-2, y=-6.5, width=5.5cm, fill=annotationbgcolor]{coolapp-rao}{\scriptsize Resource Access Objects, which provides HTTP-based implementation for domain controllers.}
+    \umlnote[x=-3, y=-13.7, width=3cm, fill=annotationbgcolor]{coolapp-web-client}{\scriptsize Binds together UI and RAO implementation of domain controllers to define a web client application.}
+
+    \umluniassoc[name=u2m]{coolapp-ui}{coolapp-pojo-bl}
+    \umlnote[x=9, y=-6, width=3.5cm, fill=annotationbgcolor]{u2m-1}{\scriptsize Accessed domain model and controller via their contracts (not implementation).} 
+    \umluniassoc{coolapp-rao}{coolapp-pojo-bl}
+    \umluniassoc{coolapp-web-client}{coolapp-ui}
+    \umluniassoc{coolapp-web-client}{coolapp-rao}  
+
+  \end{tikzpicture}
+  }
+  \end{image}
+
+%
