@@ -3,6 +3,7 @@ package ua.com.fielden.platform.persistence.types;
 import java.util.Date;
 
 import ua.com.fielden.platform.basic.autocompleter.HibernateValueMatcher;
+import ua.com.fielden.platform.dao.EntityWithMoneyDao2;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -14,6 +15,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyUserType;
 
@@ -26,6 +28,7 @@ import ua.com.fielden.platform.types.markers.IMoneyUserType;
 @KeyType(String.class)
 @DescTitle("Description")
 @MapEntityTo("MONEY_CLASS_TABLE")
+@DefaultController2(EntityWithMoneyDao2.class)
 public class EntityWithMoney extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
@@ -51,11 +54,12 @@ public class EntityWithMoney extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setMoney(final Money money) {
+    public EntityWithMoney setMoney(final Money money) {
 	if (money == null) {
 	    throw new IllegalArgumentException("money should not be null");
 	}
 	this.money = money;
+	return this;
     }
 
     public Money getMoney() {
@@ -67,8 +71,9 @@ public class EntityWithMoney extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setCalculatedProperty(final String calculatedProperty) {
+    public EntityWithMoney setCalculatedProperty(final String calculatedProperty) {
         this.calculatedProperty = calculatedProperty;
+        return this;
     }
 
     public Date getDateTimeProperty() {
@@ -76,15 +81,18 @@ public class EntityWithMoney extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setDateTimeProperty(final Date dateTime) {
+    public EntityWithMoney setDateTimeProperty(final Date dateTime) {
         this.dateTimeProperty = dateTime;
+        return this;
     }
 
     public Date getTransDate() {
         return transDate;
     }
+
     @Observable
-    public void setTransDate(final Date transDate) {
+    public EntityWithMoney setTransDate(final Date transDate) {
         this.transDate = transDate;
+        return this;
     }
 }
