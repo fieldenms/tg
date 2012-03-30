@@ -3,14 +3,23 @@ package ua.com.fielden.platform.ui.entity.centre;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Test;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.security.provider.UserController2;
 import ua.com.fielden.platform.security.user.IUserDao2;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
 import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigControllerDao2;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao2;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
@@ -18,14 +27,14 @@ import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao2;
  * @author TG Team
  *
  */
-public class EntityCentreConfigPersistenceTest2 extends DbDrivenTestCase2 {
-    private final IEntityCentreConfigController2 dao = injector.getInstance(EntityCentreConfigControllerDao2.class);
-    private final IMainMenuItemController2 menuDao = injector.getInstance(MainMenuItemControllerDao2.class);
-    private final IUserDao2 userDao = injector.getInstance(UserController2.class);
+public class EntityCentreConfigPersistenceTest2 extends AbstractDomainDrivenTestCase {
+    private final IEntityCentreConfigController2 dao = getInstance(EntityCentreConfigControllerDao2.class);
+    private final IMainMenuItemController2 menuDao = getInstance(MainMenuItemControllerDao2.class);
+    private final IUserDao2 userDao = getInstance(UserController2.class);
 
-
+    @Test
     public void test_insertion_and_retrieval_of_binary_data() {
-	final EntityCentreConfig config = entityFactory.newByKey(EntityCentreConfig.class, userDao.findById(0L), "CONFIG 1", menuDao.findById(0L));
+	final EntityCentreConfig config = new_(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
 	config.setConfigBody(new byte[]{1,2,3});
 	dao.save(config);
 
@@ -34,8 +43,9 @@ public class EntityCentreConfigPersistenceTest2 extends DbDrivenTestCase2 {
 	assertTrue("Incorrectly saved binary property.", Arrays.equals(new byte[]{1, 2, 3}, result.get(0).getConfigBody()));
     }
 
+    @Test
     public void test_update_of_binary_data() {
-	final EntityCentreConfig config = entityFactory.newByKey(EntityCentreConfig.class, userDao.findById(0L), "CONFIG 1", menuDao.findById(0L));
+	final EntityCentreConfig config = new_(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
 	config.setConfigBody(new byte[]{1,2,3});
 	dao.save(config);
 
@@ -51,7 +61,13 @@ public class EntityCentreConfigPersistenceTest2 extends DbDrivenTestCase2 {
     }
 
     @Override
-    protected String[] getDataSetPathsForInsert() {
-	return new String[] {"src/test/resources/data-files/entity-centre-config-test-case.flat.xml"};
+    protected void populateDomain() {
+	save(new_(User.class, "USER", "DESC").setBase(true).setPassword("PASSWD"));
+	save(new_(MainMenuItem.class, "type", "desc").setOrder(1));
+    }
+
+    @Override
+    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
+	return PlatformTestDomainTypes.entityTypes;
     }
 }

@@ -1,10 +1,16 @@
 package ua.com.fielden.platform.dao;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.junit.Test;
 
 import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
 import ua.com.fielden.platform.dao2.IUserRoleDao2;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao2;
@@ -13,7 +19,11 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -24,128 +34,123 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  * @author TG Team
  *
  */
-public class UserUserRoleTestCase2 extends DbDrivenTestCase2 {
-    private final IUserRoleDao2 userRoleDao = injector.getInstance(IUserRoleDao2.class);
-    private final IUserAndRoleAssociationDao2 userAssociationDao = injector.getInstance(IUserAndRoleAssociationDao2.class);
-    private final ISecurityRoleAssociationDao2 securityDao = injector.getInstance(ISecurityRoleAssociationDao2.class);
-    private final IUserController2 userDao = injector.getInstance(IUserController2.class);
+public class UserUserRoleTestCase2 extends AbstractDomainDrivenTestCase {
+    private final IUserRoleDao2 userRoleDao = getInstance(IUserRoleDao2.class);
+    private final IUserAndRoleAssociationDao2 userAssociationDao = getInstance(IUserAndRoleAssociationDao2.class);
+    private final ISecurityRoleAssociationDao2 securityDao = getInstance(ISecurityRoleAssociationDao2.class);
+    private final IUserController2 userDao = getInstance(IUserController2.class);
 
+    @Test
     public void test_retrieval_of_user_role_associations() {
 	final EntityResultQueryModel<UserAndRoleAssociation> associationModel = select(UserAndRoleAssociation.class).model();
 	assertEquals("Incorrect number of user role associations.", 8, userAssociationDao.firstPage(from(associationModel).with(new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class).with("user", new fetch<User>(User.class))).build(), 10).data().size());
     }
 
-//    public void test_retrieval_of_users() {
-//	final List<User> users = userDao.findAllUsersWithRoles();
-//	assertEquals("the number of retrieved persons is incorrect. Please check the testThatTheUsersWereRetrievedCorrectly", 4, users.size());
-//
-//	for (int userIndex = 0; userIndex < 4; userIndex++) {
-//	    final User user = users.get(userIndex);
-//	    assertEquals("incorrect id of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", userIndex + 1, user.getId().intValue());
-//	    assertEquals("incorrect key of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "user" + Integer.toString(userIndex + 1), user.getKey());
-//	    assertEquals("incorrect password of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "userpass" + Integer.toString(userIndex + 1), user.getPassword());
-//
-//	    final Set<UserAndRoleAssociation> userRolesAssociation = user.getRoles();
-//	    final Set<UserRole> userRoles = new HashSet<UserRole>();
-//	    for (final UserAndRoleAssociation userAssociation : userRolesAssociation) {
-//		userRoles.add(userAssociation.getUserRole());
-//	    }
-//	    assertEquals("the " + userIndex + "-th person has wrong number of user roles, please check the testThatTheUsersWereRetrievedCorrectly", 2, userRoles.size());
-//	    for (int userRoleIndex = 0; userRoleIndex < 2; userRoleIndex++) {
-//		final int userRoleGlobalIndex = 2 * userIndex + userRoleIndex;
-//		final UserRole userRole = new UserRole("role" + Integer.toString(userRoleGlobalIndex + 1), "");
-//		assertTrue("the " + userIndex + "-th person doesn't have the " + Integer.toString(userRoleGlobalIndex + 1) + "-th user role", userRoles.contains(userRole));
-//	    }
-//	}
-//    }
+    @Test
+    public void test_retrieval_of_users() {
+	final List<User> users = userDao.findAllUsersWithRoles();
+	assertEquals("the number of retrieved persons is incorrect. Please check the testThatTheUsersWereRetrievedCorrectly", 4, users.size());
 
+	for (int userIndex = 0; userIndex < 4; userIndex++) {
+	    final User user = users.get(userIndex);
+	    assertEquals("incorrect key of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "user" + Integer.toString(userIndex + 1), user.getKey());
+	    assertEquals("incorrect password of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "userpass" + Integer.toString(userIndex + 1), user.getPassword());
+
+	    final Set<UserAndRoleAssociation> userRolesAssociation = user.getRoles();
+	    final Set<UserRole> userRoles = new HashSet<UserRole>();
+	    for (final UserAndRoleAssociation userAssociation : userRolesAssociation) {
+		userRoles.add(userAssociation.getUserRole());
+	    }
+	    assertEquals("the " + userIndex + "-th person has wrong number of user roles, please check the testThatTheUsersWereRetrievedCorrectly", 2, userRoles.size());
+	    for (int userRoleIndex = 0; userRoleIndex < 2; userRoleIndex++) {
+		final int userRoleGlobalIndex = 2 * userIndex + userRoleIndex;
+		final UserRole userRole = new UserRole("role" + Integer.toString(userRoleGlobalIndex + 1), "");
+		assertTrue("the " + userIndex + "-th person doesn't have the " + Integer.toString(userRoleGlobalIndex + 1) + "-th user role", userRoles.contains(userRole));
+	    }
+	}
+    }
+
+    @Test
     public void test_user_role_retrieval() {
 	final List<UserRole> userRoles = userRoleDao.findAll();
 	assertEquals("the number of retrieved user roles is incorrect. Please check the testThatUserRolesWereRetrievedCorrectly", 8, userRoles.size());
 
 	for (int userRoleIndex = 0; userRoleIndex < 8; userRoleIndex++) {
 	    final UserRole userRole = userRoles.get(userRoleIndex);
-	    assertEquals("incorrect id of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", userRoleIndex + 1, userRole.getId().intValue());
 	    assertEquals("incorrect key of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", "role" + Integer.toString(userRoleIndex + 1), userRole.getKey());
 	    assertEquals("incorrect description of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", "role desc "
 		    + Integer.toString(userRoleIndex + 1), userRole.getDesc());
 	}
     }
 
-    public void test_user_role_retrieval_by_ids() {
-	final List<UserRole> userRoles = userRoleDao.findByIds(1L, 4L);
-	assertEquals("Incorrect number of user roles.", 2, userRoles.size());
+    @Test
+    public void test_that_save_for_users() {
+	// retrieving the user, modifying it's password and saving changes
+	User user = userDao.findUserByKeyWithRoles("user1");
+	user.setPassword("new password");
+	UserAndRoleAssociation userAssociation = new_(UserAndRoleAssociation.class, user, new UserRole("role1", ""));
+	final List<UserAndRoleAssociation> associations = new ArrayList<UserAndRoleAssociation>();
+	for (final UserAndRoleAssociation roleAssociation : user.getRoles()) {
+	    if (roleAssociation.equals(userAssociation)) {
+		associations.add(roleAssociation);
+	    }
+	}
+	userAssociationDao.removeAssociation(associations);
+	userDao.save(user);
+
+	// retrieving saved user and checking it
+	user = userDao.findUserByKeyWithRoles("user1");
+	assertEquals("incorrect key of the first person in the testWhetherTheSaveWorksProperlyForUsers", "user" + Integer.toString(1), user.getKey());
+	assertEquals("incorrect password of the first person in the testWhetherTheSaveWorksProperlyForUsers", "new password", user.getPassword());
+
+	// checking whether the user role1 was removed or not
+	final Set<UserAndRoleAssociation> userRoleAssociations = user.getRoles();
+	assertEquals("the first person has wrong number of user roles, please check the testWhetherTheSaveWorksProperlyForUsers", 1, userRoleAssociations.size());
+	userAssociation = new_(UserAndRoleAssociation.class, user, new UserRole("role2", ""));
+	assertTrue("the " + 1 + "-th person doesn't have the second user role", userRoleAssociations.contains(userAssociation));
+
     }
 
-//    public void test_that_save_for_users() {
-//	config.getHibernateUtil().getSessionFactory().getCurrentSession().close();
-//	// retrieving the user, modifying it's password and saving changes
-//	User user = userDao.findUserByIdWithRoles(1L);
-//	user.setPassword("new password");
-//	UserAndRoleAssociation userAssociation = entityFactory.newByKey(UserAndRoleAssociation.class, user, new UserRole("role1", ""));
-//	final List<UserAndRoleAssociation> associations = new ArrayList<UserAndRoleAssociation>();
-//	for (final UserAndRoleAssociation roleAssociation : user.getRoles()) {
-//	    if (roleAssociation.equals(userAssociation)) {
-//		associations.add(roleAssociation);
-//	    }
-//	}
-//	userAssociationDao.removeAssociation(associations);
-//	userDao.save(user);
-//
-//	// retrieving saved user and checking it
-//	user = userDao.findUserByIdWithRoles(1L);
-//	assertEquals("incorrect id of the first person in the testWhetherTheSaveWorksProperlyForUsers", 1, user.getId().intValue());
-//	assertEquals("incorrect key of the first person in the testWhetherTheSaveWorksProperlyForUsers", "user" + Integer.toString(1), user.getKey());
-//	assertEquals("incorrect password of the first person in the testWhetherTheSaveWorksProperlyForUsers", "new password", user.getPassword());
-//
-//	// checking whether the user role1 was removed or not
-//	final Set<UserAndRoleAssociation> userRoleAssociations = user.getRoles();
-//	assertEquals("the first person has wrong number of user roles, please check the testWhetherTheSaveWorksProperlyForUsers", 1, userRoleAssociations.size());
-//	userAssociation = entityFactory.newByKey(UserAndRoleAssociation.class, user, new UserRole("role2", ""));
-//	assertTrue("the " + 1 + "-th person doesn't have the second user role", userRoleAssociations.contains(userAssociation));
-//
-//    }
-//
-//    public void test_whether_the_created_user_were_correctly_saved() {
-//	config.getHibernateUtil().getSessionFactory().getCurrentSession().close();
-//
-//	// creating new person and user roles for it. Saving person
-//	final UserRole userRole1 = entityFactory.newEntity(UserRole.class, "nrole1", "nrole desc 1");
-//	userRoleDao.save(userRole1);
-//	final UserRole userRole2 = entityFactory.newEntity(UserRole.class, "nrole2", "nrole desc 2");
-//	userRoleDao.save(userRole2);
-//	final UserRole userRole3 = entityFactory.newEntity(UserRole.class, "nrole3", "nrole desc 3");
-//	userRoleDao.save(userRole3);
-//
-//	User user = entityFactory.newEntity(User.class, "new user", "new user desc");
-//	user.setPassword("new user password");
-//	userDao.save(user);
-//
-//	Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<UserAndRoleAssociation>();
-//	userRolesAssociation.add(entityFactory.newByKey(UserAndRoleAssociation.class, user, userRole1));
-//	userRolesAssociation.add(entityFactory.newByKey(UserAndRoleAssociation.class, user, userRole2));
-//	userRolesAssociation.add(entityFactory.newByKey(UserAndRoleAssociation.class, user, userRole3));
-//	user.setRoles(userRolesAssociation);
-//
-//	for (final UserAndRoleAssociation association : userRolesAssociation) {
-//	    userAssociationDao.save(association);
-//	}
-//
-//	// final checking weather the final person was saved final correctly with user final roles
-//	user = userDao.findUserByKeyWithRoles("new user");
-//	assertNotNull("Saved user should have been found.", user);
-//	assertEquals("incorrect password of the 'new user' person in the testWhetherTheCreatedUserWereCorrectlySaved", "new user password", user.getPassword());
-//
-//	// checking whether the user roles were saved correctly
-//	userRolesAssociation = user.getRoles();
-//	assertEquals("the 'new user' person has wrong number of user roles, please check the testWhetherTheCreatedUserWereCorrectlySaved", 3, userRolesAssociation.size());
-//	for (int userRoleIndex = 0; userRoleIndex < 3; userRoleIndex++) {
-//	    final UserAndRoleAssociation userRoleAssociation = entityFactory.newByKey(UserAndRoleAssociation.class, user, new UserRole("nrole"
-//		    + Integer.toString(userRoleIndex + 1), ""));
-//	    assertTrue("the 'new user'-th person doesn't have the " + userRoleAssociation.getUserRole().getKey() + "-th user role", userRolesAssociation.contains(userRoleAssociation));
-//	}
-//    }
+    @Test
+    public void test_whether_the_created_user_were_correctly_saved() {
+	// creating new person and user roles for it. Saving person
+	final UserRole userRole1 = new_(UserRole.class, "nrole1", "nrole desc 1");
+	userRoleDao.save(userRole1);
+	final UserRole userRole2 = new_(UserRole.class, "nrole2", "nrole desc 2");
+	userRoleDao.save(userRole2);
+	final UserRole userRole3 = new_(UserRole.class, "nrole3", "nrole desc 3");
+	userRoleDao.save(userRole3);
 
+	User user = new_(User.class, "new user", "new user desc");
+	user.setPassword("new user password");
+	userDao.save(user);
+
+	Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<UserAndRoleAssociation>();
+	userRolesAssociation.add(new_(UserAndRoleAssociation.class, user, userRole1));
+	userRolesAssociation.add(new_(UserAndRoleAssociation.class, user, userRole2));
+	userRolesAssociation.add(new_(UserAndRoleAssociation.class, user, userRole3));
+	user.setRoles(userRolesAssociation);
+
+	for (final UserAndRoleAssociation association : userRolesAssociation) {
+	    userAssociationDao.save(association);
+	}
+
+	// final checking weather the final person was saved final correctly with user final roles
+	user = userDao.findUserByKeyWithRoles("new user");
+	assertNotNull("Saved user should have been found.", user);
+	assertEquals("incorrect password of the 'new user' person in the testWhetherTheCreatedUserWereCorrectlySaved", "new user password", user.getPassword());
+
+	// checking whether the user roles were saved correctly
+	userRolesAssociation = user.getRoles();
+	assertEquals("the 'new user' person has wrong number of user roles, please check the testWhetherTheCreatedUserWereCorrectlySaved", 3, userRolesAssociation.size());
+	for (int userRoleIndex = 0; userRoleIndex < 3; userRoleIndex++) {
+	    final UserAndRoleAssociation userRoleAssociation = new_(UserAndRoleAssociation.class, user, new UserRole("nrole"
+		    + Integer.toString(userRoleIndex + 1), ""));
+	    assertTrue("the 'new user'-th person doesn't have the " + userRoleAssociation.getUserRole().getKey() + "-th user role", userRolesAssociation.contains(userRoleAssociation));
+	}
+    }
+
+    @Test
     public void test_that_security_associations_can_be_retrieved() {
 	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
 	final List<SecurityRoleAssociation> associations = securityDao.firstPage(from(model).with(new fetch<SecurityRoleAssociation>(SecurityRoleAssociation.class).with("role")).build(), Integer.MAX_VALUE).data();
@@ -158,6 +163,7 @@ public class UserUserRoleTestCase2 extends DbDrivenTestCase2 {
 	assertEquals("incorrect second role of the association", role, roles.get(1).getRole());
     }
 
+    @Test
     public void test_that_new_security_role_association_can_be_saved() {
 	final UserRole role = config.getEntityFactory().newEntity(UserRole.class, "role56", "role56 desc");
 	final SecurityRoleAssociation association = config.getEntityFactory().newByKey(SecurityRoleAssociation.class, FirstLevelSecurityToken1.class, role);
@@ -168,6 +174,7 @@ public class UserUserRoleTestCase2 extends DbDrivenTestCase2 {
 	assertTrue("The " + FirstLevelSecurityToken1.class.getName() + " security token doesn't have a role56 user role", roles.contains(association));
     }
 
+    @Test
     public void test_that_security_role_association_can_be_removed() {
 	List<SecurityRoleAssociation> roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
 	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());
@@ -176,6 +183,7 @@ public class UserUserRoleTestCase2 extends DbDrivenTestCase2 {
 	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 0, roles.size());
     }
 
+    @Test
     public void test_count_association_between_user_and_token() {
 	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", FirstLevelSecurityToken1.class));
 	assertEquals("Incorrect number of associations between user and token.", 2, securityDao.countAssociations("user1", ThirdLevelSecurityToken1.class));
@@ -183,7 +191,46 @@ public class UserUserRoleTestCase2 extends DbDrivenTestCase2 {
     }
 
     @Override
-    protected String[] getDataSetPathsForInsert() {
-	return new String[] { "src/test/resources/data-files/user-user_role-test-case.flat.xml" };
+    protected void populateDomain() {
+	final UserRole role1 = save(new_(UserRole.class, "role1", "role desc 1"));
+	final UserRole role2 = save(new_(UserRole.class, "role2", "role desc 2"));
+	final UserRole role3 = save(new_(UserRole.class, "role3", "role desc 3"));
+	final UserRole role4 = save(new_(UserRole.class, "role4", "role desc 4"));
+	final UserRole role5 = save(new_(UserRole.class, "role5", "role desc 5"));
+	final UserRole role6 = save(new_(UserRole.class, "role6", "role desc 6"));
+	final UserRole role7 = save(new_(UserRole.class, "role7", "role desc 7"));
+	final UserRole role8 = save(new_(UserRole.class, "role8", "role desc 8"));
+
+	final User user1 = save(new_(User.class, "user1", "user desc 1").setBase(true).setPassword("userpass1"));
+	final User user2 = save(new_(User.class, "user2", "user desc 2").setBase(true).setPassword("userpass2"));
+	final User user3 = save(new_(User.class, "user3", "user desc 3").setBase(true).setPassword("userpass3"));
+	final User user4 = save(new_(User.class, "user4", "user desc 4").setBase(true).setPassword("userpass4"));
+
+	save(new_(UserAndRoleAssociation.class, user1, role1));
+	save(new_(UserAndRoleAssociation.class, user1, role2));
+	save(new_(UserAndRoleAssociation.class, user2, role3));
+	save(new_(UserAndRoleAssociation.class, user2, role4));
+	save(new_(UserAndRoleAssociation.class, user3, role5));
+	save(new_(UserAndRoleAssociation.class, user3, role6));
+	save(new_(UserAndRoleAssociation.class, user4, role7));
+	save(new_(UserAndRoleAssociation.class, user4, role8));
+
+	save(new_(SecurityRoleAssociation.class).setRole(role1).setSecurityToken(FirstLevelSecurityToken1.class));
+	save(new_(SecurityRoleAssociation.class).setRole(role2).setSecurityToken(FirstLevelSecurityToken1.class));
+	save(new_(SecurityRoleAssociation.class).setRole(role3).setSecurityToken(FirstLevelSecurityToken2.class));
+	save(new_(SecurityRoleAssociation.class).setRole(role4).setSecurityToken(FirstLevelSecurityToken2.class));
+	save(new_(SecurityRoleAssociation.class).setRole(role5).setSecurityToken(SecondLevelSecurityToken1.class));
+	save(new_(SecurityRoleAssociation.class).setRole(role6).setSecurityToken(SecondLevelSecurityToken1.class));
+	save(new_(SecurityRoleAssociation.class).setRole(role7).setSecurityToken(SecondLevelSecurityToken2.class));
+	save(new_(SecurityRoleAssociation.class).setRole(role8).setSecurityToken(SecondLevelSecurityToken2.class));
+	save(new_(SecurityRoleAssociation.class).setRole(role1).setSecurityToken(ThirdLevelSecurityToken1.class));
+	save(new_(SecurityRoleAssociation.class).setRole(role2).setSecurityToken(ThirdLevelSecurityToken1.class));
+	save(new_(SecurityRoleAssociation.class).setRole(role3).setSecurityToken(ThirdLevelSecurityToken2.class));
+	save(new_(SecurityRoleAssociation.class).setRole(role4).setSecurityToken(FirstLevelSecurityToken2.class));
+    }
+
+    @Override
+    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
+	return PlatformTestDomainTypes.entityTypes;
     }
 }
