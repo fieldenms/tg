@@ -10,18 +10,26 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.BasicWebServerModule2;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.controller.ITgBogieClass;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake2;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel2;
+import ua.com.fielden.platform.sample.domain.controller.ITgWagon;
+import ua.com.fielden.platform.sample.domain.controller.ITgWagonClass;
+import ua.com.fielden.platform.sample.domain.controller.ITgWagonClassCompatibility;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleMakeDao2;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleModelDao2;
+import ua.com.fielden.platform.test.entities.daos.TgBogieClassDao;
 import ua.com.fielden.platform.test.entities.daos.TgFuelUsageDao;
 import ua.com.fielden.platform.test.entities.daos.TgTimesheetDao;
 import ua.com.fielden.platform.test.entities.daos.TgVehicleDao;
+import ua.com.fielden.platform.test.entities.daos.TgWagonClassCompatibilityDao;
+import ua.com.fielden.platform.test.entities.daos.TgWagonClassDao;
+import ua.com.fielden.platform.test.entities.daos.TgWagonDao;
 
 import com.google.inject.TypeLiteral;
 
@@ -61,16 +69,17 @@ public class PlatformTestServerModule2 extends BasicWebServerModule2 {
 //	bind(IWheelsetDao.class).to(WheelsetDao.class);
 //	bind(IRotableDao.class).to(RotableDao.class);
 //	bind(IWorkshopDao2.class).to(WorkshopDao2.class);
-//	bind(IWagonClassDao.class).to(WagonClassDao.class);
-//	bind(IBogieClassDao.class).to(BogieClassDao.class);
 //	bind(IWheelsetClassDao.class).to(WheelsetClassDao.class);
-//	bind(IWagonDao.class).to(WagonDao.class);
 //	bind(IWagonSlotDao.class).to(WagonSlotDao.class);
 //	bind(IWorkorderDao.class).to(WorkorderDao.class);
 //	bind(IWorkorderableDao.class).to(WorkorderableDao.class);
 //	bind(IAdviceDao.class).to(AdviceDao.class);
 //	bind(IRotableClassDao.class).to(RotableClassDao.class);
 
+	bind(ITgBogieClass.class).to(TgBogieClassDao.class);
+	bind(ITgWagon.class).to(TgWagonDao.class);
+	bind(ITgWagonClass.class).to(TgWagonClassDao.class);
+	bind(ITgWagonClassCompatibility.class).to(TgWagonClassCompatibilityDao.class);
 	bind(ITgTimesheet.class).to(TgTimesheetDao.class);
 	bind(ITgVehicle.class).to(TgVehicleDao.class);
 	bind(ITgFuelUsage.class).to(TgFuelUsageDao.class);

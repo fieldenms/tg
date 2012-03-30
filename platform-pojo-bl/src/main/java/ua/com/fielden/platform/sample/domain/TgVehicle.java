@@ -30,13 +30,13 @@ import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 public class TgVehicle extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @MapTo()
+    @IsProperty @MapTo
     private Date initDate;
 
-    @IsProperty @MapTo()
+    @IsProperty @MapTo
     private TgVehicle replacedBy;
 
-    @IsProperty @MapTo()
+    @IsProperty @MapTo
     private TgOrgUnit5 station;
 
     @IsProperty @MapTo @Required @Title(value = "Model", desc = "Model")

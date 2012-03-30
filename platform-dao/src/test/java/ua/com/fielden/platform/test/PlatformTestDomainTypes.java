@@ -11,6 +11,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
+import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgModelCount;
 import ua.com.fielden.platform.sample.domain.TgModelYearCount;
@@ -23,6 +24,9 @@ import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgWagon;
+import ua.com.fielden.platform.sample.domain.TgWagonClass;
+import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibility;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntity;
@@ -41,29 +45,33 @@ public class PlatformTestDomainTypes {
 	entityTypes.add(domainType);
     }
 
-    static{
+    static {
 	entityTypes.addAll(PlatformDomainTypes.types);
-	    add(TgTimesheet.class);
-	    add(TgVehicle.class);
-	    add(TgVehicleModel.class);
-	    add(TgVehicleMake.class);
-	    add(TgOrgUnit1.class);
-	    add(TgOrgUnit2.class);
-	    add(TgOrgUnit3.class);
-	    add(TgOrgUnit4.class);
-	    add(TgOrgUnit5.class);
-	    add(TgWorkOrder.class);
-	    add(TgFuelUsage.class);
-	    add(TgModelCount.class);
-	    add(TgModelYearCount.class);
-	    add(CompositeEntity.class);
-	    add(CompositeEntityKey.class);
-	    add(ComplexKeyEntity.class);
-	    add(EntityWithMoney.class);
-	    add(EntityWithTaxMoney.class);
-	    add(EntityWithExTaxAndTaxMoney.class);
-	    add(EntityWithSimpleTaxMoney.class);
-	    add(EntityWithSimpleMoney.class);
-	    add(EntityWithDynamicCompositeKey.class);
+	add(TgBogieClass.class);
+	add(TgWagon.class);
+	add(TgWagonClass.class);
+	add(TgWagonClassCompatibility.class);
+	add(TgTimesheet.class);
+	add(TgVehicle.class);
+	add(TgVehicleModel.class);
+	add(TgVehicleMake.class);
+	add(TgOrgUnit1.class);
+	add(TgOrgUnit2.class);
+	add(TgOrgUnit3.class);
+	add(TgOrgUnit4.class);
+	add(TgOrgUnit5.class);
+	add(TgWorkOrder.class);
+	add(TgFuelUsage.class);
+	add(TgModelCount.class);
+	add(TgModelYearCount.class);
+	add(CompositeEntity.class);
+	add(CompositeEntityKey.class);
+	add(ComplexKeyEntity.class);
+	add(EntityWithMoney.class);
+	add(EntityWithTaxMoney.class);
+	add(EntityWithExTaxAndTaxMoney.class);
+	add(EntityWithSimpleTaxMoney.class);
+	add(EntityWithSimpleMoney.class);
+	add(EntityWithDynamicCompositeKey.class);
     }
 }
