@@ -8,16 +8,12 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
-import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.events.ReviewEvent;
 import ua.com.fielden.platform.swing.review.report.events.ReviewEvent.ReviewAction;
-import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReviewEventListener;
-import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
-import ua.com.fielden.platform.swing.view.BasePanel;
 
-public abstract class AbstractEntityReview<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends BasePanel implements IReview {
+public abstract class AbstractEntityReview<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends SelectableBasePanel implements IReview {
 
     private static final long serialVersionUID = -8984113615241551583L;
 
@@ -67,22 +63,6 @@ public abstract class AbstractEntityReview<T extends AbstractEntity<?>, CDTME ex
 	return progressLayer;
     }
 
-    @Override
-    public void addSelectionEventListener(final ISelectionEventListener l) {
-	listenerList.add(ISelectionEventListener.class, l);
-    }
-
-    @Override
-    public void removeSelectionEventListener(final ISelectionEventListener l) {
-	listenerList.remove(ISelectionEventListener.class, l);
-    }
-
-    /**
-     * Selects this {@link AbstractConfigurationModel} and fires {@link SelectionEvent}.
-     */
-    public void select(){
-	fireSelectionEvent(new SelectionEvent(this));
-    }
 
     @Override
     public void addReviewEventListener(final IReviewEventListener l) {
@@ -141,17 +121,6 @@ public abstract class AbstractEntityReview<T extends AbstractEntity<?>, CDTME ex
 	    result &= listener.configureActionPerformed(ev);
 	}
 	return result;
-    }
-
-    /**
-     * Notifies all registered {@link ISelectionEventListener} that this configuration model was selected.
-     *
-     * @param event
-     */
-    protected final void fireSelectionEvent(final SelectionEvent event){
-	for(final ISelectionEventListener listener : listenerList.getListeners(ISelectionEventListener.class)){
-	    listener.viewWasSelected(event);
-	}
     }
 
     /**

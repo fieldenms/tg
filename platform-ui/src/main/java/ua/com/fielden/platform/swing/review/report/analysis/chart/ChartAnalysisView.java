@@ -61,6 +61,8 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
+import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -117,6 +119,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	this.switchChartModel = new SwitchChartsModel<List<EntityAggregates>, CategoryChartTypes>(chartPanel);
 	//	updateChart(new ArrayList<EntityAggregates>(), null);
 	this.toolBar = createChartToolBar();
+	this.addSelectionEventListener(createChartAnalysisSelectionListener());
 	layoutComponents();
 
 
@@ -131,22 +134,51 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	getOwner().getDefaultAction().setEnabled(enable);
-	if(getOwner().getCriteriaPanel().canConfigure()){
-	    getOwner().getCriteriaPanel().getSwitchAction().setEnabled(enable);
-	}
-	if(getOwner().getCustomActionChanger() != null){
-	    getOwner().getCustomActionChanger().setEnabled(enable);
+	if(getModel().getCriteria().isDefaultEnabled()){
+	    getOwner().getDefaultAction().setEnabled(enable);
 	}
 	if(!navigate){
-	    if(enable){
-		getOwner().getPaginator().enableActions();
-	    } else {
-		getOwner().getPaginator().disableActions();
-	    }
+	    getOwner().getPaginator().setEnableActions(enable, !enable);
 	}
-	getOwner().getExportAction().setEnabled(false);
 	getOwner().getRunAction().setEnabled(enable);
+    }
+
+    //    /**
+    //     * Enables or disables the paginator's actions without enabling or disabling blocking layer.
+    //     *
+    //     * @param enable
+    //     */
+    //    private void enablePaginatorActionsWithoutBlockingLayer(final boolean enable){
+    //	getOwner().getPaginator().getFirst().setEnabled(enable, false);
+    //	getOwner().getPaginator().getPrev().setEnabled(enable, false);
+    //	getOwner().getPaginator().getNext().setEnabled(enable, false);
+    //	getOwner().getPaginator().getLast().setEnabled(enable, false);
+    //	if(getOwner().getPaginator().getFeedback() != null){
+    //	    getOwner().getPaginator().getFeedback().enableFeedback(false);
+    //	}
+    //    }
+
+    /**
+     * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
+     * 
+     * @return
+     */
+    private ISelectionEventListener createChartAnalysisSelectionListener() {
+	return new ISelectionEventListener() {
+
+	    @Override
+	    public void viewWasSelected(final SelectionEvent event) {
+		//Managing the default, design and custom action changer button enablements.
+		getOwner().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
+		getOwner().getCriteriaPanel().getSwitchAction().setEnabled(getOwner().getCriteriaPanel().canConfigure());
+		getOwner().getCustomActionChanger().setEnabled(getOwner().getCustomActionChanger() != null);
+		//Managing the paginator's enablements.
+		getOwner().getPaginator().setEnableActions(true, false);
+		//Managing load and export enablements.
+		getOwner().getExportAction().setEnabled(false);
+		getOwner().getRunAction().setEnabled(true);
+	    }
+	};
     }
 
     private JList createDistributionList() {

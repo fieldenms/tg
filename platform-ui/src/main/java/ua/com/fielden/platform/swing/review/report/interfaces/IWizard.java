@@ -8,7 +8,7 @@ package ua.com.fielden.platform.swing.review.report.interfaces;
  * @author TG Team
  *
  */
-public interface IWizard extends ISelectable{
+public interface IWizard{
 
     /**
      * Adds {@link IWizardEventListener} instance to listen wizard events.

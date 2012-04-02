@@ -10,7 +10,6 @@ import javax.swing.Icon;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
-import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedListener;
@@ -43,23 +42,6 @@ public class Paginator {
 	void enableFeedback(boolean enable);
     }
 
-    /**
-     * A contract for anything that would like to enable or disable actions related to the controls of paginator.
-     *
-     * @author TGTeam
-     *
-     */
-    public static interface IEnableAction {
-
-	/**
-	 * Enables or disables actions that is related to the pagination controls
-	 *
-	 * @param enable
-	 *            - indicates whether the action must be enabled or disabled
-	 */
-	void enableAction(boolean enable);
-    }
-
     private final BlockingLayerCommand<List<? extends AbstractEntity>> prev, next, first, last;
 
     private final IPaginatorModel paginatorModel;
@@ -90,20 +72,24 @@ public class Paginator {
 	});
     }
 
-    public Command<List<? extends AbstractEntity>> getFirst() {
+    public BlockingLayerCommand<List<? extends AbstractEntity>> getFirst() {
 	return first;
     }
 
-    public Command<List<? extends AbstractEntity>> getPrev() {
+    public BlockingLayerCommand<List<? extends AbstractEntity>> getPrev() {
 	return prev;
     }
 
-    public Command<List<? extends AbstractEntity>> getNext() {
+    public BlockingLayerCommand<List<? extends AbstractEntity>> getNext() {
 	return next;
     }
 
-    public Command<List<? extends AbstractEntity>> getLast() {
+    public BlockingLayerCommand<List<? extends AbstractEntity>> getLast() {
 	return last;
+    }
+
+    public IPageChangeFeedback getFeedback() {
+	return feedback;
     }
 
     /** Simple closure to reduce code complexity. */
@@ -119,7 +105,7 @@ public class Paginator {
 	    protected boolean preAction() {
 		blockingLayer.enableIncrementalLocking();
 		setMessage(pageMessage.get());
-		disableActions();
+		setEnableActions(false, true);
 		paginatorModel.pageNavigationPhases(PageNavigationPhases.PRE_NAVIGATE);
 		return super.preAction();
 	    }
@@ -147,7 +133,7 @@ public class Paginator {
 		super.handlePreAndPostActionException(ex);
 
 		super.postAction(null);
-		enableActions();
+		setEnableActions(true, false);
 		paginatorModel.pageNavigationPhases(PageNavigationPhases.PAGE_NAVIGATION_EXCEPTION);
 	    }
 
@@ -189,30 +175,16 @@ public class Paginator {
 		"images/navigation/04-last.png", "Go to last page", KeyEvent.VK_END);
     }
 
-
     /**
-     * Enables navigation actions based on the current page.
+     * Enables or Disables all navigation actions, which is required while data loading is in progress.
      */
-    public void enableActions() {
-	enable(prev, paginatorModel.getCurrentPage() != null && paginatorModel.getCurrentPage().hasPrev(), false);
-	enable(next, paginatorModel.getCurrentPage() != null && paginatorModel.getCurrentPage().hasNext(), false);
-	enable(first, prev.isEnabled(), false);
-	enable(last, next.isEnabled(), false);
+    public void setEnableActions(final boolean enable, final boolean locked) {
+	enable(prev, enable && paginatorModel.getCurrentPage() != null && paginatorModel.getCurrentPage().hasPrev(), locked);
+	enable(next, enable && paginatorModel.getCurrentPage() != null && paginatorModel.getCurrentPage().hasNext(), locked);
+	enable(first, enable && prev.isEnabled(), locked);
+	enable(last, enable && next.isEnabled(), locked);
 	if (feedback != null) {
-	    feedback.enableFeedback(true);
-	}
-    }
-
-    /**
-     * Disables all navigation actions, which is required while data loading is in progress.
-     */
-    public void disableActions() {
-	enable(first, false, true);
-	enable(prev, false, true);
-	enable(next, false, true);
-	enable(last, false, true);
-	if (feedback != null) {
-	    feedback.enableFeedback(false);
+	    feedback.enableFeedback(enable);
 	}
     }
 
@@ -227,7 +199,7 @@ public class Paginator {
 
 	    @Override
 	    public void run() {
-		enableActions();
+		setEnableActions(true, false);
 		if (feedback != null) {
 		    feedback.feedback(paginatorModel.getCurrentPage());
 		}

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review;
 
+import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Collections;
@@ -14,6 +15,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.model.DefaultEntityProducer;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.review.factory.IEntityMasterFactory;
@@ -125,7 +127,17 @@ public class EntityMasterManager implements IEntityMasterManager {
 		@Override
 		public void windowClosed(final WindowEvent e) {
 		    super.windowClosed(e);
-		    gdtm.saveEntityMasterManager(entity.getType());
+		    new Command<Void>(null) {
+
+			private static final long serialVersionUID = 989921640239100437L;
+
+			@Override
+			protected Void action(final ActionEvent e) throws Exception {
+			    gdtm.saveEntityMasterManager(entity.getType());
+			    return null;
+			}
+		    }.actionPerformed(null);
+
 		}
 
 	    });

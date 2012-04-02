@@ -132,7 +132,7 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
      * @return
      */
     public boolean isIncrementalLocking() {
-        return incrementalLocking;
+	return incrementalLocking;
     }
 
     /**
@@ -143,7 +143,7 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
     public void setLocked(final boolean flag) {
 	if (isIncrementalLocking()) {
 	    count += flag ? 1 : -1;
-//	    new Exception("layer.setLocked(" + flag + "). count == " + count).printStackTrace();
+	    //	    new Exception("layer.setLocked(" + flag + "). count == " + count).printStackTrace();
 	    if (count < 0) {
 		final String s = "Count of blocking " + count + " < 0.";
 		JOptionPane.showMessageDialog(null, s);
@@ -156,7 +156,7 @@ public class BlockingIndefiniteProgressLayer extends JXLayer<JComponent> {
 		getUI().setLocked(true);
 	    }
 	} else {
-//	    System.out.println("Non-incremental locking: layer.setLocked(" + flag + ").");
+	    //	    System.out.println("Non-incremental locking: layer.setLocked(" + flag + ").");
 	    getUI().setLocked(flag);
 	}
     }

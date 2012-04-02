@@ -11,17 +11,14 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
-import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationModel;
-import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
+import ua.com.fielden.platform.swing.review.development.SelectableBasePanel;
 import ua.com.fielden.platform.swing.review.report.events.WizardEvent;
 import ua.com.fielden.platform.swing.review.report.events.WizardEvent.WizardAction;
-import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizardEventListener;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorView;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
-import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
  * Generic implementation for domain tree wizard. This wizard defines basic user interface and functionality that might be extended only for configuring purposes.
@@ -30,7 +27,7 @@ import ua.com.fielden.platform.swing.view.BasePanel;
  *
  * @param <T>
  */
-public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends BasePanel implements IWizard{
+public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends SelectableBasePanel implements IWizard{
 
     private static final long serialVersionUID = 268187881676011630L;
 
@@ -120,23 +117,6 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Ba
 	listenerList.remove(IWizardEventListener.class, l);
     }
 
-    @Override
-    public void addSelectionEventListener(final ISelectionEventListener l) {
-	listenerList.add(ISelectionEventListener.class, l);
-    }
-
-    @Override
-    public void removeSelectionEventListener(final ISelectionEventListener l) {
-	listenerList.remove(ISelectionEventListener.class, l);
-    }
-
-    /**
-     * Selects this {@link AbstractConfigurationModel} and fires {@link SelectionEvent}.
-     */
-    public void select(){
-	fireSelectionEvent(new SelectionEvent(this));
-    }
-
     /**
      * Might be overridden to provide custom build action (see {@link #getBuildAction()} for more information about the purpose of this action).
      *
@@ -195,17 +175,6 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Ba
 	    result &= listener.wizardActionPerformed(ev);
 	}
 	return result;
-    }
-
-    /**
-     * Notifies all registered {@link ISelectionEventListener} that this configuration model was selected.
-     *
-     * @param event
-     */
-    protected final void fireSelectionEvent(final SelectionEvent event){
-	for(final ISelectionEventListener listener : listenerList.getListeners(ISelectionEventListener.class)){
-	    listener.viewWasSelected(event);
-	}
     }
 
     /**

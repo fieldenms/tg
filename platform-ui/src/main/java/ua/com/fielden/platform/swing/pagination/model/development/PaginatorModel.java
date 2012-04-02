@@ -120,6 +120,13 @@ public class PaginatorModel implements IPaginatorModel, IPageHolderManager{
 	listenerList.remove(IPageHolderChangedListener.class, l);
     }
 
+    @Override
+    public void pageNavigationPhases(final PageNavigationPhases pageNavigationPhases) {
+        if(getCurrentPageHolder() != null){
+            getCurrentPageHolder().pageNavigated(pageNavigationPhases);
+        }
+    }
+
     private void firePageHolderChanged(final PageHolderChangedEvent pageHolderChangedEvent) {
 	for(final IPageHolderChangedListener l : listenerList.getListeners(IPageHolderChangedListener.class)){
 	    l.pageHolderChanged(pageHolderChangedEvent);
@@ -129,13 +136,6 @@ public class PaginatorModel implements IPaginatorModel, IPageHolderManager{
     private void firePageChangedEvent(final PageChangedEvent pageChangedEvent){
 	for(final IPageChangedListener l : listenerList.getListeners(IPageChangedListener.class)){
 	    l.pageChanged(pageChangedEvent);
-	}
-    }
-
-    @Override
-    public void pageNavigationPhases(final PageNavigationPhases pageNavigationPhases) {
-	if(getCurrentPageHolder() != null){
-	    getCurrentPageHolder().pageNavigated(pageNavigationPhases);
 	}
     }
 }

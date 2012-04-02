@@ -9,17 +9,14 @@ import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
+import ua.com.fielden.platform.swing.review.development.SelectableBasePanel;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.events.ReviewEvent;
-import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.events.WizardEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReviewEventListener;
-import ua.com.fielden.platform.swing.review.report.interfaces.ISelectable;
-import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizardEventListener;
-import ua.com.fielden.platform.swing.view.BasePanel;
 
 /**
  * The holder for wizard and view panels. Provides functionality that allows one to switch view between report and wizard modes.
@@ -29,7 +26,7 @@ import ua.com.fielden.platform.swing.view.BasePanel;
  * @param <VT>
  * @param <WT>
  */
-public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, WT extends BasePanel & IWizard> extends BasePanel implements ISelectable{
+public abstract class AbstractConfigurationView<VT extends SelectableBasePanel & IReview, WT extends SelectableBasePanel & IWizard> extends SelectableBasePanel{
 
     private static final long serialVersionUID = 362789325125491283L;
 
@@ -83,24 +80,7 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
 
     @Override
     public String getInfo() {
-        return "Abstract configuration panel";
-    }
-
-    @Override
-    public void addSelectionEventListener(final ISelectionEventListener l) {
-	listenerList.add(ISelectionEventListener.class, l);
-    }
-
-    @Override
-    public void removeSelectionEventListener(final ISelectionEventListener l) {
-	listenerList.remove(ISelectionEventListener.class, l);
-    }
-
-    /**
-     * Selects this {@link AbstractConfigurationModel} and fires {@link SelectionEvent}.
-     */
-    public void select(){
-	fireSelectionEvent(new SelectionEvent(this));
+	return "Abstract configuration panel";
     }
 
     /**
@@ -109,7 +89,7 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
      * @return
      */
     public final BlockingIndefiniteProgressLayer getProgressLayer() {
-        return progressLayer;
+	return progressLayer;
     }
 
     /**
@@ -141,27 +121,16 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
     }
 
     /**
-     * Notifies all registered {@link ISelectionEventListener} that this configuration model was selected.
-     * 
-     * @param event
-     */
-    protected final void fireSelectionEvent(final SelectionEvent event){
-        for(final ISelectionEventListener listener : listenerList.getListeners(ISelectionEventListener.class)){
-            listener.viewWasSelected(event);
-        }
-    }
-
-    /**
      * Override this to provide custom report view.
      * 
      * @param configurableView - view to configure.
      * @return
      */
     protected VT initConfigurableView(final VT configurableView){
-        if(configurableView != null){
-            configurableView.addReviewEventListener(createReviewListener());
-        }
-        return configurableView;
+	if(configurableView != null){
+	    configurableView.addReviewEventListener(createReviewListener());
+	}
+	return configurableView;
     }
 
     /**
@@ -171,10 +140,10 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
      * @return
      */
     protected WT initWizardView(final WT wizardView){
-        if(wizardView != null){
-            wizardView.addWizardEventListener(createWizardListener());
-        }
-        return wizardView;
+	if(wizardView != null){
+	    wizardView.addWizardEventListener(createWizardListener());
+	}
+	return wizardView;
     }
 
     /**
@@ -279,7 +248,7 @@ public abstract class AbstractConfigurationView<VT extends BasePanel & IReview, 
      * 
      * @param component
      */
-    private <ST extends BasePanel & ISelectable> void setView(final ST component){
+    private void setView(final SelectableBasePanel component){
 	removeAll();
 	if(component != null){
 	    add(component);

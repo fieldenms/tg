@@ -45,6 +45,8 @@ import ua.com.fielden.platform.swing.menu.filter.IFilter;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
+import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTableModel;
 import ua.com.fielden.platform.swing.treetable.FilterableTreeTablePanel;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
@@ -82,6 +84,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 	//DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), new PivotListDragToSupport<IDistributedProperty>(distributionList, createDistributionSwapper()), true);
 	//DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), new PivotListDragToSupport<IAggregatedProperty>(aggregationList, createAggregationSwapper()), true);
+	this.addSelectionEventListener(createPivotAnalysisSelectionListener());
 	layoutComponents();
     }
 
@@ -92,8 +95,34 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	// TODO Auto-generated method stub
+	if(getModel().getCriteria().isDefaultEnabled()){
+	    getOwner().getDefaultAction().setEnabled(enable);
+	}
+	getOwner().getExportAction().setEnabled(enable);
+	getOwner().getRunAction().setEnabled(enable);
+    }
 
+    /**
+     * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
+     * 
+     * @return
+     */
+    private ISelectionEventListener createPivotAnalysisSelectionListener() {
+	return new ISelectionEventListener() {
+
+	    @Override
+	    public void viewWasSelected(final SelectionEvent event) {
+		//Managing the default, design and custom action changer button enablements.
+		getOwner().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
+		getOwner().getCriteriaPanel().getSwitchAction().setEnabled(getOwner().getCriteriaPanel().canConfigure());
+		getOwner().getCustomActionChanger().setEnabled(getOwner().getCustomActionChanger() != null);
+		//Managing the paginator's enablements.
+		getOwner().getPaginator().setEnableActions(false, false);
+		//Managing load and export enablements.
+		getOwner().getExportAction().setEnabled(true);
+		getOwner().getRunAction().setEnabled(true);
+	    }
+	};
     }
 
     private CheckboxList<String> createDistributionList() {

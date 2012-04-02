@@ -12,6 +12,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.pagination.model.development.IPageNavigationListener;
+import ua.com.fielden.platform.swing.pagination.model.development.PageNavigationEvent;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.utils.Pair;
@@ -30,6 +32,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	this.owner = owner;
 	this.loadAction = createLoadAction();
 	this.exportAction = createExportAction();
+	this.getModel().getPageHolder().addPageNavigationListener(createPageNavigationListener());
     }
 
     public AbstractEntityCentre<T, CDTME> getOwner() {
@@ -54,7 +57,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 
 	    @Override
 	    protected boolean preAction() {
-		getProgressLayer().enableIncrementalLocking();
+		//getProgressLayer().enableIncrementalLocking();
 		setMessage("Loading...");
 		final boolean result = super.preAction();
 		if (!result) {
@@ -92,9 +95,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	    @Override
 	    protected void handlePreAndPostActionException(final Throwable ex) {
 		super.handlePreAndPostActionException(ex);
-
 		enableRelatedActions(true, false);
-		super.postAction(null);
 	    }
 	};
 
@@ -143,4 +144,25 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
     //	return pageHolder;
     //    }
 
+    /**
+     * Creates the page navigation listener that enables or disable buttons according to the page navigation phase.
+     * 
+     * @return
+     */
+    private IPageNavigationListener createPageNavigationListener() {
+	return new IPageNavigationListener() {
+
+	    @Override
+	    public void pageNavigated(final PageNavigationEvent event) {
+		switch(event.getPageNavigationPhases()){
+		case PRE_NAVIGATE:
+		    enableRelatedActions(false, true);
+		    break;
+		case POST_NAVIGATE:
+		case PAGE_NAVIGATION_EXCEPTION:
+		    enableRelatedActions(true, true);
+		}
+	    }
+	};
+    }
 }

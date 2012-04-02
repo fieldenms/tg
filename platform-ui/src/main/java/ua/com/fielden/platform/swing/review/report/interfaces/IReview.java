@@ -7,7 +7,7 @@ package ua.com.fielden.platform.swing.review.report.interfaces;
  * @author TG Team
  *
  */
-public interface IReview extends ISelectable{
+public interface IReview{
 
     /**
      * Adds {@link IReviewEventListener} instance to listen review events.

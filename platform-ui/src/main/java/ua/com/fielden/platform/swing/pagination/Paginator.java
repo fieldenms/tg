@@ -136,7 +136,7 @@ public class Paginator<T extends AbstractEntity> {
 	     */
 	    @Override
 	    protected void handlePreAndPostActionException(final Throwable ex) {
-	        super.handlePreAndPostActionException(ex);
+		super.handlePreAndPostActionException(ex);
 
 		super.postAction(null);
 		enableActions();

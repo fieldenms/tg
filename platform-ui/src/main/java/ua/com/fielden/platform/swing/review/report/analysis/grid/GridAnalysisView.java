@@ -36,6 +36,8 @@ import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.review.OrderingArrow;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
+import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.verticallabel.DefaultTableHeaderCellRenderer;
 import ua.com.fielden.platform.swing.verticallabel.MouseDefaultHeaderHandler;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -50,6 +52,84 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, CDTME> owner) {
 	super(model, progressLayer, owner);
 	this.egiPanel = new EgiPanel<T>(getModel().getGridModel(), false);
+	this.addSelectionEventListener(createGridAnalysisSelectionListener());
+	configureEgiWithOrdering();
+	layoutView();
+    }
+
+    public EgiPanel<T> getEgiPanel() {
+	return egiPanel;
+    }
+
+    @Override
+    public GridAnalysisModel<T, CDTME> getModel() {
+	return (GridAnalysisModel<T, CDTME>) super.getModel();
+    }
+
+    @Override
+    protected void enableRelatedActions(final boolean enable, final boolean navigate) {
+	if(getModel().getCriteria().isDefaultEnabled()){
+	    getOwner().getDefaultAction().setEnabled(enable);
+	}
+	if(!navigate){
+	    getOwner().getPaginator().setEnableActions(enable, !enable);
+	}
+	getOwner().getExportAction().setEnabled(enable);
+	getOwner().getRunAction().setEnabled(enable);
+    }
+
+    @Override
+    protected Action createConfigureAction() {
+	return null;
+    }
+
+    protected void layoutView() {
+	setLayout(new MigLayout("fill, insets 0","[fill, grow]","[fill, grow]"));
+	add(this.egiPanel);
+    }
+
+    //    /**
+    //     * Enables or disables the paginator's actions without enabling or disabling blocking layer.
+    //     *
+    //     * @param enable
+    //     */
+    //    private void enablePaginatorActionsWithoutBlockingLayer(final boolean enable){
+    //	getOwner().getPaginator().getFirst().setEnabled(enable, false);
+    //	getOwner().getPaginator().getPrev().setEnabled(enable, false);
+    //	getOwner().getPaginator().getNext().setEnabled(enable, false);
+    //	getOwner().getPaginator().getLast().setEnabled(enable, false);
+    //	if(getOwner().getPaginator().getFeedback() != null){
+    //	    getOwner().getPaginator().getFeedback().enableFeedback(false);
+    //	}
+    //    }
+
+    /**
+     * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
+     * 
+     * @return
+     */
+    private ISelectionEventListener createGridAnalysisSelectionListener() {
+	return new ISelectionEventListener() {
+
+	    @Override
+	    public void viewWasSelected(final SelectionEvent event) {
+		//Managing the default, design and custom action changer button enablements.
+		getOwner().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
+		getOwner().getCriteriaPanel().getSwitchAction().setEnabled(getOwner().getCriteriaPanel().canConfigure());
+		getOwner().getCustomActionChanger().setEnabled(getOwner().getCustomActionChanger() != null);
+		//Managing the paginator's enablements.
+		getOwner().getPaginator().setEnableActions(true, false);
+		//Managing load and export enablements.
+		getOwner().getExportAction().setEnabled(true);
+		getOwner().getRunAction().setEnabled(true);
+	    }
+	};
+    }
+
+    /**
+     * Configures the analysis entity grid inspector with ordering facility.
+     */
+    private void configureEgiWithOrdering(){
 	final Class<T> root = getModel().getCriteria().getEntityClass();
 	final IAddToResultTickManager tickManager = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getSecondTick();
 	final EntityGridInspector<T> egi = this.egiPanel.getEgi();
@@ -63,32 +143,6 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	final MouseDefaultHeaderHandler mouseHandler = new MouseDefaultHeaderHandler();
 	egi.getTableHeader().addMouseMotionListener(mouseHandler);
 	egi.getTableHeader().addMouseListener(mouseHandler);
-	layoutView();
-    }
-
-    public EgiPanel<T> getEgiPanel() {
-	return egiPanel;
-    }
-
-    protected void layoutView() {
-	setLayout(new MigLayout("fill, insets 0","[fill, grow]","[fill, grow]"));
-	add(this.egiPanel);
-    }
-
-    @Override
-    public GridAnalysisModel<T, CDTME> getModel() {
-	return (GridAnalysisModel<T, CDTME>) super.getModel();
-    }
-
-    @Override
-    protected Action createConfigureAction() {
-	return null;
-    }
-
-    @Override
-    protected void enableRelatedActions(final boolean enable, final boolean navigate) {
-	// TODO Auto-generated method stub
-
     }
 
     /**

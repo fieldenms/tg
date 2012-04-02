@@ -18,6 +18,7 @@ import javax.swing.SingleSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 
+import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -34,6 +35,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.G
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 import com.jidesoft.swing.JideTabbedPane;
@@ -54,7 +56,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     public MultipleAnalysisEntityCentre(final EntityCentreModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	this.tabPanel = createReview();
-	getReviewProgressLayer().setView(tabPanel);
+	getReviewProgressLayer().setView(createTabPanelWrapper(tabPanel));
 	layoutComponents();
 	//TODO Also must initiate other saved analysis.
     }
@@ -64,9 +66,43 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	return getReviewProgressLayer();
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> getAnalysisList() {
+        final List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> analysisList = new ArrayList<AbstractAnalysisConfigurationView<T,ICentreDomainTreeManagerAndEnhancer,?,?,?>>();
+        for(final Component component : tabPanel.getComponents()){
+            analysisList.add((AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)component);
+        }
+        return analysisList;
+    }
+
+    @Override
+    public void addAnalysis(final String name, final AnalysisType analysisType) {
+        AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = null;
+        switch(analysisType){
+        case SIMPLE:
+            analysis = createChartAnalysis(name);
+            break;
+        case PIVOT:
+            analysis = createPivotAnalysis(name);
+            break;
+        }
+        if(analysis != null){
+            tabPanel.addTab(analysis.getModel().getName(), analysis);
+            tabPanel.setSelectedComponent(analysis);
+            analysis.open();
+        }
+    }
+
+    @Override
+    public void removeAnalysis(final String name) {
+        // TODO Auto-generated method stub
+    
+    }
+
     @Override
     public EntityCentreModel<T> getModel() {
-	return (EntityCentreModel<T>)super.getModel();
+        return (EntityCentreModel<T>)super.getModel();
     }
 
     @Override
@@ -93,6 +129,27 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	customActions.add(createSaveAsAction());
 	customActions.add(createRemoveAction());
 	return customActions;
+    }
+
+    /**
+     * Returns the panel that wraps the tab panel with analysis.
+     * 
+     * @param tabPanel
+     * @return
+     */
+    private BasePanel createTabPanelWrapper(final JideTabbedPane tabPanel) {
+	final BasePanel tabPanelWrapper = new BasePanel(new MigLayout("fill, insets 0", "[fill, grow]", "[fill, grow]")) {
+
+	    private static final long serialVersionUID = -6010772291931485281L;
+
+	    @Override
+	    public String getInfo() {
+		// TODO Auto-generated method stub
+		return null;
+	    }
+	};
+	tabPanelWrapper.add(tabPanel);
+	return tabPanelWrapper;
     }
 
     private JideTabbedPane createReview() {
@@ -276,40 +333,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    }
 	    return -1;
 	}
-
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> getAnalysisList() {
-	final List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> analysisList = new ArrayList<AbstractAnalysisConfigurationView<T,ICentreDomainTreeManagerAndEnhancer,?,?,?>>();
-	for(final Component component : tabPanel.getComponents()){
-	    analysisList.add((AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)component);
-	}
-	return analysisList;
-    }
-
-    @Override
-    public void addAnalysis(final String name, final AnalysisType analysisType) {
-	AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = null;
-	switch(analysisType){
-	case SIMPLE:
-	    analysis = createChartAnalysis(name);
-	    break;
-	case PIVOT:
-	    analysis = createPivotAnalysis(name);
-	    break;
-	}
-	if(analysis != null){
-	    tabPanel.addTab(analysis.getModel().getName(), analysis);
-	    tabPanel.setSelectedComponent(analysis);
-	    analysis.open();
-	}
-    }
-
-    @Override
-    public void removeAnalysis(final String name) {
-	// TODO Auto-generated method stub
 
     }
 }
