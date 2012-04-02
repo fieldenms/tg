@@ -34,6 +34,7 @@ import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -350,6 +351,47 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Incorrect count", 1, entities.size());
 	assertEquals("Incorrect user", "user1", entities.get(0).getUser().getKey());
     }
+
+    @Test
+    public void testParameterSetting() {
+	final EntityResultQueryModel<TgVehicleMake> queryModel = select(TgVehicleMake.class).where().prop("key").eq().param("makeParam").model();
+
+	assertEquals("Mercedes", vehicleMakeDao.getAllEntities(from(queryModel).with("makeParam", "MERC").build()).get(0).getDesc());
+	assertEquals("Audi", vehicleMakeDao.getAllEntities(from(queryModel).with("makeParam", "AUDI").build()).get(0).getDesc());
+
+	try {
+	    vehicleMakeDao.getAllEntities(from(queryModel).with("wrongParam", "AUDI").build());
+	    fail("Setting param value with wrong param name should not lead to exception");
+	} catch (final RuntimeException e) {
+	}
+    }
+
+    @Test
+    public void testThatCanQueryWithListParams() {
+	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param1", "param2", "param3").model();
+	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param1", "316").with("param2", "317").with("param3", "318").build()).size());
+    }
+
+    @Test
+    public void testThatQueryCountModelWorks() {
+	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().values("316", "317", "318").model();
+	assertEquals("Incorrect number of veh models.", 3, vehicleModelDao.count(queryModel));
+    }
+
+    @Test
+    public void testThatCanQueryWithArrays() {
+	final String[] modelKeys = new String[] { "316", "317", "318", "318" };
+	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().values(modelKeys).model();
+	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).build()).size());
+    }
+
+    @Test
+    public void testThatCanQueryWithArrayParam() {
+	final String[] modelKeys = new String[] { "316", "317", "318", "318" };
+	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
+	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).build()).size());
+    }
+
 
     @Override
     protected void populateDomain() {

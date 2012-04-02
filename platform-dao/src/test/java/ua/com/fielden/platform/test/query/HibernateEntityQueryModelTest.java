@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.test.query;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.hibernate.Session;
@@ -28,7 +27,6 @@ import ua.com.fielden.platform.test.domain.entities.Workshop;
 import ua.com.fielden.platform.test.domain.entities.daos.IAdviceDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWagonDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWagonSlotDao;
-import ua.com.fielden.platform.test.domain.entities.daos.IWheelsetDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWorkorderDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWorkshopDao;
 
@@ -39,7 +37,6 @@ public class HibernateEntityQueryModelTest extends DbDrivenTestCase {
     private final IWagonDao wagonDao = injector.getInstance(IWagonDao.class);
     private final IWagonSlotDao wagonSlotDao = injector.getInstance(IWagonSlotDao.class);
     private final IWorkshopDao workshopDao = injector.getInstance(IWorkshopDao.class);
-    private final IWheelsetDao wheelsetDao = injector.getInstance(IWheelsetDao.class);
     private final IEntityAggregatesDao aggregatesDao = injector.getInstance(IEntityAggregatesDao.class);
     private final IWorkorderDao workOrderDao = injector.getInstance(IWorkorderDao.class);
 
@@ -140,53 +137,6 @@ public class HibernateEntityQueryModelTest extends DbDrivenTestCase {
 	.prop("initiatedAtWorkshop").eq().param("in_workshop").or().prop("dispatchedToWorkshop").eq().param("in_workshop").or().exists(subQueryModelThree).end().model();
     }
 
-    public void testParameterSetting() {
-	final IQueryModel<Wheelset> queryModel = select(Wheelset.class).where().prop("key").eq().param("rotableKeyParam").model();
-	queryModel.setParamValue("rotableKeyParam", "WSET01");
-
-	assertEquals("wset01", wheelsetDao.getPage(queryModel, null, 0, 100).data().get(0).getDesc());
-	queryModel.setParamValue("rotableKeyParam", "WSET02");
-	assertEquals("wset02", wheelsetDao.getPage(queryModel, null, 0, 100).data().get(0).getDesc());
-
-	try {
-	    queryModel.setParamValue("wrongParam", "value");
-	} catch (final RuntimeException e) {
-	    fail("Setting param value with wrong param name should not lead to exception");
-	}
-    }
-
-    public void testThatCanQueryWithoutParams() {
-	final IQueryModel<Advice> queryModel = select(Advice.class).model();
-	assertEquals("Incorrect number of retrieved advices.", 1, adviceDao.getPage(queryModel, 0, 100).data().size());
-    }
-
-    public void testThatCanQueryWithNonListParams() {
-	final IQueryModel<Advice> queryModel = select(Advice.class).where().prop("dateRaised").lt().val(new Date()).model();
-	assertEquals("Incorrect number of retrieved advices.", 1, adviceDao.getPage(queryModel, 0, 100).data().size());
-	final IQueryModel<Advice> queryModel2 = select(Advice.class).where().prop("dateRaised").gt().val(new Date()).model();
-	assertEquals("Incorrect number of retrieved advices.", 0, adviceDao.getPage(queryModel2, 0, 100).data().size());
-    }
-
-    public void testThatCanQueryWithListParams() {
-	final IQueryModel<Wagon> queryModel = select(Wagon.class).where().prop("serialNo").in().val("SN_", "SN_1", "SN_2", "SN_2").model();
-	assertEquals("Incorrect number of retrieved wagons.", 2, wagonDao.getPage(queryModel, 0, 100).data().size());
-	final IQueryModel<Wagon> queryModel2 = select(Wagon.class).where().prop("serialNo").in().val("SN_2").model();
-	assertEquals("Incorrect number of retrieved wagons.", 1, wagonDao.getPage(queryModel2, 0, 100).data().size());
-    }
-
-    public void testThatQueryCountModelWorks() {
-	final IQueryOrderedModel<Wagon> queryModel = select(Wagon.class).where().prop("serialNo").in().val("SN_", "SN_1", "SN_2", "SN_2").orderBy("key").model();
-	final IPage<Wagon> wagonPage = wagonDao.getPage(queryModel, 1, 1);
-	assertFalse("It should not be possible to iterate to the next page of wagons.", wagonPage.hasNext());
-	assertEquals("Incorrect wagon key.", "WAGON2", wagonPage.data().get(0).getKey());
-	assertEquals("Incorrect number of wagons on page.", 1, wagonPage.data().size());
-    }
-
-    public void testThatCanQueryWithArrayParams() {
-	final String[] serialNos = new String[] { "SN_", "SN_1", "SN_2", "SN_2" };
-	final IQueryModel<Wagon> queryModel = select(Wagon.class).where().prop("serialNo").in().val(serialNos).model();
-	assertEquals("Incorrect number of retrieved wagons.", 2, wagonDao.getPage(queryModel, 0, 100).data().size());
-    }
 
     public void testThatCanQueryWithArrayParams2() {
 	final String[] serialNos = new String[] { "SN_", "SN_1", "SN_2", "SN_2" };

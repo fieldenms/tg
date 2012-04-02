@@ -73,6 +73,8 @@ public class EntityFetcher {
 	for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {
 	    if (paramEntry.getValue() instanceof Collection) {
 		q.setParameterList(paramEntry.getKey(), (Collection<?>) paramEntry.getValue());
+	    } else if (paramEntry.getValue().getClass().isArray()) {
+		q.setParameterList(paramEntry.getKey(), (Object[]) paramEntry.getValue());
 	    } else {
 		q.setParameter(paramEntry.getKey(), paramEntry.getValue());
 	    }

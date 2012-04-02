@@ -28,6 +28,8 @@ public class CommonEntityDaoTest2 extends DbDrivenTestCase2 {
     private final EntityWithMoneyDao2 dao = injector.getInstance(EntityWithMoneyDao2.class);
     private final EntityWithDynamicCompositeKeyDao2 daoComposite = injector.getInstance(EntityWithDynamicCompositeKeyDao2.class);
 
+    //TODO test count, delete
+
     public void test_that_entity_with_simple_key_is_handled_correctly() {
 	// find all
 	final List<EntityWithMoney> result = dao.getPage(0, 25).data();
