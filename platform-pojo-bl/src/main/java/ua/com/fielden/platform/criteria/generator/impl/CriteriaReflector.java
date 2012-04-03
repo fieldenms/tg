@@ -43,7 +43,7 @@ public class CriteriaReflector {
      * @return
      */
     public static String generateCriteriaPropertyName(final Class<?> root, final String propertyName, final String suffix){
-	return root.getSimpleName() + "_" + propertyName.replaceAll(Reflector.DOT_SPLITTER, "_") + (suffix == null? "" : suffix);
+	return root.getSimpleName().substring(0, 1).toLowerCase() + root.getSimpleName().substring(1) + "_" + propertyName.replaceAll(Reflector.DOT_SPLITTER, "_") + (suffix == null? "" : suffix);
     }
 
 

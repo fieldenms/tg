@@ -7,18 +7,22 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.criteria.enhanced.EnhancedLocatorEntityQueryCriteria;
+import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao2.IDaoFactory2;
 import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.annotation.factory.AfterChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.CriteriaPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
@@ -94,6 +98,10 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	    dtmField.set(entity, cdtme);
 	    dtmField.setAccessible(isCdtmeAccessible);
 
+	    //Add change support to the entity query criteria instance
+	    //in order to synchronise entity query criteria values with model values
+	    synchroniseWithModel(entity);
+
 	    return entity;
 	} catch (final Exception e) {
 	    logger.error(e);
@@ -155,6 +163,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 		add(new EntityTypeAnnotation((Class<? extends AbstractEntity>) propertyType).newInstance());
 	    }
 	    add(new CriteriaPropertyAnnotation(propertyName).newInstance());
+	    add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 	}};
 
 	return new NewProperty(CriteriaReflector.generateCriteriaPropertyName(root, propertyName, ""), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
@@ -174,11 +183,26 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	final Class<?> newPropertyType = isBoolean(propertyType) ? Boolean.class : propertyType;
 
 	final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		new CriteriaPropertyAnnotation(propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance());
+		new CriteriaPropertyAnnotation(propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 	final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		new CriteriaPropertyAnnotation(propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance());
+		new CriteriaPropertyAnnotation(propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 
 	return new ArrayList<NewProperty>() {{ add(firstProperty); add(secondProperty); }};
+    }
+
+    /**
+     *Synchronises entity query criteria property values with domain tree model.
+     * 
+     * @param entity
+     */
+    private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao2<T>> entity){
+	final IAddToCriteriaTickManager ftm = entity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+	for(final Field propertyField : CriteriaReflector.getCriteriaProperties(entity.getType())){
+	    final SecondParam secondParam = propertyField.getAnnotation(SecondParam.class);
+	    final CriteriaProperty critProperty = propertyField.getAnnotation(CriteriaProperty.class);
+	    final Class<T> root = entity.getEntityClass();
+	    entity.set(propertyField.getName(), secondParam == null ? ftm.getValue(root, critProperty.propertyName()) : ftm.getValue2(root, critProperty.propertyName()));
+	}
     }
 
     /**
