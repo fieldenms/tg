@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao2.AggregatesQueryExecutionModel;
 import ua.com.fielden.platform.dao2.IDaoFactory2;
 import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
@@ -68,9 +67,6 @@ public class StubDaoFactory implements IDaoFactory2 {
 		public IPage2<TopLevelEntity> firstPage(final QueryExecutionModel<TopLevelEntity> query, final int pageCapacity) {return null;}
 
 		@Override
-		public IPage2<TopLevelEntity> firstPage(final QueryExecutionModel<TopLevelEntity> model, final AggregatesQueryExecutionModel summaryModel, final int pageCapacity) {return null;}
-
-		@Override
 		public IPage2<TopLevelEntity> getPage(final QueryExecutionModel<TopLevelEntity> query, final int pageNo, final int pageCapacity) {return null;}
 
 		@Override
@@ -113,22 +109,7 @@ public class StubDaoFactory implements IDaoFactory2 {
 		public byte[] export(final QueryExecutionModel<TopLevelEntity> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {return null;}
 
 		@Override
-		public List<EntityAggregates> getAggregates(final AggregatesQueryExecutionModel aggregatesQueryModel) {return null;}
-
-		@Override
-		public IPage2<EntityAggregates> firstPage(final AggregatesQueryExecutionModel query, final int pageCapacity) {return null;}
-
-		@Override
-		public IPage2<EntityAggregates> firstPage(final AggregatesQueryExecutionModel model, final AggregatesQueryExecutionModel summaryModel, final int pageCapacity) {return null;}
-
-		@Override
-		public IPage2<EntityAggregates> getPage(final AggregatesQueryExecutionModel model, final int pageNo, final int pageCapacity) {return null;}
-
-		@Override
-		public IPage2<EntityAggregates> getPage(final AggregatesQueryExecutionModel model, final int pageNo, final int pageCount, final int pageCapacity) {return null;}
-
-		@Override
-		public byte[] export(final AggregatesQueryExecutionModel query, final String[] propertyNames, final String[] propertyTitles) throws IOException {return null;}
+		public IPage2<TopLevelEntity> firstPage(final QueryExecutionModel<TopLevelEntity> model, final QueryExecutionModel<EntityAggregates> summaryModel, final int pageCapacity) { return null;}
 	    };
 	}
 	return null;
