@@ -4,14 +4,14 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.security.user.IUserDao2;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuItemMixin;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
+import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuItemMixin2;
 
 /**
  * A test case for main application menu composition, persistence and management.
@@ -19,12 +19,12 @@ import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuItemMixin;
  * @author TG Team
  *
  */
-public class MenuAndConfigurationTestCase extends DbDrivenTestCase {
-    private final IUserDao userDao = injector.getInstance(IUserDao.class);
-    private final IEntityCentreConfigController eccController = injector.getInstance(IEntityCentreConfigController.class);
-    private final IMainMenuItemController mmiController = injector.getInstance(IMainMenuItemController.class);
+public class MenuAndConfigurationTestCase extends DbDrivenTestCase2 {
+    private final IUserDao2 userDao = injector.getInstance(IUserDao2.class);
+    private final IEntityCentreConfigController2 eccController = injector.getInstance(IEntityCentreConfigController2.class);
+    private final IMainMenuItemController2 mmiController = injector.getInstance(IMainMenuItemController2.class);
 
-    private MainMenuItemMixin mixin = new MainMenuItemMixin(mmiController, eccController);
+    private MainMenuItemMixin2 mixin = new MainMenuItemMixin2(mmiController, eccController);
 
     @Test
     public void test_finding_for_principal_menu_items_in_case_of_base_user() {

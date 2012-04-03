@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.test.transactional;
 
-import ua.com.fielden.platform.dao.EntityWithMoneyDao;
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.EntityWithMoneyDao2;
 import ua.com.fielden.platform.dao.annotations.Transactional;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.types.Money;
 
@@ -10,15 +10,15 @@ import com.google.inject.Inject;
 
 /**
  * A helper class for testing transactional support.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 class LogicThatNeedsTransaction {
-    private final IEntityDao<EntityWithMoney> dao;
+    private final IEntityDao2<EntityWithMoney> dao;
 
     @Inject
-    public LogicThatNeedsTransaction(final IEntityDao<EntityWithMoney> dao) {
+    public LogicThatNeedsTransaction(final IEntityDao2<EntityWithMoney> dao) {
 	this.dao = dao;
     }
 
@@ -52,13 +52,13 @@ class LogicThatNeedsTransaction {
     public void singleTransactionInvocaionWithExceptionInDao(final String amountOne) {
 	final EntityWithMoney oneAmount = new EntityWithMoney("one", "first", new Money(amountOne));
 
-	((EntityWithMoneyDao) dao).saveWithException(oneAmount);
+	((EntityWithMoneyDao2) dao).saveWithException(oneAmount);
     }
 
     public void singleTransactionInvocaionWithExceptionInDao2() {
 	final EntityWithMoney one = new EntityWithMoney("one", "first", new Money("0.00"));
 	final EntityWithMoney two = new EntityWithMoney("one", "first", new Money("0.00"));
 
-	((EntityWithMoneyDao) dao).saveTwoWithException(one, two);
+	((EntityWithMoneyDao2) dao).saveTwoWithException(one, two);
     }
 }

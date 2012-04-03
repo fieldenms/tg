@@ -1,18 +1,14 @@
 package ua.com.fielden.platform.persistence.types;
 
-import static java.math.BigDecimal.valueOf;
-
 import java.math.BigDecimal;
 import java.util.Currency;
-import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.SQLQuery;
-
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.factory.DaoFactory;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.dao.factory.DaoFactory2;
+import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.types.Money;
+import static java.math.BigDecimal.valueOf;
 
 
 /**
@@ -20,22 +16,19 @@ import ua.com.fielden.platform.types.Money;
  *
  * @author 01es
  */
-public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase {
+public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase2 {
 
     @SuppressWarnings("unchecked")
     public void testThatCanSaveAndRetrieveEntityWithTaxMoney() {
 	final EntityWithTaxMoney instance = entityFactory.newEntity(EntityWithTaxMoney.class, "name", "desc");
 	instance.setMoney(new Money(new BigDecimal("1000"), 20, Currency.getInstance("AUD")));
 	// saving instance of MoneyClass
-	final IEntityDao dao = injector.getInstance(DaoFactory.class).newDao(EntityWithTaxMoney.class);
+	final IEntityDao2 dao = injector.getInstance(DaoFactory2.class).newDao(EntityWithTaxMoney.class);
 	dao.save(instance);
 
 	hibernateUtil.getSessionFactory().getCurrentSession().flush();
 	hibernateUtil.getSessionFactory().getCurrentSession().clear();
 
-	final SQLQuery q = hibernateUtil.getSessionFactory().getCurrentSession().createSQLQuery("select * from MONEY_CLASS_TABLE");
-	final List result = q.list();
-	System.out.println(result.size());
 	// retrieve saved instance
 	final EntityWithTaxMoney instance2 = (EntityWithTaxMoney) dao.findByKey("name");
 	assertEquals(instance, instance2);
@@ -56,17 +49,13 @@ public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase {
 	final EntityWithSimpleTaxMoney instance = entityFactory.newEntity(EntityWithSimpleTaxMoney.class, "name", "desc");
 	instance.setMoney(new Money(new BigDecimal("2222.0000"), 20, Currency.getInstance("USD"))); // USD deliberately to be different to the default currency
 	// saving instance of MoneyClass
-	final IEntityDao dao = injector.getInstance(DaoFactory.class).newDao(EntityWithSimpleTaxMoney.class);
+	final IEntityDao2 dao = injector.getInstance(DaoFactory2.class).newDao(EntityWithSimpleTaxMoney.class);
 	dao.save(instance);
 
 	hibernateUtil.getSessionFactory().getCurrentSession().flush();
 	hibernateUtil.getSessionFactory().getCurrentSession().clear();
 
-	final SQLQuery q = hibernateUtil.getSessionFactory().getCurrentSession().createSQLQuery("select * from SIMPLE_TAX_MONEY_CLASS_TABLE");
-	final List result = q.list();
-	System.out.println(result.size());
 	// retrieve saved instance
-	System.out.println(Currency.getInstance(Locale.getDefault()));
 	final EntityWithSimpleTaxMoney instance2 = (EntityWithSimpleTaxMoney) dao.findByKey("name");
 	assertEquals(instance, instance2);
 	assertEquals("Currency should not have been persisted.", Currency.getInstance(Locale.getDefault()), instance2.getMoney().getCurrency());
@@ -82,7 +71,7 @@ public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase {
 	instance.setDesc("desc");
 	instance.setMoney(new Money(valueOf(600000d), 20, Currency.getInstance("USD")));
 
-	final IEntityDao dao = injector.getInstance(DaoFactory.class).newDao(EntityWithExTaxAndTaxMoney.class);
+	final IEntityDao2 dao = injector.getInstance(DaoFactory2.class).newDao(EntityWithExTaxAndTaxMoney.class);
 	dao.save(instance);
 
 	hibernateUtil.getSessionFactory().getCurrentSession().flush();
@@ -101,5 +90,4 @@ public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase {
     protected String[] getDataSetPathsForInsert() {
 	return new String[] { "src/test/resources/data-files/money-with-tax-amount-user-type-test-case.flat.xml" };
     }
-
 }

@@ -4,7 +4,7 @@ import org.hibernate.Session;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.types.Money;
  * @author 01es
  *
  */
-public class DynamicCompositeKeyPersistenceTestCase extends DbDrivenTestCase {
+public class DynamicCompositeKeyPersistenceTestCase extends DbDrivenTestCase2 {
     /**
      * Tests correctness of methods equals, hashCode and compareTo
      */
@@ -41,7 +41,6 @@ public class DynamicCompositeKeyPersistenceTestCase extends DbDrivenTestCase {
 
 	final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
 	final EntityWithDynamicCompositeKey result = (EntityWithDynamicCompositeKey) session.load(EntityWithDynamicCompositeKey.class, 1L);
-	System.out.println(result);
 
 	assertEquals("Incorrect part one of the key.", keyPartOne, result.getKeyPartOne());
 	assertEquals("Incorrect part tow of the key.", keyPartTwo, result.getKeyPartTwo());

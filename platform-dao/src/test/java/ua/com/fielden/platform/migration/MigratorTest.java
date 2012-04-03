@@ -4,15 +4,15 @@ import java.sql.Connection;
 import java.util.Date;
 import java.util.List;
 
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
-import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
-import ua.com.fielden.platform.migration.dao.MigrationRunDao;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.migration.dao.MigrationErrorDao2;
+import ua.com.fielden.platform.migration.dao.MigrationHistoryDao2;
+import ua.com.fielden.platform.migration.dao.MigrationRunDao2;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
-import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake2;
+import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel2;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 
 /**
  * Test the basic data migration logic.
@@ -20,11 +20,11 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
  * @author TG team
  *
  */
-public class MigratorTest extends DbDrivenTestCase {
+public class MigratorTest extends DbDrivenTestCase2 {
     private final Connection conn = injector.getInstance(Connection.class);
-    private final MigrationErrorDao errorDao = injector.getInstance(MigrationErrorDao.class);
-    private final MigrationHistoryDao histDao = injector.getInstance(MigrationHistoryDao.class);
-    private final MigrationRunDao runDao = injector.getInstance(MigrationRunDao.class);
+    private final MigrationErrorDao2 errorDao = injector.getInstance(MigrationErrorDao2.class);
+    private final MigrationHistoryDao2 histDao = injector.getInstance(MigrationHistoryDao2.class);
+    private final MigrationRunDao2 runDao = injector.getInstance(MigrationRunDao2.class);
 
 
     @Override
@@ -52,31 +52,31 @@ public class MigratorTest extends DbDrivenTestCase {
 	hibernateUtil.getSessionFactory().getCurrentSession().close();
 	final MigrationRun migrationRun = generateMigrationRun();
 
-	final tMakeRetriever makeRet = injector.getInstance(tMakeRetriever.class);
+	final tMakeRetriever2 makeRet = injector.getInstance(tMakeRetriever2.class);
 	makeRet.populateData(hibernateUtil.getSessionFactory(), conn, config.getEntityFactory(), errorDao, histDao, migrationRun, null);
 
 	hibernateUtil.getSessionFactory().getCurrentSession().close();
 
-	final ITgVehicleMake dao = injector.getInstance(ITgVehicleMake.class);
+	final ITgVehicleMake2 dao = injector.getInstance(ITgVehicleMake2.class);
 	assertEquals("Incorrect number of migrated entities.", 4, dao.getPage(0, 4).data().size());
 
 	final List<MigrationHistory> hist = histDao.firstPage(100).data();
 	assertEquals("There should be only one migration history record.", 1, hist.size());
 	assertEquals("Incorrect hist record entity type name.", TgVehicleMake.class.getName(), hist.get(0).getEntityTypeName());
-	assertEquals("Incorrect hist record retriever type name.", tMakeRetriever.class.getName(), hist.get(0).getRetrieverTypeName());
+	assertEquals("Incorrect hist record retriever type name.", tMakeRetriever2.class.getName(), hist.get(0).getRetrieverTypeName());
     }
 
     public void test_migrating_of_entity_with_another_entity_association() throws Exception {
 	hibernateUtil.getSessionFactory().getCurrentSession().close();
 	final MigrationRun migrationRun = generateMigrationRun();
 	// populate makes
-	final tMakeRetriever makeRet = injector.getInstance(tMakeRetriever.class);
+	final tMakeRetriever2 makeRet = injector.getInstance(tMakeRetriever2.class);
 	makeRet.populateData(hibernateUtil.getSessionFactory(), conn, config.getEntityFactory(), errorDao, histDao, migrationRun, null);
 
 	// populate models, which depend on makes
-	final ITgVehicleModel dao = injector.getInstance(ITgVehicleModel.class);
+	final ITgVehicleModel2 dao = injector.getInstance(ITgVehicleModel2.class);
 
-	final tModelRetriever ret = injector.getInstance(tModelRetriever.class);
+	final tModelRetriever2 ret = injector.getInstance(tModelRetriever2.class);
 
 	ret.populateData(hibernateUtil.getSessionFactory(), conn, config.getEntityFactory(), errorDao, histDao, migrationRun, null);
 	hibernateUtil.getSessionFactory().getCurrentSession().close();

@@ -1,11 +1,9 @@
 package ua.com.fielden.platform.ui.config.impl.interaction;
 
-import static ua.com.fielden.platform.equery.equery.select;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -13,20 +11,22 @@ import ua.com.fielden.platform.serialisation.ClientSerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
 import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Remote implementation of {@link ICenterConfigurationController}.
  * <p>
  * Unlike many controllers that have no context, this one should be instantiated for every menu item, where menu item is the context for this controller.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class RemoteCentreConfigurationController implements ICenterConfigurationController {
 
-    private final IEntityCentreConfigController eccController;
+    private final IEntityCentreConfigController2 eccController;
     private final ISerialiser serialiser;
     private final MainMenuItem principleMenuItem;
     private final IUserProvider userProvider;
@@ -34,7 +34,7 @@ public class RemoteCentreConfigurationController implements ICenterConfiguration
     public static final char KEY_SEPARATOR = '\u2190';
 
     public RemoteCentreConfigurationController(//
-    final IEntityCentreConfigController eccController,//
+    final IEntityCentreConfigController2 eccController,//
     final MainMenuItem principleMenuItem,//
     final IUserProvider userProvider) {
 	this.eccController = eccController;
@@ -137,7 +137,7 @@ public class RemoteCentreConfigurationController implements ICenterConfiguration
 		if (child.getConfig() == null) {
 		    final User user = userProvider.getUser();
 		    final Long[] ids = user.isBase() ? new Long[] { user.getId() } : new Long[] { user.getId(), user.getBasedOnUser().getId() };
-		    child.setConfig(eccController.getEntity(findConfigByUser(child.getTitle(), ids)));
+		    child.setConfig(eccController.getEntity(from(findConfigByUser(child.getTitle(), ids)).build()));
 		}
 		return child;
 	    }
@@ -157,12 +157,12 @@ public class RemoteCentreConfigurationController implements ICenterConfiguration
 	eccController.delete(findConfigByUser(title, userProvider.getUser().getId()));
     }
 
-    private IQueryModel<EntityCentreConfig> findConfigByUser(final String title, final Long... ids) {
+    private EntityResultQueryModel<EntityCentreConfig> findConfigByUser(final String title, final Long... ids) {
 	return select(EntityCentreConfig.class).where()//
-	.prop("owner").in().val(ids)//
+	.prop("owner").in().values(ids)//
 	.and().prop("title").eq().val(title)//
 	.and().prop("menuItem").eq().val(principleMenuItem)//
-	.and().prop("principal").isFalse().model();
+	.and().prop("principal").eq().val(false).model();
     }
 
     @Override

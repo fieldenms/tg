@@ -14,11 +14,8 @@ import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.migration.DataMigrator;
-import ua.com.fielden.platform.migration.IRetriever;
-import ua.com.fielden.platform.migration.MigrationRun;
-import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
-import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
+import ua.com.fielden.platform.migration.dao.MigrationErrorDao2;
+import ua.com.fielden.platform.migration.dao.MigrationHistoryDao2;
 import ua.com.fielden.platform.utils.Pair;
 
 
@@ -41,7 +38,7 @@ public class SplitIntoBatches extends TestCase{
 	groupedItems.add(new Pair<String, Long>("A13", 1l));
 	groupedItems.add(new Pair<String, Long>("A14", 1l));
 
-	final PriorityQueue<Pair<Set<String>, Long>> pq = DataMigrator.splitIntoBatches(groupedItems, 4);
+	final PriorityQueue<Pair<Set<String>, Long>> pq = DataMigrator2.splitIntoBatches(groupedItems, 4);
 	final List<Pair<Set<String>, Long>> expected = new ArrayList<Pair<Set<String>, Long>>();
 	expected.add(new Pair<Set<String>, Long>(new HashSet<String>(Arrays.asList(new String[]{"A09", "A13", "A05", "A04"})), 33l));
 	expected.add(new Pair<Set<String>, Long>(new HashSet<String>(Arrays.asList(new String[]{"A07", "A02", "A10"})), 33l));
@@ -52,7 +49,7 @@ public class SplitIntoBatches extends TestCase{
     }
 
     public void testThatSplitSqlCompositionForRetieverWithOrderedSelectWorks() {
-	System.out.println(DataMigrator.getSplitSql(new IRetriever() {
+	System.out.println(DataMigrator2.getSplitSql(new IRetriever2() {
 
 	    @Override
 	    public String selectSql() {
@@ -60,7 +57,7 @@ public class SplitIntoBatches extends TestCase{
 	    }
 
 	    @Override
-	    public Result populateData(final SessionFactory sessionFactory, final Connection conn, final EntityFactory factory, final MigrationErrorDao errorDao, final MigrationHistoryDao histDao, final MigrationRun migrationRun, final String subset)
+	    public Result populateData(final SessionFactory sessionFactory, final Connection conn, final EntityFactory factory, final MigrationErrorDao2 errorDao, final MigrationHistoryDao2 histDao, final MigrationRun migrationRun, final String subset)
 		    throws Exception {
 		return null;
 	    }
@@ -79,7 +76,7 @@ public class SplitIntoBatches extends TestCase{
     }
 
     public void testThatSplitSqlCompositionForRetieverWithUnorderedSelectWorks() {
-	System.out.println(DataMigrator.getSplitSql(new IRetriever() {
+	System.out.println(DataMigrator2.getSplitSql(new IRetriever2() {
 
 	    @Override
 	    public String selectSql() {
@@ -88,7 +85,7 @@ public class SplitIntoBatches extends TestCase{
 	    }
 
 	    @Override
-	    public Result populateData(final SessionFactory sessionFactory, final Connection conn, final EntityFactory factory, final MigrationErrorDao errorDao, final MigrationHistoryDao histDao, final MigrationRun migrationRun, final String subset)
+	    public Result populateData(final SessionFactory sessionFactory, final Connection conn, final EntityFactory factory, final MigrationErrorDao2 errorDao, final MigrationHistoryDao2 histDao, final MigrationRun migrationRun, final String subset)
 		    throws Exception {
 		return null;
 	    }

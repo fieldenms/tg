@@ -1,24 +1,23 @@
 package ua.com.fielden.platform.ui.config.controller;
 
-import static ua.com.fielden.platform.ui.config.impl.interaction.RemoteCentreConfigurationController.KEY_SEPARATOR;
-
 import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.security.user.IUserDao2;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
+import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder2;
 import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
 import ua.com.fielden.platform.ui.config.controller.menu_items.PrincipleMenuItem1;
 import ua.com.fielden.platform.ui.config.controller.menu_items.PrincipleMenuItem1_2_1;
 import ua.com.fielden.platform.ui.config.controller.menu_items.PrincipleMenuItem2_1;
 import ua.com.fielden.platform.ui.config.impl.interaction.RemoteCentreConfigurationController;
+import static ua.com.fielden.platform.ui.config.impl.interaction.RemoteCentreConfigurationController.KEY_SEPARATOR;
 
 /**
  * A test case for {@link RemoteCentreConfigurationController} as applicable to a base user.
@@ -26,11 +25,11 @@ import ua.com.fielden.platform.ui.config.impl.interaction.RemoteCentreConfigurat
  * @author TG Team
  *
  */
-public class RemoteCentreConfigurationControllerForBaseUserTestCase extends DbDrivenTestCase {
-    private final IUserDao userDao = injector.getInstance(IUserDao.class);
-    private final IEntityCentreConfigController eccController = injector.getInstance(IEntityCentreConfigController.class);
+public class RemoteCentreConfigurationControllerForBaseUserTestCase extends DbDrivenTestCase2 {
+    private final IUserDao2 userDao = injector.getInstance(IUserDao2.class);
+    private final IEntityCentreConfigController2 eccController = injector.getInstance(IEntityCentreConfigController2.class);
     //private final IMainMenuItemController mmiController = injector.getInstance(IMainMenuItemController.class);
-    private final IMainMenuStructureBuilder menuBuilder = injector.getInstance(IMainMenuStructureBuilder.class);
+    private final IMainMenuStructureBuilder2 menuBuilder = injector.getInstance(IMainMenuStructureBuilder2.class);
     private List<MainMenuItem> tree;
 
     private final IUserProvider baseUserProvider = new IUserProvider() {

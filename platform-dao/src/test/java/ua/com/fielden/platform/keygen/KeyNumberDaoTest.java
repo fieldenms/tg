@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.keygen;
 
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 
 /**
  * Ensures correct generation of work order numbers.
@@ -8,7 +8,7 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
  * @author 01es
  *
  */
-public class KeyNumberDaoTest extends DbDrivenTestCase {
+public class KeyNumberDaoTest extends DbDrivenTestCase2 {
     private final IKeyNumberGenerator keyNumberGen = injector.getInstance(IKeyNumberGenerator.class);
 
     public void testThatCurrentWoNoIsRetrievedCorrectly() {

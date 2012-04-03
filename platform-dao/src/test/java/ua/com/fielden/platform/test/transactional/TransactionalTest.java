@@ -2,25 +2,25 @@ package ua.com.fielden.platform.test.transactional;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.EntityWithMoneyDao;
+import ua.com.fielden.platform.dao.EntityWithMoneyDao2;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.types.Money;
 
 /**
  * A test case for transaction support that reuses {@link EntityWithMoney} test entity class and {@link LogicThatNeedsTransaction} with transactional methods.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-public class TransactionalTest extends DbDrivenTestCase {
+public class TransactionalTest extends DbDrivenTestCase2 {
     private LogicThatNeedsTransaction logic;
-    private EntityWithMoneyDao dao;
+    private EntityWithMoneyDao2 dao;
 
     @Override
     public void setUp() throws Exception {
 	super.setUp();
-	dao = injector.getInstance(EntityWithMoneyDao.class);
+	dao = injector.getInstance(EntityWithMoneyDao2.class);
 	logic = injector.getInstance(LogicThatNeedsTransaction.class);
 	// commit transaction opened in the parent setUp in order not to mess the transactional testing...
 	hibernateUtil.getSessionFactory().getCurrentSession().close();
@@ -98,7 +98,7 @@ public class TransactionalTest extends DbDrivenTestCase {
 	    final EntityWithMoney one = new EntityWithMoney("one", "first", new Money("0.00"));
 	    final EntityWithMoney two = new EntityWithMoney("one", "first", new Money("0.00"));
 
-	    final EntityWithMoneyDao dao = injector.getInstance(EntityWithMoneyDao.class);
+	    final EntityWithMoneyDao2 dao = injector.getInstance(EntityWithMoneyDao2.class);
 	    dao.saveTwoWithException(one, two);
 	    fail("should have thrown an exception");
 	} catch (final RuntimeException e) {

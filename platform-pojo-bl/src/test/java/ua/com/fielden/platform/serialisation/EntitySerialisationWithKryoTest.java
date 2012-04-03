@@ -1,13 +1,5 @@
 package ua.com.fielden.platform.serialisation;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.equery.equery.select;
-
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.nio.ByteBuffer;
@@ -29,7 +21,7 @@ import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.EntityWithByteArray;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -45,6 +37,14 @@ import ua.com.fielden.platform.types.Money;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Unit tests to ensure correct serialised/deserialised of {@link AbstractEntity} descendants.
@@ -187,7 +187,7 @@ public class EntitySerialisationWithKryoTest {
     @Test
     public void serialisation_of_entity_with_query_property() {
 	final EntityWithQueryProperty entity = factory.newEntity(EntityWithQueryProperty.class, 1L, "key", "description");
-	final IQueryModel<BaseEntity> model = select(BaseEntity.class).model();
+	final EntityResultQueryModel<BaseEntity> model = select(BaseEntity.class).model();
 	entity.setQuery(model);
 
 	final ByteBuffer writeBuffer = ByteBuffer.allocate(10485760);

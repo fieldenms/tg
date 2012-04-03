@@ -2,16 +2,26 @@ package ua.com.fielden.platform.entity.matcher;
 
 import java.util.List;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.dao.factory.DaoFactory;
+import org.junit.Test;
+
+import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.dao.factory.DaoFactory2;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
-import ua.com.fielden.platform.test.domain.entities.Wagon;
-import ua.com.fielden.platform.test.domain.entities.WagonClass;
-import ua.com.fielden.platform.test.domain.entities.WagonClassCompatibility;
-import ua.com.fielden.platform.test.domain.entities.WoStatusRequiredField;
-import ua.com.fielden.platform.test.domain.entities.WorkOrder;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.sample.domain.TgBogieClass;
+import ua.com.fielden.platform.sample.domain.TgWagon;
+import ua.com.fielden.platform.sample.domain.TgWagonClass;
+import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibility;
+import ua.com.fielden.platform.sample.domain.TgWoStatusRequiredField;
+import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test the ability of the ValueMatcherFactory to correctly provide value matchers.
@@ -19,28 +29,29 @@ import ua.com.fielden.platform.test.domain.entities.WorkOrder;
  * @author TG Team
  *
  */
-public class DaoValueMatcherFactoryTest extends DbDrivenTestCase {
-    private DaoFactory daoFactory = config.getInjector().getInstance(DaoFactory.class);
+public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
+    private DaoFactory2 daoFactory = getInstance(DaoFactory2.class);
+    private EntityFactory entityFactory = getInstance(EntityFactory.class);
 
+    @Test
     public void test_instantiation() {
-	final IValueMatcherFactory vmFactory = new ValueMatcherFactory(daoFactory, entityFactory);
-	System.out.println("SETTING : " + entityFactory);
+	final IValueMatcherFactory2 vmFactory = new ValueMatcherFactory2(daoFactory, entityFactory);
 
-	final IValueMatcher<?> matcher = vmFactory.getValueMatcher(Wagon.class, "wagonClass");
+	final IValueMatcher2<?> matcher = vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
 	assertNotNull("Should have constructed a value matcher.", matcher);
 	assertEquals("Incorrect number of matching values.", 2, matcher.findMatches("W%").size());
-	assertTrue("New matcher should not have been created.", matcher == vmFactory.getValueMatcher(Wagon.class, "wagonClass"));
+	assertTrue("New matcher should not have been created.", matcher == vmFactory.getValueMatcher(TgWagon.class, "wagonClass"));
     }
 
+    @Test
     public void test_matcher_usage_with_model() {
-	config.getHibernateUtil().getSessionFactory().getCurrentSession().close();
-	final IValueMatcherFactory vmFactory = new ValueMatcherFactory(daoFactory, entityFactory);
+	final IValueMatcherFactory2 vmFactory = new ValueMatcherFactory2(daoFactory, entityFactory);
 
-	final IValueMatcher<WagonClass> matcher = (IValueMatcher<WagonClass>) vmFactory.getValueMatcher(Wagon.class, "wagonClass");
+	final IValueMatcher2<TgWagonClass> matcher = (IValueMatcher2<TgWagonClass>) vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
 	//matcher.setQueryModel(select(WagonClass.class).with("compatibles", select(WagonClassCompatibility.class).model()));
-	matcher.setFetchModel(new fetch(WagonClass.class).with("compatibles", new fetch(WagonClassCompatibility.class)));
+	matcher.setFetchModel(new fetch(TgWagonClass.class).with("compatibles", new fetch(TgWagonClassCompatibility.class)));
 	assertNotNull("Should have constructed a value matcher.", matcher);
-	List<WagonClass> result = matcher.findMatches("W%");
+	List<TgWagonClass> result = matcher.findMatches("W%");
 	assertEquals("Incorrect number of matching values.", 2, result.size());
 	assertEquals("Incorrect wagon class.", "WA1", result.get(0).getKey());
 
@@ -59,33 +70,49 @@ public class DaoValueMatcherFactoryTest extends DbDrivenTestCase {
 	assertEquals("Incorrect bogie class.", "BO1", result.get(0).getCompatibles().iterator().next().getBogieClass().getKey());
     }
 
+    @Test
     public void test_instantiation_error_handling() {
-	final IValueMatcherFactory vmFactory = new ValueMatcherFactory(daoFactory, entityFactory);
+	final IValueMatcherFactory2 vmFactory = new ValueMatcherFactory2(daoFactory, entityFactory);
 	try {
-	    vmFactory.getValueMatcher(Wagon.class, "serialNo");
+	    vmFactory.getValueMatcher(TgWagon.class, "serialNo");
 	    fail("Matcher creation exception is expected due to incorrect property type -- String.");
 	} catch (final Exception e) {
 	}
 
 	try {
-	    vmFactory.getValueMatcher(Wagon.class, "non-existing-property");
+	    vmFactory.getValueMatcher(TgWagon.class, "non-existing-property");
 	    fail("Matcher creation exception is expected due to incorrect property name.");
 	} catch (final Exception e) {
 	}
     }
 
+    @Test
     public void test_property_descriptor_matcher() {
-	final IValueMatcherFactory vmFactory = new ValueMatcherFactory(daoFactory, entityFactory);
-	final IValueMatcher<PropertyDescriptor<WorkOrder>> matcher = (IValueMatcher<PropertyDescriptor<WorkOrder>>) vmFactory.getValueMatcher(WoStatusRequiredField.class, "requiredProperty");
+	final IValueMatcherFactory2 vmFactory = new ValueMatcherFactory2(daoFactory, entityFactory);
+	final IValueMatcher2<PropertyDescriptor<TgWorkOrder>> matcher = (IValueMatcher2<PropertyDescriptor<TgWorkOrder>>) vmFactory.getValueMatcher(TgWoStatusRequiredField.class, "requiredProperty");
 	assertNotNull("Value matcher for property descriptor should have been created.", matcher);
-	assertEquals("Incorrect number of matches for '*'.", 6, matcher.findMatches("*").size());
-	assertEquals("Incorrect number of matches for capital 'W'.", 3, matcher.findMatches("W%").size());
-	assertEquals("Incorrect number of matches for lower case 'w'.", 3, matcher.findMatches("w%").size());
+	assertEquals("Incorrect number of matches for '*'.", 7, matcher.findMatches("*").size());
+	assertEquals("Incorrect number of matches containing 'Co'.", 3, matcher.findMatches("%Co%").size());
+	assertEquals("Incorrect number of matches ending with 'Cost'.", 3, matcher.findMatches("%Cost").size());
 
     }
 
     @Override
-    protected String[] getDataSetPathsForInsert() {
-	return new String[] { "src/test/resources/data-files/dao-value-matcher-test-case.flat.xml" };
+    protected void populateDomain() {
+	final TgWagonClass wa1 = save(new_(TgWagonClass.class, "WA1", "desc1").setNumberOfBogies(5).setNumberOfWheelsets(2).setTonnage(50));
+	final TgWagonClass wa2 = save(new_(TgWagonClass.class, "WA2", "desc2").setNumberOfBogies(2).setNumberOfWheelsets(2).setTonnage(100));
+
+	final TgBogieClass bo1 = save(new_(TgBogieClass.class, "BO1", "desc1").setTonnage(50));
+
+	save(new_(TgWagonClassCompatibility.class, wa1, bo1).setStatus("A"));
+
+	save(new_(TgWagon.class, "WAGON1", "desc1").setWagonClass(wa1).setSerialNo("SN_1"));
+	save(new_(TgWagon.class, "WAGON2", "desc2").setWagonClass(wa2).setSerialNo("SN_2"));
+	save(new_(TgWagon.class, "WAGON3", "desc3").setWagonClass(wa1).setSerialNo("SN_3"));
+    }
+
+    @Override
+    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
+	return PlatformTestDomainTypes.entityTypes;
     }
 }
