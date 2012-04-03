@@ -1,19 +1,21 @@
 package ua.com.fielden.platform.rao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
-import ua.com.fielden.platform.attachment.IAttachmentController;
-import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
-import ua.com.fielden.platform.dao.SinglePage;
+import ua.com.fielden.platform.attachment.IAttachmentController2;
+import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController2;
+import ua.com.fielden.platform.dao2.SinglePage2;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.equery.equery.select;
 
 /**
  * This is a default RAO implementation for managing association between attachments and entities.
@@ -22,25 +24,26 @@ import static ua.com.fielden.platform.equery.equery.select;
  *
  */
 @EntityType(EntityAttachmentAssociation.class)
-public class EntityAttachmentAssociationRao extends CommonEntityRao<EntityAttachmentAssociation> implements IEntityAttachmentAssociationController {
+public class EntityAttachmentAssociationRao extends CommonEntityRao<EntityAttachmentAssociation> implements IEntityAttachmentAssociationController2 {
 
-    private final IAttachmentController attachmentController;
+    private final IAttachmentController2 attachmentController;
 
     @Inject
-    public EntityAttachmentAssociationRao(final RestClientUtil restUtil, final IAttachmentController attachmentController) {
+    public EntityAttachmentAssociationRao(final RestClientUtil restUtil, final IAttachmentController2 attachmentController) {
 	super(restUtil);
 	this.attachmentController = attachmentController;
     }
 
     @Override
-    public IAttachmentController getAttachmentController() {
+    public IAttachmentController2 getAttachmentController() {
         return attachmentController;
     }
 
     @Override
-    public IPage<EntityAttachmentAssociation> findDetails(final AbstractEntity<?> masterEntity, final fetch<EntityAttachmentAssociation> model, final int pageCapacity) {
-	final IQueryOrderedModel<EntityAttachmentAssociation> q = select(EntityAttachmentAssociation.class).where().prop("entityId").eq().val(masterEntity.getId()).orderBy("attachment.key").model();
-	return new SinglePage<EntityAttachmentAssociation>(getEntities(q, new fetchAll<EntityAttachmentAssociation>(EntityAttachmentAssociation.class)));
+    public IPage2<EntityAttachmentAssociation> findDetails(final AbstractEntity<?> masterEntity, final fetch<EntityAttachmentAssociation> model, final int pageCapacity) {
+	final EntityResultQueryModel<EntityAttachmentAssociation> q = select(EntityAttachmentAssociation.class).where().prop("entityId").eq().val(masterEntity.getId()).model();
+	final OrderingModel orderBy = orderBy().prop("attachment.key").asc().model();
+	return new SinglePage2<EntityAttachmentAssociation>(getAllEntities(from(q).with(new fetchAll<EntityAttachmentAssociation>(EntityAttachmentAssociation.class)).with(orderBy).build()));
     }
 
     @Override
@@ -57,5 +60,4 @@ public class EntityAttachmentAssociationRao extends CommonEntityRao<EntityAttach
     public EntityAttachmentAssociation save(final EntityAttachmentAssociation entity) {
         return super.save(entity);
     }
-
 }

@@ -5,7 +5,7 @@ import java.util.Map;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
 import net.sf.jasperreports.engine.JRRewindableDataSource;
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityAggregatesReportSource implements JRRewindableDataSource {

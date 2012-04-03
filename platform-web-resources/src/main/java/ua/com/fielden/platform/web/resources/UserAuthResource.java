@@ -13,7 +13,7 @@ import org.restlet.resource.Variant;
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserController2;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -22,7 +22,7 @@ import ua.com.fielden.platform.security.user.User;
  * @author TG Team
  */
 public class UserAuthResource extends Resource {
-    private final IUserController controller;
+    private final IUserController2 controller;
     private final RestServerUtil restUtil;
     private final String token;
     private final String publicKey;
@@ -64,7 +64,7 @@ public class UserAuthResource extends Resource {
      * @param response
      * @throws Exception
      */
-    public UserAuthResource(final IUserController controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public UserAuthResource(final IUserController2 controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.controller = controller;
@@ -173,7 +173,7 @@ public class UserAuthResource extends Resource {
      */
     public void validateAndUpdate(final String username) throws Exception {
     }
-    
+
     protected User findUser(final String username){
 	return controller.findByKey(username);
     }

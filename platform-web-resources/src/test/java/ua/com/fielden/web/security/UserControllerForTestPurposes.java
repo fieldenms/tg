@@ -2,18 +2,21 @@ package ua.com.fielden.web.security;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.cypher.Cypher;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
-import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.security.provider.IUserController2;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
-public class UserControllerForTestPurposes implements IUserController {
+public class UserControllerForTestPurposes implements IUserController2 {
     public static final String USER_NAME = "user";
     public static final String PASSWORD = "password";
     private User user;
@@ -72,29 +75,10 @@ public class UserControllerForTestPurposes implements IUserController {
     }
 
     @Override
-    public User findById(final Long id, final fetch<User> fetchModel) {
-	return user;
-    }
-
-    @Override
     public User findByKey(final Object... keyValues) {
 	return USER_NAME.equals(keyValues[0]) ? user : null;
     }
 
-    @Override
-    public IPage<User> firstPage(final int pageCapacity) {
-	return null;
-    }
-
-    @Override
-    public IPage<User> firstPage(final IQueryOrderedModel<User> query, final int pageCapacity) {
-	return null;
-    }
-
-    @Override
-    public User getEntity(final IQueryOrderedModel<User> model) {
-	return null;
-    }
 
     @Override
     public Class<User> getEntityType() {
@@ -106,35 +90,6 @@ public class UserControllerForTestPurposes implements IUserController {
 	return null;
     }
 
-    @Override
-    public IPage<User> getPage(final int pageNo, final int pageCapacity) {
-	return null;
-    }
-
-    @Override
-    public IPage<User> getPage(final IQueryOrderedModel<User> query, final int pageNo, final int pageCapacity) {
-	return null;
-    }
-
-    public IPage<User> getPage(final IQueryOrderedModel<User> query, final int pageNo, final int pageCount, final int pageCapacity) {
-	return getPage(query, pageNo, 0, pageCapacity);
-    }
-
-    @Override
-    public int count(final IQueryOrderedModel<User> model) {
-	// TODO Auto-generated method stub
-	return 0;
-    }
-
-    @Override
-    public byte[] export(final IQueryOrderedModel<User> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-	return null;
-    }
-
-    @Override
-    public List<User> getEntities(final IQueryOrderedModel<User> query) {
-	return null;
-    }
 
     @Override
     public void delete(final User user) {
@@ -142,17 +97,8 @@ public class UserControllerForTestPurposes implements IUserController {
 
 
     @Override
-    public void delete(final IQueryOrderedModel<User> model) {
-    }
-
-    @Override
     public boolean isStale(final Long entityId, final Long version) {
 	return false;
-    }
-
-    @Override
-    public IPage<User> firstPage(final IQueryOrderedModel<User> model, final IQueryOrderedModel<EntityAggregates> summaryModel, final int pageCapacity) {
-	return null;
     }
 
     @Override
@@ -161,13 +107,8 @@ public class UserControllerForTestPurposes implements IUserController {
     }
 
     @Override
-    public byte[] export(final IQueryOrderedModel<User> query, final fetch<User> fetchModel, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-	return null;
-    }
-
-    @Override
     public User findById(final Long id) {
-	return null;
+	return user;
     }
 
     @Override
@@ -175,35 +116,6 @@ public class UserControllerForTestPurposes implements IUserController {
 	return findByKey(keyValues);
     }
 
-    @Override
-    public IPage<User> firstPage(final IQueryOrderedModel<User> query, final fetch<User> fetchModel, final int pageCapacity) {
-	return null;
-    }
-
-    @Override
-    public IPage<User> firstPage(final IQueryOrderedModel<User> model, final fetch<User> fetchModel, final IQueryOrderedModel<EntityAggregates> summaryModel, final int pageCapacity) {
-	return null;
-    }
-
-    @Override
-    public List<User> getEntities(final IQueryOrderedModel<User> query, final fetch<User> fetchModel) {
-	return null;
-    }
-
-    @Override
-    public User getEntity(final IQueryOrderedModel<User> model, final fetch<User> fetchModel) {
-	return null;
-    }
-
-    @Override
-    public IPage<User> getPage(final IQueryOrderedModel<User> query, final fetch<User> fetchModel, final int pageNo, final int pageCapacity) {
-	return null;
-    }
-
-    @Override
-    public IPage<User> getPage(final IQueryOrderedModel<User> query, final fetch<User> fetchModel, final int pageNo, final int pageCount, final int pageCapacity) {
-	return null;
-    }
 
     @Override
     public User findUser(final String username) {
@@ -223,5 +135,88 @@ public class UserControllerForTestPurposes implements IUserController {
     @Override
     public User getUser() {
 	return user;
+    }
+
+    @Override
+    public User findById(final Long id, final fetch<User> fetchModel) {
+	return user;
+    }
+
+    @Override
+    public IPage2<User> firstPage(final int pageCapacity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public IPage2<User> getPage(final int pageNo, final int pageCapacity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public IPage2<User> firstPage(final QueryExecutionModel<User, ?> query, final int pageCapacity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public IPage2<User> firstPage(final QueryExecutionModel<User, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public IPage2<User> getPage(final QueryExecutionModel<User, ?> query, final int pageNo, final int pageCapacity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public IPage2<User> getPage(final QueryExecutionModel<User, ?> query, final int pageNo, final int pageCount, final int pageCapacity) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public void delete(final EntityResultQueryModel<User> model, final Map<String, Object> paramValues) {
+	// TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void delete(final EntityResultQueryModel<User> model) {
+	// TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public User getEntity(final QueryExecutionModel<User, ?> model) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public int count(final EntityResultQueryModel<User> model, final Map<String, Object> paramValues) {
+	// TODO Auto-generated method stub
+	return 0;
+    }
+
+    @Override
+    public int count(final EntityResultQueryModel<User> model) {
+	// TODO Auto-generated method stub
+	return 0;
+    }
+
+    @Override
+    public List<User> getAllEntities(final QueryExecutionModel<User, ?> query) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public byte[] export(final QueryExecutionModel<User, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
+	// TODO Auto-generated method stub
+	return null;
     }
 }

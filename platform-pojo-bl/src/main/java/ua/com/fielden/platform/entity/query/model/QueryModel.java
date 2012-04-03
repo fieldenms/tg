@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -7,16 +8,15 @@ import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
 public abstract class QueryModel<T extends AbstractEntity<?>> {
-    private final List<Pair<TokenCategory, Object>> tokens;
+    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
     private Class<T> resultType;
 
-    @Override
-    public String toString() {
-        return tokens.toString();
+    protected QueryModel() {
+
     }
 
     public QueryModel(final List<Pair<TokenCategory, Object>> tokens) {
-	this.tokens = tokens;
+	this.tokens.addAll(tokens);
     }
 
     public QueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType) {
@@ -66,5 +66,10 @@ public abstract class QueryModel<T extends AbstractEntity<?>> {
 
     public Class<? extends AbstractEntity<?>> getResultType() {
         return resultType;
+    }
+
+    @Override
+    public String toString() {
+	return tokens.toString();
     }
 }

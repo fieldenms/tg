@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.security.dao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.List;
 
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -12,10 +16,6 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Db driven implementation of the {@link IUserRoleDao2}.
@@ -35,6 +35,13 @@ public class UserRoleDao2 extends CommonEntityDao2<UserRole> implements IUserRol
     @SessionRequired
     public List<UserRole> findAll() {
 	final EntityResultQueryModel<UserRole> model = select(UserRole.class).model();
+	final OrderingModel orderBy = orderBy().prop("key").asc().model();
+	return getAllEntities(from(model).with(orderBy).build());
+    }
+
+    @Override
+    public List<UserRole> findByIds(final Long... ids) {
+	final EntityResultQueryModel<UserRole> model = select(UserRole.class).where().prop("id").in().values(ids).model();
 	final OrderingModel orderBy = orderBy().prop("key").asc().model();
 	return getAllEntities(from(model).with(orderBy).build());
     }

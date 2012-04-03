@@ -2,9 +2,11 @@ package ua.com.fielden.platform.dao;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
@@ -23,27 +25,27 @@ public class EntityAggregatesDao2 implements IEntityAggregatesDao2 {
 	this.dao = dao;
     }
 
-    public List<EntityAggregates> getAllEntities(final QueryExecutionModel<EntityAggregates> aggregatesQueryModel) {
+    public List<EntityAggregates> getAllEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> aggregatesQueryModel) {
 	return dao.getAllEntities(aggregatesQueryModel);
     }
 
     @Override
-    public IPage2<EntityAggregates> firstPage(final QueryExecutionModel<EntityAggregates> query, final int pageCapacity) {
+    public IPage2<EntityAggregates> firstPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final int pageCapacity) {
 	return dao.firstPage(query, pageCapacity);
     }
 
     @Override
-    public IPage2<EntityAggregates> getPage(final QueryExecutionModel<EntityAggregates> query, final int pageNo, final int pageCapacity) {
+    public IPage2<EntityAggregates> getPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final int pageNo, final int pageCapacity) {
 	return getPage(query, pageNo, 0, pageCapacity);
     }
 
     @Override
-    public IPage2<EntityAggregates> getPage(final QueryExecutionModel<EntityAggregates> model, final int pageNo, final int pageCount, final int pageCapacity) {
+    public IPage2<EntityAggregates> getPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model, final int pageNo, final int pageCount, final int pageCapacity) {
 	return dao.getPage(model, pageNo, pageCount, pageCapacity);
     }
 
     @Override
-    public byte[] export(final QueryExecutionModel<EntityAggregates> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
+    public byte[] export(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
 	return dao.export(query, propertyNames, propertyTitles);
     }
 
@@ -60,4 +62,15 @@ public class EntityAggregatesDao2 implements IEntityAggregatesDao2 {
     public final String getUsername() {
 	return username;
     }
+
+    @Override
+    public int count(final AggregatedResultQueryModel model, final Map<String, Object> paramValues) {
+	return dao.count(model, paramValues);
+    }
+
+    @Override
+    public int count(final AggregatedResultQueryModel model) {
+	return dao.count(model);
+    }
+
 }

@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.security.user.User;
@@ -130,7 +131,7 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
      * @param query
      * @return
      */
-    IPage2<T> firstPage(final QueryExecutionModel<T> query, final int pageCapacity);
+    IPage2<T> firstPage(final QueryExecutionModel<T, ?> query, final int pageCapacity);
 
     /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided <code>summaryModel</code> and the summary
@@ -141,7 +142,7 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
      * @param pageCapacity
      * @return
      */
-    IPage2<T> firstPage(final QueryExecutionModel<T> model, final QueryExecutionModel<EntityAggregates> summaryModel, final int pageCapacity);
+    IPage2<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity);
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query model (new EntityQuery).
@@ -151,7 +152,7 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
      * @param pageNo
      * @return
      */
-    IPage2<T> getPage(final QueryExecutionModel<T> query, final int pageNo, final int pageCapacity);
+    IPage2<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCapacity);
 
     /**
      * Same as above, but the actual implementation could take into account the page count information.
@@ -162,7 +163,7 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
      * @param pageCapacity
      * @return
      */
-    IPage2<T> getPage(final QueryExecutionModel<T> query, final int pageNo, final int pageCount, final int pageCapacity);
+    IPage2<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
 
     /**
      * Persists (saves/updates) the entity.
@@ -223,7 +224,7 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
      * @param model
      * @return
      */
-    T getEntity(final QueryExecutionModel<T> model);
+    T getEntity(final QueryExecutionModel<T, ?> model);
 
     /**
      * Returns a number of entities retrieved using the provided model.
@@ -241,7 +242,7 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
      * @param quert
      * @return
      */
-    List<T> getAllEntities(final QueryExecutionModel<T> query);
+    List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
 
     /**
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
@@ -256,5 +257,5 @@ public interface IEntityDao2<T extends AbstractEntity<?>> {
      *            -- titles corresponding to the properties being exported, which are used as headers of columns.
      * @return
      */
-    byte[] export(final QueryExecutionModel<T> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
+    byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
 }

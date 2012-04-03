@@ -14,7 +14,7 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.Variant;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachmentController2;
 
 /**
  * Represents a web resource for downloading a file associated with an instance of {@link Attachment}.
@@ -25,13 +25,13 @@ public class AttachmentDownloadResource extends Resource {
     // the following properties are determined from request
     private final String username;
 
-    private final IAttachmentController controller;
+    private final IAttachmentController2 controller;
     private final RestServerUtil restUtil;
 
     private final Long attachmentId;
     private final String location;
 
-    public AttachmentDownloadResource(final String location, final IAttachmentController controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public AttachmentDownloadResource(final String location, final IAttachmentController2 controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 

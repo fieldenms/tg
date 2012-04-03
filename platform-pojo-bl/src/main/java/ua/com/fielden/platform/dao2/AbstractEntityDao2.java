@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.dao2;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
@@ -11,15 +15,13 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Provides common implementation shared between Hibernate and REST implementation of DAOs.
@@ -32,7 +34,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     protected final static String ID_PROPERTY_NAME = "id";
     private final Class<? extends Comparable> keyType;
     private final Class<T> entityType;
-    private final QueryExecutionModel<T> defaultModel;
+    private final QueryExecutionModel<T, EntityResultQueryModel<T>> defaultModel;
 
 
     /**
@@ -50,13 +52,13 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
 	this.defaultModel = produceDefaultQueryExecutionModel(entityType);
     }
 
-    protected QueryExecutionModel<T> produceDefaultQueryExecutionModel(final Class<T> entityType) {
+    protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
 	final EntityResultQueryModel<T> query = select(entityType).model();
 	final OrderingModel orderBy = orderBy().prop(ID_PROPERTY_NAME).asc().model();
 	return from(query).with(orderBy).build();
     }
 
-    protected QueryExecutionModel<T> getDefaultQueryExecutionModel() {
+    protected QueryExecutionModel<T, EntityResultQueryModel<T>> getDefaultQueryExecutionModel() {
 	return defaultModel;
     }
 
@@ -160,7 +162,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public IPage2<T> firstPage(final QueryExecutionModel<T> model, final QueryExecutionModel<EntityAggregates> summaryModel, final int pageCapacity) {
+    public IPage2<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
 	throw new UnsupportedOperationException("Not implemented.");
     }
 

@@ -1,5 +1,13 @@
 package ua.com.fielden.web.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.List;
@@ -9,18 +17,12 @@ import org.restlet.Restlet;
 import org.restlet.Router;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController;
+import ua.com.fielden.platform.attachment.IAttachmentController2;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.rao.AttachmentRao;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import static ua.com.fielden.platform.equery.equery.select;
 
 /**
  * Provides unit tests for a set of {@link Attachment} related web resources, which includes testing of DAO nad RAO implementations.
@@ -29,7 +31,7 @@ import static ua.com.fielden.platform.equery.equery.select;
  *
  */
 public class AttachmentResourceTestCase extends WebBasedTestCase {
-    private final IAttachmentController rao = new AttachmentRao(config.restClientUtil());
+    private final IAttachmentController2 rao = new AttachmentRao(config.restClientUtil());
 
     private final static String ATTACHMENT_LOCATION = "src/test/resources/data-files/attachments";
     private final static String ORIGINAL_FILE_NAME = "TEST-FILE.TXT";
@@ -44,7 +46,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
     public synchronized Restlet getRoot() {
 	final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
+	final RouterHelper helper = new RouterHelper(DbDrivenTestCase2.injector, DbDrivenTestCase2.entityFactory);
 	helper.registerAttachment(router, ATTACHMENT_LOCATION);
 
 	return router;
@@ -58,7 +60,8 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_query_attachment_behaviour() {
-	final List<Attachment> attachments = rao.getEntities(select(Attachment.class).where().prop("key").eq().val(ORIGINAL_FILE_NAME).model(Attachment.class));
+	final EntityResultQueryModel<Attachment> model = select(Attachment.class).where().prop("key").eq().val(ORIGINAL_FILE_NAME).model();
+	final List<Attachment> attachments = rao.getAllEntities(from(model).build());
 	assertEquals("Incorrect number of attachments.", 1, attachments.size());
     }
 
@@ -95,7 +98,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_saving_new_attachment_which_should_result_in_file_upload() {
-	Attachment attachment = DbDrivenTestCase.entityFactory.newEntity(Attachment.class);
+	Attachment attachment = DbDrivenTestCase2.entityFactory.newEntity(Attachment.class);
 	attachment.setFile(new File(ATTACHMENT_LOCATION + "/new/" + NEW_ATTACHMENT_FILE_NAME));
 	attachment.setDesc("new attachment to upload");
 	attachment = rao.save(attachment);
@@ -109,7 +112,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_attachment_deletion() {
-	Attachment attachment = DbDrivenTestCase.entityFactory.newEntity(Attachment.class);
+	Attachment attachment = DbDrivenTestCase2.entityFactory.newEntity(Attachment.class);
 	attachment.setFile(new File(ATTACHMENT_LOCATION + "/new/" + NEW_ATTACHMENT_FILE_NAME));
 	attachment.setDesc("new attachment to upload");
 	attachment = rao.save(attachment);

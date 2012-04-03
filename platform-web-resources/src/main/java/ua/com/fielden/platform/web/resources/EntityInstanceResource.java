@@ -12,15 +12,15 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
 
 /**
- * EntityInstanceResource represents a web resource mapped to an URI template /entity-alias-type/{entity-if}. It provides a base implementation for handling the following
- * {@link IEntityDao} methods:
+ * EntityInstanceResource represents a web resource mapped to an URI template /entity-alias-type/{entity-id}. It provides a base implementation for handling the following
+ * {@link IEntityDao2} methods:
  * <ul>
  * <li>entityExists -- HEAD request.
  * <li>findById -- GET request.
@@ -30,14 +30,14 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  *
  * @author TG Team
  */
-public class EntityInstanceResource<T extends AbstractEntity> extends Resource {
+public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resource {
     // the following properties are determined from request
     protected final String username;
     protected final Long entityId;
 
     protected final Long entityVersion; // is initialised with value other than null only in cases where head request came to check entity staleness.
 
-    protected final IEntityDao<T> dao;
+    protected final IEntityDao2<T> dao;
     protected final EntityFactory factory;
     protected final RestServerUtil restUtil;
 
@@ -75,7 +75,7 @@ public class EntityInstanceResource<T extends AbstractEntity> extends Resource {
      * @param request
      * @param response
      */
-    public EntityInstanceResource(final IEntityDao<T> dao, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public EntityInstanceResource(final IEntityDao2<T> dao, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
@@ -181,7 +181,7 @@ public class EntityInstanceResource<T extends AbstractEntity> extends Resource {
 	return entityVersion != null;
     }
 
-    public IEntityDao<T> getDao() {
+    public IEntityDao2<T> getDao() {
         return dao;
     }
 

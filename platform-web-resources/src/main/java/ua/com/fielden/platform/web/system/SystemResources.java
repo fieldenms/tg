@@ -6,11 +6,11 @@ import org.restlet.Restlet;
 import org.restlet.Router;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController2;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController2;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController2;
 import ua.com.fielden.platform.web.InfoResourceFactory;
 import ua.com.fielden.platform.web.ReferenceDependencyDownloadResourceFactory;
 import ua.com.fielden.platform.web.ReferenceDependencyListResourceFactory;
@@ -57,11 +57,11 @@ public final class SystemResources extends Application {
 	routerForResources.attach("/users/{username}/dependencies/{file-name}", new ReferenceDependencyDownloadResourceFactory(referenceDependeciensLocation, injector));
 	routerForResources.attach("/users/{username}/update", new ReferenceDependencyListResourceFactory(referenceDependeciensLocation, injector));
 
-	helper.register(routerForResources, IMainMenuItemController.class);
-	helper.register(routerForResources, IMainMenuItemInvisibilityController.class);
-	helper.register(routerForResources, IEntityMasterConfigController.class);
-	helper.register(routerForResources, IEntityLocatorConfigController.class);
-	helper.register(routerForResources, IEntityCentreConfigController.class);
+	helper.register(routerForResources, IMainMenuItemController2.class);
+	helper.register(routerForResources, IMainMenuItemInvisibilityController2.class);
+	helper.register(routerForResources, IEntityMasterConfigController2.class);
+	helper.register(routerForResources, IEntityLocatorConfigController2.class);
+	helper.register(routerForResources, IEntityCentreConfigController2.class);
 
 	// create resource guard and associate it with the resource router
 	final ResourceGuard guard = new ResourceGuard(getContext(), "Fleet Pilot", util, injector);

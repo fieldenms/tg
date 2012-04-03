@@ -13,9 +13,10 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 public abstract class AbstractPdfReportFactory implements IReportFactory {
@@ -25,13 +26,10 @@ public abstract class AbstractPdfReportFactory implements IReportFactory {
      * Provides default implementation of report generation in the form of pdf file binary representation
      */
     @Override
-    public byte[] createReport(final IQueryOrderedModel<EntityAggregates> query, final IEntityAggregatesDao aggregatesDao, final Map<String, Object> params) throws Exception {
-	for (final Map.Entry<String, Object> paramEntry : params.entrySet()) {
-	    query.setParamValue(paramEntry.getKey(), paramEntry.getValue());
-	}
+    public byte[] createReport(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final IEntityAggregatesDao2 aggregatesDao, final Map<String, Object> allParams) throws Exception {
 
 	// obtaining necessary for report data
-	final List<EntityAggregates> reportData = aggregatesDao.listAggregates(query, null);
+	final List<EntityAggregates> reportData = aggregatesDao.getAllEntities(query);
 
 	// compiling report template file
 	String reportTemplatePath = null;
@@ -45,7 +43,7 @@ public abstract class AbstractPdfReportFactory implements IReportFactory {
 
 	// filling report template with data
 	final JRRewindableDataSource jrs = new EntityAggregatesReportSource(reportData.toArray(new EntityAggregates[] {}), reportProps());
-	final JasperPrint print = JasperFillManager.fillReport(report, prepareReportParamsValues(params, report.getParameters()), jrs);
+	final JasperPrint print = JasperFillManager.fillReport(report, prepareReportParamsValues(allParams, report.getParameters()), jrs);
 
 	// exporting to PDF file as byte array
 	final JRPdfExporter exporter = new JRPdfExporter();

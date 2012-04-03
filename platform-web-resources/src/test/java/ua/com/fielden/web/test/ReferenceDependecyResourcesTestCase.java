@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.Router;
 
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.update.EChecksumMismatch;
 import ua.com.fielden.platform.update.IDownloadProgress;
 import ua.com.fielden.platform.update.IReferenceDependancyController;
@@ -23,9 +23,9 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 /**
  * Provides unit tests for {@link ReferenceDependencyDownloadResource} and {@link ReferenceDependencyListResource} web resources and {@link ReferenceDependancyController}
  * controller.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ReferenceDependecyResourcesTestCase extends WebBasedTestCase {
     private final static String REFERENCE_DEPENDENCIES_LOCATION = "src/test/resources/data-files/dependencies";
@@ -44,8 +44,8 @@ public class ReferenceDependecyResourcesTestCase extends WebBasedTestCase {
     @Override
     public synchronized Restlet getRoot() {
 	final Router router = new Router(getContext());
-	router.attach("/users/{username}/dependencies/{file-name}", new ReferenceDependencyDownloadResourceFactory(REFERENCE_DEPENDENCIES_LOCATION, DbDrivenTestCase.injector));
-	router.attach("/users/{username}/update", new ReferenceDependencyListResourceFactory(REFERENCE_DEPENDENCIES_LOCATION, DbDrivenTestCase.injector));
+	router.attach("/users/{username}/dependencies/{file-name}", new ReferenceDependencyDownloadResourceFactory(REFERENCE_DEPENDENCIES_LOCATION, DbDrivenTestCase2.injector));
+	router.attach("/users/{username}/update", new ReferenceDependencyListResourceFactory(REFERENCE_DEPENDENCIES_LOCATION, DbDrivenTestCase2.injector));
 	return router;
     }
 

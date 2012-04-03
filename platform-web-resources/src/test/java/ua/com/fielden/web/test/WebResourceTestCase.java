@@ -6,19 +6,21 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.equery.equery.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.Router;
 
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
-import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
@@ -33,7 +35,7 @@ import ua.com.fielden.web.rao.InspectedEntityRao;
  */
 public class WebResourceTestCase extends WebBasedTestCase {
     private final IInspectedEntityDao rao = new InspectedEntityRao(config.restClientUtil());
-    private final IInspectedEntityDao dao = DbDrivenTestCase.injector.getInstance(IInspectedEntityDao.class);
+    private final IInspectedEntityDao dao = DbDrivenTestCase2.injector.getInstance(IInspectedEntityDao.class);
 
     @Override
     protected String[] getDataSetPaths() {
@@ -44,7 +46,7 @@ public class WebResourceTestCase extends WebBasedTestCase {
     public synchronized Restlet getRoot() {
 	final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
+	final RouterHelper helper = new RouterHelper(DbDrivenTestCase2.injector, DbDrivenTestCase2.entityFactory);
 	helper.register(router, IInspectedEntityDao.class);
 
 	return router;
@@ -52,17 +54,17 @@ public class WebResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_pagination() {
-	final IPage<InspectedEntity> page = rao.getPage(1, 10);
+	final IPage2<InspectedEntity> page = rao.getPage(1, 10);
 	assertEquals("Incorrect page number", 1, page.no());
 	assertEquals("Incorrect number of pages", 5, page.numberOfPages());
 	assertEquals("Incorrect number of instances on the page.", 10, page.data().size());
 
-	final IPage<InspectedEntity> lastPage = page.last();
+	final IPage2<InspectedEntity> lastPage = page.last();
 	assertEquals("Incorrect last page number", 4, lastPage.no());
 	assertEquals("Incorrect number of pages", 5, lastPage.numberOfPages());
 	assertEquals("Incorrect number of instances on the last page.", 5, lastPage.data().size());
 
-	final IPage<InspectedEntity> firstPage = rao.firstPage(15);
+	final IPage2<InspectedEntity> firstPage = rao.firstPage(15);
 	assertEquals("Incorrect number of instances on the first page.", 15, firstPage.data().size());
 	assertEquals("Incorrect first page number", 0, firstPage.no());
 	assertEquals("Incorrect number of pages", 3, firstPage.numberOfPages());
@@ -71,14 +73,15 @@ public class WebResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_pagination_with_query() {
-	final IQueryOrderedModel<InspectedEntity> q = select(InspectedEntity.class).where().prop("intProperty").le().val(10).model();
+	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class).where().prop("intProperty").le().val(10).model();
 
-	final IPage<InspectedEntity> page = rao.getPage(q, 0, 5);
+
+	final IPage2<InspectedEntity> page = rao.getPage(from(q).build(), 0, 5);
 	assertEquals("Incorrect page number", 0, page.no());
 	assertEquals("Incorrect number of pages", 2, page.numberOfPages());
 	assertEquals("Incorrect number of instances on the page.", 5, page.data().size());
 
-	final IPage<InspectedEntity> nextPage = page.next();
+	final IPage2<InspectedEntity> nextPage = page.next();
 	assertEquals("Incorrect next page number", 1, nextPage.no());
 	assertEquals("Incorrect number of pages", 2, nextPage.numberOfPages());
 	assertEquals("Incorrect number of instances on the next page.", 4, nextPage.data().size());
@@ -86,17 +89,17 @@ public class WebResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_get_all_entities() {
-	final IQueryOrderedModel<InspectedEntity> q = select(InspectedEntity.class).model();
-	final List<InspectedEntity> list = rao.getEntities(q);
+	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class).model();
+	final List<InspectedEntity> list = rao.getAllEntities(from(q).build());
 	assertEquals("Incorrect count value.", 45, list.size());
     }
 
     @Test
     public void test_entity_query_export() {
-	final IQueryOrderedModel<InspectedEntity> q = select(InspectedEntity.class).where().prop("intProperty").le().val(10).model();
+	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class).where().prop("intProperty").le().val(10).model();
 
 	try {
-	    final byte[] bytes = rao.export(q, new String[] { "key", "dateProperty" }, new String[] { "this", "date" });
+	    final byte[] bytes = rao.export(from(q).build(), new String[] { "key", "dateProperty" }, new String[] { "this", "date" });
 	    assertNotNull("The export result should exist.", bytes);
 	    assertTrue("The export result should not be empty.", bytes.length > 0);
 	} catch (final IOException e) {
@@ -107,21 +110,23 @@ public class WebResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_entity_query_count() {
-	final IQueryOrderedModel<InspectedEntity> q = select(InspectedEntity.class).model();
+	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class).model();
 	assertEquals("Incorrect count value.", 45, rao.count(q));
     }
 
     @Test
     public void test_delete() {
 	rao.delete(rao.findById(1L));
-	final IQueryModel<InspectedEntity> model = select(InspectedEntity.class).model();
-	assertEquals("Incorrect count value.", 44, rao.count(model));
+	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class).model();
+	assertEquals("Incorrect count value.", 44, rao.count(q));
     }
 
     @Test
     public void test_delete_by_model() {
-	rao.delete(select(InspectedEntity.class).where().prop("id").in().val(1L, 2L).model(InspectedEntity.class));
-	assertEquals("Incorrect count value.", 43, rao.count(select(InspectedEntity.class).model(InspectedEntity.class)));
+	final EntityResultQueryModel<InspectedEntity> model = select(InspectedEntity.class).where().prop("id").in().values(1L, 2L).model();
+	rao.delete(model, Collections.<String, Object>emptyMap());
+	final EntityResultQueryModel<InspectedEntity> countModel = select(InspectedEntity.class).model();
+	assertEquals("Incorrect count value.", 43, rao.count(countModel));
     }
 
     @Test
@@ -163,6 +168,7 @@ public class WebResourceTestCase extends WebBasedTestCase {
     public void test_save_new() {
 	final InspectedEntity newEntity = config.entityFactory().newByKey(InspectedEntity.class, "key46");
 	newEntity.setDesc("new item");
+	newEntity.setMoneyProperty(Money.zero);
 	final InspectedEntity entity = rao.save(newEntity);
 	assertNotNull("ID has not been assigned.", entity.getId());
 

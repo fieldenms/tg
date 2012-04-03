@@ -9,13 +9,13 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 import com.google.inject.Inject;
 
 /**
- * RAO implementation of {@link IMainMenuItemController}.
+ * RAO implementation of {@link IMainMenuItemController2}.
  *
  * @author TG Team
  *
  */
 @EntityType(MainMenuItem.class)
-public class MainMenuItemControllerRao extends CommonEntityRao<MainMenuItem> implements IMainMenuItemController {
+public class MainMenuItemControllerRao extends CommonEntityRao<MainMenuItem> implements IMainMenuItemController2 {
 
     @Inject
     public MainMenuItemControllerRao(final RestClientUtil restUtil, final IEntityCentreConfigController eccController) {

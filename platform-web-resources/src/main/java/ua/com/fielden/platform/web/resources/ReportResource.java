@@ -14,7 +14,9 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.file_reports.IReport;
 
@@ -61,7 +63,7 @@ public class ReportResource extends Resource {
 	try {
 	    final List<?> list = restUtil.restoreList(envelope);
 	    final String reportName = (String) list.get(0);
-	    final IQueryOrderedModel<EntityAggregates> query = (IQueryOrderedModel<EntityAggregates>) list.get(1);
+	    final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query = (QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>) list.get(1);
 	    final Map<String, Object> params = (Map<String, Object>) list.get(2);
 
 	    getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(dao.getReport(reportName, query, params)), MediaType.APPLICATION_OCTET_STREAM));

@@ -2,14 +2,15 @@ package ua.com.fielden.platform.file_reports;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 
 /**
  * Factory for creating reports of some specific type.
  *
- * @author yura
+ * @author TG Team
  *
  */
 public interface IReportFactory {
@@ -24,5 +25,5 @@ public interface IReportFactory {
      * @return
      * @throws Exception
      */
-    byte[] createReport(IQueryOrderedModel<EntityAggregates> query, IEntityAggregatesDao aggregatesDao, Map<String, Object> params) throws Exception;
+    byte[] createReport(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, IEntityAggregatesDao2 aggregatesDao, final Map<String, Object> allParams) throws Exception;
 }

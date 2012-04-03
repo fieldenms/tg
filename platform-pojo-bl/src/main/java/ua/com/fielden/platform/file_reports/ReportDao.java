@@ -5,11 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.Deflater;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
 import ua.com.fielden.platform.dao.UsernameSetterMixin;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 
@@ -27,10 +28,10 @@ public class ReportDao implements IReport {
 
     private final Map<String, IReportFactory> reportFactories = new HashMap<String, IReportFactory>();
 
-    private final IEntityAggregatesDao aggregatesDao;
+    private final IEntityAggregatesDao2 aggregatesDao;
 
     @Inject
-    public ReportDao(final IEntityAggregatesDao aggregatesDao) {
+    public ReportDao(final IEntityAggregatesDao2 aggregatesDao) {
 	this.aggregatesDao = aggregatesDao;
     }
 
@@ -47,23 +48,6 @@ public class ReportDao implements IReport {
     }
 
     @Override
-    public byte[] getReport(final String reportType, final IQueryOrderedModel<EntityAggregates> query, final Map<String, Object> params) throws Exception {
-	final IReportFactory reportFactory = reportFactories.get(reportType);
-	if (reportFactory == null) {
-	    return null;
-	} else {
-	    // zipping pdf report
-	    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-	    final GZipOutputStreamEx zipperStream = new GZipOutputStreamEx(outputStream, Deflater.BEST_COMPRESSION);
-	    final byte[] pdfData = reportFactory.createReport(query, aggregatesDao, params);
-	    zipperStream.write(pdfData);
-	    zipperStream.close();
-
-	    return outputStream.toByteArray();
-	}
-    }
-
-    @Override
     public final void setUsername(final String username) {
 	try {
 	    UsernameSetterMixin.setUsername(username, this, Finder.findFieldByName(getClass(), "username"));
@@ -75,6 +59,24 @@ public class ReportDao implements IReport {
     @Override
     public final String getUsername() {
 	return username;
+    }
+
+    @Override
+    public byte[] getReport(final String reportType, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final Map<String, Object> allParams) throws Exception {
+	final IReportFactory reportFactory = reportFactories.get(reportType);
+	if (reportFactory == null) {
+	    return null;
+	} else {
+	    // zipping pdf report
+	    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+	    final GZipOutputStreamEx zipperStream = new GZipOutputStreamEx(outputStream, Deflater.BEST_COMPRESSION);
+	    final byte[] pdfData = reportFactory.createReport(query, aggregatesDao, allParams);
+	    zipperStream.write(pdfData);
+	    zipperStream.close();
+
+	    return outputStream.toByteArray();
+	}
+
     }
 
 

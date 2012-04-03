@@ -15,7 +15,7 @@ import org.restlet.resource.Variant;
 /**
  * Provides information about the application.
  *
- * @author 01es
+ * @author TG Team
  */
 public class InfoResource extends Resource {
     // the following properties are determined from request

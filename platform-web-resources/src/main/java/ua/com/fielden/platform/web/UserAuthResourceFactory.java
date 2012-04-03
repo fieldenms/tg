@@ -5,7 +5,7 @@ import org.restlet.data.Method;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserController2;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.UserAuthResource;
 
@@ -42,12 +42,12 @@ public class UserAuthResourceFactory extends Restlet {
      * @param response
      */
     protected void handleGet(final Request request, final Response response){
-	final IUserController controller = getController();
+	final IUserController2 controller = getController();
 	new UserAuthResource(controller, restUtil, getContext(), request, response).handleGet();
     }
 
-    protected IUserController getController() {
-	return injector.getInstance(IUserController.class);
+    protected IUserController2 getController() {
+	return injector.getInstance(IUserController2.class);
     }
 
     protected RestServerUtil getRestUtil() {

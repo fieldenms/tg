@@ -9,13 +9,12 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Represents a web resource mapped to URI /query/EntityAggregates. It handles POST requests to entity aggregates.
@@ -34,7 +33,7 @@ public class EntityAggregatesQueryResource extends Resource {
     private final boolean shouldReturnCount;
     private final boolean shouldReturnAll;
 
-    private final IEntityAggregatesDao dao;
+    private final IEntityAggregatesDao2 dao;
     private final RestServerUtil restUtil;
 
     /**
@@ -47,7 +46,7 @@ public class EntityAggregatesQueryResource extends Resource {
      * @param request
      * @param response
      */
-    public EntityAggregatesQueryResource(final IEntityAggregatesDao dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public EntityAggregatesQueryResource(final IEntityAggregatesDao2 dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
@@ -108,20 +107,19 @@ public class EntityAggregatesQueryResource extends Resource {
     }
 
     /**
-     * Handles POST request resulting from RAO call. It is expected that envelope is a serialised representation of {@link IQueryOrderedModel}.
+     * Handles POST request resulting from RAO call. It is expected that envelope is a serialised representation of {@link AggregatesQueryExecutionModel}.
      */
     @Override
     public void acceptRepresentation(final Representation envelope) throws ResourceException {
 	try {
-	    final Pair<IQueryOrderedModel<EntityAggregates>, fetch> queryAndFetch = restUtil.restoreQueryModel(envelope, EntityAggregates.class);
+	    final  QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> queryAndFetch = (QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>) restUtil.restoreQueryExecutionModel(envelope);
 	    if (shouldReturnCount) {
-		// TODO provide proper implementation after splitting IEntityDao into IEntityReadDao and IEntityWriteDao.
-		final int count = 0;// dao.count(query);
+		final int count = dao.count(queryAndFetch.getQueryModel(), queryAndFetch.getParamValues());
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.COUNT, count + "");
 	    } else if (shouldReturnAll) {
-		getResponse().setEntity(restUtil.listRepresentation(dao.listAggregates(queryAndFetch.getKey(), queryAndFetch.getValue())));
+		getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(queryAndFetch)));
 	    } else {
-		final IPage<EntityAggregates> page = dao.getPage(queryAndFetch.getKey(), queryAndFetch.getValue(), pageNo, pageCount, pageCapacity);
+		final IPage2<EntityAggregates> page = dao.getPage(queryAndFetch, pageNo, pageCount, pageCapacity);
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
 		getResponse().setEntity(restUtil.listRepresentation(page.data()));

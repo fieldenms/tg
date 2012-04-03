@@ -9,14 +9,14 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.roa.HttpHeaders;
 
 /**
- * EntityTypeResource represents a web resource mapped to URI /entity-alias-type. It provides a base implementation for handling the following {@link IEntityDao} methods:
+ * EntityTypeResource represents a web resource mapped to URI /entity-alias-type. It provides a base implementation for handling the following {@link IEntityDao2} methods:
  * <ul>
  * <li>findAll, firstPage -- GET request; should limit the return result to some sane number... such as 10-25
  * <li>getPage -- GET request; expects parameters "page-capacity" and "page-no".
@@ -26,17 +26,17 @@ import ua.com.fielden.platform.roa.HttpHeaders;
  *
  * @author TG Team
  */
-public class EntityTypeResource<T extends AbstractEntity> extends Resource {
+public class EntityTypeResource<T extends AbstractEntity<?>> extends Resource {
     // the following properties are determined from request
     private final String username;
     private final int pageCapacity;
     private final int pageNo;
 
-    private final IEntityDao<T> dao;
+    private final IEntityDao2<T> dao;
     private final EntityFactory factory;
     private final RestServerUtil restUtil;
 
-    public IEntityDao<T> getDao() {
+    public IEntityDao2<T> getDao() {
         return dao;
     }
 
@@ -82,7 +82,7 @@ public class EntityTypeResource<T extends AbstractEntity> extends Resource {
      * @param request
      * @param response
      */
-    public EntityTypeResource(final IEntityDao<T> dao, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public EntityTypeResource(final IEntityDao2<T> dao, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
@@ -130,7 +130,7 @@ public class EntityTypeResource<T extends AbstractEntity> extends Resource {
     ///////////////////////////////////////////////////////////////////
 
     /**
-     * Handles GET requests resulting from RAO call to either {@link IEntityDao#findAll()}, {@link IEntityDao#firstPage(int)} or {@link IEntityDao#getPage(int, int)}.
+     * Handles GET requests resulting from RAO call to {@link IEntityDao2#getPage(int, int)}.
      */
     @Override
     public Representation represent(final Variant variant) {
@@ -140,7 +140,7 @@ public class EntityTypeResource<T extends AbstractEntity> extends Resource {
 	}
 
 	try {
-	    final IPage<T> page = dao.getPage(pageNo, pageCapacity);
+	    final IPage2<T> page = dao.getPage(pageNo, pageCapacity);
 	    restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
 	    restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
 	    return restUtil.listRepresentation(page.data());

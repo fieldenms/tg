@@ -10,21 +10,21 @@ import org.restlet.Component;
 import org.restlet.data.Protocol;
 
 import ua.com.fielden.platform.rao.RestClientUtil;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 
 /**
  * This is a base class for web-driven testing of resources and RAOs. It is responsible for auto-configuration of a web-server listening on port 9000.
  * <p>
- * Descendants of this class should implement method {@link #getDataSetPaths()} similarly as for {@link DbDrivenTestCase}.
+ * Descendants of this class should implement method {@link #getDataSetPaths()} similarly as for {@link DbDrivenTestCase2}.
  * <p>
  * <code>WebBasedTestCase<code> is also a restlet application. The web resources that need to be tested or used for testing should be bound by overriding method {@link Application#getRoot()}.
  * <p>
  * An instance of pre-configured {@link RestClientUtil} is provided for the use by descendants requiring instantiation of RAO classes.
  * <p>
  * Effectively each web-drive test case is a little web-application.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class WebBasedTestCase extends Application {
     protected static final Component component = new Component();
@@ -38,7 +38,7 @@ public abstract class WebBasedTestCase extends Application {
 	}
     }
 
-    protected DbDrivenTestCase dbDrivenTestCase = new DbDrivenTestCase() {
+    protected DbDrivenTestCase2 dbDrivenTestCase = new DbDrivenTestCase2() {
 	@Override
 	protected String[] getDataSetPathsForInsert() {
 	    return WebBasedTestCase.this.getDataSetPaths();
@@ -56,7 +56,7 @@ public abstract class WebBasedTestCase extends Application {
 	    final String configClassName = testProps.getProperty("web-config");
 	    final Class<IWebDrivenTestCaseConfiguration> type = (Class<IWebDrivenTestCaseConfiguration>) Class.forName(configClassName);
 	    final IWebDrivenTestCaseConfiguration webConf = type.newInstance();
-	    webConf.setDbDrivenTestConfiguration(DbDrivenTestCase.config);
+	    webConf.setDbDrivenTestConfiguration(DbDrivenTestCase2.config);
 	    return webConf;
 	} catch (final Exception e) {
 	    e.printStackTrace();
@@ -94,7 +94,7 @@ public abstract class WebBasedTestCase extends Application {
     /**
      * This method should be implemented in descendants in order to provide list of paths to datasets, which are to be used with the given test case (via invoking method
      * getDataSet()).
-     * 
+     *
      * @return
      */
     protected abstract String[] getDataSetPaths();

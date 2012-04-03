@@ -29,6 +29,7 @@ import org.joda.time.Interval;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager.AnalysisDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManagerAndEnhancer;
@@ -76,40 +77,24 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.LogicalOperator;
-import ua.com.fielden.platform.equery.Ordering;
-import ua.com.fielden.platform.equery.QueryModel;
-import ua.com.fielden.platform.equery.QueryParameter;
-import ua.com.fielden.platform.equery.QueryTokens;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
+import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.Functions;
+import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
+import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.equery.lifecycle.EntityPropertyLifecycle;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.equery.lifecycle.ValuedInterval;
-import ua.com.fielden.platform.equery.tokens.conditions.BetweenCondition;
-import ua.com.fielden.platform.equery.tokens.conditions.ComparisonOperation;
-import ua.com.fielden.platform.equery.tokens.conditions.ComparisonWithoutArgumentOperation;
-import ua.com.fielden.platform.equery.tokens.conditions.ConditionWithoutArgument;
-import ua.com.fielden.platform.equery.tokens.conditions.ExistsCondition;
-import ua.com.fielden.platform.equery.tokens.conditions.GroupCondition;
-import ua.com.fielden.platform.equery.tokens.conditions.ImplicitOrGroupCondition;
-import ua.com.fielden.platform.equery.tokens.conditions.ImplicitOrInWithModelsCondition;
-import ua.com.fielden.platform.equery.tokens.conditions.InCondition;
-import ua.com.fielden.platform.equery.tokens.conditions.PropertyToPropertyCondition;
-import ua.com.fielden.platform.equery.tokens.main.ConditionsGroup;
-import ua.com.fielden.platform.equery.tokens.main.GroupBy;
-import ua.com.fielden.platform.equery.tokens.main.JoinConditions;
-import ua.com.fielden.platform.equery.tokens.main.OrderBy;
-import ua.com.fielden.platform.equery.tokens.main.QuerySource;
-import ua.com.fielden.platform.equery.tokens.main.Select;
-import ua.com.fielden.platform.equery.tokens.properties.AbstractQueryProperty;
-import ua.com.fielden.platform.equery.tokens.properties.GroupByProperty;
-import ua.com.fielden.platform.equery.tokens.properties.OrderByProperty;
-import ua.com.fielden.platform.equery.tokens.properties.SearchProperty;
-import ua.com.fielden.platform.equery.tokens.properties.SelectCalculatedProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
@@ -127,8 +112,6 @@ import ua.com.fielden.platform.serialisation.impl.serialisers.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.impl.serialisers.IntervalSerializer;
 import ua.com.fielden.platform.serialisation.impl.serialisers.MoneySerialiser;
 import ua.com.fielden.platform.serialisation.impl.serialisers.ProperyDescriptorSerialiser;
-import ua.com.fielden.platform.serialisation.impl.serialisers.QueryModelSerialiser;
-import ua.com.fielden.platform.serialisation.impl.serialisers.QueryTokensSerialiser;
 import ua.com.fielden.platform.serialisation.impl.serialisers.References;
 import ua.com.fielden.platform.serialisation.impl.serialisers.ResultSerialiser;
 import ua.com.fielden.platform.serialisation.impl.serialisers.SortKeySerialiser;
@@ -196,9 +179,7 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer dateSerialiser;
     private final Serializer pdSerialiser;
     private final Map<Class<AbstractEntity>, Serializer> entitySerialisers = Collections.synchronizedMap(new HashMap<Class<AbstractEntity>, Serializer>(600));
-    private final Serializer querySerialiser;
     private final Serializer classSerialiser;
-    private final Serializer queryTokensSerialiser;
     private final Serializer dateTimeSerialiser;
     private final Serializer bigIntegerSerialiser;
     private final Serializer intervalSerializer;
@@ -243,9 +224,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	dateSerialiser = new DateSerializer();
 	dateTimeSerialiser = new DateTimeSerializer();
 	pdSerialiser = new ProperyDescriptorSerialiser(factory);
-	querySerialiser = new QueryModelSerialiser(this);
 	classSerialiser = new ClassSerialiser(this);
-	queryTokensSerialiser = new QueryTokensSerialiser(this);
 	intervalSerializer = new IntervalSerializer();
 	colorSerializer = new ColorSerializer();
 	sortKeySerialiser = new SortKeySerialiser(this);
@@ -300,46 +279,32 @@ public class TgKryo extends Kryo implements ISerialiser {
 	register(ISecurityToken.class);
 	register(Attachment.class);
 	register(EntityAttachmentAssociation.class);
-	register(EntityAggregates.class);
 	// life cycle classes
 	register(ICategorizer.class);
 	register(LifecycleModel.class);
 	register(EntityPropertyLifecycle.class);
 	register(ValuedInterval.class);
 	register(Interval.class);
+
 	// entity query classes
+	register(EntityAggregates.class);
+	register(QueryModel.class);
+	register(EntityResultQueryModel.class);
+	register(AggregatedResultQueryModel.class);
+	register(ExpressionModel.class);
+	register(PrimitiveResultQueryModel.class);
+	register(QueryExecutionModel.class);
 	register(fetch.class);
 	register(fetchAll.class);
-	register(IQueryOrderedModel.class);
-	register(IQueryModel.class);
-	register(QueryModel.class);
+	register(OrderingModel.class);
+	register(TokenCategory.class);
 	register(QueryTokens.class);
-	register(AbstractQueryProperty.EntityProperty.class);
-	register(AbstractQueryProperty.ExpressionString.class);
-	register(Select.class);
-	register(SelectCalculatedProperty.class);
-	register(ConditionsGroup.class);
-	register(GroupCondition.class);
-	register(SearchProperty.class);
 	register(LogicalOperator.class);
-	register(ComparisonOperation.class);
-	register(GroupBy.class);
-	register(GroupByProperty.class);
-	register(OrderBy.class);
-	register(OrderByProperty.class);
-	register(Ordering.class);
-	register(JoinConditions.class);
-	register(QuerySource.class);
+	register(ComparisonOperator.class);
+	register(ArithmeticalOperator.class);
+	register(Functions.class);
+
 	register(Class.class);
-	register(BetweenCondition.class);
-	register(ConditionWithoutArgument.class);
-	register(ComparisonWithoutArgumentOperation.class);
-	register(ImplicitOrGroupCondition.class);
-	register(QueryParameter.class);
-	register(ImplicitOrInWithModelsCondition.class);
-	register(InCondition.class);
-	register(PropertyToPropertyCondition.class);
-	register(ExistsCondition.class);
 	// "domain tree" serialisers
 	registerDomainTreeTypes();
 	// register menu and configuration related
@@ -398,7 +363,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	for (final Class<?> type : types) {
 	    if (EntityUtils.isEnum(type)) {
 		final List<Class<?>> enumTypes = EntityUtils.extractTypes((Class<Enum>)type);
-		for (final Class klass : enumTypes) {
+		for (final Class<?> klass : enumTypes) {
 		    theTypes.add(klass);
 		}
 	    } else if (!AbstractEntity.class.equals(type)) {
@@ -463,10 +428,6 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return booleanSerialiser;
 	} else if (DateTime.class.isAssignableFrom(type)) {
 	    return dateTimeSerialiser;
-	} else if (IQueryOrderedModel.class.isAssignableFrom(type)) {
-	    return querySerialiser;
-	} else if (QueryTokens.class.isAssignableFrom(type)) {
-	    return queryTokensSerialiser;
 	} else if (Class.class.isAssignableFrom(type)) {
 	    return classSerialiser;
 	} else if (Interval.class.isAssignableFrom(type)) {

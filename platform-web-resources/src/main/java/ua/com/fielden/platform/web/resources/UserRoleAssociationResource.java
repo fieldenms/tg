@@ -14,9 +14,9 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao2.IUserRoleDao2;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserController2;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
@@ -28,8 +28,8 @@ import ua.com.fielden.platform.security.user.UserRole;
 public class UserRoleAssociationResource extends Resource {
     private final String username; // TODO to be used for auditing purposes
 
-    private final IUserController controller;
-    private final IUserRoleDao userRoleDao;
+    private final IUserController2 controller;
+    private final IUserRoleDao2 userRoleDao;
     private final RestServerUtil restUtil;
 
     private final Long userIdToHaveRolesUpdated;
@@ -56,7 +56,7 @@ public class UserRoleAssociationResource extends Resource {
     /**
      * Principle constructor.
      */
-    public UserRoleAssociationResource(final IUserController controller, final IUserRoleDao userRoleDao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public UserRoleAssociationResource(final IUserController2 controller, final IUserRoleDao2 userRoleDao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.controller = controller;

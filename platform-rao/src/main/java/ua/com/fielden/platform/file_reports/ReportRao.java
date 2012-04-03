@@ -14,8 +14,9 @@ import org.restlet.data.Response;
 import org.restlet.data.Status;
 import org.restlet.resource.Representation;
 
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.rao.RestClientUtil;
 
 /**
@@ -33,7 +34,7 @@ public class ReportRao implements IReport {
     }
 
     @Override
-    public byte[] getReport(final String reportName, final IQueryOrderedModel<EntityAggregates> query, final Map<String, Object> params) throws IOException {
+    public byte[] getReport(final String reportName, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final Map<String, Object> params) throws IOException {
 	// create request envelope containing Entity Query
 	final List<Object> requestContent = new ArrayList<Object>();
 	requestContent.add(reportName);

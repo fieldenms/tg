@@ -4,6 +4,8 @@ import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.dao2.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
@@ -39,11 +41,20 @@ public class EntityQueryUtils {
 	return new OrderingItem(new Tokens());
     }
 
-    public static <T extends AbstractEntity<?>> Builder<T> from(final EntityResultQueryModel<T> queryModel) {
+    public static <T extends AbstractEntity<?>> Builder<T, EntityResultQueryModel<T>> from(final EntityResultQueryModel<T> queryModel) {
+	return QueryExecutionModel.<T>from(queryModel);
+    }
+
+    public static Builder<EntityAggregates, AggregatedResultQueryModel> from(final AggregatedResultQueryModel queryModel) {
 	return QueryExecutionModel.from(queryModel);
     }
 
-    public static Builder<EntityAggregates> from(final AggregatedResultQueryModel queryModel) {
-	return QueryExecutionModel.from(queryModel);
+    public static <T extends AbstractEntity<?>> fetch<T> fetch(final Class<T> entityType) {
+	return new fetch<T>(entityType);
     }
+
+    public static <T extends AbstractEntity<?>> fetchAll<T> fetchAll(final Class<T> entityType) {
+	return new fetchAll<T>(entityType);
+    }
+
 }

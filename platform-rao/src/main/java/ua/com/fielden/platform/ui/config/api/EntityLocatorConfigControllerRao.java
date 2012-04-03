@@ -9,13 +9,13 @@ import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import com.google.inject.Inject;
 
 /**
- * RAO implementation of {@link IEntityLocatorConfigController}.
+ * RAO implementation of {@link IEntityLocatorConfigController2}.
  *
  * @author TG Team
  *
  */
 @EntityType(EntityLocatorConfig.class)
-public class EntityLocatorConfigControllerRao extends CommonEntityRao<EntityLocatorConfig> implements IEntityLocatorConfigController {
+public class EntityLocatorConfigControllerRao extends CommonEntityRao<EntityLocatorConfig> implements IEntityLocatorConfigController2 {
 
     @Inject
     public EntityLocatorConfigControllerRao(final RestClientUtil restUtil) {

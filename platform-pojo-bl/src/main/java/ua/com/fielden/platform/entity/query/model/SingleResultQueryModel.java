@@ -8,11 +8,15 @@ import ua.com.fielden.platform.utils.Pair;
 
 public abstract class SingleResultQueryModel<T extends AbstractEntity<?>> extends QueryModel<T> {
 
-    SingleResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
+    protected SingleResultQueryModel() {
+
+    }
+
+    protected SingleResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
 	super(tokens);
     }
 
-    SingleResultQueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType) {
+    protected SingleResultQueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType) {
 	super(tokens, resultType);
     }
 }

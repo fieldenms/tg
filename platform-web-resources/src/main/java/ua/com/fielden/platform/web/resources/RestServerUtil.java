@@ -14,15 +14,13 @@ import org.restlet.data.Response;
 import org.restlet.resource.InputRepresentation;
 import org.restlet.resource.Representation;
 
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.snappy.SnappyQuery;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This is a convenience class providing some common routines used in the
@@ -183,18 +181,15 @@ public class RestServerUtil {
     }
 
     /**
-     * Converts representation of IQueryOrderedModel to an actual instance.
+     * Converts representation of QueryExecutionModel to an actual instance.
      *
      * @param <T>
-     * @param <K>
-     * @param xml
-     * @param type
+     * @param representation
      * @return
      * @throws Exception
      */
-    public <T extends AbstractEntity> Pair<IQueryOrderedModel<T>, fetch> restoreQueryModel(final Representation representation, final Class<T> type)
-    throws Exception {
-	return serialiser.deserialise(representation.getStream(), Pair.class);
+    public QueryExecutionModel<?, ?> restoreQueryExecutionModel(final Representation representation) throws Exception {
+	return serialiser.deserialise(representation.getStream(), QueryExecutionModel.class);
     }
 
     public SnappyQuery restoreSnappyQuery(final Representation representation) throws Exception {

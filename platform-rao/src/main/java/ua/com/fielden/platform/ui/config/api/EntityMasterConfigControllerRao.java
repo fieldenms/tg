@@ -10,13 +10,13 @@ import com.google.inject.Inject;
 
 /**
  *
- * RAO implementation of {@link IEntityMasterConfigController}.
+ * RAO implementation of {@link IEntityMasterConfigController2}.
  *
  * @author TG Team
  *
  */
 @EntityType(EntityMasterConfig.class)
-public class EntityMasterConfigControllerRao extends CommonEntityRao<EntityMasterConfig> implements IEntityMasterConfigController {
+public class EntityMasterConfigControllerRao extends CommonEntityRao<EntityMasterConfig> implements IEntityMasterConfigController2 {
 
     @Inject
     public EntityMasterConfigControllerRao(final RestClientUtil restUtil) {

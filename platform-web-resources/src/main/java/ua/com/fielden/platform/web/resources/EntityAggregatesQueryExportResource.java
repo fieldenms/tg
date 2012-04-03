@@ -13,10 +13,10 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 
 /**
  * Represents a web resource mapped to URI /export/EntityAggregates. It handles POST requests to entity aggregates.
@@ -29,7 +29,7 @@ public class EntityAggregatesQueryExportResource extends Resource {
     // the following properties are determined from request
     private final String username;
 
-    private final IEntityAggregatesDao dao;
+    private final IEntityAggregatesDao2 dao;
     private final RestServerUtil restUtil;
 
     /**
@@ -42,7 +42,7 @@ public class EntityAggregatesQueryExportResource extends Resource {
      * @param request
      * @param response
      */
- public EntityAggregatesQueryExportResource(final IEntityAggregatesDao dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+ public EntityAggregatesQueryExportResource(final IEntityAggregatesDao2 dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
@@ -65,18 +65,17 @@ public class EntityAggregatesQueryExportResource extends Resource {
     }
 
     /**
-     * Handles POST request resulting from RAO call. It is expected that envelope is a serialised representation of a list containing {@link IQueryOrderedModel}, a list of property
+     * Handles POST request resulting from RAO call. It is expected that envelope is a serialised representation of a list containing {@link AggregatesQueryExecutionModel}, a list of property
      * names and a list of corresponding titles.
      */
     @Override
     public void acceptRepresentation(final Representation envelope) throws ResourceException {
 	try {
 	    final List<?> list = restUtil.restoreList(envelope);
-	    final IQueryOrderedModel<EntityAggregates> query = (IQueryOrderedModel<EntityAggregates>) list.get(0);
-	    final fetch<EntityAggregates> fetchModel = (fetch<EntityAggregates>) list.get(1);
-	    final String[] propertyNames = (String[]) list.get(2);
-	    final String[] propertyTitles = (String[]) list.get(3);
-	    getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(dao.export(query, fetchModel, propertyNames, propertyTitles)), MediaType.APPLICATION_OCTET_STREAM));
+	    final  QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query = (QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>) list.get(0);
+	    final String[] propertyNames = (String[]) list.get(1);
+	    final String[] propertyTitles = (String[]) list.get(2);
+	    getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(dao.export(query, propertyNames, propertyTitles)), MediaType.APPLICATION_OCTET_STREAM));
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
 	    getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));

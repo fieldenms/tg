@@ -10,6 +10,7 @@ import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.security.user.User;
@@ -64,13 +65,13 @@ public class StubDaoFactory implements IDaoFactory2 {
 		public IPage2<TopLevelEntity> getPage(final int pageNo, final int pageCapacity) {return null;}
 
 		@Override
-		public IPage2<TopLevelEntity> firstPage(final QueryExecutionModel<TopLevelEntity> query, final int pageCapacity) {return null;}
+		public IPage2<TopLevelEntity> firstPage(final QueryExecutionModel<TopLevelEntity, ?> query, final int pageCapacity) {return null;}
 
 		@Override
-		public IPage2<TopLevelEntity> getPage(final QueryExecutionModel<TopLevelEntity> query, final int pageNo, final int pageCapacity) {return null;}
+		public IPage2<TopLevelEntity> getPage(final QueryExecutionModel<TopLevelEntity, ?> query, final int pageNo, final int pageCapacity) {return null;}
 
 		@Override
-		public IPage2<TopLevelEntity> getPage(final QueryExecutionModel<TopLevelEntity> query, final int pageNo, final int pageCount, final int pageCapacity) {return null;}
+		public IPage2<TopLevelEntity> getPage(final QueryExecutionModel<TopLevelEntity, ?> query, final int pageNo, final int pageCount, final int pageCapacity) {return null;}
 
 		@Override
 		public TopLevelEntity save(final TopLevelEntity entity) {return null;}
@@ -94,7 +95,7 @@ public class StubDaoFactory implements IDaoFactory2 {
 		public boolean entityWithKeyExists(final Object... keyValues) {return false;}
 
 		@Override
-		public TopLevelEntity getEntity(final QueryExecutionModel<TopLevelEntity> model) {return null;}
+		public TopLevelEntity getEntity(final QueryExecutionModel<TopLevelEntity, ?> model) {return null;}
 
 		@Override
 		public int count(final EntityResultQueryModel<TopLevelEntity> model, final Map<String, Object> paramValues) {return 0;}
@@ -103,13 +104,13 @@ public class StubDaoFactory implements IDaoFactory2 {
 		public int count(final EntityResultQueryModel<TopLevelEntity> model) {return 0;}
 
 		@Override
-		public List<TopLevelEntity> getAllEntities(final QueryExecutionModel<TopLevelEntity> query) {return null;}
+		public List<TopLevelEntity> getAllEntities(final QueryExecutionModel<TopLevelEntity, ?> query) {return null;}
 
 		@Override
-		public byte[] export(final QueryExecutionModel<TopLevelEntity> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {return null;}
+		public byte[] export(final QueryExecutionModel<TopLevelEntity, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {return null;}
 
 		@Override
-		public IPage2<TopLevelEntity> firstPage(final QueryExecutionModel<TopLevelEntity> model, final QueryExecutionModel<EntityAggregates> summaryModel, final int pageCapacity) { return null;}
+		public IPage2<TopLevelEntity> firstPage(final QueryExecutionModel<TopLevelEntity, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) { return null;}
 	    };
 	}
 	return null;

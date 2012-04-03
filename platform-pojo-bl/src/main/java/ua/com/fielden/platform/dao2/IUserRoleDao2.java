@@ -14,4 +14,8 @@ public interface IUserRoleDao2 extends IEntityDao2<UserRole> {
 
     /** Returns all available {@link UserRole}s. */
     List<UserRole> findAll();
+
+    /** Returns user roles matching provided IDs. */
+    List<UserRole> findByIds(Long... ids);
+
 }

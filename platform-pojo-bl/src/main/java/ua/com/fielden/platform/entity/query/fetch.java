@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.query;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +12,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 public class fetch<T extends AbstractEntity<?>> {
     private final Class<T> entityType;
     private final Map<String, fetch<? extends AbstractEntity<?>>> fetchModels = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
-    private final List<String> fetchedProps = new ArrayList<String>();
 
     /**
      * Used mainly for serialisation.
@@ -84,5 +82,41 @@ public class fetch<T extends AbstractEntity<?>> {
 	}
 
 	return sb.toString();
+    }
+
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + ((entityType == null) ? 0 : entityType.hashCode());
+	result = prime * result + ((fetchModels == null) ? 0 : fetchModels.hashCode());
+	return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	if (this == obj) {
+	    return true;
+	}
+	if (!(obj instanceof fetch)) {
+	    return false;
+	}
+
+	final fetch that = (fetch) obj;
+	if (entityType == null) {
+	    if (that.entityType != null) {
+		return false;
+	    }
+	} else if (!entityType.equals(that.entityType)) {
+	    return false;
+	}
+	if (fetchModels == null) {
+	    if (that.fetchModels != null) {
+		return false;
+	    }
+	} else if (!fetchModels.equals(that.fetchModels)) {
+	    return false;
+	}
+	return true;
     }
 }

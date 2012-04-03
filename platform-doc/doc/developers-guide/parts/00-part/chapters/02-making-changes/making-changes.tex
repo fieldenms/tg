@@ -13,14 +13,14 @@
 	This module represents the very core of the application where the business domain model is defined.   
     \item[\textbf{Server Modules.}] Include two modules -- \texttt{coolapp-dao} and \texttt{coolapp-web-server} -- that together define application web server.	
       \begin{itemize}
-	\item \texttt{coolapp-dao} 
-	\item \texttt{coolapp-web-server}
+	\item \texttt{coolapp-dao} -- contains Data Access Objects (DAO), which are the database-aware implementations of controllers defined as part of the \texttt{coolapp-pojo-bl} module; designed to support domain driven unit testing, which makes it a natural choice for data-oriented unit tests.
+	\item \texttt{coolapp-web-server} -- represents an entry point for the server-side application; has a transitive dependecy to module \texttt{coolapp-pojo-bl} via a direct dependency to \texttt{coolapp-dao}; registers web resources associated with domain entities, which bind together controllers with their DAO implementations.
       \end{itemize}
     \item[\textbf{Client Modules.}] Include three modules~--~\texttt{coolapp-rao}, \texttt{coolapp-ui} and \texttt{coolapp-web-client}~--~that together define application web client.
       \begin{itemize}
-	\item \texttt{coolapp-rao} 
-	\item \texttt{coolapp-ui}
-	\item \texttt{coolapp-web-client}
+	\item \texttt{coolapp-rao} -- contains (web) Resource Access Objects (RAO), which are HTTP-aware implementations of controllers defined as part of the \texttt{coolapp-pojo-bl} module, which is its only dependency.
+	\item \texttt{coolapp-ui} -- contains User Interface elements such as frames, panels, menu items.
+	\item \texttt{coolapp-web-client} -- represents an entry point for the client-side application; has a transitive dependecy to module \texttt{coolapp-pojo-bl} via a direct dependency to \texttt{coolapp-rao} and \texttt{coolapp-ui}; binds together controllers defined in \texttt{coolapp-pojo-bl} with their RAO implementation, which ensures resolution of contract dependencies in \texttt{coolapp-ui}.
       \end{itemize}
    \end{description}
 

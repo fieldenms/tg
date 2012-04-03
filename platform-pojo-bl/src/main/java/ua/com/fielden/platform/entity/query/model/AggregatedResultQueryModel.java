@@ -8,6 +8,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class AggregatedResultQueryModel extends QueryModel<EntityAggregates> {
 
+    protected AggregatedResultQueryModel() {}
+
     public AggregatedResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
 	super(tokens, EntityAggregates.class);
     }

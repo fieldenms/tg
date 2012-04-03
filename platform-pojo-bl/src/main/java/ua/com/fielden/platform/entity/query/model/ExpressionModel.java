@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
@@ -12,15 +13,12 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class ExpressionModel {
-    private final List<Pair<TokenCategory, Object>> tokens;
+    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
 
-    @Override
-    public String toString() {
-        return tokens.toString();
-    }
+    protected ExpressionModel() {}
 
     public ExpressionModel(final List<Pair<TokenCategory, Object>> tokens) {
-	this.tokens = tokens;
+	this.tokens.addAll(tokens);
     }
 
     @Override
@@ -42,5 +40,10 @@ public class ExpressionModel {
 
     public List<Pair<TokenCategory, Object>> getTokens() {
         return tokens;
+    }
+
+    @Override
+    public String toString() {
+	return tokens.toString();
     }
 }

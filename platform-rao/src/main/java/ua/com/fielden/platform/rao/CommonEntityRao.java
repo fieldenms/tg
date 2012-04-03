@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.rao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.lang.StringUtils;
@@ -14,15 +18,16 @@ import org.restlet.data.Response;
 import org.restlet.data.Status;
 import org.restlet.resource.Representation;
 
-import ua.com.fielden.platform.dao.AbstractEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.AbstractEntityDao2;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.fetchAll;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.Pair;
@@ -37,7 +42,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @param <T>
  * @param <K>
  */
-public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao<T> {
+public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntityDao2<T> {
 
     protected final RestClientUtil restUtil;
 
@@ -80,7 +85,7 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
      * Sends a GET request.
      */
     @Override
-    public IPage<T> firstPage(final int pageCapacity) {
+    public IPage2<T> firstPage(final int pageCapacity) {
 	return new EntityQueryPage(0, pageCapacity);
     }
 
@@ -88,31 +93,21 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
      * Sends a POST request with {@link IQueryOrderedModel} in the envelope.
      */
     @Override
-    public IPage<T> firstPage(final IQueryOrderedModel<T> query, final int pageCapacity) {
-	return firstPage(query, new fetchAll(getEntityType()), pageCapacity);
-    }
-
-    @Override
-    public IPage<T> firstPage(final IQueryOrderedModel<T> model, final fetch<T> fetchModel, final int pageCapacity) {
-	return new EntityQueryPage(model, fetchModel, new PageInfo(0, 0, pageCapacity));
+    public IPage2<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
+	return new EntityQueryPage(model, new PageInfo(0, 0, pageCapacity));
     }
 
     /**
      * Sends two POST request with {@link IQueryOrderedModel} for data and {@link IQueryOrderedModel} for summary. The resultant page will have both the data and the summary.
      */
     @Override
-    public IPage<T> firstPage(final IQueryOrderedModel<T> model, final fetch<T> fetchModel, final IQueryOrderedModel<EntityAggregates> summaryModel, final int pageCapacity) {
-	return new EntityQueryPage(model, fetchModel, summaryModel, new PageInfo(0, 0, pageCapacity));
+    public IPage2<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
+	return new EntityQueryPage(model, summaryModel, new PageInfo(0, 0, pageCapacity));
     }
 
     @Override
-    public T getEntity(final IQueryOrderedModel<T> model) {
-	return getEntity(model, new fetchAll(getEntityType()));
-    }
-
-    @Override
-    public T getEntity(final IQueryOrderedModel<T> model, final fetch<T> fetchModel) {
-	final List<T> data = new EntityQueryPage(model, fetchModel, new PageInfo(0, 1, DEFAULT_PAGE_CAPACITY)).data();
+    public T getEntity(final QueryExecutionModel<T, ?> model) {
+	final List<T> data = new EntityQueryPage(model, new PageInfo(0, 1, DEFAULT_PAGE_CAPACITY)).data();
 	if (data.size() > 1) {
 	    throw new IllegalArgumentException("The provided query model leads to retrieval of more than one entity (" + data.size() + ").");
 	}
@@ -123,29 +118,20 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
      * Sends a POST request with {@link IQueryOrderedModel} in the envelope.
      */
     @Override
-    public IPage<T> getPage(final IQueryOrderedModel<T> query, final int pageNo, final int pageCapacity) {
-	return getPage(query, new fetchAll(getEntityType()), pageNo, pageCapacity);
+    public IPage2<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
+	return new EntityQueryPage(model, new PageInfo(pageNo, 0, pageCapacity));
     }
 
     @Override
-    public IPage<T> getPage(final IQueryOrderedModel<T> model, final fetch<T> fetchModel, final int pageNo, final int pageCapacity) {
-	return new EntityQueryPage(model, fetchModel, new PageInfo(pageNo, 0, pageCapacity));
-    }
-
-    @Override
-    public IPage<T> getPage(final IQueryOrderedModel<T> query, final int pageNo, final int pageCount, final int pageCapacity) {
-	return getPage(query, new fetchAll(getEntityType()), pageNo, pageCount, pageCapacity);
-    }
-
-    public IPage<T> getPage(final IQueryOrderedModel<T> model, final fetch<T> fetchModel, final int pageNo, final int pageCount, final int pageCapacity) {
-	return new EntityQueryPage(model, fetchModel, new PageInfo(pageNo, pageCount, pageCapacity));
+    public IPage2<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
+	return new EntityQueryPage(model, new PageInfo(pageNo, pageCount, pageCapacity));
     }
 
     /**
      * Sends a GET request.
      */
     @Override
-    public IPage<T> getPage(final int pageNo, final int pageCapacity) {
+    public IPage2<T> getPage(final int pageNo, final int pageCapacity) {
 	return new EntityQueryPage(pageNo, pageCapacity);
     }
 
@@ -160,7 +146,8 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
 	    throw validationResult;
 	}
 	// create request based on the need to save or update an entity
-	final Request request = entity.isPersisted() ? restUtil.newRequest(Method.POST, entity, getDefaultWebResourceType()) : restUtil.newRequest(Method.PUT, getEntityType(), getDefaultWebResourceType());
+	final Request request = entity.isPersisted() ? restUtil.newRequest(Method.POST, entity, getDefaultWebResourceType())
+		: restUtil.newRequest(Method.PUT, getEntityType(), getDefaultWebResourceType());
 	final Representation envelope = restUtil.represent(entity);
 	request.setEntity(envelope);
 	// perform request and enhance returned entity
@@ -202,12 +189,12 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
      * @param pageNumber
      *            -- numbers from a set of N+{0} indicate a page number to be retrieved; value of -1 (negative one) indicates the need for the last page.
      */
-    public List<T> list(final IQueryOrderedModel<T> query, final fetch<T> fetchModel, final PageInfo pageInfo) {
+    public List<T> list(final QueryExecutionModel<T, ?> query, final PageInfo pageInfo) {
 	// create request envelope containing Entity Query
-	final Representation envelope = restUtil.represent(new Pair<IQueryOrderedModel<T>, fetch<T>>(query, fetchModel));
+	final Representation envelope = restUtil.represent(query);
 	// create a request URI containing page capacity and number
-	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=" + pageInfo.pageCapacity + "&page-no=" + pageInfo.pageNumber + "&page-count="
-	+ pageInfo.numberOfPages;
+	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=" + pageInfo.pageCapacity + "&page-no=" + pageInfo.pageNumber
+		+ "&page-count=" + pageInfo.numberOfPages;
 	final Request request = new Request(Method.POST, uri, envelope);
 	// process request
 	final Pair<Response, Result> res = restUtil.process(request);
@@ -225,16 +212,16 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
 	    if (!StringUtils.isEmpty(numberOfPages)) {
 		pageInfo.numberOfPages = Integer.parseInt(numberOfPages);
 	    }
-	    return (List) result.getInstance();
+	    return (List<T>) result.getInstance();
 	} else {
 	    throw result;
 	}
     }
 
-    /** Implements the deletion by query model. Relies on the fact the DAO counterpart has method {@link IEntityDao#delete(IQueryOrderedModel) implemented.}*/
+    /** Implements the deletion by query model. Relies on the fact the DAO counterpart has method {@link IEntityDao#delete(IQueryOrderedModel) implemented.} */
     @Override
-    public void delete(final IQueryOrderedModel<T> query) {
-	final Representation envelope = restUtil.represent(new Pair<IQueryOrderedModel<T>, fetch<T>>(query, null));
+    public void delete(final EntityResultQueryModel<T> query, final Map<String, Object> params) {
+	final Representation envelope = restUtil.represent(from(query).with(params).build());
 	// create a request URI containing the deletion flag
 	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?deletion=true";
 	final Request request = new Request(Method.POST, uri, envelope);
@@ -282,15 +269,24 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
     /**
      * Delegates the request to EntityAggregates RAO to obtain the result of the query. Expects only one EntityAggregates in the result list.
      */
-    protected EntityAggregates calcSummary(final IQueryOrderedModel<EntityAggregates> model) {
-	final List<EntityAggregates> list = new CommonEntityAggregatesRao(restUtil).getEntities(model, null);
+    protected EntityAggregates calcSummary(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model) {
+	final List<EntityAggregates> list = new CommonEntityAggregatesRao(restUtil).getAllEntities(model);
 	return list.size() == 1 ? list.get(0) : null;
     }
 
     @Override
-    public int count(final IQueryOrderedModel<T> query) {
+    public int count(final EntityResultQueryModel<T> model) {
+	return count(model, Collections.<String, Object> emptyMap());
+    }
+
+    @Override
+    public int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+	return count(from(model).with(paramValues).build());
+    }
+
+    protected int count(final QueryExecutionModel<T, ?> model) {
 	// create request envelope containing Entity Query
-	final Representation envelope = restUtil.represent(new Pair(query, null));
+	final Representation envelope = restUtil.represent(model);
 	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType());
 	final Request request = new Request(Method.POST, uri, envelope);
 	// process request
@@ -300,6 +296,8 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
 	}
 	return Integer.parseInt(restUtil.getHeaderValue(response, HttpHeaders.COUNT));
     }
+
+
 
     /**
      * A convenient class capturing page stateful information, which is updated and reused when navigating between pages.
@@ -330,24 +328,22 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
      * @author TG Team
      *
      */
-    private class EntityQueryPage implements IPage<T> {
+    private class EntityQueryPage implements IPage2<T> {
 	private int pageNumber; // zero-based
 	private int numberOfPages = 0;
 	private final int pageCapacity;
 	private final List<T> data;
-	private final IQueryOrderedModel<T> model;
-	private final fetch<T> fetchModel;
+	private final QueryExecutionModel<T, ?> model;
 	private final EntityAggregates summary;
-	private final IQueryOrderedModel<EntityAggregates> summaryModel;
+	private final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel;
 
 	/** This constructor should be used when summary is not required. */
-	public EntityQueryPage(final IQueryOrderedModel<T> model, final fetch<T> fetchModel, final PageInfo pageInfo) {
-	    data = list(model, fetchModel, pageInfo);
+	public EntityQueryPage(final QueryExecutionModel<T, ?> model, final PageInfo pageInfo) {
+	    data = list(model, pageInfo);
 	    pageNumber = pageInfo.pageNumber;
 	    setNumberOfPages(pageInfo.numberOfPages);
 	    pageCapacity = pageInfo.pageCapacity;
 	    this.model = model;
-	    this.fetchModel = fetchModel;
 	    summaryModel = null;
 	    summary = null;
 	}
@@ -355,25 +351,23 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
 	/**
 	 * This constructor should be used when both data and summary should be retrieved. Passing <code>null</code> for a summary model is handled gracefully.
 	 */
-	public EntityQueryPage(final IQueryOrderedModel<T> model, final fetch<T> fetchModel, final IQueryOrderedModel<EntityAggregates> summaryModel, final PageInfo pageInfo) {
-	    data = list(model, fetchModel, pageInfo);
+	public EntityQueryPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final PageInfo pageInfo) {
+	    data = list(model, pageInfo);
 	    summary = summaryModel != null ? calcSummary(summaryModel) : null;
 	    pageNumber = pageInfo.pageNumber;
 	    setNumberOfPages(pageInfo.numberOfPages);
 	    pageCapacity = pageInfo.pageCapacity;
 	    this.model = model;
-	    this.fetchModel = fetchModel;
 	    this.summaryModel = summaryModel;
 	}
 
 	/** This constructor is required purely for navigation implementation in case where summary was calculated and needs to be preserved in another page. */
-	private EntityQueryPage(final IQueryOrderedModel<T> model, final fetch<T> fetchModel, final EntityAggregates summary, final PageInfo pageInfo) {
-	    data = list(model, fetchModel, pageInfo);
+	private EntityQueryPage(final QueryExecutionModel<T, ?> model, final EntityAggregates summary, final PageInfo pageInfo) {
+	    data = list(model, pageInfo);
 	    pageNumber = pageInfo.pageNumber;
 	    setNumberOfPages(pageInfo.numberOfPages);
 	    pageCapacity = pageInfo.pageCapacity;
 	    this.model = model;
-	    this.fetchModel = fetchModel;
 	    summaryModel = null;
 	    this.summary = summary;
 	}
@@ -383,7 +377,6 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
 	    this.pageNumber = pageNumber;
 	    this.pageCapacity = pageCapacity;
 	    this.model = null;
-	    this.fetchModel = null;
 	    summaryModel = null;
 	    summary = null;
 	    data = list(this, pageNumber, pageCapacity);
@@ -414,12 +407,12 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
 	}
 
 	@Override
-	public IPage<T> next() {
+	public IPage2<T> next() {
 	    if (hasNext()) {
 		if (model != null && summary != null) {
-		    return new EntityQueryPage(model, fetchModel, summary, new PageInfo(no() + 1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, summary, new PageInfo(no() + 1, numberOfPages(), capacity()));
 		} else if (model != null) {
-		    return new EntityQueryPage(model, fetchModel, new PageInfo(no() + 1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, new PageInfo(no() + 1, numberOfPages(), capacity()));
 		} else {
 		    return new EntityQueryPage(no() + 1, capacity());
 		}
@@ -433,12 +426,12 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
 	}
 
 	@Override
-	public IPage<T> prev() {
+	public IPage2<T> prev() {
 	    if (hasPrev()) {
 		if (model != null && summary != null) {
-		    return new EntityQueryPage(model, fetchModel, summary, new PageInfo(no() - 1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, summary, new PageInfo(no() - 1, numberOfPages(), capacity()));
 		} else if (model != null) {
-		    return new EntityQueryPage(model, fetchModel, new PageInfo(no() - 1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, new PageInfo(no() - 1, numberOfPages(), capacity()));
 		} else {
 		    return new EntityQueryPage(no() - 1, capacity());
 		}
@@ -452,12 +445,12 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
 	}
 
 	@Override
-	public IPage<T> first() {
+	public IPage2<T> first() {
 	    if (hasPrev()) {
 		if (model != null && summary != null) {
-		    return new EntityQueryPage(model, fetchModel, summary, new PageInfo(0, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, summary, new PageInfo(0, numberOfPages(), capacity()));
 		} else if (model != null) {
-		    return new EntityQueryPage(model, fetchModel, new PageInfo(0, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, new PageInfo(0, numberOfPages(), capacity()));
 		} else {
 		    return new EntityQueryPage(0, capacity());
 		}
@@ -466,12 +459,12 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
 	}
 
 	@Override
-	public IPage<T> last() {
+	public IPage2<T> last() {
 	    if (hasNext()) {
 		if (model != null && summary != null) {
-		    return new EntityQueryPage(model, fetchModel, summary, new PageInfo(-1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, summary, new PageInfo(-1, numberOfPages(), capacity()));
 		} else if (model != null) {
-		    return new EntityQueryPage(model, fetchModel, new PageInfo(-1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, new PageInfo(-1, numberOfPages(), capacity()));
 		} else {
 		    return new EntityQueryPage(-1, capacity());
 		}
@@ -495,16 +488,10 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
     }
 
     @Override
-    public byte[] export(final IQueryOrderedModel<T> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-	return export(query, new fetchAll(getEntityType()), propertyNames, propertyTitles);
-    }
-
-    @Override
-    public byte[] export(final IQueryOrderedModel<T> query, final fetch<T> fetchModel, final String[] propertyNames, final String[] propertyTitles) throws IOException {
+    public byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
 	// create request envelope containing Entity Query
 	final List<Object> requestContent = new ArrayList<Object>();
 	requestContent.add(query);
-	requestContent.add(fetchModel);
 	requestContent.add(propertyNames);
 	requestContent.add(propertyTitles);
 	final Representation envelope = restUtil.represent(requestContent);
@@ -531,14 +518,9 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
     }
 
     @Override
-    public List<T> getEntities(final IQueryOrderedModel<T> query) {
-	return getEntities(query, new fetchAll(getEntityType()));
-    }
-
-    @Override
-    public List<T> getEntities(final IQueryOrderedModel<T> query, final fetch<T> fetchModel) {
+    public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
 	// create request envelope containing Entity Query
-	final Representation envelope = restUtil.represent(new Pair<IQueryOrderedModel<T>, fetch<T>>(query, fetchModel));
+	final Representation envelope = restUtil.represent(query);
 	// create a request URI containing page capacity and number
 	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=all";
 	final Request request = new Request(Method.POST, uri, envelope);
@@ -547,7 +529,7 @@ public class CommonEntityRao<T extends AbstractEntity> extends AbstractEntityDao
 	final Result result = res.getValue();
 	// process result
 	if (result.isSuccessful()) {
-	    return (List) result.getInstance();
+	    return (List<T>) result.getInstance();
 	} else {
 	    throw result;
 	}

@@ -10,7 +10,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.dao.MappingExtractor;
 import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao2.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -27,7 +26,7 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.web.entities.InspectedEntity;
@@ -58,7 +57,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
     }
 
     /**
-     * Required for dynamic instantiation by {@link DbDrivenTestCase}
+     * Required for dynamic instantiation by {@link DbDrivenTestCase2}
      */
     public PlatformWebDbDrivenTestCaseConfiguration() {
 	// instantiate all the factories and Hibernate utility
@@ -86,7 +85,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
 	    cfg.setProperty("hibernate.connection.password", "");
 
 	    hibernateUtil = new HibernateUtil(interceptor, cfg);
-	    hibernateModule = new WebHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()), domainPersistenceMetadata);
+	    hibernateModule = new WebHibernateModule(hibernateUtil.getSessionFactory(), domainPersistenceMetadata);
 	    injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
 	    entityFactory = injector.getInstance(EntityFactory.class);
 	    interceptor.setFactory(entityFactory);

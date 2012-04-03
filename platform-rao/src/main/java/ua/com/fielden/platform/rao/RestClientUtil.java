@@ -25,12 +25,12 @@ import org.restlet.resource.Representation;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.cypher.Cypher;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
 import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserController2;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -69,7 +69,7 @@ public final class RestClientUtil implements IUserProvider {
     private String privateKey;
 
     /** User controller is required to be able to retrieve user by it name to ensure correct user association upon username change. */
-    private IUserController userController;
+    private IUserController2 userController;
     private User user;
 
     public RestClientUtil(final Protocol protocol, final String host, final int port, final String version, final String user) {
@@ -379,12 +379,12 @@ public final class RestClientUtil implements IUserProvider {
      * @param query
      * @return
      */
-    public <T extends AbstractEntity> Representation represent(final Pair<IQueryOrderedModel<T>, fetch<T>> query) {
+    public <T extends AbstractEntity<?>> Representation represent(final QueryExecutionModel<T, ?> query) {
 	// IMPORTANT: One should be very careful when composing queries not to set any of the parameters as entity instances.
 	// Doing so, causes two issues:
 	// 1. Presentation, and thus the request envelope, grows significantly in size.
 	// 2. Conversion of entities into XML (serialisation) is a time consuming operation;
-	query.getKey().setLightweight(true);
+	query.setLightweight(true);
 	final byte[] bytes = serialiser.serialise(query);
 	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
     }
@@ -530,7 +530,7 @@ public final class RestClientUtil implements IUserProvider {
 	user = null;
     }
 
-    public void setUserController(final IUserController controller) {
+    public void setUserController(final IUserController2 controller) {
 	if (userController != null) {
 	    throw new IllegalStateException("User controller should be assigned only once.");
 	}

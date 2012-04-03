@@ -1,9 +1,11 @@
 package ua.com.fielden.web.entities;
 
-import ua.com.fielden.platform.dao.CommonEntityDao;
+import java.util.Map;
+
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.dao2.CommonEntityDao2;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
@@ -11,11 +13,11 @@ import com.google.inject.Inject;
 /**
  * Test DAO for {@link InspectedEntity} class
  *
- * @author 01es
+ * @author TG Team
  *
  */
 @EntityType(InspectedEntity.class)
-public class InspectedEntityDao extends CommonEntityDao<InspectedEntity> implements IInspectedEntityDao {
+public class InspectedEntityDao extends CommonEntityDao2<InspectedEntity> implements IInspectedEntityDao {
 
     @Inject
     protected InspectedEntityDao(final IFilter filter) {
@@ -29,8 +31,7 @@ public class InspectedEntityDao extends CommonEntityDao<InspectedEntity> impleme
     }
 
     @Override
-    @SessionRequired
-    public void delete(final IQueryOrderedModel<InspectedEntity> model) {
-        defaultDelete(model);
+    public void delete(final EntityResultQueryModel<InspectedEntity> model, final Map<String, Object> paramValues) {
+        defaultDelete(model, paramValues);
     }
 }

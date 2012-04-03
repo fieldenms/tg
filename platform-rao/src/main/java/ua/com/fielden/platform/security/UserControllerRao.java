@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.security;
 
-import static ua.com.fielden.platform.equery.equery.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.List;
 
@@ -8,15 +10,15 @@ import org.restlet.data.Method;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.dao2.IUserRoleDao2;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.rao.CommonEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserController2;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -27,20 +29,20 @@ import ua.com.fielden.platform.utils.Pair;
 import com.google.inject.Inject;
 
 /**
- * RAO implementation of the {@link IUserController}.
+ * RAO implementation of the {@link IUserController2}.
  *
  * @author TG Team
  *
  */
 
 @EntityType(User.class)
-public class UserControllerRao extends CommonEntityRao<User> implements IUserController {
+public class UserControllerRao extends CommonEntityRao<User> implements IUserController2 {
     private final fetch<User> fetchModel = new fetch<User>(User.class).with("basedOnUser").with("roles", new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class).with("userRole"));
 
-    private final IUserRoleDao userRoleDao;
+    private final IUserRoleDao2 userRoleDao;
 
     @Inject
-    public UserControllerRao(final IUserRoleDao userRoleDao, final RestClientUtil restUtil) {
+    public UserControllerRao(final IUserRoleDao2 userRoleDao, final RestClientUtil restUtil) {
 	super(restUtil);
 	this.userRoleDao = userRoleDao;
     }
@@ -72,19 +74,19 @@ public class UserControllerRao extends CommonEntityRao<User> implements IUserCon
 
     @Override
     public User findUserByKeyWithRoles(final String key) {
-	final IQueryModel<User> model = select(User.class).where().prop("key").eq().val(key).model();
-	return getEntity(model, fetchModel);
+	final EntityResultQueryModel<User> model = select(User.class).where().prop("key").eq().val(key).model();
+	return getEntity(from(model).with(fetchModel).build());
     }
 
     @Override
     public List<User> findAllUsersWithRoles() {
-	final IQueryOrderedModel<User> model = select(User.class).where().prop("key").isNotNull().orderBy("key").model();
-	return getEntities(model, fetchModel);
+	final EntityResultQueryModel<User> model = select(User.class).where().prop("key").isNotNull().model();
+	final OrderingModel orderBy = orderBy().prop("key").asc().model();
+	return getAllEntities(from(model).with(fetchModel).with(orderBy).build());
     }
 
     @Override
     public User findUser(final String username) {
 	return findByKeyAndFetch(new fetchAll<User>(User.class), username);
     }
-
 }

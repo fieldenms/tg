@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.ui.config.api;
 
-import static ua.com.fielden.platform.equery.equery.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.rao.CommonEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.rao.WebResourceType;
@@ -14,13 +14,13 @@ import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 import com.google.inject.Inject;
 
 /**
- * RAO implementation of {@link IMainMenuItemInvisibilityController}.
+ * RAO implementation of {@link IMainMenuItemInvisibilityController2}.
  *
  * @author TG Team
  *
  */
 @EntityType(MainMenuItemInvisibility.class)
-public class MainMenuItemInvisibilityControllerRao extends CommonEntityRao<MainMenuItemInvisibility> implements IMainMenuItemInvisibilityController {
+public class MainMenuItemInvisibilityControllerRao extends CommonEntityRao<MainMenuItemInvisibility> implements IMainMenuItemInvisibilityController2 {
 
     private final EntityFactory factory;
 
@@ -42,7 +42,7 @@ public class MainMenuItemInvisibilityControllerRao extends CommonEntityRao<MainM
 
     @Override
     public void makeVisible(final MainMenuItem menuItem, final User user) {
-	final IQueryModel<MainMenuItemInvisibility> model = select(MainMenuItemInvisibility.class).where()//
+	final EntityResultQueryModel<MainMenuItemInvisibility> model = select(MainMenuItemInvisibility.class).where()//
 	.prop("owner").eq().val(user).and()//
 	.prop("menuItem").eq().val(menuItem).model();
 

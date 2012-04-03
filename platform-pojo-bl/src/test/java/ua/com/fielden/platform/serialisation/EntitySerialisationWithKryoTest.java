@@ -289,7 +289,7 @@ public class EntitySerialisationWithKryoTest {
 	entity.setPolyProperty(factory.newEntity(SubBaseEntity1.class, 1L, "key", "description"));
 
 	try {
-	    final EntityWithPolymorphicProperty deserialisedEntity = kryoReader.deserialise(kryoWriter.serialise(entity), EntityWithPolymorphicProperty.class);
+	    kryoReader.deserialise(kryoWriter.serialise(entity), EntityWithPolymorphicProperty.class);
 	} catch (final Exception ex) {
 	    ex.printStackTrace();
 	    fail("Failed to serialise entity with polymorphyc property.");

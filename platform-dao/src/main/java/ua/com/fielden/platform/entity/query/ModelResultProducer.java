@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 
 public class ModelResultProducer {
 
-    public <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T> qem, final DbVersion dbVersion, final DomainPersistenceMetadata domainPersistenceMetadata, final IFilter filter, final String username) {
+    public <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DbVersion dbVersion, final DomainPersistenceMetadata domainPersistenceMetadata, final IFilter filter, final String username) {
 	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, domainPersistenceMetadata, filter, username);
 	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getParamValues());
 	final String sql = entQuery.sql();

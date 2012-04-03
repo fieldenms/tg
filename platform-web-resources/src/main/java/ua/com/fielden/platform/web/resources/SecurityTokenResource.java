@@ -15,7 +15,7 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao2.IUserRoleDao2;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.security.ISecurityToken;
@@ -36,7 +36,7 @@ public class SecurityTokenResource extends Resource {
     private final String username; // TODO to be used for auditing purposes
 
     private final ISecurityTokenController controller;
-    private final IUserRoleDao userRoleDao;
+    private final IUserRoleDao2 userRoleDao;
     private final RestServerUtil restUtil;
 
     private final Class<? extends ISecurityToken> token;
@@ -62,7 +62,7 @@ public class SecurityTokenResource extends Resource {
     /**
      * Principle constructor.
      */
-    public SecurityTokenResource(final ISecurityTokenController controller, final IUserRoleDao userRoleDao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public SecurityTokenResource(final ISecurityTokenController controller, final IUserRoleDao2 userRoleDao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.controller = controller;

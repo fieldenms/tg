@@ -37,7 +37,7 @@ public class EntityFetcher {
 	this.username = username;
     }
 
-    public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+    public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
 	try {
 	    return instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight());
 	} catch (final Exception e) {
@@ -46,11 +46,11 @@ public class EntityFetcher {
 	}
     }
 
-    public <E extends AbstractEntity<?>> List<E> getEntities(final QueryExecutionModel<E> queryModel) {
+    public <E extends AbstractEntity<?>> List<E> getEntities(final QueryExecutionModel<E, ?> queryModel) {
 	return getEntitiesOnPage(queryModel, null, null);
     }
 
-    protected <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainers(final QueryExecutionModel<E> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
+    protected <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainers(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final QueryModelResult<E> modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getDomainPersistenceMetadata(), getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
 	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : new fetch<E>(modelResult.getResultType());

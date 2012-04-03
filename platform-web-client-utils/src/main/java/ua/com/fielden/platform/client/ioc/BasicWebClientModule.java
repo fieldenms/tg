@@ -6,8 +6,9 @@ import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.dao.IDaoFactory;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
+import ua.com.fielden.platform.dao2.IDaoFactory2;
+import ua.com.fielden.platform.dao2.IUserRoleDao2;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.ioc.CommonRestFactoryModule;
@@ -21,7 +22,9 @@ import ua.com.fielden.platform.security.UserControllerRao;
 import ua.com.fielden.platform.security.UserRoleRao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserController2;
 import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUserDao2;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
@@ -36,11 +39,11 @@ import ua.com.fielden.platform.swing.review.configuration.LocalMasterConfigurati
 import ua.com.fielden.platform.ui.config.api.EntityCentreConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityLocatorConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityMasterConfigControllerRao;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController2;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController2;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController2;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.ui.config.api.MainMenuItemControllerRao;
 import ua.com.fielden.platform.ui.config.api.MainMenuItemInvisibilityControllerRao;
@@ -108,34 +111,34 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	/////////////////////////////////////////////////////////////////////////
 	/////////////// bind some required platform specific RAOs ///////////////
 	/////////////////////////////////////////////////////////////////////////
-	bind(IEntityAggregatesDao.class).to(EntityAggregatesRao.class).in(Scopes.SINGLETON);
+	bind(IEntityAggregatesDao2.class).to(EntityAggregatesRao.class).in(Scopes.SINGLETON);
 	// bind value matcher factory to support autocompleters and entity master factory
-	bind(IDaoFactory.class).to(RaoFactory.class).in(Scopes.SINGLETON);
+	bind(IDaoFactory2.class).to(RaoFactory.class).in(Scopes.SINGLETON);
 	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
 	// security and user management
-	bind(IUserDao.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
-	bind(IUserRoleDao.class).to(UserRoleRao.class).in(Scopes.SINGLETON);
-	bind(IUserController.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
+	bind(IUserDao2.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
+	bind(IUserRoleDao2.class).to(UserRoleRao.class).in(Scopes.SINGLETON);
+	bind(IUserController2.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
 	bind(ISecurityTokenController.class).to(SecurityTokenControllerRao.class).in(Scopes.SINGLETON);
 	bind(IAuthorisationModel.class).to(RestAuthorisationModel.class).in(Scopes.SINGLETON);
 
 	////////////////////////////////////////////////////////////////////////
 	//////////////// bind UI configuration controllers /////////////////////
 	////////////////////////////////////////////////////////////////////////
-	bind(IMainMenuItemController.class).to(MainMenuItemControllerRao.class).in(Scopes.SINGLETON);
-	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerRao.class).in(Scopes.SINGLETON);
-	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
-	bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
+	bind(IMainMenuItemController2.class).to(MainMenuItemControllerRao.class).in(Scopes.SINGLETON);
+	bind(IEntityMasterConfigController2.class).to(EntityMasterConfigControllerRao.class).in(Scopes.SINGLETON);
+	bind(IEntityLocatorConfigController2.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
+	bind(IEntityCentreConfigController2.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
 
 	if (Workflows.valueOf(props.getProperty("workflow")).equals(Workflows.deployment)) {
-	    bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON);
+	    bind(IMainMenuItemInvisibilityController2.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON);
 	    bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
 
 	    bind(ILocatorConfigurationController.class).to(RemoteLocatorConfigurationController.class).in(Scopes.SINGLETON);
 	    bind(IMasterConfigurationController.class).to(RemoteMasterConfigurationController.class).in(Scopes.SINGLETON);
 	} else {
 	    ///////////////////////////// local
-	    bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
+	    bind(IMainMenuItemInvisibilityController2.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
 	    bind(ITreeMenuItemVisibilityProvider.class).to(LocalTreeMenuItemVisibilityProvider.class).in(Scopes.SINGLETON);
 	    bind(IMainMenuStructureBuilder.class).to(mainMenuStructureBuilderType);
 
@@ -156,7 +159,7 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
     public void setInjector(final Injector injector) {
         super.setInjector(injector);
 	restUtil.initSerialiser(injector.getInstance(ISerialiser.class));
-	restUtil.setUserController(injector.getInstance(IUserController.class));
+	restUtil.setUserController(injector.getInstance(IUserController2.class));
     }
 
 }

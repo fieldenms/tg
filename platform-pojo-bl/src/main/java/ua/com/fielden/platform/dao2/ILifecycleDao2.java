@@ -3,6 +3,7 @@ package ua.com.fielden.platform.dao2;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 
 /**
@@ -31,7 +32,7 @@ public interface ILifecycleDao2<T extends AbstractEntity<?>> {
      *            - right period boundary.
      * @return
      */
-    LifecycleModel<T> getLifecycleInformation(final QueryExecutionModel<T> model, final String propertyName, final DateTime from, final DateTime to);
+    LifecycleModel<T> getLifecycleInformation(final QueryExecutionModel<T, EntityResultQueryModel<T>> model, final String propertyName, final DateTime from, final DateTime to);
 
     /**
      * Username should be provided for every DAO instance in order to support data filtering and auditing.

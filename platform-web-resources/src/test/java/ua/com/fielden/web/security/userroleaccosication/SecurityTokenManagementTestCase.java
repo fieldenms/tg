@@ -13,13 +13,13 @@ import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.Router;
 
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao2.IUserRoleDao2;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.SecurityTokenControllerRao;
 import ua.com.fielden.platform.security.UserRoleRao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.web.SecurityTokenResourceFactory;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
@@ -32,7 +32,7 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
  */
 public class SecurityTokenManagementTestCase extends WebBasedTestCase {
 
-    private final IUserRoleDao userRoleRao = new UserRoleRao(config.restClientUtil());
+    private final IUserRoleDao2 userRoleRao = new UserRoleRao(config.restClientUtil());
     private final ISecurityTokenController tokenControllerRao = new SecurityTokenControllerRao(userRoleRao, config.restClientUtil());
 
     @Test
@@ -74,10 +74,10 @@ public class SecurityTokenManagementTestCase extends WebBasedTestCase {
     public synchronized Restlet getRoot() {
 	final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
-	helper.register(router, IUserRoleDao.class);
+	final RouterHelper helper = new RouterHelper(DbDrivenTestCase2.injector, DbDrivenTestCase2.entityFactory);
+	helper.register(router, IUserRoleDao2.class);
 
-	final Restlet tokenRoleAssociationRestlet = new SecurityTokenResourceFactory(DbDrivenTestCase.injector);
+	final Restlet tokenRoleAssociationRestlet = new SecurityTokenResourceFactory(DbDrivenTestCase2.injector);
 	router.attach("/users/{username}/securitytokens", tokenRoleAssociationRestlet);
 	router.attach("/users/{username}/securitytokens/{token}", tokenRoleAssociationRestlet);
 	router.attach("/users/{username}/securitytokens/{token}/useroles", tokenRoleAssociationRestlet);

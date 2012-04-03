@@ -9,23 +9,22 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
- * Represents a web resource mapped to URI /query/entity-alias-type. It handles POST requests provided with {@link IQueryOrderedModel}
+ * Represents a web resource mapped to URI /query/entity-alias-type. It handles POST requests provided with {@link QueryExecutionModel}
  * <p>
  * Each request is handled by a new resource instance, thus the only thread-safety requirement is to have provided DAO and entity factory thread-safe.
  *
  * @author TG Team
  */
-public class EntityQueryResource<T extends AbstractEntity> extends Resource {
+public class EntityQueryResource<T extends AbstractEntity<?>> extends Resource {
     private static final int DEFAULT_PAGE_CAPACITY = 25;
     // the following properties are determined from request
     private final String username;
@@ -39,7 +38,7 @@ public class EntityQueryResource<T extends AbstractEntity> extends Resource {
     /** Indicates whether the provided request indicated a deletion query. */
     private final boolean shouldDelete;
 
-    private final IEntityDao<T> dao;
+    private final IEntityDao2<T> dao;
     private final RestServerUtil restUtil;
 
     // //////////////////////////////////////////////////////////////////
@@ -65,7 +64,7 @@ public class EntityQueryResource<T extends AbstractEntity> extends Resource {
      * @param request
      * @param response
      */
-    public EntityQueryResource(final IEntityDao<T> dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public EntityQueryResource(final IEntityDao2<T> dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
@@ -118,22 +117,22 @@ public class EntityQueryResource<T extends AbstractEntity> extends Resource {
     // /////////////////////////////////////////////////////////////////
 
     /**
-     * Handles POST request resulting from RAO call. It is expected that envelope is a serialised representation of {@link IQueryOrderedModel}.
+     * Handles POST request resulting from RAO call. It is expected that envelope is a serialised representation of {@link QueryExecutionModel}.
      */
     @Override
     public void acceptRepresentation(final Representation envelope) throws ResourceException {
 	try {
-	    final Pair<IQueryOrderedModel<T>, fetch> queryAndFetch = restUtil.restoreQueryModel(envelope, dao.getEntityType());
+	    final QueryExecutionModel<T, EntityResultQueryModel<T>> qem = (QueryExecutionModel<T, EntityResultQueryModel<T>>) restUtil.restoreQueryExecutionModel(envelope);
 	    if (shouldDelete) {
-		dao.delete(queryAndFetch.getKey());
+		dao.delete(qem.getQueryModel(), qem.getParamValues());
 		getResponse().setEntity(restUtil.resultRepresentation( Result.successful(null)));
 	    } else if (shouldReturnCount) {
-		final int count = dao.count(queryAndFetch.getKey());
+		final int count = dao.count(qem.getQueryModel(), qem.getParamValues());
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.COUNT, count + "");
 	    } else if (shouldReturnAll) {
-		getResponse().setEntity(restUtil.listRepresentation(dao.getEntities(queryAndFetch.getKey(), queryAndFetch.getValue())));
+		getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(qem)));
 	    } else {
-		final IPage<T> page = dao.getPage(queryAndFetch.getKey(), queryAndFetch.getValue(), pageNo, pageCount, pageCapacity);
+		final IPage2<T> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
 		getResponse().setEntity(restUtil.listRepresentation(page.data()));
