@@ -4,12 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.entity.query.model.QueryModel;
 
 public final class QueryExecutionModel<T extends AbstractEntity<?>> {
-    private final EntityResultQueryModel<T> queryModel;
+    private final QueryModel<T> queryModel;
     private final OrderingModel orderModel;
     private final fetch<T> fetchModel;
     private final Map<String, Object> paramValues;
@@ -23,7 +26,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>> {
 	lightweight = builder.lightweight;
     }
 
-    public EntityResultQueryModel<T> getQueryModel() {
+    public QueryModel<T> getQueryModel() {
         return queryModel;
     }
 
@@ -47,8 +50,12 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>> {
 	return new Builder<E>(queryModel);
     }
 
+    public static Builder<EntityAggregates> from(final AggregatedResultQueryModel queryModel) {
+	return new Builder<EntityAggregates>(queryModel);
+    }
+
     public static class Builder<T extends AbstractEntity<?>> {
-	    private EntityResultQueryModel<T> queryModel;
+	    private QueryModel<T> queryModel;
 	    private OrderingModel orderModel;
 	    private fetch<T> fetchModel;
 	    private Map<String, Object> paramValues = new HashMap<String, Object>();
@@ -60,6 +67,10 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>> {
 
 	private Builder(final EntityResultQueryModel<T> queryModel) {
 	    this.queryModel = queryModel;
+	}
+
+	private Builder(final AggregatedResultQueryModel queryModel) {
+	    this.queryModel = (QueryModel<T>) queryModel;
 	}
 
 	public Builder<T> with(final OrderingModel val) {

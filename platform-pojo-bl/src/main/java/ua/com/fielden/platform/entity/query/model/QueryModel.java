@@ -6,9 +6,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
-public abstract class QueryModel {
+public abstract class QueryModel<T extends AbstractEntity<?>> {
     private final List<Pair<TokenCategory, Object>> tokens;
-    private Class<? extends AbstractEntity<?>> resultType;
+    private Class<T> resultType;
 
     @Override
     public String toString() {
@@ -19,7 +19,7 @@ public abstract class QueryModel {
 	this.tokens = tokens;
     }
 
-    public QueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<? extends AbstractEntity<?>> resultType) {
+    public QueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType) {
 	this(tokens);
 	this.resultType = resultType;
     }
@@ -42,26 +42,23 @@ public abstract class QueryModel {
 	if (this == obj) {
 	    return true;
 	}
-	if (obj == null) {
+	if (! (obj instanceof QueryModel)) {
 	    return false;
 	}
-	if (!(obj instanceof QueryModel)) {
-	    return false;
-	}
-	final QueryModel other = (QueryModel) obj;
+	final QueryModel<?> that = (QueryModel<?>) obj;
 
 	if (resultType == null) {
-	    if (other.resultType != null) {
+	    if (that.resultType != null) {
 		return false;
 	    }
-	} else if (!resultType.equals(other.resultType)) {
+	} else if (!resultType.equals(that.resultType)) {
 	    return false;
 	}
 	if (tokens == null) {
-	    if (other.tokens != null) {
+	    if (that.tokens != null) {
 		return false;
 	    }
-	} else if (!tokens.equals(other.tokens)) {
+	} else if (!tokens.equals(that.tokens)) {
 	    return false;
 	}
 	return true;

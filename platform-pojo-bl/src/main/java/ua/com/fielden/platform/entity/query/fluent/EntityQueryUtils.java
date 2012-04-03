@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import ua.com.fielden.platform.dao2.AggregatesQueryExecutionModel;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.dao2.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
@@ -43,7 +43,7 @@ public class EntityQueryUtils {
 	return QueryExecutionModel.from(queryModel);
     }
 
-    public static ua.com.fielden.platform.dao2.AggregatesQueryExecutionModel.Builder from(final AggregatedResultQueryModel queryModel) {
-	return AggregatesQueryExecutionModel.from(queryModel);
+    public static Builder<EntityAggregates> from(final AggregatedResultQueryModel queryModel) {
+	return QueryExecutionModel.from(queryModel);
     }
 }

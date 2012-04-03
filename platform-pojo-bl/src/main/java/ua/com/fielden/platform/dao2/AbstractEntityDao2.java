@@ -7,6 +7,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
@@ -159,7 +160,7 @@ public abstract class AbstractEntityDao2<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public IPage2<T> firstPage(final QueryExecutionModel<T> model, final AggregatesQueryExecutionModel summaryModel, final int pageCapacity) {
+    public IPage2<T> firstPage(final QueryExecutionModel<T> model, final QueryExecutionModel<EntityAggregates> summaryModel, final int pageCapacity) {
 	throw new UnsupportedOperationException("Not implemented.");
     }
 

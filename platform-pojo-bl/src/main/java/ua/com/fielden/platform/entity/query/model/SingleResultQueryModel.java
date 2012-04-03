@@ -6,13 +6,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
-public abstract class SingleResultQueryModel extends QueryModel {
+public abstract class SingleResultQueryModel<T extends AbstractEntity<?>> extends QueryModel<T> {
 
     SingleResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
 	super(tokens);
     }
 
-    <T extends AbstractEntity<?>> SingleResultQueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType) {
+    SingleResultQueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType) {
 	super(tokens, resultType);
     }
 }

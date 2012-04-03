@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ua.com.fielden.platform.dao2.AggregatesQueryExecutionModel;
 import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
@@ -22,13 +21,6 @@ public class ModelResultProducer {
 	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getParamValues());
 	final String sql = entQuery.sql();
 	return new QueryModelResult<T>(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
-    }
-
-    public QueryModelResult<EntityAggregates> getModelResult(final AggregatesQueryExecutionModel qem, final DbVersion dbVersion, final DomainPersistenceMetadata domainPersistenceMetadata, final IFilter filter, final String username) {
-	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, domainPersistenceMetadata, filter, username);
-	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getParamValues());
-	final String sql = entQuery.sql();
-	return new QueryModelResult<EntityAggregates>(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
     }
 
     private SortedSet<PropertyPersistenceInfo> getResultPropsInfos(final Yields model) {

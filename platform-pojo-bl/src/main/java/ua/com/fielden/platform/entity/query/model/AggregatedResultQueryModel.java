@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.utils.Pair;
 
-public class AggregatedResultQueryModel extends QueryModel {
+public class AggregatedResultQueryModel extends QueryModel<EntityAggregates> {
 
     public AggregatedResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
 	super(tokens, EntityAggregates.class);

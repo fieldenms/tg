@@ -29,13 +29,13 @@ import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.AggregatesFetcher;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.reflection.Finder;
@@ -180,7 +180,7 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 	    } else if (!entity.getDirtyProperties().isEmpty()) {
 		// let's also make sure that duplicate entities are not allowed
 		final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop("id").as("id").modelAsAggregate();
-		final List<EntityAggregates> ids = new AggregatesFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, null, null).list(from(model).build());
+		final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, null, null).getEntities(from(model).build());
 		final int count = ids.size();
 		if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get("id")).longValue())) {
 		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " entity already exists."));
@@ -386,11 +386,12 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
      * @return
      */
     @SessionRequired
-    protected int evalNumOfPages(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
-	final AggregatedResultQueryModel countQuery = select(model).yield().countAll().as("count").modelAsAggregate();
-	final AggregatesQueryExecutionModel countModel = from(countQuery).with(paramValues).lightweight(true).build();
-	final List<EntityAggregates> counts = new AggregatesFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, filter, getUsername()). //
-		list(countModel, null, null);
+    protected int evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
+	final AggregatedResultQueryModel countQuery = model instanceof EntityResultQueryModel ?  select((EntityResultQueryModel<T>)model).yield().countAll().as("count").modelAsAggregate() :
+	    					      select((AggregatedResultQueryModel)model).yield().countAll().as("count").modelAsAggregate();
+	final QueryExecutionModel<EntityAggregates> countModel = from(countQuery).with(paramValues).lightweight(true).build();
+	final List<EntityAggregates> counts = new EntityFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, filter, getUsername()). //
+		getEntities(countModel);
 	final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 
 	return resultSize % pageCapacity == 0 ? resultSize / pageCapacity : resultSize / pageCapacity + 1;
@@ -638,41 +639,5 @@ public abstract class CommonEntityDao2<T extends AbstractEntity<?>> extends Abst
 
     public IFilter getFilter() {
         return filter;
-    }
-
-    @Override
-    @SessionRequired
-    public List<EntityAggregates> getAggregates(final AggregatesQueryExecutionModel aggregatesQueryModel) {
-	return new AggregatesFetcher(getSession(), getEntityFactory(), getDomainPersistenceMetadata(), null, getFilter(), getUsername()).list(aggregatesQueryModel);
-    }
-
-    @Override
-    public IPage2<EntityAggregates> firstPage(final AggregatesQueryExecutionModel query, final int pageCapacity) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public IPage2<EntityAggregates> firstPage(final AggregatesQueryExecutionModel model, final AggregatesQueryExecutionModel summaryModel, final int pageCapacity) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public IPage2<EntityAggregates> getPage(final AggregatesQueryExecutionModel model, final int pageNo, final int pageCapacity) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public IPage2<EntityAggregates> getPage(final AggregatesQueryExecutionModel model, final int pageNo, final int pageCount, final int pageCapacity) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public byte[] export(final AggregatesQueryExecutionModel query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
-	// TODO Auto-generated method stub
-	return null;
     }
 }

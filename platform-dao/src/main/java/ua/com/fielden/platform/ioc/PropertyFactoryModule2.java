@@ -6,6 +6,8 @@ import java.util.Properties;
 
 import org.hibernate.SessionFactory;
 
+import ua.com.fielden.platform.dao.EntityAggregatesDao2;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
 import ua.com.fielden.platform.dao.factory.DaoFactory2;
 import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -55,6 +57,8 @@ public class PropertyFactoryModule2 extends TransactionalModule2 {
 	bind(IDefaultControllerProvider2.class).toInstance(defaultControllerProvider);
 	// bind property factory
 	bind(IMetaPropertyFactory.class).to(DaoMetaPropertyFactory2.class).in(Scopes.SINGLETON);
+	// bind entity aggregates DAO
+	bind(IEntityAggregatesDao2.class).to(EntityAggregatesDao2.class);
 
     }
 
