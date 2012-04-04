@@ -2,7 +2,7 @@
 
 \myepigraph{Technical skill is mastery of complexity, while creativity is mastery of simplicity.}{Erik Christopher Zeeman}
 
-  Before making any changes we should discussed the modules that comprise every TG-based application project, their roles and interdependencies.
+  Before making any changes to the generated applications, we should discussed its modules, which are typical for any TG-based application project, their roles and interdependencies.
 
 \section{Project Modules}
   The generated application consists of six modules with interdependencies depicted in Fig.~\ref{img:ch00:03:project_module_dependencies}.
@@ -11,24 +11,20 @@
   \begin{description}
     \item[\textbf{Shared Module.}] Includes a single module \texttt{coolapp-pojo-bl}, which is independent from other application modules, and is shared between the other two groups.
 	This module represents the very core of the application where the business domain model is defined.   
-    \item[\textbf{Server Modules.}] Include two modules -- \texttt{coolapp-dao} and \texttt{coolapp-web-server} -- that together define application web server.	
+    \item[\textbf{Server Modules.}] Include two modules -- \texttt{coolapp-dao} and \texttt{coolapp-web-server} -- that together define the application web server.	
       \begin{itemize}
 	\item \texttt{coolapp-dao} -- contains Data Access Objects (DAO), which are the database-aware implementations of controllers defined as part of the \texttt{coolapp-pojo-bl} module; designed to support domain driven unit testing, which makes it a natural choice for data-oriented unit tests.
-	\item \texttt{coolapp-web-server} -- represents an entry point for the server-side application; has a transitive dependecy to module \texttt{coolapp-pojo-bl} via a direct dependency to \texttt{coolapp-dao}; registers web resources associated with domain entities, which bind together controllers with their DAO implementations.
+	\item \texttt{coolapp-web-server} -- represents an entry point for the server-side application; has a transitive dependency to module \texttt{coolapp-pojo-bl} via a direct dependency to \texttt{coolapp-dao}; registers web resources associated with domain entities, which bind together controllers with their DAO implementations.
       \end{itemize}
-    \item[\textbf{Client Modules.}] Include three modules~--~\texttt{coolapp-rao}, \texttt{coolapp-ui} and \texttt{coolapp-web-client}~--~that together define application web client.
+    \item[\textbf{Client Modules.}] Include three modules~--~\texttt{coolapp-rao}, \texttt{coolapp-ui} and \texttt{coolapp-web-client}~--~that together define the application web client.
       \begin{itemize}
 	\item \texttt{coolapp-rao} -- contains (web) Resource Access Objects (RAO), which are HTTP-aware implementations of controllers defined as part of the \texttt{coolapp-pojo-bl} module, which is its only dependency.
 	\item \texttt{coolapp-ui} -- contains User Interface elements such as frames, panels, menu items.
-	\item \texttt{coolapp-web-client} -- represents an entry point for the client-side application; has a transitive dependecy to module \texttt{coolapp-pojo-bl} via a direct dependency to \texttt{coolapp-rao} and \texttt{coolapp-ui}; binds together controllers defined in \texttt{coolapp-pojo-bl} with their RAO implementation, which ensures resolution of contract dependencies in \texttt{coolapp-ui}.
+	\item \texttt{coolapp-web-client} -- represents an entry point for the client-side application; has a transitive dependency to module \texttt{coolapp-pojo-bl} via a direct dependency to \texttt{coolapp-rao} and \texttt{coolapp-ui}; binds together controllers defined in \texttt{coolapp-pojo-bl} with their RAO implementation, which ensures resolution of contract dependencies in \texttt{coolapp-ui}.
       \end{itemize}
    \end{description}
 
-
-  
-  
- 
-  \begin{image}{Dependencies between Project Modules}{\label{img:ch00:03:project_module_dependencies}}    
+\begin{image}{Dependencies between Project Modules}{\label{img:ch00:03:project_module_dependencies}}    
     \scalebox{1.0} {
   \begin{tikzpicture}
     \draw[very thick, dashed, color=blue!50!black, rounded corners] (-2.3, 1.8) rectangle (10.7,-1.2);
@@ -41,7 +37,7 @@
     \node[color=red!50!black] at (4.9, -3) {\small Share Module};
     \umlbasiccomponent[x=4, y=-5]{coolapp-pojo-bl}
     
-    \umlnote[x=-2, y=3.5, width=5.5cm, fill=annotationbgcolor]{coolapp-dao}{\scriptsize Date Access Objecs layer, which provides RDBMS-based implementation for domain controllers.}
+    \umlnote[x=-2, y=3.5, width=5.5cm, fill=annotationbgcolor]{coolapp-dao}{\scriptsize Date Access Objects layer, which provides RDBMS-based implementation for domain controllers.}
     \umlnote[x=-2, y=-3.5, width=5.5cm, fill=annotationbgcolor]{coolapp-pojo-bl}{\scriptsize Defines business domain model (entities and controllers), shared between client and server tiers.}
 
     \umluniassoc{coolapp-dao}{coolapp-pojo-bl}
@@ -68,4 +64,9 @@
   }
   \end{image}
 
-%
+  The role for each module is well defined and serves as one of the aspects of the TG development model.
+  The core value of the application is in its business domain model.
+  Module \texttt{coolapp-pojo-bl} is used for defining all domain entity types, validation and controller contracts that model the business domain for which the application is being constructed.
+  Each domain entity type is associated with a corresponding CRUD (Create Request Update Delete) controller contract, which serves as the primary way to interact with domain entities.
+  The \texttt{coolapp-rao} and \texttt{coolapp-dao} module fulfil client and server side implementation of domain controllers respectively.
+  All essential functionality for CRUD controllers is provided by the platform, and is reused by sub-typing corresponding platform classes\footnote{Later chapters provide all details on how this is done, how to properly reuse and customise provided functionality.}.
