@@ -23,7 +23,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.roa.HttpHeaders;
@@ -89,7 +88,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     }
 
     /**
-     * Sends a POST request with {@link IQueryOrderedModel} in the envelope.
+     * Sends a POST request with {@link QueryExecutionModel} in the envelope.
      */
     @Override
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
@@ -97,7 +96,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     }
 
     /**
-     * Sends two POST request with {@link IQueryOrderedModel} for data and {@link IQueryOrderedModel} for summary. The resultant page will have both the data and the summary.
+     * Sends two POST request with {@link QueryExecutionModel} for data and {@link QueryExecutionModel} for summary. The resultant page will have both the data and the summary.
      */
     @Override
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
@@ -114,7 +113,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     }
 
     /**
-     * Sends a POST request with {@link IQueryOrderedModel} in the envelope.
+     * Sends a POST request with {@link QueryExecutionModel} in the envelope.
      */
     @Override
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
@@ -182,7 +181,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     }
 
     /**
-     * Sends a POST request to /entity-type-alias?page-capacity=pageCapacity&page-no=pageNumber with an envelope containing instance of {@link EntityQuery}. The response suppose to
+     * Sends a POST request to /entity-type-alias?page-capacity=pageCapacity&page-no=pageNumber with an envelope containing instance of {@link QueryExecutionModel}. The response suppose to
      * return an envelope containing entities resulting from the query.
      *
      * @param pageNumber

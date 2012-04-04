@@ -10,7 +10,7 @@ import java.util.SortedSet;
 
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -100,7 +100,7 @@ public class MasterPropertyBinder<T extends AbstractEntity> implements ILightwei
 	return new CollectionalPropertyEditor(entity, name);
     }
 
-    protected IPropertyEditor createEntityPropertyEditor(final T entity, final String name, final IValueMatcher2<?> valueMatcher) {
+    protected IPropertyEditor createEntityPropertyEditor(final T entity, final String name, final IValueMatcher<?> valueMatcher) {
 	if(PropertyBinderType.WITH_LOCATOR == propertyBinderType){
 	    return EntityPropertyEditorWithLocator.createEntityPropertyEditorWithLocatorForMaster(entity, name, masterManager, criteriaGenerator, valueMatcherFactory.getValueMatcher(entity.getType(), name));
 	}else if(PropertyBinderType.WITHOUT_LOCATOR == propertyBinderType)

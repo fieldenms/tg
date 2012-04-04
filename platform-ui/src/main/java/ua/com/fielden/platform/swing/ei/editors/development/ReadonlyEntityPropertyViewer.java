@@ -7,7 +7,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
@@ -74,7 +74,7 @@ public class ReadonlyEntityPropertyViewer implements IPropertyEditor {
     }
 
     @Override
-    public IValueMatcher2<?> getValueMatcher() {
+    public IValueMatcher<?> getValueMatcher() {
 	throw new UnsupportedOperationException("Value matcher are not applicable for readonly editors.");
     }
 

@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.SyntheticEntity;
@@ -22,7 +22,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  * @author oleh
  *
  */
-public class SyntheticEntityValueMatcher implements IValueMatcher2<EntityAggregates> {
+public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregates> {
 
     private final IEntityAggregatesDao entityAggregatesDao;
     private final AggregatedResultQueryModel defaultModel;

@@ -13,8 +13,8 @@ import java.io.Writer;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
 
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.QueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -36,7 +36,7 @@ public abstract class XStreamSerialiser extends XStream implements ISerialiser {
     protected XStreamSerialiser(final boolean compact) {
 	alias("r", Result.class);
 	alias("w", Warning.class);
-	alias("q", QueryModel.class);
+	alias("q", QueryExecutionModel.class);
 	this.compact = compact;
 	registerConverter(new ResultConverter());
 	registerConverter(new DateConverter());

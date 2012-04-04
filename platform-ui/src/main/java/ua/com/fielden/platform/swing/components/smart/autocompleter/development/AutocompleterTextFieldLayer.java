@@ -11,7 +11,7 @@ import javax.swing.ListCellRenderer;
 import org.apache.commons.lang.StringUtils;
 import org.jdesktop.jxlayer.JXLayer;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
 
 /**
@@ -47,7 +47,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
     private static final long serialVersionUID = 1L;
 
     private final AutocompleterLogic<T> autocompleter;
-    private final IValueMatcher2<T> valueMatcher;
+    private final IValueMatcher<T> valueMatcher;
     private final String valueSeparator;
 
     /**
@@ -56,7 +56,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
      */
     public AutocompleterTextFieldLayer(//
 	    final JTextField textComponent,//
-	    final IValueMatcher2<T> valueMatcher,//
+	    final IValueMatcher<T> valueMatcher,//
 	    final Class<T> lookupClass, //
 	    final String expression, //
 	    final ListCellRenderer cellRenderer,//
@@ -85,7 +85,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
      */
     public AutocompleterTextFieldLayer(//
 	    final JTextField textComponent,//
-	    final IValueMatcher2<T> valueMatcher,//
+	    final IValueMatcher<T> valueMatcher,//
 	    final Class<T> lookupClass, //
 	    final String expression, //
 	    final ListCellRenderer cellRenderer,//
@@ -124,7 +124,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 	return autocompleter;
     }
 
-    protected IValueMatcher2<T> getValueMatcher() {
+    protected IValueMatcher<T> getValueMatcher() {
 	return valueMatcher;
     }
 

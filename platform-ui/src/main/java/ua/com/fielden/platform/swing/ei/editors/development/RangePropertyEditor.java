@@ -8,7 +8,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -158,7 +158,7 @@ public class RangePropertyEditor implements IPropertyEditor {
     }
 
     @Override
-    public IValueMatcher2<?> getValueMatcher() {
+    public IValueMatcher<?> getValueMatcher() {
 	throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
     }
 

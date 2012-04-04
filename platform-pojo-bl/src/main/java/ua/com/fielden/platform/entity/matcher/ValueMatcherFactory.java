@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.EntityQueryValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.EnumValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
@@ -28,7 +28,7 @@ import com.google.inject.Inject;
  *
  */
 public class ValueMatcherFactory implements IValueMatcherFactory {
-    private final Map<Class, Map<String, IValueMatcher2>> map = new HashMap<Class, Map<String, IValueMatcher2>>();
+    private final Map<Class, Map<String, IValueMatcher>> map = new HashMap<Class, Map<String, IValueMatcher>>();
     private final IDaoFactory daoFactory;
     private final EntityFactory entityFactory;
 
@@ -39,12 +39,12 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
     }
 
     @Override
-    public IValueMatcher2<?> getValueMatcher(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName) {
+    public IValueMatcher<?> getValueMatcher(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName) {
 	if (propertyOwnerEntityType == null) {
 	    throw new IllegalArgumentException("A valid entity type is expected.");
 	}
-	final Map<String, IValueMatcher2> entityEntry = getEntityMap(propertyOwnerEntityType);
-	final IValueMatcher2 matcher = entityEntry.get(propertyName);
+	final Map<String, IValueMatcher> entityEntry = getEntityMap(propertyOwnerEntityType);
+	final IValueMatcher matcher = entityEntry.get(propertyName);
 	return matcher != null ? matcher : createMatcher(propertyOwnerEntityType, propertyName, entityEntry);
     }
 
@@ -61,7 +61,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
      * @param additionalParameters
      * @return
      */
-    private IValueMatcher2 createMatcher(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher2> entityEntry) {
+    private IValueMatcher createMatcher(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry) {
 	if (entityEntry.get(propertyName) == null) {
 	    final Field propField = Finder.findFieldByName(propertyOwnerEntityType, propertyName);
 	    final Class<?> propType = getPropertyType(propertyOwnerEntityType, propField);
@@ -77,7 +77,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
     }
 
     /** Instantiates a matcher for a property of an entity representing criteria. */
-    private void createMatcherForCriteriaEntity(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher2> entityEntry, final Field propField, final Class<?> propType) {
+    private void createMatcherForCriteriaEntity(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry, final Field propField, final Class<?> propType) {
 	if (isPropertyAnEntity(propType)) { // this is an unusual case since most criteria are multi-valued
 	    if (PropertyDescriptor.class.isAssignableFrom(propType)) {
 		createPropertyDescriptorMatcher(propertyOwnerEntityType, propertyName, entityEntry);
@@ -112,7 +112,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
     }
 
     /** Instantiates a matcher for a property of an ordinary domain entity. */
-    private void createMathcerForDomainEntity(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher2> entityEntry, final Class<?> propType) {
+    private void createMathcerForDomainEntity(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry, final Class<?> propType) {
 	if (propType.isEnum()) {
 	    entityEntry.put(propertyName, new EnumValueMatcher(propType));
 	} else if (!isPropertyAnEntity(propType)) {
@@ -130,23 +130,23 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 	}
     }
 
-    private void createPropertyDescriptorMatcher(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher2> entityEntry) {
+    private void createPropertyDescriptorMatcher(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry) {
 	final Class<? extends AbstractEntity<?>> type = (Class<? extends AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, propertyOwnerEntityType, propertyName).value();
 	final List<?> values = entityFactory != null ? Finder.getPropertyDescriptors(type, entityFactory) : Finder.getPropertyDescriptors(type);
 	entityEntry.put(propertyName, new PojoValueMatcher(values, "key", values.size())); // instead of a key there could be propertyName
     }
 
     /** Creates value matcher for a collection of property descriptors. Usually used for building criteria. */
-    private void createPropertyDescriptorMatcherForCollection(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher2> entityEntry) {
+    private void createPropertyDescriptorMatcherForCollection(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType, final String propertyName, final Map<String, IValueMatcher> entityEntry) {
 	final Class<? extends AbstractEntity> type = AnnotationReflector.getPropertyAnnotation(EntityType.class, propertyOwnerEntityType, propertyName).value();
 	final List<?> values = entityFactory != null ? Finder.getPropertyDescriptors(type, entityFactory) : Finder.getPropertyDescriptors(type);
 	entityEntry.put(propertyName, new PojoValueMatcher(values, "key", values.size())); // instead of a key there could be propertyName
     }
 
-    private Map<String, IValueMatcher2> getEntityMap(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType) {
-	Map<String, IValueMatcher2> entityEntry = map.get(isOwnerACriteria(propertyOwnerEntityType) ? EntityQueryCriteria.class : propertyOwnerEntityType);
+    private Map<String, IValueMatcher> getEntityMap(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType) {
+	Map<String, IValueMatcher> entityEntry = map.get(isOwnerACriteria(propertyOwnerEntityType) ? EntityQueryCriteria.class : propertyOwnerEntityType);
 	if (entityEntry == null) {
-	    entityEntry = new HashMap<String, IValueMatcher2>();
+	    entityEntry = new HashMap<String, IValueMatcher>();
 	    map.put(propertyOwnerEntityType, entityEntry);
 	}
 	return entityEntry;

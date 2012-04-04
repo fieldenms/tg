@@ -22,7 +22,7 @@ import net.miginfocom.swing.MigLayout;
 
 import org.jdesktop.swingx.JXDatePicker;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.example.swing.components.autocompleter.DemoEntity;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -83,7 +83,7 @@ public class DatePickerLayerDemo {
 		new DemoEntity("DONE 1", "demo for name 3"), new DemoEntity("D2NE 2", "demo for name 3"), new DemoEntity("DONE 3", "demo for name 3") };
 
 	// create an instance of the overlayable text field, which bill be used for attaching overlay components
-	final IValueMatcher2<DemoEntity> matcher = new PojoValueMatcher<DemoEntity>(Arrays.asList(acceptableValues), "name", 10) {
+	final IValueMatcher<DemoEntity> matcher = new PojoValueMatcher<DemoEntity>(Arrays.asList(acceptableValues), "name", 10) {
 	    @Override
 	    public List<DemoEntity> findMatches(final String value) {
 		try {

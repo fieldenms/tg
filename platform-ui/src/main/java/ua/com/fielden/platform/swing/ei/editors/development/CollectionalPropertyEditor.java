@@ -9,7 +9,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
@@ -91,7 +91,7 @@ public class CollectionalPropertyEditor implements IPropertyEditor {
     }
 
     @Override
-    public IValueMatcher2<?> getValueMatcher() {
+    public IValueMatcher<?> getValueMatcher() {
 	throw new UnsupportedOperationException("Value matcher are not applicable for collectional properties.");
     }
 

@@ -2,7 +2,9 @@ package ua.com.fielden.platform.basic;
 
 import java.util.List;
 
-import ua.com.fielden.platform.equery.fetch;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fetch;
+
 
 /**
  * Custom implementation should be provided to be used in conjunction with the autocompleter component.
@@ -16,7 +18,7 @@ public interface IValueMatcher<T> {
      * Returns query model used for fetching matching entities using method {@link #findMatchesWithModel(String)}.
      *
      */
-    fetch<?> getFetchModel();
+    <FT extends AbstractEntity<?>> fetch<FT> getFetchModel();
 
     /**
      * Define a way to specify query model used for fetching matching entities using method {@link #findMatchesWithModel(String)}.
@@ -24,7 +26,7 @@ public interface IValueMatcher<T> {
      * @param join
      *            -- join is used instead of an actual model in order to be able to introduce additional conditions ad hoc as part of method implementation.
      */
-    void setFetchModel(final fetch<?> fetchModel);
+    <FT extends AbstractEntity<?>> void setFetchModel(final fetch<FT> fetchModel);
 
     /**
      * Should provide matching logic using the passed value.

@@ -25,7 +25,7 @@ import javax.swing.JToggleButton;
 import javax.swing.event.EventListenerList;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -901,7 +901,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 	}
 
 	@Override
-	public IValueMatcher2<?> getValueMatcher() {
+	public IValueMatcher<?> getValueMatcher() {
 	    throw new UnsupportedOperationException();
 	}
 

@@ -13,6 +13,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  */
 public interface IValueMatcherGetter<T extends AbstractEntity<?>> {
 
-    IValueMatcher2<T> getValueMatcher(Object... params);
+    IValueMatcher<T> getValueMatcher(Object... params);
 
 }

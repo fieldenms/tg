@@ -2,14 +2,13 @@ package ua.com.fielden.platform.entity.query;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 
 import com.google.inject.ImplementedBy;
 
 /**
  * A contract to be implemented for the purpose of data filtering.
  * <p>
- * The original intension was to enhance an {@link IQueryOrderedModel} instance with user-driven filtering.
+ * The original intension was to enhance an {@link EntityResultQueryModel} instance with user-driven filtering.
  *
  * @author TG Team
  *

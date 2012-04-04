@@ -15,7 +15,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -32,7 +32,6 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.IPropertyAggregationFunction;
 import ua.com.fielden.platform.equery.PropertyAggregationFunction;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.MiscUtilities;
@@ -54,7 +53,7 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity<?>, DAO exten
     private final Map<String, IPropertyAggregationFunction> totals = new HashMap<String, IPropertyAggregationFunction>();
     private final Map<String, String> totalsAliases = new HashMap<String, String>();
 
-    private final Map<String, IValueMatcher2> valueMatchers = new HashMap<String, IValueMatcher2>();
+    private final Map<String, IValueMatcher> valueMatchers = new HashMap<String, IValueMatcher>();
     private final IValueMatcherFactory valueMatcherFactory;
 
     private final DAO dao;
@@ -144,7 +143,7 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity<?>, DAO exten
 
     /**
      * Gets query from {@link #createQuery(int)} method, enhances it with ordering conditions, provided by {@link PropertiesOrderingModel#enhanceWithOrdering(ICompleted)} method
-     * and calls {@link #firstPage(IQueryOrderedModel, int)} method with result.
+     * and calls {@link #firstPage(EntityResultQueryModel, int)} method with result.
      *
      * @param pageSize
      * @return
@@ -234,14 +233,14 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity<?>, DAO exten
 	fo.close();
     }
 
-    public IValueMatcher2<?> getValueMatcher(final String propertyName) {
+    public IValueMatcher<?> getValueMatcher(final String propertyName) {
 	if (valueMatchers.get(propertyName) == null) {
 	    valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher((Class<? extends AbstractEntity<?>>) getType(), propertyName));
 	}
 	return valueMatchers.get(propertyName);
     }
 
-    public EntityQueryCriteria<T, DAO> setValueMatcher(final String propertyName, final IValueMatcher2<?> valueMatcher) {
+    public EntityQueryCriteria<T, DAO> setValueMatcher(final String propertyName, final IValueMatcher<?> valueMatcher) {
 	valueMatchers.put(propertyName, valueMatcher);
 	return this;
     }

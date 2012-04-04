@@ -10,7 +10,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.EnumValueMatcher;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
@@ -35,7 +35,7 @@ public class AutocompleterEnumMultiExample {
 	    public void run() {
 
 		// create an instance of the overlayable text field, which bill be used for attaching overlay components
-		final IValueMatcher2<DemoEnum> matcher = new EnumValueMatcher<DemoEnum>(DemoEnum.class) {
+		final IValueMatcher<DemoEnum> matcher = new EnumValueMatcher<DemoEnum>(DemoEnum.class) {
 		    @Override
 		    public List<DemoEnum> findMatches(final String value) {
 			try {

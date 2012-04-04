@@ -17,7 +17,7 @@ import javax.swing.JTextField;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -83,7 +83,7 @@ public class PropertyTableModelBuilder<T extends AbstractEntity> extends Abstrac
      * {@link #addEditable(String, String, Integer, String, ITooltipGetter, ua.com.fielden.platform.swing.inspector.models.builders.PropertyTableModelBuilder.EditingPolicy, ua.com.fielden.platform.swing.inspector.models.builders.PropertyTableModelBuilder.NavigationPolicy, List, IOnCommitAction...)}
      * method JavaDocs (parameters are set as it is mentioned in "by default").
      */
-    public <BUILDER_TYPE extends PropertyTableModelBuilder<T>> BUILDER_TYPE addEditable(final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final IValueMatcher2 valueMatcher, final Action clickAction, final IOnCommitAction<T>... onCommitActions) {
+    public <BUILDER_TYPE extends PropertyTableModelBuilder<T>> BUILDER_TYPE addEditable(final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final IValueMatcher valueMatcher, final Action clickAction, final IOnCommitAction<T>... onCommitActions) {
 	return (BUILDER_TYPE) addEditable(propertyName, columnName, prefSize, headerTooltip, null, BY_META_PROPERTY, ALWAYS_NAVIGABLE, valueMatcher, clickAction, NO_TOTALS, null, onCommitActions);
     }
 
@@ -111,7 +111,7 @@ public class PropertyTableModelBuilder<T extends AbstractEntity> extends Abstrac
      * {@link #addEditable(String, String, Integer, String, ITooltipGetter, ua.com.fielden.platform.swing.inspector.models.builders.PropertyTableModelBuilder.EditingPolicy, ua.com.fielden.platform.swing.inspector.models.builders.PropertyTableModelBuilder.NavigationPolicy, List, IOnCommitAction...)}
      * method JavaDocs (parameters are set as it is mentioned in "by default").
      */
-    public <BUILDER_TYPE extends PropertyTableModelBuilder<T>> BUILDER_TYPE addEditable(final String propertyName, final String columnName, final String headerTooltip, final IValueMatcher2 valueMatcher, final IOnCommitAction<T>... onCommitActions) {
+    public <BUILDER_TYPE extends PropertyTableModelBuilder<T>> BUILDER_TYPE addEditable(final String propertyName, final String columnName, final String headerTooltip, final IValueMatcher valueMatcher, final IOnCommitAction<T>... onCommitActions) {
 	return (BUILDER_TYPE) addEditable(propertyName, columnName, null, headerTooltip, null, BY_META_PROPERTY, ALWAYS_NAVIGABLE, valueMatcher, null, NO_TOTALS, null, onCommitActions);
     }
 
@@ -152,7 +152,7 @@ public class PropertyTableModelBuilder<T extends AbstractEntity> extends Abstrac
      * @param onCommitActions
      * @return
      */
-    public <BUILDER_TYPE extends PropertyTableModelBuilder<T>> BUILDER_TYPE addEditable(final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final EditingPolicy editingPolicy, final NavigationPolicy navigationPolicy, final IValueMatcher2 valueMatcher, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final IOnCommitAction<T>... onCommitActions) {
+    public <BUILDER_TYPE extends PropertyTableModelBuilder<T>> BUILDER_TYPE addEditable(final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final EditingPolicy editingPolicy, final NavigationPolicy navigationPolicy, final IValueMatcher valueMatcher, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final IOnCommitAction<T>... onCommitActions) {
 	if (StringUtils.isEmpty(propertyName)) {
 	    throw new IllegalArgumentException("Empty property name should not be used to create editable property mapping.");
 	}
@@ -183,7 +183,7 @@ public class PropertyTableModelBuilder<T extends AbstractEntity> extends Abstrac
 	return (BUILDER_TYPE) add(propertyColumnMapping);
     }
 
-    private AbstractPropertyColumnMapping<T> createStringPropertyMapping(final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final EditingPolicy editingPolicy, final NavigationPolicy navigationPolicy, final IValueMatcher2 valueMatcher, final boolean stringBinding, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final Class<?> propertyClass, final IOnCommitAction<T>... onCommitActions) {
+    private AbstractPropertyColumnMapping<T> createStringPropertyMapping(final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final EditingPolicy editingPolicy, final NavigationPolicy navigationPolicy, final IValueMatcher valueMatcher, final boolean stringBinding, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final Class<?> propertyClass, final IOnCommitAction<T>... onCommitActions) {
 	return new BoundedStringMapping<T>(getEntityClass(), propertyName, columnName, prefSize, headerTooltip, tooltipGetter, !stringBinding ? propertyClass : AbstractEntity.class,
 		valueMatcher, clickAction, columnTotals, aggregationFunction, stringBinding, onCommitActions) {
 	    @Override

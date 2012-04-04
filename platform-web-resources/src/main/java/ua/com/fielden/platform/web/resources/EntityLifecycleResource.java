@@ -16,10 +16,9 @@ import ua.com.fielden.platform.dao.ILifecycleDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
 
 /**
- * Represents a web resource mapped to URI /lifecycle/entity-alias-type. It handles POST requests provided with {@link IQueryModel} and a "propertyName" with lifecycle "period" to provide the result of the query as lifecycle data.
+ * Represents a web resource mapped to URI /lifecycle/entity-alias-type. It handles POST requests provided with {@link EntityResultQueryModel} and a "propertyName" with lifecycle "period" to provide the result of the query as lifecycle data.
  * <p>
  * Each request is handled by a new resource instance, thus the only thread-safety requirement is to have provided DAO and entity factory thread-safe.
  *

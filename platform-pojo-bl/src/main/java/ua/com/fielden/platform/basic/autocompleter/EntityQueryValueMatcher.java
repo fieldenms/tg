@@ -5,7 +5,7 @@ package ua.com.fielden.platform.basic.autocompleter;
 
 import java.util.List;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fetch;
@@ -21,7 +21,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  *
  * @author TG Team
  */
-public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher2<T> {
+public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher<T> {
 
     private final IEntityDao<T> dao;
 

@@ -17,7 +17,7 @@ import org.restlet.resource.Variant;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.IReport;
 
 /**
@@ -55,7 +55,7 @@ public class ReportResource extends Resource {
     }
 
     /**
-     * Handles POST request resulting from RAO call. It is expected that envelope is a serialised representation of a list containing {@link IQueryOrderedModel}, a list of property
+     * Handles POST request resulting from RAO call. It is expected that envelope is a serialised representation of a list containing {@link EntityResultQueryModel}, a list of property
      * names and a list of corresponding titles.
      */
     @Override

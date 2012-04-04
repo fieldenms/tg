@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.swing.ei.editors.development;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -30,7 +30,7 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
      * @param valueMatcher
      * @return
      */
-    public static EntityPropertyEditor createEntityPropertyEditorForMaster(final AbstractEntity<?> entity, final String propertyName, final IValueMatcher2<?> valueMatcher){
+    public static EntityPropertyEditor createEntityPropertyEditorForMaster(final AbstractEntity<?> entity, final String propertyName, final IValueMatcher<?> valueMatcher){
 	final MetaProperty metaProp = entity.getProperty(propertyName);
 	return new EntityPropertyEditor(entity, propertyName, "", metaProp.getDesc(), valueMatcher);
     }
@@ -44,7 +44,7 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
      */
     public static EntityPropertyEditor createEntityPropertyEditorForCentre(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> criteria, final String propertyName){
 	final MetaProperty metaProp = criteria.getProperty(propertyName);
-	final IValueMatcher2<?> valueMatcher = criteria.getValueMatcher(propertyName);
+	final IValueMatcher<?> valueMatcher = criteria.getValueMatcher(propertyName);
 	return new EntityPropertyEditor(criteria, propertyName, LabelAndTooltipExtractor.createCaption(metaProp.getTitle()), LabelAndTooltipExtractor.createTooltip(metaProp.getDesc()), valueMatcher);
     }
 
@@ -57,7 +57,7 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
      * @param toolTip
      * @param valueMatcher
      */
-    public EntityPropertyEditor(final AbstractEntity<?> entity, final String propertyName, final String caption, final String toolTip, final IValueMatcher2<?> valueMatcher){
+    public EntityPropertyEditor(final AbstractEntity<?> entity, final String propertyName, final String caption, final String toolTip, final IValueMatcher<?> valueMatcher){
 	super(entity, propertyName, valueMatcher);
 	final MetaProperty metaProp = entity.getProperty(propertyName);
 	final IsProperty propertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, entity.getType(), propertyName);
@@ -72,7 +72,7 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
     }
 
     @Override
-    public IValueMatcher2 getValueMatcher() {
+    public IValueMatcher getValueMatcher() {
 	return super.getValueMatcher();
     }
 

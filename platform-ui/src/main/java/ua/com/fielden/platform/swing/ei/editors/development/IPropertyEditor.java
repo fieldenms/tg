@@ -4,7 +4,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
@@ -63,7 +63,7 @@ public interface IPropertyEditor {
      *
      * @return
      */
-    IValueMatcher2<?> getValueMatcher();
+    IValueMatcher<?> getValueMatcher();
 
     /**
      * Returns true if the criterion is empty and should be ignored while constructing a criteria.

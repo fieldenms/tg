@@ -33,7 +33,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
@@ -66,7 +66,7 @@ import com.jidesoft.swing.StyledLabelBuilder;
  */
 public class DummyBuilder {
 
-    public static <T extends AbstractEntity<?>> AutocompleterTextFieldLayer<T> ac(final String caption, final Class<T> type, final String key, final String desc, final IValueMatcher2<T> valueMatcher) {
+    public static <T extends AbstractEntity<?>> AutocompleterTextFieldLayer<T> ac(final String caption, final Class<T> type, final String key, final String desc, final IValueMatcher<T> valueMatcher) {
 	final TwoPropertyListCellRenderer<T> cellRenderer = new TwoPropertyListCellRenderer<T>(key, desc);
 	final AutocompleterTextFieldLayer<T> ac = new AutocompleterTextFieldLayer<T>(new UpperCaseTextField(), valueMatcher, type, key, cellRenderer, caption, ",");
 	cellRenderer.setAuto(ac.getAutocompleter());
@@ -76,7 +76,7 @@ public class DummyBuilder {
     /**
      * Creates single-value autocompleter
      */
-    public static <T extends AbstractEntity<?>> AutocompleterTextFieldLayer<T> svac(final String caption, final Class<T> entityClass, final IValueMatcher2<T> valueMatcher) {
+    public static <T extends AbstractEntity<?>> AutocompleterTextFieldLayer<T> svac(final String caption, final Class<T> entityClass, final IValueMatcher<T> valueMatcher) {
 	final TwoPropertyListCellRenderer<T> cellRenderer = new TwoPropertyListCellRenderer<T>("key", "desc");
 	final AutocompleterTextFieldLayer<T> ac = new AutocompleterTextFieldLayer<T>(new UpperCaseTextField(), valueMatcher, entityClass, "key", cellRenderer, caption, null);
 	cellRenderer.setAuto(ac.getAutocompleter());
@@ -159,11 +159,11 @@ public class DummyBuilder {
     }
 
     /**
-     * Returning {@link IValueMatcher2} instance supporting the same functionality as {@link PojoValueMatcher} with wildcard support and multi value matching (i.e. parsing values
+     * Returning {@link IValueMatcher} instance supporting the same functionality as {@link PojoValueMatcher} with wildcard support and multi value matching (i.e. parsing values
      * separated with comma).
      */
     @SuppressWarnings("unchecked")
-    public static <T extends AbstractEntity<?>> IValueMatcher2<T> multiValuePojoMatcher(final List<T> instances, final String expression) {
+    public static <T extends AbstractEntity<?>> IValueMatcher<T> multiValuePojoMatcher(final List<T> instances, final String expression) {
 	// TODO method findMatches(String) takes more than O(n) time to find matches, thus it should be optimised
 	return new PojoValueMatcher<T>(instances, expression, Integer.MAX_VALUE) {
 	    private final String valueSeparator = ",";

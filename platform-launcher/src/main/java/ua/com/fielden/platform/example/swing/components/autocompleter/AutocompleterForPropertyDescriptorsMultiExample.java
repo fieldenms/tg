@@ -11,7 +11,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
 import net.miginfocom.swing.MigLayout;
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.Finder;
@@ -40,7 +40,7 @@ public class AutocompleterForPropertyDescriptorsMultiExample {
 		final List<PropertyDescriptor<DemoEntity>> acceptableValues = Finder.getPropertyDescriptors(DemoEntity.class);
 
 		// create an instance of the overlayable text field, which bill be used for attaching overlay components
-		final IValueMatcher2<PropertyDescriptor<DemoEntity>> matcher = new PojoValueMatcher<PropertyDescriptor<DemoEntity>>(acceptableValues, "key", 10) {
+		final IValueMatcher<PropertyDescriptor<DemoEntity>> matcher = new PojoValueMatcher<PropertyDescriptor<DemoEntity>>(acceptableValues, "key", 10) {
 		    @Override
 		    public List<PropertyDescriptor<DemoEntity>> findMatches(final String value) {
 			try {

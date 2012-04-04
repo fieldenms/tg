@@ -3,7 +3,7 @@ package ua.com.fielden.platform.swing.review.development;
 import java.util.HashMap;
 import java.util.Map;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -17,7 +17,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     private static final long serialVersionUID = 9154466083364529734L;
 
-    private final Map<String, IValueMatcher2> valueMatchers = new HashMap<String, IValueMatcher2>();
+    private final Map<String, IValueMatcher> valueMatchers = new HashMap<String, IValueMatcher>();
     private final IValueMatcherFactory valueMatcherFactory;
 
     private final DAO dao;
@@ -75,7 +75,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     @SuppressWarnings("unchecked")
-    public IValueMatcher2<?> getValueMatcher(final String propertyName) {
+    public IValueMatcher<?> getValueMatcher(final String propertyName) {
 	if (valueMatchers.get(propertyName) == null) {
 	    valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher((Class<? extends AbstractEntity<?>>) getType(), propertyName));
 	}

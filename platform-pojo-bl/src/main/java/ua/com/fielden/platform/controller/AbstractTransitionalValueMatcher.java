@@ -7,7 +7,7 @@ import java.util.TreeSet;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
+import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 
 /**
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.reflection.Finder;
  * @param <T>
  * @param <C>
  */
-public abstract class AbstractTransitionalValueMatcher<M extends AbstractEntity, T extends AbstractEntity, C extends ITransitionController<T>> implements IValueMatcher<T> {
+public abstract class AbstractTransitionalValueMatcher<M extends AbstractEntity<?>, T extends AbstractEntity<?>, C extends ITransitionController<T>> implements IValueMatcher<T> {
 
     private final String propertyName;
     private final C transController;
@@ -71,17 +71,16 @@ public abstract class AbstractTransitionalValueMatcher<M extends AbstractEntity,
 
 
     @Override
-    public fetch<?> getFetchModel() {
+    public <FT extends AbstractEntity<?>> fetch<FT> getFetchModel() {
 	return null;
     }
 
     @Override
-    public void setFetchModel(final fetch<?> fetchModel) {
+    public <FT extends AbstractEntity<?>> void setFetchModel(final fetch<FT> fetchModel) {
     }
 
     @Override
     public Integer getPageSize() {
 	return null;
     }
-
 }

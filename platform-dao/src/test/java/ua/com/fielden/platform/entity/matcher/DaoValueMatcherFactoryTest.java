@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -37,7 +37,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
     public void test_instantiation() {
 	final IValueMatcherFactory vmFactory = new ValueMatcherFactory(daoFactory, entityFactory);
 
-	final IValueMatcher2<?> matcher = vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
+	final IValueMatcher<?> matcher = vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
 	assertNotNull("Should have constructed a value matcher.", matcher);
 	assertEquals("Incorrect number of matching values.", 2, matcher.findMatches("W%").size());
 	assertTrue("New matcher should not have been created.", matcher == vmFactory.getValueMatcher(TgWagon.class, "wagonClass"));
@@ -47,7 +47,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
     public void test_matcher_usage_with_model() {
 	final IValueMatcherFactory vmFactory = new ValueMatcherFactory(daoFactory, entityFactory);
 
-	final IValueMatcher2<TgWagonClass> matcher = (IValueMatcher2<TgWagonClass>) vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
+	final IValueMatcher<TgWagonClass> matcher = (IValueMatcher<TgWagonClass>) vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
 	//matcher.setQueryModel(select(WagonClass.class).with("compatibles", select(WagonClassCompatibility.class).model()));
 	matcher.setFetchModel(new fetch(TgWagonClass.class).with("compatibles", new fetch(TgWagonClassCompatibility.class)));
 	assertNotNull("Should have constructed a value matcher.", matcher);
@@ -89,7 +89,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_property_descriptor_matcher() {
 	final IValueMatcherFactory vmFactory = new ValueMatcherFactory(daoFactory, entityFactory);
-	final IValueMatcher2<PropertyDescriptor<TgWorkOrder>> matcher = (IValueMatcher2<PropertyDescriptor<TgWorkOrder>>) vmFactory.getValueMatcher(TgWoStatusRequiredField.class, "requiredProperty");
+	final IValueMatcher<PropertyDescriptor<TgWorkOrder>> matcher = (IValueMatcher<PropertyDescriptor<TgWorkOrder>>) vmFactory.getValueMatcher(TgWoStatusRequiredField.class, "requiredProperty");
 	assertNotNull("Value matcher for property descriptor should have been created.", matcher);
 	assertEquals("Incorrect number of matches for '*'.", 7, matcher.findMatches("*").size());
 	assertEquals("Incorrect number of matches containing 'Co'.", 3, matcher.findMatches("%Co%").size());

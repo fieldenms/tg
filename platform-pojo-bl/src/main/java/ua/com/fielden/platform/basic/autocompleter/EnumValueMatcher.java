@@ -8,7 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
@@ -18,7 +17,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @author TG Team
  *
  */
-public class EnumValueMatcher<T extends Enum<T>> implements IValueMatcher2<T> {
+public class EnumValueMatcher<T extends Enum<T>> implements IValueMatcher<T> {
     private EnumSet<T> values;
 
     public EnumValueMatcher(final Class<T> enumType) {

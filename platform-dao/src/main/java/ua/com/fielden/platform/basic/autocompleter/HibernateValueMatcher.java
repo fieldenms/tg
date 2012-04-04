@@ -8,7 +8,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fetch;
 
@@ -22,7 +21,7 @@ import ua.com.fielden.platform.entity.query.fetch;
  *
  * @param <T>
  */
-public class HibernateValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher2<T> {
+public class HibernateValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher<T> {
     /**
      * Used for Hibernate Session instantiation.
      */

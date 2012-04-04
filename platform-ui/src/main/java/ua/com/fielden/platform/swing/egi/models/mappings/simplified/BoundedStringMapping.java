@@ -9,7 +9,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.Action;
 import javax.swing.JTextField;
 
-import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
@@ -23,7 +23,7 @@ import ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals;
 
 /**
  * Class, representing mapping of some {@link String} property of some {@link AbstractEntity} class to column of related {@link EntityGridInspector}. Uses
- * {@link ComponentFactory#createOnFocusLostAutocompleter(AbstractEntity, String, String, Class, String, String, String, ua.com.fielden.platform.basic.IValueMatcher2, String, boolean, ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction...)}
+ * {@link ComponentFactory#createOnFocusLostAutocompleter(AbstractEntity, String, String, Class, String, String, String, ua.com.fielden.platform.basic.IValueMatcher, String, boolean, ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction...)}
  * method to bound editors to properties. Extends and reuses functionality from {@link AbstractLabelPropertyColumnMapping}, so in order to provide custom logic, one may override
  * particular methods.
  *
@@ -44,7 +44,7 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
 
     private final Class valueClass;
 
-    private final IValueMatcher2 valueMatcher;
+    private final IValueMatcher valueMatcher;
 
     private final IOnCommitAction<T>[] onCommitActions;
 
@@ -52,7 +52,7 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
 
     /**
      * Creates instance of mapping, where editors are bounded to properties using
-     * {@link ComponentFactory#createOnFocusLostAutocompleter(AbstractEntity, String, String, Class, String, String, String, ua.com.fielden.platform.basic.IValueMatcher2, String, boolean, ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction...)}
+     * {@link ComponentFactory#createOnFocusLostAutocompleter(AbstractEntity, String, String, Class, String, String, String, ua.com.fielden.platform.basic.IValueMatcher, String, boolean, ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction...)}
      * method. Most of the properties are used directly in that method, so view JavaDocs for it please. Array of {@link IOnCommitAction}s would be added to each created
      * autocompleter. Please note, that {@link IOnCommitAction} is just a wrapper around {@link ua.com.fielden.platform.swing.components.bind.ComponentFactory.IOnCommitAction} that
      * provides implementing classes with additional information.<br>
@@ -72,7 +72,7 @@ public class BoundedStringMapping<T extends AbstractEntity> extends AbstractLabe
      *            - true should be passed here if one needs mapping from {@link String} property to column, but with enabled auto-completer selection
      * @param onCommitActions
      */
-    public BoundedStringMapping(final Class<T> entityClass, final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final Class valueClass, final IValueMatcher2 valueMatcher, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final boolean stringBinding, final IOnCommitAction<T>... onCommitActions) {
+    public BoundedStringMapping(final Class<T> entityClass, final String propertyName, final String columnName, final Integer prefSize, final String headerTooltip, final ITooltipGetter<T> tooltipGetter, final Class valueClass, final IValueMatcher valueMatcher, final Action clickAction, final ColumnTotals columnTotals, final AggregationFunction<T> aggregationFunction, final boolean stringBinding, final IOnCommitAction<T>... onCommitActions) {
 	super(entityClass, propertyName, columnName, prefSize, headerTooltip, tooltipGetter, clickAction, columnTotals, aggregationFunction);
 
 	originalPropertyName = propertyName;
