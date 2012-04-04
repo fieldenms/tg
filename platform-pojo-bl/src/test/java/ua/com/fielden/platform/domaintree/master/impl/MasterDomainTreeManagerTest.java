@@ -2,14 +2,11 @@ package ua.com.fielden.platform.domaintree.master.impl;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeTest;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
-import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 
@@ -36,43 +33,7 @@ public class MasterDomainTreeManagerTest extends AbstractDomainTreeTest {
 	final String message = "Non-AE property should cause IllegalArgument exception for locator-related logic.";
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		// FIRST TICK
-		// locators
-		try {
-		    mdtm().initLocatorManagerByDefault(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    ((ILocatorManagerInner) mdtm()).produceLocatorManagerByDefault(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    mdtm().discardLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    mdtm().acceptLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    mdtm().saveLocatorManagerGlobally(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    mdtm().getLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    mdtm().isChangedLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
+		illegalAllLocatorActions(mdtm(), message, name);
 	    }
 	}, "integerProp", "moneyProp", "booleanProp");
     }

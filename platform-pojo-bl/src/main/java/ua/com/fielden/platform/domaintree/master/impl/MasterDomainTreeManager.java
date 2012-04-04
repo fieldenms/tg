@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Set;
 
-import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
+import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.LocatorManager;
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public class MasterDomainTreeManager extends AbstractDomainTree implements IMasterDomainTreeManager, ILocatorManagerInner {
+public class MasterDomainTreeManager extends AbstractDomainTree implements IMasterDomainTreeManager, ILocatorManager {
     private static final long serialVersionUID = 7832625541851145438L;
 
     private final LocatorManager locatorManager;
@@ -50,23 +50,13 @@ public class MasterDomainTreeManager extends AbstractDomainTree implements IMast
     }
 
     @Override
-    public void initLocatorManagerByDefault(final Class<?> root, final String property) {
-	locatorManager.initLocatorManagerByDefault(root, property);
+    public void refreshLocatorManager(final Class<?> root, final String property) {
+	locatorManager.refreshLocatorManager(root, property);
     }
 
     @Override
-    public void resetLocatorManager(final Class<?> root, final String property) {
-	locatorManager.resetLocatorManager(root, property);
-    }
-
-    @Override
-    public ILocatorDomainTreeManagerAndEnhancer produceLocatorManagerByDefault(final Class<?> root, final String property) {
-	return locatorManager.produceLocatorManagerByDefault(root, property);
-    }
-
-    @Override
-    public void discardLocatorManager(final Class<?> root, final String property) {
-	locatorManager.discardLocatorManager(root, property);
+    public void resetLocatorManagerToDefault(final Class<?> root, final String property) {
+	locatorManager.resetLocatorManagerToDefault(root, property);
     }
 
     @Override
@@ -75,13 +65,13 @@ public class MasterDomainTreeManager extends AbstractDomainTree implements IMast
     }
 
     @Override
-    public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
-	locatorManager.saveLocatorManagerGlobally(root, property);
+    public void discardLocatorManager(final Class<?> root, final String property) {
+	locatorManager.discardLocatorManager(root, property);
     }
 
     @Override
-    public ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property) {
-	return locatorManager.getLocatorManager(root, property);
+    public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
+	locatorManager.saveLocatorManagerGlobally(root, property);
     }
 
     @Override
@@ -90,8 +80,13 @@ public class MasterDomainTreeManager extends AbstractDomainTree implements IMast
     }
 
     @Override
-    public boolean isFreezedLocatorManager(final Class<?> root, final String property) {
-        return locatorManager.isFreezedLocatorManager(root, property);
+    public ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property) {
+	return locatorManager.getLocatorManager(root, property);
+    }
+
+    @Override
+    public Pair<Phase, Type> phaseAndTypeOfLocatorManager(final Class<?> root, final String property) {
+        return locatorManager.phaseAndTypeOfLocatorManager(root, property);
     }
 
     @Override

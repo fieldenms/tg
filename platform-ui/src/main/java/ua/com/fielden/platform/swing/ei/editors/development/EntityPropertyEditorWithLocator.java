@@ -227,7 +227,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	private ILocatorDomainTreeManager ldtm(){
 	    ILocatorDomainTreeManager ldtm = locatorManager.getLocatorManager(rootType, propertyName);
 	    if(ldtm == null){
-		locatorManager.initLocatorManagerByDefault(rootType, propertyName);
+		locatorManager.refreshLocatorManager(rootType, propertyName);
 		ldtm = locatorManager.getLocatorManager(rootType, propertyName);
 		if(ldtm == null){
 		    throw new IllegalStateException("The locator manager must be initialised");

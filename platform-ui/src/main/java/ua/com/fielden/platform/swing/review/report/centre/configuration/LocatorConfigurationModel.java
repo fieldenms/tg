@@ -98,7 +98,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 	if(ReportMode.REPORT.equals(mode)){
 	    ILocatorDomainTreeManager ldtm = locatorManager.getLocatorManager(rootType, name);
 	    if(ldtm == null){
-		locatorManager.initLocatorManagerByDefault(rootType, name);
+		locatorManager.refreshLocatorManager(rootType, name);
 		ldtm = locatorManager.getLocatorManager(rootType, name);
 	    }
 	    if(ldtm == null){
@@ -227,7 +227,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
-		locatorManager.initLocatorManagerByDefault(rootType, name);
+		locatorManager.refreshLocatorManager(rootType, name);
 		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.LOAD_DEFAULT));
 		return null;
 	    }

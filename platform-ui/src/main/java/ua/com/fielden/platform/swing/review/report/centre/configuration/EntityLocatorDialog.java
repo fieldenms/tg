@@ -130,7 +130,8 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 		final Class<RT> root = locatorConfigurationView.getModel().rootType;
 		final String name = locatorConfigurationView.getModel().name;
 		if (locatorManager.isChangedLocatorManager(root, name)) {
-		    final boolean isFreezed = locatorManager.isFreezedLocatorManager(root, name);
+		    // TODO The logic should be revised after ILocatorManager enhancements!
+		    final boolean isFreezed = ILocatorManager.Phase.FREEZED_EDITING_PHASE == locatorManager.phaseAndTypeOfLocatorManager(root, name).getKey();
 		    final Object options[] = { "Save", "Save as default", "No" };
 		    final int chosenOption = JOptionPane.showOptionDialog(EntityLocatorDialog.this, "This locator has been changed, would you like to save it?", "Save entity locator configuration", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 		    switch (chosenOption) {

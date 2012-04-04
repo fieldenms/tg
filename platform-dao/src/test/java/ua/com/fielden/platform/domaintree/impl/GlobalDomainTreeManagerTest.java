@@ -15,11 +15,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
-import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 
@@ -31,150 +27,29 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
  */
 public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationTest {
     private final String NON_BASE_USERS_SAVE_AS = "NON_BASE_USER'S_SAVE_AS";
+    private final String property = "entityProp.simpleEntityProp";
+
+    private IGlobalDomainTreeManager initGlobalManagerWithEntityCentre() {
+	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
+	managerForNonBaseUser.initEntityCentreManager(MasterEntity.class, null);
+	managerForNonBaseUser.saveAsEntityCentreManager(MasterEntity.class, null, NON_BASE_USERS_SAVE_AS);
+	return managerForNonBaseUser;
+    }
+
+    private ILocatorManager prepareGlobalManagerEntityCentreForLocatorActions(final IGlobalDomainTreeManager managerForNonBaseUser) {
+	final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
+	dtm.getFirstTick().check(MasterEntity.class, property, true);
+	return dtm.getFirstTick();
+    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////// ENTITY-CENTRES/MASTERS LOCATORS MANAGEMENT /////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    public void test_that_CENTRE_saving_works_fine_with_just_initialised_LOCATORS_from_raw_construction() {
-	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityCentreManager(MasterEntity.class, null);
-	managerForNonBaseUser.saveAsEntityCentreManager(MasterEntity.class, null, NON_BASE_USERS_SAVE_AS);
-	final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
-	final String property = "entityProp.simpleEntityProp";
-	dtm.getFirstTick().check(MasterEntity.class, property, true);
-
-	final ILocatorManagerInner locatorManager = (ILocatorManagerInner) dtm.getFirstTick();
-
-	test_that_saving_works_fine_with_just_initialised_LOCATORS_from_raw_construction(property, locatorManager);
-
-	// save a box with locators
-	managerForNonBaseUser.saveEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
-
-	final ILocatorDomainTreeManagerAndEnhancer inst3 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertNull("Should be null after inteligent 'save' operation. It means that 'save' operation resets some instances to 'null' -- those instances that are fully equal to 'default' instances from 'produce' method.", inst3);
-    }
-
-    @Test
-    public void test_that_MASTER_saving_works_fine_with_just_initialised_LOCATORS_from_raw_construction() {
-	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityMasterManager(MasterEntity.class);
-	final IMasterDomainTreeManager mdtm = managerForNonBaseUser.getEntityMasterManager(MasterEntity.class);
-	final String property = "entityProp.simpleEntityProp";
-
-	final ILocatorManagerInner locatorManager = (ILocatorManagerInner) mdtm;
-
-	test_that_saving_works_fine_with_just_initialised_LOCATORS_from_raw_construction(property, locatorManager);
-
-	// save a box with locators
-	managerForNonBaseUser.saveEntityMasterManager(MasterEntity.class);
-
-	final ILocatorDomainTreeManagerAndEnhancer inst3 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertNull("Should be null after inteligent 'save' operation. It means that 'save' operation resets some instances to 'null' -- those instances that are fully equal to 'default' instances from 'produce' method.", inst3);
-    }
-
-    private void test_that_saving_works_fine_with_just_initialised_LOCATORS_from_raw_construction(final String property, final ILocatorManagerInner locatorManager) {
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////// INITIALISATION (from raw construction) /////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	// initialise a brand new instance of locator
-	locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
-	final ILocatorDomainTreeManagerAndEnhancer inst1 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertNotNull("Should be not null after initialisation.", inst1);
-	final ILocatorDomainTreeManagerAndEnhancer inst1FromProduceMethod = locatorManager.produceLocatorManagerByDefault(MasterEntity.class, property);
-	assertFalse("The current instance should not be identical to instance from 'produce' method.", inst1 == inst1FromProduceMethod);
-	assertTrue("The current instance should be 'equal' to instance from 'produce' method.", inst1.equals(inst1FromProduceMethod));
-	assertFalse("The instance should not be 'changed' after initialisation (the user did nothing with initialised instance!).", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-	// re-initialise a locator manager again -- should work as "reloading"
-	locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
-	final ILocatorDomainTreeManagerAndEnhancer inst2 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertNotNull("Should be not null after second initialisation (many initialisations are permitted, they should work as 'reloading').", inst2);
-	final ILocatorDomainTreeManagerAndEnhancer inst2FromProduceMethod = locatorManager.produceLocatorManagerByDefault(MasterEntity.class, property);
-	assertFalse("The current instance should not be identical to instance from 'produce' method (many initialisations are permitted, they should work as 'reloading').", inst2 == inst2FromProduceMethod);
-	assertTrue("The current instance should be 'equal' to instance from 'produce' method (many initialisations are permitted, they should work as 'reloading').", inst2.equals(inst2FromProduceMethod));
-	assertFalse("The instance should not be 'changed' after initialisation (the user did nothing with initialised instance!) (many initialisations are permitted, they should work as 'reloading').", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-    }
-
-    @Test
-    public void test_that_CENTRE_saving_works_fine_with_just_initialised_LOCATORS_from_default_config() {
-	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityCentreManager(MasterEntity.class, null);
-	managerForNonBaseUser.saveAsEntityCentreManager(MasterEntity.class, null, NON_BASE_USERS_SAVE_AS);
-	final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
-	final String property = "entityProp.simpleEntityProp";
-	dtm.getFirstTick().check(MasterEntity.class, property, true);
-
-	final ILocatorManagerInner locatorManager = (ILocatorManagerInner) dtm.getFirstTick();
-
-	test_that_saving_works_fine_with_just_initialised_LOCATORS_from_default_config(managerForNonBaseUser, property, locatorManager);
-
-	// save a box with locators
-	managerForNonBaseUser.saveEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
-
-	final ILocatorDomainTreeManagerAndEnhancer inst3 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertNull("Should be null after inteligent 'save' operation. It means that 'save' operation resets some instances to 'null' -- those instances that are fully equal to 'default' instances from 'produce' method.", inst3);
-    }
-
-    @Test
-    public void test_that_MASTER_saving_works_fine_with_just_initialised_LOCATORS_from_default_config() {
-	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityMasterManager(MasterEntity.class);
-	final IMasterDomainTreeManager mdtm = managerForNonBaseUser.getEntityMasterManager(MasterEntity.class);
-	final String property = "entityProp.simpleEntityProp";
-
-	final ILocatorManagerInner locatorManager = (ILocatorManagerInner) mdtm;
-
-	test_that_saving_works_fine_with_just_initialised_LOCATORS_from_default_config(managerForNonBaseUser, property, locatorManager);
-
-	// save a box with locators
-	managerForNonBaseUser.saveEntityMasterManager(MasterEntity.class);
-
-	final ILocatorDomainTreeManagerAndEnhancer inst3 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertNull("Should be null after inteligent 'save' operation. It means that 'save' operation resets some instances to 'null' -- those instances that are fully equal to 'default' instances from 'produce' method.", inst3);
-    }
-
-    private void test_that_saving_works_fine_with_just_initialised_LOCATORS_from_default_config(final IGlobalDomainTreeManager managerForNonBaseUser, final String property, final ILocatorManagerInner locatorManager) {
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////// INITIALISATION (from default configuration) ////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	// initialise a default locator for type EntityWithStringKeyType which will affect initialisation of [MasterEntity.entityProp.simpleEntityProp] property.
-	final ILocatorDomainTreeManagerAndEnhancer ldtmae = initDefaultLocatorForSomeTestType(managerForNonBaseUser);
-
-	assertNull("Should be null before creation.", locatorManager.getLocatorManager(MasterEntity.class, property));
-
-	// initialise a brand new instance of locator
-	locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
-	final ILocatorDomainTreeManagerAndEnhancer inst1 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertNotNull("Should be not null after initialisation.", inst1);
-	final ILocatorDomainTreeManagerAndEnhancer inst1FromProduceMethod = locatorManager.produceLocatorManagerByDefault(MasterEntity.class, property);
-	assertFalse("The default instance should not be identical to instance from 'produce' method.", ldtmae == inst1FromProduceMethod);
-	assertTrue("The default instance should be 'equal' to instance from 'produce' method.", ldtmae.equals(inst1FromProduceMethod));
-	assertFalse("The current instance should not be identical to instance from 'produce' method.", inst1 == inst1FromProduceMethod);
-	assertTrue("The current instance should be 'equal' to instance from 'produce' method.", inst1.equals(inst1FromProduceMethod));
-	assertFalse("The instance should not be 'changed' after initialisation (the user did nothing with initialised instance!).", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-	// re-initialise a locator manager again -- should work as "reloading"
-	locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
-	final ILocatorDomainTreeManagerAndEnhancer inst2 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertNotNull("Should be not null after second initialisation (many initialisations are permitted, they should work as 'reloading').", inst2);
-	final ILocatorDomainTreeManagerAndEnhancer inst2FromProduceMethod = locatorManager.produceLocatorManagerByDefault(MasterEntity.class, property);
-	assertFalse("The default instance should not be identical to instance from 'produce' method.", ldtmae == inst2FromProduceMethod);
-	assertTrue("The default instance should be 'equal' to instance from 'produce' method.", ldtmae.equals(inst2FromProduceMethod));
-	assertFalse("The current instance should not be identical to instance from 'produce' method (many initialisations are permitted, they should work as 'reloading').", inst2 == inst2FromProduceMethod);
-	assertTrue("The current instance should be 'equal' to instance from 'produce' method (many initialisations are permitted, they should work as 'reloading').", inst2.equals(inst2FromProduceMethod));
-	assertFalse("The instance should not be 'changed' after initialisation (the user did nothing with initialised instance!) (many initialisations are permitted, they should work as 'reloading').", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-    }
-
-    @Test
     public void test_that_CENTRE_saving_works_fine_with_just_initialised_and_modified_LOCATORS() {
-	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityCentreManager(MasterEntity.class, null);
-	managerForNonBaseUser.saveAsEntityCentreManager(MasterEntity.class, null, NON_BASE_USERS_SAVE_AS);
-	final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
-	final String property = "entityProp.simpleEntityProp";
-	dtm.getFirstTick().check(MasterEntity.class, property, true);
-
-	final IAddToCriteriaTickManager locatorManager = dtm.getFirstTick();
+	final IGlobalDomainTreeManager managerForNonBaseUser = initGlobalManagerWithEntityCentre();
+	final ILocatorManager locatorManager = prepareGlobalManagerEntityCentreForLocatorActions(managerForNonBaseUser);
 	test_that_saving_works_fine_with_just_initialised_and_modified_LOCATORS_PART1(managerForNonBaseUser, property, locatorManager);
 
 	// should be accepted before saving
@@ -187,24 +62,18 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	// save a box with locators
 	managerForNonBaseUser.saveEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
 
-	ILocatorDomainTreeManagerAndEnhancer inst3;
 	test_that_saving_works_fine_with_just_initialised_and_modified_LOCATORS_PART2(property, locatorManager);
-
+	assertNull("Should be null.", locatorManager.getLocatorManager(MasterEntity.class, property));
 	// save a box with locators
 	managerForNonBaseUser.saveEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
-
-	inst3 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertNull("Should be null after inteligent 'save' operation. It means that 'save' operation resets some instances to 'null' -- those instances that are fully equal to 'default' instances from 'produce' method.", inst3);
+	assertNull("Should be null.", locatorManager.getLocatorManager(MasterEntity.class, property));
     }
 
     @Test
     public void test_that_MASTER_saving_works_fine_with_just_initialised_and_modified_LOCATORS() {
 	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
 	managerForNonBaseUser.initEntityMasterManager(MasterEntity.class);
-	final IMasterDomainTreeManager mdtm = managerForNonBaseUser.getEntityMasterManager(MasterEntity.class);
-	final String property = "entityProp.simpleEntityProp";
-
-	final ILocatorManager locatorManager = mdtm;
+	final ILocatorManager locatorManager = managerForNonBaseUser.getEntityMasterManager(MasterEntity.class);;
 
 	test_that_saving_works_fine_with_just_initialised_and_modified_LOCATORS_PART1(managerForNonBaseUser, property, locatorManager);
 
@@ -218,26 +87,22 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	// save a box with locators
 	managerForNonBaseUser.saveEntityMasterManager(MasterEntity.class);
 
-	ILocatorDomainTreeManagerAndEnhancer inst3;
 	test_that_saving_works_fine_with_just_initialised_and_modified_LOCATORS_PART2(property, locatorManager);
-
+	assertNull("Should be null.", locatorManager.getLocatorManager(MasterEntity.class, property));
 	// save a box with locators
 	managerForNonBaseUser.saveEntityMasterManager(MasterEntity.class);
-
-	inst3 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertNull("Should be null after inteligent 'save' operation. It means that 'save' operation resets some instances to 'null' -- those instances that are fully equal to 'default' instances from 'produce' method.", inst3);
+	assertNull("Should be null.", locatorManager.getLocatorManager(MasterEntity.class, property));
     }
 
     private void test_that_saving_works_fine_with_just_initialised_and_modified_LOCATORS_PART2(final String property, final ILocatorManager locatorManager) {
-	final ILocatorDomainTreeManagerAndEnhancer inst3 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertNotNull("Should be not null after inteligent 'save' operation. It means that 'save' operation should not reset the instance to 'null' -- the instance is not equal to 'default' instances from 'produce' method.", inst3);
+	assertNotNull("Should be not null.", locatorManager.getLocatorManager(MasterEntity.class, property));
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////// INITIALISATION AS RELOADING ////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	// initialise a brand new instance of locator
-	locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
-	assertFalse("The instance should not be 'changed' after initialisation (the user did nothing!).", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
+	locatorManager.resetLocatorManagerToDefault(MasterEntity.class, property);
+	assertFalse("The instance should not be 'changed'.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
     }
 
     private void test_that_saving_works_fine_with_just_initialised_and_modified_LOCATORS_PART1(final IGlobalDomainTreeManager managerForNonBaseUser, final String property, final ILocatorManager locatorManager) {
@@ -250,104 +115,10 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertNull("Should be null before creation.", locatorManager.getLocatorManager(MasterEntity.class, property));
 
 	// initialise a brand new instance of locator
-	locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
+	locatorManager.refreshLocatorManager(MasterEntity.class, property);
 	// MODIFY
 	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
 	assertTrue("The instance should be 'changed' after initialisation & modification (the user has checked some property!).", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-    }
-
-    @Test
-    public void test_that_CENTRE_LOCATORS_discarding_works_fine() {
-	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityCentreManager(MasterEntity.class, null);
-	managerForNonBaseUser.saveAsEntityCentreManager(MasterEntity.class, null, NON_BASE_USERS_SAVE_AS);
-	final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
-	final String property = "entityProp.simpleEntityProp";
-	dtm.getFirstTick().check(MasterEntity.class, property, true);
-
-	final ILocatorManager locatorManager = dtm.getFirstTick();
-
-	test_that_LOCATORS_discarding_works_fine(managerForNonBaseUser, property, locatorManager);
-    }
-
-    @Test
-    public void test_that_MASTER_LOCATORS_discarding_works_fine() {
-	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityMasterManager(MasterEntity.class);
-	final IMasterDomainTreeManager mdtm = managerForNonBaseUser.getEntityMasterManager(MasterEntity.class);
-	final String property = "entityProp.simpleEntityProp";
-
-	final ILocatorManager locatorManager = mdtm;
-
-	test_that_LOCATORS_discarding_works_fine(managerForNonBaseUser, property, locatorManager);
-    }
-
-    private void test_that_LOCATORS_discarding_works_fine(final IGlobalDomainTreeManager managerForNonBaseUser, final String property, final ILocatorManager locatorManager) {
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////// INITIALISATION & MODIFICATION //////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	// initialise a default locator for type EntityWithStringKeyType which will affect initialisation of [MasterEntity.entityProp.simpleEntityProp] property.
-	initDefaultLocatorForSomeTestType(managerForNonBaseUser);
-
-	assertNull("Should be null before creation.", locatorManager.getLocatorManager(MasterEntity.class, property));
-
-	// initialise a brand new instance of locator
-	locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
-	// MODIFY
-	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
-	assertTrue("The instance should be 'changed' after initialisation & modification (the user has checked some property!).", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-
-	locatorManager.discardLocatorManager(MasterEntity.class, property);
-
-	final ILocatorDomainTreeManagerAndEnhancer inst3 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	assertFalse("The state should be discarded.", inst3.getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertFalse("The instance should be 'unchanged' after discard operation.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-    }
-
-    @Test
-    public void test_that_CENTRE_LOCATORS_global_saving_works_fine() {
-	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityCentreManager(MasterEntity.class, null);
-	managerForNonBaseUser.saveAsEntityCentreManager(MasterEntity.class, null, NON_BASE_USERS_SAVE_AS);
-	final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
-	final String property = "entityProp.simpleEntityProp";
-	dtm.getFirstTick().check(MasterEntity.class, property, true);
-
-	final ILocatorManager locatorManager = dtm.getFirstTick();
-
-	test_that_LOCATORS_global_saving_works_fine(managerForNonBaseUser, property, locatorManager);
-    }
-
-    @Test
-    public void test_that_MASTER_LOCATORS_global_saving_works_fine() {
-	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityMasterManager(MasterEntity.class);
-	final IMasterDomainTreeManager mdtm = managerForNonBaseUser.getEntityMasterManager(MasterEntity.class);
-	final String property = "entityProp.simpleEntityProp";
-
-	final ILocatorManager locatorManager = mdtm;
-
-	test_that_LOCATORS_global_saving_works_fine(managerForNonBaseUser, property, locatorManager);
-    }
-
-    private void test_that_LOCATORS_global_saving_works_fine(final IGlobalDomainTreeManager managerForNonBaseUser, final String property, final ILocatorManager locatorManager) {
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////// INITIALISATION & MODIFICATION //////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	assertNull("Should be null before creation.", locatorManager.getLocatorManager(MasterEntity.class, property));
-
-	// initialise a brand new instance of locator
-	locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
-	// MODIFY
-	final ILocatorDomainTreeManagerAndEnhancer inst1 = locatorManager.getLocatorManager(MasterEntity.class, property);
-	inst1.getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
-	assertTrue("The instance should be 'changed' after initialisation & modification (the user has checked some property!).", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-
-	// save a locator globally
-	locatorManager.saveLocatorManagerGlobally(MasterEntity.class, property);
-
-	assertFalse("Should not be identical.", inst1 == managerForNonBaseUser.getGlobalRepresentation().getLocatorManagerByDefault(EntityWithStringKeyType.class));
-	assertTrue("Should be equal.", inst1.equals(managerForNonBaseUser.getGlobalRepresentation().getLocatorManagerByDefault(EntityWithStringKeyType.class)));
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -621,111 +392,6 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertFalse("Should be NOT freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
     }
 
-    @Test
-    public void test_that_CENTRE_LOCATORS_freezing_works_fine() {
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////// INITIALISATION /////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
-	managerForNonBaseUser.initEntityCentreManager(MasterEntity.class, null);
-	managerForNonBaseUser.saveAsEntityCentreManager(MasterEntity.class, null, NON_BASE_USERS_SAVE_AS);
-	final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MasterEntity.class, NON_BASE_USERS_SAVE_AS);
-	final String property = "entityProp.simpleEntityProp";
-	dtm.getFirstTick().check(MasterEntity.class, property, true);
-	final ILocatorManagerInner locatorManager = (ILocatorManagerInner) dtm.getFirstTick();
-
-	// initialise a default locator for type EntityWithStringKeyType which will affect initialisation of [MasterEntity.entityProp.simpleEntityProp] property.
-	initDefaultLocatorForSomeTestType(managerForNonBaseUser);
-	assertNull("Should be null before creation.", locatorManager.getLocatorManager(MasterEntity.class, property));
-	// initialise a brand new instance of locator
-	locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
-	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "bigDecimalProp", true);
-	locatorManager.acceptLocatorManager(MasterEntity.class, property);
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////// FREEEEEEEEEEEEEEEZZZZZZZZZZZZZZZZEEEEEEEEEEEEEEEEEEEEEEEE//////////////////////
-	////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	assertFalse("Should not be changed.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
-
-	assertTrue("Should be changed after modification.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-	assertTrue("Should be checked after modification.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertFalse("Should be NOT freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
-
-	// FREEEEEEEZEEEEEE all current changes
-	locatorManager.freezeLocatorManager(MasterEntity.class, property);
-	assertFalse("Should not be changed after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-	assertTrue("Should be checked after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertTrue("Should be freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
-
-	////////////////////// Not permitted tasks after report has been freezed //////////////////////
-	try {
-	    locatorManager.freezeLocatorManager(MasterEntity.class, property);
-	    fail("Double freezing is not permitted. Please do you job -- save/discard and freeze again if you need!");
-	} catch (final IllegalArgumentException e) {
-	}
-	try {
-	    locatorManager.initLocatorManagerByDefault(MasterEntity.class, property);
-	    fail("Init action is not permitted while report is freezed. Please do you job -- save/discard and Init it if you need!");
-	} catch (final IllegalArgumentException e) {
-	}
-	try {
-	    locatorManager.produceLocatorManagerByDefault(MasterEntity.class, property);
-	    fail("Locator producing is not permitted. Please do you job -- save/discard and then produce new stuff if you need!");
-	} catch (final IllegalArgumentException e) {
-	}
-	try {
-	    locatorManager.resetLocatorManager(MasterEntity.class, property);
-	    fail("Reset action is not permitted while report is freezed. Please do you job -- save/discard and then Reset it if you need!");
-	} catch (final IllegalArgumentException e) {
-	}
-	try {
-	    locatorManager.saveLocatorManagerGlobally(MasterEntity.class, property);
-	    fail("Saving Globally is not permitted while report is freezed. Please do you job -- save/discard and then Save it Globally if you need!");
-	} catch (final IllegalArgumentException e) {
-	}
-
-	// change smth.
-	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
-	assertTrue("Should be changed after modification after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-	assertFalse("Should be unchecked after modification after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertTrue("Should be freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
-
-	// discard after-freezing changes
-	locatorManager.discardLocatorManager(MasterEntity.class, property);
-	assertTrue("Should be changed after discard after freezing (due to existence of before-freezing changes).", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-	assertTrue("Should be checked after discard after freezing (according to before-freezing changes).", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertFalse("Should be NOT freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
-
-	// FREEEEEEEZEEEEEE all current changes (again)
-	locatorManager.freezeLocatorManager(MasterEntity.class, property);
-	assertFalse("Should not be changed after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-	assertTrue("Should be checked after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertTrue("Should be checked after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "bigDecimalProp"));
-	assertTrue("Should be freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
-
-	// change smth.
-	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
-	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "bigDecimalProp", false);
-	assertTrue("Should be changed after modification after freezing.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-	assertFalse("Should be unchecked after modification after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertFalse("Should be unchecked after modification after freezing.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "bigDecimalProp"));
-	assertTrue("Should be freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
-
-	// save (precisely "apply") after-freezing changes
-	locatorManager.acceptLocatorManager(MasterEntity.class, property);
-	assertTrue("Should be changed after applying.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-	assertFalse("Should be unchecked after applying.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertFalse("Should be unchecked after applying.", locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "bigDecimalProp"));
-	assertFalse("Should be NOT freezed.", locatorManager.isFreezedLocatorManager(MasterEntity.class, property));
-
-	// return to the original version of the manager and check if it really is not changed
-	locatorManager.getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "bigDecimalProp", true);
-
-	assertFalse("Should not be changed after returning to original version.", locatorManager.isChangedLocatorManager(MasterEntity.class, property));
-    }
 
     @Test
     public void test_that_CENTRE_reloading_works_fine() {
@@ -880,55 +546,56 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	// create mgr for user USER1
 	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
 	baseMgr.initEntityMasterManager(MasterEntity.class);
-	baseMgr.getEntityMasterManager(MasterEntity.class).initLocatorManagerByDefault(MasterEntity.class, "entityProp.simpleEntityProp");
-	baseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
-	baseMgr.getEntityMasterManager(MasterEntity.class).acceptLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp");
+	baseMgr.getEntityMasterManager(MasterEntity.class).refreshLocatorManager(MasterEntity.class, property);
+	baseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
+	baseMgr.getEntityMasterManager(MasterEntity.class).acceptLocatorManager(MasterEntity.class, property);
 	baseMgr.saveEntityMasterManager(MasterEntity.class);
 
 	// check init methods for another instance of application for user USER2
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
 	nonBaseMgr.initEntityMasterManager(MasterEntity.class);
 	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MasterEntity.class));
-	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp"));
-	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property));
+	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	// discard action which should reset current master manager (because it was initialised from base configuration, not own)
 	nonBaseMgr.discardEntityMasterManager(MasterEntity.class);
 	assertNull("Should be resetted to empty! Intelligent discard operation.", nonBaseMgr.getEntityMasterManager(MasterEntity.class));
 	// check init methods again for user USER2
 	nonBaseMgr.initEntityMasterManager(MasterEntity.class);
 	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MasterEntity.class));
-	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp"));
-	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertNotNull("Should be initialised.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property));
+	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	// modify & save a current instance of master manager
-	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
-	nonBaseMgr.getEntityMasterManager(MasterEntity.class).acceptLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp");
+	nonBaseMgr.getEntityMasterManager(MasterEntity.class).refreshLocatorManager(MasterEntity.class, property);
+	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
+	nonBaseMgr.getEntityMasterManager(MasterEntity.class).acceptLocatorManager(MasterEntity.class, property);
 	nonBaseMgr.saveEntityMasterManager(MasterEntity.class);
 	// check init methods for another instance of application for user USER2
 	final IGlobalDomainTreeManager newNonBaseMgr = createManagerForNonBaseUser();
 	newNonBaseMgr.initEntityMasterManager(MasterEntity.class);
 	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class));
-	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp"));
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property));
+	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	// discard action which should do nothing with current instance of master manager, due to lack of connection with base configuration
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").isRunAutomatically());
-	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").setRunAutomatically(false);
+	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).isRunAutomatically());
+	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).setRunAutomatically(false);
 
-	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().addCalculatedProperty(EntityWithStringKeyType.class, "", "2 * integerProp", "New calc prop", "Double integer prop", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().apply();
-	assertNotNull("Should be not null.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp"));
-	assertFalse("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").isRunAutomatically());
+	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getEnhancer().addCalculatedProperty(EntityWithStringKeyType.class, "", "2 * integerProp", "New calc prop", "Double integer prop", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getEnhancer().apply();
+	assertNotNull("Should be not null.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp"));
+	assertFalse("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).isRunAutomatically());
 	newNonBaseMgr.discardEntityMasterManager(MasterEntity.class);
 	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class));
-	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp"));
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property));
+	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 	try {
-	    newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp");
+	    newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp");
 	    fail("The calc prop should not be acceptable after discard operation.");
 	} catch (final IncorrectCalcPropertyKeyException e) {
 	}
-	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").isRunAutomatically());
+	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).isRunAutomatically());
     }
 
     @Test
@@ -957,17 +624,17 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 //	// create master for USER2
 //	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
 //	nonBaseMgr.initEntityMasterManager(MasterEntity.class);
-//	nonBaseMgr.getEntityMasterManager(MasterEntity.class).initLocatorManagerByDefault(MasterEntity.class, "entityProp.simpleEntityProp");
-//	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
-//	nonBaseMgr.getEntityMasterManager(MasterEntity.class).acceptLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp");
+//	nonBaseMgr.getEntityMasterManager(MasterEntity.class).initLocatorManagerByDefault(MasterEntity.class, property);
+//	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
+//	nonBaseMgr.getEntityMasterManager(MasterEntity.class).acceptLocatorManager(MasterEntity.class, property);
 //	nonBaseMgr.saveEntityMasterManager(MasterEntity.class);
 //
 //	assertFalse("Should not be changed after 'save'.", nonBaseMgr.isChangedEntityMasterManager(MasterEntity.class));
-//	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
+//	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
 //	assertTrue("Should be changed after modification.", nonBaseMgr.isChangedEntityMasterManager(MasterEntity.class));
 //	nonBaseMgr.saveEntityMasterManager(MasterEntity.class);
 //	assertFalse("Should not be changed after save.", nonBaseMgr.isChangedEntityMasterManager(MasterEntity.class));
-//	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
+//	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
 //	assertTrue("Should be changed after modification.", nonBaseMgr.isChangedEntityMasterManager(MasterEntity.class));
 //	nonBaseMgr.discardEntityMasterManager(MasterEntity.class);
 //	assertFalse("Should not be changed after discard.", nonBaseMgr.isChangedEntityMasterManager(MasterEntity.class));
@@ -978,29 +645,30 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	// create mgr for user USER1
 	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
 	baseMgr.initEntityMasterManager(MasterEntity.class);
-	baseMgr.getEntityMasterManager(MasterEntity.class).initLocatorManagerByDefault(MasterEntity.class, "entityProp.simpleEntityProp");
-	baseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
-	baseMgr.getEntityMasterManager(MasterEntity.class).acceptLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp");
+	baseMgr.getEntityMasterManager(MasterEntity.class).refreshLocatorManager(MasterEntity.class, property);
+	baseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
+	baseMgr.getEntityMasterManager(MasterEntity.class).acceptLocatorManager(MasterEntity.class, property);
 	baseMgr.saveEntityMasterManager(MasterEntity.class);
 	// prepare a test by saving own configuration for USER2
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
 	nonBaseMgr.initEntityMasterManager(MasterEntity.class);
-	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
-	nonBaseMgr.getEntityMasterManager(MasterEntity.class).acceptLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp");
+	nonBaseMgr.getEntityMasterManager(MasterEntity.class).refreshLocatorManager(MasterEntity.class, property);
+	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", true);
+	nonBaseMgr.getEntityMasterManager(MasterEntity.class).acceptLocatorManager(MasterEntity.class, property);
 	nonBaseMgr.saveEntityMasterManager(MasterEntity.class);
 
 	// modify and reload instantly (OWN configuration)
-	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().check(EntityWithStringKeyType.class, "integerProp", false);
-	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
+	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", false);
+	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
 	nonBaseMgr.initEntityMasterManager(MasterEntity.class);
-	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
 
 	// modify and reload instantly (BASE configuration)
-	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().check(EntityWithStringKeyType.class, "integerProp", false);
-	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
+	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getFirstTick().check(EntityWithStringKeyType.class, "integerProp", false);
+	nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getSecondTick().check(EntityWithStringKeyType.class, "integerProp", false);
 	nonBaseMgr.initEntityMasterManagerByDefault(MasterEntity.class);
-	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
-	assertFalse("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, "entityProp.simpleEntityProp").getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertTrue("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getFirstTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
+	assertFalse("The state is incorrect.", nonBaseMgr.getEntityMasterManager(MasterEntity.class).getLocatorManager(MasterEntity.class, property).getSecondTick().isChecked(EntityWithStringKeyType.class, "integerProp"));
     }
 }

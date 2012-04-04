@@ -78,7 +78,7 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 
     /**
      * Returns specific {@link IReviewEventListener} for the locator.
-     * 
+     *
      * @return
      */
     private IReviewEventListener createLocatorEventListener() {
@@ -98,7 +98,7 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 
     /**
      * Provides the specific entity locators's wizard listener.
-     * 
+     *
      * @return
      */
     private IWizardEventListener createCentreWizardListener(){
@@ -109,20 +109,24 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 		final Class<R> root = getModel().rootType;
 		final String name = getModel().name;
 		final ILocatorManager locatorManager = getModel().locatorManager;
+
+		// TODO The logic should be revised after ILocatorManager enhancements!
+		final boolean isFreezed = ILocatorManager.Phase.FREEZED_EDITING_PHASE == locatorManager.phaseAndTypeOfLocatorManager(root, name).getKey();
+
 		switch (e.getWizardAction()) {
 		case PRE_CANCEL:
-		    if(!locatorManager.isFreezedLocatorManager(root, name)){
+		    if(!isFreezed){
 			JOptionPane.showMessageDialog(LocatorConfigurationView.this, "This locator's wizard can not be canceled!", "Warning", JOptionPane.WARNING_MESSAGE);
 			return false;
 		    }
 		    break;
 		case CANCEL:
-		    if(locatorManager.isFreezedLocatorManager(root, name)){
+		    if(isFreezed){
 			locatorManager.discardLocatorManager(root, name);
 		    }
 		    break;
 		case BUILD:
-		    if(locatorManager.isFreezedLocatorManager(root, name)){
+		    if(isFreezed){
 			locatorManager.acceptLocatorManager(root, name);
 		    }
 		    break;

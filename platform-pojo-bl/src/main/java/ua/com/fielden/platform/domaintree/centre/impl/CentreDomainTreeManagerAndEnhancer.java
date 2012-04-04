@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
+import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
@@ -87,7 +87,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
      *
      */
     /* TODO reduce visibility */
-    public class AddToCriteriaTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAddToCriteriaTickManager, ILocatorManagerInner {
+    public class AddToCriteriaTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAddToCriteriaTickManager, ILocatorManager {
 
 	private AddToCriteriaTickManagerAndEnhancer(final TickManager base) {
 	    super(base);
@@ -99,27 +99,15 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
-	public ILocatorDomainTreeManagerAndEnhancer produceLocatorManagerByDefault(final Class<?> root, final String property) {
+	public void refreshLocatorManager(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
-	    return base().produceLocatorManagerByDefault(enhancer().getManagedType(root), property);
+	    base().refreshLocatorManager(enhancer().getManagedType(root), property);
 	}
 
 	@Override
-	public void initLocatorManagerByDefault(final Class<?> root, final String property) {
+	public void resetLocatorManagerToDefault(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
-	    base().initLocatorManagerByDefault(enhancer().getManagedType(root), property);
-	}
-
-	@Override
-	public void resetLocatorManager(final Class<?> root, final String property) {
-	    // inject an enhanced type into method implementation
-	    base().resetLocatorManager(enhancer().getManagedType(root), property);
-	}
-
-	@Override
-	public void discardLocatorManager(final Class<?> root, final String property) {
-	    // inject an enhanced type into method implementation
-	    base().discardLocatorManager(enhancer().getManagedType(root), property);
+	    base().resetLocatorManagerToDefault(enhancer().getManagedType(root), property);
 	}
 
 	@Override
@@ -129,15 +117,15 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
-	public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
+	public void discardLocatorManager(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
-	    base().saveLocatorManagerGlobally(enhancer().getManagedType(root), property);
+	    base().discardLocatorManager(enhancer().getManagedType(root), property);
 	}
 
 	@Override
-	public ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property) {
+	public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
-	    return base().getLocatorManager(enhancer().getManagedType(root), property);
+	    base().saveLocatorManagerGlobally(enhancer().getManagedType(root), property);
 	}
 
 	@Override
@@ -147,9 +135,15 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	}
 
 	@Override
-	public boolean isFreezedLocatorManager(final Class<?> root, final String property) {
+	public ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
-	    return base().isFreezedLocatorManager(enhancer().getManagedType(root), property);
+	    return base().getLocatorManager(enhancer().getManagedType(root), property);
+	}
+
+	@Override
+	public Pair<Phase, Type> phaseAndTypeOfLocatorManager(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    return base().phaseAndTypeOfLocatorManager(enhancer().getManagedType(root), property);
 	}
 
 	@Override

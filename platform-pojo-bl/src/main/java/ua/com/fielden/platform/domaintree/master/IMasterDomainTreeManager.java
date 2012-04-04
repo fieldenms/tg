@@ -15,5 +15,5 @@ import ua.com.fielden.platform.domaintree.ILocatorManager;
  *
  * @author TG Team
  */
-public interface IMasterDomainTreeManager extends ILocatorManager{
+public interface IMasterDomainTreeManager extends ILocatorManager {
 }

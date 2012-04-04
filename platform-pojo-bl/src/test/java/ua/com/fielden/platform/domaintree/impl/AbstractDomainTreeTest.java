@@ -19,6 +19,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
@@ -517,5 +518,57 @@ public abstract class AbstractDomainTreeTest {
 
     protected static String name(final String path, final String name) {
         return "".equals(path) ? name : path + "." + name;
+    }
+
+    protected static void illegalAllLocatorActions(final ILocatorManager lm, final String message, final String name) {
+	// locators
+	try {
+	    lm.refreshLocatorManager(MasterEntity.class, name);
+	    fail(message);
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    lm.resetLocatorManagerToDefault(MasterEntity.class, name);
+	    fail(message);
+	} catch (final IllegalArgumentException e) {
+	}
+
+	try {
+	    lm.acceptLocatorManager(MasterEntity.class, name);
+	    fail(message);
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    lm.discardLocatorManager(MasterEntity.class, name);
+	    fail(message);
+	} catch (final IllegalArgumentException e) {
+	}
+
+	try {
+	    lm.saveLocatorManagerGlobally(MasterEntity.class, name);
+	    fail(message);
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    lm.freezeLocatorManager(MasterEntity.class, name);
+	    fail(message);
+	} catch (final IllegalArgumentException e) {
+	}
+
+	try {
+	    lm.getLocatorManager(MasterEntity.class, name);
+	    fail(message);
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    lm.phaseAndTypeOfLocatorManager(MasterEntity.class, name);
+	    fail(message);
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    lm.isChangedLocatorManager(MasterEntity.class, name);
+	    fail(message);
+	} catch (final IllegalArgumentException e) {
+	}
     }
 }

@@ -12,7 +12,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
+import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
@@ -119,7 +119,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @author TG Team
      *
      */
-    public static class AddToCriteriaTickManager extends TickManager implements IAddToCriteriaTickManager, ILocatorManagerInner {
+    public static class AddToCriteriaTickManager extends TickManager implements IAddToCriteriaTickManager, ILocatorManager {
 
 	private final transient ISerialiser serialiser;
 	private final EnhancementPropertiesMap<Object> propertiesValues1;
@@ -195,27 +195,15 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
-	public ILocatorDomainTreeManagerAndEnhancer produceLocatorManagerByDefault(final Class<?> root, final String property) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not init a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return locatorManager.produceLocatorManagerByDefault(root, property);
+	public void refreshLocatorManager(final Class<?> root, final String property) {
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not refresh a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    locatorManager.refreshLocatorManager(root, property);
 	}
 
 	@Override
-	public void initLocatorManagerByDefault(final Class<?> root, final String property) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not init a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    locatorManager.initLocatorManagerByDefault(root, property);
-	}
-
-	@Override
-	public void resetLocatorManager(final Class<?> root, final String property) {
+	public void resetLocatorManagerToDefault(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not reset a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    locatorManager.resetLocatorManager(root, property);
-	}
-
-	@Override
-	public void discardLocatorManager(final Class<?> root, final String property) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not discard a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    locatorManager.discardLocatorManager(root, property);
+	    locatorManager.resetLocatorManagerToDefault(root, property);
 	}
 
 	@Override
@@ -225,15 +213,15 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
-	public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not save globally a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    locatorManager.saveLocatorManagerGlobally(root, property);
+	public void discardLocatorManager(final Class<?> root, final String property) {
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not discard a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    locatorManager.discardLocatorManager(root, property);
 	}
 
 	@Override
-	public ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not retrieve a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return locatorManager.getLocatorManager(root, property);
+	public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not save globally a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    locatorManager.saveLocatorManagerGlobally(root, property);
 	}
 
 	@Override
@@ -243,9 +231,15 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 
 	@Override
-	public boolean isFreezedLocatorManager(final Class<?> root, final String property) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask whether a locator is in freezed state for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return locatorManager.isFreezedLocatorManager(root, property);
+	public ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property) {
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a locator for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    return locatorManager.getLocatorManager(root, property);
+	}
+
+	@Override
+	public Pair<Phase, Type> phaseAndTypeOfLocatorManager(final Class<?> root, final String property) {
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask a locator state for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    return locatorManager.phaseAndTypeOfLocatorManager(root, property);
 	}
 
 	@Override

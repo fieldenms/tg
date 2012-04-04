@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHASE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -12,9 +13,7 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer.AddToCriteriaTickManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
@@ -43,7 +42,7 @@ import com.google.inject.Inject;
  *
  */
 public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlobalDomainTreeManager {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final static Logger logger = Logger.getLogger(GlobalDomainTreeManager.class);
     private final EntityFactory factory;
     private final IUserProvider userProvider;
     private final IGlobalDomainTreeRepresentation gdtr;
@@ -220,7 +219,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      *
      * @param message
      */
-    private void error(final String message) {
+    private static void error(final String message) {
 	logger.error(message);
 	throw new IllegalArgumentException(message);
     }
@@ -270,18 +269,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param mgr
      * @return
      */
-    private ICentreDomainTreeManagerAndEnhancer initCriteriaManagerCrossReferences(final ICentreDomainTreeManagerAndEnhancer mgr) {
-	// initialise the references on this instance in its children
-	try {
-	    final Field dtrField = Finder.findFieldByName(LocatorManager.class, "globalRepresentation");
-	    final boolean isAccessible = dtrField.isAccessible();
-	    dtrField.setAccessible(true);
-	    dtrField.set((((AddToCriteriaTickManagerAndEnhancer)mgr.getFirstTick()).base()).locatorManager(), this.getGlobalRepresentation());
-	    dtrField.setAccessible(isAccessible);
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    error(e.getMessage());
-	}
+    public ICentreDomainTreeManagerAndEnhancer initCriteriaManagerCrossReferences(final ICentreDomainTreeManagerAndEnhancer mgr) {
+	final LocatorManager locatorManager = (((AddToCriteriaTickManagerAndEnhancer)mgr.getFirstTick()).base()).locatorManager();
+	final IGlobalDomainTreeRepresentation globalRepresentation = this.getGlobalRepresentation();
+	initLocatorManagerCrossReferences(locatorManager, globalRepresentation);
 	return mgr;
     }
 
@@ -291,21 +282,26 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param mgr
      * @return
      */
-    private IMasterDomainTreeManager initMasterManagerCrossReferences(final IMasterDomainTreeManager mgr) {
+    public IMasterDomainTreeManager initMasterManagerCrossReferences(final IMasterDomainTreeManager mgr) {
+	final LocatorManager locatorManager = ((MasterDomainTreeManager)mgr).locatorManager();
+	final IGlobalDomainTreeRepresentation globalRepresentation = this.getGlobalRepresentation();
+	initLocatorManagerCrossReferences(locatorManager, globalRepresentation);
+	return mgr;
+    }
+
+    public static void initLocatorManagerCrossReferences(final LocatorManager locatorManager, final IGlobalDomainTreeRepresentation globalRepresentation) {
 	// initialise the references on this instance in its children
 	try {
 	    final Field dtrField = Finder.findFieldByName(LocatorManager.class, "globalRepresentation");
 	    final boolean isAccessible = dtrField.isAccessible();
 	    dtrField.setAccessible(true);
-	    dtrField.set(((MasterDomainTreeManager)mgr).locatorManager(), this.getGlobalRepresentation());
+	    dtrField.set(locatorManager, globalRepresentation);
 	    dtrField.setAccessible(isAccessible);
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    error(e.getMessage());
 	}
-	return mgr;
     }
-
 
     /**
      * Initiates an application instances with a new <code>mgr</code> instance.
@@ -417,7 +413,6 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	} else {
 	    final ICentreDomainTreeManagerAndEnhancer currentMgr = getEntityCentreManager(root, name);
 	    validateBeforeSaving(currentMgr, root, name);
-	    prepareInstanceBeforeSave(currentMgr);
 
 	    // save an instance of EntityCentreConfig with overridden body, which should exist in DB
 	    final String title = title(root, name);
@@ -447,10 +442,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     private void validateBeforeSaving(final ICentreDomainTreeManagerAndEnhancer currentMgr, final Class<?> root, final String name) {
 	notInitiliasedError(currentMgr, root, name);
-	// let's iterate through all locators and ask if they are accepted
+	// let's iterate through all locators and ask if they are in USAGE phase!
 	for (final Pair<Class<?>, String> locatorKey : currentMgr.getFirstTick().locatorKeys()) {
-	    if (currentMgr.getFirstTick().isChangedLocatorManager(locatorKey.getKey(), locatorKey.getValue())) {
-		error("The inner part of entity centre [locator " + locatorKey + "] is not accepted. It should be accepted or discarded before save operation.");
+	    if (USAGE_PHASE != currentMgr.getFirstTick().phaseAndTypeOfLocatorManager(locatorKey.getKey(), locatorKey.getValue()).getKey()) {
+		error("The inner part of entity centre [locator " + locatorKey + "] is not in Usage phase. It should be accepted or discarded before save operation.");
 	    }
 	}
 	// let's iterate through all analyses and ask if they are accepted
@@ -470,10 +465,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     private void masterValidateBeforeSaving(final IMasterDomainTreeManager currentMgr, final Class<?> root) {
 	masterNotInitiliasedError(currentMgr, root);
-	// let's iterate through all locators and ask if they are accepted
+	// let's iterate through all locators and ask if they are in USAGE_PHASE!
 	for (final Pair<Class<?>, String> locatorKey : currentMgr.locatorKeys()) {
-	    if (currentMgr.isChangedLocatorManager(locatorKey.getKey(), locatorKey.getValue())) {
-		error("The inner part of entity centre [locator " + locatorKey + "] is not accepted. It should be accepted or discarded before save operation.");
+	    if (USAGE_PHASE != currentMgr.phaseAndTypeOfLocatorManager(locatorKey.getKey(), locatorKey.getValue()).getKey()) {
+		error("The inner part of entity centre [locator " + locatorKey + "] is not in Usage phase. It should be accepted or discarded before save operation.");
 	    }
 	}
     }
@@ -487,7 +482,6 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	validateBeforeSaving(originationMgr, root, originalName);
 	// create a copy of current instance of entity centre
 	final ICentreDomainTreeManagerAndEnhancer copyMgr = initCriteriaManagerCrossReferences(EntityUtils.deepCopy(originationMgr, getSerialiser()));
-	prepareInstanceBeforeSave(copyMgr);
 
 	// save an instance of EntityCentreConfig with overridden body, which should exist in DB
 	final String rootName = root.getName();
@@ -508,38 +502,6 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    init(root, newName, copyMgr, true);
 	} else { // > 1
 	    error("There are at least one entity-centre instance for type [" + root.getSimpleName() + "] with title [" + newTitle + "] for current user [" + currentUser() + "] or its base [" + baseOfTheCurrentUser() + "].");
-	}
-    }
-
-    /**
-     * Prepares a manager instance to have empty locators when they are fully equal to current default locators. It helps a criteria manager to load "fresh" instances of locator every time.
-     *
-     * @param copyMgr
-     */
-    private void prepareInstanceBeforeSave(final ICentreDomainTreeManagerAndEnhancer copyMgr) {
-	// let's iterate through all locators and make them 'null' in case when they are equal to 'default' produced instances
-	final ILocatorManagerInner firstTick = (ILocatorManagerInner) copyMgr.getFirstTick();
-	for (final Pair<Class<?>, String> locatorKey : firstTick.locatorKeys()) {
-	    final ILocatorDomainTreeManagerAndEnhancer producedLocatorManager = firstTick.produceLocatorManagerByDefault(locatorKey.getKey(), locatorKey.getValue());
-	    if (producedLocatorManager.equals(firstTick.getLocatorManager(locatorKey.getKey(), locatorKey.getValue()))) {
-		firstTick.resetLocatorManager(locatorKey.getKey(), locatorKey.getValue());
-	    }
-	}
-    }
-
-    /**
-     * Prepares a manager instance to have empty locators when they are fully equal to current default locators. It helps a criteria manager to load "fresh" instances of locator every time.
-     *
-     * @param copyMgr
-     */
-    private void masterPrepareInstanceBeforeSave(final IMasterDomainTreeManager copyMgr) {
-	// let's iterate through all locators and make them 'null' in case when they are equal to 'default' produced instances
-	final ILocatorManagerInner locatorMgr = (ILocatorManagerInner) copyMgr;
-	for (final Pair<Class<?>, String> locatorKey : locatorMgr.locatorKeys()) {
-	    final ILocatorDomainTreeManagerAndEnhancer producedLocatorManager = locatorMgr.produceLocatorManagerByDefault(locatorKey.getKey(), locatorKey.getValue());
-	    if (producedLocatorManager.equals(locatorMgr.getLocatorManager(locatorKey.getKey(), locatorKey.getValue()))) {
-		locatorMgr.resetLocatorManager(locatorKey.getKey(), locatorKey.getValue());
-	    }
 	}
     }
 
@@ -626,7 +588,6 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     public void saveEntityMasterManager(final Class<?> root) {
 	final IMasterDomainTreeManager currentMgr = getEntityMasterManager(root);
 	masterValidateBeforeSaving(currentMgr, root);
-	masterPrepareInstanceBeforeSave(currentMgr);
 
 	// save an instance of EntityMasterConfig with overridden body
 	final EntityResultQueryModel<EntityMasterConfig> model = masterModelForCurrentUser(root.getName());

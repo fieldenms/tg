@@ -19,7 +19,6 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.ILocatorManager.ILocatorManagerInner;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.IPropertyValueListener;
@@ -126,49 +125,15 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	// this test is redundant due to lack of special isChecked logic in CriteriaDomainTreeManager
     }
 
+
     ////////////////////// 6. Specific entity-centre logic //////////////////////
     @Test
     public void test_that_unchecked_properties_actions_for_both_ticks_cause_exceptions_for_all_specific_logic() {
 	final String message = "Unchecked property should cause IllegalArgument exception.";
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		// FIRST TICK
-		// locators
-		try {
-		    dtm().getFirstTick().initLocatorManagerByDefault(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    ((ILocatorManagerInner) dtm().getFirstTick()).produceLocatorManagerByDefault(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    dtm().getFirstTick().discardLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    dtm().getFirstTick().acceptLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    dtm().getFirstTick().saveLocatorManagerGlobally(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    dtm().getFirstTick().getLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    dtm().getFirstTick().isChangedLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
+		illegalAllLocatorActions(dtm().getFirstTick(), message, name);
+
 		// get / set / isEmpty value 1 / 2
 		try {
 		    dtm().getFirstTick().getValue(MasterEntity.class, name);
@@ -301,43 +266,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	final String message = "Non-AE property should cause IllegalArgument exception for locator-related logic.";
 	allLevels(new IAction() {
 	    public void action(final String name) {
-		// FIRST TICK
-		// locators
-		try {
-		    dtm().getFirstTick().initLocatorManagerByDefault(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    ((ILocatorManagerInner) dtm().getFirstTick()).produceLocatorManagerByDefault(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    dtm().getFirstTick().discardLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    dtm().getFirstTick().acceptLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    dtm().getFirstTick().saveLocatorManagerGlobally(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    dtm().getFirstTick().getLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
-		try {
-		    dtm().getFirstTick().isChangedLocatorManager(MasterEntity.class, name);
-		    fail(message);
-		} catch (final IllegalArgumentException e) {
-		}
+		illegalAllLocatorActions(dtm().getFirstTick(), message, name);
 	    }
 	}, "integerProp", "moneyProp", "booleanProp");
     }

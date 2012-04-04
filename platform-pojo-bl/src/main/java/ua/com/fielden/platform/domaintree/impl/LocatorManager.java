@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.EDITING_PHASE;
+import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.FREEZED_EDITING_PHASE;
+import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHASE;
+import static ua.com.fielden.platform.domaintree.ILocatorManager.Type.GLOBAL;
+import static ua.com.fielden.platform.domaintree.ILocatorManager.Type.LOCAL;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +26,7 @@ import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
+
 /**
  * A locator manager mixin implementation (save, init, discard locators etc.).
  *
@@ -34,6 +41,8 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     private final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> persistentLocators;
     private final transient EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> currentLocators;
     private final transient EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> freezedLocators;
+    private final transient EnhancementSet locatorsInEditingMode;
+    private final transient EnhancementSet locatorsWithLocalType;
 
     /**
      * A locator <i>manager</i> constructor (save, int, discard locators, etc.) for the first time instantiation.
@@ -59,9 +68,14 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
 	currentLocators = createPropertiesMap();
 	for (final Entry<Pair<Class<?>, String>, ILocatorDomainTreeManagerAndEnhancer> entry : this.persistentLocators.entrySet()) {
-	    currentLocators.put(entry.getKey(), EntityUtils.deepCopy(entry.getValue(), getSerialiser())); // should be initialised with copies of persistent locators
+	    persistent_to_current(entry.getKey().getKey(), entry.getKey().getValue()); // should be initialised with copies of persistent locators
 	}
 	freezedLocators = createPropertiesMap();
+
+	locatorsInEditingMode = createSet();
+
+	locatorsWithLocalType = createSet();
+	locatorsWithLocalType.addAll(locatorKeys()); // all non-null locators are LOCAL
     }
 
     /**
@@ -74,112 +88,189 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	throw new IllegalArgumentException(message);
     }
 
-    public ILocatorDomainTreeManagerAndEnhancer produceLocatorManagerByDefault(final Class<?> root, final String property) {
-	if (isFreezedLocatorManager(root, property)) {
-	    error("Unable to Produce locator instance if it is freezed for type [" + root + "] and property [" + property + "].");
-	}
-	AbstractDomainTree.illegalType(root, property, "Could not init a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
-        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-        final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-        final Class<?> notEnhancedPropertyType = DynamicEntityClassLoader.getOriginalType(propertyType);
-	return globalRepresentation.getLocatorManagerByDefault(notEnhancedPropertyType);
+    /**
+     * Logs and throws an {@link RuntimeException} error with specified message to indicate inner implementation errors.
+     *
+     * @param message
+     */
+    private void implementationError(final String message) {
+	logger.error(message);
+	throw new RuntimeException(message);
     }
 
-    private void init(final Class<?> root, final String property, final ILocatorDomainTreeManagerAndEnhancer mgr) {
-	// create a new instance and put to "current" map
-	currentLocators.put(key(root, property), mgr);
-	// the init method fully accepts a new instance of manager. After that it should be 'unchanged'.
-	acceptLocatorManager(root, property);
+    private void nonEntityTypedPropertyError(final Class<?> root, final String property) {
+	AbstractDomainTree.illegalType(root, property, "Could not do any locator-related action for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
     }
 
     @Override
-    public void initLocatorManagerByDefault(final Class<?> root, final String property) {
-	if (isFreezedLocatorManager(root, property)) {
-	    error("Unable to Init locator instance if it is freezed for type [" + root + "] and property [" + property + "].");
-	}
-	init(root, property, produceLocatorManagerByDefault(root, property));
+    public ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property) {
+	nonEntityTypedPropertyError(root, property);
+	return currentLocators.get(key(root, property));
     }
 
-    public void resetLocatorManager(final Class<?> root, final String property) {
-	if (isFreezedLocatorManager(root, property)) {
-	    error("Unable to Reset locator instance if it is freezed for type [" + root + "] and property [" + property + "].");
+    @Override
+    public Pair<Phase, Type> phaseAndTypeOfLocatorManager(final Class<?> root, final String property) {
+	nonEntityTypedPropertyError(root, property);
+        return new Pair<Phase, Type>(phase(root, property), type(root, property));
+    }
+
+    private Phase phase(final Class<?> root, final String property) {
+	return freezedLocators.get(key(root, property)) != null ? FREEZED_EDITING_PHASE //
+		: locatorsInEditingMode.contains(key(root, property)) ? EDITING_PHASE : USAGE_PHASE;
+    }
+
+    private Type type(final Class<?> root, final String property) {
+	return locatorsWithLocalType.contains(key(root, property)) ? LOCAL : GLOBAL;
+    }
+
+    @Override
+    public boolean isChangedLocatorManager(final Class<?> root, final String property) {
+	nonEntityTypedPropertyError(root, property);
+	final boolean isChanged = !EntityUtils.equalsEx(currentLocators.get(key(root, property)), persistentLocators.get(key(root, property)));
+	if (USAGE_PHASE == phase(root, property) && isChanged) {
+	    implementationError("Inner implementation error : locator isChanged == true in USAGE phase for some reason for property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
-	init(root, property, null);
+	return isChanged;
+    }
+
+    @Override
+    public List<Pair<Class<?>, String>> locatorKeys() {
+	return new ArrayList<Pair<Class<?>, String>>(currentLocators.keySet());
+    }
+
+    private Class<?> propertyTypeForGlobalRepresentationLocator(final Class<?> root, final String property) {
+	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+        final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
+        return DynamicEntityClassLoader.getOriginalType(propertyType);
+    }
+
+    private ILocatorDomainTreeManagerAndEnhancer produceByDefault(final Class<?> root, final String property) {
+	return globalRepresentation.getLocatorManagerByDefault(propertyTypeForGlobalRepresentationLocator(root, property));
+    }
+
+    private void checkEmptinessOfGlobalLocator(final Class<?> root, final String property) {
+	if (getLocatorManager(root, property) != null) {
+	    implementationError("Inner implementation error : not 'null' locator with GLOBAL type in USAGE phase for type [" + root + "] and property [" + property + "].");
+	}
+    }
+
+    private static void move(final ISerialiser serialiser, final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> from, final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> to, final Class<?> root, final String property) {
+	if (from.containsKey(key(root, property))) {
+	    to.put(key(root, property), EntityUtils.deepCopy(from.get(key(root, property)), serialiser));
+	} else {
+	    to.remove(key(root, property));
+	}
+    }
+
+    private void current_to_persistent(final Class<?> root, final String property) {
+	move(getSerialiser(), currentLocators, persistentLocators, root, property);
+    }
+
+    private void persistent_to_current(final Class<?> root, final String property) {
+	move(getSerialiser(), persistentLocators, currentLocators, root, property);
+    }
+
+    private void moveToUSAGE_PHASE(final Class<?> root, final String property) {
+	locatorsInEditingMode.remove(key(root, property));
+    }
+
+    private void moveToEDITING_PHASE(final Class<?> root, final String property) {
+	locatorsInEditingMode.add(key(root, property));
+    }
+
+    private void makeGLOBAL(final Class<?> root, final String property) {
+	locatorsWithLocalType.remove(key(root, property));
+    }
+
+    private void makeLOCAL(final Class<?> root, final String property) {
+	locatorsWithLocalType.add(key(root, property));
+    }
+
+    @Override
+    public void refreshLocatorManager(final Class<?> root, final String property) {
+	nonEntityTypedPropertyError(root, property);
+	if (USAGE_PHASE == phase(root, property)) {
+	    if (GLOBAL == type(root, property)) {
+		checkEmptinessOfGlobalLocator(root, property);
+		currentLocators.put(key(root, property), produceByDefault(root, property));
+		current_to_persistent(root, property);
+	    }
+	    moveToEDITING_PHASE(root, property);
+	} else { // not applicable
+	    error("Could not Refresh locator while it is editing. Please Accept or Discard it before Refresh (maybe multiple times in case of freezed locator). Property [" + property + "] in type [" + root.getSimpleName() + "].");
+	}
+    }
+
+    @Override
+    public void resetLocatorManagerToDefault(final Class<?> root, final String property) {
+	nonEntityTypedPropertyError(root, property);
+	if (USAGE_PHASE == phase(root, property)) {
+	    if (LOCAL == type(root, property)) {
+		currentLocators.remove(key(root, property));
+		current_to_persistent(root, property);
+		makeGLOBAL(root, property);
+	    } else {
+		checkEmptinessOfGlobalLocator(root, property);
+		// do nothing
+	    }
+	} else { // not applicable
+	    error("Could not Reset locator to Default while it is editing. Please Accept or Discard it before ResetToDefault (maybe multiple times in case of freezed locator). Property [" + property + "] in type [" + root.getSimpleName() + "].");
+	}
+    }
+
+
+    @Override
+    public void acceptLocatorManager(final Class<?> root, final String property) {
+	nonEntityTypedPropertyError(root, property);
+	if (EDITING_PHASE == phase(root, property)) {
+	    if (GLOBAL == type(root, property)) {
+		makeLOCAL(root, property);
+	    }
+	    current_to_persistent(root, property);
+	    moveToUSAGE_PHASE(root, property);
+	} else if (FREEZED_EDITING_PHASE == phase(root, property)) {
+	    unfreeze(root, property);
+	} else { // USAGE_PHASE -- not applicable
+	    error("Could not Accept locator while it is in Usage phase. Please Refresh it (that will move it to Editing phase) before Accept. Property [" + property + "] in type [" + root.getSimpleName() + "].");
+	}
     }
 
     @Override
     public void discardLocatorManager(final Class<?> root, final String property) {
-	AbstractDomainTree.illegalType(root, property, "Could not discard a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
-	currentLocators.put(key(root, property), EntityUtils.deepCopy(persistentLocators.get(key(root, property)), getSerialiser()));
-
-	if (isFreezedLocatorManager(root, property)) {
+	nonEntityTypedPropertyError(root, property);
+	if (EDITING_PHASE == phase(root, property)) {
+	    if (GLOBAL == type(root, property)) {
+		persistentLocators.remove(key(root, property));
+	    }
+	    persistent_to_current(root, property);
+	    moveToUSAGE_PHASE(root, property);
+	} else if (FREEZED_EDITING_PHASE == phase(root, property)) {
+	    persistent_to_current(root, property);
 	    unfreeze(root, property);
-	}
-    }
-
-    @Override
-    public void acceptLocatorManager(final Class<?> root, final String property) {
-	if (isFreezedLocatorManager(root, property)) {
-	    unfreeze(root, property);
-	} else {
-	    AbstractDomainTree.illegalType(root, property, "Could not save a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
-	    persistentLocators.put(key(root, property), EntityUtils.deepCopy(currentLocators.get(key(root, property)), getSerialiser()));
+	} else { // USAGE_PHASE -- not applicable
+	    error("Could not Discard locator while it is in Usage phase. Please Refresh it (that will move it to Editing phase) before Discard. Property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
     }
 
     @Override
     public void saveLocatorManagerGlobally(final Class<?> root, final String property) {
-	if (isFreezedLocatorManager(root, property)) {
-	    error("Unable to Save locator instance Globally if it is freezed for type [" + root + "] and property [" + property + "].");
-	}
-	AbstractDomainTree.illegalType(root, property, "Could not save globally a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
-        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-        final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-        final Class<?> notEnhancedPropertyType = DynamicEntityClassLoader.getOriginalType(propertyType);
-	globalRepresentation.setLocatorManagerByDefault(notEnhancedPropertyType, getLocatorManager(root, property));
-    }
-
-    @Override
-    public ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property) {
-	AbstractDomainTree.illegalType(root, property, "Could not retrieve a locator for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
-	return currentLocators.get(key(root, property));
-    }
-
-    /**
-     * Throws an error when the instance is <code>null</code> (not initialised).
-     *
-     * @param mgr
-     * @param root
-     * @param name
-     */
-    private void notInitiliasedError(final ILocatorDomainTreeManagerAndEnhancer mgr, final Class<?> root, final String property) {
-	if (mgr == null) {
-	    error("Unable to perform this operation on the locator instance, that wasn't initialised, for type [" + root + "] and property [" + property + "].");
+	nonEntityTypedPropertyError(root, property);
+	if (EDITING_PHASE == phase(root, property)) {
+	    globalRepresentation.setLocatorManagerByDefault(propertyTypeForGlobalRepresentationLocator(root, property), getLocatorManager(root, property));
+	} else { // not applicable
+	    error("Could not SaveGlobally locator while it is not in Editing phase. Property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
     }
 
     @Override
     public void freezeLocatorManager(final Class<?> root, final String property) {
-	if (isFreezedLocatorManager(root, property)) {
-	    error("Unable to freeze the locator instance more than once for type [" + root + "] and property [" + property + "].");
+	nonEntityTypedPropertyError(root, property);
+	if (EDITING_PHASE == phase(root, property)) {
+	    freezedLocators.put(key(root, property), persistentLocators.remove(key(root, property)));
+	    current_to_persistent(root, property);
+	} else { // not applicable
+	    error("Could not Freeze locator while it is not in Editing phase (e.g. double freezing is not permitted). Property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
-	notInitiliasedError(persistentLocators.get(key(root, property)), root, property);
-	notInitiliasedError(currentLocators.get(key(root, property)), root, property);
-	final ILocatorDomainTreeManagerAndEnhancer persistentLocator = persistentLocators.remove(key(root, property));
-	freezedLocators.put(key(root, property), persistentLocator);
-	persistentLocators.put(key(root, property), EntityUtils.deepCopy(currentLocators.get(key(root, property)), getSerialiser()));
-    }
-
-    /**
-     * Returns <code>true</code> if the locator instance is in 'freezed' state, <code>false</code> otherwise.
-     *
-     * @param root
-     * @param property
-     * @return
-     */
-    @Override
-    public boolean isFreezedLocatorManager(final Class<?> root, final String property) {
-	return freezedLocators.get(key(root, property)) != null;
     }
 
     /**
@@ -188,23 +279,8 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
      * @param root
      * @param property
      */
-    protected void unfreeze(final Class<?> root, final String property) {
-	if (!isFreezedLocatorManager(root, property)) {
-	    error("Unable to unfreeze the locator instance that is not 'freezed' for type [" + root + "] and property [" + property + "].");
-	}
-	final ILocatorDomainTreeManagerAndEnhancer persistentLocator = freezedLocators.remove(key(root, property));
-	persistentLocators.put(key(root, property), persistentLocator);
-    }
-
-    @Override
-    public boolean isChangedLocatorManager(final Class<?> root, final String property) {
-	AbstractDomainTree.illegalType(root, property, "Could not ask whether a locator has been changed for 'non-AE' property [" + property + "] in type [" + root.getSimpleName() + "].", AbstractEntity.class);
-	return !EntityUtils.equalsEx(currentLocators.get(key(root, property)), persistentLocators.get(key(root, property)));
-    }
-
-    @Override
-    public List<Pair<Class<?>, String>> locatorKeys() {
-	return new ArrayList<Pair<Class<?>, String>>(currentLocators.keySet());
+    private void unfreeze(final Class<?> root, final String property) {
+	persistentLocators.put(key(root, property), freezedLocators.remove(key(root, property)));
     }
 
     /**
@@ -266,5 +342,9 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	} else if (!rootTypes.equals(other.rootTypes))
 	    return false;
 	return true;
+    }
+
+    public IGlobalDomainTreeRepresentation getGlobalRepresentation() {
+	return globalRepresentation;
     }
 }

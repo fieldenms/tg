@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+
+
 import java.util.HashSet;
 import java.util.List;
 
@@ -41,19 +43,19 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
     private final ISerialiser serialiser = new TgKryo1(entityFactory, new ProvidedSerialisationClassProvider());
     private final IUserDao userDao = getInstance(IUserDao.class);
 
-    protected IGlobalDomainTreeManager createManagerForNonBaseUser2() {
+    protected GlobalDomainTreeManager createManagerForNonBaseUser2() {
 	return createGlobalDomainTreeManager("USER3");
     }
 
-    protected IGlobalDomainTreeManager createManagerForNonBaseUser() {
+    protected GlobalDomainTreeManager createManagerForNonBaseUser() {
 	return createGlobalDomainTreeManager("USER2");
     }
 
-    protected IGlobalDomainTreeManager createManagerForBaseUser() {
+    protected GlobalDomainTreeManager createManagerForBaseUser() {
 	return createGlobalDomainTreeManager("USER1");
     }
 
-    private IGlobalDomainTreeManager createGlobalDomainTreeManager(final String userName) {
+    private GlobalDomainTreeManager createGlobalDomainTreeManager(final String userName) {
 	return new GlobalDomainTreeManager(serialiser, entityFactory, createUserProvider(userName), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityMasterConfigController.class), getInstance(IEntityLocatorConfigController.class));
     }
 
