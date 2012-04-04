@@ -14,7 +14,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
 
-import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PurePropInfo;

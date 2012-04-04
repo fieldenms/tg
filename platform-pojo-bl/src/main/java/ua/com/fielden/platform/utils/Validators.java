@@ -2,7 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import java.util.List;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -37,7 +37,7 @@ public final class Validators {
      */
     public static <T extends AbstractEntity<?>> boolean overlaps(//
 	    final T entity, //
-	    final IEntityDao2<T> controller, //
+	    final IEntityDao<T> controller, //
 	    final String fromDateProperty, //
 	    final String toDateProperty, //
 	    final String... matchProperties) {
@@ -60,7 +60,7 @@ public final class Validators {
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
 	    final T entity, //
 	    final fetch<T> fetchModel,//
-	    final IEntityDao2<T> controller, //
+	    final IEntityDao<T> controller, //
 	    final String fromDateProperty, //
 	    final String toDateProperty, //
 	    final String... matchProperties) {
@@ -84,7 +84,7 @@ public final class Validators {
      */
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
 	    final T entity, //
-	    final IEntityDao2<T> controller, //
+	    final IEntityDao<T> controller, //
 	    final String fromDateProperty, //
 	    final String toDateProperty, //
 	    final String... matchProperties) {

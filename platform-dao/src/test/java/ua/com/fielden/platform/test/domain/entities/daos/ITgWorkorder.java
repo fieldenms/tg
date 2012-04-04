@@ -3,7 +3,7 @@
  */
 package ua.com.fielden.platform.test.domain.entities.daos;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 
 /**
@@ -12,6 +12,6 @@ import ua.com.fielden.platform.sample.domain.TgWorkOrder;
  * @author nc
  *
  */
-public interface ITgWorkorder extends IEntityDao2<TgWorkOrder> {
+public interface ITgWorkorder extends IEntityDao<TgWorkOrder> {
 
 }

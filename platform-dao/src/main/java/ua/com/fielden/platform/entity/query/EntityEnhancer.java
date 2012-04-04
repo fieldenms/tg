@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -38,7 +38,6 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
      * @throws Exception
      */
     protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final fetch<E> fetchModel) throws Exception {
-	System.out.println("               ENHANCING ENTITIES WITH: " + fetchModel);
 	if (fetchModel != null) {
 	    final Map<String, fetch<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getFetchModels();
 

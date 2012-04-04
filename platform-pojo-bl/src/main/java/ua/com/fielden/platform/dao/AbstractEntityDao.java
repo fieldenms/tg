@@ -1,20 +1,23 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.equery.equery.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.List;
-
-import javax.management.Query;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.interfaces.IMain.IPlainJoin;
-import ua.com.fielden.platform.equery.interfaces.IOthers.ICompoundCondition;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -26,11 +29,13 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
  * @author TG Team
  *
  */
-public abstract class AbstractEntityDao<T extends AbstractEntity> implements IEntityDao<T> {
+public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements IEntityDao<T> {
 
-    private final static String ID_PROPERTY_NAME = "id";
+    protected final static String ID_PROPERTY_NAME = "id";
     private final Class<? extends Comparable> keyType;
     private final Class<T> entityType;
+    private final QueryExecutionModel<T, EntityResultQueryModel<T>> defaultModel;
+
 
     /**
      * A principle constructor, which requires entity type that should be managed by this DAO instance. Entity's key type is determined automatically.
@@ -44,6 +49,17 @@ public abstract class AbstractEntityDao<T extends AbstractEntity> implements IEn
 	}
 	this.entityType = (Class<T>) annotation.value();
 	this.keyType = AnnotationReflector.getKeyType(entityType);
+	this.defaultModel = produceDefaultQueryExecutionModel(entityType);
+    }
+
+    protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
+	final EntityResultQueryModel<T> query = select(entityType).model();
+	final OrderingModel orderBy = orderBy().prop(ID_PROPERTY_NAME).asc().model();
+	return from(query).with(orderBy).build();
+    }
+
+    protected QueryExecutionModel<T, EntityResultQueryModel<T>> getDefaultQueryExecutionModel() {
+	return defaultModel;
     }
 
     @Override
@@ -68,7 +84,8 @@ public abstract class AbstractEntityDao<T extends AbstractEntity> implements IEn
 
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
 	try {
-	    return getEntity((IQueryOrderedModel<T>) select(getEntityType()).where().prop(ID_PROPERTY_NAME).eq().val(id).model(), fetchModel);
+	    final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(ID_PROPERTY_NAME).eq().val(id).model();
+	    return getEntity(from(query).with(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
@@ -82,7 +99,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity> implements IEn
      *
      * Otherwise, <code>WHERE</code> statement is build using only property <code>key</code>.
      *
-     * The created {@link Query} expects a unique result, and throws a runtime exception if this is not the case.
+     * The created query expects a unique result, and throws a runtime exception if this is not the case.
      *
      * TODO Need to consider the case of polymorphic associations such as Rotable, which can be both Bogie and/or Wheelset.
      */
@@ -94,9 +111,8 @@ public abstract class AbstractEntityDao<T extends AbstractEntity> implements IEn
 
     @Override
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
-	final IQueryOrderedModel<T> model = createQueryByKey(keyValues);
 	try {
-	    return getEntity(model, fetchModel);
+	    return getEntity(from((createQueryByKey(keyValues))).with(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}
@@ -104,12 +120,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity> implements IEn
 
     @Override
     public T findByKey(final Object... keyValues) {
-	final IQueryOrderedModel<T> model = createQueryByKey(keyValues);
-	try {
-	    return getEntity(model, null);
-	} catch (final Exception e) {
-	    throw new IllegalStateException(e);
-	}
+	return findByKeyAndFetch(null, keyValues);
     }
 
     /**
@@ -118,7 +129,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity> implements IEn
      * @param keyValues
      * @return
      */
-    protected IQueryModel<T> createQueryByKey(final Object... keyValues) {
+    protected EntityResultQueryModel<T> createQueryByKey(final Object... keyValues) {
 	final IPlainJoin qry = select(getEntityType());
 
 	if (getKeyType() == DynamicEntityKey.class) {
@@ -133,7 +144,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity> implements IEn
 			+ ") does not match the number of properties in the entity composite key (" + list.size() + ").");
 	    }
 
-	    ICompoundCondition cc = qry//
+	    ICompoundCondition0 cc = qry//
 	    .where().prop(list.get(0).getName())//
 	    .eq().val(realKeyValues[0]);
 
@@ -143,24 +154,15 @@ public abstract class AbstractEntityDao<T extends AbstractEntity> implements IEn
 	    return cc.model();
 	} else if (keyValues.length != 1) {
 	    throw new IllegalArgumentException("Only one key value is expected instead of " + keyValues.length + " when looking for an entity by a non-composite key.");
-	} else if (AbstractEntity.class.isAssignableFrom(getKeyType())) {
-	    return qry//
-	    .where().prop("key")// .id
-	    .eq().val(((AbstractEntity) keyValues[0]).getId()).model();
 	} else {
 	    return qry//
-	    .where().prop("key")//
-	    .eq().val(keyValues[0]).model();
+		    .where().prop("key")//
+		    .eq().val(keyValues[0]).model();
 	}
     }
 
     @Override
-    public IPage<T> firstPage(final IQueryOrderedModel<T> model, final fetch<T> fetchModel, final IQueryOrderedModel<EntityAggregates> summaryModel, final int pageCapacity) {
-	throw new UnsupportedOperationException("Not implemented.");
-    }
-
-    @Override
-    public IPage<T> firstPage(final IQueryOrderedModel<T> model, final IQueryOrderedModel<EntityAggregates> summaryModel, final int pageCapacity) {
+    public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
 	throw new UnsupportedOperationException("Not implemented.");
     }
 
@@ -170,7 +172,12 @@ public abstract class AbstractEntityDao<T extends AbstractEntity> implements IEn
     }
 
     @Override
-    public void delete(final IQueryOrderedModel<T> model) {
+    public void delete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
 	throw new UnsupportedOperationException("By default deletion is not supported.");
+    }
+
+    @Override
+    public void delete(final EntityResultQueryModel<T> model) {
+	delete(model, Collections.<String, Object> emptyMap());
     }
 }

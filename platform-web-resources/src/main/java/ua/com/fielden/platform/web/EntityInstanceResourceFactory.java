@@ -5,7 +5,7 @@ import org.restlet.data.Method;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -21,7 +21,7 @@ import com.google.inject.Injector;
  * @author 01es
  *
  */
-public class EntityInstanceResourceFactory<T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> extends Restlet {
+public class EntityInstanceResourceFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends Restlet {
     private final Class<DAO> daoType;
     private final Injector injector;
     private final EntityFactory factory;

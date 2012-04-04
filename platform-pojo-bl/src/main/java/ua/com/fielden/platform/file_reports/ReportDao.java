@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.Deflater;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.UsernameSetterMixin;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -28,10 +28,10 @@ public class ReportDao implements IReport {
 
     private final Map<String, IReportFactory> reportFactories = new HashMap<String, IReportFactory>();
 
-    private final IEntityAggregatesDao2 aggregatesDao;
+    private final IEntityAggregatesDao aggregatesDao;
 
     @Inject
-    public ReportDao(final IEntityAggregatesDao2 aggregatesDao) {
+    public ReportDao(final IEntityAggregatesDao aggregatesDao) {
 	this.aggregatesDao = aggregatesDao;
     }
 
@@ -78,6 +78,4 @@ public class ReportDao implements IReport {
 	}
 
     }
-
-
 }

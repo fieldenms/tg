@@ -1,14 +1,15 @@
 package ua.com.fielden.platform.security.dao;
 
+import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -16,7 +17,9 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.equery.equery.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * DbDriven implementation of the {@link ISecurityRoleAssociationDao}
@@ -38,9 +41,9 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     public List<SecurityRoleAssociation> findAssociationsFor(final  Class<? extends ISecurityToken> securityToken) {
-	final IQueryOrderedModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class)//
-	.where().prop("securityToken").eq().val(securityToken.getName()).orderBy("role").model();
-	return getEntities(model, new fetchAll(SecurityRoleAssociation.class));
+	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).where().prop("securityToken").eq().val(securityToken.getName()).model();
+	final OrderingModel orderBy = orderBy().prop("role").asc().model();
+	return getAllEntities(from(model).with(new fetchAll<SecurityRoleAssociation>(SecurityRoleAssociation.class)).with(orderBy).build());
     }
 
     @Override
@@ -52,9 +55,9 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     public int countAssociations(final String username, final Class<? extends ISecurityToken> token) {
-	final IQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class).where().prop("user.key").eq().val(username).and()
+	final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class).where().prop("user.key").eq().val(username).and()
 	.prop("userRole.id").eq().prop("sra.role.id").model();
-	final IQueryOrderedModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class, "sra").where().prop("sra.securityToken").eq().val(token.getName()).and().exists(slaveModel).model();
-	return count(model);
+	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).as("sra").where().prop("sra.securityToken").eq().val(token.getName()).and().exists(slaveModel).model();
+	return count(model, Collections.<String, Object> emptyMap());
     }
 }

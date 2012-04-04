@@ -6,7 +6,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -31,7 +31,7 @@ import ua.com.fielden.platform.swing.ei.editors.development.IPropertyBinder;
 @SuppressWarnings("rawtypes")
 public class CrudEntityInspectorModel<T extends AbstractEntity<?>> extends EntityInspectorModel<T> {
 
-    private final IEntityDao2<T> dao;
+    private final IEntityDao<T> dao;
 
     private final Action save;
     private final Action cancel;
@@ -48,7 +48,7 @@ public class CrudEntityInspectorModel<T extends AbstractEntity<?>> extends Entit
      * @param valueMatcherFactory
      *            -- required to obtain value matchers for autocompleter-based editors used for properties of entity types.
      */
-    public CrudEntityInspectorModel(final T entity, final IPropertyBinder binder, final IEntityDao2<T> dao, final IAfterActions afterActions) {
+    public CrudEntityInspectorModel(final T entity, final IPropertyBinder binder, final IEntityDao<T> dao, final IAfterActions afterActions) {
 	super(entity, binder);
 	this.dao = dao;
 	this.afterActions = afterActions;
@@ -65,7 +65,7 @@ public class CrudEntityInspectorModel<T extends AbstractEntity<?>> extends Entit
      * @param binder
      * @param dao
      */
-    public CrudEntityInspectorModel(final T entity, final IPropertyBinder binder, final IEntityDao2<T> dao) {
+    public CrudEntityInspectorModel(final T entity, final IPropertyBinder binder, final IEntityDao<T> dao) {
 	this(entity, binder, dao, null);
     }
 
@@ -191,7 +191,7 @@ public class CrudEntityInspectorModel<T extends AbstractEntity<?>> extends Entit
 	void afterDelete();
     }
 
-    public IEntityDao2<T> getDao() {
+    public IEntityDao<T> getDao() {
 	return dao;
     }
 

@@ -38,11 +38,11 @@ import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.TextAnchor;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.equery.lifecycle.IProgressUpdater;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
 import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
 import ua.com.fielden.platform.swing.categorychart.FixedCategoryAxis;
@@ -50,7 +50,7 @@ import ua.com.fielden.platform.swing.categorychart.IChartFactory;
 import ua.com.fielden.platform.swing.chartscroll.ScrollableCategoryPlot;
 
 //TODO this class should be removed later on.
-class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> implements IChartFactory<List<EntityAggregates>, CategoryChartTypes> {
+class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> implements IChartFactory<List<EntityAggregates>, CategoryChartTypes> {
 
     private static final CommonCategoryRenderer commonRenderer = new CommonCategoryRenderer();
 
@@ -60,13 +60,13 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao2<
 
     private final List<Integer> seriesIndexes = new ArrayList<Integer>();
 
-    private final ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage2<EntityAggregates>> dataProvider;
+    private final ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage<EntityAggregates>> dataProvider;
 
     private final NumberFormat numberFormat;
 
     private DefaultCategoryDataset dataSet;
 
-    public CategoryChartFactory(final ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage2<EntityAggregates>> dataProvider, final CategoryDataModel chartEntryModel, final boolean all, final int... indexes) {
+    public CategoryChartFactory(final ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage<EntityAggregates>> dataProvider, final CategoryDataModel chartEntryModel, final boolean all, final int... indexes) {
 	this.chartEntryModel = chartEntryModel;
 	this.dataProvider = dataProvider;
 	this.numberFormat = new DecimalFormat("#,##0.00");

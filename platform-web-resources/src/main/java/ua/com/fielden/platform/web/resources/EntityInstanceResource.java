@@ -12,7 +12,7 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
@@ -20,7 +20,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
 
 /**
  * EntityInstanceResource represents a web resource mapped to an URI template /entity-alias-type/{entity-id}. It provides a base implementation for handling the following
- * {@link IEntityDao2} methods:
+ * {@link IEntityDao} methods:
  * <ul>
  * <li>entityExists -- HEAD request.
  * <li>findById -- GET request.
@@ -37,7 +37,7 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
 
     protected final Long entityVersion; // is initialised with value other than null only in cases where head request came to check entity staleness.
 
-    protected final IEntityDao2<T> dao;
+    protected final IEntityDao<T> dao;
     protected final EntityFactory factory;
     protected final RestServerUtil restUtil;
 
@@ -75,7 +75,7 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
      * @param request
      * @param response
      */
-    public EntityInstanceResource(final IEntityDao2<T> dao, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public EntityInstanceResource(final IEntityDao<T> dao, final EntityFactory factory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
@@ -101,7 +101,7 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
     }
 
     /**
-     * Handles GET requests resulting from RAO call to IEntityDao.findById
+     * Handles GET requests resulting from RAO call to {@link IEntityDao#findById(Long)}
      */
     @Override
     public Representation represent(final Variant variant) {
@@ -119,7 +119,7 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
     }
 
     /**
-     * Handles HEAD request resulting from RAO call to IEntityDao.entityExists and IEntityDao.isStale.
+     * Handles HEAD request resulting from RAO call to {@link IEntityDao#entityExists(AbstractEntity)} and {@link IEntityDao#isStale(Long, Long)}.
      */
     @Override
     public void handleHead() {
@@ -181,7 +181,7 @@ public class EntityInstanceResource<T extends AbstractEntity<?>> extends Resourc
 	return entityVersion != null;
     }
 
-    public IEntityDao2<T> getDao() {
+    public IEntityDao<T> getDao() {
         return dao;
     }
 

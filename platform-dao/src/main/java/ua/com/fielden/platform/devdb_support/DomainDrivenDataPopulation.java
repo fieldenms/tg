@@ -12,12 +12,12 @@ import java.util.List;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider2;
+import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import static java.lang.String.format;
 
@@ -36,7 +36,7 @@ public abstract class DomainDrivenDataPopulation {
 
     public final IDomainDrivenTestCaseConfiguration config;
 
-    private final IDefaultControllerProvider2 provider;
+    private final IDefaultControllerProvider provider;
     private final EntityFactory factory;
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -45,7 +45,7 @@ public abstract class DomainDrivenDataPopulation {
     protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config) {
 	try {
 	    this.config = config;
-	    provider = config.getInstance(IDefaultControllerProvider2.class);
+	    provider = config.getInstance(IDefaultControllerProvider.class);
 	    factory = config.getEntityFactory();
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
@@ -140,11 +140,11 @@ public abstract class DomainDrivenDataPopulation {
     }
 
     public final <T extends AbstractEntity<?>> T save(final T instance) {
-	final IEntityDao2<T> pp = provider.findController((Class<T>) instance.getType());
+	final IEntityDao<T> pp = provider.findController((Class<T>) instance.getType());
 	return pp.save(instance);
     }
 
-    public final <T extends IEntityDao2<E>, E extends AbstractEntity<?>> T ao(final Class<E> type) {
+    public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T ao(final Class<E> type) {
 	return (T) provider.findController(type);
     }
 

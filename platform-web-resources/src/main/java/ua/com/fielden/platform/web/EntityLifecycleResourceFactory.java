@@ -22,7 +22,7 @@ import com.google.inject.Injector;
  *
  */
 @SuppressWarnings("unchecked")
-public class EntityLifecycleResourceFactory<T extends AbstractEntity, DAO extends IEntityDao<T>> extends Restlet {
+public class EntityLifecycleResourceFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends Restlet {
     private final Class<DAO> daoType;
     private final Injector injector;
     private final RestServerUtil restUtil;

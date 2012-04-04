@@ -4,7 +4,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
@@ -18,7 +18,7 @@ import com.google.inject.Inject;
  *
  */
 @EntityType(EntityAggregates.class)
-public class CommonEntityAggregatesRao extends CommonEntityRao<EntityAggregates> implements IEntityDao2<EntityAggregates> {
+public class CommonEntityAggregatesRao extends CommonEntityRao<EntityAggregates> implements IEntityDao<EntityAggregates> {
 
     @Inject
     public CommonEntityAggregatesRao(final RestClientUtil restUtil) {

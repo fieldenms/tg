@@ -5,18 +5,18 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.cypher.Cypher;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.pagination.IPage2;
-import ua.com.fielden.platform.security.provider.IUserController2;
+import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
-public class UserControllerForTestPurposes implements IUserController2 {
+public class UserControllerForTestPurposes implements IUserController {
     public static final String USER_NAME = "user";
     public static final String PASSWORD = "password";
     private User user;
@@ -143,37 +143,37 @@ public class UserControllerForTestPurposes implements IUserController2 {
     }
 
     @Override
-    public IPage2<User> firstPage(final int pageCapacity) {
+    public IPage<User> firstPage(final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage2<User> getPage(final int pageNo, final int pageCapacity) {
+    public IPage<User> getPage(final int pageNo, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage2<User> firstPage(final QueryExecutionModel<User, ?> query, final int pageCapacity) {
+    public IPage<User> firstPage(final QueryExecutionModel<User, ?> query, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage2<User> firstPage(final QueryExecutionModel<User, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
+    public IPage<User> firstPage(final QueryExecutionModel<User, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage2<User> getPage(final QueryExecutionModel<User, ?> query, final int pageNo, final int pageCapacity) {
+    public IPage<User> getPage(final QueryExecutionModel<User, ?> query, final int pageNo, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }
 
     @Override
-    public IPage2<User> getPage(final QueryExecutionModel<User, ?> query, final int pageNo, final int pageCount, final int pageCapacity) {
+    public IPage<User> getPage(final QueryExecutionModel<User, ?> query, final int pageNo, final int pageCount, final int pageCapacity) {
 	// TODO Auto-generated method stub
 	return null;
     }

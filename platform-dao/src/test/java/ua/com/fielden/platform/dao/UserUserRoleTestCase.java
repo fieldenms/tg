@@ -7,14 +7,11 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
-import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
-import ua.com.fielden.platform.dao2.IUserRoleDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao2;
-import ua.com.fielden.platform.security.provider.IUserController2;
+import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
+import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -29,16 +26,16 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 
 /**
- * Test case for the {@link IUserRoleDao2}, {@link IUserAndRoleAssociationDao2}, and {@link SecurityRoleAssociationDao2} classes
+ * Test case for the {@link IUserRoleDao}, {@link IUserAndRoleAssociationDao}, and {@link SecurityRoleAssociationDao} classes
  *
  * @author TG Team
  *
  */
 public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
-    private final IUserRoleDao2 userRoleDao = getInstance(IUserRoleDao2.class);
-    private final IUserAndRoleAssociationDao2 userAssociationDao = getInstance(IUserAndRoleAssociationDao2.class);
-    private final ISecurityRoleAssociationDao2 securityDao = getInstance(ISecurityRoleAssociationDao2.class);
-    private final IUserController2 userDao = getInstance(IUserController2.class);
+    private final IUserRoleDao userRoleDao = getInstance(IUserRoleDao.class);
+    private final IUserAndRoleAssociationDao userAssociationDao = getInstance(IUserAndRoleAssociationDao.class);
+    private final ISecurityRoleAssociationDao securityDao = getInstance(ISecurityRoleAssociationDao.class);
+    private final IUserController userDao = getInstance(IUserController.class);
 
     @Test
     public void test_retrieval_of_user_role_associations() {

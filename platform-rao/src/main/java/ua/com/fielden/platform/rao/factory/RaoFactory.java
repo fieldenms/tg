@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.rao.factory;
 
-import ua.com.fielden.platform.dao2.IDaoFactory2;
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IDaoFactory;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.rao.DynamicEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
@@ -14,7 +14,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class RaoFactory implements IDaoFactory2 {
+public class RaoFactory implements IDaoFactory {
     private final RestClientUtil util;
 
     @Inject
@@ -23,7 +23,7 @@ public class RaoFactory implements IDaoFactory2 {
     }
 
     @Override
-    public IEntityDao2<?> newDao(final Class<? extends AbstractEntity<?>> entityType) {
+    public IEntityDao<?> newDao(final Class<? extends AbstractEntity<?>> entityType) {
 	final DynamicEntityRao rao = new DynamicEntityRao(util);
 	rao.setEntityType(entityType);
 	return rao;

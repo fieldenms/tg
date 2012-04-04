@@ -13,14 +13,14 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleECEEntityDao;
 
 @EntityTitle("Simple entity type")
 @KeyType(String.class)
 @KeyTitle(value = "Simple entity", desc = "Simple entity description")
 @MapEntityTo("SIMPLEECEENTITY")
-@DefaultController2(ISimpleECEEntityDao.class)
+@DefaultController(ISimpleECEEntityDao.class)
 public class SimpleECEEntity extends AbstractEntity<String> {
 
     private static final long serialVersionUID = -8516470172415858958L;

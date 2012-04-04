@@ -9,7 +9,7 @@ import org.restlet.data.Response;
 import org.restlet.resource.Representation;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.snappy.ISnappyDao;
@@ -66,7 +66,7 @@ public class SnappyRao extends CommonEntityRao implements ISnappyDao {
     /**
      * Sends a POST request to /snappyquery?page-capacity=pageCapacity&page-no=pageNumber with an envelope containing instance of <code>queryString</code>. The response suppose to
      * return an envelope containing entities resulting from the query.
-     * 
+     *
      * @param pageNumber
      *            -- numbers from a set of N+{0} indicate a page number to be retrieved.
      */

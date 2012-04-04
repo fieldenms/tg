@@ -7,13 +7,13 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogieClass;
 
 @KeyType(String.class)
 @MapEntityTo
 @DescTitle("Description")
-@DefaultController2(ITgBogieClass.class)
+@DefaultController(ITgBogieClass.class)
 public class TgBogieClass extends AbstractEntity<String> {
 
     private static final long serialVersionUID = 1L;

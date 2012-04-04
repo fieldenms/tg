@@ -9,8 +9,8 @@ import java.util.TreeMap;
 
 import org.hibernate.Hibernate;
 
-import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
-import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.utils.EntityUtils;

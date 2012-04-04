@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test.DbDrivenTestCase2;
@@ -25,8 +25,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  *
  */
 public class CommonEntityDaoTest extends DbDrivenTestCase2 {
-    private final EntityWithMoneyDao2 dao = injector.getInstance(EntityWithMoneyDao2.class);
-    private final EntityWithDynamicCompositeKeyDao2 daoComposite = injector.getInstance(EntityWithDynamicCompositeKeyDao2.class);
+    private final EntityWithMoneyDao dao = injector.getInstance(EntityWithMoneyDao.class);
+    private final EntityWithDynamicCompositeKeyDao daoComposite = injector.getInstance(EntityWithDynamicCompositeKeyDao.class);
 
     //TODO test count, delete
 
@@ -64,19 +64,19 @@ public class CommonEntityDaoTest extends DbDrivenTestCase2 {
     }
 
     public void test_that_unfiltered_pagination_works() {
-	final IPage2<EntityWithMoney> page = dao.firstPage(2);
+	final IPage<EntityWithMoney> page = dao.firstPage(2);
 	assertEquals("Incorrect number of instances on the page.", 2, page.data().size());
 	assertTrue("Page should have the next one.", page.hasNext());
 
-	final IPage2<EntityWithMoney> nextPage = page.next();
+	final IPage<EntityWithMoney> nextPage = page.next();
 	assertFalse("Page should not have the next one.", nextPage.hasNext());
 	assertEquals("Incorrect number of instances on the next page.", 2, nextPage.data().size());
 
-	final IPage2<EntityWithMoney> prevPage = nextPage.prev();
+	final IPage<EntityWithMoney> prevPage = nextPage.prev();
 	assertEquals("Incorrect number of instances on the page.", 2, prevPage.data().size());
 	assertTrue("Page should have the next one.", prevPage.hasNext());
 
-	final IPage2<EntityWithMoney> lastPage = page.last();
+	final IPage<EntityWithMoney> lastPage = page.last();
 	assertFalse("Last page should not have the next one.", lastPage.hasNext());
 	assertTrue("Last page should have the previous one.", lastPage.hasPrev());
 	assertEquals("Incorrect number of instances on the last page.", 2, lastPage.data().size());
@@ -87,20 +87,20 @@ public class CommonEntityDaoTest extends DbDrivenTestCase2 {
 	.where().prop("money.amount").ge().val(new BigDecimal("30.00"))//
 	.model();
 
-	final IPage2<EntityWithMoney> page = dao.firstPage(from(q).build(), 2);
+	final IPage<EntityWithMoney> page = dao.firstPage(from(q).build(), 2);
 	assertEquals("Incorrect number of instances on the page.", 2, page.data().size());
 	assertTrue("Page should have the next one.", page.hasNext());
 
-	final IPage2<EntityWithMoney> nextPage = page.next();
+	final IPage<EntityWithMoney> nextPage = page.next();
 	assertFalse("Page should not have the next one.", nextPage.hasNext());
 	assertEquals("Incorrect number of instances on the next page.", 1, nextPage.data().size());
 
-	final IPage2<EntityWithMoney> firstPage = nextPage.first();
+	final IPage<EntityWithMoney> firstPage = nextPage.first();
 	assertTrue("First page should have the next one.", firstPage.hasNext());
 	assertFalse("First page should not have the previous one.", firstPage.hasPrev());
 	assertEquals("Incorrect number of instances on the first page.", 2, firstPage.data().size());
 
-	final IPage2<EntityWithMoney> lastPage = firstPage.last();
+	final IPage<EntityWithMoney> lastPage = firstPage.last();
 	assertFalse("Last page should not have the next one.", lastPage.hasNext());
 	assertTrue("Last page should have the previous one.", lastPage.hasPrev());
 	assertEquals("Incorrect number of instances on the last page.", 1, lastPage.data().size());

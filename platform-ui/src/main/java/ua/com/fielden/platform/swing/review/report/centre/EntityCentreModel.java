@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
@@ -15,7 +15,7 @@ public class EntityCentreModel<T extends AbstractEntity<?>> extends AbstractEnti
     //private AbstractAnalysisConfigurationModel resultViewModel;
 
 
-    public EntityCentreModel(final CentreConfigurationModel<T> configurationModel, final EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>>> entityInspectorModel, final IEntityMasterManager masterManager, final String name){
+    public EntityCentreModel(final CentreConfigurationModel<T> configurationModel, final EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> entityInspectorModel, final IEntityMasterManager masterManager, final String name){
 	super(configurationModel, entityInspectorModel, masterManager, name);
     }
 

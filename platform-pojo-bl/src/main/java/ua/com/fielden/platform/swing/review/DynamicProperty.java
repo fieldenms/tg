@@ -23,7 +23,7 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
-public class DynamicProperty<T extends AbstractEntity> {
+public class DynamicProperty<T extends AbstractEntity<?>> {
     //Properties that can be modified dynamically.
     private Object criteriaValue;
     private String title;
@@ -269,7 +269,7 @@ public class DynamicProperty<T extends AbstractEntity> {
 
 	    @Override
 	    protected AbstractEntity<?> doInBackground() throws Exception {
-		return criteria.getDaoFactory().newDao((Class<AbstractEntity>) getType()).findById(id);
+		return criteria.getDaoFactory().newDao((Class<AbstractEntity<?>>) getType()).findById(id);
 	    }
 
 	    @Override

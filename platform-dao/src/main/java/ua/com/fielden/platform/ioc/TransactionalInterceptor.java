@@ -27,8 +27,8 @@ import ua.com.fielden.platform.dao.annotations.Transactional;
 public class TransactionalInterceptor implements MethodInterceptor {
     private final SessionFactory sessionFactory;
 
-    public TransactionalInterceptor(final SessionFactory sessnioFactory) {
-	this.sessionFactory = sessnioFactory;
+    public TransactionalInterceptor(final SessionFactory sessionFactory) {
+	this.sessionFactory = sessionFactory;
     }
 
     @Override

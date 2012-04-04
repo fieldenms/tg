@@ -25,11 +25,11 @@ import org.restlet.resource.Representation;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.cypher.Cypher;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.security.provider.IUserController2;
+import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -68,7 +68,7 @@ public final class RestClientUtil implements IUserProvider {
     private String privateKey;
 
     /** User controller is required to be able to retrieve user by it name to ensure correct user association upon username change. */
-    private IUserController2 userController;
+    private IUserController userController;
     private User user;
 
     public RestClientUtil(final Protocol protocol, final String host, final int port, final String version, final String user) {
@@ -529,7 +529,7 @@ public final class RestClientUtil implements IUserProvider {
 	user = null;
     }
 
-    public void setUserController(final IUserController2 controller) {
+    public void setUserController(final IUserController controller) {
 	if (userController != null) {
 	    throw new IllegalStateException("User controller should be assigned only once.");
 	}

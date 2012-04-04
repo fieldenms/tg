@@ -51,21 +51,6 @@ public class UsernameSetterMixin {
 		    field.setAccessible(flag);
 		}
 	    }
-	    // assigned username to all other aggregated DAO instances
-	    for (final Field field : Finder.getFieldsOfSpecifiedType(usernameObtainer.getClass(), IEntityAggregatesDao.class)) {
-		final boolean flag = field.isAccessible();
-		try {
-		    field.setAccessible(true);
-		    final IEntityAggregatesDao dao = (IEntityAggregatesDao) field.get(usernameObtainer);
-		    if (dao != null) {
-			dao.setUsername(username);
-		    }
-		} catch (final Exception e) {
-		    throw new IllegalStateException(e);
-		} finally {
-		    field.setAccessible(flag);
-		}
-	    }
 	}
     }
 

@@ -6,7 +6,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import java.util.List;
 
-import ua.com.fielden.platform.dao2.IUserRoleDao2;
+import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.rao.CommonEntityRao;
@@ -17,13 +17,13 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import com.google.inject.Inject;
 
 /**
- * RAO implementation of the {@link IUserRoleDao2}.
+ * RAO implementation of the {@link IUserRoleDao}.
  *
  * @author TG Team
  *
  */
 @EntityType(UserRole.class)
-public class UserRoleRao extends CommonEntityRao<UserRole> implements IUserRoleDao2 {
+public class UserRoleRao extends CommonEntityRao<UserRole> implements IUserRoleDao {
 
     @Inject
     public UserRoleRao(final RestClientUtil restUtil) {

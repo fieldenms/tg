@@ -17,7 +17,7 @@ public class DefaultConrollerProviderImpl implements IDefaultControllerProvider 
     private Injector injector;
 
     @Override
-    public <T extends IEntityDao<E>, E extends AbstractEntity> T findController(final Class<E> type) {
+    public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T findController(final Class<E> type) {
 	if (type.isAnnotationPresent(DefaultController.class)) {
 	    try {
 		final Class<T> controllerType = (Class<T>) type.getAnnotation(DefaultController.class).value();
@@ -38,5 +38,4 @@ public class DefaultConrollerProviderImpl implements IDefaultControllerProvider 
     public void setInjector(final Injector injector) {
         this.injector = injector;
     }
-
 }

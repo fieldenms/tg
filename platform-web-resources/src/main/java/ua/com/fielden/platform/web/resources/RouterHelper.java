@@ -4,12 +4,11 @@ import org.restlet.Restlet;
 import org.restlet.Router;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController2;
+import ua.com.fielden.platform.attachment.IAttachmentController;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.file_reports.IReportDaoFactory;
 import ua.com.fielden.platform.web.AttachmentDownloadResourceFactory;
 import ua.com.fielden.platform.web.AttachmentInstanceResourceFactory;
@@ -41,7 +40,7 @@ public final class RouterHelper {
 	this.factory = factory;
     }
 
-    public <T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> void register(final Router router, final Class<DAO> daoType) {
+    public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void register(final Router router, final Class<DAO> daoType) {
 	registerInstanceResource(router, daoType);
 	registerTypeResource(router, daoType);
 	registerExportResource(router, daoType);
@@ -71,7 +70,7 @@ public final class RouterHelper {
 	final Restlet queryResource = new AttachmentQueryResourceFactory(injector);
 	router.attach("/users/{username}/query/" + Attachment.class.getSimpleName(), queryResource);
 
-	final Restlet queryExportResource = new EntityQueryExportResourceFactory<Attachment, IAttachmentController2>(IAttachmentController2.class, injector);
+	final Restlet queryExportResource = new EntityQueryExportResourceFactory<Attachment, IAttachmentController>(IAttachmentController.class, injector);
 	router.attach("/users/{username}/export/" + Attachment.class.getSimpleName(), queryExportResource);
 
 	final Restlet downloadResource = new AttachmentDownloadResourceFactory(location, injector);
@@ -81,20 +80,20 @@ public final class RouterHelper {
 	router.attach("/users/{username}/" + Attachment.class.getSimpleName() + "/{entity-id}", instanceResource);
     }
 
-    public <T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> void registerInstanceResource(final Router router, final Class<DAO> daoType) {
+    public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerInstanceResource(final Router router, final Class<DAO> daoType) {
 	final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimise it
 	final Restlet instanceResource = new EntityInstanceResourceFactory<T, DAO>(daoType, injector, factory);
 	router.attach("/users/{username}/" + dao.getEntityType().getSimpleName() + "/{entity-id}", instanceResource);
     }
 
-    public <T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> void registerTypeResource(final Router router, final Class<DAO> daoType) {
+    public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerTypeResource(final Router router, final Class<DAO> daoType) {
 	final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimize it
 	final Restlet typeResource = new EntityTypeResourceFactory<T, DAO>(daoType, injector, factory);
 	router.attach("/users/{username}/" + dao.getEntityType().getSimpleName(), typeResource);
 	router.attach("/users/{username}/query/" + dao.getEntityType().getSimpleName(), typeResource);
     }
 
-    public <T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> void registerExportResource(final Router router, final Class<DAO> daoType) {
+    public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerExportResource(final Router router, final Class<DAO> daoType) {
 	final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimize it
 	final Restlet queryExportResource = new EntityQueryExportResourceFactory<T, DAO>(daoType, injector);
 	router.attach("/users/{username}/export/" + dao.getEntityType().getSimpleName(), queryExportResource);

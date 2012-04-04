@@ -5,23 +5,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
 /**
- * RAO implementing {@link IEntityAggregatesDao2} contract.
+ * RAO implementing {@link IEntityAggregatesDao} contract.
  *
  * @author TG Team
  *
  */
 @EntityType(EntityAggregates.class)
-public class EntityAggregatesRao implements IEntityAggregatesDao2 {
+public class EntityAggregatesRao implements IEntityAggregatesDao {
     private final CommonEntityAggregatesRao rao;
 
     @Inject
@@ -80,17 +80,17 @@ public class EntityAggregatesRao implements IEntityAggregatesDao2 {
     }
 
     @Override
-    public IPage2<EntityAggregates> firstPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final int pageCapacity) {
+    public IPage<EntityAggregates> firstPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final int pageCapacity) {
 	return rao.firstPage(query, pageCapacity);
     }
 
     @Override
-    public IPage2<EntityAggregates> getPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model, final int pageNo, final int pageCapacity) {
+    public IPage<EntityAggregates> getPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model, final int pageNo, final int pageCapacity) {
 	return rao.getPage(model, pageNo, pageCapacity);
     }
 
     @Override
-    public IPage2<EntityAggregates> getPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model, final int pageNo, final int pageCount, final int pageCapacity) {
+    public IPage<EntityAggregates> getPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model, final int pageNo, final int pageCount, final int pageCapacity) {
 	return rao.getPage(model, pageNo, pageCount, pageCapacity);
     }
 

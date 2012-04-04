@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.test.entities.daos;
 
-import ua.com.fielden.platform.dao2.CommonEntityDao2;
+import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.controller.ITgTimesheet;
@@ -15,7 +15,7 @@ import com.google.inject.Inject;
  *
  */
 @EntityType(TgTimesheet.class)
-public class TgTimesheetDao extends CommonEntityDao2<TgTimesheet> implements ITgTimesheet {
+public class TgTimesheetDao extends CommonEntityDao<TgTimesheet> implements ITgTimesheet {
 
     @Inject
     protected TgTimesheetDao(final IFilter filter) {

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.review;
 
 import java.awt.event.ActionEvent;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
@@ -93,7 +93,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
     protected void postAction(final AbstractEntity clickedEntity) {
 	super.postAction(clickedEntity);
 	if (clickedEntity != null) {
-	    entityMasterFactory.<AbstractEntity<?>, IEntityDao2<AbstractEntity<?>>> showMaster(clickedEntity, ownerView);
+	    entityMasterFactory.<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> showMaster(clickedEntity, ownerView);
 	}
     }
 

@@ -9,11 +9,11 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.roa.HttpHeaders;
 
 /**
@@ -33,7 +33,7 @@ public class EntityAggregatesQueryResource extends Resource {
     private final boolean shouldReturnCount;
     private final boolean shouldReturnAll;
 
-    private final IEntityAggregatesDao2 dao;
+    private final IEntityAggregatesDao dao;
     private final RestServerUtil restUtil;
 
     /**
@@ -46,7 +46,7 @@ public class EntityAggregatesQueryResource extends Resource {
      * @param request
      * @param response
      */
-    public EntityAggregatesQueryResource(final IEntityAggregatesDao2 dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public EntityAggregatesQueryResource(final IEntityAggregatesDao dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
@@ -119,7 +119,7 @@ public class EntityAggregatesQueryResource extends Resource {
 	    } else if (shouldReturnAll) {
 		getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(queryAndFetch)));
 	    } else {
-		final IPage2<EntityAggregates> page = dao.getPage(queryAndFetch, pageNo, pageCount, pageCapacity);
+		final IPage<EntityAggregates> page = dao.getPage(queryAndFetch, pageNo, pageCount, pageCapacity);
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
 		getResponse().setEntity(restUtil.listRepresentation(page.data()));

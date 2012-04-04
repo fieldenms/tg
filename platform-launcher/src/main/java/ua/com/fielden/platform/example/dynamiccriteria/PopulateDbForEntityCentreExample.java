@@ -6,11 +6,11 @@ import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleECEEntity;
-import ua.com.fielden.platform.security.user.IUserDao2;
+import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 
 public class PopulateDbForEntityCentreExample extends DomainDrivenDataPopulation {
 
@@ -44,7 +44,7 @@ public class PopulateDbForEntityCentreExample extends DomainDrivenDataPopulation
     protected void populateDomain() {
 
 	//Configure base and non base users and save them into the database.
-	final IUserDao2 userDao = ao(User.class);
+	final IUserDao userDao = ao(User.class);
 	final User baseUser = new_(User.class, User.system_users.SU.name(), "Super user");
 	baseUser.setBase(true);
 	userDao.save(baseUser);
@@ -56,7 +56,7 @@ public class PopulateDbForEntityCentreExample extends DomainDrivenDataPopulation
 	//Configure main menu.
 	final MainMenuItem menuItem = new_(MainMenuItem.class, SimpleECEEntity.class.getName());
 	final MainMenuItem menuItem2 = new_(MainMenuItem.class, SimpleCompositeEntity.class.getName());
-	final IMainMenuItemController2 menuItemDao = ao(MainMenuItem.class);
+	final IMainMenuItemController menuItemDao = ao(MainMenuItem.class);
 	menuItemDao.save(menuItem);
 	menuItemDao.save(menuItem2);
     }

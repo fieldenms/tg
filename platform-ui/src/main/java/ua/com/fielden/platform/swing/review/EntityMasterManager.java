@@ -7,13 +7,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
-import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
+import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.model.DefaultEntityProducer;
@@ -37,7 +37,7 @@ public class EntityMasterManager implements IEntityMasterManager {
 
     private final Map<Class<? extends AbstractEntity<?>>, IEntityMasterCache> entityMasterCaches = Collections.synchronizedMap(new HashMap<Class<? extends AbstractEntity<?>>, IEntityMasterCache>());
 
-    private final IValueMatcherFactory2 vmf;
+    private final IValueMatcherFactory vmf;
 
     private final IGlobalDomainTreeManager gdtm;
 
@@ -48,7 +48,7 @@ public class EntityMasterManager implements IEntityMasterManager {
     @Inject
     public EntityMasterManager(//
 	    final EntityFactory entityFactory, //
-	    final IValueMatcherFactory2 vmf,//
+	    final IValueMatcherFactory vmf,//
 	    final IGlobalDomainTreeManager gdtm//
 	    ) {
 	this.entityFactory = entityFactory;
@@ -66,7 +66,7 @@ public class EntityMasterManager implements IEntityMasterManager {
      * @param factory
      * @return
      */
-    public <T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> EntityMasterManager addFactory(final Class<T> entityClass, final IEntityMasterFactory<T, DAO> factory) {
+    public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> EntityMasterManager addFactory(final Class<T> entityClass, final IEntityMasterFactory<T, DAO> factory) {
 	factories.put(entityClass, factory);
 	return this;
     }
@@ -95,7 +95,7 @@ public class EntityMasterManager implements IEntityMasterManager {
 	return cache;
     }
 
-    public <T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner) {
+    public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> BaseFrame showMaster(final T entity, final IUmViewOwner owner) {
 	// let's be defensive...
 	if (entity == null) {
 	    throw new IllegalArgumentException("<html>Master cannot be displayed for <b>null</b> domain entity.</html>");

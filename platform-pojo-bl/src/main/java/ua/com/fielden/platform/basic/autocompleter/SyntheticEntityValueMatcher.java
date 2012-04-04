@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.basic.IValueMatcher2;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.SyntheticEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -24,13 +24,13 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  */
 public class SyntheticEntityValueMatcher implements IValueMatcher2<EntityAggregates> {
 
-    private final IEntityAggregatesDao2 entityAggregatesDao;
+    private final IEntityAggregatesDao entityAggregatesDao;
     private final AggregatedResultQueryModel defaultModel;
     private final String propertyParamName = "propertyNameFor_key";
 
     private int pageSize = 10;
 
-    public SyntheticEntityValueMatcher(final IEntityAggregatesDao2 entityAggregatesDao, final Class<? extends SyntheticEntity> syntheticEntityClass) {
+    public SyntheticEntityValueMatcher(final IEntityAggregatesDao entityAggregatesDao, final Class<? extends SyntheticEntity> syntheticEntityClass) {
 	this.entityAggregatesDao = entityAggregatesDao;
 
 	final List<Field> properties = Finder.findProperties(syntheticEntityClass);

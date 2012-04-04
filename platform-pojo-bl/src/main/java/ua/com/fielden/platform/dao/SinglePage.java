@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.pagination.IPage;
 
 /**
  * An abstraction of the list of entities as a single page.
  *
  */
-public class SinglePage<T extends AbstractEntity> implements IPage<T> {
+public class SinglePage<T extends AbstractEntity<?>> implements IPage<T> {
     private final List<T> data;
 
     public SinglePage(final List<T> data) {

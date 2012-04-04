@@ -47,10 +47,10 @@ public class DataMigrator {
 	private final SessionFactory sessionFactory;
 	private final String[] subsetItems;
 	private final Connection conn;
-	private final Class<? extends IRetriever> retrieverClass;
+	private final Class<? extends IRetriever<?>> retrieverClass;
 	private final MigrationRun migrationRun;
 
-	public Task(final String msg, final Injector injector, final SessionFactory sessionFactory, final Connection conn, final EntityFactory factory, final MigrationRun migrationRun, final Class<? extends IRetriever> retrieverClass, final String... subsetItems) {
+	public Task(final String msg, final Injector injector, final SessionFactory sessionFactory, final Connection conn, final EntityFactory factory, final MigrationRun migrationRun, final Class<? extends IRetriever<?>> retrieverClass, final String... subsetItems) {
 	    this.msg = msg;
 	    this.injector = injector;
 	    this.factory = factory;
@@ -63,7 +63,7 @@ public class DataMigrator {
 
 	@Override
 	public String call() throws Exception {
-	    final IRetriever<? extends AbstractEntity> ret = injector.getInstance(retrieverClass);
+	    final IRetriever<? extends AbstractEntity<?>> ret = injector.getInstance(retrieverClass);
 	    try {
 		ret.populateData(sessionFactory, conn, factory, injector.getInstance(MigrationErrorDao.class), injector.getInstance(MigrationHistoryDao.class), migrationRun, getSubsetCondition(subsetItems));
 		conn.close();
@@ -167,7 +167,7 @@ public class DataMigrator {
 
     private final HibernateUtil hiberUtil;
     private final EntityFactory factory;
-    private final List<IRetriever<? extends AbstractEntity>> retrievers = new ArrayList<IRetriever<? extends AbstractEntity>>();
+    private final List<IRetriever<? extends AbstractEntity<?>>> retrievers = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
     private final MigrationHistoryDao histDao;
     private final MigrationErrorDao errorDao;
     private final MigrationRunDao runDao;
@@ -185,7 +185,7 @@ public class DataMigrator {
 	this.errorDao = injector.getInstance(MigrationErrorDao.class);
 	this.runDao = injector.getInstance(MigrationRunDao.class);
 
-	for (final Class<? extends IRetriever<? extends AbstractEntity>> retrieverClass : retrieversClasses) {
+	for (final Class<? extends IRetriever<? extends AbstractEntity<?>>> retrieverClass : retrieversClasses) {
 	    retrievers.add(injector.getInstance(retrieverClass));
 	}
 
@@ -203,7 +203,7 @@ public class DataMigrator {
      * @return
      * @throws Exception
      */
-    private boolean validateRetrievalSql(final IRetriever retriever, final Connection conn) throws Exception {
+    private boolean validateRetrievalSql(final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) throws Exception {
 	System.out.print("Validating " + retriever.getClass().getSimpleName() + " ... ");
 	boolean foundErrors = false;
 	final String legacyDataSql = retriever.selectSql();
@@ -279,7 +279,7 @@ public class DataMigrator {
     private void validateRetrievalSql() throws Exception {
 	boolean foundErrors = false;
 	final Connection conn = injector.getInstance(Connection.class);
-	for (final IRetriever<?> ret : retrievers) {
+	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
 	    if (validateRetrievalSql(ret, conn)) {
 		foundErrors = true;
 	    }
@@ -296,7 +296,7 @@ public class DataMigrator {
 
 	final SessionFactory sFactory = hiberUtil.getSessionFactory();
 
-	for (final IRetriever<? extends AbstractEntity> ret : retrievers) {
+	for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
 	    if (ret.splitProperty() == null) {
 		final Connection conn = injector.getInstance(Connection.class);
 		final Result result = ret.populateData(sFactory, conn, factory, errorDao, histDao, migrationRun, null);
@@ -307,7 +307,7 @@ public class DataMigrator {
 
 		for (final Iterator<Pair<Set<String>, Long>> iterator = DataMigrator.splitIntoBatches(populateData(ret), threadCount).iterator(); iterator.hasNext();) {
 		    final Connection conn = injector.getInstance(Connection.class);
-		    tasks.add(new Task("done.", injector, sFactory, conn, factory, migrationRun, ret.getClass(), iterator.next().getKey().toArray(new String[] {})));
+		    tasks.add(new Task("done.", injector, sFactory, conn, factory, migrationRun, (Class<? extends IRetriever<?>>) ret.getClass(), iterator.next().getKey().toArray(new String[] {})));
 		}
 
 		final ExecutorService exec = Executors.newFixedThreadPool(tasks.size());

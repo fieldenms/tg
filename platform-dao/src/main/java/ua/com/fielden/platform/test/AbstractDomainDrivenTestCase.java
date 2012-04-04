@@ -18,12 +18,12 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 
-import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider2;
+import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
 import static java.lang.String.format;
 
 
@@ -41,7 +41,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
     public final static IDomainDrivenTestCaseConfiguration config = createConfig();
 
-    private final IDefaultControllerProvider2 provider = config.getInstance(IDefaultControllerProvider2.class);
+    private final IDefaultControllerProvider provider = config.getInstance(IDefaultControllerProvider.class);
     private final EntityFactory factory = config.getEntityFactory();
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -171,11 +171,11 @@ public abstract class AbstractDomainDrivenTestCase {
     }
 
     protected <T extends AbstractEntity<?>> T save(final T instance) {
-	final IEntityDao2<T> pp = provider.findController((Class<T>) instance.getType());
+	final IEntityDao<T> pp = provider.findController((Class<T>) instance.getType());
 	return pp.save(instance);
     }
 
-    protected <T extends IEntityDao2<E>, E extends AbstractEntity<?>> T ao(final Class<E> type) {
+    protected <T extends IEntityDao<E>, E extends AbstractEntity<?>> T ao(final Class<E> type) {
 	return (T) provider.findController(type);
     }
 

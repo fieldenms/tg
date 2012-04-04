@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.criteria.enhanced;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 
 import com.google.inject.Inject;
@@ -18,7 +17,7 @@ import com.google.inject.Inject;
  * @param <T>
  * @param <DAO>
  */
-public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
+public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
 
     private static final long serialVersionUID = -5189571197523084383L;
 
@@ -30,7 +29,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
      * @param valueMatcherFactory
      */
     @Inject
-    protected EnhancedCentreEntityQueryCriteria(final IValueMatcherFactory2 valueMatcherFactory) {
+    protected EnhancedCentreEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory) {
 	super(valueMatcherFactory);
     }
 }

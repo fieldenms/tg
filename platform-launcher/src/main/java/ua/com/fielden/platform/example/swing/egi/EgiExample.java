@@ -31,7 +31,7 @@ import javax.swing.table.TableColumn;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.application.AbstractUiApplication;
-import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher2;
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -79,8 +79,8 @@ public class EgiExample extends AbstractUiApplication {
 	dummyEntityTableModel = new PropertyTableModelBuilder<DummyEntity>(DummyEntity.class)//
 		.addReadonly("key", (Integer) null)//
 		.addEditableString("desc", null)//
-		.addEditable("dummyEntity2Ref", "DummyEntity2Ref", "DummyEntity2 String reference", new PojoValueMatcher2<DummyEntity2>(dummyEntities2, "key", 10))//
-		.addEditable("dummyEntity2", "DummyEntity2", null, "DummyEntity2 reference", new PojoValueMatcher2<DummyEntity2>(dummyEntities2, "key", 10), dummyEntity2ClickAction).addEditable("key", 30)
+		.addEditable("dummyEntity2Ref", "DummyEntity2Ref", "DummyEntity2 String reference", new PojoValueMatcher<DummyEntity2>(dummyEntities2, "key", 10))//
+		.addEditable("dummyEntity2", "DummyEntity2", null, "DummyEntity2 reference", new PojoValueMatcher<DummyEntity2>(dummyEntities2, "key", 10), dummyEntity2ClickAction).addEditable("key", 30)
 		//////////////  this should be failed (do not uncomment following lines) : //////////////
 		//         .addEditable("dummyEntity2.key", 30)
 		//         .addEditable("getKey()", 30)

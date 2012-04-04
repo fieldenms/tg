@@ -13,7 +13,7 @@ import org.restlet.Router;
 
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
@@ -34,7 +34,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     private final EntityResultQueryModel<InspectedEntity> model = select(InspectedEntity.class).model();
     private final AggregatedResultQueryModel summaryModel = select(InspectedEntity.class).yield().beginExpr().sumOf().prop("moneyProperty").endExpr().as("total_money").//
 	    yield().beginExpr().maxOf().prop("key").endExpr().as("max_key").modelAsAggregate();
-    private IPage2<InspectedEntity> firstPage;
+    private IPage<InspectedEntity> firstPage;
 
     @Override
     protected String[] getDataSetPaths() {
@@ -68,7 +68,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 
     @Test
     public void test_next_page() {
-	final IPage2<InspectedEntity> page = firstPage.next();
+	final IPage<InspectedEntity> page = firstPage.next();
 
 	assertNotNull("Summary is missing.", page.summary());
 	assertEquals("Incorrect value for max_key.", "key9", page.summary().get("max_key"));
@@ -77,7 +77,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 
     @Test
     public void test_prev_page() {
-	final IPage2<InspectedEntity> page = firstPage.next().prev();
+	final IPage<InspectedEntity> page = firstPage.next().prev();
 
 	assertNotNull("Summary is missing.", page.summary());
 	assertEquals("Incorrect value for max_key.", "key9", page.summary().get("max_key"));
@@ -86,7 +86,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 
     @Test
     public void test_last_page() {
-	final IPage2<InspectedEntity> page = firstPage.last();
+	final IPage<InspectedEntity> page = firstPage.last();
 
 	assertNotNull("Summary is missing.", page.summary());
 	assertEquals("Incorrect value for max_key.", "key9", page.summary().get("max_key"));
@@ -95,7 +95,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 
     @Test
     public void test_first_from_last_page() {
-	final IPage2<InspectedEntity> page = firstPage.last().first();
+	final IPage<InspectedEntity> page = firstPage.last().first();
 
 	assertNotNull("Summary is missing.", page.summary());
 	assertEquals("Incorrect value for max_key.", "key9", page.summary().get("max_key"));

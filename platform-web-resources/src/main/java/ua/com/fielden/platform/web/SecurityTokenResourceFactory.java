@@ -5,7 +5,7 @@ import org.restlet.data.Method;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-import ua.com.fielden.platform.dao2.IUserRoleDao2;
+import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -39,7 +39,7 @@ public class SecurityTokenResourceFactory extends Restlet {
 	super.handle(request, response);
 
 	final ISecurityTokenController controller = injector.getInstance(ISecurityTokenController.class);
-	final IUserRoleDao2 userRoleDao = injector.getInstance(IUserRoleDao2.class);
+	final IUserRoleDao userRoleDao = injector.getInstance(IUserRoleDao.class);
 
 	if (Method.GET.equals(request.getMethod())) {
 	    new SecurityTokenResource(controller, userRoleDao, restUtil, getContext(), request, response).handleGet();

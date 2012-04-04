@@ -15,17 +15,17 @@ import ua.com.fielden.platform.domaintree.testing.TgKryo1;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fetchAll;
-import ua.com.fielden.platform.security.user.IUserDao2;
+import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController2;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController2;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertTrue;
 public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTestCase {
     private final EntityFactory entityFactory = getInstance(EntityFactory.class);
     private final ISerialiser serialiser = new TgKryo1(entityFactory, new ProvidedSerialisationClassProvider());
-    private final IUserDao2 userDao = getInstance(IUserDao2.class);
+    private final IUserDao userDao = getInstance(IUserDao.class);
 
     protected IGlobalDomainTreeManager createManagerForNonBaseUser2() {
 	return createGlobalDomainTreeManager("USER3");
@@ -54,7 +54,7 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
     }
 
     private IGlobalDomainTreeManager createGlobalDomainTreeManager(final String userName) {
-	return new GlobalDomainTreeManager(serialiser, entityFactory, createUserProvider(userName), getInstance(IMainMenuItemController2.class), getInstance(IEntityCentreConfigController2.class), getInstance(IEntityMasterConfigController2.class), getInstance(IEntityLocatorConfigController2.class));
+	return new GlobalDomainTreeManager(serialiser, entityFactory, createUserProvider(userName), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityMasterConfigController.class), getInstance(IEntityLocatorConfigController.class));
     }
 
     private IUserProvider createUserProvider(final String userName) {

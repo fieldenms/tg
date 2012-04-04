@@ -3,7 +3,7 @@ package ua.com.fielden.platform.swing.pagination.model.development;
 import javax.swing.event.EventListenerList;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.pagination.model.development.IPaginatorModel.PageNavigationPhases;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
@@ -18,14 +18,14 @@ public class PageHolder{
 
     private final EventListenerList listenerList = new EventListenerList();
 
-    private IPage2<? extends AbstractEntity> page;
+    private IPage<? extends AbstractEntity> page;
 
     /**
      * Sets the new page for this page holder. This method also fires page changed event. Please note that the event processing will be performed on EDT.
      *
      * @param newPage
      */
-    public void newPage(final IPage2<? extends AbstractEntity> newPage) {
+    public void newPage(final IPage<? extends AbstractEntity> newPage) {
 	this.page = newPage;
 	SwingUtilitiesEx.invokeLater(new Runnable() {
 
@@ -41,7 +41,7 @@ public class PageHolder{
      *
      * @return
      */
-    public IPage2<? extends AbstractEntity> getPage() {
+    public IPage<? extends AbstractEntity> getPage() {
 	return page;
     }
 

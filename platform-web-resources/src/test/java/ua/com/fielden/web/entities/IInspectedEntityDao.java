@@ -1,7 +1,7 @@
 package ua.com.fielden.web.entities;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 
-public interface IInspectedEntityDao extends IEntityDao2<InspectedEntity> {
+public interface IInspectedEntityDao extends IEntityDao<InspectedEntity> {
 
 }

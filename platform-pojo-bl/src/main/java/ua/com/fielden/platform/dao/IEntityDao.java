@@ -2,12 +2,14 @@ package ua.com.fielden.platform.dao;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
 
@@ -20,13 +22,18 @@ import ua.com.fielden.platform.security.user.User;
  * @author TG Team
  *
  */
-public interface IEntityDao<T extends AbstractEntity> {
+public interface IEntityDao<T extends AbstractEntity<?>> {
     static final int DEFAULT_PAGE_CAPACITY = 25;
 
     /**
      * Username should be provided for every DAO instance in order to support data filtering and auditing.
      */
     void setUsername(final String username);
+
+    /**
+     * Returns provided name.
+     * @return
+     */
     String getUsername();
 
     /**
@@ -35,7 +42,6 @@ public interface IEntityDao<T extends AbstractEntity> {
      * @return
      */
     abstract User getUser();
-
 
     /**
      * Should return an entity type the DAO is managing.
@@ -109,15 +115,23 @@ public interface IEntityDao<T extends AbstractEntity> {
     IPage<T> firstPage(final int pageCapacity);
 
     /**
+     * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
+     *
+     * @param Equery
+     * @param pageCapacity
+     * @param pageNo
+     * @return
+     */
+    IPage<T> getPage(final int pageNo, final int pageCapacity);
+
+    /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query model (new EntityQuery).
      *
      * @param pageCapacity
      * @param query
      * @return
      */
-    IPage<T> firstPage(final IQueryOrderedModel<T> query, final int pageCapacity);
-
-    IPage<T> firstPage(final IQueryOrderedModel<T> query, final fetch<T> fetchModel, final int pageCapacity);
+    IPage<T> firstPage(final QueryExecutionModel<T, ?> query, final int pageCapacity);
 
     /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided <code>summaryModel</code> and the summary
@@ -128,19 +142,7 @@ public interface IEntityDao<T extends AbstractEntity> {
      * @param pageCapacity
      * @return
      */
-    IPage<T> firstPage(final IQueryOrderedModel<T> model, final IQueryOrderedModel<EntityAggregates> summaryModel, final int pageCapacity);
-
-    IPage<T> firstPage(final IQueryOrderedModel<T> model, final fetch<T> fetchModel, final IQueryOrderedModel<EntityAggregates> summaryModel, final int pageCapacity);
-
-    /**
-     * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
-     *
-     * @param query
-     * @param pageCapacity
-     * @param pageNo
-     * @return
-     */
-    IPage<T> getPage(final int pageNo, final int pageCapacity);
+    IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity);
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query model (new EntityQuery).
@@ -150,9 +152,7 @@ public interface IEntityDao<T extends AbstractEntity> {
      * @param pageNo
      * @return
      */
-    IPage<T> getPage(final IQueryOrderedModel<T> query, final int pageNo, final int pageCapacity);
-
-    IPage<T> getPage(final IQueryOrderedModel<T> query, final fetch<T> fetchModel, final int pageNo, final int pageCapacity);
+    IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCapacity);
 
     /**
      * Same as above, but the actual implementation could take into account the page count information.
@@ -163,9 +163,7 @@ public interface IEntityDao<T extends AbstractEntity> {
      * @param pageCapacity
      * @return
      */
-    IPage<T> getPage(final IQueryOrderedModel<T> query, final int pageNo, final int pageCount, final int pageCapacity);
-
-    IPage<T> getPage(final IQueryOrderedModel<T> query, final fetch<T> fetchModel, final int pageNo, final int pageCount, final int pageCapacity);
+    IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
 
     /**
      * Persists (saves/updates) the entity.
@@ -183,11 +181,17 @@ public interface IEntityDao<T extends AbstractEntity> {
     void delete(final T entity);
 
     /**
-     * Deletes entities returned by provided query model.
+     * Deletes entities returned by provided query model with provided param values.
      *
      * @param model
      */
-    void delete(final IQueryOrderedModel<T> model);
+    void delete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
+
+    /**
+     * Deletes entities returned by provided query model
+     * @param model
+     */
+    void delete(final EntityResultQueryModel<T> model);
 
     /**
      * Should return true if the passed entity exists in the persistent state.
@@ -220,9 +224,7 @@ public interface IEntityDao<T extends AbstractEntity> {
      * @param model
      * @return
      */
-    T getEntity(final IQueryOrderedModel<T> model);
-
-    T getEntity(final IQueryOrderedModel<T> model, final fetch<T> fetchModel);
+    T getEntity(final QueryExecutionModel<T, ?> model);
 
     /**
      * Returns a number of entities retrieved using the provided model.
@@ -230,7 +232,9 @@ public interface IEntityDao<T extends AbstractEntity> {
      * @param model
      * @return
      */
-    int count(final IQueryOrderedModel<T> model);
+    int count(final EntityResultQueryModel<T> model, Map<String, Object> paramValues);
+
+    int count(final EntityResultQueryModel<T> model);
 
     /**
      * Returns all entities produced by the provided query.
@@ -238,9 +242,7 @@ public interface IEntityDao<T extends AbstractEntity> {
      * @param quert
      * @return
      */
-    List<T> getEntities(final IQueryOrderedModel<T> query);
-
-    List<T> getEntities(final IQueryOrderedModel<T> query, final fetch<T> fetchModel);
+    List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
 
     /**
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
@@ -255,7 +257,5 @@ public interface IEntityDao<T extends AbstractEntity> {
      *            -- titles corresponding to the properties being exported, which are used as headers of columns.
      * @return
      */
-    byte[] export(final IQueryOrderedModel<T> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
-
-    byte[] export(final IQueryOrderedModel<T> query, final fetch<T> fetchModel, final String[] propertyNames, final String[] propertyTitles) throws IOException;
+    byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
 }

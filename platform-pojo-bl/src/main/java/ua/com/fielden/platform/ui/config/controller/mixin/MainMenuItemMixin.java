@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.ui.config.controller.mixin;
 
-import static ua.com.fielden.platform.equery.equery.select;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -16,6 +15,11 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 
 /**
  * A mixin to avoid code duplication for providing RAO and DAP implementations of {@link IMainMenuItemController}.
@@ -66,15 +70,16 @@ public final class MainMenuItemMixin {
 	final Long ownerId = user.isBase() ? user.getId() : user.getBasedOnUser().getId();
 
 	// get all items
-	final IQueryOrderedModel<MainMenuItem> model = select(MainMenuItem.class).orderBy("order asc").model();
-	final List<MainMenuItem> allItemsAsLinearList = mmiController.getEntities(model, new fetchAll<MainMenuItem>(MainMenuItem.class));
+	final EntityResultQueryModel<MainMenuItem> model = select(MainMenuItem.class).model();
+	final OrderingModel orderBy = orderBy().prop("order").asc().model();
+	final List<MainMenuItem> allItemsAsLinearList = mmiController.getAllEntities(from(model).with(new fetchAll<MainMenuItem>(MainMenuItem.class)).with(orderBy).build());
 
 	// get those that are marked as invisible
-	final IQueryOrderedModel<MainMenuItem> invisibleItemsModel = select(MainMenuItem.class, "mm").join(MainMenuItemInvisibility.class, "viz").on() //
-	.prop("mm.id").eq().prop("viz.menuItem.id")//
-	.where().prop("viz.owner").eq().val(ownerId)//
-	.orderBy("mm.order asc").model(MainMenuItem.class);
-	final List<MainMenuItem> invisibleItems = mmiController.getEntities(invisibleItemsModel, new fetchAll<MainMenuItem>(MainMenuItem.class)); // could be optimized by not fetching all
+	final EntityResultQueryModel<MainMenuItem> invisibleItemsModel = select(MainMenuItem.class).as("mm").join(MainMenuItemInvisibility.class).as("viz").on() //
+	.prop("mm").eq().prop("viz.menuItem")//
+	.where().prop("viz.owner").eq().val(ownerId).model();
+	final OrderingModel invisibleItemsOrderBy = orderBy().prop("mm.order").asc().model();
+	final List<MainMenuItem> invisibleItems = mmiController.getAllEntities(from(invisibleItemsModel).with(new fetchAll<MainMenuItem>(MainMenuItem.class)).with(invisibleItemsOrderBy).build()); // could be optimized by not fetching all
 
 	if (user.isBase()) { // set visibility property for menu items, which does not take into account hierarchical structure
 	    for (final MainMenuItem item : allItemsAsLinearList) {
@@ -107,11 +112,13 @@ public final class MainMenuItemMixin {
 	final Long[] ids = user.isBase() ? new Long[] { user.getId() } : new Long[] { user.getId(), user.getBasedOnUser().getId() };
 
 	// retrieve entity centre configurations, which do not correspond to principle menu items and belong to the users identified by ids
-	final IQueryOrderedModel<EntityCentreConfig> model = select(EntityCentreConfig.class).where()//
-	.prop("owner").in().val(ids)//
-	.and().prop("principal").isFalse().orderBy("menuItem.order asc").model(); // TODO may be it is better to order by title
+	final EntityResultQueryModel<EntityCentreConfig> model = select(EntityCentreConfig.class).where()//
+	.prop("owner").in().values(ids)//
+	.and().prop("principal").eq().val(false).model(); // TODO may be it is better to order by title
 
-	final List<EntityCentreConfig> eccs = eccController.getEntities(model);
+	final OrderingModel orderBy = orderBy().prop("menuItem.order").asc().model();
+
+	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(model).with(orderBy).build());
 
 	// iterate through the list of configurations and make new non-persistent instances of type MainMenuItem
 	// representing non-principal (i.e. save as) menu items of the same type as the referenced by the configuration menu item.

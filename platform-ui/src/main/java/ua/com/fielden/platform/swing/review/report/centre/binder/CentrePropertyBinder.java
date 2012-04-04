@@ -8,7 +8,7 @@ import java.util.Map;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -29,7 +29,7 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
  *
  * @param <T> - The centre's entity type.
  */
-public class CentrePropertyBinder<T extends AbstractEntity<?>> implements ILightweightPropertyBinder<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>>> {
+public class CentrePropertyBinder<T extends AbstractEntity<?>> implements ILightweightPropertyBinder<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> {
 
     private final EntityCentreType entityCentreType;
 
@@ -65,7 +65,7 @@ public class CentrePropertyBinder<T extends AbstractEntity<?>> implements ILight
     }
 
     @Override
-    public Map<String, IPropertyEditor> bind(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> entity) {
+    public Map<String, IPropertyEditor> bind(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> entity) {
 	final Map<String, IPropertyEditor> newPropertyEditors = new HashMap<String, IPropertyEditor>();
 	final List<Field> fields = CriteriaReflector.getCriteriaProperties(entity.getClass());
 	// iterate through the meta-properties and create appropriate editors
@@ -73,12 +73,12 @@ public class CentrePropertyBinder<T extends AbstractEntity<?>> implements ILight
 	    newPropertyEditors.put(field.getName(), bindProperty(entity, field.getName()));
 	}
 	// enhance titles and descriptions by unified TG way :
-	PropertyBinderEnhancer.enhancePropertyEditors((Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>>>) entity.getType(), newPropertyEditors, false);
+	PropertyBinderEnhancer.enhancePropertyEditors((Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>) entity.getType(), newPropertyEditors, false);
 	return newPropertyEditors;
     }
 
     @Override
-    public void rebind(final Map<String, IPropertyEditor> editors, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> entity) {
+    public void rebind(final Map<String, IPropertyEditor> editors, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> entity) {
 	final List<Field> fields = CriteriaReflector.getCriteriaProperties(entity.getClass());
 	for (final Field field : fields) {
 	    final IPropertyEditor propertyEditor = editors.get(field.getName());
@@ -89,10 +89,10 @@ public class CentrePropertyBinder<T extends AbstractEntity<?>> implements ILight
 	    }
 	}
 	// enhance titles and descriptions by unified TG way :
-	PropertyBinderEnhancer.enhancePropertyEditors((Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>>>)entity.getType(), editors, false);
+	PropertyBinderEnhancer.enhancePropertyEditors((Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>)entity.getType(), editors, false);
     }
 
-    private IPropertyEditor bindProperty(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> entity, final String property) {
+    private IPropertyEditor bindProperty(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> entity, final String property) {
 
 	final MetaProperty metaProp = entity.getProperty(property);
 	final IsProperty propertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, entity.getType(), property);
@@ -108,7 +108,7 @@ public class CentrePropertyBinder<T extends AbstractEntity<?>> implements ILight
 	}
     }
 
-    private IPropertyEditor createAutocompleter(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> entity, final String propertyName) {
+    private IPropertyEditor createAutocompleter(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> entity, final String propertyName) {
 	switch (entityCentreType) {
 	case LOCATOR:
 	    return EntityPropertyEditor.createEntityPropertyEditorForCentre(entity, propertyName);
@@ -118,7 +118,7 @@ public class CentrePropertyBinder<T extends AbstractEntity<?>> implements ILight
 	return null;
     }
 
-    private IPropertyEditor createOrdinaryPropertyEditor(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> entity, final String property) {
+    private IPropertyEditor createOrdinaryPropertyEditor(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> entity, final String property) {
 	return OrdinaryPropertyEditor.createOrdinaryPropertyEditorForCentre(entity, property);
     }
 

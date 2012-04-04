@@ -8,7 +8,7 @@ import org.restlet.data.Request;
 
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.security.provider.IUserController2;
+import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -57,7 +57,7 @@ public class ResourceGuard extends Guard {
 	    }
 	    // use the username to lookup a corresponding public key to decode security token
 	    final String username = parts[0];
-	    final IUserController2 controller = getController();
+	    final IUserController controller = getController();
 	    final User user = controller.findByKey(username);
 	    if (user == null) {
 		return AUTHENTICATION_INVALID;
@@ -79,7 +79,7 @@ public class ResourceGuard extends Guard {
 	return AUTHENTICATION_VALID;
     }
 
-    protected IUserController2 getController() {
-	return injector.getInstance(IUserController2.class);
+    protected IUserController getController() {
+	return injector.getInstance(IUserController.class);
     }
 }

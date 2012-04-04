@@ -57,7 +57,7 @@ public abstract class DbDrivenTestCase2 extends TestCase {
 	    dbDtdFile = StringUtils.isEmpty(testProps.getProperty("db-dtd-file")) ? "src/test/resources/data-files/db.dtd" : testProps.getProperty("db-dtd-file");
 	    dbDdlFile = StringUtils.isEmpty(testProps.getProperty("db-ddl-file")) ? "src/test/resources/db/testdb.ddl" : testProps.getProperty("db-ddl-file");
 
-	    final String configClassName = testProps.getProperty("config2");
+	    final String configClassName = testProps.getProperty("config");
 	    final Class<IDbDrivenTestCaseConfiguration> type = (Class<IDbDrivenTestCaseConfiguration>) Class.forName(configClassName);
 	    return type.newInstance();
 	} catch (final Exception e) {

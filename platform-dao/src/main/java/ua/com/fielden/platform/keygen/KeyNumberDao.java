@@ -5,7 +5,7 @@ import org.hibernate.LockMode;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.annotations.Transactional;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;

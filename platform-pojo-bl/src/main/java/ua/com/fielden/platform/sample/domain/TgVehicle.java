@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.types.Money;
@@ -26,7 +26,7 @@ import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 @MapEntityTo
 @DescTitle("Description")
 @Ignore
-@DefaultController2(ITgVehicle.class)
+@DefaultController(ITgVehicle.class)
 public class TgVehicle extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

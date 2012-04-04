@@ -3,7 +3,7 @@ package ua.com.fielden.platform.example.dynamiccriteria.master;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
+import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleECEEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleCompositeEntityDao;
@@ -23,7 +23,7 @@ public class SimpleCompositeEntityModel extends UmMasterWithCrudAndUpdater<Simpl
 	    final IEntityProducer<SimpleCompositeEntity> entityProducer,//
 	    final IEntityMasterCache cache,//
 	    final SimpleCompositeEntity entity, final ISimpleCompositeEntityDao controller, //
-	    final IValueMatcherFactory2 valueMatcherFactory, //
+	    final IValueMatcherFactory valueMatcherFactory, //
 	    //final IEntityMasterManager entityMasterFactory,//
 	    final FrameTitleUpdater titleUpdater, //
 	    final IUmViewOwner owner, //

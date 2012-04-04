@@ -2,7 +2,6 @@ package ua.com.fielden.platform.migration;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.migration.AbstractRetriever;
 import static org.junit.Assert.assertEquals;
 
 /**

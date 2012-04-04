@@ -7,8 +7,8 @@ import java.util.Map;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
-import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fetch;
@@ -38,7 +38,7 @@ import ua.com.fielden.platform.swing.view.IEntityMasterCache;
  * @param <C>
  *            -- controller type.
  */
-public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IEntityDao2<T>> extends UmMaster<T, C> {
+public abstract class UmMasterWithCrud<T extends AbstractEntity<?>, C extends IEntityDao<T>> extends UmMaster<T, C> {
 
     /** Is used in situation where user invokes action new and then cancel */
     private T prevEntity;

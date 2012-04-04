@@ -31,7 +31,7 @@ public class DaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
 
     @Override
     protected synchronized IBeforeChangeEventHandler createEntityExists(final EntityExists anotation) {
-	final Class<? extends AbstractEntity> key = anotation.value();
+	final Class<? extends AbstractEntity<?>> key = anotation.value();
 	if (!entityExistsValidators.containsKey(key)) {
 	    final IEntityDao dao = factory.newDao(key);
 	    entityExistsValidators.put(key, new EntityExistsValidator(dao));

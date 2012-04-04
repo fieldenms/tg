@@ -17,7 +17,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
@@ -38,7 +37,6 @@ import ua.com.fielden.platform.error.Result;
 @KeyType(String.class)
 @MapEntityTo(value = "CRAFT", keyColumn = "USER_NAME")
 @DefaultController(IUserDao.class)
-@DefaultController2(IUserDao2.class)
 public class User extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

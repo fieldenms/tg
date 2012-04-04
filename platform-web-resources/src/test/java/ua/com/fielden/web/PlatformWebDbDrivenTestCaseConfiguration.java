@@ -10,8 +10,8 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
-import ua.com.fielden.platform.dao2.HibernateMappingsGenerator;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;

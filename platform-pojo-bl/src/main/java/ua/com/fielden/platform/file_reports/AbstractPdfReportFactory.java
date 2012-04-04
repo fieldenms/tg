@@ -13,8 +13,8 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -26,7 +26,7 @@ public abstract class AbstractPdfReportFactory implements IReportFactory {
      * Provides default implementation of report generation in the form of pdf file binary representation
      */
     @Override
-    public byte[] createReport(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final IEntityAggregatesDao2 aggregatesDao, final Map<String, Object> allParams) throws Exception {
+    public byte[] createReport(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final IEntityAggregatesDao aggregatesDao, final Map<String, Object> allParams) throws Exception {
 
 	// obtaining necessary for report data
 	final List<EntityAggregates> reportData = aggregatesDao.getAllEntities(query);

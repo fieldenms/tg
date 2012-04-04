@@ -7,11 +7,10 @@ import java.util.Properties;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.MappingExtractor;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.annotations.Transactional;
-import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Proxy;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
@@ -33,13 +32,12 @@ public abstract class TransactionalModule extends EntityModule {
     protected final SessionFactory sessionFactory;
     private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
-    private final MappingExtractor mappingExtractor;
-    private final DomainPersistenceMetadata mappingsGenerator;
+    private final DomainPersistenceMetadata domainPersistenceMetadata;
     protected final ProxyInterceptor interceptor;
     private final HibernateUtil hibernateUtil;
 
     /**
-     * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link MappingExtractor}. All descending classes needs to provide those two
+     * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link DomainPersistenceMetadata}. All descending classes needs to provide those two
      * parameters.
      *
      * @param sessionFactory
@@ -53,29 +51,23 @@ public abstract class TransactionalModule extends EntityModule {
 	hibernateUtil = new HibernateUtil(interceptor, hibernateConfig);
 
 	this.sessionFactory = hibernateUtil.getSessionFactory();
-	this.mappingExtractor = new MappingExtractor(hibernateConfig);
-	this.mappingsGenerator = hcf.getDomainPersistenceMetadata();
+	this.domainPersistenceMetadata = hcf.getDomainPersistenceMetadata();
     }
 
-    public TransactionalModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final DomainPersistenceMetadata mappingsGenerator) {
+    public TransactionalModule(final SessionFactory sessionFactory, final DomainPersistenceMetadata domainPersistenceMetadata) {
 	interceptor = null;
 	hibernateUtil = null;
 
 	this.sessionFactory = sessionFactory;
-	this.mappingExtractor = mappingExtractor;
-	this.mappingsGenerator = mappingsGenerator;
+	this.domainPersistenceMetadata = domainPersistenceMetadata;
     }
 
     @Override
     protected void configure() {
 	super.configure();
 	// entity aggregates transformer
-	if (mappingExtractor != null) {
-	    bind(MappingExtractor.class).toInstance(mappingExtractor);
-	}
-	// entity aggregates transformer
-	if (mappingsGenerator != null) {
-	    bind(DomainPersistenceMetadata.class).toInstance(mappingsGenerator);
+	if (domainPersistenceMetadata != null) {
+	    bind(DomainPersistenceMetadata.class).toInstance(domainPersistenceMetadata);
 	}
 	// hibernate util
 	if (hibernateUtil != null) {
@@ -88,7 +80,7 @@ public abstract class TransactionalModule extends EntityModule {
 	new TransactionalInterceptor(sessionFactory) // the intercepter
 	);
 	// bind SessionRequired injector
-	bindInterceptor(subclassesOf(CommonEntityDao.class), // match only DAO derived from  CommonEntityDao
+	bindInterceptor(subclassesOf(ISessionEnabled.class), // match only DAO derived from  CommonEntityDao
 	annotatedWith(SessionRequired.class), // having annotated methods
 	new SessionInterceptor(sessionFactory) // the intercepter
 	);
@@ -112,11 +104,7 @@ public abstract class TransactionalModule extends EntityModule {
 	return domainMetaPropertyConfig;
     }
 
-    protected MappingExtractor getMappingExtractor() {
-	return mappingExtractor;
-    }
-
-    public DomainPersistenceMetadata getMappingsGenerator() {
-	return mappingsGenerator;
+    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
+	return domainPersistenceMetadata;
     }
 }

@@ -27,10 +27,10 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController2;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController2;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -47,9 +47,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final EntityFactory factory;
     private final IUserProvider userProvider;
     private final IGlobalDomainTreeRepresentation gdtr;
-    private final IMainMenuItemController2 mainMenuItemController;
-    private final IEntityCentreConfigController2 entityCentreConfigController;
-    private final IEntityMasterConfigController2 entityMasterConfigController;
+    private final IMainMenuItemController mainMenuItemController;
+    private final IEntityCentreConfigController entityCentreConfigController;
+    private final IEntityMasterConfigController entityMasterConfigController;
 
     private final EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> persistentCentres;
     private final transient EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> currentCentres;
@@ -60,7 +60,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final transient EnhancementRootsMap<IMasterDomainTreeManager> currentMasters;
 
     @Inject
-    public GlobalDomainTreeManager(final ISerialiser serialiser, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController2 mainMenuItemController, final IEntityCentreConfigController2 entityCentreConfigController, final IEntityMasterConfigController2 entityMasterConfigController, final IEntityLocatorConfigController2 entityLocatorConfigController) {
+    public GlobalDomainTreeManager(final ISerialiser serialiser, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfigController entityCentreConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {
 	super(serialiser);
 	this.factory = factory;
 	this.userProvider = userProvider;

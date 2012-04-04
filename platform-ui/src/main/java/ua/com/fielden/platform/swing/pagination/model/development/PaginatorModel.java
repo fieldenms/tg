@@ -6,7 +6,7 @@ import java.util.Set;
 import javax.swing.event.EventListenerList;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.pagination.Paginator;
 
 /**
@@ -49,7 +49,7 @@ public class PaginatorModel implements IPaginatorModel, IPageHolderManager{
     }
 
     @Override
-    public IPage2<? extends AbstractEntity> getCurrentPage() {
+    public IPage<? extends AbstractEntity> getCurrentPage() {
 	return getCurrentPageHolder() == null ? null : getCurrentPageHolder().getPage();
     }
 

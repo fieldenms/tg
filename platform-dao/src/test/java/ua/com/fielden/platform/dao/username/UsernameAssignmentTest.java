@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.dao.username;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.equery.DefaultFilter;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
+import ua.com.fielden.platform.entity.query.DefaultFilter;
+import ua.com.fielden.platform.entity.query.IFilter;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * A test case to cover username assignment in {@link CommonEntityDao}

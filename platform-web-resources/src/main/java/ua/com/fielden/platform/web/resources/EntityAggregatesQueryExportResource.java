@@ -13,8 +13,8 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 
@@ -29,7 +29,7 @@ public class EntityAggregatesQueryExportResource extends Resource {
     // the following properties are determined from request
     private final String username;
 
-    private final IEntityAggregatesDao2 dao;
+    private final IEntityAggregatesDao dao;
     private final RestServerUtil restUtil;
 
     /**
@@ -42,7 +42,7 @@ public class EntityAggregatesQueryExportResource extends Resource {
      * @param request
      * @param response
      */
- public EntityAggregatesQueryExportResource(final IEntityAggregatesDao2 dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+ public EntityAggregatesQueryExportResource(final IEntityAggregatesDao dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;

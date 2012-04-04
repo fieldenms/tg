@@ -3,7 +3,7 @@ package ua.com.fielden.platform.persistence.types;
 import java.util.Date;
 
 import ua.com.fielden.platform.basic.autocompleter.HibernateValueMatcher;
-import ua.com.fielden.platform.dao.EntityWithMoneyDao2;
+import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyUserType;
 
@@ -28,7 +28,7 @@ import ua.com.fielden.platform.types.markers.IMoneyUserType;
 @KeyType(String.class)
 @DescTitle("Description")
 @MapEntityTo("MONEY_CLASS_TABLE")
-@DefaultController2(EntityWithMoneyDao2.class)
+@DefaultController(EntityWithMoneyDao.class)
 public class EntityWithMoney extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

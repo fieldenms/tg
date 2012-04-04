@@ -5,7 +5,7 @@ import org.restlet.data.Method;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-import ua.com.fielden.platform.attachment.IAttachmentController2;
+import ua.com.fielden.platform.attachment.IAttachmentController;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.AttachmentDownloadResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -38,7 +38,7 @@ public class AttachmentDownloadResourceFactory extends Restlet {
 	super.handle(request, response);
 
 	if (Method.GET == request.getMethod()) {
-	    new AttachmentDownloadResource(location, injector.getInstance(IAttachmentController2.class), restUtil, getContext(), request, response).handleGet();
+	    new AttachmentDownloadResource(location, injector.getInstance(IAttachmentController.class), restUtil, getContext(), request, response).handleGet();
 	}
     }
 }

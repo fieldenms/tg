@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
@@ -30,7 +30,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     private final PivotTreeTableModel pivotModel;
 
-    public PivotAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao2<T>> criteria, final IPivotDomainTreeManager adtm, final PageHolder pageHolder) {
+    public PivotAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IPivotDomainTreeManager adtm, final PageHolder pageHolder) {
 	super(configurationModel, criteria, adtm, pageHolder);
 	pivotModel = new PivotTreeTableModelEx();
     }

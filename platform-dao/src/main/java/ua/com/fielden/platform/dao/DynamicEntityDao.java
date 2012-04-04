@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
@@ -17,8 +17,9 @@ import com.google.inject.Inject;
 @EntityType(AbstractEntity.class)
 public class DynamicEntityDao extends CommonEntityDao {
 
-    private Class<? extends AbstractEntity> entityType;
+    private Class<? extends AbstractEntity<?>> entityType;
     private Class<? extends Comparable> keyType;
+    private QueryExecutionModel defaultModel;
 
     /**
      * Needed for reflective instantiation.
@@ -28,9 +29,10 @@ public class DynamicEntityDao extends CommonEntityDao {
 	super(filter);
     }
 
-    public void setEntityType(final Class<? extends AbstractEntity> type) {
+    public void setEntityType(final Class<? extends AbstractEntity<?>> type) {
 	this.entityType = type;
 	this.keyType = AnnotationReflector.getKeyType(entityType);
+	this.defaultModel = produceDefaultQueryExecutionModel(entityType);
     }
 
     @Override
@@ -42,4 +44,10 @@ public class DynamicEntityDao extends CommonEntityDao {
     public Class<? extends Comparable> getKeyType() {
 	return keyType;
     }
+
+    @Override
+    protected QueryExecutionModel getDefaultQueryExecutionModel() {
+	return defaultModel;
+    }
+
 }

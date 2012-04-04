@@ -34,7 +34,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 import ua.com.fielden.platform.basic.IValueMatcher2;
-import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher2;
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
@@ -159,13 +159,13 @@ public class DummyBuilder {
     }
 
     /**
-     * Returning {@link IValueMatcher2} instance supporting the same functionality as {@link PojoValueMatcher2} with wildcard support and multi value matching (i.e. parsing values
+     * Returning {@link IValueMatcher2} instance supporting the same functionality as {@link PojoValueMatcher} with wildcard support and multi value matching (i.e. parsing values
      * separated with comma).
      */
     @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity<?>> IValueMatcher2<T> multiValuePojoMatcher(final List<T> instances, final String expression) {
 	// TODO method findMatches(String) takes more than O(n) time to find matches, thus it should be optimised
-	return new PojoValueMatcher2<T>(instances, expression, Integer.MAX_VALUE) {
+	return new PojoValueMatcher<T>(instances, expression, Integer.MAX_VALUE) {
 	    private final String valueSeparator = ",";
 
 	    @Override

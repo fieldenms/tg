@@ -9,12 +9,12 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.roa.HttpHeaders;
 
 /**
@@ -38,7 +38,7 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends Resource {
     /** Indicates whether the provided request indicated a deletion query. */
     private final boolean shouldDelete;
 
-    private final IEntityDao2<T> dao;
+    private final IEntityDao<T> dao;
     private final RestServerUtil restUtil;
 
     // //////////////////////////////////////////////////////////////////
@@ -64,7 +64,7 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends Resource {
      * @param request
      * @param response
      */
-    public EntityQueryResource(final IEntityDao2<T> dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public EntityQueryResource(final IEntityDao<T> dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
 	super(context, request, response);
 	getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
 	this.dao = dao;
@@ -132,7 +132,7 @@ public class EntityQueryResource<T extends AbstractEntity<?>> extends Resource {
 	    } else if (shouldReturnAll) {
 		getResponse().setEntity(restUtil.listRepresentation(dao.getAllEntities(qem)));
 	    } else {
-		final IPage2<T> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
+		final IPage<T> page = dao.getPage(qem, pageNo, pageCount, pageCapacity);
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGES, page.numberOfPages() + "");
 		restUtil.setHeaderEntry(getResponse(), HttpHeaders.PAGE_NO, page.no() + "");
 		getResponse().setEntity(restUtil.listRepresentation(page.data()));

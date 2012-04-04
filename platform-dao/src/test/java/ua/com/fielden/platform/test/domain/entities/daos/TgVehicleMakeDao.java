@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.test.domain.entities.daos;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;

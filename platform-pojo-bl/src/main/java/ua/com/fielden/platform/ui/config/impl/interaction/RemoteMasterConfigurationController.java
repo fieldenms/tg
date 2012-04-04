@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.ui.config.impl.interaction;
 
-import static ua.com.fielden.platform.equery.equery.select;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -19,11 +18,13 @@ import ua.com.fielden.platform.ui.config.api.interaction.IMasterConfigurationCon
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 /**
  * Remote implementation of {@link IMasterConfigurationController}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class RemoteMasterConfigurationController implements IMasterConfigurationController {
 
@@ -78,7 +79,7 @@ public class RemoteMasterConfigurationController implements IMasterConfiguration
     public boolean exists(final String key) {
 	final User owner = userProvider.getUser().isBase() ? userProvider.getUser() : userProvider.getUser().getBasedOnUser();
 
-	final IQueryModel<EntityMasterConfig> model = select(EntityMasterConfig.class).where().prop("owner").eq().val(owner)//
+	final EntityResultQueryModel<EntityMasterConfig> model = select(EntityMasterConfig.class).where().prop("owner").eq().val(owner)//
 	.and().prop("masterType").eq().val(key).model();
 	return mccController.count(model) > 0;
     }

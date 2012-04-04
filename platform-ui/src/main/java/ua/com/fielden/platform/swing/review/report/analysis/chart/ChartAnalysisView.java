@@ -36,7 +36,7 @@ import net.miginfocom.swing.MigLayout;
 
 import org.jfree.chart.ChartMouseEvent;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
@@ -463,7 +463,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 
     private ActionChartPanel<List<EntityAggregates>, CategoryChartTypes> createChartPanel(final boolean all, final int... indexes) {
-	final ActionChartPanel<List<EntityAggregates>, CategoryChartTypes> chartPanel = new ActionChartPanel<List<EntityAggregates>, CategoryChartTypes>(new CategoryChartFactory<T, IEntityDao2<T>>(getModel().getChartAnalysisDataProvider(), dataModel, all, indexes), new IBlockingLayerProvider() {
+	final ActionChartPanel<List<EntityAggregates>, CategoryChartTypes> chartPanel = new ActionChartPanel<List<EntityAggregates>, CategoryChartTypes>(new CategoryChartFactory<T, IEntityDao<T>>(getModel().getChartAnalysisDataProvider(), dataModel, all, indexes), new IBlockingLayerProvider() {
 	    @Override
 	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
 		return getProgressLayer();

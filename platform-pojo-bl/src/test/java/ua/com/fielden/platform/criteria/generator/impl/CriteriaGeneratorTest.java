@@ -21,7 +21,7 @@ import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.FirstParam;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
@@ -326,7 +326,7 @@ public class CriteriaGeneratorTest {
 
     @Test
     public void test_that_criteria_generation_works_correctly(){
-	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao2<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(TopLevelEntity.class, cdtm);
+	final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity = cg.generateCentreQueryCriteria(TopLevelEntity.class, cdtm);
 	assertNotNull("The centre domain tree manager can not be null", criteriaEntity.getCentreDomainTreeMangerAndEnhancer());
 	final List<Field> criteriaProperties = CriteriaReflector.getCriteriaProperties(criteriaEntity.getClass());
 	assertEquals("The number of criteria properties is incorrect", propertyNames.size(), criteriaProperties.size());
@@ -340,7 +340,7 @@ public class CriteriaGeneratorTest {
 	assertNewPropertyValues(criteriaEntity, criteriaProperties);
     }
 
-    private void assertNewPropertyValues(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao2<TopLevelEntity>> criteriaEntity, final List<Field> criteriaProperties) {
+    private void assertNewPropertyValues(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity, final List<Field> criteriaProperties) {
 	final IAddToCriteriaTickManager ftm = criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	for(final Field propertyField : criteriaProperties){
 	    final SecondParam secondParam = propertyField.getAnnotation(SecondParam.class);
@@ -351,7 +351,7 @@ public class CriteriaGeneratorTest {
 	}
     }
 
-    private void assertOldPropertyValues(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao2<TopLevelEntity>> criteriaEntity, final List<Field> criteriaProperties) {
+    private void assertOldPropertyValues(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>> criteriaEntity, final List<Field> criteriaProperties) {
 	for(final Field critProperty : criteriaProperties){
 	    assertEquals("The property with " + critProperty.getName() + " name has incorrect value", oldValues.get(critProperty.getName()), criteriaEntity.get(critProperty.getName()));
 	}

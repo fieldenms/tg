@@ -7,7 +7,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
-import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 
 /**
@@ -39,7 +39,7 @@ public class SessionInterceptor implements MethodInterceptor {
 
     @Override
     public Object invoke(final MethodInvocation invocation) throws Throwable {
-	final CommonEntityDao<?> dao = (CommonEntityDao<?>) invocation.getThis();
+	final ISessionEnabled dao = (ISessionEnabled) invocation.getThis();
 	final Session session = sessionFactory.getCurrentSession();
 	dao.setSession(session);
 	final Transaction tr = session.getTransaction();

@@ -6,9 +6,10 @@ import java.util.Properties;
 
 import org.hibernate.SessionFactory;
 
-import ua.com.fielden.platform.dao.MappingExtractor;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.EntityAggregatesDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
-import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.DefaultConrollerProviderImpl;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -39,8 +40,8 @@ public class PropertyFactoryModule extends TransactionalModule {
 	interceptor.setFactory(entityFactory);
     }
 
-    public PropertyFactoryModule(final SessionFactory sessionFactory, final MappingExtractor mappingExtractor, final DomainPersistenceMetadata mappingsGenerator) {
-	super(sessionFactory, mappingExtractor, mappingsGenerator);
+    public PropertyFactoryModule(final SessionFactory sessionFactory, final DomainPersistenceMetadata domainPersistenceMetadata) {
+	super(sessionFactory, domainPersistenceMetadata);
 	daoFactory = new DaoFactory() {};
 	entityFactory = new EntityFactory() {};
 	defaultControllerProvider = new DefaultConrollerProviderImpl();
@@ -56,6 +57,8 @@ public class PropertyFactoryModule extends TransactionalModule {
 	bind(IDefaultControllerProvider.class).toInstance(defaultControllerProvider);
 	// bind property factory
 	bind(IMetaPropertyFactory.class).to(DaoMetaPropertyFactory.class).in(Scopes.SINGLETON);
+	// bind entity aggregates DAO
+	bind(IEntityAggregatesDao.class).to(EntityAggregatesDao.class);
 
     }
 

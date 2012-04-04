@@ -7,11 +7,11 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -19,7 +19,10 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.equery.equery.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 
 /**
  * Implementation of the user controller, which should be used managing system user information.
@@ -33,8 +36,7 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
     private final IUserRoleDao userRoleDao;
     private final IUserAndRoleAssociationDao userAssociationDao;
 
-    @SuppressWarnings("unchecked")
-    private final fetch<User> fetchModel = new fetch(User.class).with("roles", new fetch(UserAndRoleAssociation.class));
+    private final fetch<User> fetchModel = new fetch<User>(User.class).with("roles", new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class));
 
     @Inject
     public UserController(final IUserRoleDao userRoleDao, final IUserAndRoleAssociationDao userAssociationDao, final IFilter filter) {
@@ -90,14 +92,15 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
 
     @Override
     public User findUserByKeyWithRoles(final String key) {
-	final IQueryModel<User> model = select(User.class).where().prop("key").eq().val(key).model();
-	return getEntity(model, fetchModel);
+	final EntityResultQueryModel<User> query = select(User.class).where().prop("key").eq().val(key).model();
+	return getEntity(from(query).with(fetchModel).build());
     }
 
     @Override
     public List<User> findAllUsersWithRoles() {
-	final IQueryOrderedModel<User> model = select(User.class).where().prop("key").isNotNull().orderBy("key").model();
-	return getEntities(model, fetchModel);
+	final EntityResultQueryModel<User> model = select(User.class).where().prop("key").isNotNull().model();
+	final OrderingModel orderBy = orderBy().prop("key").asc().model();
+	return getAllEntities(from(model).with(fetchModel).with(orderBy).build());
     }
 
     @Override

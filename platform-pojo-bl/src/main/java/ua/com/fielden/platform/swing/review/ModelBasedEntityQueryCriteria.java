@@ -8,19 +8,18 @@ import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.equery.IPropertyAggregationFunction;
-import ua.com.fielden.platform.equery.interfaces.IMain.ICompleted;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.treemodel.IPropertyFilter;
 
-public class ModelBasedEntityQueryCriteria<T extends AbstractEntity, DAO extends IEntityDao<T>> extends DynamicEntityQueryCriteria<T, DAO> {
+public class ModelBasedEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends DynamicEntityQueryCriteria<T, DAO> {
 
     private static final long serialVersionUID = -5153076412786128830L;
 
     private final ICompleted queryModel;
-    private final IQueryModel<EntityAggregates> queryTotalsModel;
+    private final AggregatedResultQueryModel queryTotalsModel;
     private final Map<String, String> totalsDescs = new HashMap<String, String>();
 
     private IPropertyFilter propertyFilter = new DefaultModelBasedCriteriaPropertyFilter();
@@ -30,7 +29,7 @@ public class ModelBasedEntityQueryCriteria<T extends AbstractEntity, DAO extends
 	return propertyFilter;
     }
 
-    public ModelBasedEntityQueryCriteria(final EntityFactory entityFactory, final DAO dao, final IEntityAggregatesDao entityAggregatesDao, final ICompleted queryModel, final IQueryModel<EntityAggregates> queryTotalsModel, final Map<String, String> totalsDescs) {
+    public ModelBasedEntityQueryCriteria(final EntityFactory entityFactory, final DAO dao, final IEntityAggregatesDao entityAggregatesDao, final ICompleted queryModel, final AggregatedResultQueryModel queryTotalsModel, final Map<String, String> totalsDescs) {
 	super(entityFactory, null, dao, entityAggregatesDao, null, null);
 	this.queryModel = queryModel;
 	this.queryTotalsModel = queryTotalsModel;
@@ -39,7 +38,7 @@ public class ModelBasedEntityQueryCriteria<T extends AbstractEntity, DAO extends
 	    final DynamicCriteriaPropertyAnalyser propertyAnalyser = new DynamicCriteriaPropertyAnalyser(getEntityClass(), propField.getName(), propertyFilter);
 	    if (propertyAnalyser.isPropertyVisible() && propertyAnalyser.isFetchPropertyAvailable()) {
 		addFetchProperty(propField.getName());
-		if (queryTotalsModel.getYieldedPropsNames().contains(propField.getName() + "_total")) {
+		if (true) {// queryTotalsModel.getYieldedPropsNames().contains(propField.getName() + "_total")) {
 		    addTotal(propField.getName(), new IPropertyAggregationFunction() {
 
 			@Override
@@ -73,14 +72,14 @@ public class ModelBasedEntityQueryCriteria<T extends AbstractEntity, DAO extends
     }
 
     @Override
-    protected IQueryModel<EntityAggregates> createQueryWithTotals() {
+    protected AggregatedResultQueryModel createQueryWithTotals() {
 	return queryTotalsModel;
     }
 
     @Override
     public String getAliasForTotalsProperty(final String propertyName) {
 	final String totalPropName = propertyName + "_total";
-	if (queryTotalsModel.getYieldedPropsNames().contains(totalPropName)) {
+	if (true) {//queryTotalsModel.getYieldedPropsNames().contains(totalPropName)) {
 	    return totalPropName;
 	} else {
 	    return null;

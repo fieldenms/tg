@@ -2,10 +2,10 @@ package ua.com.fielden.platform.swing.categorychart;
 
 import javax.swing.JList;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public class AnalysisChartDragToSupport<A extends AbstractEntity<?>, DAO extends IEntityDao2<A>, T, M, CT> extends AnalysisListDragToSupport {
+public class AnalysisChartDragToSupport<A extends AbstractEntity<?>, DAO extends IEntityDao<A>, T, M, CT> extends AnalysisListDragToSupport {
     // TODO migrate to new API
     public AnalysisChartDragToSupport(final JList list) {
 	super(list);

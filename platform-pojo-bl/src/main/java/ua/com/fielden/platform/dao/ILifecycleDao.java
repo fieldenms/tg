@@ -3,7 +3,7 @@ package ua.com.fielden.platform.dao;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 
 /**
@@ -16,7 +16,7 @@ import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
  * @author Jhou
  *
  */
-public interface ILifecycleDao<T extends AbstractEntity> {
+public interface ILifecycleDao<T extends AbstractEntity<?>> {
 
     /**
      * Retrieves information about entities lifecycle (<code>model</code> specifies a criteria for that entities) for concrete property (specified by <code>propertyName</code>) for
@@ -32,7 +32,7 @@ public interface ILifecycleDao<T extends AbstractEntity> {
      *            - right period boundary.
      * @return
      */
-    LifecycleModel<T> getLifecycleInformation(final IQueryModel<T> model, final String propertyName, final DateTime from, final DateTime to);
+    LifecycleModel<T> getLifecycleInformation(final QueryExecutionModel<T, EntityResultQueryModel<T>> model, final String propertyName, final DateTime from, final DateTime to);
 
     /**
      * Username should be provided for every DAO instance in order to support data filtering and auditing.

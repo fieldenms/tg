@@ -3,8 +3,8 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import java.util.Collections;
 import java.util.List;
 
-import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
-import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;

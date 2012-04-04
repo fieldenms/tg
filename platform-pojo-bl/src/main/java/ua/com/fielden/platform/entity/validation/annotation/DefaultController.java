@@ -17,5 +17,5 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
 public @interface DefaultController {
-    Class<? extends IEntityDao<? extends AbstractEntity>> value();
+    Class<? extends IEntityDao<? extends AbstractEntity<?>>> value();
 }

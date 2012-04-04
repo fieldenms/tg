@@ -9,13 +9,13 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import com.google.inject.Inject;
 
 /**
- * RAO implementation of {@link IEntityCentreConfigController2}.
+ * RAO implementation of {@link IEntityCentreConfigController}.
  *
  * @author TG Team
  *
  */
 @EntityType(EntityCentreConfig.class)
-public class EntityCentreConfigControllerRao extends CommonEntityRao<EntityCentreConfig> implements IEntityCentreConfigController2 {
+public class EntityCentreConfigControllerRao extends CommonEntityRao<EntityCentreConfig> implements IEntityCentreConfigController {
 
     @Inject
     public EntityCentreConfigControllerRao(final RestClientUtil restUtil) {

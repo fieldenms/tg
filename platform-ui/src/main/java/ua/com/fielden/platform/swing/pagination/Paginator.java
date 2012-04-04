@@ -23,7 +23,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
  * @author 01es
  *
  */
-public class Paginator<T extends AbstractEntity> {
+public class Paginator<T extends AbstractEntity<?>> {
 
     /**
      * A contract for anything that would like to receive a feedback when paginator changes the current page.

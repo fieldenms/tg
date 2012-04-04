@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleFinDetails;
 
 /**
@@ -23,7 +23,7 @@ import ua.com.fielden.platform.sample.domain.controller.ITgVehicleFinDetails;
 @KeyType(TgVehicle.class)
 @KeyTitle(value="Vehicle", desc="Vehicle")
 @MapEntityTo
-@DefaultController2(ITgVehicleFinDetails.class)
+@DefaultController(ITgVehicleFinDetails.class)
 public class TgVehicleFinDetails extends AbstractEntity<TgVehicle> {
     private static final long serialVersionUID = 1L;
 

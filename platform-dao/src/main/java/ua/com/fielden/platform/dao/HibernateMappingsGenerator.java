@@ -1,10 +1,10 @@
-package ua.com.fielden.platform.dao2;
+package ua.com.fielden.platform.dao;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao2.PropertyPersistenceInfo.PropertyPersistenceType;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 

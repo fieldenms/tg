@@ -1,14 +1,12 @@
 package ua.com.fielden.platform.security.user;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.dao2.IUserRoleDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
 
 /**
  * Represents a concept of a user role. Multiple users may have the same role. At this stage user role has only key and description.
@@ -23,7 +21,6 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
 @DescTitle("Description")
 @MapEntityTo("USER_ROLE")
 @DefaultController(IUserRoleDao.class)
-@DefaultController2(IUserRoleDao2.class)
 public class UserRole extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

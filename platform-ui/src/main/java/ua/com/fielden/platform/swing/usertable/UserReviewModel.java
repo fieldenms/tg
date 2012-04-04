@@ -14,9 +14,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Model for the {@link UserReview} panel.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class UserReviewModel {
 
@@ -34,7 +34,7 @@ public class UserReviewModel {
 
     /**
      * Returns the action that saves the data from the {@link UserTableModel}
-     * 
+     *
      * @param pane
      * @return
      */
@@ -66,7 +66,7 @@ public class UserReviewModel {
 
     /**
      * Returns the action that loads data into the {@link UserTableModel}
-     * 
+     *
      * @param pane
      * @return
      */
@@ -101,7 +101,7 @@ public class UserReviewModel {
 
     /**
      * Returns the {@link UserTableModel} instance
-     * 
+     *
      * @return
      */
     public UserTableModel getUserTableModel() {
@@ -110,7 +110,7 @@ public class UserReviewModel {
 
     /**
      * Returns the {@link IUserController} that is responsible for retrieving and saving data
-     * 
+     *
      * @return
      */
     public IUserController getUserController() {
@@ -119,7 +119,7 @@ public class UserReviewModel {
 
     /**
      * See {@link #createLoadAction(BlockingIndefiniteProgressLayer)}
-     * 
+     *
      * @param pane
      * @return
      */
@@ -132,7 +132,7 @@ public class UserReviewModel {
 
     /**
      * See {@link #createSaveAction(BlockingIndefiniteProgressLayer)}
-     * 
+     *
      * @param pane
      * @return
      */

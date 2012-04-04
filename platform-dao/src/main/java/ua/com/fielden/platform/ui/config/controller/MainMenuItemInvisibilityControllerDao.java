@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.ui.config.controller;
 
-import static ua.com.fielden.platform.equery.equery.select;
+import java.util.Map;
+
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -15,11 +15,13 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 /**
  * DAO implementation of {@link IMainMenuItemInvisibilityController}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @EntityType(MainMenuItemInvisibility.class)
 public class MainMenuItemInvisibilityControllerDao extends CommonEntityDao<MainMenuItemInvisibility> implements IMainMenuItemInvisibilityController {
@@ -40,8 +42,8 @@ public class MainMenuItemInvisibilityControllerDao extends CommonEntityDao<MainM
 
     @Override
     @SessionRequired
-    public void delete(final IQueryOrderedModel<MainMenuItemInvisibility> model) {
-	super.defaultDelete(model);
+    public void delete(final EntityResultQueryModel<MainMenuItemInvisibility> model, final Map<String, Object> paramValues) {
+	super.defaultDelete(model, paramValues);
     }
 
     @Override
@@ -53,11 +55,10 @@ public class MainMenuItemInvisibilityControllerDao extends CommonEntityDao<MainM
 
     @Override
     public void makeVisible(final MainMenuItem menuItem, final User user) {
-	final IQueryModel<MainMenuItemInvisibility> model = select(MainMenuItemInvisibility.class).where()//
+	final EntityResultQueryModel<MainMenuItemInvisibility> model = select(MainMenuItemInvisibility.class).where()//
 	.prop("owner").eq().val(user).and()//
 	.prop("menuItem").eq().val(menuItem).model();
 
 	delete(model);
     }
-
 }

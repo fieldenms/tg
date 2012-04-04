@@ -11,13 +11,13 @@ import java.util.Map;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.YesNoType;
 
-import ua.com.fielden.platform.dao.MappingExtractor;
-import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
-import ua.com.fielden.platform.dao2.HibernateMappingsGenerator;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -32,6 +32,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
+import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
@@ -43,16 +44,10 @@ import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.test.domain.entities.Advice;
-import ua.com.fielden.platform.test.domain.entities.AdvicePosition;
+import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntityKey;
-import ua.com.fielden.platform.test.entities.meta.AdviceDispatchedToWorkshopMetaDefiner;
-import ua.com.fielden.platform.test.entities.meta.AdviceRoadMetaDefiner;
-import ua.com.fielden.platform.test.entities.validators.AdviceCarrierValidator;
-import ua.com.fielden.platform.test.entities.validators.AdvicePositionRotableValidator;
-import ua.com.fielden.platform.test.entities.validators.AdviceRoadValidator;
 import ua.com.fielden.platform.test.ioc.DaoTestHibernateModule;
 import ua.com.fielden.platform.types.Money;
 
@@ -87,6 +82,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 	hibTypeDefaults.put(Boolean.class, YesNoType.class);
 	hibTypeDefaults.put(Date.class, DateTimeType.class);
 	hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+	hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
 	testDomain.addAll(PlatformDomainTypes.types);
 	testDomain.add(CompositeEntity.class);
 	testDomain.add(CompositeEntityKey.class);
@@ -107,6 +103,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 	testDomain.add(TgOrgUnit3.class);
 	testDomain.add(TgOrgUnit4.class);
 	testDomain.add(TgOrgUnit5.class);
+	testDomain.add(TgWorkOrder.class);
     }
 
 
@@ -117,12 +114,12 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 	// instantiate all the factories and Hibernate utility
 	final ProxyInterceptor interceptor = new ProxyInterceptor();
 	try {
-	    final DomainPersistenceMetadata mappingsGenerator = new DomainPersistenceMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain);
+	    final DomainPersistenceMetadata domainPersistenceMetadata = new DomainPersistenceMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain);
 	    final Configuration cfg = new Configuration();
-	    cfg.addXML(new HibernateMappingsGenerator(mappingsGenerator.getHibTypeInfosMap()).generateMappings());
+	    cfg.addXML(new HibernateMappingsGenerator(domainPersistenceMetadata.getHibTypeInfosMap()).generateMappings());
 
 	    hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
-	    hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), new MappingExtractor(hibernateUtil.getConfiguration()), mappingsGenerator);
+	    hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), domainPersistenceMetadata);
 	    injector = new ApplicationInjectorFactory().add(hibernateModule).add(new LegacyConnectionModule(new Provider() {
 		@Override
 		public Object get() {
@@ -140,9 +137,9 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 	    interceptor.setFactory(entityFactory);
 
 	    // bind domain specific validation classes
-	    hibernateModule.getDomainValidationConfig().setValidator(Advice.class, "road", new AdviceRoadValidator()).setValidator(Advice.class, "carrier", injector.getInstance(AdviceCarrierValidator.class)).setValidator(AdvicePosition.class, "rotable", new AdvicePositionRotableValidator());
+//	    hibernateModule.getDomainValidationConfig().setValidator(Advice.class, "road", new AdviceRoadValidator()).setValidator(Advice.class, "carrier", injector.getInstance(AdviceCarrierValidator.class)).setValidator(AdvicePosition.class, "rotable", new AdvicePositionRotableValidator());
 	    // bind domain specific meta property configuration classes
-	    hibernateModule.getDomainMetaPropertyConfig().setDefiner(Advice.class, "dispatchedToWorkshop", new AdviceDispatchedToWorkshopMetaDefiner()).setDefiner(Advice.class, "road", new AdviceRoadMetaDefiner());
+//	    hibernateModule.getDomainMetaPropertyConfig().setDefiner(Advice.class, "dispatchedToWorkshop", new AdviceDispatchedToWorkshopMetaDefiner()).setDefiner(Advice.class, "road", new AdviceRoadMetaDefiner());
 	} catch (final Exception e) {
 	    e.printStackTrace();
 	    throw new RuntimeException(e);
@@ -178,5 +175,4 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
     public List<String> getDdl() {
 	return null;
     }
-
 }

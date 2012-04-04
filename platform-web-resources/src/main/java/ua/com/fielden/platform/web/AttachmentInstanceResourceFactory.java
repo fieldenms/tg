@@ -6,7 +6,7 @@ import org.restlet.data.Request;
 import org.restlet.data.Response;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController2;
+import ua.com.fielden.platform.attachment.IAttachmentController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.AttachmentInstanceResource;
@@ -37,7 +37,7 @@ public class AttachmentInstanceResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
 	super.handle(request, response);
 
-	final IAttachmentController2 dao = injector.getInstance(IAttachmentController2.class);
+	final IAttachmentController dao = injector.getInstance(IAttachmentController.class);
 
 	final AttachmentInstanceResource resource = new AttachmentInstanceResource(location, dao, factory, restUtil, getContext(), request, response);
 	if (Method.GET == request.getMethod()) {

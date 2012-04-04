@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.query;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.dao2.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**

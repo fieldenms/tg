@@ -3,8 +3,6 @@
  */
 package ua.com.fielden.platform.swing.review;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -17,7 +15,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -27,13 +25,13 @@ import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompletedAndYielded;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.IPropertyAggregationFunction;
 import ua.com.fielden.platform.equery.PropertyAggregationFunction;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.interfaces.IMain.ICompleted;
-import ua.com.fielden.platform.equery.interfaces.IMain.ICompletedAndYielded;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
 import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
@@ -41,19 +39,22 @@ import ua.com.fielden.platform.utils.MiscUtilities;
 
 import com.google.inject.Inject;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+
 /**
  * Base class for every criteria for retrieval of {@link AbstractEntity}s. Each TG property of this class represents some query criterion.
  *
  * @author TG Team
  */
 @KeyType(String.class)
-public abstract class EntityQueryCriteria<T extends AbstractEntity, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
+public abstract class EntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     private final Map<String, IPropertyAggregationFunction> totals = new HashMap<String, IPropertyAggregationFunction>();
     private final Map<String, String> totalsAliases = new HashMap<String, String>();
 
-    private final Map<String, IValueMatcher> valueMatchers = new HashMap<String, IValueMatcher>();
+    private final Map<String, IValueMatcher2> valueMatchers = new HashMap<String, IValueMatcher2>();
     private final IValueMatcherFactory valueMatcherFactory;
 
     private final DAO dao;
@@ -98,8 +99,8 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity, DAO extends 
      * @param pageSize
      * @return
      */
-    protected IPage<T> firstPage(final IQueryOrderedModel<T> query, final int pageSize) {
-	return dao.firstPage(query, createFetchModel(), pageSize);
+    protected IPage<T> firstPage(final EntityResultQueryModel<T> query, final int pageSize) {
+	return dao.firstPage(from(query).with(createFetchModel()).build(), pageSize);
     }
 
     /**
@@ -110,8 +111,8 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity, DAO extends 
      * @param pageSize
      * @return
      */
-    protected IPage<T> firstPage(final IQueryOrderedModel<T> query, final IQueryOrderedModel<EntityAggregates> summaryModel, final int pageSize) {
-	return dao.firstPage(query, createFetchModel(), summaryModel, pageSize);
+    protected IPage<T> firstPage(final EntityResultQueryModel<T> query, final AggregatedResultQueryModel summaryModel, final int pageSize) {
+	return dao.firstPage(from(query).with(createFetchModel()).build(), from(summaryModel).build(), pageSize);
     }
 
     /**
@@ -119,7 +120,7 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity, DAO extends 
      *
      * @return
      */
-    protected IQueryModel<T> createLifecycleQueryBaseModel() {
+    protected EntityResultQueryModel<T> createLifecycleQueryBaseModel() {
 	throw new UnsupportedOperationException("Should be used in DEQCriteria.");
     }
 
@@ -148,18 +149,18 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity, DAO extends 
      * @param pageSize
      * @return
      */
-    public final IPage<T> run(final int pageSize, final IOrderEnhancer orderEnhancer) {
-	final ICompleted notOrderedQuery = createQuery();
-	final IQueryOrderedModel<T> queryModel = orderEnhancer.enhanceWithOrdering(notOrderedQuery, getQueryResultType());
-	return run(pageSize, queryModel);
-    }
+//    public final IPage2<T> run(final int pageSize/*, final IOrderEnhancer orderEnhancer*/) {
+//	final ICompleted notOrderedQuery = createQuery();
+//	//final EntityResultQueryModel<T> queryModel = orderEnhancer.enhanceWithOrdering(notOrderedQuery, getQueryResultType());
+//	return run(pageSize, notOrderedQuery.model());
+//    }
 
     public final IPage<T> run(final int pageSize) {
-	final IQueryModel<T> notOrderedQuery = createQuery().model();
+	final EntityResultQueryModel<T> notOrderedQuery = createQuery().model();
 	return run(pageSize, notOrderedQuery);
     }
 
-    private IPage<T> run(final int pageSize, final IQueryOrderedModel<T> queryModel) {
+    private IPage<T> run(final int pageSize, final EntityResultQueryModel<T> queryModel) {
 	if (isTotalsPresent()) {
 	    return firstPage(queryModel, createQueryWithTotals(), pageSize);
 	}
@@ -174,8 +175,9 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity, DAO extends 
      */
     public final List<T> run(final IOrderEnhancer orderEnhancer) {
 	final ICompleted notOrderedQuery = createQuery();
-	final IQueryOrderedModel<T> queryModel = orderEnhancer.enhanceWithOrdering(notOrderedQuery, getQueryResultType());
-	return dao.getEntities(queryModel, createFetchModel());
+	//final IQueryOrderedModel<T> queryModel = orderEnhancer.enhanceWithOrdering(notOrderedQuery, getQueryResultType());
+	final EntityResultQueryModel<T> queryModel = notOrderedQuery.model();
+	return dao.getAllEntities(from(queryModel).with(createFetchModel()).build());
     }
 
     public String getAlias() {
@@ -187,17 +189,17 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity, DAO extends 
      *
      * @return
      */
-    protected IQueryModel<EntityAggregates> createQueryWithTotals() {
+    protected AggregatedResultQueryModel createQueryWithTotals() {
 	int aliasCounter = 0;
 	final ICompleted query = createQuery();
 	totalsAliases.clear();
-	ICompletedAndYielded queryYielded = query;
+	final ICompletedAndYielded queryYielded = query;
 	for (final Entry<String, IPropertyAggregationFunction> entry : totals.entrySet()) {
 	    final String currentAlias = "alias_" + aliasCounter++;
-	    queryYielded = queryYielded.yieldExp(entry.getValue().createQueryString((!StringUtils.isEmpty(getAlias()) ? (getAlias() + ".") : "") + entry.getKey()), currentAlias);
+	    //queryYielded = queryYielded.yield().beginExpr()(entry.getValue().createQueryString((!StringUtils.isEmpty(getAlias()) ? (getAlias() + ".") : "") + entry.getKey()), currentAlias);
 	    totalsAliases.put(entry.getKey(), currentAlias);
 	}
-	return queryYielded.model(EntityAggregates.class);
+	return queryYielded.modelAsAggregate();
     }
 
     /**
@@ -224,22 +226,22 @@ public abstract class EntityQueryCriteria<T extends AbstractEntity, DAO extends 
      */
     public final void export(final File file, final IOrderEnhancer enhancer, final String[] propertyNames, final String[] propertyTitles) throws IOException {
 	final ICompleted notOrderedQuery = createQuery();
-	final IQueryOrderedModel<T> queryModel = enhancer.enhanceWithOrdering(notOrderedQuery, getQueryResultType());
-	final byte[] content = dao.export(queryModel, createFetchModel(), propertyNames, propertyTitles);
+	final EntityResultQueryModel<T> queryModel = notOrderedQuery.model();//enhancer.enhanceWithOrdering(notOrderedQuery, getQueryResultType());
+	final byte[] content = dao.export(from(queryModel).with(createFetchModel()).build(), propertyNames, propertyTitles);
 	final FileOutputStream fo = new FileOutputStream(file);
 	fo.write(content);
 	fo.flush();
 	fo.close();
     }
 
-    public IValueMatcher<?> getValueMatcher(final String propertyName) {
+    public IValueMatcher2<?> getValueMatcher(final String propertyName) {
 	if (valueMatchers.get(propertyName) == null) {
-	    valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher((Class<? extends AbstractEntity>) getType(), propertyName, this));
+	    valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher((Class<? extends AbstractEntity<?>>) getType(), propertyName));
 	}
 	return valueMatchers.get(propertyName);
     }
 
-    public EntityQueryCriteria<T, DAO> setValueMatcher(final String propertyName, final IValueMatcher<?> valueMatcher) {
+    public EntityQueryCriteria<T, DAO> setValueMatcher(final String propertyName, final IValueMatcher2<?> valueMatcher) {
 	valueMatchers.put(propertyName, valueMatcher);
 	return this;
     }

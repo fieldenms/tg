@@ -4,28 +4,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.basic.IValueMatcher2;
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory2;
+import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 
 import com.google.inject.Inject;
 
 @KeyType(String.class)
-public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>, DAO extends IEntityDao2<T>> extends AbstractEntity<String> {
+public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
 
     private static final long serialVersionUID = 9154466083364529734L;
 
     private final Map<String, IValueMatcher2> valueMatchers = new HashMap<String, IValueMatcher2>();
-    private final IValueMatcherFactory2 valueMatcherFactory;
+    private final IValueMatcherFactory valueMatcherFactory;
 
     private final DAO dao;
 
     private final C cdtme;
 
     @Inject
-    public EntityQueryCriteria(final IValueMatcherFactory2 valueMatcherFactory){
+    public EntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory){
 	this.valueMatcherFactory = valueMatcherFactory;
 
 	//This values should be initialized through reflection.

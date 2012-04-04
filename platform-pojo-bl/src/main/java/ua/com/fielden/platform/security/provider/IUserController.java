@@ -22,6 +22,13 @@ public interface IUserController extends IUserDao {
     List<? extends UserRole> findAllUserRoles();
 
     /**
+     * Returns the list of users. Users must be associated with user roles.
+     *
+     * @return
+     */
+    List<User> findAllUsers();
+
+    /**
      * Updates association between user and a list of roles. Once completer user should be associated strictly with the specified list of roles.
      *
      * @param user

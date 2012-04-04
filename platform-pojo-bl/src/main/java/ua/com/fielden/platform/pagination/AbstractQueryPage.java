@@ -4,13 +4,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * Abstract convenience class for query pages, encapsulating pageNumber and pageCapacity properties and implementing related methods
- * 
+ *
  * @author Yura, Oleh
- * 
+ *
  * @param <T>
  */
 @SuppressWarnings("unchecked")
-public abstract class AbstractQueryPage<T extends AbstractEntity> implements IPage<T> {
+public abstract class AbstractQueryPage<T extends AbstractEntity<?>> implements IPage<T> {
 
     private final int pageNumber;
     private final int pageCapacity;

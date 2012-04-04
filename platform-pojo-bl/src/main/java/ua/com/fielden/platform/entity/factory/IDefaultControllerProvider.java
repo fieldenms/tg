@@ -10,5 +10,5 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  */
 public interface IDefaultControllerProvider {
-    <T extends IEntityDao<E>, E extends AbstractEntity> T findController(Class<E> type);
+    <T extends IEntityDao<E>, E extends AbstractEntity<?>> T findController(Class<E> type);
 }

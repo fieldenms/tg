@@ -10,7 +10,7 @@ import org.restlet.data.Method;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-import ua.com.fielden.platform.dao2.IUserRoleDao2;
+import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -18,7 +18,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.rao.CommonEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
-import ua.com.fielden.platform.security.provider.IUserController2;
+import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -29,20 +29,20 @@ import ua.com.fielden.platform.utils.Pair;
 import com.google.inject.Inject;
 
 /**
- * RAO implementation of the {@link IUserController2}.
+ * RAO implementation of the {@link IUserController}.
  *
  * @author TG Team
  *
  */
 
 @EntityType(User.class)
-public class UserControllerRao extends CommonEntityRao<User> implements IUserController2 {
+public class UserControllerRao extends CommonEntityRao<User> implements IUserController {
     private final fetch<User> fetchModel = new fetch<User>(User.class).with("basedOnUser").with("roles", new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class).with("userRole"));
 
-    private final IUserRoleDao2 userRoleDao;
+    private final IUserRoleDao userRoleDao;
 
     @Inject
-    public UserControllerRao(final IUserRoleDao2 userRoleDao, final RestClientUtil restUtil) {
+    public UserControllerRao(final IUserRoleDao userRoleDao, final RestClientUtil restUtil) {
 	super(restUtil);
 	this.userRoleDao = userRoleDao;
     }

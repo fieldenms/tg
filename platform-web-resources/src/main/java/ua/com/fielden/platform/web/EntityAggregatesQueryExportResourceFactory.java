@@ -5,7 +5,7 @@ import org.restlet.data.Method;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.EntityAggregatesQueryExportResource;
@@ -38,7 +38,7 @@ public class EntityAggregatesQueryExportResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
 	super.handle(request, response);
 
-	final IEntityAggregatesDao2 dao = injector.getInstance(IEntityAggregatesDao2.class);
+	final IEntityAggregatesDao dao = injector.getInstance(IEntityAggregatesDao.class);
 
 	if (Method.POST.equals(request.getMethod())) {
 	    new EntityAggregatesQueryExportResource(dao, restUtil, getContext(), request, response).handlePost();

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.model;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.dao2.IMasterDetailsDao2;
+import ua.com.fielden.platform.dao.IMasterDetailsDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fetch;
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
  * @param <D>
  * @param <C>
  */
-public abstract class UmDetailsWithCrud<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C extends IMasterDetailsDao2<M, D>> extends UmDetails<M, D, C> {
+public abstract class UmDetailsWithCrud<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C extends IMasterDetailsDao<M, D>> extends UmDetails<M, D, C> {
 
     /**
      * Represents a current managed entity instance.

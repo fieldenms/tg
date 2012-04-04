@@ -3,9 +3,9 @@ package ua.com.fielden.platform.domaintree.testing;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.IParameterGetter;
 import ua.com.fielden.platform.equery.IQueryModelProvider;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
 
 /**
  * Entity for "domain tree representation" testing.
@@ -22,7 +22,7 @@ public class MasterSyntheticEntity extends AbstractEntity<String>  implements IQ
     }
 
     @Override
-    public IQueryModel<MasterSyntheticEntity> model(final IParameterGetter parameterGetter) {
+    public EntityResultQueryModel<MasterSyntheticEntity> model(final IParameterGetter parameterGetter) {
 	return null;
     }
 }

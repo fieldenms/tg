@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
-import ua.com.fielden.platform.dao2.HibernateMappingsGenerator;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import static org.junit.Assert.assertEquals;

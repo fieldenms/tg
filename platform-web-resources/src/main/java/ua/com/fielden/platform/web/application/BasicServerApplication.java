@@ -6,7 +6,7 @@ import org.restlet.Context;
 import org.restlet.Restlet;
 import org.restlet.Router;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.web.ResourceGuard;
 import ua.com.fielden.platform.web.SecurityTokenResourceFactory;
@@ -30,11 +30,11 @@ public abstract class BasicServerApplication extends Application {
     protected final RestServerUtil serverRestUtil;
     protected final String attachmentLocation;
     protected final RouterHelper helper;
-    protected final Class<IEntityDao2>[] controllerTypes;
+    protected final Class<IEntityDao>[] controllerTypes;
 
     private transient final Logger logger;
 
-    public BasicServerApplication(final String securityRealm, final Context context, final Injector injector, final EntityFactory factory, final RestServerUtil serverRestUtil, final String attachmentLocation, final Class<IEntityDao2>[] controllerTypes) {
+    public BasicServerApplication(final String securityRealm, final Context context, final Injector injector, final EntityFactory factory, final RestServerUtil serverRestUtil, final String attachmentLocation, final Class<IEntityDao>[] controllerTypes) {
 	super(context);
 	this.securityRealm = securityRealm;
 	this.injector = injector;
@@ -51,7 +51,7 @@ public abstract class BasicServerApplication extends Application {
 	// create resource router and attach all relevant resources to it
 	final Router routerForResources = new Router(getContext());
 	// register standard entity resources
-	for (final Class<IEntityDao2> daoType : controllerTypes) {
+	for (final Class<IEntityDao> daoType : controllerTypes) {
 	    helper.register(routerForResources, daoType);
 	}
 	try {

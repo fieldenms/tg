@@ -17,7 +17,7 @@ import org.restlet.Restlet;
 import org.restlet.Router;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController2;
+import ua.com.fielden.platform.attachment.IAttachmentController;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.rao.AttachmentRao;
 import ua.com.fielden.platform.test.DbDrivenTestCase2;
@@ -31,7 +31,7 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
  *
  */
 public class AttachmentResourceTestCase extends WebBasedTestCase {
-    private final IAttachmentController2 rao = new AttachmentRao(config.restClientUtil());
+    private final IAttachmentController rao = new AttachmentRao(config.restClientUtil());
 
     private final static String ATTACHMENT_LOCATION = "src/test/resources/data-files/attachments";
     private final static String ORIGINAL_FILE_NAME = "TEST-FILE.TXT";

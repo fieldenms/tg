@@ -8,7 +8,7 @@ import org.junit.Test;
 
 /**
  * Test case for {@link PojoValueMatcher} class
- * 
+ *
  * @author Yura, Oleh
  */
 public class PojoValueMatcherTestCase {

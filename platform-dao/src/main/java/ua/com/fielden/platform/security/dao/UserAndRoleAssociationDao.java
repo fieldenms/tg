@@ -5,7 +5,7 @@ import java.util.List;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
@@ -41,5 +41,4 @@ public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssoci
 	}
 	getSession().createQuery(query).executeUpdate();
     }
-
 }

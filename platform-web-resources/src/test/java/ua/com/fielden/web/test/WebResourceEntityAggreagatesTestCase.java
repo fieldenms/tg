@@ -16,12 +16,12 @@ import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.Router;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.CommonEntityAggregatesRao;
 import ua.com.fielden.platform.rao.EntityAggregatesRao;
 import ua.com.fielden.platform.test.DbDrivenTestCase2;
@@ -36,7 +36,7 @@ import ua.com.fielden.web.entities.InspectedEntity;
  *
  */
 public class WebResourceEntityAggreagatesTestCase extends WebBasedTestCase {
-    private final IEntityAggregatesDao2 rao = new EntityAggregatesRao(new CommonEntityAggregatesRao(config.restClientUtil()));
+    private final IEntityAggregatesDao rao = new EntityAggregatesRao(new CommonEntityAggregatesRao(config.restClientUtil()));
 
     @Test
     public void test_aggregated_data_retrieval() {
@@ -60,7 +60,7 @@ public class WebResourceEntityAggreagatesTestCase extends WebBasedTestCase {
 
 	final OrderingModel orderBy = orderBy().prop("intProperty").asc().model();
 
-	final IPage2<EntityAggregates> page = rao.firstPage(from(model).with(orderBy).build(), 1);
+	final IPage<EntityAggregates> page = rao.firstPage(from(model).with(orderBy).build(), 1);
 
 	assertEquals("Incorrect page number", 0, page.no());
 	assertEquals("Incorrect number of pages", 2, page.numberOfPages());

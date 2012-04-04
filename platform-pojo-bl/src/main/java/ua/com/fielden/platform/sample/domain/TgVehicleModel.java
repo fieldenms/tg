@@ -11,14 +11,14 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DefaultController2;
-import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel2;
+import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 
 @KeyType(String.class)
 @MapEntityTo
 @DescTitle("Description")
 @Ignore
-@DefaultController2(ITgVehicleModel2.class)
+@DefaultController(ITgVehicleModel.class)
 public class TgVehicleModel extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

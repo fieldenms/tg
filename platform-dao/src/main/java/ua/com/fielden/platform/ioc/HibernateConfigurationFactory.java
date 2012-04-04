@@ -6,8 +6,8 @@ import java.util.Properties;
 
 import org.hibernate.cfg.Configuration;
 
-import ua.com.fielden.platform.dao2.DomainPersistenceMetadata;
-import ua.com.fielden.platform.dao2.HibernateMappingsGenerator;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 import com.google.inject.Guice;

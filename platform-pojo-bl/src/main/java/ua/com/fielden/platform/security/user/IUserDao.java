@@ -1,3 +1,6 @@
+/**
+ *
+ */
 package ua.com.fielden.platform.security.user;
 
 import java.util.List;

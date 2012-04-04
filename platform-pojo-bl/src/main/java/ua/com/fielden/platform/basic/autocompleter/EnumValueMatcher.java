@@ -8,7 +8,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.equery.fetch;
+import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * Provides a enumeration driven implementation of the {@link IValueMatcher} with wild card support. This implementation should be convenient in cases where there is a property of
@@ -17,7 +18,7 @@ import ua.com.fielden.platform.equery.fetch;
  * @author TG Team
  *
  */
-public class EnumValueMatcher<T extends Enum<T>> implements IValueMatcher<T> {
+public class EnumValueMatcher<T extends Enum<T>> implements IValueMatcher2<T> {
     private EnumSet<T> values;
 
     public EnumValueMatcher(final Class<T> enumType) {
@@ -110,18 +111,18 @@ public class EnumValueMatcher<T extends Enum<T>> implements IValueMatcher<T> {
     }
 
     @Override
-    public void setFetchModel(final fetch fetchModel) {
-	throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
-    }
-
-    @Override
-    public fetch<?> getFetchModel() {
-	throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
-    }
-
-    @Override
     public Integer getPageSize() {
 	return null;
+    }
+
+    @Override
+    public <FT extends AbstractEntity<?>> ua.com.fielden.platform.entity.query.fetch<FT> getFetchModel() {
+	throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
+    }
+
+    @Override
+    public <FT extends AbstractEntity<?>> void setFetchModel(final ua.com.fielden.platform.entity.query.fetch<FT> fetchModel) {
+	throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
     }
 
 }

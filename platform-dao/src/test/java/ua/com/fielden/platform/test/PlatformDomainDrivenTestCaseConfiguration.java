@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.impl.DefaultSerialisationClassProvider;
-import ua.com.fielden.platform.test.ioc.PlatformTestServerModule2;
+import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
 
 import com.google.inject.Injector;
 
@@ -24,7 +24,7 @@ import com.google.inject.Injector;
 public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
     private final EntityFactory entityFactory;
     private final Injector injector;
-    private final PlatformTestServerModule2 hibernateModule;
+    private final PlatformTestServerModule hibernateModule;
 
     /**
      * Required for dynamic instantiation by {@link DbDrivenTestCase}
@@ -48,7 +48,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
 	    props.setProperty("hibernate.show_sql", "false");
 	    props.setProperty("hibernate.format_sql", "true");
 
-	    hibernateModule = new PlatformTestServerModule2(
+	    hibernateModule = new PlatformTestServerModule(
 		    PlatformTestHibernateSetup.getHibernateTypes(),
 		    PlatformTestDomainTypes.entityTypes,
 		    DefaultSerialisationClassProvider.class,
@@ -73,7 +73,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
      *
      * @param hibernateUtil
      */
-    private void bindDomainMetaProperty(final PlatformTestServerModule2 hibernateModule) {
+    private void bindDomainMetaProperty(final PlatformTestServerModule hibernateModule) {
 	// TODO Add domain meta property binding if needed
     }
 
@@ -82,7 +82,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
      *
      * @param hibernateUtil
      */
-    private void bindDomainValidation(final PlatformTestServerModule2 hibernateModule) {
+    private void bindDomainValidation(final PlatformTestServerModule hibernateModule) {
 	// TODO Add domain validation binding if needed
     }
 

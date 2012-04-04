@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
@@ -13,11 +13,11 @@ import ua.com.fielden.platform.swing.review.report.centre.configuration.Abstract
 public class AbstractEntityCentreModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityReviewModel<T, CDTME> {
 
     private final String name;
-    private final EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao2<T>>> entityInspectorModel;
+    private final EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityInspectorModel;
     private final IEntityMasterManager masterManager;
 
 
-    public AbstractEntityCentreModel(final AbstractCentreConfigurationModel<T, CDTME> configurationModel, final EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao2<T>>> entityInspectorModel, final IEntityMasterManager masterManager, final String name) {
+    public AbstractEntityCentreModel(final AbstractCentreConfigurationModel<T, CDTME> configurationModel, final EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityInspectorModel, final IEntityMasterManager masterManager, final String name) {
 	super(configurationModel, entityInspectorModel.getEntity());
 	this.entityInspectorModel = entityInspectorModel;
 	this.masterManager = masterManager;
@@ -46,7 +46,7 @@ public class AbstractEntityCentreModel<T extends AbstractEntity<?>, CDTME extend
      *
      * @return
      */
-    public EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao2<T>>> getEntityInspectorModel() {
+    public EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> getEntityInspectorModel() {
 	return entityInspectorModel;
     }
 

@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.ui.config.controller;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
@@ -31,8 +33,7 @@ public class EntityCentreConfigControllerDao extends CommonEntityDao<EntityCentr
     }
 
     @Override
-    public void delete(final IQueryOrderedModel<EntityCentreConfig> model) {
-        defaultDelete(model);
+    public void delete(final EntityResultQueryModel<EntityCentreConfig> model, final Map<String, Object> paramValues) {
+        defaultDelete(model, paramValues);
     }
-
 }

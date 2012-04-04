@@ -227,7 +227,7 @@ public class MigrateDb {
 	// reset passwords
 	if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {
 		System.out.println("Resetting user passwords...");
-		final ResetUserPassword passwordReset = new ResetUserPassword(injector.getInstance(IUserController.class));
+		final ResetUserPassword2 passwordReset = new ResetUserPassword2(injector.getInstance(IUserController.class));
 		passwordReset.resetAll(props.getProperty("private-key"));
 	}
 

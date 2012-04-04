@@ -18,7 +18,7 @@ import org.restlet.Restlet;
 import org.restlet.Router;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.resources.RouterHelper;
@@ -54,17 +54,17 @@ public class WebResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_pagination() {
-	final IPage2<InspectedEntity> page = rao.getPage(1, 10);
+	final IPage<InspectedEntity> page = rao.getPage(1, 10);
 	assertEquals("Incorrect page number", 1, page.no());
 	assertEquals("Incorrect number of pages", 5, page.numberOfPages());
 	assertEquals("Incorrect number of instances on the page.", 10, page.data().size());
 
-	final IPage2<InspectedEntity> lastPage = page.last();
+	final IPage<InspectedEntity> lastPage = page.last();
 	assertEquals("Incorrect last page number", 4, lastPage.no());
 	assertEquals("Incorrect number of pages", 5, lastPage.numberOfPages());
 	assertEquals("Incorrect number of instances on the last page.", 5, lastPage.data().size());
 
-	final IPage2<InspectedEntity> firstPage = rao.firstPage(15);
+	final IPage<InspectedEntity> firstPage = rao.firstPage(15);
 	assertEquals("Incorrect number of instances on the first page.", 15, firstPage.data().size());
 	assertEquals("Incorrect first page number", 0, firstPage.no());
 	assertEquals("Incorrect number of pages", 3, firstPage.numberOfPages());
@@ -76,12 +76,12 @@ public class WebResourceTestCase extends WebBasedTestCase {
 	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class).where().prop("intProperty").le().val(10).model();
 
 
-	final IPage2<InspectedEntity> page = rao.getPage(from(q).build(), 0, 5);
+	final IPage<InspectedEntity> page = rao.getPage(from(q).build(), 0, 5);
 	assertEquals("Incorrect page number", 0, page.no());
 	assertEquals("Incorrect number of pages", 2, page.numberOfPages());
 	assertEquals("Incorrect number of instances on the page.", 5, page.data().size());
 
-	final IPage2<InspectedEntity> nextPage = page.next();
+	final IPage<InspectedEntity> nextPage = page.next();
 	assertEquals("Incorrect next page number", 1, nextPage.no());
 	assertEquals("Incorrect number of pages", 2, nextPage.numberOfPages());
 	assertEquals("Incorrect number of instances on the next page.", 4, nextPage.data().size());

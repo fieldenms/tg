@@ -12,7 +12,6 @@ import javax.swing.UIManager.LookAndFeelInfo;
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.basic.autocompleter.EnumValueMatcher;
-import ua.com.fielden.platform.basic.autocompleter.EnumValueMatcher2;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.TwoPropertyListCellRenderer;
@@ -36,7 +35,7 @@ public class AutocompleterEnumMultiExample {
 	    public void run() {
 
 		// create an instance of the overlayable text field, which bill be used for attaching overlay components
-		final IValueMatcher2<DemoEnum> matcher = new EnumValueMatcher2<DemoEnum>(DemoEnum.class) {
+		final IValueMatcher2<DemoEnum> matcher = new EnumValueMatcher<DemoEnum>(DemoEnum.class) {
 		    @Override
 		    public List<DemoEnum> findMatches(final String value) {
 			try {

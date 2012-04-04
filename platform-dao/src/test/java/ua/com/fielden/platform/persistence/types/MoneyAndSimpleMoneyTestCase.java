@@ -8,8 +8,8 @@ import java.util.Locale;
 
 import org.hibernate.Session;
 
-import ua.com.fielden.platform.dao.factory.DaoFactory2;
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.factory.DaoFactory;
 import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.types.Money;
 
@@ -33,7 +33,7 @@ public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase2 {
 	final EntityWithMoney instance = entityFactory.newEntity(EntityWithMoney.class, "name", "desc");
 	instance.setMoney(new Money(new BigDecimal(100000d), Currency.getInstance("USD")));
 	// saving instance of MoneyClass
-	final IEntityDao2 dao = injector.getInstance(DaoFactory2.class).newDao(EntityWithMoney.class);
+	final IEntityDao dao = injector.getInstance(DaoFactory.class).newDao(EntityWithMoney.class);
 	dao.save(instance);
 	// retrieve saved instance
 	final EntityWithMoney instance2 = (EntityWithMoney) dao.findByKey("name");
@@ -59,7 +59,7 @@ public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase2 {
 	final EntityWithSimpleMoney instance = entityFactory.newEntity(EntityWithSimpleMoney.class, "name", "desc");
 	instance.setMoney(new Money(new BigDecimal(100000d), Currency.getInstance(Locale.getDefault())));
 	// saving instance of MoneyClass
-	final IEntityDao2 dao = injector.getInstance(DaoFactory2.class).newDao(EntityWithSimpleMoney.class);
+	final IEntityDao dao = injector.getInstance(DaoFactory.class).newDao(EntityWithSimpleMoney.class);
 	dao.save(instance);
 	// retrieve saved instance
 	final EntityWithSimpleMoney instance2 = (EntityWithSimpleMoney) dao.findByKey("name");

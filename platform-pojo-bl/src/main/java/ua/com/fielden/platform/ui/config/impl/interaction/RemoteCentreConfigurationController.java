@@ -11,7 +11,7 @@ import ua.com.fielden.platform.serialisation.ClientSerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -26,7 +26,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  */
 public class RemoteCentreConfigurationController implements ICenterConfigurationController {
 
-    private final IEntityCentreConfigController2 eccController;
+    private final IEntityCentreConfigController eccController;
     private final ISerialiser serialiser;
     private final MainMenuItem principleMenuItem;
     private final IUserProvider userProvider;
@@ -34,7 +34,7 @@ public class RemoteCentreConfigurationController implements ICenterConfiguration
     public static final char KEY_SEPARATOR = '\u2190';
 
     public RemoteCentreConfigurationController(//
-    final IEntityCentreConfigController2 eccController,//
+    final IEntityCentreConfigController eccController,//
     final MainMenuItem principleMenuItem,//
     final IUserProvider userProvider) {
 	this.eccController = eccController;

@@ -13,7 +13,9 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
 import ua.com.fielden.platform.dao.ILifecycleDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.interfaces.IQueryModel;
 
 /**
@@ -23,7 +25,7 @@ import ua.com.fielden.platform.equery.interfaces.IQueryModel;
  *
  * @author TG Team
  */
-public class EntityLifecycleResource<T extends AbstractEntity> extends Resource {
+public class EntityLifecycleResource<T extends AbstractEntity<?>> extends Resource {
     // the following properties are determined from request
     private final String username;
 
@@ -67,7 +69,7 @@ public class EntityLifecycleResource<T extends AbstractEntity> extends Resource 
     public void acceptRepresentation(final Representation envelope) throws ResourceException {
 	try {
 	    final List<?> list = restUtil.restoreList(envelope);
-	    final IQueryModel<T> model = (IQueryModel<T>) list.get(0);
+	    final QueryExecutionModel<T, EntityResultQueryModel<T>> model = (QueryExecutionModel<T, EntityResultQueryModel<T>>) list.get(0);
 	    final String propertyName = (String) list.get(1);
 	    final DateTime from = (DateTime) list.get(2);
 	    final DateTime to = (DateTime) list.get(3);

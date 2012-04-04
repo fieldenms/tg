@@ -7,11 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 
 /**
  * This class represents empty page list
- * 
+ *
  * @author Yura, Oleh
  */
 public class EmptyPage<T extends AbstractEntity<?>> implements IPage<T> {
@@ -71,6 +71,7 @@ public class EmptyPage<T extends AbstractEntity<?>> implements IPage<T> {
 	return 1;
     }
 
+    @Override
     public String toString() {
 	return "1 of 1";
     }

@@ -32,12 +32,12 @@ import org.jvnet.flamingo.common.ElementState;
 import org.jvnet.flamingo.common.icon.EmptyResizableIcon;
 
 import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
-import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.actions.ActionChanger;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -441,7 +441,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 
 	    @Override
 	    protected void postAction(final T entity) {
-		masterManager.<T, IEntityDao2<T>> showMaster(entity, AbstractEntityCentre.this);
+		masterManager.<T, IEntityDao<T>> showMaster(entity, AbstractEntityCentre.this);
 		super.postAction(entity);
 	    }
 	};
@@ -483,7 +483,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	    protected void postAction(final T entity) {
 		super.postAction(entity);
 		if (entity != null) {
-		    masterManager.<T, IEntityDao2<T>> showMaster(entity, AbstractEntityCentre.this);
+		    masterManager.<T, IEntityDao<T>> showMaster(entity, AbstractEntityCentre.this);
 		}
 	    }
 	};
@@ -657,7 +657,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     private IPageChangeFeedback createPaginatorFeedback() {
 	return new IPageChangeFeedback() {
 	    @Override
-	    public void feedback(final IPage2<?> page) {
+	    public void feedback(final IPage<?> page) {
 		feedBack.setText(page != null ? page.toString() : "Page 0 of 0");
 	    }
 

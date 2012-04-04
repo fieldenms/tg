@@ -14,7 +14,7 @@ import org.restlet.data.Response;
 import org.restlet.resource.InputRepresentation;
 import org.restlet.resource.Representation;
 
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.error.Result;

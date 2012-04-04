@@ -6,17 +6,17 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.security.provider.UserController2;
-import ua.com.fielden.platform.security.user.IUserDao2;
+import ua.com.fielden.platform.security.provider.UserController;
+import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController2;
-import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigControllerDao2;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao2;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigControllerDao;
+import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -28,9 +28,9 @@ import static org.junit.Assert.assertTrue;
  *
  */
 public class EntityCentreConfigPersistenceTest extends AbstractDomainDrivenTestCase {
-    private final IEntityCentreConfigController2 dao = getInstance(EntityCentreConfigControllerDao2.class);
-    private final IMainMenuItemController2 menuDao = getInstance(MainMenuItemControllerDao2.class);
-    private final IUserDao2 userDao = getInstance(UserController2.class);
+    private final IEntityCentreConfigController dao = getInstance(EntityCentreConfigControllerDao.class);
+    private final IMainMenuItemController menuDao = getInstance(MainMenuItemControllerDao.class);
+    private final IUserDao userDao = getInstance(UserController.class);
 
     @Test
     public void test_insertion_and_retrieval_of_binary_data() {

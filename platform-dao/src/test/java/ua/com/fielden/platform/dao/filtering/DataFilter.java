@@ -3,11 +3,11 @@ package ua.com.fielden.platform.dao.filtering;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.IQueryModelProvider;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
-import ua.com.fielden.platform.equery.interfaces.IOthers.ICompoundCondition;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Finder.IPropertyPathFilteringCondition;
 import ua.com.fielden.platform.test.domain.entities.Workshop;
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.test.domain.entities.daos.IWorkshopDao;
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.equery.equery.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * This is a filter providing a mock implementation to be used for testing purposes.
@@ -45,13 +45,13 @@ public class DataFilter implements IFilter {
     }
 
     @Override
-    public <T extends AbstractEntity> IQueryModel<T> enhance(final Class<T> entityType, final String workshop) {
+    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> enhance(final Class<T> entityType, final String workshop) {
 	if (workshop == null) {
 	    return null;
 	}
 
 	if (entityType == Workshop.class) {
-	    return select(entityType).where().prop("key").eq().val(workshop).model(entityType);
+	    return select(entityType).where().prop("key").eq().val(workshop).model();
 	}
 
 	if (entityType == EntityAggregates.class || IQueryModelProvider.class.isAssignableFrom(entityType)) {
@@ -67,13 +67,13 @@ public class DataFilter implements IFilter {
 		    return null;
 		}
 
-		ICompoundCondition cc = select(entityType).where().prop(properties.get(0)).eq().val(wc);
+		ICompoundCondition0 cc = select(entityType).where().prop(properties.get(0)).eq().val(wc);
 
 		for (int index = 1; index < properties.size(); index++) {
 		    cc = cc.and().prop(properties.get(index)).eq().val(wc); // all conditions are linked with AND by default
 		}
 
-		return cc.model(entityType);
+		return cc.model();
 	    } // else
 	}
     }

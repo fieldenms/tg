@@ -6,7 +6,7 @@ import org.restlet.data.Request;
 import org.restlet.data.Response;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachmentController2;
+import ua.com.fielden.platform.attachment.IAttachmentController;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.EntityQueryResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -35,7 +35,7 @@ public class AttachmentQueryResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
 	super.handle(request, response);
 	if (Method.POST.equals(request.getMethod())) {
-	    new EntityQueryResource<Attachment>(injector.getInstance(IAttachmentController2.class), restUtil, getContext(), request, response).handlePost();
+	    new EntityQueryResource<Attachment>(injector.getInstance(IAttachmentController.class), restUtil, getContext(), request, response).handlePost();
 	}
     }
 }

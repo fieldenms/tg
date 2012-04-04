@@ -16,15 +16,16 @@ import org.restlet.data.Response;
 import org.restlet.data.Status;
 import org.restlet.resource.Representation;
 
+import ua.com.fielden.platform.dao.AbstractEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao2.AbstractEntityDao2;
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.pagination.IPage2;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.Pair;
@@ -40,7 +41,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
  * @param <T>
  * @param <K>
  */
-public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntityDao2<T> {
+public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntityDao<T> {
 
     protected final RestClientUtil restUtil;
 
@@ -83,7 +84,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
      * Sends a GET request.
      */
     @Override
-    public IPage2<T> firstPage(final int pageCapacity) {
+    public IPage<T> firstPage(final int pageCapacity) {
 	return new EntityQueryPage(0, pageCapacity);
     }
 
@@ -91,7 +92,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
      * Sends a POST request with {@link IQueryOrderedModel} in the envelope.
      */
     @Override
-    public IPage2<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
+    public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
 	return new EntityQueryPage(model, new PageInfo(0, 0, pageCapacity));
     }
 
@@ -99,7 +100,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
      * Sends two POST request with {@link IQueryOrderedModel} for data and {@link IQueryOrderedModel} for summary. The resultant page will have both the data and the summary.
      */
     @Override
-    public IPage2<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
+    public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
 	return new EntityQueryPage(model, summaryModel, new PageInfo(0, 0, pageCapacity));
     }
 
@@ -116,12 +117,12 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
      * Sends a POST request with {@link IQueryOrderedModel} in the envelope.
      */
     @Override
-    public IPage2<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
+    public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
 	return new EntityQueryPage(model, new PageInfo(pageNo, 0, pageCapacity));
     }
 
     @Override
-    public IPage2<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
+    public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
 	return new EntityQueryPage(model, new PageInfo(pageNo, pageCount, pageCapacity));
     }
 
@@ -129,7 +130,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
      * Sends a GET request.
      */
     @Override
-    public IPage2<T> getPage(final int pageNo, final int pageCapacity) {
+    public IPage<T> getPage(final int pageNo, final int pageCapacity) {
 	return new EntityQueryPage(pageNo, pageCapacity);
     }
 
@@ -216,7 +217,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 	}
     }
 
-    /** Implements the deletion by query model. Relies on the fact the DAO counterpart has method {@link IEntityDao#delete(IQueryOrderedModel) implemented.} */
+    /** Implements the deletion by query model. Relies on the fact the DAO counterpart has method {@link IEntityDao#delete(EntityResultQueryModel)} implemented. */
     @Override
     public void delete(final EntityResultQueryModel<T> query, final Map<String, Object> params) {
 	final Representation envelope = restUtil.represent(from(query).with(params).build());
@@ -326,7 +327,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
      * @author TG Team
      *
      */
-    private class EntityQueryPage implements IPage2<T> {
+    private class EntityQueryPage implements IPage<T> {
 	private int pageNumber; // zero-based
 	private int numberOfPages = 0;
 	private final int pageCapacity;
@@ -405,7 +406,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 	}
 
 	@Override
-	public IPage2<T> next() {
+	public IPage<T> next() {
 	    if (hasNext()) {
 		if (model != null && summary != null) {
 		    return new EntityQueryPage(model, summary, new PageInfo(no() + 1, numberOfPages(), capacity()));
@@ -424,7 +425,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 	}
 
 	@Override
-	public IPage2<T> prev() {
+	public IPage<T> prev() {
 	    if (hasPrev()) {
 		if (model != null && summary != null) {
 		    return new EntityQueryPage(model, summary, new PageInfo(no() - 1, numberOfPages(), capacity()));
@@ -443,7 +444,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 	}
 
 	@Override
-	public IPage2<T> first() {
+	public IPage<T> first() {
 	    if (hasPrev()) {
 		if (model != null && summary != null) {
 		    return new EntityQueryPage(model, summary, new PageInfo(0, numberOfPages(), capacity()));
@@ -457,7 +458,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 	}
 
 	@Override
-	public IPage2<T> last() {
+	public IPage<T> last() {
 	    if (hasNext()) {
 		if (model != null && summary != null) {
 		    return new EntityQueryPage(model, summary, new PageInfo(-1, numberOfPages(), capacity()));

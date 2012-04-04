@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.swing.review;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.equery.equery.select;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,14 +21,14 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
 import ua.com.fielden.platform.equery.IParameter;
 import ua.com.fielden.platform.equery.IParameterGetter;
 import ua.com.fielden.platform.equery.IPropertyAggregationFunction;
 import ua.com.fielden.platform.equery.IQueryModelProvider;
 import ua.com.fielden.platform.equery.PropertyAggregationFunction;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.interfaces.IMain.ICompleted;
-import ua.com.fielden.platform.equery.interfaces.IMain.IJoin;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.swing.review.persistens.DynamicCriteriaPersistentObject;
@@ -39,6 +36,9 @@ import ua.com.fielden.platform.treemodel.IPropertyFilter;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.CheckingStrategy;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 
 /**
  * This class allows to create criteria at runtime with defined list of properties. If one wants to add new property then the {@link #addProperty(List)} method must be used. In
@@ -49,7 +49,7 @@ import ua.com.fielden.platform.utils.PropertyChangeSupportEx.CheckingStrategy;
  *
  */
 @SuppressWarnings("unchecked")
-public class DynamicEntityQueryCriteria<T extends AbstractEntity, DAO extends IEntityDao<T>> extends EntityQueryCriteria<T, DAO> {
+public class DynamicEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<T, DAO> {
     private static final long serialVersionUID = -3416480981984231794L;
 
     /**
@@ -321,7 +321,7 @@ public class DynamicEntityQueryCriteria<T extends AbstractEntity, DAO extends IE
 	    throw new IllegalStateException("Criteira has union properperties. These properties arent't supported yet.");
 	}
 	final ICompleted result = DynamicQueryBuilder.buildConditions(createJoinCondition(), createQueryProperties(), getAlias());
-	return !IQueryModelProvider.class.isAssignableFrom(getEntityClass()) ? result : result.resultType(getEntityClass());
+	return result; //!IQueryModelProvider.class.isAssignableFrom(getEntityClass()) ? result : result.resultType(getEntityClass());
     }
 
     /**
@@ -416,9 +416,9 @@ public class DynamicEntityQueryCriteria<T extends AbstractEntity, DAO extends IE
     protected IJoin createJoinCondition() {
 	try {
 	    if (IQueryModelProvider.class.isAssignableFrom(getEntityClass())) { // synthetic entity case
-		return select(((IQueryModelProvider) getDummyEntity()).model(createParameterGetter()), getAlias());
+		return select(((IQueryModelProvider) getDummyEntity()).model(createParameterGetter())).as(getAlias());
 	    } else {
-		return select(getEntityClass(), getAlias());
+		return select(getEntityClass()).as(getAlias());
 	    }
 	} catch (final Exception e) {
 	    throw new RuntimeException("Can not create join condition due to: " + e + ".");

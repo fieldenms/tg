@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Locale;
 
-import ua.com.fielden.platform.dao.factory.DaoFactory2;
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.factory.DaoFactory;
 import ua.com.fielden.platform.test.DbDrivenTestCase2;
 import ua.com.fielden.platform.types.Money;
 import static java.math.BigDecimal.valueOf;
@@ -23,7 +23,7 @@ public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase2 {
 	final EntityWithTaxMoney instance = entityFactory.newEntity(EntityWithTaxMoney.class, "name", "desc");
 	instance.setMoney(new Money(new BigDecimal("1000"), 20, Currency.getInstance("AUD")));
 	// saving instance of MoneyClass
-	final IEntityDao2 dao = injector.getInstance(DaoFactory2.class).newDao(EntityWithTaxMoney.class);
+	final IEntityDao dao = injector.getInstance(DaoFactory.class).newDao(EntityWithTaxMoney.class);
 	dao.save(instance);
 
 	hibernateUtil.getSessionFactory().getCurrentSession().flush();
@@ -49,7 +49,7 @@ public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase2 {
 	final EntityWithSimpleTaxMoney instance = entityFactory.newEntity(EntityWithSimpleTaxMoney.class, "name", "desc");
 	instance.setMoney(new Money(new BigDecimal("2222.0000"), 20, Currency.getInstance("USD"))); // USD deliberately to be different to the default currency
 	// saving instance of MoneyClass
-	final IEntityDao2 dao = injector.getInstance(DaoFactory2.class).newDao(EntityWithSimpleTaxMoney.class);
+	final IEntityDao dao = injector.getInstance(DaoFactory.class).newDao(EntityWithSimpleTaxMoney.class);
 	dao.save(instance);
 
 	hibernateUtil.getSessionFactory().getCurrentSession().flush();
@@ -71,7 +71,7 @@ public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase2 {
 	instance.setDesc("desc");
 	instance.setMoney(new Money(valueOf(600000d), 20, Currency.getInstance("USD")));
 
-	final IEntityDao2 dao = injector.getInstance(DaoFactory2.class).newDao(EntityWithExTaxAndTaxMoney.class);
+	final IEntityDao dao = injector.getInstance(DaoFactory.class).newDao(EntityWithExTaxAndTaxMoney.class);
 	dao.save(instance);
 
 	hibernateUtil.getSessionFactory().getCurrentSession().flush();

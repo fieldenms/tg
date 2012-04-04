@@ -7,8 +7,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
 import ua.com.fielden.platform.utils.ExpExec;
 
 /**
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.utils.ExpExec;
  *
  * @param <T>
  */
-public class PojoValueMatcher<T extends AbstractEntity> implements IValueMatcher<T> {
+public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher2<T> {
     private final Collection<T> instances;
     private final ExpExec<T> exec = new ExpExec<T>("pojo");
     private final boolean isCaseSensitive;
@@ -129,13 +129,12 @@ public class PojoValueMatcher<T extends AbstractEntity> implements IValueMatcher
     }
 
     @Override
-    public void setFetchModel(final fetch fetchModel) {
+    public <FT extends AbstractEntity<?>> ua.com.fielden.platform.entity.query.fetch<FT> getFetchModel() {
 	throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
     }
 
     @Override
-    public fetch<?> getFetchModel() {
+    public <FT extends AbstractEntity<?>> void setFetchModel(final ua.com.fielden.platform.entity.query.fetch<FT> fetchModel) {
 	throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
     }
-
 }

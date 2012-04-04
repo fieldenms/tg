@@ -7,10 +7,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.FirstLevelSecurityToken1;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
-import ua.com.fielden.platform.dao2.ISecurityRoleAssociationDao2;
-import ua.com.fielden.platform.dao2.IUserAndRoleAssociationDao2;
-import ua.com.fielden.platform.dao2.IUserRoleDao2;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
+import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
+import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
@@ -25,9 +25,9 @@ import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
-import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake2;
-import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel2;
-import ua.com.fielden.platform.security.user.IUserDao2;
+import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
+import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
+import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -43,15 +43,15 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
-    private final ITgVehicleModel2 vehicleModelDao = getInstance(ITgVehicleModel2.class);
-    private final ITgVehicleMake2 vehicleMakeDao = getInstance(ITgVehicleMake2.class);
+    private final ITgVehicleModel vehicleModelDao = getInstance(ITgVehicleModel.class);
+    private final ITgVehicleMake vehicleMakeDao = getInstance(ITgVehicleMake.class);
     private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
-    private final IUserDao2 userDao = getInstance(IUserDao2.class);
-    private final IUserRoleDao2 userRoleDao = getInstance(IUserRoleDao2.class);
-    private final IUserAndRoleAssociationDao2 userAndRoleAssociationDao = getInstance(IUserAndRoleAssociationDao2.class);
-    private final IEntityAggregatesDao2 aggregateDao = getInstance(IEntityAggregatesDao2.class);
+    private final IUserDao userDao = getInstance(IUserDao.class);
+    private final IUserRoleDao userRoleDao = getInstance(IUserRoleDao.class);
+    private final IUserAndRoleAssociationDao userAndRoleAssociationDao = getInstance(IUserAndRoleAssociationDao.class);
+    private final IEntityAggregatesDao aggregateDao = getInstance(IEntityAggregatesDao.class);
 
-    private final ISecurityRoleAssociationDao2 secRolAssociationDao = getInstance(ISecurityRoleAssociationDao2.class);
+    private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
 
     @Test
     public void test1() {

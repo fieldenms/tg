@@ -31,7 +31,7 @@ import org.jdesktop.swingx.VerticalLayout;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.basic.IValueMatcher2;
-import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher2;
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.components.bind.development.Binder;
@@ -326,7 +326,7 @@ public class EntityView {
 	    panel.add(createPropertyPanel(commitOnValidRadioButtonOKT, null, commitOnValidRadioButtonOTC, new JLabel("")));
 
 	    final String keyExpression = "key";
-	    final IValueMatcher2<DemoAbstractEntity> matcher = new PojoValueMatcher2<DemoAbstractEntity>(Arrays.asList(acceptableValues), keyExpression, 10) {
+	    final IValueMatcher2<DemoAbstractEntity> matcher = new PojoValueMatcher<DemoAbstractEntity>(Arrays.asList(acceptableValues), keyExpression, 10) {
 		@Override
 		public List<DemoAbstractEntity> findMatches(final String value) {
 		    try {

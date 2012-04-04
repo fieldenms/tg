@@ -1,12 +1,10 @@
 package ua.com.fielden.platform.ui.config.impl.interaction;
 
-import static ua.com.fielden.platform.equery.equery.select;
-
 import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -19,11 +17,14 @@ import ua.com.fielden.platform.ui.config.api.interaction.ILocatorConfigurationCo
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+
 /**
  * Remote implementation of {@link ILocatorConfigurationController}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class RemoteLocatorConfigurationController implements ILocatorConfigurationController {
 
@@ -99,7 +100,7 @@ public class RemoteLocatorConfigurationController implements ILocatorConfigurati
 
 	final User user = userProvider.getUser().isBase() ? userProvider.getUser() : userProvider.getUser().getBasedOnUser();
 
-	final IQueryModel<EntityLocatorConfig> model = select(EntityLocatorConfig.class).where().prop("owner").eq().val(user).and().prop("locatorType").eq().val(key).model();
+	final EntityResultQueryModel<EntityLocatorConfig> model = select(EntityLocatorConfig.class).where().prop("owner").eq().val(user).and().prop("locatorType").eq().val(key).model();
 	return lccController.count(model) > 0;
     }
 
@@ -136,5 +137,4 @@ public class RemoteLocatorConfigurationController implements ILocatorConfigurati
     public Result canConfigure(final String locatorKey) {
 	return canSave(locatorKey);
     }
-
 }

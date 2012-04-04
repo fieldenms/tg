@@ -11,7 +11,7 @@ import ua.com.fielden.platform.swing.menu.TreeMenuWithTabs;
 import ua.com.fielden.platform.swing.menu.api.ITreeMenuFactory;
 import ua.com.fielden.platform.swing.menu.api.ITreeMenuItemFactory;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController2;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
 import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
 import ua.com.fielden.platform.ui.config.impl.interaction.RemoteCentreConfigurationController;
@@ -31,7 +31,7 @@ public class RemoteTreeMenuFactory implements ITreeMenuFactory {
     private final TreeMenuWithTabs menu;
     private final Injector injector;
     private final ITreeMenuItemFactory defaultFactory;
-    private final IEntityCentreConfigController2 eccController;
+    private final IEntityCentreConfigController eccController;
     private final IUserProvider userProvider;
     private final IMainMenuItemInvisibilityController mmiController;
 
@@ -40,7 +40,7 @@ public class RemoteTreeMenuFactory implements ITreeMenuFactory {
 	this.menu = menu;
 	this.injector = injector;
 	this.defaultFactory = new DefaultTreeMenuItemFactory();
-	this.eccController = injector.getInstance(IEntityCentreConfigController2.class);
+	this.eccController = injector.getInstance(IEntityCentreConfigController.class);
 	this.userProvider = injector.getInstance(IUserProvider.class);
 	this.mmiController = injector.getInstance(IMainMenuItemInvisibilityController.class);
     }

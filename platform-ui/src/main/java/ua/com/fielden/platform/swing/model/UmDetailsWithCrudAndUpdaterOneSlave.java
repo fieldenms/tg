@@ -6,7 +6,7 @@ import java.util.Map;
 
 import javax.swing.Action;
 
-import ua.com.fielden.platform.dao2.IMasterDetailsDao2;
+import ua.com.fielden.platform.dao.IMasterDetailsDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
@@ -33,7 +33,7 @@ import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
  * @param <D>
  * @param <C>
  */
-public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C extends IMasterDetailsDao2<M, D>> extends UmDetailsWithCrudAndUpdaterOne<M, D, C> {
+public abstract class UmDetailsWithCrudAndUpdaterOneSlave<M extends AbstractEntity<?>, D extends AbstractEntity<?>, C extends IMasterDetailsDao<M, D>> extends UmDetailsWithCrudAndUpdaterOne<M, D, C> {
 
     private final UmDetailsWithCrudAndUpdaterOne<M, D, C> masterModel;
 

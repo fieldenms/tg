@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -22,7 +22,7 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
     @SuppressWarnings("unchecked")
     @Override
     public void handle(final MetaProperty property, final Object entityPropertyValue) {
-	final EntityQueryCriteria<CDTME, T, IEntityDao2<T>> entity = (EntityQueryCriteria<CDTME, T, IEntityDao2<T>>)property.getEntity();
+	final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity = (EntityQueryCriteria<CDTME, T, IEntityDao<T>>)property.getEntity();
 	final IAddToCriteriaTickManager ftm = entity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	final Class<T> root = entity.getEntityClass();
 	final boolean isSecond = CriteriaReflector.isSecondParam(entity.getType(), property.getName());

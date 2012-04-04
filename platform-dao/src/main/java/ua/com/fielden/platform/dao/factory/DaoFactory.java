@@ -19,7 +19,7 @@ public class DaoFactory implements IDaoFactory {
     protected DaoFactory() {
     }
 
-    public IEntityDao<?> newDao(final Class<? extends AbstractEntity> entityType) {
+    public IEntityDao<?> newDao(final Class<? extends AbstractEntity<?>> entityType) {
 	final DynamicEntityDao dao = injector.getInstance(DynamicEntityDao.class);
 	dao.setEntityType(entityType);
 	return dao;

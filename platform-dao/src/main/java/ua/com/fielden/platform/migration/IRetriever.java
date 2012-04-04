@@ -7,7 +7,6 @@ import org.hibernate.SessionFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.migration.MigrationRun;
 import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 
@@ -17,7 +16,7 @@ import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
  * @author TG Team
  *
  */
-public interface IRetriever<T extends AbstractEntity> {
+public interface IRetriever<T extends AbstractEntity<?>> {
     /**
      * Should provide an SQL for selection of data from a legacy database. The convention:
      * <ul>

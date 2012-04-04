@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import ua.com.fielden.platform.dao2.QueryExecutionModel;
-import ua.com.fielden.platform.dao2.QueryExecutionModel.Builder;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;

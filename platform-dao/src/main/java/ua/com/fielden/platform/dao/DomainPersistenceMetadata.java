@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao2;
+package ua.com.fielden.platform.dao;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
 
-import ua.com.fielden.platform.dao2.PropertyPersistenceInfo.PropertyPersistenceType;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;

@@ -5,8 +5,8 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.EntityWithDynamicCompositeKeyDao2;
-import ua.com.fielden.platform.dao.EntityWithMoneyDao2;
+import ua.com.fielden.platform.dao.EntityWithDynamicCompositeKeyDao;
+import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -33,8 +33,8 @@ import static org.junit.Assert.assertTrue;
  *
  */
 public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
-    private final EntityWithMoneyDao2 dao = getInstance(EntityWithMoneyDao2.class);
-    private final EntityWithDynamicCompositeKeyDao2 daoComposite = getInstance(EntityWithDynamicCompositeKeyDao2.class);
+    private final EntityWithMoneyDao dao = getInstance(EntityWithMoneyDao.class);
+    private final EntityWithDynamicCompositeKeyDao daoComposite = getInstance(EntityWithDynamicCompositeKeyDao.class);
 
     @Test
     public void testThatNullCannotBeAssigned() throws Exception {

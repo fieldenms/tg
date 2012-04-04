@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao2;
+package ua.com.fielden.platform.dao;
 
 import java.util.HashMap;
 import java.util.Map;

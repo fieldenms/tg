@@ -10,8 +10,8 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.snappy.ISnappyDao;
 import ua.com.fielden.platform.snappy.SnappyQuery;

@@ -16,7 +16,7 @@ import ua.com.fielden.platform.example.dynamiccriteria.ao.SimpleECEEntityDao;
 import ua.com.fielden.platform.example.dynamiccriteria.iao.INestedEntityDao;
 import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleCompositeEntityDao;
 import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleECEEntityDao;
-import ua.com.fielden.platform.ioc.BasicWebServerModule2;
+import ua.com.fielden.platform.ioc.BasicWebServerModule;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.swing.review.EntityMasterManager;
@@ -24,7 +24,7 @@ import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 
 import com.google.inject.Scopes;
 
-public class EntityCentreExampleModule extends BasicWebServerModule2{
+public class EntityCentreExampleModule extends BasicWebServerModule{
 
 
     public EntityCentreExampleModule(//

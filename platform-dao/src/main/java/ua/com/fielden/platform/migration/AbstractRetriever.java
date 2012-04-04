@@ -25,7 +25,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.annotations.Transactional;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.equery.fetchAll;
+import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
@@ -43,7 +43,7 @@ import com.google.inject.Inject;
  *
  * @param <T>
  */
-public abstract class AbstractRetriever<T extends AbstractEntity> implements IRetriever<T> {
+public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements IRetriever<T> {
     private final Logger logger = Logger.getLogger(this.getClass());
     protected final IEntityDao<T> dao;
     @Inject
@@ -396,7 +396,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity> implements IRe
 	} else if (hasPvr(propName)) {
 	    return findValue(propName, propValue);
 	} else if (AbstractEntity.class.isAssignableFrom(propType)) {
-	    dynamicDao.setEntityType((Class<? extends AbstractEntity>) propType);
+	    dynamicDao.setEntityType((Class<? extends AbstractEntity<?>>) propType);
 	    final Object foundEntity = dynamicDao.findByKey(propValue);
 	    if (foundEntity != null) {
 		return foundEntity;

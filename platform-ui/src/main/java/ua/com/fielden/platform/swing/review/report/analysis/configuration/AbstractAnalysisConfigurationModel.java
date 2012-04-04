@@ -4,7 +4,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
 
-import ua.com.fielden.platform.dao2.IEntityDao2;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.Command;
@@ -17,7 +17,7 @@ import ua.com.fielden.platform.swing.review.report.interfaces.IAnalysisConfigura
 
 public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractConfigurationModel {
 
-    private final EntityQueryCriteria<CDTME, T, IEntityDao2<T>> criteria;
+    private final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria;
 
     /**
      * The page holder for this analysis.
@@ -39,7 +39,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
      */
     private final String name;
 
-    public AbstractAnalysisConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao2<T>> criteria, final String name){
+    public AbstractAnalysisConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final String name){
 	this.criteria = criteria;
 	this.name = name;
 	this.pageHolder = new PageHolder();
@@ -75,7 +75,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
      *
      * @return
      */
-    public EntityQueryCriteria<CDTME, T, IEntityDao2<T>> getCriteria() {
+    public EntityQueryCriteria<CDTME, T, IEntityDao<T>> getCriteria() {
 	return criteria;
     }
 

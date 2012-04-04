@@ -4,8 +4,8 @@ import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
-import ua.com.fielden.platform.dao2.IEntityDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
@@ -20,7 +20,7 @@ import ua.com.fielden.platform.swing.view.IEntityMasterCache;
  * @param <T>
  * @param <C>
  */
-public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity<?>, C extends IEntityDao2<T>> extends UmMasterWithCrud<T, C> {
+public abstract class UmMasterWithCrudAndUpdater<T extends AbstractEntity<?>, C extends IEntityDao<T>> extends UmMasterWithCrud<T, C> {
     private final FrameTitleUpdater titleUpdater;
     private final IUmViewOwner owner;
 

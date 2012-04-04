@@ -9,17 +9,15 @@ import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.AttachmentDao;
-import ua.com.fielden.platform.dao.EntityAggregatesDao;
 import ua.com.fielden.platform.dao.EntityAttachmentAssociationDao;
 import ua.com.fielden.platform.dao.IDaoFactory;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumberGenerator;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
@@ -108,7 +106,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
 	// bind DAO and any other implementations of the required application controllers
 	bind(IFilter.class).to(automaticDataFilterType); // UserDrivenFilter.class
-	bind(IEntityAggregatesDao.class).to(EntityAggregatesDao.class);
 	bind(IKeyNumberGenerator.class).to(KeyNumberDao.class);
 
 	bind(IAttachmentController.class).to(AttachmentDao.class);
@@ -137,7 +134,5 @@ public class BasicWebServerModule extends CommonFactoryModule {
 	// bind value matcher factory to support autocompleters
 	bind(IDaoFactory.class).toInstance(getDaoFactory());
 	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
-
     }
-
 }

@@ -12,7 +12,7 @@ import org.restlet.data.Response;
 import org.restlet.data.Status;
 import org.restlet.resource.Representation;
 
-import ua.com.fielden.platform.dao2.IUserRoleDao2;
+import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.rao.WebResourceType;
@@ -33,10 +33,10 @@ import com.google.inject.Inject;
 public class SecurityTokenControllerRao implements ISecurityTokenController {
 
     private final RestClientUtil restUtil;
-    private final IUserRoleDao2 userRoleDao;
+    private final IUserRoleDao userRoleDao;
 
     @Inject
-    public SecurityTokenControllerRao(final IUserRoleDao2 userRoleDao, final RestClientUtil restUtil) {
+    public SecurityTokenControllerRao(final IUserRoleDao userRoleDao, final RestClientUtil restUtil) {
 	this.restUtil = restUtil;
 	this.userRoleDao = userRoleDao;
     }

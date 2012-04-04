@@ -13,7 +13,7 @@ import org.restlet.Router;
 import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.ClientAuthenticationModel;
-import ua.com.fielden.platform.security.provider.IUserController2;
+import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -192,7 +192,7 @@ public class RequestAuthenticationTestCase extends WebBasedTestCase {
 	// setup resource guard for the whole router
 	final ResourceGuard guard = new ResourceGuard(getContext(), "Test", config.restServerUtil(), config.injector()) {
 	    @Override
-	    protected IUserController2 getController() {
+	    protected IUserController getController() {
 		return controller;
 	    }
 	};
@@ -204,7 +204,7 @@ public class RequestAuthenticationTestCase extends WebBasedTestCase {
 	config.restServerUtil().setAppWidePublicKey(appWidePublicKey);
 	mainRouter.attach(authenticationUri, new UserAuthResourceFactory(DbDrivenTestCase2.injector, config.restServerUtil()) {
 	    @Override
-	    protected IUserController2 getController() {
+	    protected IUserController getController() {
 		return controller;
 	    }
 	});

@@ -12,6 +12,8 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.StringRepresentation;
 import org.restlet.resource.Variant;
 
+import ua.com.fielden.platform.dao.IEntityDao;
+
 /**
  * Provides information about the application.
  *
@@ -59,7 +61,7 @@ public class InfoResource extends Resource {
     }
 
     /**
-     * Handles GET requests resulting from RAO call to IEntityDao.findById
+     * Handles GET requests resulting from RAO call to {@link IEntityDao#findById(Long)}.
      */
     @Override
     public Representation represent(final Variant variant) {

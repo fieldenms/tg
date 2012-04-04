@@ -4,16 +4,20 @@ import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.attachment.IAttachmentController;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.fetchAll;
-import ua.com.fielden.platform.equery.interfaces.IFilter;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fetchAll;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
-import static ua.com.fielden.platform.equery.equery.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 
 /**
  * This is a default DAO implementation for managing association between attachments and entities.
@@ -39,8 +43,9 @@ public class EntityAttachmentAssociationDao extends CommonEntityDao<EntityAttach
 
     @Override
     public IPage<EntityAttachmentAssociation> findDetails(final AbstractEntity<?> masterEntity, final fetch<EntityAttachmentAssociation> model, final int pageCapacity) {
-	final IQueryOrderedModel<EntityAttachmentAssociation> q = select(EntityAttachmentAssociation.class).where().prop("entityId").eq().val(masterEntity.getId()).orderBy("attachment.key").model();
-	return new SinglePage<EntityAttachmentAssociation>(getEntities(q, new fetchAll<EntityAttachmentAssociation>(EntityAttachmentAssociation.class)));
+	final EntityResultQueryModel<EntityAttachmentAssociation> q = select(EntityAttachmentAssociation.class).where().prop("entityId").eq().val(masterEntity).model();
+	final OrderingModel ordering = orderBy().prop("attachment.key").asc().model();
+	return new SinglePage<EntityAttachmentAssociation>(getAllEntities(from(q).with(ordering).with(new fetchAll<EntityAttachmentAssociation>(EntityAttachmentAssociation.class)).build()));
     }
 
     @Override
@@ -57,5 +62,4 @@ public class EntityAttachmentAssociationDao extends CommonEntityDao<EntityAttach
     public void delete(final EntityAttachmentAssociation entity) {
         defaultDelete(entity);
     }
-
 }
