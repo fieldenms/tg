@@ -69,4 +69,271 @@
   Module \texttt{coolapp-pojo-bl} is used for defining all domain entity types, validation and controller contracts that model the business domain for which the application is being constructed.
   Each domain entity type is associated with a corresponding CRUD (Create Request Update Delete) controller contract, which serves as the primary way to interact with domain entities.
   The \texttt{coolapp-rao} and \texttt{coolapp-dao} module fulfil client and server side implementation of domain controllers respectively.
-  All essential functionality for CRUD controllers is provided by the platform, and is reused by sub-typing corresponding platform classes\footnote{Later chapters provide all details on how this is done, how to properly reuse and customise provided functionality.}.
+  All essential functionality for CRUD controllers is provided by the platform, and is reused by sub-typing corresponding platform classes.\footnote{Later chapters provide all details on how this is done, how to properly reuse and customise provided functionality.}.
+  There are guidelines as to what logic is better suited for the client side and what for the server side of the applicaton.
+  These are provided in later chapters of this book.  
+
+\section{Quick changes}
+
+  In order to provide a sense of what it is like to change TG-based application let's consider one of the entity types, which is provided as part of the generated application -- \emph{Person} -- listed in Listing~\ref{lst:Person}.
+
+ \lstset{language=Java,
+	  escapechar=\%,
+	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
+  \begin{code}{A fragment of entity type Person}{\label{lst:Person}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(String.class)
+@KeyTitle(value = "Person Code", desc = "A code uniquely representing a person.")
+@DescTitle(value = "Description", desc = "A short description...")
+@MapEntityTo("CRAFT")
+@DefaultController(IPerson.class)
+public class Person extends AbstractEntity<String> {
+    .....................
+    @IsProperty
+    @Title(value = "Username", desc = "Application user name")
+    @MapTo("USER_NAME")
+    private String username;
+    .....................
+}
+    \end{lstlisting}
+  \end{code}
+  
+  The purpose of entity Person is to model a concept of a person that is either using the application or needs referenced by any other domain entity, which might be required by some business process implemented in the application.
+  The platform provides a concept of the application user, which is implemented by entity \emph{User}.
+  This entity is an integral part of the platform and cannot be changed in any derived application\footnote{More detailed on entity User is provided as part of security related chapter.}.
+  The Person entity reuses this User concept by sharing some of its properties.
+  Specifically, property \emph{username} and \emph{password}.
+  This way Person and User fuse together, which is not required, but convenient.  
+
+\subsection{Attributes for Entity and its Properties}
+  Any custom Java type that subtypes \emph{AbstractEntity} is an entity from platform perspective.
+  Type AbstractEntity is very rich in its functionality and provides full support for modeling a wide variety of business domain entities.
+  It is discussed in great details further in the book.
+  So, here we just touch on some of the aspects of domain entity modeling.
+
+  Domain entities may have \emph{simple} or \emph{composite} (more than property is involved) business key, which uniquely identifies each entity instance.
+  Entity Person has a simple business key of type String, which is specified by annotation \emph{KeyType}  and \emph{AbstractEnity} type parameter as can be observed in Listing~\ref{lst:Person} at lines 1 and 6.
+  
+  Each property of domain entities can be provided with a user friendly title and description, which is used by the system when building UI or reporting warnings/errors.
+  This is done by annotating property representing fields with annotation \emph{Title} such as depicted in Listing~\ref{lst:Person} at line 9.
+  However, property \emph{key}, which implements the business key concept, is declared at the AbstractEntity level, and thus not accessible for modification from custom types such as Person.
+  Another inherited property is \emph{desc}, which represents a description for an entity instance.
+  
+  In order to provide uniform customisation capabilities for all entity properties, special entity type annotations \emph{KeyTitle} and \emph{DescTitle} are provided and should be used in a way depicted in Listing~\ref{lst:Person} at lines 2 and 3.
+  
+  \paragraph*{Property title change.}
+  Let's change the description of property \emph{username} from \texttt{Username} to \texttt{Login Name}, and description from \texttt{Application user name} to \texttt{A name, which is used for loging into the application}.
+  In order to do this, locate type Person by pressing the key combination \texttt{Ctrl+Shift+T} to invoke \emph{Open Type} dialog and type \emph{Person} (refer Fig.~\ref{img:ch00:03:open-type-dialog}), which should quickly locate the required type.
+
+  \begin{image}{Open Type Dialog}{\label{img:ch00:03:open-type-dialog}}
+    \includegraphics[width=0.6\textwidth]{parts/00-part/chapters/02-making-changes/images/01-open-type-person.png}
+  \end{image}
+
+  Open the type, make the changes in the code editor and save your them.
+  In order to see the effect run the application from Eclipse IDE.
+  This requires starting both the server (if it is not already running) and the client applications.
+  The client application needs to be restarted is it was running at the time of changes in order to reload the recompiled classes.
+  Although, the modified classes are shared between client and server applications, their reloading by the server is not essential as the performed changes effect only the client side.
+  
+  Once the client is up and running, go to \emph{Table Codes}$\longrightarrow$\emph{Personnel} and observer the affect of your changes, which should be obvious in the grid, selection criteria panel and in the configuration domain tree (can be invoked by clicking the \emph{Configure} button on Personnel Centre).
+  
+\subsection{Enhance Person and Test Your Changes}
+  Let's now make some more serious changes. 
+  
+  \subsubsection*{The scenario.} 
+  The following items should serve as a mini specification of the business rules for personnel enhancement.
+  
+  \begin{enumerate}
+    \item Entity Person should be provided with a non-mandatory property \texttt{birthday}.
+    \item This new property should be validated upon entry or change: 
+	\begin{enumerate}
+	  \item if the birth date value indicates that a person is too young (younger than 23 years of age) then a warning should be produced, but the value should be accepted;
+	  \item no future birth dates should be accept.
+	\end{enumerate}
+  \end{enumerate}
+
+  \subsubsection*{Implementing the requirements.}
+
+  \paragraph*{Adding property.} 
+  If the Eclipse IDE was property setup with TG templates, then creation of a new property is trivial.
+  Type \texttt{tgp} and hit \emph{Ctrl+Space} in the code editor of type Person under the last available property.
+  This should result in the dialog depicted in Fig.~\ref{img:ch00:03:gen-prop-template}, which should be used to select option \texttt{tgprop} for property template generation.
+
+  \begin{image}{TG Property Templates Dialog}{\label{img:ch00:03:gen-prop-template}}
+    \includegraphics[width=0.8\textwidth]{parts/00-part/chapters/02-making-changes/images/02-birthday-property-gen.png}
+  \end{image}
+
+  The generation result is depicted in Fig.~\ref{img:ch00:03:prop-template}.
+  Right after generation, the template is in edit mode, which means that all of its parts can be conveniently edited and navigated between using the \texttt{Tab} key.
+  The first selected word is \emph{Title}, without moving the keyboard cursor or clicking anywhere with the mouse, start typing the new title \texttt{Birthday}.
+  Hit the \texttt{Tab} key to move to the \texttt{desc} attribute and type \texttt{The date when person was born}.
+  Hit the \texttt{Tab} key again to move to the \texttt{type} part and type \texttt{Date} to specify the property type.
+  Hit the \texttt{Tab} key to move to the \texttt{name} and type \texttt{birthday} to give the property a field name.
+  The next \texttt{Tab} will move the cursor to the setter name between the word \texttt{set} and \texttt{birthday}.
+  Hit \texttt{Enter} to confirm changes.
+  At this stage both setter and getter have the \texttt{birthday} portion starting with small \texttt{b}.
+  Change it to be a capital \texttt{B}, so that the setter read \texttt{setBirthday} and getter read \texttt{getBirthday}.
+
+  \begin{image}{TG Property Temple}{\label{img:ch00:03:prop-template}}
+    \includegraphics[width=0.4\textwidth]{parts/00-part/chapters/02-making-changes/images/03-birthday-property-template.png}
+  \end{image}
+
+  The final look of the property is provided in Listing~\ref{lst:Person-birthday}.
+  Please note the return type of the setter, which matches the enclosing type Person.
+  This is done to support method chaining, which is so convenient when creating new or modifying existing entity instances.
+
+  \begin{code}{Property \texttt{birthday}}{\label{lst:Person-birthday}}{codebgcolor}
+    \begin{lstlisting}
+    @IsProperty
+    @MapTo
+    @Title(value = "Birthday", desc = "The date when person was born")
+    private Date birthday;
+    
+    @Observable
+    public Person setBirthday(final Date birthday) {
+      this.birthday = birthday;
+      return this;
+    }
+    
+    public Date getBirthday() {
+      return birthday;
+    }
+    \end{lstlisting}
+  \end{code}
+
+  \paragraph*{Implementing validation.}
+  The platform provides a sophisticated support for handling property before change events.
+  This support, albeit in its simplest form, is demonstrated here for implementing birthday validation rules.
+
+  First, annotate property \texttt{birthday} with \texttt{BeforeChange} as illustrated in Listing~\ref{lst:Person-birthday-beforechange} on line 3.
+  The \texttt{Handler} is provided with value \texttt{BirthdayValidator.class}, which indicates the name of the wouldbe validator.
+  This validator needs to be created.
+
+  \begin{code}{BeforeChange declaration}{\label{lst:Person-birthday-beforechange}}{codebgcolor}
+    \begin{lstlisting}
+    @IsProperty
+    @MapTo
+    @BeforeChange(@Handler(BirthdayValidator.class))
+    @Title(value = "Birthday", desc = "The date when person was born")
+    private Date birthday;
+    \end{lstlisting}
+  \end{code}
+
+  Eclipse provides an easy way to generate the stub by clicking the error mark on the left margin of the editor and selecting option \emph{Create class 'BirthdayValidator'} as depicted in Fig.~\ref{img:ch00:03:gen-validator-class}.
+  By default the invoked class\footnote{Please note that this time we're creating a new class that would provide the validation logic, but generally speaking it could also be an interface with customer specific binding that would happen at the project assembly phase.} creating wizard would offer to place it into the same package and the class where wizard was initiated.
+  It is best if validators are kept in a separate to entities package in order to better organise the project structure.
+  Thus, in the wizard change the package value from \texttt{fielden.personel} to \texttt{fielden.personel.validation}.
+
+  \begin{image}{TG Property Temple}{\label{img:ch00:03:gen-validator-class}}
+    \includegraphics[width=\textwidth]{parts/00-part/chapters/02-making-changes/images/04-create-validator.png}
+  \end{image}
+
+  The generated class is an empty class, which does not explicitly extend any other class or implement any contracts\footnote{The term \emph{contract} is used in this book instead of the word \emph{interface} in order not to mix things up when taking about user interfaces and the interface, which is a contract that some class implements.}.
+  In order for this class to become a proper \emph{before change event handler}, it needs to implement contract \texttt{IBeforeChangeEventHandler}, which requires one type parameter that should match the type of the property.
+  In this case, it would be \texttt{Date} to match the type of property \texttt{birthday}.
+  The contract demands implementation of only one method \texttt{handle} that would provide the necessary validation logic.
+  
+  The test-first approach works really well when implementing business logic, which ensures both the correctness of the business logic and the quickest possible implementation time by navigating the development effort along the requirements captured tests.
+  Thus, let's first provide stub implementation for the handler class as illustrated in Listing~\ref{lst:Person-birthday-validation-stub}, and then implement the test that would define that should happen during birthday validation.  
+  
+ \begin{code}{Birthday validation logic stub}{\label{lst:Person-birthday-validation-stub}}{codebgcolor}
+    \begin{lstlisting}
+public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
+
+    @Override
+    public Result handle(final MetaProperty property, 
+			 final Date newValue, final Date oldValue, 
+			 final Set<Annotation> mutatorAnnotations) {
+	return Result.successful(newValue);
+    }
+}
+    \end{lstlisting}
+  \end{code}
+
+  
+  The generated application conveniently provides an example of a domain-driven unit test case for entity Person.
+  Open test case \texttt{PersonnelTest} by using the \emph{Open Type} dialog as before in the editor, and without explaining too much of the existing code add the two tests from Listings~\ref{lst:Person-birthday-validation-test-1} and ~\ref{lst:Person-birthday-validation-test-2}.
+
+ \begin{code}{Personnel younger 23 should produce warning}{\label{lst:Person-birthday-validation-test-1}}{codebgcolor}
+    \begin{lstlisting}
+@Test
+public void birthday_should_produce_warning_and_be_saved() {	
+  final Person person = ao(Person.class).
+			findByKey("USER2").
+			setBirthday(date("2000-01-01 10:10:00"));	
+
+  assertTrue("Should be valid", 
+             person.getProperty("birthday").isValid());
+  assertNotNull("Should have warning", 
+                person.getProperty("birthday").getFirstWarning());
+
+  ao(Person.class).save(person);
+
+  assertEquals("Should have been saved.", 
+	       date("2000-01-01 10:10:00"), 
+               ao(Person.class).findByKey("USER2").getBirthday());
+}
+    \end{lstlisting}
+  \end{code}
+
+  Both test rely on the fact that test data contains a person with business key equals to \emph{USER2} and property \texttt{birthday} that has no value (i.e. it is null).
+  The first test ensures rule \emph{2.a} that if the birth date suggests a person younger than 23 years of age then a warning should be raised, but the value is recognised as valid and saved when requested.
+  The second test ensures rule \emph{2.b} that no future birth dates are acceptable, and thus are not saved.
+  Running these tests by pressing \texttt{Ctrl+F11} combination should result in failure of both tests\footnote{One existing test should succeed.}.
+  This means we need to keep coding the validation rules until both of these tests are successful.
+  Before moving further in the text, please try to implement the validation rules to make the tests pass.
+  
+\begin{code}{Unborn personnel is not acceptable}{\label{lst:Person-birthday-validation-test-2}}{codebgcolor}
+    \begin{lstlisting}
+@Test
+public void birthday_should_produce_error_and_not_be_saved() {	
+  final Person person = ao(Person.class).
+			findByKey("USER2").
+			setBirthday(new DateTime().plusYears(1).toDate());	
+
+  assertFalse("Should be invalid", 
+              person.getProperty("birthday").isValid());
+
+  ao(Person.class).save(person);
+
+  assertNull("Should have not been saved.", 
+             ao(Person.class).findByKey("USER2").getBirthday());
+}
+    \end{lstlisting}
+  \end{code}
+
+ Listing~\ref{lst:Person-birthday-validation} provides a complete validation logic that satisfies all the requirements.
+
+
+ \begin{code}{Birthday validation logic}{\label{lst:Person-birthday-validation}}{codebgcolor}
+    \begin{lstlisting}
+public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
+
+    @Override
+    public Result handle(final MetaProperty property, 
+			 final Date newValue, final Date oldValue, 
+			 final Set<Annotation> mutatorAnnotations) {
+	if (newValue != null) {
+	    // let's use Joda Time for intermediate calculations
+	    final DateTime date = new DateTime(newValue);
+	    // reject future dates 
+	    if (date.isAfterNow()) {
+		return new Result(newValue, 
+	                          new IllegalArgumentException("Cannot be in future."));
+	    }
+	    // warn is younger than 23 years of age 
+	    if (date.isAfter(new DateTime().minusYears(23))) {
+		return new Warning("The person is potentially too young.");
+	    }
+	}	
+	
+	return Result.successful(newValue);
+    }
+}
+    \end{lstlisting}
+  \end{code}
+
+  The next step is to observe our changes in the actual application.
+
+
+\subsection{Running Modified Application}
