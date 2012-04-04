@@ -1,57 +1,56 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
-import static ua.com.fielden.platform.equery.equery.select;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.basic.IValueMatcher2;
+import ua.com.fielden.platform.dao.IEntityAggregatesDao2;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.SyntheticEntity;
-import ua.com.fielden.platform.equery.EntityAggregates;
-import ua.com.fielden.platform.equery.fetch;
-import ua.com.fielden.platform.equery.interfaces.IQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  *
  * @author oleh
  *
  */
-public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregates> {
+public class SyntheticEntityValueMatcher implements IValueMatcher2<EntityAggregates> {
 
-    private final IEntityAggregatesDao entityAggregatesDao;
-    private final IQueryOrderedModel<EntityAggregates> defaultModel;
+    private final IEntityAggregatesDao2 entityAggregatesDao;
+    private final AggregatedResultQueryModel defaultModel;
     private final String propertyParamName = "propertyNameFor_key";
 
     private int pageSize = 10;
 
-    public SyntheticEntityValueMatcher(final IEntityAggregatesDao entityAggregatesDao, final Class<? extends SyntheticEntity> syntheticEntityClass) {
+    public SyntheticEntityValueMatcher(final IEntityAggregatesDao2 entityAggregatesDao, final Class<? extends SyntheticEntity> syntheticEntityClass) {
 	this.entityAggregatesDao = entityAggregatesDao;
 
 	final List<Field> properties = Finder.findProperties(syntheticEntityClass);
 	properties.remove(Finder.getFieldByName(syntheticEntityClass, AbstractEntity.DESC));
 	final List<Field> keys = Finder.getKeyMembers(syntheticEntityClass);
 	properties.removeAll(keys);
-	final List<IQueryModel<EntityAggregates>> propertiesModels = new ArrayList<IQueryModel<EntityAggregates>>();
+	final List<AggregatedResultQueryModel> propertiesModels = new ArrayList<AggregatedResultQueryModel>();
 	for (final Field propertyField : properties) {
 	    if (AbstractEntity.class.isAssignableFrom(propertyField.getType())) {
 		propertiesModels.add(createQueryModelFor(propertyField));
 	    }
 	}
 	if (propertiesModels.size() > 0) {
-	    defaultModel = select(propertiesModels.toArray(new IQueryModel[propertiesModels.size()])).yieldProp("key").yieldProp("desc").model(EntityAggregates.class);
-	} else {
+	    defaultModel = select(propertiesModels.toArray(new AggregatedResultQueryModel[propertiesModels.size()])).yield().prop("key").as("key").yield().prop("desc").as("desc").modelAsAggregate();
+	    } else {
 	    defaultModel = null;
 	}
     }
 
-    private IQueryModel<EntityAggregates> createQueryModelFor(final Field propertyField) {
+    private AggregatedResultQueryModel createQueryModelFor(final Field propertyField) {
 	if (!AbstractEntity.class.isAssignableFrom(propertyField.getType())) {
 	    return null;
 	}
@@ -61,7 +60,7 @@ public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregat
 	    propertyName += ".key";
 	    propertyType = PropertyTypeDeterminator.determinePropertyType(propertyType, "key");
 	}
-	return select((Class<AbstractEntity>) propertyField.getType()).where().prop(propertyName).like().param(propertyParamName).yieldProp(propertyName, "key").yieldProp("desc").model(EntityAggregates.class);
+	return select((Class<AbstractEntity>) propertyField.getType()).where().prop(propertyName).like().param(propertyParamName).yield().prop(propertyName).as("key").yield().prop("desc").as("desc").modelAsAggregate();
     }
 
     private fetch createJoinModel(final Class<? extends AbstractEntity> clazz) {
@@ -74,8 +73,7 @@ public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregat
 
     @Override
     public List<EntityAggregates> findMatches(final String value) {
-	defaultModel.setParamValue(propertyParamName, value);
-	return entityAggregatesDao.getPage(defaultModel, null, 0, pageSize).data();
+	return entityAggregatesDao.getPage(from(defaultModel).with(propertyParamName, value).build(), 0, pageSize).data();
     }
 
     @Override

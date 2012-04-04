@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
@@ -394,6 +395,16 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).build()).size());
     }
 
+    @Test
+    public void test_mutiple_queries_as_query_source() {
+	final EntityResultQueryModel<TgVehicleModel> sourceModel1 = select(TgVehicleModel.class).where().prop("key").eq().val("316").model();
+	final EntityResultQueryModel<TgVehicleModel> sourceModel2 = select(TgVehicleModel.class).where().prop("key").eq().val("317").model();
+	final EntityResultQueryModel<TgVehicleModel> model = select(sourceModel1, sourceModel2).where().prop("key").in().values("316", "317").model();
+	final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(model).with(orderBy().prop("key").asc().model()).build());
+	assertEquals("Incorrect key", "316", models.get(0).getKey());
+	assertEquals("Incorrect key", "317", models.get(1).getKey());
+    }
+
 
     @Override
     protected void populateDomain() {
@@ -412,6 +423,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
 	final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").setModel(m318).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
 	final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")));
+
+	save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
 
 	save(new_(TgFuelUsage.class, car2, date("2008-02-09 00:00:00")).setQty(new BigDecimal("100")));
 	save(new_(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")));

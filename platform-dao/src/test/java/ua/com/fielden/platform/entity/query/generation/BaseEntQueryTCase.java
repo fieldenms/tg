@@ -37,6 +37,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
@@ -52,6 +53,7 @@ import static org.junit.Assert.assertTrue;
 public class BaseEntQueryTCase {
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
     protected static final Class<TgVehicle> VEHICLE = TgVehicle.class;
+    protected static final Class<TgVehicleFinDetails> VEHICLE_FIN_DETAILS = TgVehicleFinDetails.class;
     protected static final Class<TgVehicleModel> MODEL = TgVehicleModel.class;
     protected static final Class<TgVehicleMake> MAKE = TgVehicleMake.class;
     protected static final Class<TgFuelUsage> FUEL_USAGE = TgFuelUsage.class;

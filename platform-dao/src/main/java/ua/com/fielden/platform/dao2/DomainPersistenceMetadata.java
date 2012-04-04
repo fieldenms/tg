@@ -182,7 +182,7 @@ public class DomainPersistenceMetadata {
 
 	final String keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? getMapEntityTo(entityType).keyColumn() : key;
 	if (isOneToOne(entityType)) {
-	    result.add(new PropertyPersistenceInfo.Builder("key", getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
+	    result.add(new PropertyPersistenceInfo.Builder("key", getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
 	} else if (!DynamicEntityKey.class.equals(getKeyType(entityType))){
 	    result.add(new PropertyPersistenceInfo.Builder("key", getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PropertyPersistenceType.PRIMITIVE_KEY).build());
 	}

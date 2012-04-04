@@ -121,6 +121,19 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
     }
 
     @Test
+    public void test_model_with_no_explicit_yields_and_entity_with_entity_key() {
+	assertModelsEquals(//
+		select(VEHICLE_FIN_DETAILS).model(),
+
+		select(VEHICLE_FIN_DETAILS). //
+		yield().prop("id").as("id"). //
+		yield().prop("key").as("key"). //
+		yield().prop("version").as("version"). //
+		yield().prop("capitalWorksNo").as("capitalWorksNo"). //
+		modelAsEntity(VEHICLE_FIN_DETAILS));
+    }
+
+    @Test
     public void test_model_with_no_explicit_yields_and_explicit_joins() {
 	assertModelsEquals(//
 		select(VEHICLE). //

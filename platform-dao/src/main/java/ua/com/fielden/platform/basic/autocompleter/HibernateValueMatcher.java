@@ -8,8 +8,9 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcher2;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.fetch;
+import ua.com.fielden.platform.entity.query.fetch;
 
 /**
  * This is a Hibernate based implementation of {@link IValueMatcher}. It can be used in to ways -- by passing HQL query or by passing just an entity type.
@@ -21,7 +22,7 @@ import ua.com.fielden.platform.equery.fetch;
  *
  * @param <T>
  */
-public class HibernateValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher<T> {
+public class HibernateValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher2<T> {
     /**
      * Used for Hibernate Session instantiation.
      */
@@ -100,12 +101,12 @@ public class HibernateValueMatcher<T extends AbstractEntity<?>> implements IValu
     }
 
     @Override
-    public void setFetchModel(final fetch fetchModel) {
+    public <FT extends AbstractEntity<?>> fetch<FT> getFetchModel() {
 	throw new UnsupportedOperationException("Entity query model is not supported by Hibernate value matcher.");
     }
 
     @Override
-    public fetch<?> getFetchModel() {
+    public <FT extends AbstractEntity<?>> void setFetchModel(final fetch<FT> fetchModel) {
 	throw new UnsupportedOperationException("Entity query model is not supported by Hibernate value matcher.");
     }
 }

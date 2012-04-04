@@ -22,6 +22,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagon;
@@ -53,6 +54,7 @@ public class PlatformTestDomainTypes {
 	add(TgWagonClassCompatibility.class);
 	add(TgTimesheet.class);
 	add(TgVehicle.class);
+	add(TgVehicleFinDetails.class);
 	add(TgVehicleModel.class);
 	add(TgVehicleMake.class);
 	add(TgOrgUnit1.class);
