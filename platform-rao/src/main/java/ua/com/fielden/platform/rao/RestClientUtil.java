@@ -27,7 +27,6 @@ import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.dao2.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.security.provider.IUserController2;
@@ -422,8 +421,8 @@ public final class RestClientUtil implements IUserProvider {
     public Representation represent(final List<?> list) {
 	// need to ensure that elements of type IQueryOrderedModel are provided with additional attributes
 	for (final Object el : list) {
-	    if (el instanceof IQueryOrderedModel) {
-		((IQueryOrderedModel) el).setLightweight(true);
+	    if (el instanceof QueryExecutionModel) {
+		((QueryExecutionModel<?,?>) el).setLightweight(true);
 	    }
 	}
 	// now serialise and make a representation
