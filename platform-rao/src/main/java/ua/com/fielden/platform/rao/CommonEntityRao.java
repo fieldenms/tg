@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.rao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,12 +23,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.equery.interfaces.IQueryOrderedModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage2;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 /**
  * Base class for all RAO implementations. Provides REST-driven implementation of all {@link IEntityDao} functionality including Entity Query API and pagination.
