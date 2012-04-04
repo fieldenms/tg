@@ -3,11 +3,11 @@ package ua.com.fielden.platform.basic.autocompleter;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.entities.ComplexSyntheticEntity;
 import ua.com.fielden.platform.test.entities.SimpleSyntheticEntity;
 
-public class SyntheticEntityValueMatcherTestCase extends DbDrivenTestCase2 {
+public class SyntheticEntityValueMatcherTestCase extends DbDrivenTestCase {
 
     @Test
     public void testSyntheticValueMatcherWithSimpleEntities() {

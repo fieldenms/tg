@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  *
  */
-public class TransactionalTest extends DbDrivenTestCase2 {
+public class TransactionalTest extends DbDrivenTestCase {
     private LogicThatNeedsTransaction logic;
     private EntityWithMoneyDao dao;
 

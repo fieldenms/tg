@@ -12,7 +12,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 
 /**
  * Test the basic data migration logic.
@@ -20,7 +20,7 @@ import ua.com.fielden.platform.test.DbDrivenTestCase2;
  * @author TG team
  *
  */
-public class MigratorTest extends DbDrivenTestCase2 {
+public class MigratorTest extends DbDrivenTestCase {
     private final Connection conn = injector.getInstance(Connection.class);
     private final MigrationErrorDao errorDao = injector.getInstance(MigrationErrorDao.class);
     private final MigrationHistoryDao histDao = injector.getInstance(MigrationHistoryDao.class);

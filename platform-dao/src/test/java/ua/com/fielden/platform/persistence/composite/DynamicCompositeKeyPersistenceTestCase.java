@@ -4,7 +4,7 @@ import org.hibernate.Session;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.types.Money;
  * @author 01es
  *
  */
-public class DynamicCompositeKeyPersistenceTestCase extends DbDrivenTestCase2 {
+public class DynamicCompositeKeyPersistenceTestCase extends DbDrivenTestCase {
     /**
      * Tests correctness of methods equals, hashCode and compareTo
      */

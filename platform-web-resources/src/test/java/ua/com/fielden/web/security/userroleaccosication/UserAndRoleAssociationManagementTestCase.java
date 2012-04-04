@@ -16,7 +16,7 @@ import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.UserRoleAssociationResourceFactory;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
@@ -90,11 +90,11 @@ public class UserAndRoleAssociationManagementTestCase extends WebBasedTestCase {
     public synchronized Restlet getRoot() {
 	final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase2.injector, DbDrivenTestCase2.entityFactory);
+	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
 	helper.register(router, IUserRoleDao.class);
 	helper.register(router, IUserDao.class);
 
-	final Restlet userRoleAssociationRestlet = new UserRoleAssociationResourceFactory(DbDrivenTestCase2.injector);
+	final Restlet userRoleAssociationRestlet = new UserRoleAssociationResourceFactory(DbDrivenTestCase.injector);
 	router.attach("/users/{username}/useroles", userRoleAssociationRestlet);
 
 	return router;

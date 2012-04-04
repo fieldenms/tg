@@ -44,8 +44,7 @@ public final class RouterHelper {
 	registerInstanceResource(router, daoType);
 	registerTypeResource(router, daoType);
 	registerExportResource(router, daoType);
-	// FIXME migrate LifecycleResource to new infrastructure
-	//registerLifecycleResource(router, daoType);
+	registerLifecycleResource(router, daoType);
     }
 
     public void registerSnappyQueryResource(final Router router) {

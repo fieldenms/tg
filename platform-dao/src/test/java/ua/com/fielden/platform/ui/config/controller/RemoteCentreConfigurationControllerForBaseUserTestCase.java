@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
@@ -25,7 +25,7 @@ import static ua.com.fielden.platform.ui.config.impl.interaction.RemoteCentreCon
  * @author TG Team
  *
  */
-public class RemoteCentreConfigurationControllerForBaseUserTestCase extends DbDrivenTestCase2 {
+public class RemoteCentreConfigurationControllerForBaseUserTestCase extends DbDrivenTestCase {
     private final IUserDao userDao = injector.getInstance(IUserDao.class);
     private final IEntityCentreConfigController eccController = injector.getInstance(IEntityCentreConfigController.class);
     //private final IMainMenuItemController mmiController = injector.getInstance(IMainMenuItemController.class);

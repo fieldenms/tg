@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 
-public class HibernateValueMatcherTest extends DbDrivenTestCase2 {
+public class HibernateValueMatcherTest extends DbDrivenTestCase {
 
     public void testThatValuesAreMatchedWhenUsingCostructorWithHqlQuery() {
 	final HibernateValueMatcher<EntityWithMoney> matcher = new HibernateValueMatcher<EntityWithMoney>("from " + EntityWithMoney.class.getName() + " where key like :in_value", "in_value", hibernateUtil.getSessionFactory());

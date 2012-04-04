@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.types.Money;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -24,7 +24,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  * @author TG Team
  *
  */
-public class CommonEntityDaoTest extends DbDrivenTestCase2 {
+public class CommonEntityDaoTest extends DbDrivenTestCase {
     private final EntityWithMoneyDao dao = injector.getInstance(EntityWithMoneyDao.class);
     private final EntityWithDynamicCompositeKeyDao daoComposite = injector.getInstance(EntityWithDynamicCompositeKeyDao.class);
 

@@ -20,7 +20,7 @@ import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachmentController;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.rao.AttachmentRao;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 
@@ -46,7 +46,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
     public synchronized Restlet getRoot() {
 	final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase2.injector, DbDrivenTestCase2.entityFactory);
+	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
 	helper.registerAttachment(router, ATTACHMENT_LOCATION);
 
 	return router;
@@ -98,7 +98,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_saving_new_attachment_which_should_result_in_file_upload() {
-	Attachment attachment = DbDrivenTestCase2.entityFactory.newEntity(Attachment.class);
+	Attachment attachment = DbDrivenTestCase.entityFactory.newEntity(Attachment.class);
 	attachment.setFile(new File(ATTACHMENT_LOCATION + "/new/" + NEW_ATTACHMENT_FILE_NAME));
 	attachment.setDesc("new attachment to upload");
 	attachment = rao.save(attachment);
@@ -112,7 +112,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_attachment_deletion() {
-	Attachment attachment = DbDrivenTestCase2.entityFactory.newEntity(Attachment.class);
+	Attachment attachment = DbDrivenTestCase.entityFactory.newEntity(Attachment.class);
 	attachment.setFile(new File(ATTACHMENT_LOCATION + "/new/" + NEW_ATTACHMENT_FILE_NAME));
 	attachment.setDesc("new attachment to upload");
 	attachment = rao.save(attachment);

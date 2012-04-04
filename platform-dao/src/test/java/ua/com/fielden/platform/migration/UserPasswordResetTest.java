@@ -5,7 +5,7 @@ import java.util.List;
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 
 /**
  * This is a test for user password reset utility.
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.test.DbDrivenTestCase2;
  * @author TG Team
  *
  */
-public class UserPasswordResetTest extends DbDrivenTestCase2 {
+public class UserPasswordResetTest extends DbDrivenTestCase {
     private final IUserController controller = injector.getInstance(IUserController.class);
     private final ResetUserPassword2 passwordReset = new ResetUserPassword2(controller);
 

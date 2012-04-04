@@ -24,7 +24,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.CommonEntityAggregatesRao;
 import ua.com.fielden.platform.rao.EntityAggregatesRao;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.InspectedEntity;
@@ -106,7 +106,7 @@ public class WebResourceEntityAggreagatesTestCase extends WebBasedTestCase {
     public synchronized Restlet getRoot() {
 	final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase2.injector, DbDrivenTestCase2.entityFactory);
+	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
 	helper.registerAggregates(router);
 
 	return router;

@@ -30,7 +30,7 @@ public interface IRetriever<T extends AbstractEntity<?>> {
     /**
      * Determines whether data (re-)population is required.
      * In case of data (re-)population retrieves data from a legacy database, creates entity instances based on this data and persists them.
-     * @param subset TODO
+     * @param subset
      * @param session
      *
      * @throws Exception

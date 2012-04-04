@@ -19,7 +19,7 @@ import ua.com.fielden.platform.security.SecurityTokenControllerRao;
 import ua.com.fielden.platform.security.UserRoleRao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.SecurityTokenResourceFactory;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
@@ -74,10 +74,10 @@ public class SecurityTokenManagementTestCase extends WebBasedTestCase {
     public synchronized Restlet getRoot() {
 	final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase2.injector, DbDrivenTestCase2.entityFactory);
+	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
 	helper.register(router, IUserRoleDao.class);
 
-	final Restlet tokenRoleAssociationRestlet = new SecurityTokenResourceFactory(DbDrivenTestCase2.injector);
+	final Restlet tokenRoleAssociationRestlet = new SecurityTokenResourceFactory(DbDrivenTestCase.injector);
 	router.attach("/users/{username}/securitytokens", tokenRoleAssociationRestlet);
 	router.attach("/users/{username}/securitytokens/{token}", tokenRoleAssociationRestlet);
 	router.attach("/users/{username}/securitytokens/{token}/useroles", tokenRoleAssociationRestlet);

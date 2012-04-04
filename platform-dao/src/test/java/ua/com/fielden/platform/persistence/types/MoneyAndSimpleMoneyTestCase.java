@@ -10,7 +10,7 @@ import org.hibernate.Session;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.types.Money;
  * @author Yura
  * @author 01es
  */
-public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase2 {
+public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase {
     private boolean changeIndicator = false;
 
     @Override

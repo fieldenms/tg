@@ -6,7 +6,7 @@ import java.util.Locale;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.types.Money;
 import static java.math.BigDecimal.valueOf;
 
@@ -16,7 +16,7 @@ import static java.math.BigDecimal.valueOf;
  *
  * @author 01es
  */
-public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase2 {
+public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase {
 
     @SuppressWarnings("unchecked")
     public void testThatCanSaveAndRetrieveEntityWithTaxMoney() {

@@ -26,7 +26,7 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.web.entities.InspectedEntity;
@@ -57,7 +57,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
     }
 
     /**
-     * Required for dynamic instantiation by {@link DbDrivenTestCase2}
+     * Required for dynamic instantiation by {@link DbDrivenTestCase}
      */
     public PlatformWebDbDrivenTestCaseConfiguration() {
 	// instantiate all the factories and Hibernate utility

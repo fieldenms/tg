@@ -16,7 +16,7 @@ import org.restlet.Router;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.DynamicEntityRao;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
@@ -33,7 +33,7 @@ public class WebResourceDynamicRaoTestCase extends WebBasedTestCase {
     {
 	rao.setEntityType(InspectedEntity.class);
     }
-    final IInspectedEntityDao dao = DbDrivenTestCase2.injector.getInstance(IInspectedEntityDao.class);
+    final IInspectedEntityDao dao = DbDrivenTestCase.injector.getInstance(IInspectedEntityDao.class);
 
     @Override
     protected String[] getDataSetPaths() {
@@ -114,7 +114,7 @@ public class WebResourceDynamicRaoTestCase extends WebBasedTestCase {
     public synchronized Restlet getRoot() {
 	final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase2.injector, DbDrivenTestCase2.entityFactory);
+	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
 	helper.register(router, IInspectedEntityDao.class);
 
 	return router;

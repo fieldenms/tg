@@ -10,12 +10,12 @@ import org.restlet.Component;
 import org.restlet.data.Protocol;
 
 import ua.com.fielden.platform.rao.RestClientUtil;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 
 /**
  * This is a base class for web-driven testing of resources and RAOs. It is responsible for auto-configuration of a web-server listening on port 9000.
  * <p>
- * Descendants of this class should implement method {@link #getDataSetPaths()} similarly as for {@link DbDrivenTestCase2}.
+ * Descendants of this class should implement method {@link #getDataSetPaths()} similarly as for {@link DbDrivenTestCase}.
  * <p>
  * <code>WebBasedTestCase<code> is also a restlet application. The web resources that need to be tested or used for testing should be bound by overriding method {@link Application#getRoot()}.
  * <p>
@@ -38,7 +38,7 @@ public abstract class WebBasedTestCase extends Application {
 	}
     }
 
-    protected DbDrivenTestCase2 dbDrivenTestCase = new DbDrivenTestCase2() {
+    protected DbDrivenTestCase dbDrivenTestCase = new DbDrivenTestCase() {
 	@Override
 	protected String[] getDataSetPathsForInsert() {
 	    return WebBasedTestCase.this.getDataSetPaths();
@@ -56,7 +56,7 @@ public abstract class WebBasedTestCase extends Application {
 	    final String configClassName = testProps.getProperty("web-config");
 	    final Class<IWebDrivenTestCaseConfiguration> type = (Class<IWebDrivenTestCaseConfiguration>) Class.forName(configClassName);
 	    final IWebDrivenTestCaseConfiguration webConf = type.newInstance();
-	    webConf.setDbDrivenTestConfiguration(DbDrivenTestCase2.config);
+	    webConf.setDbDrivenTestConfiguration(DbDrivenTestCase.config);
 	    return webConf;
 	} catch (final Exception e) {
 	    e.printStackTrace();

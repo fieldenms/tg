@@ -14,7 +14,7 @@ import org.restlet.Router;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
@@ -29,7 +29,7 @@ import ua.com.fielden.web.rao.InspectedEntityRao;
  */
 public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     private final IInspectedEntityDao rao = new InspectedEntityRao(config.restClientUtil());
-    private final IInspectedEntityDao dao = DbDrivenTestCase2.injector.getInstance(IInspectedEntityDao.class);
+    private final IInspectedEntityDao dao = DbDrivenTestCase.injector.getInstance(IInspectedEntityDao.class);
 
     private final EntityResultQueryModel<InspectedEntity> model = select(InspectedEntity.class).model();
     private final AggregatedResultQueryModel summaryModel = select(InspectedEntity.class).yield().beginExpr().sumOf().prop("moneyProperty").endExpr().as("total_money").//
@@ -45,7 +45,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     public synchronized Restlet getRoot() {
 	final Router router = new Router(getContext());
 
-	final RouterHelper helper = new RouterHelper(DbDrivenTestCase2.injector, DbDrivenTestCase2.entityFactory);
+	final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
 	helper.register(router, IInspectedEntityDao.class);
 	helper.registerAggregates(router);
 

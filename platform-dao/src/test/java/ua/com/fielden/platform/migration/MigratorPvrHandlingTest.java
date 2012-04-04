@@ -8,7 +8,7 @@ import org.junit.Ignore;
 import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 
 /**
  * Tests data migration logic when properties are provided with value retriever. It is based on the {@link tMeterReadingRetriever}.
@@ -16,7 +16,7 @@ import ua.com.fielden.platform.test.DbDrivenTestCase2;
  * @author TG team
  *
  */
-public class MigratorPvrHandlingTest extends DbDrivenTestCase2 {
+public class MigratorPvrHandlingTest extends DbDrivenTestCase {
     private Connection conn = injector.getInstance(Connection.class);
     private final MigrationErrorDao errorDao = injector.getInstance(MigrationErrorDao.class);
     private final MigrationHistoryDao histDao = injector.getInstance(MigrationHistoryDao.class);

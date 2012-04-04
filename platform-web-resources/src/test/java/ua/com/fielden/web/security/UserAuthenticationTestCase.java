@@ -15,7 +15,7 @@ import ua.com.fielden.platform.security.ClientAuthenticationModel;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.UserAuthResourceFactory;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 
@@ -82,7 +82,7 @@ public class UserAuthenticationTestCase extends WebBasedTestCase {
 
 	config.restServerUtil().setAppWidePrivateKey(appWidePrivateKey);
 	config.restServerUtil().setAppWidePublicKey(appWidePublicKey);
-	router.attach(authenticationUri, new UserAuthResourceFactory(DbDrivenTestCase2.injector, config.restServerUtil()) {
+	router.attach(authenticationUri, new UserAuthResourceFactory(DbDrivenTestCase.injector, config.restServerUtil()) {
 	    @Override
 	    protected IUserController getController() {
 		return controller;

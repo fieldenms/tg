@@ -36,7 +36,7 @@ import com.google.inject.Injector;
  * @author 01es
  *
  */
-public abstract class DbDrivenTestCase2 extends TestCase {
+public abstract class DbDrivenTestCase extends TestCase {
 
     private enum DataSetReason {
 	INSERT, UPDATE;

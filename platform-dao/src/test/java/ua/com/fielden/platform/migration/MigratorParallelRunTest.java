@@ -5,7 +5,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 
 
 /**
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.test.DbDrivenTestCase2;
  * @author TG team
  *
  */
-public class MigratorParallelRunTest extends DbDrivenTestCase2 {
+public class MigratorParallelRunTest extends DbDrivenTestCase {
     private Connection conn = injector.getInstance(Connection.class);
 
 

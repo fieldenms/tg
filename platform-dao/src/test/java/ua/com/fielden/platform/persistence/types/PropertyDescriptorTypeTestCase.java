@@ -2,7 +2,7 @@ package ua.com.fielden.platform.persistence.types;
 
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.domain.entities.daos.ITgWorkorder;
 
 /**
@@ -10,7 +10,7 @@ import ua.com.fielden.platform.test.domain.entities.daos.ITgWorkorder;
  *
  * @author TG Team
  */
-public class PropertyDescriptorTypeTestCase extends DbDrivenTestCase2 {
+public class PropertyDescriptorTypeTestCase extends DbDrivenTestCase {
     private final ITgWorkorder dao = injector.getInstance(ITgWorkorder.class);
 
     public void test_property_descriptor_is_restored_correctly() {

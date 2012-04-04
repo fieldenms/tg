@@ -17,7 +17,7 @@ import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.test.DbDrivenTestCase2;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.EntityInstanceResourceFactory;
 import ua.com.fielden.platform.web.ResourceGuard;
 import ua.com.fielden.platform.web.UserAuthResourceFactory;
@@ -40,7 +40,7 @@ public class RequestAuthenticationTestCase extends WebBasedTestCase {
 
     private static UserControllerForTestPurposes controller = new UserControllerForTestPurposes();
     private final IInspectedEntityDao rao = new InspectedEntityRao(config.restClientUtil());
-    private final IInspectedEntityDao dao = DbDrivenTestCase2.injector.getInstance(IInspectedEntityDao.class);
+    private final IInspectedEntityDao dao = DbDrivenTestCase.injector.getInstance(IInspectedEntityDao.class);
 
     private final fetch<User> fetchModel = new fetch(User.class).with("roles", new fetch(UserAndRoleAssociation.class).with("userRole"));
 
@@ -187,7 +187,7 @@ public class RequestAuthenticationTestCase extends WebBasedTestCase {
 	final Router router = new Router(getContext());
 	// add some other resource to be accessed
 
-	final Restlet inspectedEntityInstanceResource = new EntityInstanceResourceFactory<InspectedEntity, IInspectedEntityDao>(IInspectedEntityDao.class, DbDrivenTestCase2.injector, DbDrivenTestCase2.entityFactory);
+	final Restlet inspectedEntityInstanceResource = new EntityInstanceResourceFactory<InspectedEntity, IInspectedEntityDao>(IInspectedEntityDao.class, DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
 	router.attach("/users/{username}/" + InspectedEntity.class.getSimpleName() + "/{entity-id}", inspectedEntityInstanceResource);
 	// setup resource guard for the whole router
 	final ResourceGuard guard = new ResourceGuard(getContext(), "Test", config.restServerUtil(), config.injector()) {
@@ -202,7 +202,7 @@ public class RequestAuthenticationTestCase extends WebBasedTestCase {
 	final Router mainRouter = new Router(getContext());
 	config.restServerUtil().setAppWidePrivateKey(appWidePrivateKey);
 	config.restServerUtil().setAppWidePublicKey(appWidePublicKey);
-	mainRouter.attach(authenticationUri, new UserAuthResourceFactory(DbDrivenTestCase2.injector, config.restServerUtil()) {
+	mainRouter.attach(authenticationUri, new UserAuthResourceFactory(DbDrivenTestCase.injector, config.restServerUtil()) {
 	    @Override
 	    protected IUserController getController() {
 		return controller;
