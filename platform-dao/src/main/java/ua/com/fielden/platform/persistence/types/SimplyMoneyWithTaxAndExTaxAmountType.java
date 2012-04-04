@@ -3,7 +3,6 @@
  */
 package ua.com.fielden.platform.persistence.types;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,7 +13,6 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.Type;
-import org.hibernate.usertype.CompositeUserType;
 
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAndExTaxAmountType;
@@ -27,32 +25,7 @@ import static org.hibernate.Hibernate.BIG_DECIMAL;
  *
  * @author Yura
  */
-public class SimplyMoneyWithTaxAndExTaxAmountType implements CompositeUserType, ISimplyMoneyWithTaxAndExTaxAmountType {
-
-    @Override
-    public Object assemble(final Serializable cache, final SessionImplementor implementor, final Object owner) throws HibernateException {
-	return cache;
-    }
-
-    @Override
-    public Object deepCopy(final Object value) {
-	return value;
-    }
-
-    @Override
-    public Serializable disassemble(final Object value, final SessionImplementor implementor) throws HibernateException {
-	return (Serializable) value;
-    }
-
-    public boolean equals(final Object x, final Object y) {
-	if (x == y) {
-	    return true;
-	}
-	if (x == null || y == null) {
-	    return false;
-	}
-	return x.equals(y);
-    }
+public class SimplyMoneyWithTaxAndExTaxAmountType extends AbstractCompositeUserType implements ISimplyMoneyWithTaxAndExTaxAmountType {
 
     @Override
     public String[] getPropertyNames() {
@@ -75,16 +48,6 @@ public class SimplyMoneyWithTaxAndExTaxAmountType implements CompositeUserType, 
     }
 
     @Override
-    public int hashCode(final Object value) {
-	return value.hashCode();
-    }
-
-    @Override
-    public boolean isMutable() {
-	return false;
-    }
-
-    @Override
     public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SessionImplementor implementor, final Object owner) throws SQLException {
 	/*
 	 *  It is very important to call resultSet.getXXX before checking resultSet.wasNull(). Please refer {@link ResultSet#wasNull()} for more details.
@@ -99,6 +62,9 @@ public class SimplyMoneyWithTaxAndExTaxAmountType implements CompositeUserType, 
 
     @Override
     public Object instantiate(final Map<String, Object> arguments) {
+	if (allArgumentsAreNull(arguments)) {
+	    return null;
+	}
 	final BigDecimal taxAmount = (BigDecimal) arguments.get("taxAmount");
 	final BigDecimal exTaxAmount = (BigDecimal) arguments.get("exTaxAmount");
 	return new Money(exTaxAmount.add(taxAmount), taxAmount, getInstance(Locale.getDefault()));
@@ -117,17 +83,7 @@ public class SimplyMoneyWithTaxAndExTaxAmountType implements CompositeUserType, 
     }
 
     @Override
-    public Object replace(final Object original, final Object target, final SessionImplementor implementor, final Object owner){
-	return original;
-    }
-
-    @Override
     public Class<Money> returnedClass() {
 	return Money.class;
-    }
-
-    @Override
-    public void setPropertyValue(final Object component, final int property, final Object value) throws HibernateException {
-	throw new UnsupportedOperationException("Money type is immutable");
     }
 }

@@ -1,14 +1,5 @@
 package ua.com.fielden.web.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -20,12 +11,19 @@ import org.restlet.Router;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntity;
 import ua.com.fielden.web.rao.InspectedEntityRao;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Provides a unit test for entity driven web resources.
@@ -168,7 +166,6 @@ public class WebResourceTestCase extends WebBasedTestCase {
     public void test_save_new() {
 	final InspectedEntity newEntity = config.entityFactory().newByKey(InspectedEntity.class, "key46");
 	newEntity.setDesc("new item");
-	newEntity.setMoneyProperty(Money.zero);
 	final InspectedEntity entity = rao.save(newEntity);
 	assertNotNull("ID has not been assigned.", entity.getId());
 

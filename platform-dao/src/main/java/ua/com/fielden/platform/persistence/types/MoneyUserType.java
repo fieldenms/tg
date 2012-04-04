@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.persistence.types;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,7 +10,6 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.Type;
-import org.hibernate.usertype.CompositeUserType;
 
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyUserType;
@@ -23,44 +21,10 @@ import ua.com.fielden.platform.types.markers.IMoneyUserType;
  *
  * @author Yura
  */
-public class MoneyUserType implements CompositeUserType, IMoneyUserType {
+public class MoneyUserType extends AbstractCompositeUserType implements IMoneyUserType {
 
     public Class<Money> returnedClass() {
 	return Money.class;
-    }
-
-    public boolean isMutable() {
-	return false;
-    }
-
-    public Object deepCopy(final Object value) {
-	return value;
-    }
-
-    public Serializable disassemble(final Object value, final SessionImplementor session) {
-	return (Serializable) value;
-    }
-
-    public Object assemble(final Serializable cached, final SessionImplementor session, final Object owner) {
-	return cached;
-    }
-
-    public Object replace(final Object original, final Object target, final SessionImplementor session, final Object owner) {
-	return original;
-    }
-
-    public boolean equals(final Object x, final Object y) {
-	if (x == y) {
-	    return true;
-	}
-	if (x == null || y == null) {
-	    return false;
-	}
-	return x.equals(y);
-    }
-
-    public int hashCode(final Object x) {
-	return x.hashCode();
     }
 
     public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SessionImplementor session, final Object owner) throws SQLException {
@@ -77,6 +41,9 @@ public class MoneyUserType implements CompositeUserType, IMoneyUserType {
 
     @Override
     public Object instantiate(final Map<String, Object> arguments) {
+	if (allArgumentsAreNull(arguments)) {
+	    return null;
+	}
 	return new Money((BigDecimal) arguments.get("amount"), (Currency) arguments.get("currency"));
     }
 
@@ -107,9 +74,5 @@ public class MoneyUserType implements CompositeUserType, IMoneyUserType {
 	} else {
 	    return monetaryAmount.getCurrency();
 	}
-    }
-
-    public void setPropertyValue(final Object component, final int property, final Object value) {
-	throw new UnsupportedOperationException("Monetary type is immutable");
     }
 }
