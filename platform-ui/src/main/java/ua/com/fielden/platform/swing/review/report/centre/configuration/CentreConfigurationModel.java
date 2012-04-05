@@ -48,7 +48,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      */
     protected final IGlobalDomainTreeManager gdtm;
 
-    private final Action save, saveAs, remove;
+    private final Action save, closingSave, saveAs, closingSaveAs, remove;
 
     /**
      * Needed for handling close operation.
@@ -65,8 +65,10 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     public CentreConfigurationModel(final Class<T> entityType, final String name, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
 	super(entityType, name, entityFactory, masterManager, criteriaGenerator);
 	this.gdtm = gdtm;
-	this.save = createSaveAction();
-	this.saveAs = createSaveAsAction();
+	this.save = createSaveAction(true, false);
+	this.closingSave = createSaveAction(false, true);
+	this.saveAs = createSaveAsAction(true, false);
+	this.closingSaveAs = createSaveAsAction(false, true);
 	this.remove = createRemoveAction();
     }
 
@@ -116,6 +118,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      */
     final boolean canClose() {
 	final String title = StringUtils.isEmpty(name) ? TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey() : name;
+	acceptAnalysis();
 	if(gdtm.isChangedEntityCentreManager(entityType, name)){
 	    switch(JOptionPane.showConfirmDialog(null, "Would you like to save changes"
 		    + (!StringUtils.isEmpty(title) ? " for the " + title : "") + " before closing?", "Save report", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)){
@@ -143,7 +146,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 	    if(gdtm.isFreezedEntityCentreManager(entityType, name)){
 		gdtm.saveEntityCentreManager(entityType, name);
 	    }
-	    save();
+	    closingSave.actionPerformed(null);
 	    break;
 	case DISCARD:
 	    if(gdtm.isFreezedEntityCentreManager(entityType, name)){
@@ -215,31 +218,31 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 		if(!result){
 		    return false;
 		}
-		return fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, null, CentreConfigurationAction.PRE_REMOVE));
+		return fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, false, null, CentreConfigurationAction.PRE_REMOVE));
 	    }
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
 		gdtm.removeEntityCentreManager(entityType, name);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, null, CentreConfigurationAction.REMOVE));
+		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, false, null, CentreConfigurationAction.REMOVE));
 		return null;
 	    }
 
 	    @Override
 	    protected void postAction(final Void value) {
 		super.postAction(value);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, null, CentreConfigurationAction.POST_REMOVE));
+		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, false, null, CentreConfigurationAction.POST_REMOVE));
 	    }
 
 	    @Override
 	    protected void handlePreAndPostActionException(final Throwable ex) {
 		super.handlePreAndPostActionException(ex);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, ex, CentreConfigurationAction.REMOVE_FAILED));
+		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, false, ex, CentreConfigurationAction.REMOVE_FAILED));
 	    }
 	};
     }
 
-    private Action createSaveAsAction() {
+    private Action createSaveAsAction(final boolean acceptAnalysis, final boolean isClosing) {
 	return new Command<Void>("Save As") {
 
 	    private static final long serialVersionUID = -1316746113497694217L;
@@ -257,7 +260,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 		final boolean shouldSave = SaveReportOptions.APPROVE.equals(saveReportDialog.showDialog());
 		if(shouldSave){
 		    saveAsName = saveReportDialog.getEnteredFileName();
-		    return fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, saveAsName, null, CentreConfigurationAction.PRE_SAVE_AS));
+		    return fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, saveAsName, isClosing, null, CentreConfigurationAction.PRE_SAVE_AS));
 		} else {
 		    saveAsName = null;
 		    return false;
@@ -266,28 +269,31 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
+		if(acceptAnalysis){
+		    acceptAnalysis();
+		}
 		gdtm.saveAsEntityCentreManager(entityType, name, saveAsName);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, saveAsName, null, CentreConfigurationAction.SAVE_AS));
+		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, saveAsName, isClosing, null, CentreConfigurationAction.SAVE_AS));
 		return null;
 	    }
 
 	    @Override
 	    protected void postAction(final Void value) {
 		super.postAction(value);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, saveAsName, null, CentreConfigurationAction.POST_SAVE_AS));
+		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, saveAsName, isClosing, null, CentreConfigurationAction.POST_SAVE_AS));
 
 	    }
 
 	    @Override
 	    protected void handlePreAndPostActionException(final Throwable ex) {
 		super.handlePreAndPostActionException(ex);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, saveAsName, ex, CentreConfigurationAction.SAVE_AS_FAILED));
+		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, saveAsName, isClosing, ex, CentreConfigurationAction.SAVE_AS_FAILED));
 	    }
 
 	};
     }
 
-    private Action createSaveAction() {
+    private Action createSaveAction(final boolean acceptAnalysis, final boolean isClosing) {
 	return new Command<Void>("Save") {
 
 	    private static final long serialVersionUID = 7912294028797678105L;
@@ -298,26 +304,29 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 		if(!result){
 		    return false;
 		}
-		return fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, null, CentreConfigurationAction.PRE_SAVE));
+		return fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, isClosing, null, CentreConfigurationAction.PRE_SAVE));
 	    }
 
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
+		if(acceptAnalysis){
+		    acceptAnalysis();
+		}
 		gdtm.saveEntityCentreManager(entityType, name);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, null, CentreConfigurationAction.SAVE));
+		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, isClosing, null, CentreConfigurationAction.SAVE));
 		return null;
 	    }
 
 	    @Override
 	    protected void postAction(final Void value) {
 		super.postAction(value);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, null, CentreConfigurationAction.POST_SAVE));
+		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, isClosing, null, CentreConfigurationAction.POST_SAVE));
 	    }
 
 	    @Override
 	    protected void handlePreAndPostActionException(final Throwable ex) {
 		super.handlePreAndPostActionException(ex);
-		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, ex, CentreConfigurationAction.SAVE_FAILED));
+		fireCentreConfigurationEvent(new CentreConfigurationEvent(CentreConfigurationModel.this, null, isClosing, ex, CentreConfigurationAction.SAVE_FAILED));
 	    }
 	};
     }
@@ -336,6 +345,21 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 	    result &= listener.centerConfigurationEventPerformed(event);
 	}
 	return result;
+    }
+
+    /**
+     * Accepts all analysis associated with this entity centre.
+     */
+    final void acceptAnalysis(){
+	final ICentreDomainTreeManager centreManager = gdtm.getEntityCentreManager(entityType, name);
+	if(centreManager != null){
+	    for(final String analysis : centreManager.analysisKeys()){
+		if(centreManager.isFreezedAnalysisManager(analysis)){
+		    centreManager.acceptAnalysisManager(analysis);
+		}
+		centreManager.acceptAnalysisManager(analysis);
+	    }
+	}
     }
 
     /**

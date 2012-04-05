@@ -20,8 +20,12 @@ import javax.swing.border.EtchedBorder;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabDialog;
@@ -53,12 +57,22 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     private final JideTabbedPane tabPanel;
 
+    private final Action removeAnalysisAction;
+
     public MultipleAnalysisEntityCentre(final EntityCentreModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	this.tabPanel = createReview();
+	this.removeAnalysisAction = createRemoveAnalysisAction();
 	getReviewProgressLayer().setView(createTabPanelWrapper(tabPanel));
 	layoutComponents();
-	//TODO Also must initiate other saved analysis.
+	final ICentreDomainTreeManager centreManager = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
+	for(final String analysis : centreManager.analysisKeys()){
+	    final IAbstractAnalysisDomainTreeManager analysisManager = centreManager.getAnalysisManager(analysis);
+	    if(analysisManager.isVisible()){
+		addAnalysis(analysis, determineAnalysisType(analysisManager));
+	    }
+	}
+	addAnalysis(GridConfigurationModel.gridAnalysisName, null);
     }
 
     @Override
@@ -69,40 +83,51 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     @SuppressWarnings("unchecked")
     @Override
     public List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> getAnalysisList() {
-        final List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> analysisList = new ArrayList<AbstractAnalysisConfigurationView<T,ICentreDomainTreeManagerAndEnhancer,?,?,?>>();
-        for(final Component component : tabPanel.getComponents()){
-            analysisList.add((AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)component);
-        }
-        return analysisList;
+	final List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> analysisList = new ArrayList<AbstractAnalysisConfigurationView<T,ICentreDomainTreeManagerAndEnhancer,?,?,?>>();
+	for(final Component component : tabPanel.getComponents()){
+	    analysisList.add((AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)component);
+	}
+	return analysisList;
     }
 
     @Override
     public void addAnalysis(final String name, final AnalysisType analysisType) {
-        AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = null;
-        switch(analysisType){
-        case SIMPLE:
-            analysis = createChartAnalysis(name);
-            break;
-        case PIVOT:
-            analysis = createPivotAnalysis(name);
-            break;
-        }
-        if(analysis != null){
-            tabPanel.addTab(analysis.getModel().getName(), analysis);
-            tabPanel.setSelectedComponent(analysis);
-            analysis.open();
-        }
+	AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = null;
+	final int index = tabIndex(name);
+	if(index >=0 ){
+	    tabPanel.setSelectedIndex(index);
+	} else {
+	    switch(analysisType){
+	    case SIMPLE:
+		analysis = createChartAnalysis(name);
+		break;
+	    case PIVOT:
+		analysis = createPivotAnalysis(name);
+		break;
+	    }
+	    if(analysis != null){
+		tabPanel.addTab(analysis.getModel().getName(), analysis);
+		if(!getReviewProgressLayer().isLocked()){
+		    tabPanel.setSelectedComponent(analysis);
+		}
+		analysis.open();
+		getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name).setVisible(true);
+	    }
+	}
     }
 
     @Override
     public void removeAnalysis(final String name) {
-        // TODO Auto-generated method stub
-    
+	final int tabIndex = tabIndex(name);
+	if(canRemoveTabSheet(tabIndex)){
+	    removeTabSheet(tabIndex);
+	    getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name).setVisible(false);
+	}
     }
 
     @Override
     public EntityCentreModel<T> getModel() {
-        return (EntityCentreModel<T>)super.getModel();
+	return (EntityCentreModel<T>)super.getModel();
     }
 
     @Override
@@ -115,6 +140,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	final JToolBar toolBar = panelBuilder//
 		.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")))//
 		.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
+		.addButton(createRemoveAnalysisAction())
 		.buildActionPanel();
 	toolBar.setFloatable(false);
 	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
@@ -129,6 +155,21 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	customActions.add(createSaveAsAction());
 	customActions.add(createRemoveAction());
 	return customActions;
+    }
+
+    /**
+     * Returns the analysis type for the specified instance of {@link IAbstractAnalysisDomainTreeManager}.
+     * 
+     * @param analysisManager
+     * @return
+     */
+    private AnalysisType determineAnalysisType(final IAbstractAnalysisDomainTreeManager analysisManager) {
+	if(analysisManager instanceof IAnalysisDomainTreeManager){
+	    return AnalysisType.SIMPLE;
+	}else if(analysisManager instanceof IPivotDomainTreeManager){
+	    return AnalysisType.PIVOT;
+	}
+	return null;
     }
 
     /**
@@ -179,9 +220,89 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
-		//TODO implement close tab sheet.
+		if(getModel().getName() == null){
+		    removeAnalysisAction.actionPerformed(null);
+		}else{
+		    removeAnalysis(getCurrentAnalysisConfigurationView().getModel().getName());
+		}
 	    }
 	};
+    }
+
+    private Action createRemoveAnalysisAction() {
+	return new Command<Void>("Remove  analysis") {
+	    private static final long serialVersionUID = -1271728862598382645L;
+
+	    {
+		putValue(Action.SHORT_DESCRIPTION, "Remove selected analysis");
+		putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/chart-remove.png"));
+		putValue(Action.SMALL_ICON, ResourceLoader.getIcon("images/chart-remove.png"));
+	    }
+
+	    @Override
+	    protected boolean preAction() {
+		if(super.preAction()){
+		    return canRemoveTabSheet(tabPanel.getSelectedIndex());
+		}
+		return false;
+	    }
+
+	    @Override
+	    protected Void action(final ActionEvent e) throws Exception {
+		getCurrentAnalysisConfigurationView().getModel().remove();
+		return null;
+	    }
+
+	    @Override
+	    protected void postAction(final Void value) {
+		removeTabSheet(tabPanel.getSelectedIndex());
+		super.postAction(value);
+	    }
+	};
+    }
+
+    /**
+     * Determines whether analysis specified with tab sheet index can be removed.
+     * 
+     * @param index
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private boolean canRemoveTabSheet(final int index){
+	if(index < 0){
+	    throw new IllegalArgumentException("The tab index can not be less then 0");
+	}
+	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)tabPanel.getComponentAt(index);
+	if(analysis instanceof GridConfigurationView){
+	    JOptionPane.showMessageDialog(this, "Main details analysis can not be removed", "Informotaion", JOptionPane.INFORMATION_MESSAGE);
+	    return false;
+	}
+	if(getReviewProgressLayer().isLocked()){
+	    JOptionPane.showMessageDialog(this, "This analysis can not be removed right now.", "Informotaion", JOptionPane.INFORMATION_MESSAGE);
+	    return false;
+	}
+	if(analysis.canClose() != null){
+	    JOptionPane.showMessageDialog(this, getCurrentAnalysisConfigurationView().whyCannotClose(), "Close tab sheet", JOptionPane.INFORMATION_MESSAGE);
+	    return false;
+	}
+	return true;
+    }
+
+    /**
+     * Returns the removed analysis.
+     * 
+     * @param index
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> removeTabSheet(final int index){
+	if(index < 0){
+	    throw new IllegalArgumentException("The tab index can not be less then 0");
+	}
+	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)tabPanel.getComponentAt(index);
+	analysis.close();
+	tabPanel.removeTabAt(index);
+	return analysis;
     }
 
     private SingleSelectionModel createTabbedPaneModel(final JideTabbedPane tabPane) {
@@ -276,6 +397,21 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	};
     }
 
+    /**
+     * Returns the index of the tab with specified name. If tab with specified name doesn't exists then returns negative number.
+     *
+     * @param name - the specified tab name.
+     * @return
+     */
+    private int tabIndex(final String name) {
+	for (int index = 0; index < tabPanel.getTabCount(); index++) {
+	    if (tabPanel.getTitleAt(index).equals(name)) {
+		return index;
+	    }
+	}
+	return -1;
+    }
+
     private class AddAnalysisAction extends Command<Void>{
 
 	private static final long serialVersionUID = 1916078804942683757L;
@@ -310,29 +446,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	@Override
 	protected final void postAction(final Void value) {
 	    super.postAction(value);
-
-	    final int index = tabIndex(addTabDialog.getEnteredTabName());
-	    if(index >=0 ){
-		tabPanel.setSelectedIndex(index);
-	    }else{
-		addAnalysis(addTabDialog.getEnteredTabName(), analysisType);
-	    }
+	    addAnalysis(addTabDialog.getEnteredTabName(), analysisType);
 	}
-
-	/**
-	 * Returns the index of the tab with specified name. If tab with specified name doesn't exists then returns negative number.
-	 *
-	 * @param name - the specified tab name.
-	 * @return
-	 */
-	protected int tabIndex(final String name) {
-	    for (int index = 0; index < tabPanel.getTabCount(); index++) {
-		if (tabPanel.getTitleAt(index).equals(name)) {
-		    return index;
-		}
-	    }
-	    return -1;
-	}
-
     }
 }

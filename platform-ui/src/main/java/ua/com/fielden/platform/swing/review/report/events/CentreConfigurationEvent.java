@@ -26,6 +26,9 @@ public class CentreConfigurationEvent extends EventObject {
 	PRE_REMOVE, REMOVE, POST_REMOVE, REMOVE_FAILED;
     }
 
+    /**
+     * The action phase. It is one of the available {@link CentreConfigurationAction}s.
+     */
     private final CentreConfigurationAction eventAction;
 
     /**
@@ -39,33 +42,53 @@ public class CentreConfigurationEvent extends EventObject {
     private final Throwable exception;
 
     /**
+     * Determines whether save or save as actions were invoked during close operation.
+     */
+    private final boolean isClosing;
+
+    /**
      * Initiates this {@link CentreConfigurationEvent} with instance of {@link CentreConfigurationModel} where the event was generated and the {@link CentreConfigurationAction}.
      * 
      * @param source
      * @param eventAction
      */
-    public CentreConfigurationEvent(final CentreConfigurationModel<?> source, final String saveAsName, final Throwable exception, final CentreConfigurationAction eventAction) {
+    public CentreConfigurationEvent(final CentreConfigurationModel<?> source, final String saveAsName, final boolean isClosing, final Throwable exception, final CentreConfigurationAction eventAction) {
 	super(source);
 	this.eventAction = eventAction;
 	switch(eventAction){
 	case PRE_SAVE_AS:
-	case SAVE:
+	case SAVE_AS:
 	case POST_SAVE_AS:
+	    this.isClosing = isClosing;
 	    this.saveAsName = saveAsName;
 	    this.exception = null;
 	    break;
-	case SAVE_FAILED:
-	case REMOVE_FAILED:
-	    this.saveAsName = null;
+	case SAVE_AS_FAILED:
+	    this.isClosing = isClosing;
+	    this.saveAsName = saveAsName;
 	    this.exception = exception;
 	    break;
-	case SAVE_AS_FAILED:
-	    this.saveAsName = saveAsName;
+	case PRE_SAVE:
+	case SAVE:
+	case POST_SAVE:
+	    this.saveAsName = null;
+	    this.exception = null;
+	    this.isClosing = isClosing;
+	    break;
+	case SAVE_FAILED:
+	    this.saveAsName = null;
+	    this.exception = exception;
+	    this.isClosing = isClosing;
+	    break;
+	case REMOVE_FAILED:
+	    this.isClosing = false;
+	    this.saveAsName = null;
 	    this.exception = exception;
 	    break;
 	default:
 	    this.exception = null;
 	    this.saveAsName = null;
+	    this.isClosing = false;
 	}
     }
 
@@ -99,5 +122,14 @@ public class CentreConfigurationEvent extends EventObject {
      */
     public Throwable getException() {
 	return exception;
+    }
+
+    /**
+     * Returns value that indicates whether save or save as actions were invoked during close operation or not.
+     * 
+     * @return
+     */
+    public boolean isClosing(){
+	return isClosing;
     }
 }

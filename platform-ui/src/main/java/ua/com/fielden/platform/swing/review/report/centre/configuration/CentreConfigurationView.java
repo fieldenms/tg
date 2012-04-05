@@ -36,12 +36,17 @@ public class CentreConfigurationView<T extends AbstractEntity<?>, C extends Abst
 
     @Override
     public final ICloseGuard canClose() {
+	final ICloseGuard closeGuard = super.canClose();
+	if(closeGuard != null){
+	    return closeGuard;
+	}
 	return getModel().canClose() ? null : this;
     }
 
     @Override
     public final void close() {
 	getModel().close();
+	super.close();
     }
 
     @Override
@@ -71,6 +76,7 @@ public class CentreConfigurationView<T extends AbstractEntity<?>, C extends Abst
 	    public boolean configureActionPerformed(final ReviewEvent e) {
 		switch (e.getReviewAction()) {
 		case CONFIGURE:
+		    getModel().acceptAnalysis();
 		    getModel().gdtm.freezeEntityCentreManager(getModel().entityType, getModel().name);
 		    break;
 		}

@@ -5,6 +5,8 @@ import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +23,12 @@ import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.SortOrder;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableColumnModelEvent;
+import javax.swing.event.TableColumnModelListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumn;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
@@ -163,7 +171,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public void valueChanged(final ListCheckingEvent<String> e) {
 		firstTick.use(root, e.getValue(), e.isChecked());
-		//TODO implement logic that updates the pivot table model.
+		refreshPivotTable(pivotTablePanel.getTreeTable());
 	    }
 	});
 	return distributionList;
@@ -218,6 +226,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public void valueChanged(final ListCheckingEvent<String> e) {
 		secondTick.use(root, e.getValue(), e.isChecked());
+		refreshPivotTable(pivotTablePanel.getTreeTable());
 		//TODO implement review update after property usage was changed.
 	    }
 	});
@@ -249,10 +258,80 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     }
 
     private FilterableTreeTablePanel<PivotTreeTable> createPivotTreeTablePanel() {
-	final FilterableTreeTablePanel<PivotTreeTable> pivotTablePanel = new FilterableTreeTablePanel<PivotTreeTable>(new PivotTreeTable(new FilterableTreeTableModel(getModel().getPivotModel())), createPivotFilter(), "find item");
-	final PivotTreeTable treeTable = pivotTablePanel.getTreeTable();
+	final PivotTreeTable treeTable = new PivotTreeTable(new FilterableTreeTableModel(getModel().getPivotModel()));
+	final FilterableTreeTablePanel<PivotTreeTable> pivotTablePanel = new FilterableTreeTablePanel<PivotTreeTable>(treeTable, createPivotFilter(), "find item");
 	treeTable.addMouseListener(createDoubleClickListener(treeTable));
+	treeTable.getColumnModel().addColumnModelListener(createColumnModelListener(treeTable, createColumnWidthChangeListener(treeTable)));
+	refreshPivotTable(treeTable);
 	return pivotTablePanel;
+    }
+
+    /**
+     * Creates the table column listener for the tree table model that updates the column's width.
+     * 
+     * @param columnWidthChangeListener
+     * @return
+     */
+    private TableColumnModelListener createColumnModelListener(final PivotTreeTable treeTable, final PropertyChangeListener columnWidthChangeListener) {
+	return new TableColumnModelListener() {
+
+	    @Override
+	    public void columnSelectionChanged(final ListSelectionEvent e) {}
+
+	    @Override
+	    public void columnRemoved(final TableColumnModelEvent e) {}
+
+	    @Override
+	    public void columnMoved(final TableColumnModelEvent e) {}
+
+	    @Override
+	    public void columnMarginChanged(final ChangeEvent e) {}
+
+	    @Override
+	    public void columnAdded(final TableColumnModelEvent e) {
+		final int columnIndex = e.getToIndex();
+		final TableColumn column = treeTable.getColumnModel().getColumn(columnIndex);
+		final Class<T> root = getModel().getCriteria().getEntityClass();
+		final IPivotAddToDistributionTickManager firstTick = getModel().adtm().getFirstTick();
+		final IPivotAddToAggregationTickManager secondTick = getModel().adtm().getSecondTick();
+		int width = 0;
+		if(treeTable.isHierarchical(columnIndex)){
+		    width = firstTick.getWidth(root, firstTick.usedProperties(root).get(0));
+		}else if(columnIndex > 0){
+		    width = secondTick.getWidth(root, secondTick.usedProperties(root).get(columnIndex - 1));
+		}
+		if(width > 0){
+		    column.setPreferredWidth(width);
+		}
+		column.addPropertyChangeListener(columnWidthChangeListener);
+	    }
+	};
+    }
+
+    /**
+     * Creates the column's width property change listener. Updates model property's width.
+     * 
+     * @param pivotTable
+     * @return
+     */
+    private PropertyChangeListener createColumnWidthChangeListener(final PivotTreeTable pivotTable) {
+	return new PropertyChangeListener() {
+
+	    @Override
+	    public void propertyChange(final PropertyChangeEvent evt) {
+		if (evt.getPropertyName().equals("width")) {
+		    final Class<T> root = getModel().getCriteria().getEntityClass();
+		    final IPivotAddToDistributionTickManager firstTick = getModel().adtm().getFirstTick();
+		    final IPivotAddToAggregationTickManager secondTick = getModel().adtm().getSecondTick();
+		    final int columnIndex = pivotTable.getColumnModel().getColumnIndex(((TableColumn)evt.getSource()).getIdentifier());
+		    if(pivotTable.isHierarchical(columnIndex)){
+			firstTick.setWidth(root, firstTick.usedProperties(root).get(0), ((Integer)evt.getNewValue()).intValue());
+		    }else if(columnIndex > 0){
+			secondTick.setWidth(root, secondTick.usedProperties(root).get(columnIndex - 1), ((Integer)evt.getNewValue()).intValue());
+		    }
+		}
+	    }
+	};
     }
 
     private IFilter createPivotFilter() {
@@ -395,6 +474,16 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	splitPane.setRightComponent(rightPanel);
 
 	add(splitPane);
+    }
+
+    /**
+     * Refreshes the pivot tree table.
+     * @param treeTable
+     */
+    private static void refreshPivotTable(final PivotTreeTable treeTable){
+        final TreePath selectedPath = treeTable.getPathForRow(treeTable.getSelectedRow());
+        ((AbstractTableModel) treeTable.getModel()).fireTableStructureChanged();
+        treeTable.getSelectionModel().setSelectionInterval(0, treeTable.getRowForPath(selectedPath));
     }
 
 

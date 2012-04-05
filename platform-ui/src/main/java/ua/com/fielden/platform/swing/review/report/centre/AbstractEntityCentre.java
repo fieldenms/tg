@@ -178,7 +178,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 		@Override
 		public void run() {
 		    getEntityGridInspector(AbstractEntityCentre.this).getActualModel().refresh((T) entity);
-		    getProgressLayer().setLocked(false);
+		    //getProgressLayer().setLocked(false);
 		}
 	    });
 	}

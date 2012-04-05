@@ -11,9 +11,10 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisMod
 
 public class GridConfigurationModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisConfigurationModel<T, CDTME> {
 
+    public static final String gridAnalysisName = "Main details";
 
     public GridConfigurationModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria){
-	super(criteria, "Main details");
+	super(criteria, gridAnalysisName);
     }
 
     @Override

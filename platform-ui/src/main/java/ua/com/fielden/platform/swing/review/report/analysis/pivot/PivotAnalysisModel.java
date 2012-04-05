@@ -214,6 +214,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		Collections.sort(children, sorter);
 	    }
 
+	    @SuppressWarnings("rawtypes")
 	    @Override
 	    public String getTooltipAt(final int column) {
 		if (column == 0) {
