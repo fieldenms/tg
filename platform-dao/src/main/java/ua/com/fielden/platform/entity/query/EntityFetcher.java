@@ -18,6 +18,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 
 public class EntityFetcher {
@@ -53,7 +54,7 @@ public class EntityFetcher {
     protected <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainers(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final QueryModelResult<E> modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getDomainPersistenceMetadata(), getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
-	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : new fetch<E>(modelResult.getResultType());
+	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetch(modelResult.getResultType());
 	return new EntityEnhancer<E>(this).enhance(result, fetchModel);
     }
 

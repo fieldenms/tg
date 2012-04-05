@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.example.dynamiccriteria;
 
-import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 public class BaseUserProvider extends EntitycentreUserProvider {
 
@@ -15,7 +16,7 @@ public class BaseUserProvider extends EntitycentreUserProvider {
 
     @Override
     protected User initUser() {
-	return userDao.findByKeyAndFetch(new fetch<User>(User.class).with("basedOnUser"), User.system_users.SU.name());
+	return userDao.findByKeyAndFetch(fetch(User.class).with("basedOnUser"), User.system_users.SU.name());
     }
 
 }

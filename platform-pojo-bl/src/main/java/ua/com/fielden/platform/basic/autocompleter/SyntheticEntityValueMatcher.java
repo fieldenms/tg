@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -65,9 +66,9 @@ public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregat
 
     private fetch createJoinModel(final Class<? extends AbstractEntity> clazz) {
 	if (AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(clazz))) {
-	    return new fetch(clazz).with("key", createJoinModel((Class<AbstractEntity>) AnnotationReflector.getKeyType(clazz)));
+	    return fetch(clazz).with("key", createJoinModel((Class<AbstractEntity>) AnnotationReflector.getKeyType(clazz)));
 	} else {
-	    return new fetch(clazz);
+	    return fetch(clazz);
 	}
     }
 

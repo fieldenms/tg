@@ -1,11 +1,5 @@
 package ua.com.fielden.web.security;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.Router;
@@ -26,6 +20,12 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntity;
 import ua.com.fielden.web.rao.InspectedEntityRao;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 /**
  * Provides a unit test for request authentication process.
@@ -42,7 +42,7 @@ public class RequestAuthenticationTestCase extends WebBasedTestCase {
     private final IInspectedEntityDao rao = new InspectedEntityRao(config.restClientUtil());
     private final IInspectedEntityDao dao = DbDrivenTestCase.injector.getInstance(IInspectedEntityDao.class);
 
-    private final fetch<User> fetchModel = new fetch(User.class).with("roles", new fetch(UserAndRoleAssociation.class).with("userRole"));
+    private final fetch<User> fetchModel = fetch(User.class).with("roles", fetch(UserAndRoleAssociation.class).with("userRole"));
 
     @Test
     public void test_request_athentication_with_correctly_authenticated_user() {

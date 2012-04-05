@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.util.Date;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
@@ -13,7 +12,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
-
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 /**
  * Test the basic data migration logic.
  *
@@ -82,10 +81,10 @@ public class MigratorTest extends DbDrivenTestCase {
 	hibernateUtil.getSessionFactory().getCurrentSession().close();
 
 	assertEquals("Incorrect number of migrated entities.", 14, dao.getPage(0, 100).data().size());
-	assertNotNull("Not-null association has not been migrated correctly.", dao.findByKeyAndFetch(new fetchAll(TgVehicleModel.class), "MODEL1").getMake());
-	assertNotNull("Not-null association has not been migrated correctly.", dao.findByKeyAndFetch(new fetchAll(TgVehicleModel.class), "MODEL2").getMake());
+	assertNotNull("Not-null association has not been migrated correctly.", dao.findByKeyAndFetch(fetchAll(TgVehicleModel.class), "MODEL1").getMake());
+	assertNotNull("Not-null association has not been migrated correctly.", dao.findByKeyAndFetch(fetchAll(TgVehicleModel.class), "MODEL2").getMake());
 	//FIXME
-	//assertNull("Null association has not been migrated correctly.", dao.findByKeyAndFetch(new fetchAll(TgVehicleModel.class), "MODEL3").getMake());
+	//assertNull("Null association has not been migrated correctly.", dao.findByKeyAndFetch(fetchAll(TgVehicleModel.class), "MODEL3").getMake());
     }
 
     //FIXME
@@ -109,9 +108,9 @@ public class MigratorTest extends DbDrivenTestCase {
 //	upd.populateData(hibernateUtil.getSessionFactory(), conn, config.getEntityFactory(), errorDao, histDao, migrationRun, null);
 //
 //	assertEquals("Incorrect number of migrated entities.", 15, dao.getPage(0, 15).data().size());
-//	assertNotNull("Not-null association has not been migrated correctly.", dao.findByKeyAndFetch(new fetchAll(TgVehicleModel.class), "MODEL1").getMake());
-//	assertNotNull("Not-null association has not been migrated correctly.", dao.findByKeyAndFetch(new fetchAll(TgVehicleModel.class), "MODEL2").getMake());
-//	assertNull("Null association has not been migrated correctly.", dao.findByKeyAndFetch(new fetchAll(TgVehicleModel.class), "MODEL3").getMake());
+//	assertNotNull("Not-null association has not been migrated correctly.", dao.findByKeyAndFetch(fetchAll(TgVehicleModel.class), "MODEL1").getMake());
+//	assertNotNull("Not-null association has not been migrated correctly.", dao.findByKeyAndFetch(fetchAll(TgVehicleModel.class), "MODEL2").getMake());
+//	assertNull("Null association has not been migrated correctly.", dao.findByKeyAndFetch(fetchAll(TgVehicleModel.class), "MODEL3").getMake());
 //    }
 
     @Override

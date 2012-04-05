@@ -276,9 +276,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	return count != 1;
     }
 
-    /**
-     * TODO Need to consider the case of polymorphic associations such as Rotable, which can be both Bogie and/or Wheelset.
-     */
     @Override
     @SessionRequired
     public boolean entityExists(final T entity) {
@@ -521,10 +518,27 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	}
     }
 
+    protected EntityFactory getEntityFactory() {
+	return entityFactory;
+    }
+
+    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
+        return domainPersistenceMetadata;
+    }
+
+    @Override
+    public User getUser() {
+	return userDao.findByKey(getUsername());
+    }
+
+    public IFilter getFilter() {
+        return filter;
+    }
+
     /**
      * Implements pagination based on the provided query.
      *
-     * @author 01es
+     * @author TG Team
      *
      */
     public class EntityQueryPage implements IPage<T> {
@@ -534,14 +548,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	private final List<T> data;
 	private final QueryExecutionModel<T, ?> queryModel;
 
-	/**
-	 * Temporary constructor to be used with IQueryOrderedModel during transition phase.
-	 *
-	 * @param queryModel
-	 * @param pageNumber
-	 * @param pageCapacity
-	 * @param numberOfPages
-	 */
 	public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final int pageNumber, final int pageCapacity, final int numberOfPages) {
 	    this.pageNumber = pageNumber;
 	    this.pageCapacity = pageCapacity;
@@ -621,22 +627,5 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	public int no() {
 	    return pageNumber;
 	}
-    }
-
-    protected EntityFactory getEntityFactory() {
-	return entityFactory;
-    }
-
-    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
-        return domainPersistenceMetadata;
-    }
-
-    @Override
-    public User getUser() {
-	return userDao.findByKey(getUsername());
-    }
-
-    public IFilter getFilter() {
-        return filter;
     }
 }

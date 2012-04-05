@@ -315,9 +315,9 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 //	// retrieve wagon with all its slots and a bogie to be set into a slot
 //	final EntityResultQueryModel<Wagon> wagonModel = select(Wagon.class).where().prop("key").eq().val("WAGON1").model();
 //	final OrderingModel orderBy = orderBy().prop("key").asc().model();
-//	final fetch<Wagon> fetchModel = new fetch<Wagon>(Wagon.class).with("wagonClass").with("slots", new fetch<WagonSlot>(WagonSlot.class).with("bogie"));
+//	final fetch<Wagon> fetchModel = fetch(Wagon.class).with("wagonClass").with("slots", fetch(WagonSlot.class).with("bogie"));
 //	final Wagon wagon = injector.getInstance(IWagonDao2.class).getEntity(query(wagonModel, orderBy, fetchModel));
-//	final Bogie bogie = injector.getInstance(IBogieDao2.class).findById(5L, new fetch<Bogie>(Bogie.class).with("rotableClass"));
+//	final Bogie bogie = injector.getInstance(IBogieDao2.class).findById(5L, fetch(Bogie.class).with("rotableClass"));
 //
 //	// let's close the session in order to mimic proper client/server (and web) communication
 //	hibernateUtil.getSessionFactory().getCurrentSession().close();

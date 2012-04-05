@@ -3,10 +3,10 @@ package ua.com.fielden.platform.client.ui.menu.dumpper;
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.algorithm.search.ITreeNodePredicate;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
-import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 /**
  * Traverses the remote main menu tree and for every node, which is not present in the local main menu tree removes it by deleting the remote instance.
@@ -55,7 +55,7 @@ public class RemoveIrrelevantTreeMenuItemsUtility {
 	    final ITreeNode localNode = new BreadthFirstSearch<ITreeNode, ITreeNode<ITreeNode>>().search(localMenuRoot, new TreeNodeByClassPredicate(node));
 	    if (localNode == null) {
 		System.out.println("Need to remove " + node.getClass());
-		final MainMenuItem menuItem = controller.findByKeyAndFetch(new fetch<MainMenuItem>(MainMenuItem.class).with("parent"), node.getClass().getName());
+		final MainMenuItem menuItem = controller.findByKeyAndFetch(fetch(MainMenuItem.class).with("parent"), node.getClass().getName());
 		if (menuItem != null) {
 		    System.out.println("\tremoving " + menuItem);
 		    controller.delete(menuItem);

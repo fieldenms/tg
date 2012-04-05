@@ -9,7 +9,6 @@ import ua.com.fielden.platform.dao.factory.DaoFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgWagon;
 import ua.com.fielden.platform.sample.domain.TgWagonClass;
@@ -22,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 /**
  * Test the ability of the ValueMatcherFactory to correctly provide value matchers.
@@ -49,7 +49,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
 
 	final IValueMatcher<TgWagonClass> matcher = (IValueMatcher<TgWagonClass>) vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
 	//matcher.setQueryModel(select(WagonClass.class).with("compatibles", select(WagonClassCompatibility.class).model()));
-	matcher.setFetchModel(new fetch(TgWagonClass.class).with("compatibles", new fetch(TgWagonClassCompatibility.class)));
+	matcher.setFetchModel(fetch(TgWagonClass.class).with("compatibles", fetch(TgWagonClassCompatibility.class)));
 	assertNotNull("Should have constructed a value matcher.", matcher);
 	List<TgWagonClass> result = matcher.findMatches("W%");
 	assertEquals("Incorrect number of matching values.", 2, result.size());

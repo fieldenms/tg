@@ -56,7 +56,7 @@ public class MigratorPvrHandlingTest extends DbDrivenTestCase {
 //	hibernateUtil.getSessionFactory().getCurrentSession().close();
 //
 //	final IQueryOrderedModel<TgMeterReading> model = select(TgMeterReading.class).orderBy("readingDate").model();
-//	final List<TgMeterReading> readings = injector.getInstance(ITgMeterReading.class).getEntities(model, new fetchAll<TgMeterReading>(TgMeterReading.class));
+//	final List<TgMeterReading> readings = injector.getInstance(ITgMeterReading.class).getEntities(model, fetchAll(TgMeterReading.class));
 //	assertEquals("Incorrect number of migrated entities.", 2, readings.size());
 //	assertNotNull("Should have fuel usage association", readings.get(0).getFuelUsage());
 //	assertNull("Should not have fuel usage association", readings.get(1).getFuelUsage());

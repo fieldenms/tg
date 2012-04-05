@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -67,7 +68,7 @@ public final class Validators {
 	final EntityResultQueryModel<T> model = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, matchProperties);
 	final OrderingModel orderBy = orderBy().prop(fromDateProperty).asc().model();
 
-	final fetch<T> runFetch = fetchModel != null ? fetchModel : new fetch<T>((Class<T>) entity.getType());
+	final fetch<T> runFetch = fetchModel != null ? fetchModel : fetch((Class<T>) entity.getType());
 	final List<T> result = controller.firstPage(from(model).with(runFetch).with(orderBy).build(), 1).data();
 	return result.size() > 0 ? result.get(0) : null;
     }

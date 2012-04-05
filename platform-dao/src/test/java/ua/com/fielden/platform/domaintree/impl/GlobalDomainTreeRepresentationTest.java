@@ -16,7 +16,6 @@ import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 import ua.com.fielden.platform.domaintree.testing.TgKryo1;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -31,6 +30,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
@@ -63,7 +63,7 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
 	final IUserProvider baseUserProvider = new IUserProvider() {
 	    @Override
 	    public User getUser() {
-		return userDao.findByKeyAndFetch(new fetchAll<User>(User.class), userName);
+		return userDao.findByKeyAndFetch(fetchAll(User.class), userName);
 	    }
 	};
 	return baseUserProvider;

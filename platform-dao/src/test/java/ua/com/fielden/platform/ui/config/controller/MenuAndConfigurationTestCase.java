@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
@@ -12,6 +11,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuItemMixin;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 /**
  * A test case for main application menu composition, persistence and management.
@@ -28,7 +28,7 @@ public class MenuAndConfigurationTestCase extends DbDrivenTestCase {
 
     @Test
     public void test_finding_for_principal_menu_items_in_case_of_base_user() {
-	final User baseUser = userDao.findById(0L, new fetchAll<User>(User.class));
+	final User baseUser = userDao.findById(0L, fetchAll(User.class));
 	mixin.setUser(baseUser);
 	final List<MainMenuItem> menu = mixin.findPrincipalMenuItems();
 	assertEquals("Incorrect number of principal items", 7, menu.size());
@@ -45,7 +45,7 @@ public class MenuAndConfigurationTestCase extends DbDrivenTestCase {
 
     @Test
     public void test_finding_for_principal_menu_items_in_case_of_descendant_user() {
-	final User descendantUser = userDao.findById(1L, new fetchAll<User>(User.class));
+	final User descendantUser = userDao.findById(1L, fetchAll(User.class));
 	mixin.setUser(descendantUser);
 	final List<MainMenuItem> menu = mixin.findPrincipalMenuItems();
 	assertEquals("Incorrect number of principal items", 6, menu.size());
@@ -62,7 +62,7 @@ public class MenuAndConfigurationTestCase extends DbDrivenTestCase {
 
     @Test
     public void test_finding_for_saveas_menu_items_in_case_of_base_user() {
-	final User baseUser = userDao.findById(0L, new fetchAll<User>(User.class));
+	final User baseUser = userDao.findById(0L, fetchAll(User.class));
 	mixin.setUser(baseUser);
 	final List<MainMenuItem> menu = mixin.findSaveAsMenuItems();
 	assertEquals("Incorrect number of 'save as' items", 1, menu.size());
@@ -71,7 +71,7 @@ public class MenuAndConfigurationTestCase extends DbDrivenTestCase {
 
     @Test
     public void test_finding_for_saveas_menu_items_in_case_of_descendant_user() {
-	final User descendantUser = userDao.findById(1L, new fetchAll<User>(User.class));
+	final User descendantUser = userDao.findById(1L, fetchAll(User.class));
 	mixin.setUser(descendantUser);
 	final List<MainMenuItem> menu = mixin.findSaveAsMenuItems();
 	assertEquals("Incorrect number of 'save as' items", 1, menu.size());
@@ -80,7 +80,7 @@ public class MenuAndConfigurationTestCase extends DbDrivenTestCase {
 
     @Test
     public void test_constcution_of_menu_hierarchy_skeleton_for_base_user() {
-	final User baseUser = userDao.findById(0L, new fetchAll<User>(User.class));
+	final User baseUser = userDao.findById(0L, fetchAll(User.class));
 	mixin.setUser(baseUser);
 	final List<MainMenuItem> menu = mixin.loadMenuSkeletonStructure();
 
@@ -144,7 +144,7 @@ public class MenuAndConfigurationTestCase extends DbDrivenTestCase {
 
     @Test
     public void test_constcution_of_menu_hierarchy_skeleton_for_descendant_user() {
-	final User descendantUser = userDao.findById(1L, new fetchAll<User>(User.class));
+	final User descendantUser = userDao.findById(1L, fetchAll(User.class));
 	mixin.setUser(descendantUser);
 	final List<MainMenuItem> menu = mixin.loadMenuSkeletonStructure();
 
@@ -186,7 +186,7 @@ public class MenuAndConfigurationTestCase extends DbDrivenTestCase {
 
     @Test
     public void test_parenthood_of_saveas_items() {
-	final User user = userDao.findById(0L, new fetchAll<User>(User.class));
+	final User user = userDao.findById(0L, fetchAll(User.class));
 	mixin.setUser(user);
 	final List<MainMenuItem> menu = mixin.loadMenuSkeletonStructure();
 

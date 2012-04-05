@@ -9,7 +9,6 @@ import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fetch;
-import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.user.User;
@@ -19,10 +18,11 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 
 /**
  * Implementation of the user controller, which should be used managing system user information.
@@ -36,7 +36,7 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
     private final IUserRoleDao userRoleDao;
     private final IUserAndRoleAssociationDao userAssociationDao;
 
-    private final fetch<User> fetchModel = new fetch<User>(User.class).with("roles", new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class));
+    private final fetch<User> fetchModel = fetch(User.class).with("roles", fetch(UserAndRoleAssociation.class));
 
     @Inject
     public UserController(final IUserRoleDao userRoleDao, final IUserAndRoleAssociationDao userAssociationDao, final IFilter filter) {
@@ -105,6 +105,6 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
 
     @Override
     public User findUser(final String username) {
-	return findByKeyAndFetch(new fetchAll<User>(User.class), username);
+	return findByKeyAndFetch(fetchAll(User.class), username);
     }
 }

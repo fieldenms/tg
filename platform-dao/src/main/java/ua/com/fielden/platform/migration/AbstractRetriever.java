@@ -25,7 +25,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.annotations.Transactional;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
@@ -35,6 +34,8 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 /**
  * A base class for all concrete retrievers.
@@ -86,7 +87,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 	    keyValues[i] = keyContainers.get(i).getPropValue(this, rs, dynamicDao, factory);
 	}
 
-	T instance = dao.findByKeyAndFetch(new fetchAll(type()), keyValues);
+	T instance = dao.findByKeyAndFetch(fetchAll(type()), keyValues);
 	Long originalVersion = null;
 	boolean inserted = true;
 

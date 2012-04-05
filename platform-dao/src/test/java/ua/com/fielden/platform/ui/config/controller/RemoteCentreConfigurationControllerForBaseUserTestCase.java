@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -17,6 +16,7 @@ import ua.com.fielden.platform.ui.config.controller.menu_items.PrincipleMenuItem
 import ua.com.fielden.platform.ui.config.controller.menu_items.PrincipleMenuItem1_2_1;
 import ua.com.fielden.platform.ui.config.controller.menu_items.PrincipleMenuItem2_1;
 import ua.com.fielden.platform.ui.config.impl.interaction.RemoteCentreConfigurationController;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.ui.config.impl.interaction.RemoteCentreConfigurationController.KEY_SEPARATOR;
 
 /**
@@ -35,7 +35,7 @@ public class RemoteCentreConfigurationControllerForBaseUserTestCase extends DbDr
     private final IUserProvider baseUserProvider = new IUserProvider() {
 	@Override
 	public User getUser() {
-	    return userDao.findById(0L, new fetchAll<User>(User.class));
+	    return userDao.findById(0L, fetchAll(User.class));
 	}
 
     };

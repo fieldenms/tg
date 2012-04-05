@@ -56,5 +56,4 @@ public class EntityQueryUtils {
     public static <T extends AbstractEntity<?>> fetchAll<T> fetchAll(final Class<T> entityType) {
 	return new fetchAll<T>(entityType);
     }
-
 }

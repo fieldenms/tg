@@ -4,12 +4,12 @@ import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.algorithm.search.ITreeNodePredicate;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.fetch;
 import ua.com.fielden.platform.swing.menu.MiSaveAsConfiguration;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.menu.TreeMenuItemWrapper;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 /**
  * Traverses the main menu tree and persists each relevant item together with its configuration stored locally.
@@ -58,7 +58,7 @@ public class AdjustTreeMenuStructureUtility {
 	@Override
 	public boolean eval(final ITreeNode<ITreeNode> node) {
 	    if(canSave(node)){
-		MainMenuItem menuItem = controller.findByKeyAndFetch(new fetch<MainMenuItem>(MainMenuItem.class).with("parent"), node.getClass().getName());
+		MainMenuItem menuItem = controller.findByKeyAndFetch(fetch(MainMenuItem.class).with("parent"), node.getClass().getName());
 		if(menuItem == null){
 		    menuItem = factory.newByKey(MainMenuItem.class, node.getClass().getName());
 		}

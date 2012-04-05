@@ -206,7 +206,6 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
                 final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
                 final OrderingModel currTypePropertyOrderModel = indexPropName != null ? orderBy().prop(parentPropName).asc().prop(indexPropName).asc().model() : orderBy().prop(parentPropName).asc().model();
                 @SuppressWarnings("unchecked")
-                // final List<EntityContainer> properties = new Fetcher().listContainersWithoutKeyEnhanced(currTypePropertyModel, null, null);
                 final List<EntityContainer<T>> properties = fetcher.listContainers(from(currTypePropertyModel).with(currTypePropertyOrderModel).with(fetchModel).build(), null, null);
                 result.addAll(properties);
                 // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available

@@ -2,8 +2,8 @@ package ua.com.fielden.platform.swing.model;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fetch;
-import ua.com.fielden.platform.entity.query.fetchAll;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 /**
  * This is convenient UI model based on {@link UModel} simplifying model creation of a single stand alone (or simply master) entity. In this model the entity and managed entity is
@@ -24,7 +24,7 @@ public abstract class UmMaster<T extends AbstractEntity<?>, C> extends UModel<T,
 
     protected UmMaster(final T entity, final C controller, final ILightweightPropertyBinder<T> propertyBinder, final fetch<T> fm, final boolean lazy) {
 	super(entity, controller, propertyBinder, lazy);
-	this.fm = fm != null ? fm : new fetchAll<T>((Class<T>)entity.getType());
+	this.fm = fm != null ? fm : fetchAll((Class<T>)entity.getType());
 	if (shouldEnforceEntityLoadingDuringInstantiation()) {
 	    setEntity(findById(entity.getId(), true));
 	}

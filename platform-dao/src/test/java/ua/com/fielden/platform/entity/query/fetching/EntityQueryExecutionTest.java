@@ -6,7 +6,6 @@ import java.util.List;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.FirstLevelSecurityToken1;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
@@ -28,7 +27,6 @@ import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 import ua.com.fielden.platform.security.user.IUserDao;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -37,6 +35,7 @@ import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -102,7 +101,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     public void test4() {
         final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("make").eq().model(select(TgVehicleMake.class).where().prop("key").eq().val("MERC").yield().prop("id").modelAsPrimitive()). //
                 modelAsEntity(TgVehicleModel.class);
-        final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(model).with(new fetch<TgVehicleModel>(TgVehicleModel.class).with("make")).build());
+        final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(model).with(fetch(TgVehicleModel.class).with("make")).build());
             final TgVehicleModel vehModel = models.get(0);
         assertEquals("Incorrect key", "316", vehModel.getKey());
         assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
@@ -112,7 +111,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     public void test5() {
 	final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("make.key").eq().val("MERC"). //
 		modelAsEntity(TgVehicleModel.class);
-	final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(model).with(new fetch<TgVehicleModel>(TgVehicleModel.class).with("make")).build());
+	final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(model).with(fetch(TgVehicleModel.class).with("make")).build());
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
@@ -307,7 +306,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_vehicle_fetching() {
 	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
-	final fetch<TgVehicle> fetchModel = new fetch<TgVehicle>(TgVehicle.class).with("model", new fetch<TgVehicleModel>(TgVehicleModel.class).with("make"));
+	final fetch<TgVehicle> fetchModel = fetch(TgVehicle.class).with("model", fetch(TgVehicleModel.class).with("make"));
 	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).with(fetchModel).build());
 	final TgVehicle vehicle = vehicles.get(0);
 	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
@@ -318,7 +317,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_vehicle_with_collection_fetching() {
 	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
-	final fetch<TgVehicle> fetchModel = new fetch<TgVehicle>(TgVehicle.class).with("model", new fetch<TgVehicleModel>(TgVehicleModel.class).with("make")).with("fuelUsages", new fetch<TgFuelUsage>(TgFuelUsage.class));
+	final fetch<TgVehicle> fetchModel = fetch(TgVehicle.class).with("model", fetch(TgVehicleModel.class).with("make")).with("fuelUsages", fetch(TgFuelUsage.class));
 	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).with(fetchModel).build());
 	final TgVehicle vehicle = vehicles.get(0);
 	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
@@ -331,26 +330,16 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Ignore
     public void test_aggregates_fetching() {
 	final AggregatedResultQueryModel model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").yield().prop("model").as("model").modelAsAggregate();
-	final fetch<EntityAggregates> fetchModel = new fetch<EntityAggregates>(EntityAggregates.class).with("model", new fetch<TgVehicleModel>(TgVehicleModel.class).with("make"));
+	final fetch<EntityAggregates> fetchModel = fetch(EntityAggregates.class).with("model", fetch(TgVehicleModel.class).with("make"));
 	final EntityAggregates value = aggregateDao.getAllEntities(from(model).with(fetchModel).build()).get(0);
 	assertEquals("Incorrect key", "316", ((TgVehicleModel) value.get("model")).getKey());
 	assertEquals("Incorrect key", "MERC", ((TgVehicleModel) value.get("model")).getMake().getKey());
     }
 
     @Test
-    @Ignore
     public void test22() {
-	final EntityResultQueryModel<SecurityRoleAssociation> associationModel = select(SecurityRoleAssociation.class). //
-	where().prop("securityToken").eq().val(FirstLevelSecurityToken1.class.getName()).model();
-	final List<SecurityRoleAssociation> entities = secRolAssociationDao.getAllEntities(from(associationModel).build());
-	assertEquals("Incorrect count", 2, entities.size());
-	assertEquals("Incorrect key", FirstLevelSecurityToken1.class, entities.get(0).getSecurityToken());
-    }
-
-    @Test
-    public void test23() {
 	final EntityResultQueryModel<UserAndRoleAssociation> model = select(UserAndRoleAssociation.class).where().prop("user.key").eq().val("user1").and().prop("userRole.key").eq().val("MANAGER").model();
-	final List<UserAndRoleAssociation> entities = userAndRoleAssociationDao.getAllEntities(from(model).with(new fetch<UserAndRoleAssociation>(UserAndRoleAssociation.class)).build());
+	final List<UserAndRoleAssociation> entities = userAndRoleAssociationDao.getAllEntities(from(model).with(fetch(UserAndRoleAssociation.class)).build());
 	assertEquals("Incorrect count", 1, entities.size());
 	assertEquals("Incorrect user", "user1", entities.get(0).getUser().getKey());
     }

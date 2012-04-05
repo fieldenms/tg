@@ -37,6 +37,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.CheckingStrategy;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 
@@ -505,7 +506,7 @@ public class DynamicEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends
      * @throws Exception
      */
     private fetch<T> buildFetchModels(final Class<T> entityType, final DynamicEntityTreeNode treeNode) throws Exception {
-	fetch fetchModel = new fetch(entityType);
+	fetch fetchModel = fetch(entityType);
 
 	if (treeNode == null || treeNode.getChildCount() == 0) {
 	    return fetchModel;
