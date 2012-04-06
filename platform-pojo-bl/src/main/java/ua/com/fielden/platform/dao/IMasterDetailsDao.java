@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.pagination.IPage;
 
 /**

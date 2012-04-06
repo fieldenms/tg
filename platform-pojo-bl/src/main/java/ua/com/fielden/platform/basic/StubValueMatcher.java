@@ -3,7 +3,7 @@ package ua.com.fielden.platform.basic;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 
 
 /**

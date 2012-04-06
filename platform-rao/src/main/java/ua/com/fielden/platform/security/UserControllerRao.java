@@ -7,7 +7,7 @@ import org.restlet.data.Request;
 import org.restlet.data.Response;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;

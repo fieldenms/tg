@@ -128,12 +128,12 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
     }
 
     @Override
-    public <FT extends AbstractEntity<?>> ua.com.fielden.platform.entity.query.fetch<FT> getFetchModel() {
+    public <FT extends AbstractEntity<?>> ua.com.fielden.platform.entity.query.fluent.fetch<FT> getFetchModel() {
 	throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
     }
 
     @Override
-    public <FT extends AbstractEntity<?>> void setFetchModel(final ua.com.fielden.platform.entity.query.fetch<FT> fetchModel) {
+    public <FT extends AbstractEntity<?>> void setFetchModel(final ua.com.fielden.platform.entity.query.fluent.fetch<FT> fetchModel) {
 	throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
     }
 }

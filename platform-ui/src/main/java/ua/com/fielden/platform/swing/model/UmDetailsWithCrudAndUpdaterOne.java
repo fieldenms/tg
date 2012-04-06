@@ -6,7 +6,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import ua.com.fielden.platform.dao.IMasterDetailsDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 
 /**

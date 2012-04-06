@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.review;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 
 public abstract class EntityQueryCriteriaExtender<T extends AbstractEntity<?>, DAO extends IEntityDao<T>, R> {

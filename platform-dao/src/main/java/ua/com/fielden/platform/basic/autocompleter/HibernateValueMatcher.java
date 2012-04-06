@@ -9,7 +9,7 @@ import org.hibernate.Transaction;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 
 /**
  * This is a Hibernate based implementation of {@link IValueMatcher}. It can be used in to ways -- by passing HQL query or by passing just an entity type.

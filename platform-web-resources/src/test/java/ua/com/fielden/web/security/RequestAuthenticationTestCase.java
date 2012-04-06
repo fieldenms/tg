@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.Router;
 
-import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.ClientAuthenticationModel;
 import ua.com.fielden.platform.security.provider.IUserController;
