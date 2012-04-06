@@ -6,6 +6,7 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fetch;
+import ua.com.fielden.platform.entity.query.fluent.ValuePreprocessor;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -17,6 +18,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     private final fetch<T> fetchModel;
     private final Map<String, Object> paramValues;
     private boolean lightweight;
+    transient private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
 
     protected QueryExecutionModel(){
 	queryModel = null;
@@ -30,8 +32,16 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
 	queryModel = builder.queryModel;
 	orderModel = builder.orderModel;
 	fetchModel = builder.fetchModel;
-	paramValues = builder.paramValues;
+	paramValues = preprocessParamValues(builder.paramValues);
 	lightweight = builder.lightweight;
+    }
+
+    private Map<String, Object> preprocessParamValues(final Map<String, Object> paramValues) {
+	final Map<String, Object> result = new HashMap<String, Object>();
+	for (final Map.Entry<String, Object> entry : paramValues.entrySet()) {
+	    result.put(entry.getKey(), valuePreprocessor.preprocessValue(entry.getValue()));
+	}
+	return result;
     }
 
     public Q getQueryModel() {

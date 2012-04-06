@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -9,12 +11,15 @@ import ua.com.fielden.platform.types.Money;
 
 public class ValuePreprocessor {
     public Object preprocessValue(final Object value) {
-	if (value != null && value.getClass().isArray()) {
-	    final List<Object> values = new ArrayList<Object>();
-	    for (final Object object : (Object[]) value) {
-		values.add(convertValue(object));
+	if (value == null) {
+	    return null;
+	} else 	if (value instanceof Collection || value.getClass().isArray()) {
+	    final List<Object> result = new ArrayList<Object>();
+	    final Collection<Object> original = value instanceof Collection ? (Collection<Object>) value : Arrays.asList((Object[])value);
+	    for (final Object object :  original) {
+		result.add(convertValue(object));
 	    }
-	    return values.toArray();
+	    return result;
 	} else {
 	    return convertValue(value);
 	}

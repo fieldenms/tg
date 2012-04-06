@@ -84,7 +84,7 @@ public interface EntityQueryProgressiveInterfaces {
         T iVal(Object value);
         T param(String paramName);
         T iParam(String paramName);
-        T model(PrimitiveResultQueryModel model);
+        T model(SingleResultQueryModel<?> model);
         T expr(ExpressionModel Expr);
 
         // built-in SQL functions

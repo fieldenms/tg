@@ -51,16 +51,6 @@ final class Tokens {
 	return result;
     }
 
-    private List<Object> getValuesListFromArray(final Object... items) {
-	final List<Object> result = new ArrayList<Object>();
-	if (items != null) {
-	    for (final Object value : items) {
-		result.add(valuePreprocessor.preprocessValue(value));
-	    }
-	}
-	return result;
-    }
-
     public Tokens and() {
 	return add(TokenCategory.LOGICAL_OPERATOR, LogicalOperator.AND);
     }
@@ -198,7 +188,7 @@ final class Tokens {
     }
 
     public Tokens anyOfValues(final Object... values) {
-	return add(TokenCategory.ANY_OF_VALUES, getValuesListFromArray(values));
+	return add(TokenCategory.ANY_OF_VALUES, valuePreprocessor.preprocessValue(values));
     }
 
     public Tokens anyOfExpressions(final ExpressionModel... expressions) {
@@ -218,7 +208,7 @@ final class Tokens {
     }
 
     public Tokens allOfValues(final Object... values) {
-	return add(TokenCategory.ALL_OF_VALUES, getValuesListFromArray(values));
+	return add(TokenCategory.ALL_OF_VALUES, valuePreprocessor.preprocessValue(values));
     }
 
     public Tokens allOfExpressions(final ExpressionModel... expressions) {
@@ -242,7 +232,7 @@ final class Tokens {
     }
 
     public Tokens setOfValues(final Object... values) {
-	return add(TokenCategory.SET_OF_VALUES, getValuesListFromArray(values));
+	return add(TokenCategory.SET_OF_VALUES, valuePreprocessor.preprocessValue(values));
     }
 
     public Tokens setOfExpressions(final ExpressionModel... expressions) {

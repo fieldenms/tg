@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IRoundFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
 abstract class AbstractSingleOperand<T> extends AbstractQueryLink implements ISingleOperand<T> {
     abstract T getParent();
@@ -29,7 +29,7 @@ abstract class AbstractSingleOperand<T> extends AbstractQueryLink implements ISi
     }
 
     @Override
-    public T model(final PrimitiveResultQueryModel model) {
+    public T model(final SingleResultQueryModel<?> model) {
 	getTokens().model(model);
 	return getParent();
     }

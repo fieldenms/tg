@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 abstract class AbstractComparisonOperator<T extends ILogicalOperator<?>> extends AbstractQueryLink implements IComparisonOperator<T> {
     abstract T getParent1();
 
-    //@Override
     IComparisonOperand<T> getParent2() {
 	return new AbstractExpConditionalOperand<T>(getTokens()) {
 	    @Override
@@ -20,7 +19,6 @@ abstract class AbstractComparisonOperator<T extends ILogicalOperator<?>> extends
 	};
     }
 
-    //@Override
     IComparisonSetOperand<T> getParent3() {
 	return new AbstractSetOfOperands<T>(getTokens()) {
 	    @Override
@@ -30,7 +28,6 @@ abstract class AbstractComparisonOperator<T extends ILogicalOperator<?>> extends
 	};
     }
 
-    //@Override
     IComparisonQuantifiedOperand<T> getParent4() {
 	return new AbstractExpRightSideConditionalOperand<T>(getTokens()) {
 	    @Override
