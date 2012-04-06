@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.pivot.PivotAnalysisV
 import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
-public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void, PivotAnalysisView<T>> {
+public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManagerAndEnhancer, Void, PivotAnalysisView<T>> {
 
     private static final long serialVersionUID = -1464413279095086886L;
 

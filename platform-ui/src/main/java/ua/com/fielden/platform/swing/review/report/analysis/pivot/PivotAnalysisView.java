@@ -34,9 +34,9 @@ import javax.swing.tree.TreePath;
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToDistributionTickManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxListCellRenderer;
@@ -61,7 +61,7 @@ import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
-public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManager, Void> {
+public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManagerAndEnhancer, Void> {
 
     private static final long serialVersionUID = 8295216779213506230L;
 
@@ -137,7 +137,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	final DefaultListModel listModel = new DefaultListModel();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
-	final IPivotAddToDistributionTickManager firstTick = getModel().adtm().getFirstTick();
+	final IPivotAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
 
 	for (final String distributionProperty : firstTick.checkedProperties(root)) {
 	    listModel.addElement(distributionProperty);
@@ -181,7 +181,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	final DefaultListModel listModel = new DefaultListModel();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
-	final IPivotAddToAggregationTickManager secondTick = getModel().adtm().getSecondTick();
+	final IPivotAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
 
 	for (final String distributionProperty : secondTick.checkedProperties(root)) {
 	    listModel.addElement(distributionProperty);
@@ -292,8 +292,8 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		final int columnIndex = e.getToIndex();
 		final TableColumn column = treeTable.getColumnModel().getColumn(columnIndex);
 		final Class<T> root = getModel().getCriteria().getEntityClass();
-		final IPivotAddToDistributionTickManager firstTick = getModel().adtm().getFirstTick();
-		final IPivotAddToAggregationTickManager secondTick = getModel().adtm().getSecondTick();
+		final IPivotAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
+		final IPivotAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
 		int width = 0;
 		if(treeTable.isHierarchical(columnIndex)){
 		    width = firstTick.getWidth(root, firstTick.usedProperties(root).get(0));
@@ -321,8 +321,8 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    public void propertyChange(final PropertyChangeEvent evt) {
 		if (evt.getPropertyName().equals("width")) {
 		    final Class<T> root = getModel().getCriteria().getEntityClass();
-		    final IPivotAddToDistributionTickManager firstTick = getModel().adtm().getFirstTick();
-		    final IPivotAddToAggregationTickManager secondTick = getModel().adtm().getSecondTick();
+		    final IPivotAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
+		    final IPivotAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
 		    final int columnIndex = pivotTable.getColumnModel().getColumnIndex(((TableColumn)evt.getSource()).getIdentifier());
 		    if(pivotTable.isHierarchical(columnIndex)){
 			firstTick.setWidth(root, firstTick.usedProperties(root).get(0), ((Integer)evt.getNewValue()).intValue());
@@ -481,9 +481,9 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
      * @param treeTable
      */
     private static void refreshPivotTable(final PivotTreeTable treeTable){
-        final TreePath selectedPath = treeTable.getPathForRow(treeTable.getSelectedRow());
-        ((AbstractTableModel) treeTable.getModel()).fireTableStructureChanged();
-        treeTable.getSelectionModel().setSelectionInterval(0, treeTable.getRowForPath(selectedPath));
+	final TreePath selectedPath = treeTable.getPathForRow(treeTable.getSelectedRow());
+	((AbstractTableModel) treeTable.getModel()).fireTableStructureChanged();
+	treeTable.getSelectionModel().setSelectionInterval(0, treeTable.getRowForPath(selectedPath));
     }
 
 

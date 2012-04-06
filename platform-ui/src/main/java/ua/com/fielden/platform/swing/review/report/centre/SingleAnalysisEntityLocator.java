@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -33,8 +35,6 @@ import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.jidesoft.grid.TableModelWrapperUtils;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends AbstractSingleAnalysisEntityCentre<T, ILocatorDomainTreeManagerAndEnhancer> {
 
@@ -209,10 +209,11 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 	final JPanel locatorPanel = new JPanel(new MigLayout("fill, insets 0", "[fill][fill]push[][]", "[fill,grow][fill,grow]"));
 
 	final Class<T> entityType = getModel().getCriteria().getEntityClass();
+	final Class<?> managedType = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(entityType);
 	final ILocatorDomainTreeManager ldtm = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
 
-	final Pair<String, String> keyTitle = TitlesDescsGetter.getTitleAndDesc("key", entityType);
-	final Pair<String, String> descTitle = TitlesDescsGetter.getTitleAndDesc("desc", entityType);
+	final Pair<String, String> keyTitle = TitlesDescsGetter.getTitleAndDesc("key", managedType);
+	final Pair<String, String> descTitle = TitlesDescsGetter.getTitleAndDesc("desc", managedType);
 	final JCheckBox searchByDesc = new JCheckBox("Search by " + (descTitle.getKey() != null ? descTitle.getKey() : "description"));
 	final JCheckBox searchByKeyAndDesc = new JCheckBox("Search by " + (keyTitle.getKey() != null ? keyTitle.getKey() : "key") + " and "
 		+ (descTitle.getKey() != null ? descTitle.getKey() : "description"));

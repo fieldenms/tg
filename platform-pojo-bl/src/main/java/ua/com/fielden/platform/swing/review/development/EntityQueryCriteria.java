@@ -1,11 +1,16 @@
 package ua.com.fielden.platform.swing.review.development;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
+import ua.com.fielden.platform.criteria.enhanced.SecondParam;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
@@ -49,19 +54,21 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	return cdtme;
     }
 
-    //TODO What entity class it should return entity class or enhanced entity class? Please consider that.
-    //As far as this class might be generated with asm then one must consider whether criteria generation algorithm works correctly.
     public Class<T> getEntityClass(){
 	return dao.getEntityType();
     }
-
-    //TODO must implement later.
 
     /**
      * Must load default values for the properties of the binding entity.
      */
     public void defaultValues(){
-	//TODO implement default values for this criteria values.
+	final IAddToCriteriaTickRepresentation ftr = getCentreDomainTreeMangerAndEnhancer().getRepresentation().getFirstTick();
+	for(final Field propertyField : CriteriaReflector.getCriteriaProperties(getType())){
+	    final SecondParam secondParam = propertyField.getAnnotation(SecondParam.class);
+	    final CriteriaProperty critProperty = propertyField.getAnnotation(CriteriaProperty.class);
+	    final Class<T> root = getEntityClass();
+	    set(propertyField.getName(), secondParam == null ? ftr.getValueByDefault(root, critProperty.propertyName()) : ftr.getValue2ByDefault(root, critProperty.propertyName()));
+	}
     }
 
     /**
@@ -70,8 +77,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     public boolean isDefaultEnabled(){
-	//TODO implement is default enable method
-	return false;
+	return !CriteriaReflector.getCriteriaProperties(getType()).isEmpty();
     }
 
     @SuppressWarnings("unchecked")

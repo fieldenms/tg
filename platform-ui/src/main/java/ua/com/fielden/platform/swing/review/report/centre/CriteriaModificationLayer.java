@@ -200,7 +200,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	final IPropertyEditor leftPropertyEditor = (this.propertyEditor instanceof RangePropertyEditor) ? ((RangePropertyEditor) this.propertyEditor).getFromEditor()
 		: this.propertyEditor;
 	final IPropertyEditor rightPropertyEditor = (this.propertyEditor instanceof RangePropertyEditor) ? ((RangePropertyEditor) this.propertyEditor).getToEditor() : null;
-	propertyName = CriteriaReflector.getCriteriaProperty((Class<? extends EntityQueryCriteria>)eqc.getType(), leftPropertyEditor.getPropertyName());
+	propertyName = CriteriaReflector.getCriteriaProperty(eqc.getType(), leftPropertyEditor.getPropertyName());
 	rootType = eqc.getEntityClass();
 	managedType = eqc.getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(rootType);
 	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determineClass(managedType, propertyName, true, true);
@@ -230,7 +230,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	nullMenuItem.setMnemonic(KeyEvent.VK_H);
 	nullMenuItem.setSelected(Boolean.TRUE.equals(orNull));
 	nullMenuItem.addItemListener(this);
-	final CritOnly critOnly = StringUtils.isEmpty(propertyName) ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, eqc.getEntityClass(), propertyName);
+	final CritOnly critOnly = StringUtils.isEmpty(propertyName) ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, propertyName);
 	final boolean isCritOnly = critOnly != null;
 	final boolean isNotBoolOrCritOnlyDate = !(this.propertyEditor instanceof RangePropertyEditor && ( ((RangePropertyEditor) this.propertyEditor).isBool() || ((RangePropertyEditor) this.propertyEditor).isDate() && isCritOnly));
 	if (isNotBoolOrCritOnlyDate) { // all criteria could be altered by emptiness except boolean criteria

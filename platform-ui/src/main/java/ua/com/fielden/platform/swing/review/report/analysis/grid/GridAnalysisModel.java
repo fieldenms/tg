@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
@@ -18,19 +18,19 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 
-public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReviewModel<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage<T>> {
+public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReviewModel<T, CDTME, IAbstractAnalysisDomainTreeManagerAndEnhancer, IPage<T>> {
 
-    private final PropertyTableModel<T> gridModel;
+    private final PropertyTableModel<?> gridModel;
 
     public GridAnalysisModel(final GridConfigurationModel<T, CDTME> configurationModel, final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final PageHolder pageHolder) {
 	super(configurationModel, criteria, null, pageHolder);
 	this.gridModel = createTableModel();
 	getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
-	    @SuppressWarnings("unchecked")
+	    @SuppressWarnings({ "unchecked", "rawtypes" })
 	    @Override
 	    public void pageChanged(final PageChangedEvent e) {
-		getGridModel().setInstances(e.getNewPage() == null ? new ArrayList<T>() : ((IPage<T>)e.getNewPage()).data());
+		getGridModel().setInstances(e.getNewPage() == null ? new ArrayList() : ((IPage)e.getNewPage()).data());
 	    }
 	});
 	getPageHolder().newPage(null);
@@ -41,17 +41,19 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	return (GridConfigurationModel<T, CDTME>)super.getConfigurationModel();
     }
 
-    private PropertyTableModel<T> createTableModel() {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private PropertyTableModel<?> createTableModel() {
 	final Class<T> entityClass = getCriteria().getEntityClass();
-	final PropertyTableModelBuilder<T> tableModelBuilder = new PropertyTableModelBuilder<T> (entityClass);
+	final Class<?> managedType = getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(entityClass);
+	final PropertyTableModelBuilder<?> tableModelBuilder = new PropertyTableModelBuilder(managedType);
 	final IAddToResultTickManager resultTickManager = getCriteria().getCentreDomainTreeMangerAndEnhancer().getSecondTick();
 	for(final String propertyName : resultTickManager.checkedProperties(entityClass)){
 	    tableModelBuilder.addReadonly(propertyName, resultTickManager.getWidth(entityClass, propertyName));
 	}
-	return tableModelBuilder.build(new ArrayList<T>());
+	return tableModelBuilder.build(new ArrayList());
     }
 
-    public final PropertyTableModel<T> getGridModel(){
+    public final PropertyTableModel<?> getGridModel(){
 	return gridModel;
     }
 

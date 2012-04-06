@@ -4,6 +4,8 @@ import java.awt.Dimension;
 import java.io.FileInputStream;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.xml.DOMConfigurator;
 import org.jfree.ui.RefineryUtilities;
 
 import ua.com.fielden.platform.application.AbstractUiApplication;
@@ -40,6 +42,7 @@ public class EntityCentreExample extends AbstractUiApplication {
     private IGlobalDomainTreeManager gdtm;
     private EntityMasterManager emm;
     private IUserProvider userProvider;
+    private Logger logger = Logger.getLogger(EntityCentreExample.class);
 
     @Override
     protected void beforeUiExposure(final String[] args, final SplashController splashController) throws Throwable {
@@ -108,10 +111,12 @@ public class EntityCentreExample extends AbstractUiApplication {
 
 	RefineryUtilities.centerFrameOnScreen(mainApplicationFrame);
 	SimpleLauncher.show("Expression editor example", mainApplicationFrame, null);
+	//logger.info("__________________________________________________________________________________________");
     }
 
     public static void main(final String[] args) {
 	Rdbms.rdbms = Rdbms.H2;
+	DOMConfigurator.configure("src/main/resources/log4j.xml");
 	new EntityCentreExample().launch(args);
     }
 

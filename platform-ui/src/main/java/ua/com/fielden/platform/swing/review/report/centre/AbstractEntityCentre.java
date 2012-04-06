@@ -631,19 +631,19 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 
 	final JPanel controlPanel = new JPanel(new MigLayout("fill, insets 0", "[70::,fill]" + columnConstraints.toString() + "20:push[][][][]20[]push[:70:,fill][:70:,fill]", "[c,fill]"));
 
-	controlPanel.add(newButton(getDefaultAction()));
+	controlPanel.add(newButton(getDefaultAction(), true));
 	for(final JComponent component : controlButtons){
 	    controlPanel.add(component);
 	}
 
-	controlPanel.add(newButton(getPaginator().getFirst()));
-	controlPanel.add(newButton(getPaginator().getPrev()));
-	controlPanel.add(newButton(getPaginator().getNext()));
-	controlPanel.add(newButton(getPaginator().getLast()));
+	controlPanel.add(newButton(getPaginator().getFirst(), false));
+	controlPanel.add(newButton(getPaginator().getPrev(), false));
+	controlPanel.add(newButton(getPaginator().getNext(), false));
+	controlPanel.add(newButton(getPaginator().getLast(), false));
 	controlPanel.add(feedBack);
 
-	controlPanel.add(newButton(getExportAction()));
-	controlPanel.add(newButton(getRunAction()));
+	controlPanel.add(newButton(getExportAction(), true));
+	controlPanel.add(newButton(getRunAction(), true));
 
 	return controlPanel;
 
@@ -700,7 +700,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	}
 
 	if(actionList.size() == 1){
-	    return newButton(actionList.get(0));
+	    return newButton(actionList.get(0), true);
 	}
 	if(actionList.size() > 1){
 	    final List<ActionChanger<Void>> actionChangers = new ArrayList<ActionChanger<Void>>();
@@ -760,14 +760,14 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     }
 
     /**
-     * Creates non-focusable {@link JButton} for passed action
+     * Creates focusable/non-focusable {@link JButton} for passed action
      *
      * @param action
      * @return
      */
-    private static JButton newButton(final Action action) {
+    private static JButton newButton(final Action action, final boolean focusable) {
 	final JButton button = new JButton(action);
-	button.setFocusable(false);
+	button.setFocusable(focusable);
 	return button;
     }
 }

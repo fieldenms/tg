@@ -39,9 +39,9 @@ import org.jfree.chart.ChartMouseEvent;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToDistributionTickManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
@@ -67,7 +67,7 @@ import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
-public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer ,IAnalysisDomainTreeManager, Void> {
+public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer ,IAnalysisDomainTreeManagerAndEnhancer, Void> {
 
     private static final long serialVersionUID = -6505281133387254406L;
 
@@ -112,7 +112,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	super(model, progressLayer, owner);
 	this.dataModel = new CategoryDataModel(getModel().getChartAnalysisDataProvider());
 	this.chartPanel = new MultipleChartPanel<List<EntityAggregates>, CategoryChartTypes>();
-	this.chartScroller = new CategoryChartScrollPanel(chartPanel, getModel().adtm().getVisibleDistributedValuesNumber());
+	this.chartScroller = new CategoryChartScrollPanel(chartPanel, getModel().adtme().getVisibleDistributedValuesNumber());
 	this.distributionList = createDistributionList();
 	this.aggregationList = createAggregationList();
 	this.spinner = createColumnCounterSpinner();
@@ -185,7 +185,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	final DefaultListModel listModel = new DefaultListModel();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
-	final IAnalysisAddToDistributionTickManager firstTick = getModel().adtm().getFirstTick();
+	final IAnalysisAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
 
 	for (final String distributionProperty : firstTick.checkedProperties(root)) {
 	    listModel.addElement(distributionProperty);
@@ -240,7 +240,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	final DefaultListModel listModel = new DefaultListModel();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
-	final IAnalysisAddToAggregationTickManager secondTick = getModel().adtm().getSecondTick();
+	final IAnalysisAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
 
 	for (final String distributionProperty : secondTick.checkedProperties(root)) {
 	    listModel.addElement(distributionProperty);
@@ -304,7 +304,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     }
 
     private JSpinner createColumnCounterSpinner() {
-	final JSpinner spinner = new JSpinner(new SpinnerNumberModel(getModel().adtm().getVisibleDistributedValuesNumber(), null, null, 1));
+	final JSpinner spinner = new JSpinner(new SpinnerNumberModel(getModel().adtme().getVisibleDistributedValuesNumber(), null, null, 1));
 	final Dimension prefSize = spinner.getPreferredSize();
 	spinner.setPreferredSize(new Dimension(50, prefSize.height));
 	spinner.setEnabled(chartPanel.getChartPanelsCount() > 0 && isAllChartAvailable());
@@ -377,7 +377,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     private int getNumOfSelectedWithoutNew() {
 	final Class<T> root = getModel().getCriteria().getEntityClass();
-	final IAnalysisAddToAggregationTickManager secondTick = getModel().adtm().getSecondTick();
+	final IAnalysisAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
 
 	final List<String> usedProperties = secondTick.usedProperties(root);
 	int num = 0;
@@ -391,7 +391,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     private List<Integer> getSeriesOrder() {
 	final Class<T> root = getModel().getCriteria().getEntityClass();
-	final IAnalysisAddToAggregationTickManager secondTick = getModel().adtm().getSecondTick();
+	final IAnalysisAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
 
 	final List<String> actualAggregationList = getModel().getChartAnalysisDataProvider().aggregatedProperties();
 	final List<Integer> selectedValuesOrder = new ArrayList<Integer>();

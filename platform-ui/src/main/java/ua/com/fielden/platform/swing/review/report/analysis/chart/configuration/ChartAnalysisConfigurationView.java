@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.analysis.chart.configuration;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.ChartAnalysisView;
@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.configuration.Abstra
 import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
-public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManager, Void, ChartAnalysisView<T>> {
+public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, IAnalysisDomainTreeManagerAndEnhancer, Void, ChartAnalysisView<T>> {
 
     private static final long serialVersionUID = -44217633254876740L;
 

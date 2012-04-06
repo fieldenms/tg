@@ -27,7 +27,7 @@ import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -43,15 +43,16 @@ import ua.com.fielden.platform.swing.verticallabel.MouseDefaultHeaderHandler;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
-public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManager, IPage<T>> {
+public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManagerAndEnhancer, IPage<T>> {
 
     private static final long serialVersionUID = 8538099803371092525L;
 
     private final EgiPanel<T> egiPanel;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, CDTME> owner) {
 	super(model, progressLayer, owner);
-	this.egiPanel = new EgiPanel<T>(getModel().getGridModel(), false);
+	this.egiPanel = new EgiPanel(getModel().getGridModel(), false);
 	this.addSelectionEventListener(createGridAnalysisSelectionListener());
 	configureEgiWithOrdering();
 	layoutView();

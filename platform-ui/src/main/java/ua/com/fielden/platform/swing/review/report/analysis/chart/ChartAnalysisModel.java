@@ -7,7 +7,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.error.Result;
@@ -21,12 +21,12 @@ import ua.com.fielden.platform.swing.review.report.analysis.configuration.Abstra
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.types.Money;
 
-public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer ,IAnalysisDomainTreeManager, Void> {
+public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer ,IAnalysisDomainTreeManagerAndEnhancer, Void> {
 
     private final ChartAnalysisDataProvider chartAnalysisDataProvider = new ChartAnalysisDataProvider();
 
-    public ChartAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisDomainTreeManager adtm, final PageHolder pageHolder) {
-	super(configurationModel, criteria, adtm, pageHolder);
+    public ChartAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisDomainTreeManagerAndEnhancer adtme, final PageHolder pageHolder) {
+	super(configurationModel, criteria, adtme, pageHolder);
 	getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
 	    @SuppressWarnings("unchecked")
