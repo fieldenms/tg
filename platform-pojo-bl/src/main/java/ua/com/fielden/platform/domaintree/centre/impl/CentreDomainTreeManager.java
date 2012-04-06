@@ -59,6 +59,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     private Boolean runAutomatically;
 
     private final transient List<IAnalysisListener> analysisListeners;
+    private final transient CentreDomainTreeManagerSerialiserWithTransientAnalyses specificSerialiser = new CentreDomainTreeManagerSerialiserWithTransientAnalyses((TgKryo) getSerialiser());
 
     /**
      * A <i>manager</i> constructor for the first time instantiation.
@@ -89,6 +90,28 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    currentAnalyses.put(entry.getKey(), EntityUtils.deepCopy(entry.getValue(), getSerialiser())); // should be initialised with copies of persistent analyses
 	}
 	freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
+
+	this.analysisListeners = new ArrayList<IAnalysisListener>();
+    }
+
+    /**
+     * A <i>manager</i> constructor with transient analyses (current and freezed).
+     *
+     * @param serialiser
+     * @param dtr
+     * @param firstTick
+     * @param secondTick
+     */
+    protected CentreDomainTreeManager(final ISerialiser serialiser, final CentreDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses, final Boolean runAutomatically, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> currentAnalyses, final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> freezedAnalyses) {
+	super(serialiser, dtr, firstTick, secondTick);
+	this.persistentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
+	this.persistentAnalyses.putAll(persistentAnalyses);
+	this.runAutomatically = runAutomatically;
+
+	this.currentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
+	this.currentAnalyses.putAll(currentAnalyses);
+	this.freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer>();
+	this.freezedAnalyses.putAll(currentAnalyses);
 
 	this.analysisListeners = new ArrayList<IAnalysisListener>();
     }
@@ -899,6 +922,40 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    super.write(buffer, manager);
 	    writeValue(buffer, manager.persistentAnalyses);
 	    writeValue(buffer, manager.runAutomatically);
+	}
+    }
+
+    /**
+     * A specific Kryo serialiser for {@link CentreDomainTreeManager} with transient analyses.
+     *
+     * @author TG Team
+     *
+     */
+    public static class CentreDomainTreeManagerSerialiserWithTransientAnalyses extends CentreDomainTreeManagerSerialiser {
+	public CentreDomainTreeManagerSerialiserWithTransientAnalyses(final TgKryo kryo) {
+	    super(kryo);
+	}
+
+	@Override
+	public CentreDomainTreeManager read(final ByteBuffer buffer) {
+	    final CentreDomainTreeRepresentation dtr = readValue(buffer, CentreDomainTreeRepresentation.class);
+	    final AddToCriteriaTickManager firstTick = readValue(buffer, AddToCriteriaTickManager.class);
+	    final AddToResultTickManager secondTick = readValue(buffer, AddToResultTickManager.class);
+	    final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses = readValue(buffer, LinkedHashMap.class);
+	    final Boolean runAutomatically = readValue(buffer, Boolean.class);
+
+	    final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> currentAnalyses = readValue(buffer, LinkedHashMap.class);
+	    final Map<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> freezedAnalyses = readValue(buffer, LinkedHashMap.class);
+
+	    return new CentreDomainTreeManager(kryo(), dtr, firstTick, secondTick, persistentAnalyses, runAutomatically, currentAnalyses, freezedAnalyses);
+	}
+
+	@Override
+	public void write(final ByteBuffer buffer, final CentreDomainTreeManager manager) {
+	    super.write(buffer, manager);
+
+	    writeValue(buffer, manager.currentAnalyses);
+	    writeValue(buffer, manager.freezedAnalyses);
 	}
     }
 

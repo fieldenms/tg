@@ -14,6 +14,8 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.CentreDomainTreeManagerSerialiserWithTransientAnalyses;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer.AddToCriteriaTickManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
@@ -24,6 +26,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
@@ -304,6 +307,26 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     /**
+     * A copy method for entity centre that copies also "transient" stuff like currentAnalyses and freezedAnalyses.
+     * It has been done to take care about copying entity centre with some changed / freezed analyses (all that changes
+     * will be promoted to copies).
+     *
+     * @param centre
+     * @return
+     */
+    private ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre) {
+	final TgKryo kryo = (TgKryo) getSerialiser();
+	kryo.register(CentreDomainTreeManager.class, new CentreDomainTreeManagerSerialiserWithTransientAnalyses(kryo));
+	final ICentreDomainTreeManagerAndEnhancer copy = initCriteriaManagerCrossReferences(EntityUtils.deepCopy(centre, getSerialiser()));
+	kryo.register(CentreDomainTreeManager.class);
+	return copy;
+    }
+
+    private IMasterDomainTreeManager copyMaster(final IMasterDomainTreeManager master) {
+	return initMasterManagerCrossReferences(EntityUtils.deepCopy(master, getSerialiser()));
+    }
+
+    /**
      * Initiates an application instances with a new <code>mgr</code> instance.
      *
      * @param root
@@ -314,7 +337,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private void init(final Class<?> root, final String name, final ICentreDomainTreeManagerAndEnhancer mgr, final boolean owning) {
 	final ICentreDomainTreeManagerAndEnhancer fullyDefinedMgr = initCriteriaManagerCrossReferences(mgr);
 	currentCentres.put(key(root, name), fullyDefinedMgr);
-	persistentCentres.put(key(root, name), initCriteriaManagerCrossReferences(EntityUtils.deepCopy(fullyDefinedMgr, getSerialiser())));
+	persistentCentres.put(key(root, name), copyCentre(fullyDefinedMgr));
 	centresOwning.put(key(root, name), owning);
     }
 
@@ -329,13 +352,14 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private void initMaster(final Class<?> root, final IMasterDomainTreeManager mgr) {
 	final IMasterDomainTreeManager fullyDefinedMgr = initMasterManagerCrossReferences(mgr);
 	currentMasters.put(root, fullyDefinedMgr);
-	persistentMasters.put(root, initMasterManagerCrossReferences(EntityUtils.deepCopy(fullyDefinedMgr, getSerialiser())));
+	persistentMasters.put(root, copyMaster(fullyDefinedMgr));
     }
 
     @Override
     public void discardEntityCentreManager(final Class<?> root, final String name) {
-	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
-	currentCentres.put(key(root, name), initCriteriaManagerCrossReferences(EntityUtils.deepCopy(persistentCentres.get(key(root, name)), getSerialiser())));
+	final ICentreDomainTreeManagerAndEnhancer persistentCentre = persistentCentres.get(key(root, name));
+	notInitiliasedError(persistentCentre, root, name);
+	currentCentres.put(key(root, name), copyCentre(persistentCentre));
 
 	if (isFreezedEntityCentreManager(root, name)) {
 	    unfreeze(root, name);
@@ -348,10 +372,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    error("Unable to freeze the entity-centre instance more than once for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
 	}
 	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
-	notInitiliasedError(currentCentres.get(key(root, name)), root, name);
+	final ICentreDomainTreeManagerAndEnhancer currentCentre = currentCentres.get(key(root, name));
+	notInitiliasedError(currentCentre, root, name);
 	final ICentreDomainTreeManagerAndEnhancer persistentCentre = persistentCentres.remove(key(root, name));
 	freezedCentres.put(key(root, name), persistentCentre);
-	persistentCentres.put(key(root, name), initCriteriaManagerCrossReferences(EntityUtils.deepCopy(currentCentres.get(key(root, name)), getSerialiser())));
+	persistentCentres.put(key(root, name), copyCentre(currentCentre));
     }
 
     /**
@@ -424,7 +449,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 		ecc.setConfigBody(getSerialiser().serialise(currentMgr));
 		entityCentreConfigController.save(ecc);
 
-		persistentCentres.put(key(root, name), initCriteriaManagerCrossReferences(EntityUtils.deepCopy(currentMgr, getSerialiser())));
+		persistentCentres.put(key(root, name), copyCentre(currentMgr));
 	    } else if (count < 1) { // there is no entity-centre
 		error("Unable to save a non-existent (non-visible for current user) entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    } else { // > 1
@@ -481,7 +506,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final ICentreDomainTreeManagerAndEnhancer originationMgr = getEntityCentreManager(root, originalName);
 	validateBeforeSaving(originationMgr, root, originalName);
 	// create a copy of current instance of entity centre
-	final ICentreDomainTreeManagerAndEnhancer copyMgr = initCriteriaManagerCrossReferences(EntityUtils.deepCopy(originationMgr, getSerialiser()));
+	final ICentreDomainTreeManagerAndEnhancer copyMgr = copyCentre(originationMgr);
 
 	// save an instance of EntityCentreConfig with overridden body, which should exist in DB
 	final String rootName = root.getName();
@@ -575,7 +600,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final EntityResultQueryModel<EntityMasterConfig> model = masterModelForCurrentUser(rootName);
 	final int count = entityMasterConfigController.count(model);
 	if (count == 1) { // the persistence layer contains own entity-master, so the changes should be rejected
-	    currentMasters.put(root, initMasterManagerCrossReferences(EntityUtils.deepCopy(persistentMasters.get(root), getSerialiser())));
+	    currentMasters.put(root, copyMaster(persistentMasters.get(root)));
 	} else if (count < 1) { // there is no own entity-master -- should be resetted to empty!
 	    currentMasters.remove(root);
 	    persistentMasters.remove(root);
@@ -597,14 +622,14 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    emc.setConfigBody(getSerialiser().serialise(currentMgr));
 	    entityMasterConfigController.save(emc);
 
-	    persistentMasters.put(root, initMasterManagerCrossReferences(EntityUtils.deepCopy(currentMgr, getSerialiser())));
+	    persistentMasters.put(root, copyMaster(currentMgr));
 	} else if (count < 1) { // there is no entity-centre
 	    // save a new instance of EntityMasterConfig
 	    final EntityMasterConfig emc = factory.newByKey(EntityMasterConfig.class, currentUser(), root.getName());
 	    emc.setConfigBody(getSerialiser().serialise(currentMgr));
 	    entityMasterConfigController.save(emc);
 
-	    persistentMasters.put(root, initMasterManagerCrossReferences(EntityUtils.deepCopy(currentMgr, getSerialiser())));
+	    persistentMasters.put(root, copyMaster(currentMgr));
 	} else { // > 1
 	    error("There are more than one entity-master instance for type [" + root.getSimpleName() + "] for current user [" + currentUser() + "].");
 	}

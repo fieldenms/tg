@@ -15,6 +15,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
@@ -392,6 +393,69 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertFalse("Should be NOT freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
     }
 
+    @Test
+    public void test_that_CENTRE_freezing_unfreezing_works_fine_with_changed_analysis_inside() {
+	// create PRINCIPLE and REPORT report for USER2
+	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
+	nonBaseMgr.initEntityCentreManager(MasterEntity.class, null);
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, null).getFirstTick().check(MasterEntity.class, "integerProp", true);
+	nonBaseMgr.saveAsEntityCentreManager(MasterEntity.class, null, "REPORT");
+
+	// init analysis => it should become 'changed' within CENTRE
+	final String name = "A brand new PIVOT analysis";
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").initAnalysisManagerByDefault(name, AnalysisType.PIVOT);
+	assertFalse("The CENTRE should be 'unchanged'.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertNotNull("The EMBEDDED ANALYSIS should be 'not null' after initialisation.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getAnalysisManager(name));
+	assertTrue("The EMBEDDED ANALYSIS should be 'changed' after initialisation.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").isChangedAnalysisManager(name));
+
+	// FREEEEEEEZEEEEEE CENTRE
+	nonBaseMgr.freezeEntityCentreManager(MasterEntity.class, "REPORT");
+	assertFalse("The CENTRE should not be changed after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertNotNull("The EMBEDDED ANALYSIS should be 'not null' after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getAnalysisManager(name));
+	assertTrue("The EMBEDDED ANALYSIS should remain 'changed' after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").isChangedAnalysisManager(name));
+
+	// discard after-freezing changes
+	nonBaseMgr.discardEntityCentreManager(MasterEntity.class, "REPORT");
+	assertFalse("The CENTRE should be 'unchanged' after unfreezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertNotNull("The EMBEDDED ANALYSIS should remain 'not null' after unfreezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getAnalysisManager(name));
+	assertTrue("The EMBEDDED ANALYSIS should remain 'changed' after unfreezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").isChangedAnalysisManager(name));
+    }
+
+    @Test
+    public void test_that_CENTRE_freezing_unfreezing_works_fine_with_freezed_analysis_inside() {
+	// create PRINCIPLE and REPORT report for USER2
+	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
+	nonBaseMgr.initEntityCentreManager(MasterEntity.class, null);
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, null).getFirstTick().check(MasterEntity.class, "integerProp", true);
+	nonBaseMgr.saveAsEntityCentreManager(MasterEntity.class, null, "REPORT");
+
+	// init analysis => it should become 'changed' within CENTRE
+	final String name = "A brand new PIVOT analysis";
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").initAnalysisManagerByDefault(name, AnalysisType.PIVOT);
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").acceptAnalysisManager(name);
+	nonBaseMgr.saveEntityCentreManager(MasterEntity.class, "REPORT");
+	assertFalse("The CENTRE should be 'unchanged'.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getAnalysisManager(name).setVisible(false);
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").freezeAnalysisManager(name);
+	assertTrue("The CENTRE should be 'changed' due to freezed analysis (it copies current analysis to persistent and now the CENTRE ischanged).", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertNotNull("The EMBEDDED ANALYSIS should be 'not null'.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getAnalysisManager(name));
+	assertTrue("The EMBEDDED ANALYSIS should be 'freezed' after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").isFreezedAnalysisManager(name));
+	assertFalse("The EMBEDDED ANALYSIS should be 'unchanged' after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").isChangedAnalysisManager(name));
+
+	// FREEEEEEEZEEEEEE CENTRE
+	nonBaseMgr.freezeEntityCentreManager(MasterEntity.class, "REPORT");
+	assertFalse("The CENTRE should not be changed after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertNotNull("The EMBEDDED ANALYSIS should be 'not null' after CENTRE freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getAnalysisManager(name));
+	assertTrue("The EMBEDDED ANALYSIS should remain 'freezed' after CENTRE freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").isFreezedAnalysisManager(name));
+	assertFalse("The EMBEDDED ANALYSIS should remain 'unchanged' after CENTRE freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").isChangedAnalysisManager(name));
+
+	// discard after-freezing changes
+	nonBaseMgr.discardEntityCentreManager(MasterEntity.class, "REPORT");
+	assertTrue("The CENTRE should be 'changed' after unfreezing due to freezed analysis (it copies current analysis to persistent and now the CENTRE ischanged).", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
+	assertNotNull("The EMBEDDED ANALYSIS should be 'not null' after CENTRE unfreezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getAnalysisManager(name));
+	assertTrue("The EMBEDDED ANALYSIS should remain 'freezed' after CENTRE unfreezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").isFreezedAnalysisManager(name));
+	assertFalse("The EMBEDDED ANALYSIS should remain 'unchanged' after CENTRE unfreezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").isChangedAnalysisManager(name));
+    }
 
     @Test
     public void test_that_CENTRE_reloading_works_fine() {
