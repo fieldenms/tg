@@ -50,7 +50,6 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CentreDomainTreeManager extends AbstractDomainTreeManager implements ICentreDomainTreeManager {
-    private static final long serialVersionUID = 7832625541851145438L;
     private final transient Logger logger = Logger.getLogger(getClass());
 
     private final LinkedHashMap<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> persistentAnalyses;
@@ -59,7 +58,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     private Boolean runAutomatically;
 
     private final transient List<IAnalysisListener> analysisListeners;
-    private final transient CentreDomainTreeManagerSerialiserWithTransientAnalyses specificSerialiser = new CentreDomainTreeManagerSerialiserWithTransientAnalyses((TgKryo) getSerialiser());
 
     /**
      * A <i>manager</i> constructor for the first time instantiation.
