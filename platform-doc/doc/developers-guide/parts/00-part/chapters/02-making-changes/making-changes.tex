@@ -34,7 +34,7 @@
     \umlbasiccomponent[x=8, y=0, fill=blue!10]{coolapp-web-server}
 
     \draw[very thick, dashed, color=red!50!black, rounded corners] (1.8, -3.3) rectangle (6.2,-6.1);
-    \node[color=red!50!black] at (4.9, -3) {\small Share Module};
+    \node[color=red!50!black] at (4.9, -3) {\small Shared Module};
     \umlbasiccomponent[x=4, y=-5]{coolapp-pojo-bl}
     
     \umlnote[x=-2, y=3.5, width=5.5cm, fill=annotationbgcolor]{coolapp-dao}{\scriptsize Date Access Objects layer, which provides RDBMS-based implementation for domain controllers.}
@@ -371,6 +371,39 @@ public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
     \end{lstlisting}
   \end{code}
 
-  The next step is to observe our changes in the actual application.
+\subsection{Modifying User Interface}
+  In order for application users to be able to enter and modify values of the \texttt{birthday} property added to the \emph{Person} entity, the application user interface (UI) needs to be updated.
+  A complete discussion of the UI development support as provided by the platform is presented in chapter~\ref{?}.
+  In this section we only cover the most essential concepts required to gain a general understanding in order to add \texttt{birthday} property to the application UI.
+
+  The platform UI programming model is loosely based on a Model-View-Controller (MVC) pattern with stronger separation between the view and controller, which allows for a linear (instead of triad) dependency between the Model, View and Controller.
+  Also, the nomenclature is slightly different:
+  \begin{description}
+    \item[\textbf{The View.}] Has the same meaning as in MVC, which is represented in TG by a specialised container (panel or frame) containing other UI controls. It is responsible strictly for layouting and holding UI controls and bares no UI logic.
+    \item[\textbf{The Controller.}] Represents a pure business domain controller, which bares no UI logic\footnote{This separation of concerns is ensured at the module level, where business controller have no visibility of UI code.}. The View does not interact with Controller directly.
+    \item [\textbf{The Model.}] Acts as a mediator between the View and Controller, and provides all UI related logic such as implementation of actions, event handlers etc. It interacts with Controller in order to invoke the business logic.
+  \end{description}
+
+  The basic modus operandi is this.
+  Each domain entity such as \emph{Person} has a corresponding CRUD controller, UI model and view, which are bound together to enable user interaction with this domain entity.
+
+ \begin{code}{Person main view construction}{\label{lst:Person-birthday-validation}}{codebgcolor}
+    \begin{lstlisting}
+@Override
+public void buildUi() {
+    final JPanel componentsPanel = new JPanel(new MigLayout("insets 0", 
+					      "[:50:][grow, fill]", 
+					      "[c]"));
+    final Map<String, IPropertyEditor> editors = getModel().getEditors();
+    ///////////////////////////////////////////////////////    
+    addAndWrap(componentsPanel, editors, "key");  // row 1    
+    addAndWrap(componentsPanel, editors, "desc"); // row 2
+    ...
+}
+    \end{lstlisting}
+  \end{code}
+
 
 \subsection{Running Modified Application}
+
+\subsection{Securing access}
