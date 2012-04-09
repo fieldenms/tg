@@ -45,20 +45,25 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	    for (final Map.Entry<String, fetch<?>> entry : propertiesFetchModels.entrySet()) {
 		final String propName = entry.getKey();
 		final fetch<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
-		final PropertyPersistenceInfo ppi = fetcher.getDomainPersistenceMetadata().getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
-		if (ppi == null || ppi.isCollection()) {
-		    final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
-		    for (final Field field : collProps) {
-			if (field.getName().equals(propName)) {
-			    enhanceCollectional(entities, propName, HashSet.class, field.getAnnotation(IsProperty.class).linkProperty(), null, propFetchModel);
+		if (fetchModel.getEntityType() != EntityAggregates.class) {
+			final PropertyPersistenceInfo ppi = fetcher.getDomainPersistenceMetadata().getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
+			if (ppi == null || ppi.isCollection()) {
+			    final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
+			    for (final Field field : collProps) {
+				if (field.getName().equals(propName)) {
+				    enhanceCollectional(entities, propName, HashSet.class, field.getAnnotation(IsProperty.class).linkProperty(), null, propFetchModel);
+				}
+			    }
+			    //
+			} else if (ppi.isEntity() || ppi.isOne2OneId()) {
+			    enhanceProperty(entities, propName, propFetchModel);
+			} else  {
+			    // do nothing
 			}
-		    }
-		    //
-		} else if (/*!EntityUtils.isPersistedEntityType(entitiesType) || //*/ppi.isEntity() || ppi.isOne2OneId()) {
+		} else {
 		    enhanceProperty(entities, propName, propFetchModel);
-		} else  {
-		    // do nothing
 		}
+
 	    }
 	}
 

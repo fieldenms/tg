@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
@@ -18,12 +20,35 @@ final class EntityResultTreeBuilder {
 	this.domainPersistenceMetadata = domainPersistenceMetadata;
     }
 
-    protected <E extends AbstractEntity<?>> EntityTree<E> buildEntityTree(final Class<E> resultType, final Collection<PropertyPersistenceInfo> properties) throws Exception {
+    private class MetaP {
+	String name;
+	Class type;
+	ICompositeUserTypeInstantiate hibType;
+	SortedSet<PropertyPersistenceInfo> items;
+
+	public MetaP(final String name, final Class type, final SortedSet<PropertyPersistenceInfo> items) {
+	    super();
+	    this.name = name;
+	    this.type = type;
+	    this.items = items;
+	    this.hibType = null;
+	}
+	public MetaP(final String name, final ICompositeUserTypeInstantiate hibType, final SortedSet<PropertyPersistenceInfo> items) {
+	    super();
+	    this.name = name;
+	    this.type = null;
+	    this.items = items;
+	    this.hibType = hibType;
+	}
+
+    }
+
+    protected <E extends AbstractEntity<?>> EntityTree<E> buildEntityTree(final Class<E> resultType, final SortedSet<PropertyPersistenceInfo> properties) throws Exception {
 	final EntityTree<E> result = new EntityTree<E>(resultType);
 
 	final List<PropertyPersistenceInfo> singleProps = getFirstLevelSingleProps(resultType, properties);
-	final Map<String, Collection<PropertyPersistenceInfo>> compositeProps = getFirstLevelCompositeProps(resultType, properties);
-	final Map<String, Collection<PropertyPersistenceInfo>> compositeValueProps = getFirstLevelCompositeValueProps(resultType, properties);
+	final Map<String, MetaP> compositeProps = getFirstLevelCompositeProps(resultType, properties);
+	final Map<String, MetaP> compositeValueProps = getFirstLevelCompositeValueProps(resultType, properties);
 
 	for (final PropertyPersistenceInfo propInfo : singleProps) {
 	    result.getSingles().put(new PropertyPersistenceInfo.Builder(propInfo.getName(), propInfo.getJavaType(), propInfo.isNullable()). //
@@ -32,16 +57,14 @@ final class EntityResultTreeBuilder {
 		    build(), index.getNext());
 	}
 
-	for (final Map.Entry<String, Collection<PropertyPersistenceInfo>> propEntry : compositeValueProps.entrySet()) {
+	for (final Map.Entry<String, MetaP> propEntry : compositeValueProps.entrySet()) {
 	    final String subtreePropName = propEntry.getKey();
-	    final PropertyPersistenceInfo ppi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, subtreePropName);
-	    result.getCompositeValues().put(subtreePropName, buildValueTree(ppi.getHibTypeAsCompositeUserType(), propEntry.getValue()));
+	    result.getCompositeValues().put(subtreePropName, buildValueTree(propEntry.getValue().hibType, propEntry.getValue().items));
 	}
 
-	for (final Map.Entry<String, Collection<PropertyPersistenceInfo>> propEntry : compositeProps.entrySet()) {
+	for (final Map.Entry<String, MetaP> propEntry : compositeProps.entrySet()) {
 	    final String subtreePropName = propEntry.getKey();
-	    final PropertyPersistenceInfo ppi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, subtreePropName);
-	    result.getComposites().put(subtreePropName, buildEntityTree(ppi.getJavaType(), propEntry.getValue()));
+	    result.getComposites().put(subtreePropName, buildEntityTree(propEntry.getValue().type, propEntry.getValue().items));
 	}
 
 	return result;
@@ -80,57 +103,63 @@ final class EntityResultTreeBuilder {
 	return result;
     }
 
-    private <E extends AbstractEntity<?>> Map<String, Collection<PropertyPersistenceInfo>> getFirstLevelCompositeProps(final Class<E> resultType, final Collection<PropertyPersistenceInfo> allProps) {
-	final Map<String, Collection<PropertyPersistenceInfo>> result = new HashMap<String, Collection<PropertyPersistenceInfo>>();
+    private <E extends AbstractEntity<?>> Map<String, MetaP> getFirstLevelCompositeProps(final Class<E> resultType, final Collection<PropertyPersistenceInfo> allProps) {
+	final Map<String, MetaP> result = new HashMap<String, MetaP>();
 
 	for (final PropertyPersistenceInfo prop : allProps) {
 	    if (prop.getName().contains(".")) {
 		final int firstDotIndex = prop.getName().indexOf(".");
 		final String group = prop.getName().substring(0, firstDotIndex);
 
-		final PropertyPersistenceInfo groupPpi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, group);
-
-		if (groupPpi.isEntity()) {
-			if (!result.containsKey(group)) {
-			    result.put(group, new ArrayList<PropertyPersistenceInfo>());
-			}
-			result.get(group).add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), false/*?*/). //
-				column(prop.getColumn()). //
-				hibType(prop.getHibType()). //
-				build());
-
-		}
-
-	    } else if (prop.isEntity()) { //prop.getType() != null && EntityUtils.isPersistedEntityType(prop.getJavaType())) {
-		final List<PropertyPersistenceInfo> subprops = new ArrayList<PropertyPersistenceInfo>();
-		subprops.add(new PropertyPersistenceInfo.Builder("id", Long.class, false). //
+		if (EntityAggregates.class != resultType) {
+		    if (result.containsKey(group)) {
+			result.get(group).items.add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), false/*?*/). //
 			column(prop.getColumn()). //
 			hibType(prop.getHibType()). //
 			build());
-		result.put(prop.getName(), subprops);
+
+		    }
+		} else {
+		    if (!result.containsKey(group)) {
+			result.put(group, new MetaP(group, EntityAggregates.class, new TreeSet<PropertyPersistenceInfo>()));
+		    }
+		    result.get(group).items.add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), false/*?*/). //
+		    column(prop.getColumn()). //
+		    hibType(prop.getHibType()). //
+		    build());
+
+		}
+
+	    } else if (prop.isEntity()) {
+		final SortedSet<PropertyPersistenceInfo> subprops = new TreeSet<PropertyPersistenceInfo>();
+		subprops.add(new PropertyPersistenceInfo.Builder("id", Long.class, false).column(prop.getColumn()).hibType(prop.getHibType()).build());
+		result.put(prop.getName(), new MetaP(prop.getName(), prop.getJavaType(), subprops));
 	    }
 	}
 
 	return result;
     }
 
-    private <E extends AbstractEntity<?>>Map<String, Collection<PropertyPersistenceInfo>> getFirstLevelCompositeValueProps(final Class<E> resultType, final Collection<PropertyPersistenceInfo> allProps) {
-	final Map<String, Collection<PropertyPersistenceInfo>> result = new HashMap<String, Collection<PropertyPersistenceInfo>>();
+    private <E extends AbstractEntity<?>> Map<String, MetaP> getFirstLevelCompositeValueProps(final Class<E> resultType, final SortedSet<PropertyPersistenceInfo> allProps) {
+	final Map<String, MetaP> result = new HashMap<String, MetaP>();
 
 	for (final PropertyPersistenceInfo prop : allProps) {
 	    if (prop.getName().contains(".")) {
 		final int firstDotIndex = prop.getName().indexOf(".");
 		final String group = prop.getName().substring(0, firstDotIndex);
-		final PropertyPersistenceInfo groupPpi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, group);
 
-		if (groupPpi.isCompositeProperty()) {
+		if (EntityAggregates.class != resultType) {
+		    final PropertyPersistenceInfo groupPpi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, group);
+
+		    if (groupPpi.isCompositeProperty()) {
 			if (!result.containsKey(group)) {
-			    result.put(group, new ArrayList<PropertyPersistenceInfo>());
+			    result.put(group, new MetaP(group, groupPpi.getHibTypeAsCompositeUserType(), new TreeSet<PropertyPersistenceInfo>()));
 			}
-			result.get(group).add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), false /*?*/). //
-				column(prop.getColumn()). //
-				hibType(prop.getHibType()). //
-				build());
+			result.get(group).items.add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), false /*?*/). //
+			column(prop.getColumn()). //
+			hibType(prop.getHibType()). //
+			build());
+		    }
 		}
 	    }
 	}
