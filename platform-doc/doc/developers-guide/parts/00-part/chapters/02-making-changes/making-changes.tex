@@ -24,7 +24,7 @@
       \end{itemize}
    \end{description}
 
-\begin{image}{Dependencies between Project Modules}{\label{img:ch00:03:project_module_dependencies}}    
+\begin{image}{Dependencies between Project Modules.}{\label{img:ch00:03:project_module_dependencies}}    
     \scalebox{1.0} {
   \begin{tikzpicture}
     \draw[very thick, dashed, color=blue!50!black, rounded corners] (-2.3, 1.8) rectangle (10.7,-1.2);
@@ -80,7 +80,7 @@
  \lstset{language=Java,
 	  escapechar=\%,
 	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
-  \begin{code}{A fragment of entity type Person}{\label{lst:Person}}{codebgcolor}
+  \begin{code}{A fragment of entity type Person.}{\label{lst:Person}}{codebgcolor}
     \begin{lstlisting}
 @KeyType(String.class)
 @KeyTitle(value = "Person Code", desc = "A code uniquely representing a person.")
@@ -125,7 +125,7 @@ public class Person extends AbstractEntity<String> {
   Let's change the description of property \emph{username} from \texttt{Username} to \texttt{Login Name}, and description from \texttt{Application user name} to \texttt{A name, which is used for loging into the application}.
   In order to do this, locate type Person by pressing the key combination \texttt{Ctrl+Shift+T} to invoke \emph{Open Type} dialog and type \emph{Person} (refer Fig.~\ref{img:ch00:03:open-type-dialog}), which should quickly locate the required type.
 
-  \begin{image}{Open Type Dialog}{\label{img:ch00:03:open-type-dialog}}
+  \begin{image}{Open Type Dialog.}{\label{img:ch00:03:open-type-dialog}}
     \includegraphics[width=0.6\textwidth]{parts/00-part/chapters/02-making-changes/images/01-open-type-person.png}
   \end{image}
 
@@ -156,10 +156,10 @@ public class Person extends AbstractEntity<String> {
 
   \paragraph*{Adding property.} 
   If the Eclipse IDE was property setup with TG templates, then creation of a new property is trivial.
-  Type \texttt{tgp} and hit \emph{Ctrl+Space} in the code editor of type Person under the last available property.
+  Type \texttt{tgp} and hit \texttt{Ctrl+Space} in the code editor of type Person under the last available property.
   This should result in the dialog depicted in Fig.~\ref{img:ch00:03:gen-prop-template}, which should be used to select option \texttt{tgprop} for property template generation.
 
-  \begin{image}{TG Property Templates Dialog}{\label{img:ch00:03:gen-prop-template}}
+  \begin{image}{TG Property Templates Dialog.}{\label{img:ch00:03:gen-prop-template}}
     \includegraphics[width=0.8\textwidth]{parts/00-part/chapters/02-making-changes/images/02-birthday-property-gen.png}
   \end{image}
 
@@ -174,7 +174,7 @@ public class Person extends AbstractEntity<String> {
   At this stage both setter and getter have the \texttt{birthday} portion starting with small \texttt{b}.
   Change it to be a capital \texttt{B}, so that the setter read \texttt{setBirthday} and getter read \texttt{getBirthday}.
 
-  \begin{image}{TG Property Temple}{\label{img:ch00:03:prop-template}}
+  \begin{image}{TG Property Temple.}{\label{img:ch00:03:prop-template}}
     \includegraphics[width=0.4\textwidth]{parts/00-part/chapters/02-making-changes/images/03-birthday-property-template.png}
   \end{image}
 
@@ -182,7 +182,7 @@ public class Person extends AbstractEntity<String> {
   Please note the return type of the setter, which matches the enclosing type Person.
   This is done to support method chaining, which is so convenient when creating new or modifying existing entity instances.
 
-  \begin{code}{Property \texttt{birthday}}{\label{lst:Person-birthday}}{codebgcolor}
+  \begin{code}{Property \texttt{birthday}.}{\label{lst:Person-birthday}}{codebgcolor}
     \begin{lstlisting}
     @IsProperty
     @MapTo
@@ -209,7 +209,7 @@ public class Person extends AbstractEntity<String> {
   The \texttt{Handler} is provided with value \texttt{BirthdayValidator.class}, which indicates the name of the wouldbe validator.
   This validator needs to be created.
 
-  \begin{code}{BeforeChange declaration}{\label{lst:Person-birthday-beforechange}}{codebgcolor}
+  \begin{code}{BeforeChange declaration.}{\label{lst:Person-birthday-beforechange}}{codebgcolor}
     \begin{lstlisting}
     @IsProperty
     @MapTo
@@ -222,7 +222,7 @@ public class Person extends AbstractEntity<String> {
   Eclipse provides an easy way to generate the stub by clicking the error mark on the left margin of the editor and selecting option \emph{Create class 'BirthdayValidator'} as depicted in Fig.~\ref{img:ch00:03:gen-validator-class}.
   By default the invoked class\footnote{Please note that this time we're creating a new class that would provide the validation logic, but generally speaking it could also be an interface with customer specific binding that would happen at the project assembly phase.} creating wizard would offer to place it into the same package and the class where wizard was initiated.
   It is best if validators are kept in a separate to entities package in order to better organise the project structure.
-  Thus, in the wizard change the package value from \texttt{fielden.personel} to \texttt{fielden.personel.validation}.
+  Thus, in the wizard change the package value from \texttt{fielden.personnel} to \texttt{fielden.personnel.validation}.
 
   \begin{image}{TG Property Temple}{\label{img:ch00:03:gen-validator-class}}
     \includegraphics[width=\textwidth]{parts/00-part/chapters/02-making-changes/images/04-create-validator.png}
@@ -233,10 +233,11 @@ public class Person extends AbstractEntity<String> {
   In this case, it would be \texttt{Date} to match the type of property \texttt{birthday}.
   The contract demands implementation of only one method \texttt{handle} that would provide the necessary validation logic.
   
-  The test-first approach works really well when implementing business logic, which ensures both the correctness of the business logic and the quickest possible implementation time by navigating the development effort along the requirements captured tests.
+  The \emph{test-first} approach works really well when implementing business logic, which ensures both the correctness of the business logic and the quickest possible implementation time by navigating the development effort along the requirements captured by tests.
   Thus, let's first provide stub implementation for the handler class as illustrated in Listing~\ref{lst:Person-birthday-validation-stub}, and then implement the test that would define that should happen during birthday validation.  
+  The stub returns a successful validation result, which is equivalent to not having any validation at all.
   
- \begin{code}{Birthday validation logic stub}{\label{lst:Person-birthday-validation-stub}}{codebgcolor}
+ \begin{code}{Birthday validation logic stub.}{\label{lst:Person-birthday-validation-stub}}{codebgcolor}
     \begin{lstlisting}
 public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
 
@@ -249,50 +250,81 @@ public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
 }
     \end{lstlisting}
   \end{code}
-
   
   The generated application conveniently provides an example of a domain-driven unit test case for entity Person.
-  Open test case \texttt{PersonnelTest} by using the \emph{Open Type} dialog as before in the editor, and without explaining too much of the existing code add the two tests from Listings~\ref{lst:Person-birthday-validation-test-1} and ~\ref{lst:Person-birthday-validation-test-2}.
+  Open test case \texttt{PersonnelTest} by using the \emph{Open Type} dialog as before in the editor, and without explaining too much of the existing code\footnote{A separate chapter is dedicated to unit testing further in the book.} add the four tests from Listings~\ref{lst:Person-birthday-validation-test-1}-\ref{lst:Person-birthday-validation-test-4} to this test case.
 
- \begin{code}{Personnel younger 23 should produce warning}{\label{lst:Person-birthday-validation-test-1}}{codebgcolor}
+  \begin{notebox}{A rule of thumb.}{\label{mb:rule-of-thumb}}
+    Creation of unit tests should follow a rule of thumb where by \emph{each unit test should ensure one particular fact}.
+    This keeps tests short in code and clear in meaning.
+    The recommended approach is to use test method name to specify what fact it ensures.
+    The provided examples follow this rule.
+  \end{notebox}  
+
+ \begin{code}{Personnel younger 23 should produce warning.}{\label{lst:Person-birthday-validation-test-1}}{codebgcolor}
     \begin{lstlisting}
 @Test
-public void birthday_should_produce_warning_and_be_saved() {	
+public void birthday_indicating_a_young_person_should_produce_warning() {	
   final Person person = ao(Person.class).
 			findByKey("USER2").
-			setBirthday(date("2000-01-01 10:10:00"));	
+			setBirthday(new DateTime().minusYears(20).toDate());	
 
   assertTrue("Should be valid", 
              person.getProperty("birthday").isValid());
   assertNotNull("Should have warning", 
                 person.getProperty("birthday").getFirstWarning());
-
-  ao(Person.class).save(person);
-
-  assertEquals("Should have been saved.", 
-	       date("2000-01-01 10:10:00"), 
-               ao(Person.class).findByKey("USER2").getBirthday());
 }
     \end{lstlisting}
   \end{code}
 
-  Both test rely on the fact that test data contains a person with business key equals to \emph{USER2} and property \texttt{birthday} that has no value (i.e. it is null).
-  The first test ensures rule \emph{2.a} that if the birth date suggests a person younger than 23 years of age then a warning should be raised, but the value is recognised as valid and saved when requested.
-  The second test ensures rule \emph{2.b} that no future birth dates are acceptable, and thus are not saved.
-  Running these tests by pressing \texttt{Ctrl+F11} combination should result in failure of both tests\footnote{One existing test should succeed.}.
-  This means we need to keep coding the validation rules until both of these tests are successful.
-  Before moving further in the text, please try to implement the validation rules to make the tests pass.
-  
-\begin{code}{Unborn personnel is not acceptable}{\label{lst:Person-birthday-validation-test-2}}{codebgcolor}
+\begin{code}{Personnel younger 23 should be persisted.}{\label{lst:Person-birthday-validation-test-2}}{codebgcolor}
     \begin{lstlisting}
 @Test
-public void birthday_should_produce_error_and_not_be_saved() {	
+public void birthday_indicating_a_young_person_should_be_saved() {	
+  final Date birthday = new DateTime().minusYears(20).toDate();
+  final Person person = ao(Person.class).
+			findByKey("USER2").
+			setBirthday(birthday);
+
+  ao(Person.class).save(person);
+
+  assertEquals("Incorrectly saved birthday.", 
+	  birthday,
+          ao(Person.class).findByKey("USER2").getBirthday());
+}
+    \end{lstlisting}
+  \end{code}
+
+  All tests rely on the fact that test data contains a person with business key equals to \emph{USER2} and property \texttt{birthday} that has no value (i.e. it is null).
+  Test in Listing~\ref{lst:Person-birthday-validation-test-1} ensures rule \emph{2.a} that if the birth date suggests a person younger than 23 years of age then a warning should be raised, but the value should be recognised as valid.
+  Test in Listing~\ref{lst:Person-birthday-validation-test-2} ensures that these ``early'' birthday value are saved correctly.
+  Strictly speaking this test is not necessary and is provided only for the purpose of example, as it tests an already established at the platform level fact -- correct property values can be persisted when requested.
+
+  The third test (Listing~\ref{lst:Person-birthday-validation-test-3}) ensures rule \emph{2.b} that no future birth dates are acceptable.
+  The last test (Listing~\ref{lst:Person-birthday-validation-test-4}) ensures that invalid birthday value is not saved
+  \footnote{Similar to test in Listing~\ref{lst:Person-birthday-validation-test-2}, it is provided more as an example -- the platform does not permit saving of invalid values, and there is no particular reason to test this invariant behaviour at the application level}.
+
+\begin{code}{Unborn personnel should lead to a validation error.}{\label{lst:Person-birthday-validation-test-3}}{codebgcolor}
+    \begin{lstlisting}
+@Test
+public void future_birthday_date_should_produce_validation_error() {	
   final Person person = ao(Person.class).
 			findByKey("USER2").
 			setBirthday(new DateTime().plusYears(1).toDate());	
 
   assertFalse("Should be invalid", 
               person.getProperty("birthday").isValid());
+}
+    \end{lstlisting}
+  \end{code}
+
+\begin{code}{Unborn personnel should not be persisted.}{\label{lst:Person-birthday-validation-test-4}}{codebgcolor}
+    \begin{lstlisting}
+@Test
+public void future_birthday_date_should_not_be_saved() {	
+  final Person person = ao(Person.class).
+			findByKey("USER2").
+			setBirthday(new DateTime().plusYears(1).toDate());	
 
   ao(Person.class).save(person);
 
@@ -302,7 +334,13 @@ public void birthday_should_produce_error_and_not_be_saved() {
     \end{lstlisting}
   \end{code}
 
- Listing~\ref{lst:Person-birthday-validation} provides a complete validation logic that satisfies all the requirements.
+  Running these tests by pressing \texttt{Ctrl+F11} combination while in the editor window of the test case, should result in failure of three out of four of the provided tests\footnote{The generated test \texttt{should\_be\_able\_to\_find\_person\_USER2} should also succeed.}.
+  Test \texttt{birthday\_indicating\_a\_young\_person\_should\_be\_saved} succeeds because any value without validation is persisted when requested.
+  For the same reason, test \texttt{future\_birthday\_date\_should\_not\_be\_saved} fails.
+
+  The provided unit tests establish a set of constraints that guide the coding effort -- once all the tests pass the validation rule implementation can be declared completed.
+  Listing~\ref{lst:Person-birthday-validation} provides a complete validation logic that satisfies all business requirements.
+  Before moving further in the text please try to implement the validation rules personally without using code from the listing to make the tests pass.
 
 
  \begin{code}{Birthday validation logic}{\label{lst:Person-birthday-validation}}{codebgcolor}
@@ -321,7 +359,7 @@ public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
 		return new Result(newValue, 
 	                          new IllegalArgumentException("Cannot be in future."));
 	    }
-	    // warn is younger than 23 years of age 
+	    // warn if younger than 23 years of age 
 	    if (date.isAfter(new DateTime().minusYears(23))) {
 		return new Warning("The person is potentially too young.");
 	    }
@@ -334,6 +372,5 @@ public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
   \end{code}
 
   The next step is to observe our changes in the actual application.
-
 
 \subsection{Running Modified Application}
