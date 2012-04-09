@@ -10,13 +10,16 @@ import static org.junit.Assert.fail;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
@@ -29,10 +32,12 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Orderin
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
+import ua.com.fielden.platform.domaintree.testing.EntityForCentreCheckedProperties;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
+import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterSyntheticEntity;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
@@ -47,6 +52,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
+
     @Override
     protected ICentreDomainTreeManagerAndEnhancer dtm() {
 	return (ICentreDomainTreeManagerAndEnhancer) super.dtm();
@@ -65,6 +71,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	rootTypes.add(EntityWithCompositeKey.class);
 	rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
 	rootTypes.add(MasterSyntheticEntity.class);
+	rootTypes.add(EntityForCentreCheckedProperties.class);
 	return rootTypes;
     }
 
@@ -853,22 +860,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     @Override
-    public void test_that_CHECKed_properties_order_is_correct() throws Exception {
-    }
-
-    @Override
-    public void test_that_CHECKed_properties_order_is_correct_and_can_be_altered() throws Exception {
-    }
-
-    @Override
-    public void test_that_CHECKed_properties_Move_Swap_operations_work() throws Exception {
-    }
-
-    @Override
-    public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
-    }
-
-    @Override
     public void test_that_PropertyCheckingListeners_work() {
     }
 
@@ -911,4 +902,174 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	assertEquals("Incorrect value 'i'.", 2, i);
 	assertEquals("Incorrect value 'j'.", 2, j);
     }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////// Checked properties with PLACEHOLDERS ///////////////
+    ////////////////////////////////////////////////////////////////////////////////
+
+    private static final Class<?> rootForCheckedPropsTesting = EntityForCentreCheckedProperties.class;
+
+    @Override
+    @Test
+    public void test_that_CHECKed_properties_order_is_correct() throws Exception {
+	// at first the manager will be initialised the first time and its "included" and then "checked" props will be initialised (heavy operation)
+	assertEquals("The checked properties are incorrect.", Arrays.asList(), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	// next -- lightweight operation -- no loading will be performed
+	assertEquals("The checked properties are incorrect.", Arrays.asList(), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+	// serialise and deserialise and then check the order of "checked properties"
+	final byte[] array = getSerialiser().serialise(dtm());
+	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
+	assertEquals("The checked properties are incorrect.", Arrays.asList(), copy.getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+	// simple lightweight example
+	assertEquals("The checked properties are incorrect.", Arrays.asList(), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+    }
+
+    @Override
+    @Test
+    public void test_that_CHECKed_properties_order_is_correct_and_can_be_altered() throws Exception {
+	dtm().getFirstTick().setColumnsNumber(3);
+
+	// at first the manager will be initialised the first time and its "included" and then "checked" props will be initialised (heavy operation)
+	assertEquals("The checked properties are incorrect.", Arrays.asList(), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+	assertEquals("Columns number is incorrect.", 3, dtm().getFirstTick().getColumnsNumber());
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "integerProp", true);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "0-placeholder-origin-0-1", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "moneyProp", true);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "booleanProp", true);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "booleanProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "bigDecimalProp", true);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "booleanProp", "bigDecimalProp", "0-placeholder-origin-1-1", "1-placeholder-origin-1-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "bigDecimalProp", false);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "booleanProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "bigDecimalProp", true);
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "integerProp", false);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("2-placeholder-origin-0-0", "moneyProp", "booleanProp", "bigDecimalProp", "0-placeholder-origin-1-1", "1-placeholder-origin-1-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "integerProp", true);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "booleanProp", "bigDecimalProp", "0-placeholder-origin-1-1", "1-placeholder-origin-1-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "moneyProp", false);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "2-placeholder-origin-0-1", "booleanProp", "bigDecimalProp", "0-placeholder-origin-1-1", "1-placeholder-origin-1-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "integerProp", false);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("3-placeholder-origin-0-0", "2-placeholder-origin-0-1", "booleanProp", "bigDecimalProp", "0-placeholder-origin-1-1", "1-placeholder-origin-1-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "booleanProp", false);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("bigDecimalProp", "0-placeholder-origin-1-1", "1-placeholder-origin-1-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	// serialise and deserialise and then check the order of "checked properties"
+	final byte[] array = getSerialiser().serialise(dtm());
+	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("bigDecimalProp", "0-placeholder-origin-1-1", "1-placeholder-origin-1-2"), copy.getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+    }
+
+    @Override
+    @Test
+    public void test_that_CHECKed_properties_Move_Swap_operations_work() throws Exception {
+	dtm().getFirstTick().setColumnsNumber(3);
+	assertEquals("The checked properties are incorrect.", Arrays.asList(), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+	assertEquals("Columns number is incorrect.", 3, dtm().getFirstTick().getColumnsNumber());
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "integerProp", true);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "0-placeholder-origin-0-1", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().swap(rootForCheckedPropsTesting, "integerProp", "1-placeholder-origin-0-2");
+	assertEquals("The checked properties are incorrect.", Arrays.asList("1-placeholder-origin-0-2", "0-placeholder-origin-0-1", "integerProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+	dtm().getFirstTick().swap(rootForCheckedPropsTesting, "integerProp", "0-placeholder-origin-0-1");
+	assertEquals("The checked properties are incorrect.", Arrays.asList("1-placeholder-origin-0-2", "integerProp", "0-placeholder-origin-0-1"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+	dtm().getFirstTick().swap(rootForCheckedPropsTesting, "integerProp", "1-placeholder-origin-0-2");
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "1-placeholder-origin-0-2", "0-placeholder-origin-0-1"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "moneyProp", true);
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "booleanProp", true);
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "bigDecimalProp", true);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "booleanProp", "bigDecimalProp", "0-placeholder-origin-1-1", "1-placeholder-origin-1-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().swap(rootForCheckedPropsTesting, "moneyProp", "0-placeholder-origin-1-1");
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "0-placeholder-origin-1-1", "booleanProp", "bigDecimalProp", "moneyProp", "1-placeholder-origin-1-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "integerProp", false);
+	dtm().getFirstTick().swap(rootForCheckedPropsTesting, "booleanProp", "1-placeholder-origin-1-2");
+	assertEquals("The checked properties are incorrect.", Arrays.asList("bigDecimalProp", "moneyProp", "booleanProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	try {
+	    dtm().getFirstTick().move(rootForCheckedPropsTesting, "bullshitProp", "bullshitProp");
+	    fail("Move operation should be unsupported.");
+	} catch (final UnsupportedOperationException e) {
+	}
+	try {
+	    dtm().getFirstTick().moveToTheEnd(rootForCheckedPropsTesting, "bullshitProp");
+	    fail("MoveToTheEnd operation should be unsupported.");
+	} catch (final UnsupportedOperationException e) {
+	}
+
+	// serialise and deserialise and then check the order of "checked properties"
+	final byte[] array = getSerialiser().serialise(dtm());
+	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("bigDecimalProp", "moneyProp", "booleanProp"), copy.getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+    }
+
+    @Override
+    @Test
+    public void test_that_CHECKed_properties_Move_Swap_operations_doesnot_work_for_non_checked_properties() {
+	// at first the manager will be initialised the first time and its "included" and then "checked" props will be initialised (heavy operation)
+	// alter the order of properties
+	try {
+	    dtm().getFirstTick().swap(rootForCheckedPropsTesting, "unknown-prop", "integerProp");
+	    fail("Non-existent properties operation should fail.");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    dtm().getFirstTick().swap(rootForCheckedPropsTesting, "integerProp", "bigDecimalProp"); // both are unchecked
+	    fail("Non-checked properties operation should fail.");
+	} catch (final IllegalArgumentException e) {
+	}
+
+	try {
+	    dtm().getFirstTick().move(rootForCheckedPropsTesting, "bullshitProp", "bullshitProp");
+	    fail("Move operation should be unsupported.");
+	} catch (final UnsupportedOperationException e) {
+	}
+	try {
+	    dtm().getFirstTick().moveToTheEnd(rootForCheckedPropsTesting, "bullshitProp");
+	    fail("MoveToTheEnd operation should be unsupported.");
+	} catch (final UnsupportedOperationException e) {
+	}
+    }
+
+    @Override
+    @Test
+    @Ignore
+    public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
+	dtm().getFirstTick().setColumnsNumber(3);
+
+	assertEquals("Incorrect checked properties.", Collections.emptyList(), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+
+	dtm().getFirstTick().check(MasterEntityForIncludedPropertiesLogic.class, "integerProp", true);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "0-placeholder-origin-0-1", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+
+	dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop1_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect checked properties.", Arrays.asList("integerProp", "entityProp.prop1_mutablyCheckedProp", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop2_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect checked properties.", Arrays.asList("integerProp", "entityProp.prop1_mutablyCheckedProp", "entityProp.prop2_mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getFirstTick().swap(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop1_mutablyCheckedProp", "entityProp.prop2_mutablyCheckedProp");
+	assertEquals("Incorrect checked properties.", Arrays.asList("integerProp", "entityProp.prop2_mutablyCheckedProp", "entityProp.prop1_mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getEnhancer().removeCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop1_mutablyCheckedProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect checked properties.", Arrays.asList("integerProp", "entityProp.prop2_mutablyCheckedProp", "0-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getEnhancer().removeCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop2_mutablyCheckedProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect checked properties.", Arrays.asList("integerProp", "1-placeholder-origin-0-1", "0-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
+    }
+
 }

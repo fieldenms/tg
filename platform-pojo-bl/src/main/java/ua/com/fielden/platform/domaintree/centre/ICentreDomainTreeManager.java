@@ -570,15 +570,67 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	// Boolean getAll(final Class<?> root, final String property);
 	// ICriteriaTickManager setAll(final Class<?> root, final String property, final Boolean all);
 
-	/**
-	 * Returns an <b>ordered</b> list of checked properties for concrete <code>root</code> type.
-	 *
-	 * <b>IMPORTANT</b> : a list of properties also contains "empty places", which can be swapped, moved exactly as simple property.
-	 *
-	 * @param root -- a root type that contains a checked properties.
-	 * @return
-	 */
-	List<String> checkedProperties(final Class<?> root);
+        /**
+         * Marks a concrete property's tick to be <b>mutably</b> checked in domain tree representation. <br><br>
+         *
+         * The action should not conflict with a contract of disabled / checked property's ticks. The conflict will produce an {@link IllegalArgumentException}.
+         * <p>
+	 * <b>IMPORTANT</b> : a list of checked properties also contains "placeholders", which can be swapped, moved exactly as simple property.
+	 * Placeholder property name has contract "<numberOfPlaceholder>-placeholder-origin-<placeholderOriginalRow>-<placeholderOriginalColumn>", but
+	 * this is only for information, not for "property-related" usage.
+         *
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @param check -- an action to perform (<code>true</code> to check, <code>false</code> to uncheck)
+         *
+         */
+        void check(final Class<?> root, final String property, final boolean check);
+
+        /**
+         * Returns an <b>ordered</b> list of checked properties for concrete <code>root</code> type. <br><br>
+         *
+         * The order of the checked properties should be following (if it was not altered using {@link #swap(Class, String, String)}/{@link #move(Class, String, String)} methods):<br>
+         * 1. all checked properties as defined by a) {@link #isChecked(Class, String)} contract b) {@link IDomainTreeRepresentation#includedProperties(Class)} order<br>
+         * 2. all manually checked properties (in order that they were checked)
+         * <p>
+	 * <b>IMPORTANT</b> : a list of properties also contains "placeholders", which can be swapped, moved exactly as simple property.
+	 * Placeholder property name has contract "<numberOfPlaceholder>-placeholder-origin-<placeholderOriginalRow>-<placeholderOriginalColumn>", but
+	 * this is only for information, not for "property-related" usage.
+         *
+         * @param root -- a root type that contains a checked properties.
+         * @return
+         */
+        List<String> checkedProperties(final Class<?> root);
+
+        /**
+         * Swaps two properties (<code>property1</code> and <code>property2</code>) in an ordered list of checked properties for concrete <code>root</code> type.
+         * <p>
+	 * <b>IMPORTANT</b> : a list of properties also contains "placeholders", which can be swapped, moved exactly as simple property.
+	 * Placeholder property name has contract "<numberOfPlaceholder>-placeholder-origin-<placeholderOriginalRow>-<placeholderOriginalColumn>", but
+	 * this is only for information, not for "property-related" usage.
+         *
+         * @param root -- a root type that contains a checked properties.
+         * @param property1 -- a first property to swap
+         * @param property2 -- a second property to swap
+         */
+        void swap(final Class<?> root, final String property1, final String property2);
+
+        /**
+         * Throws {@link UnsupportedOperationException}.
+         *
+         * @param root -- a root type that contains a checked properties.
+         * @param what -- a property to move
+         * @param beforeWhat -- a property before which property "what" will be inserted
+         */
+        void move(final Class<?> root, final String what, final String beforeWhat);
+
+        /**
+         * Throws {@link UnsupportedOperationException}.
+         *
+         * @param root -- a root type that contains a checked properties.
+         * @param what -- a property to move
+         */
+        void moveToTheEnd(final Class<?> root, final String what);
     }
 
     /**

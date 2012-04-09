@@ -12,8 +12,6 @@ import org.junit.Test;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
-import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 
 
@@ -116,5 +114,25 @@ public class LocatorDomainTreeManagerTest extends CentreDomainTreeManagerTest {
     @Override
     public void test_that_equality_and_copying_works() {
 	super.test_that_equality_and_copying_works();
+    }
+
+    @Override
+    public void test_that_CHECKed_properties_order_is_correct() throws Exception {
+    }
+
+    @Override
+    public void test_that_CHECKed_properties_order_is_correct_and_can_be_altered() throws Exception {
+    }
+
+    @Override
+    public void test_that_CHECKed_properties_Move_Swap_operations_work() throws Exception {
+    }
+
+    @Override
+    public void test_that_CHECKed_properties_Move_Swap_operations_doesnot_work_for_non_checked_properties() {
+    }
+
+    @Override
+    public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
     }
 }

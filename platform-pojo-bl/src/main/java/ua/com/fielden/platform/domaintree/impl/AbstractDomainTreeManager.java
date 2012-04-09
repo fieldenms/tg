@@ -192,6 +192,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		    final String reflectionProperty = reflectionProperty(property);
 		    // update checked properties
 		    if (firstTickManager.isCheckedNaturally(root, reflectionProperty) && !firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+			// TODO firstTickManager.insertCheckedProperty(root, reflectionProperty, firstTickManager.checkedPropertiesMutable(root).size()); // add it to the end of list
 			firstTickManager.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
 		    }
 		    if (secondTickManager.isCheckedNaturally(root, reflectionProperty) && !secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
@@ -203,6 +204,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		    final String reflectionProperty = reflectionProperty(property);
 		    // update checked properties
 		    if (firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
+			// TODO firstTickManager.removeCheckedProperty(root, reflectionProperty);
 			firstTickManager.checkedPropertiesMutable(root).remove(reflectionProperty);
 		    }
 		    if (secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
@@ -324,26 +326,34 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    final boolean contains = checkedPropertiesMutable(root).contains(property);
 	    if (check) {
 		if (!contains) {
-		    checkedPropertiesMutable(root).add(property);
-
-		    // fire CHECKED event after successful "checked" action
-		    for (final IPropertyCheckingListener listener : propertyCheckingListeners) {
-			listener.propertyStateChanged(root, property, check, null);
-		    }
+		    insertCheckedProperty(root, property, checkedPropertiesMutable(root).size());
 		} else {
 		    logger().warn("Could not check already checked property [" + property + "] in type [" + root.getSimpleName() + "].");
 		}
 	    } else {
 		if (contains) {
-		    checkedPropertiesMutable(root).remove(property);
-
-		    // fire UNCHECKED event after successful "unchecked" action
-		    for (final IPropertyCheckingListener listener : propertyCheckingListeners) {
-			listener.propertyStateChanged(root, property, check, null);
-		    }
+		    removeCheckedProperty(root, property);
 		} else {
 		    logger().warn("Could not uncheck already unchecked property [" + property + "] in type [" + root.getSimpleName() + "].");
 		}
+	    }
+	}
+
+	protected void removeCheckedProperty(final Class<?> root, final String property) {
+	    checkedPropertiesMutable(root).remove(property);
+
+	    // fire UNCHECKED event after successful "unchecked" action
+	    for (final IPropertyCheckingListener listener : propertyCheckingListeners) {
+		listener.propertyStateChanged(root, property, false, null);
+	    }
+	}
+
+	protected void insertCheckedProperty(final Class<?> root, final String property, final int index) {
+	    checkedPropertiesMutable(root).add(index, property);
+
+	    // fire CHECKED event after successful "checked" action
+	    for (final IPropertyCheckingListener listener : propertyCheckingListeners) {
+		listener.propertyStateChanged(root, property, true, null);
 	    }
 	}
 

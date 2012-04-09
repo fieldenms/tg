@@ -458,6 +458,97 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    return this;
 	}
 
+	/////////////////// Checked properties with placeholders ///////////////////
+	@Override
+	public void swap(final Class<?> root, final String property1, final String property2) {
+	    super.swap(root, property1, property2);
+
+	    cropEmptyRows(root, checkedPropertiesMutable(root).size() - 1);
+	}
+
+	@Override
+	public void move(final Class<?> root, final String what, final String beforeWhat) {
+	    throw new UnsupportedOperationException("Move operation is not supported for Centre domain tree manager's first tick. Please use perhaps 'swap' operation.");
+	}
+
+	@Override
+	public void moveToTheEnd(final Class<?> root, final String what) {
+	    throw new UnsupportedOperationException("MoveToTheEnd operation is not supported for Centre domain tree manager's first tick. Please use perhaps 'swap' operation.");
+	}
+
+	@Override
+	protected void removeCheckedProperty(final Class<?> root, final String property) {
+	    final int removalIndex = checkedPropertiesMutable(root).indexOf(property);
+	    super.removeCheckedProperty(root, property);
+	    super.insertCheckedProperty(root, generatePlaceholderName(root, removalIndex), removalIndex);
+
+	    cropEmptyRows(root, checkedPropertiesMutable(root).size() - 1);
+	}
+
+	private void cropEmptyRows(final Class<?> root, final int index) {
+	    if (index < 0) {
+		return;
+	    }
+	    boolean isEmptyRow = true;
+	    for (int i = index; i >= index - getColumnsNumber() + 1; i--) {
+		if (!isPlaceholder(checkedPropertiesMutable(root).get(i))) {
+		    isEmptyRow = false;
+		    break;
+		}
+	    }
+	    if (isEmptyRow) {
+		for (int i = index; i >= index - getColumnsNumber() + 1; i--) {
+		    super.removeCheckedProperty(root, checkedPropertiesMutable(root).get(i));
+		}
+	    }
+	    cropEmptyRows(root, index - getColumnsNumber());
+	}
+
+	@Override
+	protected void insertCheckedProperty(final Class<?> root, final String property, final int index) {
+	    final int firstPlaceholderIndex = findFirstPlaceholder(root);
+	    if (firstPlaceholderIndex < checkedPropertiesMutable(root).size()) { // there is at least one placeholder in checked properties matrix
+		super.removeCheckedProperty(root, checkedPropertiesMutable(root).get(firstPlaceholderIndex));
+		super.insertCheckedProperty(root, property, firstPlaceholderIndex);
+	    } else {
+		super.insertCheckedProperty(root, property, checkedPropertiesMutable(root).size());
+		while (checkedPropertiesMutable(root).size() % getColumnsNumber() != 0) {
+		    final int newPlaceholderIndex = checkedPropertiesMutable(root).size();
+		    super.insertCheckedProperty(root, generatePlaceholderName(root, newPlaceholderIndex), newPlaceholderIndex);
+		}
+	    }
+	}
+
+	private String generatePlaceholderName(final Class<?> root, final int newPlaceholderIndex) {
+	    int max = -1;
+	    for (int i = 0; i < checkedPropertiesMutable(root).size(); i++) {
+		final String name = checkedPropertiesMutable(root).get(i);
+		if (isPlaceholder(name)) {
+		    final int placeholderNumber = Integer.valueOf(name.substring(0, name.indexOf(PLACEHOLDER)));
+		    if (placeholderNumber > max) {
+			max = placeholderNumber;
+		    }
+		}
+	    }
+	    return (max + 1) + PLACEHOLDER + (newPlaceholderIndex / getColumnsNumber()) + "-" + (newPlaceholderIndex % getColumnsNumber());
+	}
+
+	private final static String PLACEHOLDER = "-placeholder-origin-";
+
+	private boolean isPlaceholder(final String string) {
+	    return string.contains(PLACEHOLDER);
+	}
+
+	private int findFirstPlaceholder(final Class<?> root) {
+	    for (int i = 0; i < checkedPropertiesMutable(root).size(); i++) {
+		if (isPlaceholder(checkedPropertiesMutable(root).get(i))) {
+		    return i;
+		}
+	    }
+	    return checkedPropertiesMutable(root).size();
+	}
+	/////////////////// Checked properties with placeholders (END) ///////////////////
+
 	protected ISerialiser getSerialiser() {
 	    return serialiser;
 	}
