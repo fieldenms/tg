@@ -44,9 +44,11 @@ public class Yields implements IPropertyCollector {
 	final StringBuffer sb = new StringBuffer();
 	for (final Iterator<Yield> iterator = yields.values().iterator(); iterator.hasNext();) {
 	    final Yield yieldModel = iterator.next();
-	    sb.append(yieldModel.sql());
-	    if (iterator.hasNext()) {
-		sb.append(", ");
+	    if (!yieldModel.getInfo().isCompositeProperty()) {
+		    sb.append(yieldModel.sql());
+		    if (iterator.hasNext()) {
+			sb.append(", ");
+		    }
 	    }
 	}
 

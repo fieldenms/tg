@@ -95,7 +95,7 @@ final class EntityResultTreeBuilder {
 	final List<PropertyPersistenceInfo> result = new ArrayList<PropertyPersistenceInfo>();
 
 	for (final PropertyPersistenceInfo prop : allProps) {
-	    if ((prop.getJavaType() == null || !prop.isEntity()) && !prop.getName().contains(".")) {
+	    if (((prop.getJavaType() == null || !prop.isEntity()) && !prop.getName().contains(".")) & !prop.isCompositeProperty()) {
 		result.add(prop);
 	    }
 	}
@@ -148,19 +148,21 @@ final class EntityResultTreeBuilder {
 		final int firstDotIndex = prop.getName().indexOf(".");
 		final String group = prop.getName().substring(0, firstDotIndex);
 
-		if (EntityAggregates.class != resultType) {
-		    final PropertyPersistenceInfo groupPpi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, group);
+//		if (EntityAggregates.class != resultType) {
+//		    final PropertyPersistenceInfo groupPpi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, group);
 
-		    if (groupPpi.isCompositeProperty()) {
-			if (!result.containsKey(group)) {
-			    result.put(group, new MetaP(group, groupPpi.getHibTypeAsCompositeUserType(), new TreeSet<PropertyPersistenceInfo>()));
+//		    if (groupPpi.isCompositeProperty()) {
+			if (result.containsKey(group)) {
+				result.get(group).items.add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), false /*?*/). //
+					column(prop.getColumn()). //
+					hibType(prop.getHibType()). //
+					build());
 			}
-			result.get(group).items.add(new PropertyPersistenceInfo.Builder(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), false /*?*/). //
-			column(prop.getColumn()). //
-			hibType(prop.getHibType()). //
-			build());
-		    }
-		}
+//		    }
+//		}
+	    } else if (prop.isCompositeProperty()) {
+		final SortedSet<PropertyPersistenceInfo> subprops = new TreeSet<PropertyPersistenceInfo>();
+		result.put(prop.getName(), new MetaP(prop.getName(), prop.getHibTypeAsCompositeUserType(), subprops));
 	    }
 	}
 

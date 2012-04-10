@@ -112,7 +112,9 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("initDate").as("initDate"). //
 		yield().prop("model").as("model"). //
 		yield().prop("station").as("station"). //
+		yield().prop("price").as("price"). //
 		yield().prop("price.amount").as("price.amount"). //
+		yield().prop("purchasePrice").as("purchasePrice"). //
 		yield().prop("purchasePrice.amount").as("purchasePrice.amount"). //
 		yield().prop("active").as("active"). //
 		yield().prop("leased").as("leased"). //
@@ -150,7 +152,9 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("initDate").as("initDate"). //
 		yield().prop("model").as("model"). //
 		yield().prop("station").as("station"). //
+		yield().prop("price").as("price"). //
 		yield().prop("price.amount").as("price.amount"). //
+		yield().prop("purchasePrice").as("purchasePrice"). //
 		yield().prop("purchasePrice.amount").as("purchasePrice.amount"). //
 		yield().prop("active").as("active"). //
 		yield().prop("leased").as("leased"). //
@@ -361,7 +365,9 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("desc").as("desc"). //
 		yield().prop("initDate").as("initDate"). //
 		yield().prop("station").as("station"). //
+		yield().prop("price").as("price"). //
 		yield().prop("price.amount").as("price.amount"). //
+		yield().prop("purchasePrice").as("purchasePrice"). //
 		yield().prop("purchasePrice.amount").as("purchasePrice.amount"). //
 		yield().prop("active").as("active"). //
 		yield().prop("leased").as("leased"). //
