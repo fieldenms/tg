@@ -470,6 +470,16 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Incorrect key", "CAR2", vehicles.get(1).getKey());
     }
 
+    @Test
+    public void test_subqueries_in_yield_stmt3() {
+	final PrimitiveResultQueryModel sumPriceModel = select(TgVehicle.class).yield().sumOf().prop("price.amount").modelAsPrimitive();
+	final PrimitiveResultQueryModel avgPriceModel = select(TgVehicle.class).yield().sumOf().model(sumPriceModel).modelAsPrimitive();
+	final EntityResultQueryModel<TgVehicle> query = select(TgVehicle.class).where().beginExpr().model(avgPriceModel).add().prop("price.amount").endExpr().ge().val(10).model();
+	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(query).with(orderBy().prop("key").asc().model()).build());
+	assertEquals("Incorrect key", "CAR1", vehicles.get(0).getKey());
+	assertEquals("Incorrect key", "CAR2", vehicles.get(1).getKey());
+    }
+
     @Override
     protected void populateDomain() {
 	final TgVehicleMake merc = save(new_(TgVehicleMake.class, "MERC", "Mercedes"));
