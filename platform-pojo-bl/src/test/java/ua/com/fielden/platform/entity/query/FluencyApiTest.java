@@ -55,7 +55,7 @@ public class FluencyApiTest extends TestCase {
     private static Set<String> getMethods(final Class<?> type) {
 	final Set<String> result = new HashSet<String>();
 	for (final Method method : type.getMethods()) {
-	    if (!objectMethods.contains(method) && !"toString".equals(method.getName()) && !"getTokens".equals(method.getName())) {
+	    if (!objectMethods.contains(method) && !"toString".equals(method.getName()) && !"getTokens".equals(method.getName()) && !"setTokens".equals(method.getName())) {
 		result.add(method.getName());
 	    }
 	}

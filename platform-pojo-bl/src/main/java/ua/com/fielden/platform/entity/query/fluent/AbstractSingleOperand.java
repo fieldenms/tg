@@ -18,44 +18,51 @@ abstract class AbstractSingleOperand<T> extends AbstractQueryLink implements ISi
 
     @Override
     public T val(final Object value) {
-	getTokens().val(value);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().val(value));
+	return result;
     }
 
     @Override
     public T iVal(final Object value) {
-	getTokens().iVal(value);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().iVal(value));
+	return result;
     }
 
     @Override
     public T model(final SingleResultQueryModel<?> model) {
-	getTokens().model(model);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().model(model));
+	return result;
     }
 
     @Override
     public T param(final String paramName) {
-	getTokens().param(paramName);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().param(paramName));
+	return result;
     }
 
     @Override
     public T iParam(final String paramName) {
-	getTokens().iParam(paramName);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().iParam(paramName));
+	return result;
     }
 
     @Override
     public T prop(final String propertyName) {
-	getTokens().prop(propertyName);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().prop(propertyName));
+	return result;
     }
 
     @Override
     public T expr(final ExpressionModel expr) {
-	getTokens().expr(expr);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().expr(expr));
+	return result;
     }
 
     @Override
@@ -80,8 +87,9 @@ abstract class AbstractSingleOperand<T> extends AbstractQueryLink implements ISi
 
     @Override
     public T now() {
-	getTokens().now();
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().now());
+	return result;
     }
 
     @Override

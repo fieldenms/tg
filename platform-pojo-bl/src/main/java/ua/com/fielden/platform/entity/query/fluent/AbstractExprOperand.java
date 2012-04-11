@@ -11,7 +11,8 @@ abstract class AbstractExprOperand<T1, T2> extends AbstractSingleOperand<T1> imp
 
     @Override
     public T2 beginExpr() {
-	getTokens().beginExpression();
-	return getParent2();
+	final T2 result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().beginExpression());
+	return result;
     }
 }

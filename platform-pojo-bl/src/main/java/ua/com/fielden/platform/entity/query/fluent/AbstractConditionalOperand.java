@@ -15,38 +15,44 @@ abstract class AbstractConditionalOperand<T1 extends IComparisonOperator<T2>, T2
 
     @Override
     public T2 exists(final QueryModel subQuery) {
-	getTokens().exists(false, subQuery);
-	return getParent2();
+	final T2 result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().exists(false, subQuery));
+	return result;
     }
 
     @Override
     public T2 notExists(final QueryModel subQuery) {
-	getTokens().exists(true, subQuery);
-	return getParent2();
+	final T2 result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().exists(true, subQuery));
+	return result;
     }
 
     @Override
     public T2 existsAnyOf(final QueryModel ... subQueries) {
-	getTokens().existsAnyOf(false, subQueries);
-	return getParent2();
+	final T2 result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().existsAnyOf(false, subQueries));
+	return result;
     }
 
     @Override
     public T2 notExistsAnyOf(final QueryModel ... subQueries) {
-	getTokens().existsAnyOf(true, subQueries);
-	return getParent2();
+	final T2 result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().existsAnyOf(true, subQueries));
+	return result;
     }
 
     @Override
     public T2 existsAllOf(final QueryModel ... subQueries) {
-	getTokens().existsAllOf(false, subQueries);
-	return getParent2();
+	final T2 result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().existsAllOf(false, subQueries));
+	return result;
     }
 
     @Override
     public T2 notExistsAllOf(final QueryModel ... subQueries) {
-	getTokens().existsAllOf(true, subQueries);
-	return getParent2();
+	final T2 result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().existsAllOf(true, subQueries));
+	return result;
     }
 
 //    @Override

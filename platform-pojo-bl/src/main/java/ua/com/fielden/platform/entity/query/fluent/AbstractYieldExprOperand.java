@@ -10,8 +10,9 @@ abstract class AbstractYieldExprOperand<T1, T2> extends AbstractYieldedItem<T1> 
 
     @Override
     public T2 beginExpr() {
-	getTokens().beginExpression();
-	return getParent2();
+	final T2 result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().beginExpression());
+	return result;
     }
 
     abstract T2 getParent2();

@@ -43,85 +43,99 @@ abstract class AbstractComparisonOperator<T extends ILogicalOperator<?>> extends
 
     @Override
     public IComparisonQuantifiedOperand<T> eq() {
-	getTokens().eq();
-	return getParent4();
+	final IComparisonQuantifiedOperand<T> result = getParent4();
+	((AbstractQueryLink) result).setTokens(getTokens().eq());
+	return result;
     }
 
     @Override
     public IComparisonQuantifiedOperand<T> ne() {
-	getTokens().ne();
-	return getParent4();
+	final IComparisonQuantifiedOperand<T> result = getParent4();
+	((AbstractQueryLink) result).setTokens(getTokens().ne());
+	return result;
     }
 
     @Override
     public IComparisonQuantifiedOperand<T> ge() {
-	getTokens().ge();
-	return getParent4();
+	final IComparisonQuantifiedOperand<T> result = getParent4();
+	((AbstractQueryLink) result).setTokens(getTokens().ge());
+	return result;
     }
 
     @Override
     public IComparisonQuantifiedOperand<T> le() {
-	getTokens().le();
-	return getParent4();
+	final IComparisonQuantifiedOperand<T> result = getParent4();
+	((AbstractQueryLink) result).setTokens(getTokens().le());
+	return result;
     }
 
     @Override
     public IComparisonQuantifiedOperand<T> gt() {
-	getTokens().gt();
-	return getParent4();
+	final IComparisonQuantifiedOperand<T> result = getParent4();
+	((AbstractQueryLink) result).setTokens(getTokens().gt());
+	return result;
     }
 
     @Override
     public IComparisonQuantifiedOperand<T> lt() {
-	getTokens().lt();
-	return getParent4();
+	final IComparisonQuantifiedOperand<T> result = getParent4();
+	((AbstractQueryLink) result).setTokens(getTokens().lt());
+	return result;
     }
 
     @Override
     public IComparisonSetOperand<T> in() {
-	getTokens().in(false);
-	return getParent3();
+	final IComparisonSetOperand<T> result = getParent3();
+	((AbstractQueryLink) result).setTokens(getTokens().in(false));
+	return result;
     }
 
     @Override
     public IComparisonSetOperand<T> notIn() {
-	getTokens().in(true);
-	return getParent3();
+	final IComparisonSetOperand<T> result = getParent3();
+	((AbstractQueryLink) result).setTokens(getTokens().in(true));
+	return result;
     }
 
     @Override
     public IComparisonOperand<T> like() {
-	getTokens().like(false);
-	return getParent2();
+	final IComparisonOperand<T> result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().like(false));
+	return result;
     }
 
     @Override
     public IComparisonOperand<T> notLike() {
-	getTokens().like(true);
-	return getParent2();
+	final IComparisonOperand<T> result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().like(true));
+	return result;
     }
 
     @Override
     public IComparisonOperand<T> iLike() {
-	getTokens().iLike(false);
-	return getParent2();
+	final IComparisonOperand<T> result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().iLike(false));
+	return result;
     }
 
     @Override
     public IComparisonOperand<T> notILike() {
-	getTokens().iLike(true);
-	return getParent2();
+	final IComparisonOperand<T> result = getParent2();
+	((AbstractQueryLink) result).setTokens(getTokens().iLike(true));
+	return result;
     }
 
     @Override
     public T isNull() {
-	getTokens().isNull(false);
-	return getParent1();
+	final T result = getParent1();
+	((AbstractQueryLink) result).setTokens(getTokens().isNull(false));
+	return result;
     }
 
     @Override
     public T isNotNull() {
-	getTokens().isNull(true);
-	return getParent1();
+	final T result = getParent1();
+	((AbstractQueryLink) result).setTokens(getTokens().isNull(true));
+	return result;
     }
 }

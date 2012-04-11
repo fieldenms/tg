@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 
 public class SubsequentYieldedItemAlias<T> extends AbstractQueryLink implements ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded> {
     T parent;
+
     SubsequentYieldedItemAlias(final Tokens queryTokens, final T parent) {
 	super(queryTokens);
 	this.parent = parent;

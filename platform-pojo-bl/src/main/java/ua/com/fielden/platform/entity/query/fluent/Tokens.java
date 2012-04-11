@@ -23,9 +23,14 @@ import ua.com.fielden.platform.utils.Pair;
  */
 final class Tokens {
     private final List<Pair<TokenCategory, Object>> values = new ArrayList<Pair<TokenCategory, Object>>();
-    private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
+    private final ValuePreprocessor valuePreprocessor;
 
     public Tokens() {
+	valuePreprocessor = new ValuePreprocessor();
+    }
+
+    private Tokens(final ValuePreprocessor valuePreprocessor) {
+	this.valuePreprocessor = valuePreprocessor;
     }
 
     @Override
@@ -34,13 +39,18 @@ final class Tokens {
     }
 
     private Tokens add(final TokenCategory cat, final Object value) {
-	values.add(new Pair<TokenCategory, Object>(cat, value));
-	return this;
+	final Tokens result = new Tokens(valuePreprocessor);
+	result.values.addAll(values);
+	result.values.add(new Pair<TokenCategory, Object>(cat, value));
+	return result;
     }
 
     private Tokens add(final TokenCategory cat1, final Object value1, final TokenCategory cat2, final Object value2) {
-	add(cat1, value1);
-	return add(cat2, value2);
+	final Tokens result = new Tokens(valuePreprocessor);
+	result.values.addAll(values);
+	result.values.add(new Pair<TokenCategory, Object>(cat1, value1));
+	result.values.add(new Pair<TokenCategory, Object>(cat2, value2));
+	return result;
     }
 
     private <E extends Object> List<E> getListFromArray(final E... items) {

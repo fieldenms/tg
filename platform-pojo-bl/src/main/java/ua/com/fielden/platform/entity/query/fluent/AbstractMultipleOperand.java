@@ -12,62 +12,71 @@ abstract class AbstractMultipleOperand<T> extends AbstractSingleOperand<T> imple
 
     @Override
     public T anyOfProps(final String... propertyNames) {
-	getTokens().anyOfProps(propertyNames);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().anyOfProps(propertyNames));
+	return result;
     }
 
     @Override
     public T anyOfValues(final Object... values) {
-	getTokens().anyOfValues(values);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().anyOfValues(values));
+	return result;
     }
 
     @Override
     public T anyOfParams(final String... paramNames) {
-	getTokens().anyOfParams(paramNames);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().anyOfParams(paramNames));
+	return result;
     }
 
     @Override
     public T anyOfModels(final PrimitiveResultQueryModel... models) {
-	getTokens().anyOfModels(models);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().anyOfModels(models));
+	return result;
     }
 
     @Override
     public T anyOfExpressions(final ExpressionModel... expressions) {
-	getTokens().anyOfExpressions(expressions);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().anyOfExpressions(expressions));
+	return result;
     }
 
     @Override
     public T allOfProps(final String... propertyNames) {
-	getTokens().allOfProps(propertyNames);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().allOfProps(propertyNames));
+	return result;
     }
 
     @Override
     public T allOfValues(final Object... values) {
-	getTokens().allOfValues(values);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().allOfValues(values));
+	return result;
     }
 
     @Override
     public T allOfParams(final String... paramNames) {
-	getTokens().allOfParams(paramNames);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().allOfParams(paramNames));
+	return result;
     }
 
     @Override
     public T allOfModels(final PrimitiveResultQueryModel... models) {
-	getTokens().allOfModels(models);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().allOfModels(models));
+	return result;
     }
 
     @Override
     public T allOfExpressions(final ExpressionModel... expressions) {
-	getTokens().allOfExpressions(expressions);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().allOfExpressions(expressions));
+	return result;
     }
-
 }

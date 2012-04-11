@@ -2,7 +2,10 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 abstract class AbstractQueryLink {
 
-    private final Tokens tokens;
+    private Tokens tokens;
+
+    protected AbstractQueryLink() {
+    }
 
     protected AbstractQueryLink(final Tokens tokens) {
 	this.tokens = tokens;
@@ -15,5 +18,9 @@ abstract class AbstractQueryLink {
     @Override
     public String toString() {
         return tokens.toString();
+    }
+
+    public void setTokens(final Tokens tokens) {
+        this.tokens = tokens;
     }
 }

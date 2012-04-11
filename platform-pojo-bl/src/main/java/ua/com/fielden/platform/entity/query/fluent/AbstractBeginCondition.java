@@ -12,13 +12,15 @@ abstract class AbstractBeginCondition<T> extends AbstractQueryLink implements IB
 
     @Override
     public T begin() {
-	getTokens().beginCondition(false);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().beginCondition(false));
+	return result;
     }
 
     @Override
     public T notBegin() {
-	getTokens().beginCondition(true);
-	return getParent();
+	final T result = getParent();
+	((AbstractQueryLink) result).setTokens(getTokens().beginCondition(true));
+	return result;
     }
 }

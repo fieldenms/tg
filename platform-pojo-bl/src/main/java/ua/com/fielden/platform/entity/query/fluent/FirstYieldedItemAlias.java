@@ -14,7 +14,7 @@ public class FirstYieldedItemAlias<T> extends AbstractQueryLink implements IFirs
 
     @Override
     public T as(final String alias) {
-	getTokens().as(alias);
+	((AbstractQueryLink) parent).setTokens(getTokens().as(alias));
 	return parent;
     }
 
