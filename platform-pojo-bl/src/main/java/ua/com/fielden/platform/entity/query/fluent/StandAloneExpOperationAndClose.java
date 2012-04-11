@@ -12,7 +12,7 @@ public class StandAloneExpOperationAndClose extends AbstractArithmeticalOperator
 
     @Override
     public ExpressionModel model() {
-	return new ExpressionModel(getTokens().getTokens());
+	return new ExpressionModel(getTokens().getValues());
     }
 
     @Override

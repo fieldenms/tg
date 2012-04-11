@@ -15,7 +15,7 @@ class SubsequentCompletedAndYielded extends CompletedCommon implements ISubseque
 
     @Override
     public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-	return new EntityResultQueryModel<T>(getTokens().getTokens(), resultType);
+	return new EntityResultQueryModel<T>(getTokens().getValues(), resultType);
     }
 
     @Override
@@ -25,6 +25,6 @@ class SubsequentCompletedAndYielded extends CompletedCommon implements ISubseque
 
     @Override
     public AggregatedResultQueryModel modelAsAggregate() {
-	return new AggregatedResultQueryModel(getTokens().getTokens());
+	return new AggregatedResultQueryModel(getTokens().getValues());
     }
 }

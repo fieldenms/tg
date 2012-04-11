@@ -22,7 +22,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 final class Tokens {
-    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
+    private final List<Pair<TokenCategory, Object>> values = new ArrayList<Pair<TokenCategory, Object>>();
     private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
 
     public Tokens() {
@@ -30,11 +30,11 @@ final class Tokens {
 
     @Override
     public String toString() {
-	return tokens.toString();
+	return values.toString();
     }
 
     private Tokens add(final TokenCategory cat, final Object value) {
-	tokens.add(new Pair<TokenCategory, Object>(cat, value));
+	values.add(new Pair<TokenCategory, Object>(cat, value));
 	return this;
     }
 
@@ -381,7 +381,7 @@ final class Tokens {
 
     public <E extends AbstractEntity<?>> Tokens from(final Class<E> entityType) {
 	if (entityType == null) {
-	    throw new IllegalArgumentException("Missing entity type in query: " + this.tokens);
+	    throw new IllegalArgumentException("Missing entity type in query: " + this.values);
 	}
 	return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
@@ -442,7 +442,7 @@ final class Tokens {
 	}
     }
 
-    public List<Pair<TokenCategory, Object>> getTokens() {
-	return tokens;
+    public List<Pair<TokenCategory, Object>> getValues() {
+	return values;
     }
 }

@@ -11,6 +11,6 @@ class OrderingItemCloseable extends OrderingItem implements IOrderingItemCloseab
 
     @Override
     public OrderingModel model() {
-	return new OrderingModel(getTokens().getTokens());
+	return new OrderingModel(getTokens().getValues());
     }
 }
