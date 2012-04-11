@@ -65,6 +65,7 @@ public abstract class AbstractDomainTree {
     private final transient ISerialiser serialiser;
     private final static transient Logger logger = Logger.getLogger(AbstractDomainTree.class);
     private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
+    protected final static String PLACEHOLDER = "-placeholder-origin-";
 
     protected static Logger logger() {
         return logger;
@@ -146,6 +147,16 @@ public abstract class AbstractDomainTree {
      */
     public static boolean isCommonBranch(final String property) {
 	return property.endsWith(COMMON_SUFFIX);
+    }
+    
+    /**
+     * Returns <code>true</code> if the "property" represents a root of common properties branch.
+     * 
+     * @param string
+     * @return
+     */
+    public static boolean isPlaceholder(final String string) {
+	return string.contains(PLACEHOLDER);
     }
 
     /**

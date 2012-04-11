@@ -533,12 +533,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    return (max + 1) + PLACEHOLDER + (newPlaceholderIndex / getColumnsNumber()) + "-" + (newPlaceholderIndex % getColumnsNumber());
 	}
 
-	private final static String PLACEHOLDER = "-placeholder-origin-";
-
-	private boolean isPlaceholder(final String string) {
-	    return string.contains(PLACEHOLDER);
-	}
-
 	private int findFirstPlaceholder(final Class<?> root) {
 	    for (int i = 0; i < checkedPropertiesMutable(root).size(); i++) {
 		if (isPlaceholder(checkedPropertiesMutable(root).get(i))) {
