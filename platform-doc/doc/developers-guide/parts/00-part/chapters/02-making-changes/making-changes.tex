@@ -144,7 +144,7 @@ public class Person extends AbstractEntity<String> {
   The following items should serve as a mini specification of the business rules for personnel enhancement.
   
   \begin{enumerate}
-    \item Entity Person should be provided with a non-mandatory property \texttt{birthday}.
+    \item Entity \emph{Person} should be provided with a non-mandatory property \emph{birthday}.
     \item This new property should be validated upon entry or change: 
 	\begin{enumerate}
 	  \item if the birth date value indicates that a person is too young (younger than 23 years of age) then a warning should be produced, but the value should be accepted;
@@ -165,14 +165,14 @@ public class Person extends AbstractEntity<String> {
 
   The generation result is depicted in Fig.~\ref{img:ch00:03:prop-template}.
   Right after generation, the template is in edit mode, which means that all of its parts can be conveniently edited and navigated between using the \texttt{Tab} key.
-  The first selected word is \emph{Title}, without moving the keyboard cursor or clicking anywhere with the mouse, start typing the new title \texttt{Birthday}.
-  Hit the \texttt{Tab} key to move to the \texttt{desc} attribute and type \texttt{The date when person was born}.
-  Hit the \texttt{Tab} key again to move to the \texttt{type} part and type \texttt{Date} to specify the property type.
-  Hit the \texttt{Tab} key to move to the \texttt{name} and type \texttt{birthday} to give the property a field name.
-  The next \texttt{Tab} will move the cursor to the setter name between the word \texttt{set} and \texttt{birthday}.
+  The first selected word is \emph{Title}, without moving the keyboard cursor or clicking anywhere with the mouse, start typing the new title \emph{Birthday}.
+  Hit the \texttt{Tab} key to move to the \emph{desc} attribute and type \emph{The date when person was born}.
+  Hit the \texttt{Tab} key again to move to the \emph{type} part and type \emph{Date} to specify the property type.
+  Hit the \texttt{Tab} key to move to the \emph{name} and type \emph{birthday} to give the property a field name.
+  The next \texttt{Tab} will move the cursor to the setter name between the word \emph{set} and \emph{birthday}.
   Hit \texttt{Enter} to confirm changes.
-  At this stage both setter and getter have the \texttt{birthday} portion starting with small \texttt{b}.
-  Change it to be a capital \texttt{B}, so that the setter read \texttt{setBirthday} and getter read \texttt{getBirthday}.
+  At this stage both setter and getter have the \emph{birthday} portion starting with small \texttt{b}.
+  Change it to be a capital \texttt{B}, so that the setter read \emph{setBirthday} and getter read \emph{getBirthday}.
 
   \begin{image}{TG Property Temple.}{\label{img:ch00:03:prop-template}}
     \includegraphics[width=0.4\textwidth]{parts/00-part/chapters/02-making-changes/images/03-birthday-property-template.png}
@@ -182,7 +182,7 @@ public class Person extends AbstractEntity<String> {
   Please note the return type of the setter, which matches the enclosing type Person.
   This is done to support method chaining, which is so convenient when creating new or modifying existing entity instances.
 
-  \begin{code}{Property \texttt{birthday}.}{\label{lst:Person-birthday}}{codebgcolor}
+  \begin{code}{Property \emph{birthday}.}{\label{lst:Person-birthday}}{codebgcolor}
     \begin{lstlisting}
     @IsProperty
     @MapTo
@@ -205,7 +205,7 @@ public class Person extends AbstractEntity<String> {
   The platform provides a sophisticated support for handling property before change events.
   This support, albeit in its simplest form, is demonstrated here for implementing birthday validation rules.
 
-  First, annotate property \texttt{birthday} with \texttt{BeforeChange} as illustrated in Listing~\ref{lst:Person-birthday-beforechange} on line 3.
+  First, annotate property \emph{birthday} with \texttt{BeforeChange} as illustrated in Listing~\ref{lst:Person-birthday-beforechange} on line 3.
   The \texttt{Handler} is provided with value \texttt{BirthdayValidator.class}, which indicates the name of the wouldbe validator.
   This validator needs to be created.
 
@@ -229,9 +229,9 @@ public class Person extends AbstractEntity<String> {
   \end{image}
 
   The generated class is an empty class, which does not explicitly extend any other class or implement any contracts\footnote{The term \emph{contract} is used in this book instead of the word \emph{interface} in order not to mix things up when taking about user interfaces and the interface, which is a contract that some class implements.}.
-  In order for this class to become a proper \emph{before change event handler}, it needs to implement contract \texttt{IBeforeChangeEventHandler}, which requires one type parameter that should match the type of the property.
-  In this case, it would be \texttt{Date} to match the type of property \texttt{birthday}.
-  The contract demands implementation of only one method \texttt{handle} that would provide the necessary validation logic.
+  In order for this class to become a proper \emph{before change event handler}, it needs to implement contract \emph{IBeforeChangeEventHandler}, which requires one type parameter that should match the type of the property.
+  In this case, it would be \texttt{Date} to match the type of property \emph{birthday}.
+  The contract demands implementation of only one method \emph{handle} that would provide the necessary validation logic.
   
   The \emph{test-first} approach works really well when implementing business logic, which ensures both the correctness of the business logic and the quickest possible implementation time by navigating the development effort along the requirements captured by tests.
   Thus, let's first provide stub implementation for the handler class as illustrated in Listing~\ref{lst:Person-birthday-validation-stub}, and then implement the test that would define that should happen during birthday validation.  
@@ -252,7 +252,7 @@ public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
   \end{code}
   
   The generated application conveniently provides an example of a domain-driven unit test case for entity Person.
-  Open test case \texttt{PersonnelTest} by using the \emph{Open Type} dialog as before in the editor, and without explaining too much of the existing code\footnote{A separate chapter is dedicated to unit testing further in the book.} add the four tests from Listings~\ref{lst:Person-birthday-validation-test-1}-\ref{lst:Person-birthday-validation-test-4} to this test case.
+  Open test case \emph{PersonnelTest} by using the \texttt{Open Type} dialog as before in the editor, and without explaining too much of the existing code\footnote{A separate chapter is dedicated to unit testing further in the book.} add the four tests from Listings~\ref{lst:Person-birthday-validation-test-1}-\ref{lst:Person-birthday-validation-test-4} to this test case.
 
   \begin{notebox}{A rule of thumb.}{\label{mb:rule-of-thumb}}
     Creation of unit tests should follow a rule of thumb where by \emph{each unit test should ensure one particular fact}.
@@ -295,7 +295,7 @@ public void birthday_indicating_a_young_person_should_be_saved() {
     \end{lstlisting}
   \end{code}
 
-  All tests rely on the fact that test data contains a person with business key equals to \emph{USER2} and property \texttt{birthday} that has no value (i.e. it is null).
+  All tests rely on the fact that test data contains a person with business key equals to \texttt{USER2} and property \emph{birthday} that has no value (i.e. it is null).
   Test in Listing~\ref{lst:Person-birthday-validation-test-1} ensures rule \emph{2.a} that if the birth date suggests a person younger than 23 years of age then a warning should be raised, but the value should be recognised as valid.
   Test in Listing~\ref{lst:Person-birthday-validation-test-2} ensures that these ``early'' birthday value are saved correctly.
   Strictly speaking this test is not necessary and is provided only for the purpose of example, as it tests an already established at the platform level fact -- correct property values can be persisted when requested.
@@ -372,34 +372,64 @@ public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
   \end{code}
 
 \subsection{Modifying User Interface}
-  In order for application users to be able to enter and modify values of the \texttt{birthday} property added to the \emph{Person} entity, the application user interface (UI) needs to be updated.
+  In order for application users to be able to enter and modify values of the \emph{birthday} property added to the \emph{Person} entity, the application user interface (UI) needs to be updated.
   A complete discussion of the UI development support as provided by the platform is presented in chapter~\ref{?}.
   In this section we only cover the most essential concepts required to gain a general understanding in order to add \texttt{birthday} property to the application UI.
 
   The platform's UI programming model is based on Model-View-Presenter (MVP) pattern~\cite{BoGl2000}, which in turn is an improvement to the well known Model-View-Controller (MVC) pattern.  
-  However, in order to synchronise the MVP nomenclature with the nomeclature of the platfrom, it was renamed into Domain-Model-View (DMV):
+  In order to align the MVP nomenclature with the nomeclature of the platfrom, it was renamed into Domain-Model-View (DMV):
   \begin{description}
     \item[\textbf{The Domain.}] Represents a pure business domain model with entities and controllers that bares no UI logic\footnote{This separation of concerns is ensured at the module level, where business controller have no visibility of UI code.}.
-    \item[\textbf{The View.}] Has the same meaning as in MVC, which is represented in TG by a specialised container (panel or frame) containing other UI controls. It is responsible strictly for layouting and holding UI controls and bares no UI logic.
-    
-    \item [\textbf{The Model.}] Acts as a mediator between the View and Controller, and provides all UI related logic such as implementation of actions, event handlers etc. It interacts with Controller in order to invoke the business logic.
+    \item [\textbf{The Model.}] Governs how the domain can be manipulated and changed from UI. 
+	This is where the hart of the application UI logic resides. The view and model can closely collaborate in their roles of supplying the user interface for a particular domain.
+    \item[\textbf{The View.}] Has the responsibility to display the content of a domain. 
+	It is represented in TG by property editors and specialised containers (panel or frame) for holding UI controls.    
   \end{description}
 
-  The diagram of the MVP pattern principal difference between the two 
+  The platfrom provides a wide range of models and views that can be used as the basis for building consistent user intraface.
+  Let's quickly have a look at the basic modus operandi for developing UI for entering and editing \emph{Person} entities.
+  \begin{description}
+    \item[\textbf{Domain identification.}] Identify the part of the domain to be represented by UI. 
+	For example, if we need to build a master UI for entering/modifying of \emph{Person} then entity type \emph{Person} together with a corresponding controller \emph{IPerson}, which is specified using annotation \texttt{DefaultController}, represent the required domain part.
+    \item [\textbf{UI Model construction.}] Constract a UI model, which should be a new class extending one of the provided UI models. 
+	In case of a master it would be either \emph{UmMasterWithCrud} or one of its descendants. 
+	For example, a master model for \emph{Person} is implemented by class \emph{PersonMasterModel}, which extends \emph{UmMasterWithCrudAndUpdater\textless Person, IPerson\textgreater}. 
+	Type parameterisation plays a important role to support type aware UI models that ensures type safety.
+	UI models can be composed together in order to form more complex models for supporting composition of UI views.
+    \item[\textbf{UI View construction.}] Constract a UI view for the provided UI model. 
+	Each UI view is a container. 
+	Views can be composed to provide sophisticated user interfaces that could bringing together loosely coupled business domain concepts into one UI view.
+	At the very least UI views should extend either \emph{BasePanel} (a composable container, is embedded into other views) or \emph{BaseFrame} (a final container, may hold other views) classes. 
+	In most cases more specialised classes that are provided by the platfrom should be used.
+	For example, a view for the \emph{Person} master is represented by \emph{PersonMasterView} derived from \emph{MasterPanel}, which has a tree menu and embeds view \emph{PersonMainView} that can be accessed via one of menu's items.
+	The \emph{PersonMainView} view is derived from \emph{BaseNotifPanel\textless PersonMasterModel\textgreater} parameterised with the aforementioned UI model.
+  \end{description}
+  
+  Class \emph{PersonMainView} represent the UI view, which needs to be modified in order to provide application users with ability to change person's birthday.
+  Its method \emph{buildUi} contains the layout logic of UI elements displayed by the view.
+  Listing~\ref{lst:person-main-view-before-change} shows the beginning of this method.
+  Line~3 declares a \emph{JPanel} instance, created with a \emph{MigLayout}\footnote{Any Swing layout manager can be used instead, but we stongrly recommed to use MigLayout as a one-stop solution for all layouting needs. 
+	    The platform layouting support inherently based on MigLayout. 
+	    In a chapter on UI we'll provide more details about the provided support and flexibilit of MigLayout.} 
+  layout manager.
+  The specified layout settings ensure the following:
+  \begin{itemize}
+    \item The panel has no insets (i.e. the gap between the edges of the panel and the embedded elements is zero).
+    \item There are two columns -- one with preferred width of 50 units, another -- should be filled with embedded component (the fill option) and should resize that component if the width of the column changes (the grow option).
+    \item There can be any number of rows that centre their content.
+  \end{itemize}
 
-  The basic modus operandi is this.
-  Each domain entity such as \emph{Person} has a corresponding CRUD controller, UI model and view, which are bound together to enable user interaction with this domain entity.
 
- \begin{code}{Person main view construction}{\label{lst:Person-birthday-validation}}{codebgcolor}
+ \begin{code}{PersonMainView before change}{\label{lst:person-main-view-before-change}}{codebgcolor}
     \begin{lstlisting}
 @Override
 public void buildUi() {
     final JPanel componentsPanel = new JPanel(new MigLayout("insets 0", 
-					      "[:50:][grow, fill]", 
-					      "[c]"));
+						  "[:50:][grow, fill]", 
+						  "[c]"));
     final Map<String, IPropertyEditor> editors = getModel().getEditors();
     ///////////////////////////////////////////////////////    
-    addAndWrap(componentsPanel, editors, "key");  // row 1    
+    addAndWrap(componentsPanel, editors, "key"); // row 1
     addAndWrap(componentsPanel, editors, "desc"); // row 2
     ...
 }
