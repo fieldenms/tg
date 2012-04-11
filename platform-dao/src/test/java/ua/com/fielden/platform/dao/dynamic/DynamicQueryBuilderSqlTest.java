@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.YesNoType;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
@@ -169,36 +170,42 @@ public class DynamicQueryBuilderSqlTest {
     ////////////////////////////////// 1.1. Range type /////////////////////////////////////////
 
     @Test
+    @Ignore
     public void test_atomic_query_composition_for_integer_range_type() {
 	test_atomic_query_composition_for_range_type("integerProp");
 	test_atomic_query_composition_for_range_type("entityProp.integerProp");
     }
 
     @Test
+    @Ignore
     public void test_atomic_query_composition_for_double_range_type() {
 	test_atomic_query_composition_for_range_type("doubleProp");
 	test_atomic_query_composition_for_range_type("entityProp.doubleProp");
     }
 
     @Test
+    @Ignore
     public void test_atomic_query_composition_for_bigDecimal_range_type() {
 	test_atomic_query_composition_for_range_type("bigDecimalProp");
 	test_atomic_query_composition_for_range_type("entityProp.bigDecimalProp");
     }
 
     @Test
+    @Ignore
     public void test_atomic_query_composition_for_money_range_type() {
 	test_atomic_query_composition_for_range_type("moneyProp");
 	test_atomic_query_composition_for_range_type("entityProp.moneyProp");
     }
 
     @Test
+    @Ignore
     public void test_atomic_query_composition_for_date_range_type() {
 	test_atomic_query_composition_for_range_type("dateProp");
 	test_atomic_query_composition_for_range_type("entityProp.dateProp");
     }
 
     @Test
+    @Ignore
     public void test_atomic_query_composition_for_date_range_type_with_mnemonics_assigned() {
 	test_atomic_query_composition_for_date_range_type_with_mnemonic_assigned("dateProp");
 	test_atomic_query_composition_for_date_range_type_with_mnemonic_assigned("entityProp.dateProp");
