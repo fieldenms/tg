@@ -122,8 +122,12 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    public void viewWasSelected(final SelectionEvent event) {
 		//Managing the default, design and custom action changer button enablements.
 		getOwner().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
-		getOwner().getCriteriaPanel().getSwitchAction().setEnabled(getOwner().getCriteriaPanel().canConfigure());
-		getOwner().getCustomActionChanger().setEnabled(getOwner().getCustomActionChanger() != null);
+		if(getOwner().getCriteriaPanel() != null && getOwner().getCriteriaPanel().canConfigure()){
+		    getOwner().getCriteriaPanel().getSwitchAction().setEnabled(true);
+		}
+		if(getOwner().getCustomActionChanger() != null){
+		    getOwner().getCustomActionChanger().setEnabled(true);
+		}
 		//Managing the paginator's enablements.
 		getOwner().getPaginator().setEnableActions(false, false);
 		//Managing load and export enablements.

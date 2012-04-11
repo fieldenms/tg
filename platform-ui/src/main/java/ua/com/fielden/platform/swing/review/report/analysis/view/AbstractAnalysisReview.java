@@ -63,7 +63,9 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 		if (!result) {
 		    return result;
 		}
-		getOwner().getCriteriaPanel().updateModel();
+		if (getOwner().getCriteriaPanel() != null) {
+		    getOwner().getCriteriaPanel().updateModel();
+		}
 		enableRelatedActions(false, false);
 		return true;
 	    }

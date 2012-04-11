@@ -41,32 +41,31 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	return (GridConfigurationModel<T, CDTME>)super.getConfigurationModel();
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private PropertyTableModel<?> createTableModel() {
-	final Class<T> entityClass = getCriteria().getEntityClass();
-	final Class<?> managedType = getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(entityClass);
-	final PropertyTableModelBuilder<?> tableModelBuilder = new PropertyTableModelBuilder(managedType);
-	final IAddToResultTickManager resultTickManager = getCriteria().getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-	for(final String propertyName : resultTickManager.checkedProperties(entityClass)){
-	    tableModelBuilder.addReadonly(propertyName, resultTickManager.getWidth(entityClass, propertyName));
-	}
-	return tableModelBuilder.build(new ArrayList());
-    }
-
     public final PropertyTableModel<?> getGridModel(){
 	return gridModel;
     }
 
     @Override
     protected IPage<T> executeAnalysisQuery() {
-	// TODO implement
-	//getPageHolder().newPage(/*newPage*/);
-	return null;
+	IPage<T> newPage = getCriteria().run(10);
+	getPageHolder().newPage(newPage);
+	return newPage;
     }
 
     @Override
     protected Result canLoadData() {
-	//TODO consider this implementation.
 	return getCriteria().isValid();
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private PropertyTableModel<?> createTableModel() {
+        final Class<T> entityClass = getCriteria().getEntityClass();
+        final Class<?> managedType = getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(entityClass);
+        final PropertyTableModelBuilder<?> tableModelBuilder = new PropertyTableModelBuilder(managedType);
+        final IAddToResultTickManager resultTickManager = getCriteria().getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+        for(final String propertyName : resultTickManager.checkedProperties(entityClass)){
+            tableModelBuilder.addReadonly(propertyName, resultTickManager.getWidth(entityClass, propertyName));
+        }
+        return tableModelBuilder.build(new ArrayList());
     }
 }

@@ -30,6 +30,7 @@ import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2.DragFromSupport;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2.DragToSupport;
@@ -241,6 +242,19 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
     @Override
     public Action getSwitchAction() {
 	return toggleAction;
+    }
+    
+    @SuppressWarnings("rawtypes")
+    @Override
+    public void updateModel() {
+	for (final IPropertyEditor component : editors.values()) {
+	    if (component.getEditor() instanceof BoundedValidationLayer) {
+		final BoundedValidationLayer bvl = (BoundedValidationLayer) component.getEditor();
+		if (bvl.canCommit()) {
+		    bvl.commit();
+		}
+	    }
+	}
     }
 
     /**

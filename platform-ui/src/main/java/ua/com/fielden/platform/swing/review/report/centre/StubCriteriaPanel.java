@@ -31,9 +31,7 @@ public class StubCriteriaPanel extends JPanel implements ICriteriaPanel {
      * 
      * @return
      */
-    public boolean updateModel(){
-	//TODO must implement that.
-	return true;
+    public void updateModel(){
     }
 
     @Override

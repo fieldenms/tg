@@ -15,6 +15,7 @@ import java.util.List;
 import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JTable;
+import javax.swing.JToggleButton;
 import javax.swing.SortOrder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
@@ -116,8 +117,12 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    public void viewWasSelected(final SelectionEvent event) {
 		//Managing the default, design and custom action changer button enablements.
 		getOwner().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
-		getOwner().getCriteriaPanel().getSwitchAction().setEnabled(getOwner().getCriteriaPanel().canConfigure());
-		getOwner().getCustomActionChanger().setEnabled(getOwner().getCustomActionChanger() != null);
+		if(getOwner().getCriteriaPanel() != null && getOwner().getCriteriaPanel().canConfigure()){
+		    getOwner().getCriteriaPanel().getSwitchAction().setEnabled(true);
+		}
+		if(getOwner().getCustomActionChanger() != null){
+		    getOwner().getCustomActionChanger().setEnabled(true);
+		}
 		//Managing the paginator's enablements.
 		getOwner().getPaginator().setEnableActions(true, false);
 		//Managing load and export enablements.

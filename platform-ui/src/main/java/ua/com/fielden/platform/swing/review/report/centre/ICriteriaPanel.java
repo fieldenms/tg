@@ -23,4 +23,11 @@ public interface ICriteriaPanel {
      * @return
      */
     Action getSwitchAction();
+    
+    /**
+     * Must updates the underlying model according to it's view.
+     * 
+     * @return
+     */
+    public void updateModel();
 }
