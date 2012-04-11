@@ -11,15 +11,11 @@ abstract class AbstractLogicalCondition<T> extends AbstractQueryLink implements 
 
     @Override
     public T and() {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().and());
-	return result;
+	return copy(getParent(), getTokens().and());
     }
 
     @Override
     public T or() {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().or());
-	return result;
+	return copy(getParent(), getTokens().or());
     }
 }

@@ -12,8 +12,6 @@ abstract class AbstractExprOperationOrEnd<T1, T2> extends AbstractArithmeticalOp
 
     @Override
     public T2 endExpr() {
-	final T2 result = getParent2();
-	((AbstractQueryLink) result).setTokens(getTokens().endExpression());
-	return result;
+	return copy(getParent2(), getTokens().endExpression());
     }
 }

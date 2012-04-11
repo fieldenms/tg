@@ -17,7 +17,7 @@ final class FunctionCompoundCondition0<T> extends AbstractQueryLink implements I
 	return new CaseWhenFunctionArgument<T>(getTokens(), parent);
     }
 
-    private AbstractLogicalCondition<IFunctionWhere0<T>> get() {
+    private AbstractLogicalCondition<IFunctionWhere0<T>> getLogicalCondition() {
 	return new AbstractLogicalCondition<IFunctionWhere0<T>>(getTokens()) {
 
 	    @Override
@@ -29,11 +29,11 @@ final class FunctionCompoundCondition0<T> extends AbstractQueryLink implements I
 
     @Override
     public IFunctionWhere0<T> and() {
-	return get().and();
+	return getLogicalCondition().and();
     }
 
     @Override
     public IFunctionWhere0<T> or() {
-	return get().or();
+	return getLogicalCondition().or();
     }
 }

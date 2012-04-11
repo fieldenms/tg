@@ -10,7 +10,7 @@ final class CompoundCondition0 extends Completed implements ICompoundCondition0 
 	super(queryTokens);
     }
 
-    private AbstractLogicalCondition<IWhere0> get() {
+    private AbstractLogicalCondition<IWhere0> getLogicalCondition() {
 	return new AbstractLogicalCondition<IWhere0>(getTokens()) {
 
 	    @Override
@@ -22,11 +22,11 @@ final class CompoundCondition0 extends Completed implements ICompoundCondition0 
 
     @Override
     public IWhere0 and() {
-	return get().and();
+	return getLogicalCondition().and();
     }
 
     @Override
     public IWhere0 or() {
-	return get().or();
+	return getLogicalCondition().or();
     }
 }

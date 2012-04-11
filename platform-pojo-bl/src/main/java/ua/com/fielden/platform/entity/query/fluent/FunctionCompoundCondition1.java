@@ -17,7 +17,7 @@ final class FunctionCompoundCondition1<T> extends AbstractCompoundCondition<IFun
     }
 
     @Override
-    IFunctionCompoundCondition0<T> get() {
+    IFunctionCompoundCondition0<T> getParent2() {
 	return new FunctionCompoundCondition0<T>(getTokens(), parent);
     }
 }

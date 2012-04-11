@@ -9,9 +9,9 @@ public class RoundFunctionTo<T> extends AbstractQueryLink implements IRoundFunct
 	super(queryTokens);
 	this.parent = parent;
     }
+
     @Override
     public T to(final Integer precision) {
-	((AbstractQueryLink) parent).setTokens(getTokens().to(precision));
-	return parent;
+	return copy(parent, getTokens().to(precision));
     }
 }

@@ -13,8 +13,6 @@ abstract class AbstractEndExpression<T> extends AbstractQueryLink implements IEn
 
     @Override
     public T endExpr() {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().endExpression());
-	return result;
+	return copy(getParent(), getTokens().endExpression());
     }
 }

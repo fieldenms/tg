@@ -12,29 +12,21 @@ abstract class AbstractArithmeticalOperator<T> extends AbstractQueryLink impleme
 
     @Override
     public T add() {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().add());
-	return result;
+	return copy(getParent(), getTokens().add());
     }
 
     @Override
     public T sub() {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().subtract());
-	return result;
+	return copy(getParent(), getTokens().subtract());
     }
 
     @Override
     public T mult() {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().multiply());
-	return result;
+	return copy(getParent(), getTokens().multiply());
     }
 
     @Override
     public T div() {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().divide());
-	return result;
+	return copy(getParent(), getTokens().divide());
     }
 }

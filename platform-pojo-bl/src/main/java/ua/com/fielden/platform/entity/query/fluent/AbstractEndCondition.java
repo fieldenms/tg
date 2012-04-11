@@ -12,8 +12,6 @@ abstract class AbstractEndCondition<T> extends AbstractQueryLink implements IEnd
 
     @Override
     public T end() {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().endCondition());
-	return result;
+	return copy(getParent(), getTokens().endCondition());
     }
 }

@@ -8,7 +8,7 @@ abstract class AbstractCompoundCondition<T1, T2> extends AbstractLogicalConditio
 	super(queryTokens);
     }
 
-    abstract T2 get();
+    abstract T2 getParent2();
 
     @Override
     public T2 end() {
@@ -16,9 +16,7 @@ abstract class AbstractCompoundCondition<T1, T2> extends AbstractLogicalConditio
 
 	    @Override
 	    T2 getParent() {
-		final T2 result = get();
-		((AbstractQueryLink) result).setTokens(getTokens());
-		return result;
+		return getParent2();
 	    }
 	}).end();
     }

@@ -16,7 +16,7 @@ final class CompoundCondition2 extends AbstractCompoundCondition<IWhere2, ICompo
     }
 
     @Override
-    ICompoundCondition1 get() {
+    ICompoundCondition1 getParent2() {
 	return new CompoundCondition1(getTokens());
     }
 }

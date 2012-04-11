@@ -16,7 +16,7 @@ final class JoinCompoundCondition1 extends AbstractCompoundCondition<IJoinWhere1
     }
 
     @Override
-    IJoinCompoundCondition0 get() {
+    IJoinCompoundCondition0 getParent2() {
 	return new JoinCompoundCondition0(getTokens());
     }
 }

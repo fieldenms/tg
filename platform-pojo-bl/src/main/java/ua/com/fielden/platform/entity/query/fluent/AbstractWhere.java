@@ -12,7 +12,7 @@ abstract class AbstractWhere<T1 extends IComparisonOperator<T2>, T2 extends ILog
 
     protected abstract T3 getParent3();
 
-    private AbstractBeginCondition<T3> getOpenCondition() {
+    private AbstractBeginCondition<T3> getBeginCondition() {
 	return new AbstractBeginCondition<T3>(getTokens()) {
 	    @Override
 	    T3 getParent() {
@@ -23,11 +23,11 @@ abstract class AbstractWhere<T1 extends IComparisonOperator<T2>, T2 extends ILog
 
     @Override
     public T3 begin() {
-	return getOpenCondition().begin();
+	return getBeginCondition().begin();
     }
 
     @Override
     public T3 notBegin() {
-	return getOpenCondition().notBegin();
+	return getBeginCondition().notBegin();
     }
 }

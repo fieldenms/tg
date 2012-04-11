@@ -11,15 +11,11 @@ abstract class AbstractRightSideOperand<T> extends AbstractMultipleOperand<T> im
 
     @Override
     public T any(final SingleResultQueryModel subQuery) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().any(subQuery));
-	return result;
+	return copy(getParent(), getTokens().any(subQuery));
     }
 
     @Override
     public T all(final SingleResultQueryModel subQuery) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().all(subQuery));
-	return result;
+	return copy(getParent(), getTokens().all(subQuery));
     }
 }

@@ -10,29 +10,21 @@ abstract class AbstractSetOfOperands<T> extends AbstractSingleOperand<T> impleme
 
     @Override
     public <E extends Object> T values(final E... values) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().setOfValues(values));
-	return result;
+	return copy(getParent(), getTokens().setOfValues(values));
     }
 
     @Override
     public T props(final String... properties) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().setOfProps(properties));
-	return result;
+	return copy(getParent(), getTokens().setOfProps(properties));
     }
 
     @Override
     public T params(final String... paramNames) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().setOfParams(paramNames));
-	return result;
+	return copy(getParent(), getTokens().setOfParams(paramNames));
     }
 
     @Override
     public T model(final SingleResultQueryModel model) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().model(model));
-	return result;
+	return copy(getParent(), getTokens().model(model));
     }
 }

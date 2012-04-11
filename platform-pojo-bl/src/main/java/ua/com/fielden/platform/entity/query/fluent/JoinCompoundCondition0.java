@@ -10,7 +10,7 @@ final class JoinCompoundCondition0 extends Join implements IJoinCompoundConditio
 	super(queryTokens);
     }
 
-    private AbstractLogicalCondition<IJoinWhere0> get() {
+    private AbstractLogicalCondition<IJoinWhere0> getLogicalCondition() {
 	return new AbstractLogicalCondition<IJoinWhere0>(getTokens()) {
 
 	    @Override
@@ -22,11 +22,11 @@ final class JoinCompoundCondition0 extends Join implements IJoinCompoundConditio
 
     @Override
     public IJoinWhere0 and() {
-	return get().and();
+	return getLogicalCondition().and();
     }
 
     @Override
     public IJoinWhere0 or() {
-	return get().or();
+	return getLogicalCondition().or();
     }
 }

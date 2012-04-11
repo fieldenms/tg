@@ -50,15 +50,11 @@ abstract class AbstractYieldedItem<T> extends AbstractSingleOperand<T> implement
 
     @Override
     public T countAll() {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().countAll());
-	return result;
+	return copy(getParent(), getTokens().countAll());
     }
 
     @Override
     public T join(final String joinAlias) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().entity(joinAlias));
-	return result;
+	return copy(getParent(), getTokens().entity(joinAlias));
     }
 }

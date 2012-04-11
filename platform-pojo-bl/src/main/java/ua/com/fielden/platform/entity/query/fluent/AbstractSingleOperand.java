@@ -18,51 +18,37 @@ abstract class AbstractSingleOperand<T> extends AbstractQueryLink implements ISi
 
     @Override
     public T val(final Object value) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().val(value));
-	return result;
+	return copy(getParent(), getTokens().val(value));
     }
 
     @Override
     public T iVal(final Object value) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().iVal(value));
-	return result;
+	return copy(getParent(), getTokens().iVal(value));
     }
 
     @Override
     public T model(final SingleResultQueryModel<?> model) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().model(model));
-	return result;
+	return copy(getParent(), getTokens().model(model));
     }
 
     @Override
     public T param(final String paramName) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().param(paramName));
-	return result;
+	return copy(getParent(), getTokens().param(paramName));
     }
 
     @Override
     public T iParam(final String paramName) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().iParam(paramName));
-	return result;
+	return copy(getParent(), getTokens().iParam(paramName));
     }
 
     @Override
     public T prop(final String propertyName) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().prop(propertyName));
-	return result;
+	return copy(getParent(), getTokens().prop(propertyName));
     }
 
     @Override
     public T expr(final ExpressionModel expr) {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().expr(expr));
-	return result;
+	return copy(getParent(), getTokens().expr(expr));
     }
 
     @Override
@@ -87,9 +73,7 @@ abstract class AbstractSingleOperand<T> extends AbstractQueryLink implements ISi
 
     @Override
     public T now() {
-	final T result = getParent();
-	((AbstractQueryLink) result).setTokens(getTokens().now());
-	return result;
+	return copy(getParent(), getTokens().now());
     }
 
     @Override
