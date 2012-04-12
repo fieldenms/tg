@@ -593,9 +593,9 @@ public class DynamicQueryBuilder {
 	    final boolean isNot = (Boolean) property.getValue2();
 	    return (is && !isNot) ? conditionGroup.prop(propertyName).eq().val(true).end() : (!is && isNot ? conditionGroup.prop(propertyName).eq().val(false).end() : null);
 	} else if (EntityUtils.isString(property.getType())) {
-	    return conditionGroup.prop(propertyName).like().val(DynamicEntityQueryCriteria.prepare((String) property.getValue())).end();
+	    return conditionGroup.prop(propertyName).like().anyOfValues(DynamicEntityQueryCriteria.prepare((String) property.getValue())).end();
 	} else if (EntityUtils.isEntityType(property.getType())) {
-	    return conditionGroup.prop(propertyName).like().val(DynamicEntityQueryCriteria.prepare((List<String>) property.getValue())).end();
+	    return conditionGroup.prop(propertyName).like().anyOfValues(DynamicEntityQueryCriteria.prepare((List<String>) property.getValue())).end();
 	} else {
 	    throw new UnsupportedTypeException(property.getType());
 	}

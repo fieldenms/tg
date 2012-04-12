@@ -568,7 +568,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).like().val(DynamicEntityQueryCriteria.prepare((String) property.getValue())).end() //
+	/*    */.begin().prop(cbn).like().anyOfValues(DynamicEntityQueryCriteria.prepare((String) property.getValue())).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -588,8 +588,8 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
-	/*    */.begin().prop(cbn).like().val(DynamicEntityQueryCriteria.prepare((List<String>) property.getValue())).end() //
-	/*  */.end() //
+	/*    */.begin().prop(cbn).like().anyOfValues(DynamicEntityQueryCriteria.prepare((List<String>) property.getValue())).end() //
+	/*  */.end() //s
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
