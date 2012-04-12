@@ -16,7 +16,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
@@ -1047,7 +1046,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 
     @Override
     @Test
-    @Ignore
     public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
 	dtm().getFirstTick().setColumnsNumber(3);
 

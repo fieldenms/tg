@@ -209,6 +209,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	protected IAddToCriteriaTickRepresentation tr() {
 	    return (IAddToCriteriaTickRepresentation) super.tr();
 	}
+	
+	@Override
+	protected boolean isCheckedMutably(final Class<?> root, final String property) {
+	    return super.isCheckedMutably(root, property) || property.endsWith("mutablyCheckedProp");
+	}
 
 	@Override
 	public Set<Class<?>> rootTypes() {

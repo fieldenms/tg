@@ -324,6 +324,17 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    return base().rootTypes();
 	}
 
+	@Override
+	protected void insertCheckedProperty(final Class<?> root, final String property, final int index) {
+	    // inject an enhanced type into method implementation
+	    base().insertCheckedProperty(enhancer().getManagedType(root), property, index);
+	}
+	
+	@Override
+	protected void removeCheckedProperty(final Class<?> root, final String property) {
+	    // inject an enhanced type into method implementation
+	    base().removeCheckedProperty(enhancer().getManagedType(root), property);
+	}
     }
 
     /**

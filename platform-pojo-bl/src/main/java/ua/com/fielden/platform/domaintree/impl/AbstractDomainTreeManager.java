@@ -164,7 +164,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      *
      */
     protected static class IncludedAndCheckedPropertiesSynchronisationListener implements IPropertyListener {
-	private final ITickManagerWithMutability firstTickManager, secondTickManager;
+	private final TickManager firstTickManager, secondTickManager;
 	private final ITickRepresentationWithMutability firstTickRepresentation, secondTickRepresentation;
 	private final IDomainTreeRepresentationWithMutability domainTreeRepresentation;
 
@@ -174,7 +174,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	 * @param firstTick
 	 * @param secondTick
 	 */
-	protected IncludedAndCheckedPropertiesSynchronisationListener(final ITickManagerWithMutability firstTick, final ITickManagerWithMutability secondTick, final ITickRepresentationWithMutability firstTickRepresentation, final ITickRepresentationWithMutability secondTickRepresentation, final IDomainTreeRepresentationWithMutability domainTreeRepresentation) {
+	protected IncludedAndCheckedPropertiesSynchronisationListener(final TickManager firstTick, final TickManager secondTick, final ITickRepresentationWithMutability firstTickRepresentation, final ITickRepresentationWithMutability secondTickRepresentation, final IDomainTreeRepresentationWithMutability domainTreeRepresentation) {
 	    this.firstTickManager = firstTick;
 	    this.secondTickManager = secondTick;
 	    this.firstTickRepresentation = firstTickRepresentation;
@@ -192,8 +192,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		    final String reflectionProperty = reflectionProperty(property);
 		    // update checked properties
 		    if (firstTickManager.isCheckedNaturally(root, reflectionProperty) && !firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-			// TODO firstTickManager.insertCheckedProperty(root, reflectionProperty, firstTickManager.checkedPropertiesMutable(root).size()); // add it to the end of list
-			firstTickManager.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
+			firstTickManager.insertCheckedProperty(root, reflectionProperty, firstTickManager.checkedPropertiesMutable(root).size()); // add it to the end of list
 		    }
 		    if (secondTickManager.isCheckedNaturally(root, reflectionProperty) && !secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
 			secondTickManager.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
@@ -204,8 +203,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 		    final String reflectionProperty = reflectionProperty(property);
 		    // update checked properties
 		    if (firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-			// TODO firstTickManager.removeCheckedProperty(root, reflectionProperty);
-			firstTickManager.checkedPropertiesMutable(root).remove(reflectionProperty);
+			firstTickManager.removeCheckedProperty(root, reflectionProperty);
 		    }
 		    if (secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
 			secondTickManager.checkedPropertiesMutable(root).remove(reflectionProperty);
