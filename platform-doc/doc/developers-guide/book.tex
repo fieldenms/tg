@@ -112,13 +112,19 @@
 \newenvironment{code}[3]
 { \begin{program}
   \capstart
-  \captionsetup{format=plain,justification=centering,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}
-  \caption{#2#1}
+  \captionsetup{format=plain,justification=justified,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}
   \begin{center}
     \begin{tikzpicture}
-      \node [fill=#3!20!white,rounded corners=5pt]
-      \bgroup}
-      {\egroup;
+      \node[fill=#3!20!white,rounded corners=5pt]
+      \bgroup
+      \bgroup
+      \begin{minipage}{\textwidth}	
+	\caption{#2#1}      
+      \begin{minipage}{\textwidth}}
+      {\end{minipage}\vspace*{-5pt}
+      \end{minipage}
+      \egroup
+      \egroup;
     \end{tikzpicture}
   \end{center}
 \end{program}
@@ -133,8 +139,7 @@
 \floatname{notethis}{Note}
 
 \newenvironment{notebox}[2]
-{\begin{notethis}
-  \vspace*{-8pt}  
+{\begin{notethis}  
   \capstart
   \captionsetup{font=footnotesize,justification=justified,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}  
   \begin{center}
@@ -143,13 +148,13 @@
       \bgroup
       \bgroup
       \begin{minipage}{\textwidth}
-      \vspace*{-8pt}
       \caption{#2#1}
       \vspace*{4pt}
       \centering
-      \begin{minipage}{0.9\textwidth}
-      \footnotesize}
-      {\end{minipage}\vspace*{5pt}\end{minipage}
+	\begin{minipage}{0.9\textwidth}
+	\footnotesize}
+	{\end{minipage}\vspace*{5pt}
+      \end{minipage}
       \egroup
       \egroup;
     \end{tikzpicture}
@@ -165,7 +170,7 @@
     \capstart  
     \captionsetup{font=footnotesize,justification=centering,labelsep=colon,labelfont=bf,singlelinecheck=false,indention=0pt,position=below}  
     \caption{#2#1}
-    \vspace*{10pt}
+    %\vspace*{10pt}
     \begin{center}}
     {\end{center}
   \end{figure}
@@ -229,7 +234,7 @@
 }
 
 \newcommand{\tikznote}[7]{
-\begin{tikzpicture}[remember picture, overlay, >=latex', note/.style={rectangle callout, rounded corners = 1pt, fill=annotationbgcolor, drop shadow}]    
+\begin{tikzpicture}[remember picture, overlay, >=latex', note/.style={rectangle callout, rounded corners = 1pt, fill=annotationbgcolor, drop shadow}]
     \node [note=annotationbgcolor, callout absolute pointer={(#2.east)}, xshift=#3, yshift=#4] (#1) at (#2) 
     {
       \begin{minipage}{#5}

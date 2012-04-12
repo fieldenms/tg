@@ -72,7 +72,7 @@
 			  level 5/.style={level distance=40mm,sibling distance=10mm, nodes={fill=white!10}, minimum width=50mm, minimum height=5mm}
 			  ]      
       \node{$\sim$/.m2}
-	child {node[fill=codebgcolor!30] (settings) {.settings}}
+	child {node[fill=codebgcolor!30] (settings11) {.settings}}
 	child {node[fill=highlight] {repository}
 	  child {node {group ID $N_1$}}	  
 	  child {node {\ldots}}	  
@@ -96,7 +96,7 @@
 	};    
     \end{tikzpicture}
     
-    \tikznote{tree_a1}{settings}{6cm}{-0.2cm}{4cm}{Settings File}{Contains Maven specific settings, which are discussed in details later in this section.}
+    \tikznote{tree_a1}{settings11}{6cm}{-0.2cm}{4cm}{Settings File}{Contains Maven specific settings, which are discussed in details later in this section.}
   \end{image}
   
 
@@ -252,13 +252,9 @@
 	</servers>
       </settings>
     \end{lstlisting}
-
     \tikznote{lst_settings_mirror_annotation}{lst_settings_mirror}{5cm}{0.8cm}{4cm}{Mirrors}{The \emph{mirror} section is responsible for specifying TG Maven Repository as the mirror for all Maven related requests.}
-
     \tikznote{lst_settings_profile_annotation}{lst_settings_profile}{5.5cm}{0.3cm}{4cm}{Profiles}{The \emph{profiles} section lists all configured Maven profiles available. In this case there is only one profile \emph{nexus}, which specifies artifact and plugin repository locations.}
-
     \tikznote{lst_settings_active_profile_annotation}{lst_settings_active_profile}{3.5cm}{0.5cm}{4cm}{Active Profile}{There can be several profiles, so here we identify what profile is active.}
-
     \tikznote{lst_settings_servers_annotation}{lst_settings_servers}{5.0cm}{-0.2cm}{6cm}{Servers}{
       This sections is responsible for listing three server components registered as separate servers for Maven to access all types of artifacts (releases and snapshots).
 
@@ -285,7 +281,6 @@
 	  </proxy>
 	</proxies>
     \end{lstlisting}
-
     \tikznote{lst_proxy_a1}{lst_proxy_server}{2cm}{1.0cm}{4cm}{Proxy Server}{Provide valid \emph{host} and \emph{port} settings.}
     \tikznote{lst_proxy_a2}{lst_proxy_credentials}{4cm}{0.3cm}{5cm}{Proxy Credentials}{Provide appropriate \emph{username} and \emph{password} to access the proxy server.}
   \end{code}
@@ -376,16 +371,12 @@
 	  </dependencies>
     </project> 
     \end{lstlisting}
-
     \tikzhighlight{lst_pom_n1}{lst_pom_n2}  
     \tikznote{lst_pom_a1}{lst_pom_n2_1}{6cm}{0.5cm}{5cm}{Project Group}{This tag indicates project's group, which usually refers to the company or development group responsible for implementing the project.}
-
     \tikzhighlight{lst_pom_n3}{lst_pom_n4}
-    \tikznote{lst_pom_a2}{lst_pom_n4_1}{4cm}{-0.5cm}{5cm}{Project Artifact}{There can be several notes for the same highlighted area.}
-  
+    \tikznote{lst_pom_a2}{lst_pom_n4_1}{4cm}{-0.5cm}{5cm}{Project Artifact}{There can be several notes for the same highlighted area.}  
     \tikznote{lst_pom_a3}{lst_pom_modules}{4cm}{-0.5cm}{5cm}{Project Modules}{Lists all modules that form the multi-module project.}
-    \tikznote{lst_pom_a4}{lst_pom_dependency}{6cm}{0.2cm}{5cm}{Project Dependencies}{Lists Maven artifacts that project depends on in format \texttt{groupId:artifactId:version}.}
-    \vspace*{-40pt}
+    \tikznote{lst_pom_a4}{lst_pom_dependency}{6cm}{0.2cm}{5cm}{Project Dependencies}{Lists Maven artifacts that project depends on in format \texttt{groupId:artifactId:version}.}    
   \end{code}
 
   More insightful material on Maven can be found in an excellent book ``Apache Maven 2 Effective Implementation''~\cite{PoCh2009}.

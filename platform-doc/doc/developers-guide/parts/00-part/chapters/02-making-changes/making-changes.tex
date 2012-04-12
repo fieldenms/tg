@@ -137,10 +137,10 @@ public class Person extends AbstractEntity<String> {
   
   Once the client is up and running, go to \emph{Table Codes}$\longrightarrow$\emph{Personnel} and observer the affect of your changes, which should be obvious in the grid, selection criteria panel and in the configuration domain tree (can be invoked by clicking the \emph{Configure} button on Personnel Centre).
   
-\subsection{Enhance Person and Test Your Changes}
+\subsection{Enhance Person and Test Your Changes}\label{ch00:03:the-scenario}
   Let's now make some more serious changes. 
   
-  \subsubsection*{The scenario.} 
+  \subsubsection*{The scenario.}
   The following items should serve as a mini specification of the business rules for personnel enhancement.
   
   \begin{enumerate}
@@ -377,7 +377,7 @@ public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
   In this section we only cover the most essential concepts required to gain a general understanding in order to add \texttt{birthday} property to the application UI.
 
   The platform's UI programming model is based on Model-View-Presenter (MVP) pattern~\cite{BoGl2000}, which in turn is an improvement to the well known Model-View-Controller (MVC) pattern.  
-  In order to align the MVP nomenclature with the nomeclature of the platfrom, it was renamed into Domain-Model-View (DMV):
+  In order to align the MVP nomenclature with the nomenclature of the platform, it was renamed into Domain-Model-View (DMV):
   \begin{description}
     \item[\textbf{The Domain.}] Represents a pure business domain model with entities and controllers that bares no UI logic\footnote{This separation of concerns is ensured at the module level, where business controller have no visibility of UI code.}.
     \item [\textbf{The Model.}] Governs how the domain can be manipulated and changed from UI. 
@@ -386,21 +386,21 @@ public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
 	It is represented in TG by property editors and specialised containers (panel or frame) for holding UI controls.    
   \end{description}
 
-  The platfrom provides a wide range of models and views that can be used as the basis for building consistent user intraface.
+  The platform provides a wide range of models and views that can be used as the basis for building consistent user interface.
   Let's quickly have a look at the basic modus operandi for developing UI for entering and editing \emph{Person} entities.
   \begin{description}
     \item[\textbf{Domain identification.}] Identify the part of the domain to be represented by UI. 
 	For example, if we need to build a master UI for entering/modifying of \emph{Person} then entity type \emph{Person} together with a corresponding controller \emph{IPerson}, which is specified using annotation \texttt{DefaultController}, represent the required domain part.
-    \item [\textbf{UI Model construction.}] Constract a UI model, which should be a new class extending one of the provided UI models. 
+    \item [\textbf{UI Model construction.}] Construct a UI model, which should be a new class extending one of the provided UI models. 
 	In case of a master it would be either \emph{UmMasterWithCrud} or one of its descendants. 
 	For example, a master model for \emph{Person} is implemented by class \emph{PersonMasterModel}, which extends \emph{UmMasterWithCrudAndUpdater\textless Person, IPerson\textgreater}. 
 	Type parameterisation plays a important role to support type aware UI models that ensures type safety.
 	UI models can be composed together in order to form more complex models for supporting composition of UI views.
-    \item[\textbf{UI View construction.}] Constract a UI view for the provided UI model. 
+    \item[\textbf{UI View construction.}] Construct a UI view for the provided UI model. 
 	Each UI view is a container. 
 	Views can be composed to provide sophisticated user interfaces that could bringing together loosely coupled business domain concepts into one UI view.
-	At the very least UI views should extend either \emph{BasePanel} (a composable container, is embedded into other views) or \emph{BaseFrame} (a final container, may hold other views) classes. 
-	In most cases more specialised classes that are provided by the platfrom should be used.
+	At the very least UI views should extend either \emph{BasePanel} (a compoundable container, is embedded into other views) or \emph{BaseFrame} (a final container, may hold other views) classes. 
+	In most cases more specialised classes that are provided by the platform should be used.
 	For example, a view for the \emph{Person} master is represented by \emph{PersonMasterView} derived from \emph{MasterPanel}, which has a tree menu and embeds view \emph{PersonMainView} that can be accessed via one of menu's items.
 	The \emph{PersonMainView} view is derived from \emph{BaseNotifPanel\textless PersonMasterModel\textgreater} parameterised with the aforementioned UI model.
   \end{description}
@@ -408,19 +408,18 @@ public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
   Class \emph{PersonMainView} represent the UI view, which needs to be modified in order to provide application users with ability to change person's birthday.
   Its method \emph{buildUi} contains the layout logic of UI elements displayed by the view.
   Listing~\ref{lst:person-main-view-before-change} shows the beginning of this method.
-  Line~3 declares a \emph{JPanel} instance, created with a \emph{MigLayout}\footnote{Any Swing layout manager can be used instead, but we stongrly recommed to use MigLayout as a one-stop solution for all layouting needs. 
+  Line~3 declares a \emph{JPanel} instance, created with a \emph{MigLayout}\footnote{Any Swing layout manager can be used instead, but we strongly recommend to use MigLayout as a one-stop solution for all layouting needs. 
 	    The platform layouting support inherently based on MigLayout. 
-	    In a chapter on UI we'll provide more details about the provided support and flexibilit of MigLayout.} 
+	    In a chapter on UI we'll provide more details about the provided support and flexibility of MigLayout.} 
   layout manager.
   The specified layout settings ensure the following:
   \begin{itemize}
     \item The panel has no insets (i.e. the gap between the edges of the panel and the embedded elements is zero).
-    \item There are two columns -- one with preferred width of 50 units, another -- should be filled with embedded component (the fill option) and should resize that component if the width of the column changes (the grow option).
-    \item There can be any number of rows that centre their content.
+    \item There are two columns -- one with preferred width of 50 units, another -- should be filled with embedded component (the \texttt{fill} option) and should resize that component if the width of the column changes (the \texttt{grow} option).
+    \item There can be any number of rows with their content centred.
   \end{itemize}
 
-
- \begin{code}{PersonMainView before change}{\label{lst:person-main-view-before-change}}{codebgcolor}
+ \begin{code}{PersonMainView code before modification.}{\label{lst:person-main-view-before-change}}{codebgcolor}
     \begin{lstlisting}
 @Override
 public void buildUi() {
@@ -436,7 +435,177 @@ public void buildUi() {
     \end{lstlisting}
   \end{code}
 
+  The platform provides a convenient abstraction for UI components that are used to change property values of domain entities.
+  It is called \emph{Property Editor}.
+  Thus, there is no need to work directly with low level UI components such as text fields, labels and date pickers, which would require tremendous effort to build a user interface (consider the matter of binding components to entity properties, handle validation and error etc.).
+  Instead, the platform automatically determines what UI components are most appropriate for any given property based on its type and constructs an instance of a higher-order UI component -- a property editor.
+  Property editors are bound to corresponding properties, so if user changes value from UI it is propagated to the property and vice versa -- if a property is changed programmatically its value is automatically refreshed in UI.
+  They take full advantage over the associated with properties meta-data such as validation logic, title, description etc. 
+  This approach completely removes the dichotomy of the UI and business logic -- in all cases the domain determines the behaviour.
+  
+  Line~6 declares a variable, which points to a map of all \emph{property editors} obtained from a corresponding UI model.
+  Due to the fact that the UI model is associated with domain entity \emph{Person}, this map contains editors for all of its properties.
 
-\subsection{Running Modified Application}
+  Lines~8 and 9 invoke an inherited from the base view class method \emph{addAndWrap} to add editors for properties \emph{key} and \emph{desc} to two sequential rows on the view.
+  At the surface a property editor is very simple.
+  It has two principle parts -- a label component and an editor component.
+  Method \emph{addAndWrap} reuses this to place property label into the first column of the layout and the editor -- into the second column.
+  The result is depicted in Fig.~\ref{img:ch00:03:person-main-before-change}.
 
-\subsection{Securing access}
+  \begin{image}{PersonMainView L\&F before modification.}{\label{img:ch00:03:person-main-before-change}}
+    \includegraphics[width=0.9\textwidth]{parts/00-part/chapters/02-making-changes/images/05-person-main-before-change.png}
+  \end{image}
+
+  As can be suspected based on the above information, enabling application users to enter and change person birthday is a matter of a very simple change -- adding birthday property editor to the view.
+  Listing~\ref{lst:person-main-view-after-change} shows a modified code, where method \emph{addAndWrap} is used on line 10 to add birthday property editor to the view below the existing editors.
+
+ \begin{code}{PersonMainView code after modification.}{\label{lst:person-main-view-after-change}}{codebgcolor}
+    \begin{lstlisting}
+@Override
+public void buildUi() {
+    final JPanel componentsPanel = new JPanel(new MigLayout("insets 0", 
+						  "[:50:][grow, fill]", 
+						  "[c]"));
+    final Map<String, IPropertyEditor> editors = getModel().getEditors();
+    ///////////////////////////////////////////////////////    
+    addAndWrap(componentsPanel, editors, "key"); // row 1
+    addAndWrap(componentsPanel, editors, "desc"); // row 2
+    addAndWrap(componentsPanel, editors, "birthday"); // row 3
+    ...
+}
+    \end{lstlisting}
+  \end{code}  
+
+  The result is depicted in Fig.~\ref{img:ch00:03:person-main-before-change}.
+
+  \begin{image}{PersonMainView L\&F after modification.}{\label{img:ch00:03:person-main-after-change}}
+    \includegraphics[width=0.9\textwidth]{parts/00-part/chapters/02-making-changes/images/06-person-main-after-change.png}
+  \end{image}
+
+  In order to fully appreciate the power of such a trivial change, let's run the application.
+  But first, we need to update the development database to reflect the fact of adding a new persistent property \emph{birthday} to entity \emph{Person}.
+  This is covered in the next section.
+  
+
+\subsection{Running the Modified Application}
+
+  When a business domain model changes in ways that require changes to the underlying database\footnote{This is mostly related to creation of new persistent domain entities or addition/removal/modification of properties for existing persistent domain entities.}.
+  The proper way of initiating and tracking such changes during production application development is covered in a separate chapter of this book.
+  For pure development convenience, the generated application provides a utility, which should be used for autoupdate of the development database.
+  Similarly as for data-aware unit tests, it is always a good thing to be able to set the development database into a known state.
+  The provided development utility should be used for exactly this purpose.
+  This way, regardless of how you modify the data in the development database when running an application, it is always possible to reset it to the predefined state.
+
+  Open the utility main class \emph{PopulateDb} via an \texttt{Open Type} dialog (\texttt{Ctrl+Shit+T}) in the code editor.
+  This class extends the provided by platform class \emph{DomainDrivenDataPopulation} by overriding its method \emph{populateDomain} in order to define application specific data state.
+  Running this class changes the development database based on the current domain definition and populates the state as specified in method \emph{populateDomain}.
+
+  At this stage we do not need to change the initial data.
+  Thus, simple execute the class by pressing \texttt{Ctrl+F11} key combination to recreate the database in order to provide the newly added property \emph{birthday} of entity \emph{Person} with a column.
+  Before running the utility, please make sure that the application server is shutdown as it would locks the H2 development database, which runs in file mode.
+  Once the utility finishes, we can start the server followed by the client in order to observe changes made in the previous section.
+
+  When the client is up and running (a login prompt should be presented due to the database reset), navigate to the \emph{Personnel} main menu item in the \emph{Table Codes} group\footnote{Another way is to simply start typing item's title in the search bar above the main menu tree.}.
+  Open it -- this is an entity centre for entity \emph{Person} -- and configure to add property \emph{birthday} both as the selection criteria and result as depicted in Fig.~\ref{img:ch00:03:person-centre-configuration}.
+  The configuration result is depicted in Fig.~\ref{img:ch00:03:person-centre}.
+
+  \begin{image}{Person centre configuration.}{\label{img:ch00:03:person-centre-configuration}}
+    \includegraphics[width=0.9\textwidth]{parts/00-part/chapters/02-making-changes/images/07-person-centre-configuration.png}
+  \end{image}
+
+  \begin{image}{Person centre with birthday.}{\label{img:ch00:03:person-centre}}
+    \includegraphics[width=\textwidth]{parts/00-part/chapters/02-making-changes/images/08-person-centre.png}
+  \end{image}
+
+  This shows that declaring property \emph{birthday} as part of \emph{Person} automatically propagated it to the generic UI facilities such as Entity Centres without any additional work.
+  
+  Double clicking \emph{Person Code} with value \texttt{DUSE} in the resultant grid (Entity Grid Inspector, EGI) of the Person Centre should invoke a master view for entity \emph{Person}, which we modified in the previous section.
+  Click the \emph{Edit} button on the invoked master, focus the \emph{birthday} editor.
+  This activates the date/picker button at the right end of the editor, which can be used to visually enter the date value.
+  Figure~\ref{img:ch00:03:person-master-editing} depicts date selection for property \emph{birthday}.
+
+  \begin{image}{Person birthday entry.}{\label{img:ch00:03:person-master-editing}}
+    \includegraphics[width=0.9\textwidth]{parts/00-part/chapters/02-making-changes/images/09-person-master-editing.png}
+  \end{image}
+  
+  Please recall the validation rules for the birthday in section \ref{ch00:03:the-scenario}.
+  Try setting future value (invalid) and a value less than 23 into the past (warning), and observe how UI reacts\footnote{Please note that for the entered value to be set, the editor needs to loose focus.}.
+  Point the mouse cursor to the highlighted editor (red -- indicates error, yellow -- warning) to see the reason for an error and warning.
+  Figures~\ref{img:ch00:03:person-master-warning} and \ref{img:ch00:03:person-master-error} depict the cases with warning and error respectively.
+  
+  Thus, with a one line modification to UI, the applications gains all necessary functionality for entering/changing the \emph{birthday} value and follows all the domain rules defined for this property automatically.
+  
+  \begin{image}{Person birthday warning.}{\label{img:ch00:03:person-master-warning}}
+    \includegraphics[width=0.9\textwidth]{parts/00-part/chapters/02-making-changes/images/10-person-master-warning.png}
+  \end{image}
+
+  \begin{image}{Person birthday entry.}{\label{img:ch00:03:person-master-error}}
+    \includegraphics[width=0.9\textwidth]{parts/00-part/chapters/02-making-changes/images/11-person-master-error.png}
+  \end{image}
+  
+\subsection{Securing the Access}
+
+  At the end of this chapter, let's quickly show how easy it is to secure the capability to modify the \emph{Person} property \emph{birthday}.
+
+  \subsubsection*{Security token creation}
+  The first step for this is to create a \emph{security token}\emph{A separate chapter on security provide full discussion, which cannot be included into the quick start.}, which should implement contract \emph{ISecurityToken}.
+  All security tokens should be a part of \texttt{coolapp-pojo-bl} module.
+  It is advised to keep all security tokens in subpackages of the same dedicated parent package.
+
+  The generated application already contains a number of security tokens, some of which guard \emph{Person} related functionality.
+  All security token are located in subpackages on package \texttt{fielden.security.tokens}.
+  Personnel related tokens are located in package \texttt{fielden.security.tokens.personnel}.
+  
+  Security tokens can form a hierarchy, which is recognised at runtime by the security functionality when presenting tokens to the user for management.
+  For example, security token \emph{PersonnelReviewToken}, which implements \emph{ISecurityToken}, servers as the root type for all tokens related to personnel review capabilities.
+  Annotation \emph{KeyTitle} should be used to specify how any particular security token should appear to application users.
+  This is the same annotation used for providing title and description for domain entities.
+
+  Let's create a new security token with a root specified as an existing \emph{PersonnelReviewToken} by creating a new class \emph{PersonBirthdayToken} in package \texttt{fielden.security.tokens.personnel}, which extends class \emph{PersonnelReviewToken}.
+  This new class should be annotated with \emph{KeyTitle} provided with appropriate \emph{value} and \emph{desc}.
+  Listing~\ref{lst:person-birthday-token} shows the token's implementation.
+
+ \begin{code}{PersonMainView code after modification.}{\label{lst:person-birthday-token}}{codebgcolor}
+    \begin{lstlisting}
+package fielden.security.tokens.personnel;
+...
+@KeyTitle(value = "Person birthday", 
+	  desc = "Controls permission to change person's property birthday.")
+public class PersonBirthdayToken extends PersonnelReviewToken {
+}
+    \end{lstlisting}
+  \end{code}  
+  
+  \subsubsection*{Securing property \emph{birthday}}
+  The next step is to associated the created security token with a setter of property \emph{birthday}.
+  Navigate to class \emph{Person} and change setter \emph{setBirthday} as illustrated in Listing~\ref{lst:Person-birthday-auth} -- line 2 specifies authorisation annotation with an argument set to just created security token type \emph{PersonBirthdayToken}.
+
+  \begin{code}{Property \emph{birthday} authorisation.}{\label{lst:Person-birthday-auth}}{codebgcolor}
+    \begin{lstlisting}
+    @Observable
+    @Authorise(PersonBirthdayToken.class)
+    public Person setBirthday(final Date birthday) {
+      this.birthday = birthday;
+      return this;
+    }
+    \end{lstlisting}
+  \end{code}
+
+  \subsubsection*{Look ma, I cannot change my \emph{birthday}}
+  In order to observe the effect of this change restart the client and server and try changing property \emph{birthday} on the \emph{Person} master.
+  This should not be possible as the newly created security token is not marked as authorised for the user role of the currently logged in user \texttt{SU}.
+  Fig.~\ref{img:ch00:03:person-master-birthday-permission} depicts a corresponding error.
+  
+  \begin{image}{Person birthday permission error.}{\label{img:ch00:03:person-master-birthday-permission}}
+    \includegraphics[width=0.9\textwidth]{parts/00-part/chapters/02-making-changes/images/12-person-master-birthday-permission.png}
+  \end{image}
+
+  Due to the fact that \texttt{SU} user has permission to change change security token permissions, please grand \emph{Person birthday} token to the role \emph{ADMINISTRATOR}.
+  This can be done by using \emph{Token/Role Management} facility, available as part of the application.
+  Figure~\ref{img:ch00:03:person-birthday-permission} depicts the state of token/role associations before granting access to \emph{Person birthday}.
+
+  \begin{image}{Person birthday token association with use role.}{\label{img:ch00:03:person-birthday-permission}}
+    \includegraphics[width=0.9\textwidth]{parts/00-part/chapters/02-making-changes/images/13-person-birthday-permission.png}
+  \end{image}
+
+  Once \emph{Person birthday} has been associated with role \emph{ADMINISTRATOR} (click a corresponding checkbox and press the \emph{Save} button), there should be no problems changing the \emph{birthday} property (no application restart is necessary).
