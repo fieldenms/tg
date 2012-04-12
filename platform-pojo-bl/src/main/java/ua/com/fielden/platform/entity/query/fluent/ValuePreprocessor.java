@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.types.Money;
 
 public class ValuePreprocessor {
-    public Object preprocessValue(final Object value) {
+    public Object apply(final Object value) {
 	if (value == null) {
 	    return null;
 	} else 	if (value instanceof Collection || value.getClass().isArray()) {

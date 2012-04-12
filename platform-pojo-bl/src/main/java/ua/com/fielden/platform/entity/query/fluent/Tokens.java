@@ -142,11 +142,11 @@ final class Tokens {
     }
 
     public Tokens val(final Object value) {
-	return add(TokenCategory.VAL, valuePreprocessor.preprocessValue(value));
+	return add(TokenCategory.VAL, valuePreprocessor.apply(value));
     }
 
     public Tokens iVal(final Object value) {
-	return add(TokenCategory.IVAL, valuePreprocessor.preprocessValue(value));
+	return add(TokenCategory.IVAL, valuePreprocessor.apply(value));
     }
 
     public Tokens model(final PrimitiveResultQueryModel model) {
@@ -198,7 +198,7 @@ final class Tokens {
     }
 
     public Tokens anyOfValues(final Object... values) {
-	return add(TokenCategory.ANY_OF_VALUES, valuePreprocessor.preprocessValue(values));
+	return add(TokenCategory.ANY_OF_VALUES, valuePreprocessor.apply(values));
     }
 
     public Tokens anyOfExpressions(final ExpressionModel... expressions) {
@@ -218,7 +218,7 @@ final class Tokens {
     }
 
     public Tokens allOfValues(final Object... values) {
-	return add(TokenCategory.ALL_OF_VALUES, valuePreprocessor.preprocessValue(values));
+	return add(TokenCategory.ALL_OF_VALUES, valuePreprocessor.apply(values));
     }
 
     public Tokens allOfExpressions(final ExpressionModel... expressions) {
@@ -242,7 +242,7 @@ final class Tokens {
     }
 
     public Tokens setOfValues(final Object... values) {
-	return add(TokenCategory.SET_OF_VALUES, valuePreprocessor.preprocessValue(values));
+	return add(TokenCategory.SET_OF_VALUES, valuePreprocessor.apply(values));
     }
 
     public Tokens setOfExpressions(final ExpressionModel... expressions) {

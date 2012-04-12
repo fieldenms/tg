@@ -39,7 +39,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     private Map<String, Object> preprocessParamValues(final Map<String, Object> paramValues) {
 	final Map<String, Object> result = new HashMap<String, Object>();
 	for (final Map.Entry<String, Object> entry : paramValues.entrySet()) {
-	    result.put(entry.getKey(), valuePreprocessor.preprocessValue(entry.getValue()));
+	    result.put(entry.getKey(), valuePreprocessor.apply(entry.getValue()));
 	}
 	return result;
     }
