@@ -12,7 +12,7 @@ public class GroupedConditions extends Conditions implements ICondition {
 
     @Override
     public String sql() {
-        return "(" + super.sql() + ")";
+        return (negated ? " NOT" : "") + "(" + super.sql() + ")";
     }
 
     @Override
