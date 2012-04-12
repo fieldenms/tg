@@ -578,15 +578,15 @@ public class DynamicQueryBuilder {
 	    if (EntityUtils.isDate(property.getType()) && property.getDatePrefix() != null && property.getDateMnemonic() != null) {
 		// left boundary should be inclusive and right -- exclusive!
 		final Pair<Date, Date> fromAndTo = getDateValuesFrom(property.getDatePrefix(), property.getDateMnemonic(), property.getAndBefore());
-		return conditionGroup.prop(propertyName).ge().val(fromAndTo.getKey()).and().prop(propertyName).lt().val(fromAndTo.getValue()).end();
+		return conditionGroup.prop(propertyName).ge().iVal(fromAndTo.getKey()).and().prop(propertyName).lt().iVal(fromAndTo.getValue()).end();
 	    } else {
 		final IComparisonOperator3 scag = conditionGroup.prop(propertyName);
 		final IComparisonOperator3 scag2 = (Boolean.TRUE.equals(property.getExclusive())) ? //
-		/*      */scag.gt().val(property.getValue()).and().prop(propertyName) // exclusive
-			: scag.ge().val(property.getValue()).and().prop(propertyName); // inclusive
+		/*      */scag.gt().iVal(property.getValue()).and().prop(propertyName) // exclusive
+			: scag.ge().iVal(property.getValue()).and().prop(propertyName); // inclusive
 		return (Boolean.TRUE.equals(property.getExclusive2())) ? //
-		/*      */scag2.lt().val(property.getValue2()).end() // exclusive
-			: scag2.le().val(property.getValue2()).end(); // inclusive
+		/*      */scag2.lt().iVal(property.getValue2()).end() // exclusive
+			: scag2.le().iVal(property.getValue2()).end(); // inclusive
 	    }
 	} else if (EntityUtils.isBoolean(property.getType())) {
 	    final boolean is = (Boolean) property.getValue();

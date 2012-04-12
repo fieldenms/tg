@@ -11,7 +11,6 @@ import java.util.Map;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.YesNoType;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
@@ -170,42 +169,36 @@ public class DynamicQueryBuilderSqlTest {
     ////////////////////////////////// 1.1. Range type /////////////////////////////////////////
 
     @Test
-    @Ignore
     public void test_atomic_query_composition_for_integer_range_type() {
 	test_atomic_query_composition_for_range_type("integerProp");
 	test_atomic_query_composition_for_range_type("entityProp.integerProp");
     }
 
     @Test
-    @Ignore
     public void test_atomic_query_composition_for_double_range_type() {
 	test_atomic_query_composition_for_range_type("doubleProp");
 	test_atomic_query_composition_for_range_type("entityProp.doubleProp");
     }
 
     @Test
-    @Ignore
     public void test_atomic_query_composition_for_bigDecimal_range_type() {
 	test_atomic_query_composition_for_range_type("bigDecimalProp");
 	test_atomic_query_composition_for_range_type("entityProp.bigDecimalProp");
     }
 
     @Test
-    @Ignore
     public void test_atomic_query_composition_for_money_range_type() {
 	test_atomic_query_composition_for_range_type("moneyProp");
 	test_atomic_query_composition_for_range_type("entityProp.moneyProp");
     }
 
     @Test
-    @Ignore
     public void test_atomic_query_composition_for_date_range_type() {
 	test_atomic_query_composition_for_range_type("dateProp");
 	test_atomic_query_composition_for_range_type("entityProp.dateProp");
     }
 
     @Test
-    @Ignore
     public void test_atomic_query_composition_for_date_range_type_with_mnemonics_assigned() {
 	test_atomic_query_composition_for_date_range_type_with_mnemonic_assigned("dateProp");
 	test_atomic_query_composition_for_date_range_type_with_mnemonic_assigned("entityProp.dateProp");
@@ -222,10 +215,6 @@ public class DynamicQueryBuilderSqlTest {
 	test_atomic_query_composition_for_range_type_with_both_boundaries_and_left_Exclusive_flag_assigned(propertyName);
 	test_atomic_query_composition_for_range_type_with_both_boundaries_and_right_Exclusive_flag_assigned(propertyName);
 	test_atomic_query_composition_for_range_type_with_both_boundaries_and_both_Exclusive_flags_assigned(propertyName);
-	test_atomic_query_composition_for_range_type_with_left_boundary(propertyName);
-	test_atomic_query_composition_for_range_type_with_left_boundary_and_left_Exclusive_flag_assigned(propertyName);
-	test_atomic_query_composition_for_range_type_with_right_boundary(propertyName);
-	test_atomic_query_composition_for_range_type_with_right_boundary_and_right_Exclusive_flag_assigned(propertyName);
     }
 
     private void test_atomic_query_composition_for_date_range_type_with_with_only_mnemonic_assigned(final String propertyName) {
@@ -250,7 +239,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).ge().val(from).and().prop(cbn).lt().val(to).end() //
+	/*    */.begin().prop(cbn).ge().iVal(from).and().prop(cbn).lt().iVal(to).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -282,7 +271,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).lt().val(to).end() //
+	/*    */.begin().prop(cbn).ge().iVal(null).and().prop(cbn).lt().iVal(to).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -314,7 +303,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).ge().val(from).end() //
+	/*    */.begin().prop(cbn).ge().iVal(from).and().prop(cbn).lt().iVal(null).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -335,7 +324,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).ge().val(3).and().prop(cbn).le().val(7).end() //
+	/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -357,7 +346,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).gt().val(3).and().prop(cbn).le().val(7).end() //
+	/*    */.begin().prop(cbn).gt().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -379,7 +368,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).ge().val(3).and().prop(cbn).lt().val(7).end() //
+	/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).lt().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -402,89 +391,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).gt().val(3).and().prop(cbn).lt().val(7).end() //
-	/*  */.end() //
-	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
-
-
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
-	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
-    }
-
-    private void test_atomic_query_composition_for_range_type_with_left_boundary(final String propertyName) {
-	set_up();
-	final QueryProperty property = queryProperties.get(propertyName);
-	property.setValue(3);
-
-	final String cbn = property.getConditionBuildingName();
-
-	final ICompleted expected = //
-	/**/iJoin.where().begin() //
-	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).ge().val(3).end() //
-	/*  */.end() //
-	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
-
-
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
-	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
-    }
-
-    private void test_atomic_query_composition_for_range_type_with_left_boundary_and_left_Exclusive_flag_assigned(final String propertyName) {
-	set_up();
-	final QueryProperty property = queryProperties.get(propertyName);
-	property.setValue(3);
-	property.setExclusive(true);
-
-	final String cbn = property.getConditionBuildingName();
-
-	final ICompleted expected = //
-	/**/iJoin.where().begin() //
-	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).gt().val(3).end() //
-	/*  */.end() //
-	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
-
-
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
-	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
-    }
-
-    private void test_atomic_query_composition_for_range_type_with_right_boundary(final String propertyName) {
-	set_up();
-	final QueryProperty property = queryProperties.get(propertyName);
-	property.setValue2(7);
-
-	final String cbn = property.getConditionBuildingName();
-
-	final ICompleted expected = //
-	/**/iJoin.where().begin() //
-	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).le().val(7).end() //
-	/*  */.end() //
-	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
-
-
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
-	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
-    }
-
-    private void test_atomic_query_composition_for_range_type_with_right_boundary_and_right_Exclusive_flag_assigned(final String propertyName) {
-	set_up();
-	final QueryProperty property = queryProperties.get(propertyName);
-	property.setValue2(7);
-	property.setExclusive2(true);
-
-	final String cbn = property.getConditionBuildingName();
-
-	final ICompleted expected = //
-	/**/iJoin.where().begin() //
-	/*  */.begin().prop(cbn).isNotNull().and() //
-	/*    */.begin().prop(cbn).lt().val(7).end() //
+	/*    */.begin().prop(cbn).gt().iVal(3).and().prop(cbn).lt().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -658,7 +565,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
-	/*    */.begin().prop(cbn).ge().val(3).and().prop(cbn).le().val(7).end() //
+	/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -681,7 +588,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNull().or() //
-	/*    */.notBegin().prop(cbn).ge().val(3).and().prop(cbn).le().val(7).end() //
+	/*    */.notBegin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -704,7 +611,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNull().or() //
-	/*    */.begin().prop(cbn).ge().val(3).and().prop(cbn).le().val(7).end() //
+	/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -728,7 +635,7 @@ public class DynamicQueryBuilderSqlTest {
 	final ICompleted expected = //
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
-	/*    */.notBegin().prop(cbn).ge().val(3).and().prop(cbn).le().val(7).end() //
+	/*    */.notBegin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
@@ -759,7 +666,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/iJoin.where().begin() //
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNull().end().and() // integerProp
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNotNull().and() // bigDecimalProp
-	/*    */.begin().prop(cbn1).ge().val(3).and().prop(cbn1).le().val(7).end() //
+	/*    */.begin().prop(cbn1).ge().iVal(3).and().prop(cbn1).le().iVal(7).end() //
 	/*  */.end().and() //
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end() // dateProp
 	/**/.end(); //
@@ -1029,7 +936,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*                          simple properties below                             */
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn02)).isNull().end().and() // integerProp
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn01)).isNotNull().and() // bigDecimalProp
-	/*    */.begin().prop(cbn01).ge().val(3).and().prop(cbn01).le().val(7).end() //
+	/*    */.begin().prop(cbn01).ge().iVal(3).and().prop(cbn01).le().iVal(7).end() //
 	/*  */.end().and() //
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn03)).isNotNull().end().and() // dateProp
 	/*  */
