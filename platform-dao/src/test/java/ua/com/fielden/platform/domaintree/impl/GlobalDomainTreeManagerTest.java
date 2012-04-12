@@ -372,8 +372,8 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertTrue("Should be freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
 
 	// change smth.
-	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().check(MasterEntity.class, "bigDecimalProp", true);
 	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().check(MasterEntity.class, "integerProp", true);
+	nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().check(MasterEntity.class, "bigDecimalProp", true);
 	assertTrue("Should be changed after modification after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
 	assertTrue("Should be checked after modification after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "bigDecimalProp"));
 	assertTrue("Should be checked after modification after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
