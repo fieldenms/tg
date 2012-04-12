@@ -18,6 +18,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.dynamictree.DynamicEntityTree;
 import ua.com.fielden.platform.dynamictree.DynamicEntityTreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -154,7 +155,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     protected List<QueryProperty> createQueryProperties() {
 	final List<QueryProperty> queryProperties = new ArrayList<QueryProperty>();
 	for (final String actualProperty : getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(getEntityClass())) {
-	    queryProperties.add(createQueryProperty(actualProperty));
+	    if (!AbstractDomainTree.isPlaceholder(actualProperty)) {
+		queryProperties.add(createQueryProperty(actualProperty));
+	    }
 	}
 	return queryProperties;
     }
