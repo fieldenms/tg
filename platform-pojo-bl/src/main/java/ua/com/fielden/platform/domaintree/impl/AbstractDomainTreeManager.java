@@ -340,11 +340,12 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	}
 
 	protected void removeCheckedProperty(final Class<?> root, final String property) {
+	    final int index = checkedPropertiesMutable(root).indexOf(property);
 	    checkedPropertiesMutable(root).remove(property);
 
 	    // fire UNCHECKED event after successful "unchecked" action
 	    for (final IPropertyCheckingListener listener : propertyCheckingListeners) {
-		listener.propertyStateChanged(root, property, false, null);
+		listener.propertyStateChanged(root, property, false, null, index);
 	    }
 	}
 
@@ -353,7 +354,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
 	    // fire CHECKED event after successful "checked" action
 	    for (final IPropertyCheckingListener listener : propertyCheckingListeners) {
-		listener.propertyStateChanged(root, property, true, null);
+		listener.propertyStateChanged(root, property, true, null, index);
 	    }
 	}
 

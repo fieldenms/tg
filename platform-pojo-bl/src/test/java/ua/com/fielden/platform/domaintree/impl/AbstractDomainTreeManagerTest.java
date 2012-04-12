@@ -477,7 +477,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 	i = 0; j = 0;
 	final IPropertyCheckingListener listener = new IPropertyCheckingListener() {
 	    @Override
-	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState) {
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState, final int index) {
 		if (hasBeenChecked == null) {
 		    throw new IllegalArgumentException("'hasBeenChecked' cannot be null.");
 		}

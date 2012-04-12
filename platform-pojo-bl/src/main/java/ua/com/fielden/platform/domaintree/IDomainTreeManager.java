@@ -2,7 +2,7 @@ package ua.com.fielden.platform.domaintree;
 
 import java.util.List;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyStateListener;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 
 /**
  * This interface defines how domain tree can be managed. <br><br>
@@ -119,12 +119,12 @@ public interface IDomainTreeManager {
          * @author TG Team
          *
          */
-        public interface IPropertyCheckingListener extends IPropertyStateListener<Boolean> {
+        public interface IPropertyCheckingListener {
 	    /**
 	     * @param hasBeenChecked -- <code>true</code> to indicate that property was successfully checked, <code>false</code> to indicate that it was successfully unchecked.
+	     * @param index -- the <code>index</code> of the property being checked / unchecked inside "checking properties" list.
 	     */
-	    @Override
-	    void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState);
+	    void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState, final int index);
         }
 
         /**

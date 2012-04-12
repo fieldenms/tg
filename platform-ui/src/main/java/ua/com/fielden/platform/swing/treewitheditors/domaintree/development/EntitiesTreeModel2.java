@@ -179,7 +179,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	}
 
 	@Override
-	public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState) {
+	public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState, final int index) {
 	    final String reflectionProperty = AbstractDomainTree.reflectionProperty(property);
 	    if (!AbstractDomainTree.isPlaceholder(reflectionProperty)) {
 		provideCheckingForPath(getCheckingModel(modelIndex), path(root, reflectionProperty), hasBeenChecked);
