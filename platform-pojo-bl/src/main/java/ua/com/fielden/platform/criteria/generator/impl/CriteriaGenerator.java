@@ -19,6 +19,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -75,9 +76,10 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     private <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> EntityQueryCriteria<CDTME, T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final CDTME cdtme, final Class<? extends EntityQueryCriteria> entityClass) {
 	final List<NewProperty> newProperties = new ArrayList<NewProperty>();
 	for(final String propertyName : cdtme.getFirstTick().checkedProperties(root)){
-	    newProperties.addAll(generateCriteriaProperties(root, cdtme.getEnhancer(), propertyName));
+	    if (!AbstractDomainTree.isPlaceholder(propertyName)) {
+                newProperties.addAll(generateCriteriaProperties(root, cdtme.getEnhancer(), propertyName));
+            }
 	}
-
 	final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 
 	try {
@@ -118,10 +120,9 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @return
      */
     private static List<NewProperty> generateCriteriaProperties(final Class<?> root, final IDomainTreeEnhancer enhancer, final String propertyName) {
-	ICalculatedProperty calculatedProperty = null;
 	boolean isCalculated = false;
 	try{
-	    calculatedProperty = enhancer.getCalculatedProperty(root, propertyName);
+	    enhancer.getCalculatedProperty(root, propertyName);
 	    isCalculated = true;
 	}catch(final Exception e){
 
