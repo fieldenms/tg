@@ -67,7 +67,7 @@ public class LocalCenterConfigurationController extends LocalConfigurationContro
 
     @Override
     public List<String> getNonPrincipleCenters(final String principleCenterKey) {
-	final File reportDirectory = new File(principleCenterKey.replaceAll(".dcf", System.getProperty("file.separator")));
+	final File reportDirectory = new File(principleCenterKey.replace(".dcf", System.getProperty("file.separator")));
 	final List<String> centerList = new ArrayList<String>();
 	if (!reportDirectory.exists()) {
 	    return centerList;
