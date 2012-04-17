@@ -155,6 +155,9 @@ public class Person extends AbstractEntity<String> {
   \subsubsection*{Implementing the requirements.}
 
   \paragraph*{Adding property.} 
+  In order to take the advantage of Eclipse's source templates, the platform includes a set of templates for automate commonly encountered situations when describing domain entities.
+  These templates can be downloaded from the platform's web site at \url{http://www.fielden.com.ua/trac/pnl-tg/wiki/EclipseCodeTemplates}.
+  
   If the Eclipse IDE was property setup with TG templates, then creation of a new property is trivial.
   Type \texttt{tgp} and hit \texttt{Ctrl+Space} in the code editor of type Person under the last available property.
   This should result in the dialog depicted in Fig.~\ref{img:ch00:03:gen-prop-template}, which should be used to select option \texttt{tgprop} for property template generation.
@@ -381,7 +384,7 @@ public class BirthdayValidator implements IBeforeChangeEventHandler<Date> {
   \begin{description}
     \item[\textbf{The Domain.}] Represents a pure business domain model with entities and controllers that bares no UI logic\footnote{This separation of concerns is ensured at the module level, where business controller have no visibility of UI code.}.
     \item [\textbf{The Model.}] Governs how the domain can be manipulated and changed from UI. 
-	This is where the hart of the application UI logic resides. The view and model can closely collaborate in their roles of supplying the user interface for a particular domain.
+	This is where the heart of the application UI logic resides. The view and model can closely collaborate in their roles of supplying the user interface for a particular domain.
     \item[\textbf{The View.}] Has the responsibility to display the content of a domain. 
 	It is represented in TG by property editors and specialised containers (panel or frame) for holding UI controls.    
   \end{description}
