@@ -6,7 +6,7 @@ import javax.swing.JPanel;
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.review.development.SelectableBasePanel;
+import ua.com.fielden.platform.swing.review.development.SelectableAndLoadBasePanel;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.BuildAction;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.CancelAction;
@@ -22,11 +22,11 @@ import ua.com.fielden.platform.swing.utils.DummyBuilder;
  *
  * @param <T>
  */
-public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends SelectableBasePanel implements IWizard{
+public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends SelectableAndLoadBasePanel implements IWizard{
 
     private static final long serialVersionUID = 268187881676011630L;
 
-    private final AbstractConfigurationView<?, ? extends AbstractWizardView<T>> owner;
+    private final AbstractConfigurationView<?, ?> owner;
 
     private final DomainTreeEditorView<T> treeEditorView;
 
@@ -85,7 +85,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Se
      * 
      * @return
      */
-    public AbstractConfigurationView<?, ? extends AbstractWizardView<T>> getOwner() {
+    public AbstractConfigurationView<?, ?> getOwner() {
 	return owner;
     }
 

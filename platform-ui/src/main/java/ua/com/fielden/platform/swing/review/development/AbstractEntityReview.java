@@ -6,13 +6,13 @@ import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigu
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
 
-public abstract class AbstractEntityReview<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends SelectableBasePanel implements IReview {
+public abstract class AbstractEntityReview<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends SelectableAndLoadBasePanel implements IReview {
 
     private static final long serialVersionUID = -8984113615241551583L;
 
     private final AbstractEntityReviewModel<T, CDTME> model;
 
-    private final AbstractConfigurationView<? extends AbstractEntityReview<T, CDTME>, ?> owner;
+    private final AbstractConfigurationView<?, ?> owner;
 
     private final ConfigureAction configureAction/*, saveAction, saveAsAction, saveAsDefaultAction, loadDefaultAction, removeAction*/;
 
@@ -27,7 +27,7 @@ public abstract class AbstractEntityReview<T extends AbstractEntity<?>, CDTME ex
 	return configureAction;
     }
 
-    public AbstractConfigurationView<? extends AbstractEntityReview<T, CDTME>, ?> getOwner() {
+    public AbstractConfigurationView<?, ?> getOwner() {
 	return owner;
     }
 

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.swing.review.report.configuration;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -8,12 +10,13 @@ import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
-import ua.com.fielden.platform.swing.review.development.SelectableBasePanel;
+import ua.com.fielden.platform.swing.review.development.SelectableAndLoadBasePanel;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
 import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction;
@@ -29,7 +32,7 @@ import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
  * @param <VT>
  * @param <WT>
  */
-public abstract class AbstractConfigurationView<VT extends SelectableBasePanel & IReview, WT extends SelectableBasePanel & IWizard> extends SelectableBasePanel{
+public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBasePanel & IReview, WT extends SelectableAndLoadBasePanel & IWizard> extends SelectableAndLoadBasePanel{
 
     private static final long serialVersionUID = 362789325125491283L;
 
@@ -47,17 +50,52 @@ public abstract class AbstractConfigurationView<VT extends SelectableBasePanel &
     private WT previousWizard = null;
     private VT previousView = null;
 
+    private boolean wasLoaded;
+    private boolean isHierarchyChange;
+    private boolean wasChildLoaded;
+
     /**
      * Initiates this {@link AbstractConfigurationView} with associated {@link AbstractConfigurationModel}.
      * 
      * @param model
      */
     public AbstractConfigurationView(final AbstractConfigurationModel model, final BlockingIndefiniteProgressLayer progressLayer){
-	super(new MigLayout("fill, insets 0", "[fill, grow]","[fill, grow]"));
+	super(new MigLayout("fill, insets 0", "[fill, grow]", "[fill, grow]"));
 	this.model = model;
 	this.progressLayer = progressLayer;
 	this.openAction = createOpenAction();
+	wasLoaded = false;
+	isHierarchyChange = false;
+	wasChildLoaded = false;
+	addHierarchyListener(createComponentWasShown());
 	model.addPropertyChangeListener(createModeChangeListener());
+    }
+
+    private HierarchyListener createComponentWasShown() {
+	return new HierarchyListener() {
+
+	    @Override
+	    public void hierarchyChanged(final HierarchyEvent e) {
+		// should hierarchy change event be handled?
+		if (((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED)
+			&& !isHierarchyChange) {
+		    // yes, so this one is first, lets handle it and set flag
+		    // to indicate that we won't handle any more
+		    // hierarchy changed events
+		    isHierarchyChange = true;
+		    //The components are resized so lets see whether child was loaded if that is true then fire
+		    //event that this .
+		    // getRunAction().actionPerformed(null);
+		    // after this handler end its execution, lets remove it
+		    // from component because it is already not-useful
+		    final HierarchyListener refToThis = this;
+		    SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+			    removeHierarchyListener(refToThis);
+			}
+		    });
+		}
+	    }	};
     }
 
     /**
@@ -229,7 +267,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableBasePanel &
      * 
      * @param component
      */
-    private void setView(final SelectableBasePanel component){
+    private void setView(final SelectableAndLoadBasePanel component){
 	removeAll();
 	if(component != null){
 	    add(component);
