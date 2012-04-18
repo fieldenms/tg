@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.swing.review.report.interfaces;
 
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
+
 
 /**
- * A contract for <i>entity review</i> that allows one to be configured, saved, removed.
+ * A contract for <i>entity review</i> that allows one to be configured.
  * 
  * @author TG Team
  *
@@ -10,16 +12,9 @@ package ua.com.fielden.platform.swing.review.report.interfaces;
 public interface IReview{
 
     /**
-     * Adds {@link IReviewEventListener} instance to listen review events.
+     * Returns the action that switches the view in to wizard mode.
      * 
-     * @param l
+     * @return
      */
-    void addReviewEventListener(IReviewEventListener l);
-
-    /**
-     * Removes {@link IReviewEventListener} instance.
-     * 
-     * @param l
-     */
-    void removeReviewEventListener(IReviewEventListener l);
+    ConfigureAction getConfigureAction();
 }

@@ -12,6 +12,7 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
 
 public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityCentre<T, CDTME> {
 
@@ -21,8 +22,8 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 
     private GridConfigurationView<T, CDTME> gridConfigurationView;
 
-    public AbstractSingleAnalysisEntityCentre(final AbstractEntityCentreModel<T, CDTME> model, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, progressLayer);
+    public AbstractSingleAnalysisEntityCentre(final AbstractEntityCentreModel<T, CDTME> model, final AbstractConfigurationView<? extends AbstractEntityCentre<T, CDTME>, ?> owner) {
+	super(model, owner);
 	this.analysisCounter = 0;
 	this.gridConfigurationView = null;
     }
@@ -41,9 +42,9 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 	    final GridConfigurationModel<T, CDTME> configModel = new GridConfigurationModel<T, CDTME>(getModel().getCriteria());
 	    gridConfigurationView = new GridConfigurationView<T, CDTME>(configModel, this, reviewProgressLayer);
 	    reviewProgressLayer.setView(gridConfigurationView);
-	    gridConfigurationView.open();
 	    setCurrentAnalysisConfigurationView(gridConfigurationView);
 	    analysisCounter++;
+	    gridConfigurationView.open();
 	}else{
 	    if(name != null || analysisType != null){
 		throw new IllegalArgumentException("This centre can not have analysis different then main details analysis!");

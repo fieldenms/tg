@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.analysis.chart.configuration;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -21,12 +20,7 @@ public class ChartAnalysisConfigurationModel<T extends AbstractEntity<?>> extend
     @Override
     protected Result canSetMode(final ReportMode mode) {
 	if(ReportMode.REPORT.equals(mode)){
-	    final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
-	    IAnalysisDomainTreeManagerAndEnhancer adtme = (IAnalysisDomainTreeManagerAndEnhancer)cdtme.getAnalysisManager(getName());
-	    if(adtme == null){
-		cdtme.initAnalysisManagerByDefault(getName(), AnalysisType.SIMPLE);
-		adtme = (IAnalysisDomainTreeManagerAndEnhancer)cdtme.getAnalysisManager(getName());
-	    }
+	    final IAnalysisDomainTreeManagerAndEnhancer adtme = (IAnalysisDomainTreeManagerAndEnhancer)getAnalysisManager();
 	    if(adtme==null){
 		return new Result(this, new IllegalStateException("Simple analysis with " + getName() + " name can not be created!"));
 	    }
@@ -40,7 +34,7 @@ public class ChartAnalysisConfigurationModel<T extends AbstractEntity<?>> extend
     final ChartAnalysisModel<T> createChartAnalysisModel() {
 	final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
 	final IAnalysisDomainTreeManagerAndEnhancer adtme = (IAnalysisDomainTreeManagerAndEnhancer)cdtme.getAnalysisManager(getName());
-	return new ChartAnalysisModel<T>(this, getCriteria(), adtme, getPageHolder());
+	return new ChartAnalysisModel<T>(getCriteria(), adtme, getPageHolder());
     }
 
     final DomainTreeEditorModel<T> createDomainTreeEditorModel() {

@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
+import static java.awt.Cursor.DEFAULT_CURSOR;
+import static java.awt.Cursor.MOVE_CURSOR;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.swing.utils.DummyBuilder.invokeWhenGainedFocus;
+
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Point;
@@ -22,7 +28,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
-import javax.swing.event.EventListenerList;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IValueMatcher;
@@ -41,11 +46,6 @@ import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
 import ua.com.fielden.platform.swing.ei.editors.development.RangePropertyEditor;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
-import static java.awt.Cursor.DEFAULT_CURSOR;
-import static java.awt.Cursor.MOVE_CURSOR;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.swing.utils.DummyBuilder.invokeWhenGainedFocus;
 
 /**
  * Panel, which provides drag'n'drop support for label-editor pairs.
@@ -56,7 +56,7 @@ import static ua.com.fielden.platform.swing.utils.DummyBuilder.invokeWhenGainedF
 public class CriteriaDndPanel extends StubCriteriaPanel {
 
     private enum CriteriaPanelMode {
-	DESIGN, VIEW; 
+	DESIGN, VIEW;
     }
 
     private static final long serialVersionUID = 586217758592148120L;
@@ -87,37 +87,37 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
     private final Map<IPropertyEditor, Position> positions = new HashMap<IPropertyEditor, Position>();
 
     private final Map<IPropertyEditor, CriteriaModificationLayer> layers = new HashMap<IPropertyEditor, CriteriaModificationLayer>();
-    
+
     /**
      * Determines the current criteria panel mode.
      */
     private CriteriaPanelMode mode = CriteriaPanelMode.VIEW;
 
     public CriteriaDndPanel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, ?, ?> eqc, final Map<String, IPropertyEditor> editors) {
-        super(null);
+	super(null);
 	this.eqc = eqc;
-        this.editors.clear();
-        if(editors != null){
-            this.editors.putAll(editors);
-        }
-        final IAddToCriteriaTickManager firstTick = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-        final int elementsNumber = firstTick.checkedProperties(eqc.getEntityClass()).size();
-        this.columns = firstTick.getColumnsNumber();
-        if(elementsNumber % columns != 0){
-            throw new IllegalStateException("The number of checked elements is not correct! elements: " + elementsNumber + ", columns: " + columns);
-        }
-        DnDSupport2.installDnDSupport(this, createDragFromSupport(), createDragToSupport(), true);
-        changeLayoutAction = createChangeLayoutAction();
-        backToNormalAction = createBackToNormalAction();
-        toggleAction = createToggleAction();
-	
+	this.editors.clear();
+	if(editors != null){
+	    this.editors.putAll(editors);
+	}
+	final IAddToCriteriaTickManager firstTick = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+	final int elementsNumber = firstTick.checkedProperties(eqc.getEntityClass()).size();
+	this.columns = firstTick.getColumnsNumber();
+	if(elementsNumber % columns != 0){
+	    throw new IllegalStateException("The number of checked elements is not correct! elements: " + elementsNumber + ", columns: " + columns);
+	}
+	DnDSupport2.installDnDSupport(this, createDragFromSupport(), createDragToSupport(), true);
+	changeLayoutAction = createChangeLayoutAction();
+	backToNormalAction = createBackToNormalAction();
+	toggleAction = createToggleAction();
+
 	setLayout(new MigLayout("fill, insets 5", createMigColumnsString(getColumns(), maxLabelWidth(editors.values()), getMaxFromMinPossibleEditorWidth()), "[align center, :"
 		+ getMaxFromMinPossibleEditorHeight() + ":]"));
 
 	// editors adding:
 	layoutEditors(); // adds persistent editors
 	addPlaceholders();
-	
+
 	this.eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick().addPropertyCheckingListener(createPropertyRemoveListener());
     }
 
@@ -125,13 +125,13 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 	return new IPropertyCheckingListener(){
 
 	    @Override
-	    public void propertyStateChanged(Class<?> root, String property, Boolean hasBeenChecked, Boolean oldState, int index) {
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState, final int index) {
 		if(mode != CriteriaPanelMode.DESIGN){
 		    return;
 		}
 		if(AbstractDomainTree.isPlaceholder(property) && !hasBeenChecked){
-		    LinkedComponentCopy placeHolder = findPlaceHolder(property);
-		    Position position = positions.remove(placeHolder.getPropEditor());
+		    final LinkedComponentCopy placeHolder = findPlaceHolder(property);
+		    final Position position = positions.remove(placeHolder.getPropEditor());
 		    remove(placeHolder);
 		    remove(placeHolder.getLinkedCopy());
 		    if(isLastPlaceHolderInRow(position.getRow())){
@@ -139,8 +139,8 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 			updateComponentLayout();
 		    }
 		    revalidate();
-	            invalidate();
-	            repaint();
+		    invalidate();
+		    repaint();
 		}
 	    }
 
@@ -148,15 +148,15 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 		final Component components[] = getComponents();
 		removeAll();
 		setLayout(new MigLayout("fill, insets 5", createMigColumnsString(getColumns(), maxLabelWidth(editors.values()), getMaxFromMinPossibleEditorWidth()), "[align center, :"
-	        	+ getMaxFromMinPossibleEditorHeight() + ":]"));
-		List<Component> alreadyUsed = new ArrayList<Component>();
-		for (Component component : components) {
+			+ getMaxFromMinPossibleEditorHeight() + ":]"));
+		final List<Component> alreadyUsed = new ArrayList<Component>();
+		for (final Component component : components) {
 		    if (!alreadyUsed.contains(component)) {
-			LinkedComponentCopy linkedCopy = (LinkedComponentCopy) component;
-			Position pos = positions.get(linkedCopy.getPropEditor());
-			Pair<LinkedComponentCopy, LinkedComponentCopy> copyPair = linkedCopy.getCopyPair();
-			LinkedComponentCopy labelCopy = copyPair.getKey();
-			LinkedComponentCopy editorCopy = copyPair.getValue();
+			final LinkedComponentCopy linkedCopy = (LinkedComponentCopy) component;
+			final Position pos = positions.get(linkedCopy.getPropEditor());
+			final Pair<LinkedComponentCopy, LinkedComponentCopy> copyPair = linkedCopy.getCopyPair();
+			final LinkedComponentCopy labelCopy = copyPair.getKey();
+			final LinkedComponentCopy editorCopy = copyPair.getValue();
 			alreadyUsed.add(labelCopy);
 			alreadyUsed.add(editorCopy);
 			add(labelCopy, pos.getLabelConstr());
@@ -165,21 +165,21 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 		}
 	    }
 
-	    private void updatePositions(int row) {
+	    private void updatePositions(final int row) {
 		final List<Pair<IPropertyEditor, Position>> updatedPositions = new ArrayList<Pair<IPropertyEditor,Position>>();
-		for(Map.Entry<IPropertyEditor, Position> entry : positions.entrySet()){
+		for(final Map.Entry<IPropertyEditor, Position> entry : positions.entrySet()){
 		    if(entry.getValue().getRow() > row){
 			final Position oldPos = entry.getValue();
 			updatedPositions.add(new Pair<IPropertyEditor, Position>(entry.getKey(), new Position(oldPos.getColumn(), oldPos.getRow() - 1, oldPos.getLabelConstr(), oldPos.getEditorConstr())));
 		    }
 		}
-		for(Pair<IPropertyEditor, Position> newPosEntry : updatedPositions){
+		for(final Pair<IPropertyEditor, Position> newPosEntry : updatedPositions){
 		    positions.put(newPosEntry.getKey(), newPosEntry.getValue());
 		}
 	    }
 
-	    private boolean isLastPlaceHolderInRow(int row) {
-		for(Position position : positions.values()){
+	    private boolean isLastPlaceHolderInRow(final int row) {
+		for(final Position position : positions.values()){
 		    if(position.getRow() == row){
 			return false;
 		    }
@@ -187,10 +187,10 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 		return true;
 	    }
 
-	    private LinkedComponentCopy findPlaceHolder(String property) {
-		for(Component component : getComponents()){
+	    private LinkedComponentCopy findPlaceHolder(final String property) {
+		for(final Component component : getComponents()){
 		    if(component instanceof LinkedComponentCopy){
-			LinkedComponentCopy linkedCopy = (LinkedComponentCopy)component;
+			final LinkedComponentCopy linkedCopy = (LinkedComponentCopy)component;
 			if(linkedCopy.getPropEditor().getPropertyName().equals(property)){
 			    return linkedCopy;
 			}
@@ -198,7 +198,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 		}
 		return null;
 	    }
-	    
+
 	};
     }
 
@@ -218,26 +218,26 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
      */
     public int getRows() {
 	final IAddToCriteriaTickManager firstTick = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-        final int elementsNumber = firstTick.checkedProperties(eqc.getEntityClass()).size();
+	final int elementsNumber = firstTick.checkedProperties(eqc.getEntityClass()).size();
 	return elementsNumber / columns;
     }
 
     @Override
     public Action getSwitchAction() {
-        return toggleAction;
+	return toggleAction;
     }
 
     @SuppressWarnings("rawtypes")
     @Override
     public void updateModel() {
-        for (final IPropertyEditor component : editors.values()) {
-            if (component.getEditor() instanceof BoundedValidationLayer) {
-        	final BoundedValidationLayer bvl = (BoundedValidationLayer) component.getEditor();
-        	if (bvl.canCommit()) {
-        	    bvl.commit();
-        	}
-            }
-        }
+	for (final IPropertyEditor component : editors.values()) {
+	    if (component.getEditor() instanceof BoundedValidationLayer) {
+		final BoundedValidationLayer bvl = (BoundedValidationLayer) component.getEditor();
+		if (bvl.canCommit()) {
+		    bvl.commit();
+		}
+	    }
+	}
     }
 
     /**
@@ -247,104 +247,94 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
      * @param listener
      */
     public void addLayoutListener(final CriteriaLayoutListener listener) {
-        listenerList.add(CriteriaLayoutListener.class, listener);
-    }
-
-    /**
-     * Removes the specified {@link CriteriaLayoutListener} from the list of registered listeners.
-     *
-     * @see CriteriaLayoutListener
-     * @param listener
-     */
-    public void removeLayoutListener(final CriteriaLayoutListener listener) {
-	listenerList.remove(CriteriaLayoutListener.class, listener);
+	listenerList.add(CriteriaLayoutListener.class, listener);
     }
 
     /**
      * Switches panel to layout editing mode with enabled component dragging but disabled other component functionality (only concerns draggable components).
      */
     private void switchToLayoutEditingMode() {
-        // creating runnable instance, which switches panel to layout editing mode
-        final Runnable runnable = new Runnable() {
-            public void run() {
-        	for (final Entry<IPropertyEditor, Position> entry : positions.entrySet()) {
-        	    final CriteriaModificationLayer layer = layers.get(entry.getKey());
-        	    //removing label component
-        	    remove(entry.getKey().getLabel());
-        	    //creating linked copies
-        	    final LinkedComponentCopy labelCopy = new LinkedComponentCopy(entry.getKey(), entry.getKey().getLabel(), true);
-        	    LinkedComponentCopy editorCopy = null;
-        	    if (layer != null) {
-        		//removing editor component
-        		remove(layer);
-        		//creating editor component visual copy for criteria modification layer
-        		editorCopy = new LinkedComponentCopy(entry.getKey(), layer, false);
-        	    } else {
-        		//removing place holder
-        		remove(entry.getKey().getEditor());
-        		//creating linked copy for place holder component
-        		editorCopy = new LinkedComponentCopy(entry.getKey(), entry.getKey().getEditor(), false);
-        	    }
-        	    //linking label copy with editor copy.
-        	    labelCopy.linkWith(editorCopy);
-        	    // adding them on the same place
-        	    add(labelCopy, entry.getValue().getLabelConstraints());
-        	    add(editorCopy, entry.getValue().getEditorConstraints());
-        	}
-        	revalidate();
-        	invalidate();
-        	repaint();
-        	CriteriaDndPanel.this.setCursor(new Cursor(MOVE_CURSOR));
-        	mode = CriteriaPanelMode.DESIGN;
-            }
-        };
-        if (hasFocus()) {
-            // if this panel already has focus - switching to layout editing mode right now
-            runnable.run();
-        } else if (requestFocusInWindow()) {
-            // otherwise requesting focus and if successful - waiting for focus gain and then switching
-            invokeWhenGainedFocus(this, runnable);
-        }
+	// creating runnable instance, which switches panel to layout editing mode
+	final Runnable runnable = new Runnable() {
+	    public void run() {
+		for (final Entry<IPropertyEditor, Position> entry : positions.entrySet()) {
+		    final CriteriaModificationLayer layer = layers.get(entry.getKey());
+		    //removing label component
+		    remove(entry.getKey().getLabel());
+		    //creating linked copies
+		    final LinkedComponentCopy labelCopy = new LinkedComponentCopy(entry.getKey(), entry.getKey().getLabel(), true);
+		    LinkedComponentCopy editorCopy = null;
+		    if (layer != null) {
+			//removing editor component
+			remove(layer);
+			//creating editor component visual copy for criteria modification layer
+			editorCopy = new LinkedComponentCopy(entry.getKey(), layer, false);
+		    } else {
+			//removing place holder
+			remove(entry.getKey().getEditor());
+			//creating linked copy for place holder component
+			editorCopy = new LinkedComponentCopy(entry.getKey(), entry.getKey().getEditor(), false);
+		    }
+		    //linking label copy with editor copy.
+		    labelCopy.linkWith(editorCopy);
+		    // adding them on the same place
+		    add(labelCopy, entry.getValue().getLabelConstraints());
+		    add(editorCopy, entry.getValue().getEditorConstraints());
+		}
+		revalidate();
+		invalidate();
+		repaint();
+		CriteriaDndPanel.this.setCursor(new Cursor(MOVE_CURSOR));
+		mode = CriteriaPanelMode.DESIGN;
+	    }
+	};
+	if (hasFocus()) {
+	    // if this panel already has focus - switching to layout editing mode right now
+	    runnable.run();
+	} else if (requestFocusInWindow()) {
+	    // otherwise requesting focus and if successful - waiting for focus gain and then switching
+	    invokeWhenGainedFocus(this, runnable);
+	}
     }
 
     /**
      * Switches panel to normal mode with disabled component dragging.
      */
     private void switchToNormalMode() {
-        final Set<LinkedComponentCopy> alreadyUsedCopies = new HashSet<LinkedComponentCopy>();
-        for (final Component comp : asList(getComponents())) {
-            if (comp instanceof LinkedComponentCopy && !(alreadyUsedCopies.contains(comp))) {
-        	final LinkedComponentCopy copy = (LinkedComponentCopy) comp;
-        	// removing copy
-        	remove(copy);
-        	remove(copy.getLinkedCopy());
-        	// adding original on its place
-        	if (positions.containsKey(copy.getPropEditor())) {
-        	    add(copy.getPropEditor().getLabel(), positions.get(copy.getPropEditor()).getLabelConstraints());
-        	    if (layers.containsKey(copy.getPropEditor())) {
-        		add(layers.get(copy.getPropEditor()), positions.get(copy.getPropEditor()).getEditorConstraints());
-        	    } else {
-        		add(copy.getPropEditor().getEditor(), positions.get(copy.getPropEditor()).getEditorConstraints());
-        	    }
-        	}
-        	// adding to alreadyUsedCopies set in order to avoid iteration over already removed copies
-        	alreadyUsedCopies.add(copy);
-        	alreadyUsedCopies.add(copy.getLinkedCopy());
-            }
-        }
-        revalidate();
-        invalidate();
-        repaint();
-        CriteriaDndPanel.this.setCursor(new Cursor(DEFAULT_CURSOR));
-        mode = CriteriaPanelMode.VIEW;
+	final Set<LinkedComponentCopy> alreadyUsedCopies = new HashSet<LinkedComponentCopy>();
+	for (final Component comp : asList(getComponents())) {
+	    if (comp instanceof LinkedComponentCopy && !(alreadyUsedCopies.contains(comp))) {
+		final LinkedComponentCopy copy = (LinkedComponentCopy) comp;
+		// removing copy
+		remove(copy);
+		remove(copy.getLinkedCopy());
+		// adding original on its place
+		if (positions.containsKey(copy.getPropEditor())) {
+		    add(copy.getPropEditor().getLabel(), positions.get(copy.getPropEditor()).getLabelConstraints());
+		    if (layers.containsKey(copy.getPropEditor())) {
+			add(layers.get(copy.getPropEditor()), positions.get(copy.getPropEditor()).getEditorConstraints());
+		    } else {
+			add(copy.getPropEditor().getEditor(), positions.get(copy.getPropEditor()).getEditorConstraints());
+		    }
+		}
+		// adding to alreadyUsedCopies set in order to avoid iteration over already removed copies
+		alreadyUsedCopies.add(copy);
+		alreadyUsedCopies.add(copy.getLinkedCopy());
+	    }
+	}
+	revalidate();
+	invalidate();
+	repaint();
+	CriteriaDndPanel.this.setCursor(new Cursor(DEFAULT_CURSOR));
+	mode = CriteriaPanelMode.VIEW;
     }
 
     private Action getChangeLayoutAction() {
-        return changeLayoutAction;
+	return changeLayoutAction;
     }
 
     private Action getBackToNormalAction() {
-        return backToNormalAction;
+	return backToNormalAction;
     }
 
     /**
@@ -503,9 +493,9 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
      *
      * @param column
      * @param row
-     * @param propertyName 
+     * @param propertyName
      */
-    private void addPlaceHolder(final int column, final int row, String propertyName) {
+    private void addPlaceHolder(final int column, final int row, final String propertyName) {
 	final Position position = new Position(column, row, "", "grow"); // grow
 
 	final Pair<JLabel, JComponent> placeholder = new Pair<JLabel, JComponent>(new JLabel(), new JPanel());
@@ -569,14 +559,14 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
      * @param posMatrix
      */
     private void addPlaceholders() {
-        final List<String> checkedProperties = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(eqc.getEntityClass());
-        
-        for(int propertyIndex = 0; propertyIndex < checkedProperties.size(); propertyIndex++){
-            String propertyName = checkedProperties.get(propertyIndex);
-            if(AbstractDomainTree.isPlaceholder(checkedProperties.get(propertyIndex))){
-        	addPlaceHolder((propertyIndex % getColumns()) * 2, propertyIndex / getColumns(), propertyName);
-            }
-        }
+	final List<String> checkedProperties = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(eqc.getEntityClass());
+
+	for(int propertyIndex = 0; propertyIndex < checkedProperties.size(); propertyIndex++){
+	    final String propertyName = checkedProperties.get(propertyIndex);
+	    if(AbstractDomainTree.isPlaceholder(checkedProperties.get(propertyIndex))){
+		addPlaceHolder((propertyIndex % getColumns()) * 2, propertyIndex / getColumns(), propertyName);
+	    }
+	}
     }
 
     /**
@@ -584,23 +574,23 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void layoutEditors() {
-        final Class<? extends EntityQueryCriteria> criteriaClass = (Class<? extends EntityQueryCriteria>) eqc.getType();
-        final List<String> checkedProperties = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(eqc.getEntityClass());
-        for(final Entry<String, IPropertyEditor> entry : editors.entrySet()){
-            final String propertyName = entry.getKey();
-            if(!CriteriaReflector.isSecondParam(criteriaClass, propertyName)){
-        	final IPropertyEditor editor;
-        	if(CriteriaReflector.isFirstParam(criteriaClass, propertyName)){
-        	    final String correspondingRangePropertyName = CriteriaReflector.getSecondParamFor(criteriaClass,propertyName);
-        	    editor = createSinglePropertyEditor(entry.getValue(), editors.get(correspondingRangePropertyName));
-        	}else{
-        	    editor = entry.getValue();
-        	}
-        	final String criteriaParameters = CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
-        	final int index = checkedProperties.indexOf(criteriaParameters);
-        	addDraggable(editor, (index % getColumns()) * 2, index / getColumns());
-            }
-        }
+	final Class<? extends EntityQueryCriteria> criteriaClass = (Class<? extends EntityQueryCriteria>) eqc.getType();
+	final List<String> checkedProperties = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(eqc.getEntityClass());
+	for(final Entry<String, IPropertyEditor> entry : editors.entrySet()){
+	    final String propertyName = entry.getKey();
+	    if(!CriteriaReflector.isSecondParam(criteriaClass, propertyName)){
+		final IPropertyEditor editor;
+		if(CriteriaReflector.isFirstParam(criteriaClass, propertyName)){
+		    final String correspondingRangePropertyName = CriteriaReflector.getSecondParamFor(criteriaClass,propertyName);
+		    editor = createSinglePropertyEditor(entry.getValue(), editors.get(correspondingRangePropertyName));
+		}else{
+		    editor = entry.getValue();
+		}
+		final String criteriaParameters = CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
+		final int index = checkedProperties.indexOf(criteriaParameters);
+		addDraggable(editor, (index % getColumns()) * 2, index / getColumns());
+	    }
+	}
     }
 
     /**
@@ -610,30 +600,30 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
      * @return
      */
     private static int maxLabelWidth(final Collection<IPropertyEditor> editors) {
-        int maxLabelWidth = -1;
-        for (final IPropertyEditor editor : editors) {
-            final boolean isNotSecondLabel = editor instanceof RangePropertyEditor ? true : !CriteriaReflector.isSecondParam(editor.getEntity().getClass(), editor.getPropertyName());
-            if (isNotSecondLabel && editor.getLabel().getPreferredSize().getWidth() > maxLabelWidth) {
-        	maxLabelWidth = (int) editor.getLabel().getPreferredSize().getWidth();
-            }
-        }
-        return maxLabelWidth;
+	int maxLabelWidth = -1;
+	for (final IPropertyEditor editor : editors) {
+	    final boolean isNotSecondLabel = editor instanceof RangePropertyEditor ? true : !CriteriaReflector.isSecondParam(editor.getEntity().getClass(), editor.getPropertyName());
+	    if (isNotSecondLabel && editor.getLabel().getPreferredSize().getWidth() > maxLabelWidth) {
+		maxLabelWidth = (int) editor.getLabel().getPreferredSize().getWidth();
+	    }
+	}
+	return maxLabelWidth;
     }
 
     /**
      * This method should return maximum value from all editors minimum widths. IPropertyEditors were analyzed and it seems that boolean double editor satisfies this condition.
      */
     private static int getMaxFromMinPossibleEditorWidth() {
-        // final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[grow]5[]5[grow]", "[]"));
-        final int maxCheckBoxSize = (int) new JCheckBox("yes").getMinimumSize().getWidth();
-        return maxCheckBoxSize + 5 + ((int) new JLabel("to").getMinimumSize().getWidth()) + 5 + maxCheckBoxSize;
+	// final JPanel panel = new JPanel(new MigLayout("fill, insets 0", "[grow]5[]5[grow]", "[]"));
+	final int maxCheckBoxSize = (int) new JCheckBox("yes").getMinimumSize().getWidth();
+	return maxCheckBoxSize + 5 + ((int) new JLabel("to").getMinimumSize().getWidth()) + 5 + maxCheckBoxSize;
     }
 
     /**
      * This method should return maximum value from all editors minimum heights. IPropertyEditors were analyzed and it seems that any text editor satisfies this condition.
      */
     private static int getMaxFromMinPossibleEditorHeight() {
-        return ((int) new JTextField().getMinimumSize().getHeight());
+	return ((int) new JTextField().getMinimumSize().getHeight());
     }
 
     /**
@@ -643,11 +633,11 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
      * @return
      */
     private static String createMigColumnsString(final int columns, final int maxLabelWidth, final int maxFromMinPossibleEditorWidth) {
-        String migColumnsStr = "";
-        for (int i = 1; i <= columns; i++) {
-            migColumnsStr += (i == 1 ? "" : "20") + "[align left, :" + maxLabelWidth + ":][grow, :" + maxFromMinPossibleEditorWidth + ":]"; //
-        }
-        return migColumnsStr;
+	String migColumnsStr = "";
+	for (int i = 1; i <= columns; i++) {
+	    migColumnsStr += (i == 1 ? "" : "20") + "[align left, :" + maxLabelWidth + ":][grow, :" + maxFromMinPossibleEditorWidth + ":]"; //
+	}
+	return migColumnsStr;
     }
 
     /**
@@ -657,7 +647,7 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
      *
      */
     public static interface CriteriaLayoutListener extends EventListener{
-        void layoutChanged();
+	void layoutChanged();
     }
 
     /**
@@ -693,75 +683,75 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
      *
      */
     public static class LinkedComponentCopy extends ComponentCopy {
-    
-        private static final long serialVersionUID = 7138356064320181273L;
-    
-        private LinkedComponentCopy linkedCopy;
-    
-        private final IPropertyEditor propEditor;
-    
-        private final boolean isLabel;
-    
-        /**
-         * In case of {@link JLabel}, sets minimum size of this component to size of original component.
-         *
-         * @param original
-         */
-        public LinkedComponentCopy(final IPropertyEditor propEditor, final JComponent component, final boolean isLabel) {
-            super(isLabel ? component : createEditor(component));
-            this.propEditor = propEditor;
-            this.isLabel = isLabel;
-        }
-    
-        /**
-         * Sets cross-references between this instance and the specified one.
-         *
-         * @param compCopy
-         */
-        public void linkWith(final LinkedComponentCopy compCopy) {
-            linkedCopy = compCopy;
-            compCopy.linkedCopy = this;
-        }
-    
-        public JComponent getOriginalComponent() {
-            return getOriginal();
-        }
-    
-        /**
-         * @return pair of {@link LinkedComponentCopy}s, where key corresponds to label copy and value corresponds to editor copy.
-         */
-        public Pair<LinkedComponentCopy, LinkedComponentCopy> getCopyPair() {
-            if (getOriginalComponent() instanceof JLabel) {
-        	return new Pair<LinkedComponentCopy, LinkedComponentCopy>(this, linkedCopy);
-            } else {
-        	return new Pair<LinkedComponentCopy, LinkedComponentCopy>(linkedCopy, this);
-            }
-        }
-    
-        /**
-         * Used for correct painting of component copy. (without black bounds)
-         *
-         *
-         * @param propertyEditor
-         * @return
-         */
-        private static JComponent createEditor(final JComponent editor) {
-            final JPanel editorPanel = new JPanel(new MigLayout("fill, insets 0"));
-            editorPanel.add(editor, "grow");
-            return editorPanel;
-        }
-    
-        public LinkedComponentCopy getLinkedCopy() {
-            return linkedCopy;
-        }
-    
-        public IPropertyEditor getPropEditor() {
-            return propEditor;
-        }
-    
-        public boolean isLabel() {
-            return isLabel;
-        }
+
+	private static final long serialVersionUID = 7138356064320181273L;
+
+	private LinkedComponentCopy linkedCopy;
+
+	private final IPropertyEditor propEditor;
+
+	private final boolean isLabel;
+
+	/**
+	 * In case of {@link JLabel}, sets minimum size of this component to size of original component.
+	 *
+	 * @param original
+	 */
+	public LinkedComponentCopy(final IPropertyEditor propEditor, final JComponent component, final boolean isLabel) {
+	    super(isLabel ? component : createEditor(component));
+	    this.propEditor = propEditor;
+	    this.isLabel = isLabel;
+	}
+
+	/**
+	 * Sets cross-references between this instance and the specified one.
+	 *
+	 * @param compCopy
+	 */
+	public void linkWith(final LinkedComponentCopy compCopy) {
+	    linkedCopy = compCopy;
+	    compCopy.linkedCopy = this;
+	}
+
+	public JComponent getOriginalComponent() {
+	    return getOriginal();
+	}
+
+	/**
+	 * @return pair of {@link LinkedComponentCopy}s, where key corresponds to label copy and value corresponds to editor copy.
+	 */
+	public Pair<LinkedComponentCopy, LinkedComponentCopy> getCopyPair() {
+	    if (getOriginalComponent() instanceof JLabel) {
+		return new Pair<LinkedComponentCopy, LinkedComponentCopy>(this, linkedCopy);
+	    } else {
+		return new Pair<LinkedComponentCopy, LinkedComponentCopy>(linkedCopy, this);
+	    }
+	}
+
+	/**
+	 * Used for correct painting of component copy. (without black bounds)
+	 *
+	 *
+	 * @param propertyEditor
+	 * @return
+	 */
+	private static JComponent createEditor(final JComponent editor) {
+	    final JPanel editorPanel = new JPanel(new MigLayout("fill, insets 0"));
+	    editorPanel.add(editor, "grow");
+	    return editorPanel;
+	}
+
+	public LinkedComponentCopy getLinkedCopy() {
+	    return linkedCopy;
+	}
+
+	public IPropertyEditor getPropEditor() {
+	    return propEditor;
+	}
+
+	public boolean isLabel() {
+	    return isLabel;
+	}
     }
 
     /**

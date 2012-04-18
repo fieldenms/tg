@@ -12,7 +12,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
-import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JTable;
 import javax.swing.JToggleButton;
@@ -31,12 +30,13 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Orderin
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.egi.EgiPanel;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.review.OrderingArrow;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.verticallabel.DefaultTableHeaderCellRenderer;
@@ -51,8 +51,8 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     private final EgiPanel<T> egiPanel;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, CDTME> owner) {
-	super(model, progressLayer, owner);
+    public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final GridConfigurationView<T, CDTME> owner) {
+	super(model, owner);
 	this.egiPanel = new EgiPanel(getModel().getGridModel(), false);
 	this.addSelectionEventListener(createGridAnalysisSelectionListener());
 	configureEgiWithOrdering();
@@ -71,17 +71,17 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
 	if(getModel().getCriteria().isDefaultEnabled()){
-	    getOwner().getDefaultAction().setEnabled(enable);
+	    getCentre().getDefaultAction().setEnabled(enable);
 	}
 	if(!navigate){
-	    getOwner().getPaginator().setEnableActions(enable, !enable);
+	    getCentre().getPaginator().setEnableActions(enable, !enable);
 	}
-	getOwner().getExportAction().setEnabled(enable);
-	getOwner().getRunAction().setEnabled(enable);
+	getCentre().getExportAction().setEnabled(enable);
+	getCentre().getRunAction().setEnabled(enable);
     }
 
     @Override
-    protected Action createConfigureAction() {
+    protected ConfigureAction createConfigureAction() {
 	return null;
     }
 
@@ -116,18 +116,18 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	    @Override
 	    public void viewWasSelected(final SelectionEvent event) {
 		//Managing the default, design and custom action changer button enablements.
-		getOwner().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
-		if(getOwner().getCriteriaPanel() != null && getOwner().getCriteriaPanel().canConfigure()){
-		    getOwner().getCriteriaPanel().getSwitchAction().setEnabled(true);
+		getCentre().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
+		if (getCentre().getCriteriaPanel() != null && getCentre().getCriteriaPanel().canConfigure()) {
+		    getCentre().getCriteriaPanel().getSwitchAction().setEnabled(true);
 		}
-		if(getOwner().getCustomActionChanger() != null){
-		    getOwner().getCustomActionChanger().setEnabled(true);
+		if(getCentre().getCustomActionChanger() != null){
+		    getCentre().getCustomActionChanger().setEnabled(true);
 		}
 		//Managing the paginator's enablements.
-		getOwner().getPaginator().setEnableActions(true, false);
+		getCentre().getPaginator().setEnableActions(true, false);
 		//Managing load and export enablements.
-		getOwner().getExportAction().setEnabled(true);
-		getOwner().getRunAction().setEnabled(true);
+		getCentre().getExportAction().setEnabled(true);
+		getCentre().getRunAction().setEnabled(true);
 	    }
 	};
     }
@@ -230,6 +230,10 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 		}
 	    }
 	};
+    }
+
+    private AbstractEntityCentre<T, CDTME> getCentre(){
+	return getOwner().getOwner();
     }
 
     /**

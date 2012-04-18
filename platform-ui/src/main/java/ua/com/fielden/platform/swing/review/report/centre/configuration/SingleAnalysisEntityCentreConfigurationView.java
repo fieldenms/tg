@@ -13,7 +13,7 @@ public class SingleAnalysisEntityCentreConfigurationView<T extends AbstractEntit
     }
 
     @Override
-    protected SingleAnalysisEntityCentre<T> initConfigurableView(final SingleAnalysisEntityCentre<T> configurableView) {
-	return super.initConfigurableView(new SingleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), getProgressLayer()));
+    protected SingleAnalysisEntityCentre<T> createConfigurableView() {
+	return new SingleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), this);
     }
 }

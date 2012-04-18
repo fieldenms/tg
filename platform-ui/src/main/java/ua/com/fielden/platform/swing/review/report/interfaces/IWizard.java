@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.interfaces;
 
-
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.BuildAction;
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.CancelAction;
 
 /**
  * A contract for <i>wizard</i> that allows one to build specific view.
@@ -11,16 +12,16 @@ package ua.com.fielden.platform.swing.review.report.interfaces;
 public interface IWizard{
 
     /**
-     * Adds {@link IWizardEventListener} instance to listen wizard events.
+     * Returns the action that accepts wizard modification and builds the report view.
      * 
-     * @param l
+     * @return
      */
-    void addWizardEventListener(final IWizardEventListener l);
+    BuildAction getBuildAction();
 
     /**
-     * Removes {@link IWizardEventListener} instance.
+     * Returns the action that discards wizard modification and builds the report view.
      * 
-     * @param l
+     * @return
      */
-    void removeWizardEventListener(IWizardEventListener l);
+    CancelAction getCancelAction();
 }

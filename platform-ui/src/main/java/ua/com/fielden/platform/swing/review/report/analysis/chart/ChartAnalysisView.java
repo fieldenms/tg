@@ -59,6 +59,7 @@ import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
+import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
@@ -108,8 +109,8 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
      */
     private boolean split = false;
 
-    public ChartAnalysisView(final ChartAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner) {
-	super(model, progressLayer, owner);
+    public ChartAnalysisView(final ChartAnalysisModel<T> model, final ChartAnalysisConfigurationView<T> owner) {
+	super(model, owner);
 	this.dataModel = new CategoryDataModel(getModel().getChartAnalysisDataProvider());
 	this.chartPanel = new MultipleChartPanel<List<EntityAggregates>, CategoryChartTypes>();
 	this.chartScroller = new CategoryChartScrollPanel(chartPanel, getModel().adtme().getVisibleDistributedValuesNumber());
@@ -127,6 +128,12 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	//DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), new AnalysisListDragToSupport(distributionList), true);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public ChartAnalysisConfigurationView<T> getOwner() {
+	return (ChartAnalysisConfigurationView<T>)super.getOwner();
+    }
+
     @Override
     public ChartAnalysisModel<T> getModel() {
 	return (ChartAnalysisModel<T>)super.getModel();
@@ -135,12 +142,12 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
 	if(getModel().getCriteria().isDefaultEnabled()){
-	    getOwner().getDefaultAction().setEnabled(enable);
+	    getCentre().getDefaultAction().setEnabled(enable);
 	}
 	if(!navigate){
-	    getOwner().getPaginator().setEnableActions(enable, !enable);
+	    getCentre().getPaginator().setEnableActions(enable, !enable);
 	}
-	getOwner().getRunAction().setEnabled(enable);
+	getCentre().getRunAction().setEnabled(enable);
     }
 
     //    /**
@@ -158,6 +165,10 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     //	}
     //    }
 
+    private AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> getCentre(){
+	return getOwner().getOwner();
+    }
+
     /**
      * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
      * 
@@ -169,18 +180,18 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public void viewWasSelected(final SelectionEvent event) {
 		//Managing the default, design and custom action changer button enablements.
-		getOwner().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
-		if(getOwner().getCriteriaPanel() != null && getOwner().getCriteriaPanel().canConfigure()){
-		    getOwner().getCriteriaPanel().getSwitchAction().setEnabled(true);
+		getCentre().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
+		if (getCentre().getCriteriaPanel() != null && getCentre().getCriteriaPanel().canConfigure()) {
+		    getCentre().getCriteriaPanel().getSwitchAction().setEnabled(true);
 		}
-		if(getOwner().getCustomActionChanger() != null){
-		    getOwner().getCustomActionChanger().setEnabled(true);
+		if (getCentre().getCustomActionChanger() != null) {
+		    getCentre().getCustomActionChanger().setEnabled(true);
 		}
 		//Managing the paginator's enablements.
-		getOwner().getPaginator().setEnableActions(true, false);
+		getCentre().getPaginator().setEnableActions(true, false);
 		//Managing load and export enablements.
-		getOwner().getExportAction().setEnabled(false);
-		getOwner().getRunAction().setEnabled(true);
+		getCentre().getExportAction().setEnabled(false);
+		getCentre().getRunAction().setEnabled(true);
 	    }
 	};
     }
@@ -470,7 +481,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	final ActionChartPanel<List<EntityAggregates>, CategoryChartTypes> chartPanel = new ActionChartPanel<List<EntityAggregates>, CategoryChartTypes>(new CategoryChartFactory<T, IEntityDao<T>>(getModel().getChartAnalysisDataProvider(), dataModel, all, indexes), new IBlockingLayerProvider() {
 	    @Override
 	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
-		return getProgressLayer();
+		return getOwner().getProgressLayer();
 	    }
 	}, switchChartModel.getCurrentType(), /* factory creates single chart -> use first chart for this chart panel. */0, 400, 300, 0, 0, Integer.MAX_VALUE, Integer.MAX_VALUE, true, true, true, true, true, true) {
 	    private static final long serialVersionUID = -4006162899347838630L;

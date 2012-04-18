@@ -1,23 +1,24 @@
 package ua.com.fielden.platform.swing.review.report.analysis.configuration;
 
-import javax.swing.JOptionPane;
+import java.awt.event.ActionEvent;
 
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import javax.swing.Action;
+
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
-import ua.com.fielden.platform.swing.review.report.events.ReviewEvent;
+import ua.com.fielden.platform.swing.review.report.events.AnalysisConfigurationEvent;
+import ua.com.fielden.platform.swing.review.report.events.AnalysisConfigurationEvent.AnalysisConfigurationAction;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
-import ua.com.fielden.platform.swing.review.report.events.WizardEvent;
-import ua.com.fielden.platform.swing.review.report.interfaces.IReviewEventListener;
+import ua.com.fielden.platform.swing.review.report.interfaces.IAnalysisConfigurationEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
-import ua.com.fielden.platform.swing.review.report.interfaces.IWizardEventListener;
 
 /**
  * The base class for all type of analysis.
@@ -39,10 +40,21 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
      */
     private final AbstractEntityCentre<T, CDTME> owner;
 
+    /**
+     * Analysis related actions:
+     * <ul>
+     * <li> save - saves the analysis configuration.</li>
+     * <li> remove - removes the analysis configuration.</li>
+     * </ul>
+     *
+     */
+    private final Action save, remove;
 
     public AbstractAnalysisConfigurationView(final AbstractAnalysisConfigurationModel<T, CDTME> model, final AbstractEntityCentre<T, CDTME> owner, final BlockingIndefiniteProgressLayer progressLayer) {
 	super(model, progressLayer);
 	this.owner = owner;
+	this.save = createSaveAction();
+	this.remove = createRemoveAction();
 	addSelectionEventListener(createSelectionListener());
 	owner.getPageHolderManager().addPageHolder(getModel().getPageHolder());
     }
@@ -54,87 +66,37 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
     }
 
     /**
+     * Registers the {@link IAnalysisConfigurationEventListener} to listen the analysis configuration event.
+     *
+     * @param l
+     */
+    public void addAnalysisConfigurationEventListener(final IAnalysisConfigurationEventListener l){
+	listenerList.add(IAnalysisConfigurationEventListener.class, l);
+    }
+
+    /**
+     * Removes the specified {@link IAnalysisConfigurationEventListener} from the list of registered listeners.
+     *
+     * @param l
+     */
+    public void removeCentreConfigurationEventListener(final IAnalysisConfigurationEventListener l){
+	listenerList.remove(IAnalysisConfigurationEventListener.class, l);
+    }
+
+    /**
      * Returns the entity centre that owns this analysis.
      *
      * @return
      */
-    protected final AbstractEntityCentre<T, CDTME> getOwner() {
+    public final AbstractEntityCentre<T, CDTME> getOwner() {
 	return owner;
     }
 
-    @Override
-    protected VT initConfigurableView(final VT configurableView) {
-	if(configurableView != null){
-	    configurableView.addReviewEventListener(createAnalysisReviewListener());
-	}
-	return super.initConfigurableView(configurableView);
-    }
-
     /**
-     * Returns custom {@link IReviewEventListener} for the analysis view.
+     * Returns the selection listener that is responsible for selecting the this analysis configurable view.
      * 
      * @return
      */
-    private IReviewEventListener createAnalysisReviewListener() {
-	return new IReviewEventListener() {
-
-	    @Override
-	    public boolean configureActionPerformed(final ReviewEvent e) {
-		switch (e.getReviewAction()) {
-		case CONFIGURE:
-		    final ICentreDomainTreeManager cdtm = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
-		    final String name = getModel().getName();
-		    cdtm.freezeAnalysisManager(name);
-		    break;
-		}
-		return true;
-	    }
-	};
-    }
-
-    @Override
-    protected AnalysisWizardView<T, CDTME> initWizardView(final AnalysisWizardView<T, CDTME> wizardView) {
-	if(wizardView != null){
-	    wizardView.addWizardEventListener(createAnalysisWizardListener());
-	}
-	return super.initWizardView(wizardView);
-    }
-
-    /**
-     * Returns custom {@link IWizardEventListener} for the analysis view.
-     * 
-     * @return
-     */
-    private IWizardEventListener createAnalysisWizardListener() {
-	return new IWizardEventListener() {
-
-	    @Override
-	    public boolean wizardActionPerformed(final WizardEvent e) {
-		final ICentreDomainTreeManager cdtm = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
-		final String name = getModel().getName();
-		switch (e.getWizardAction()) {
-		case PRE_CANCEL:
-		    if(!cdtm.isFreezedAnalysisManager(name)){
-			JOptionPane.showMessageDialog(AbstractAnalysisConfigurationView.this, "This analysis wizard can not be canceled!", "Warning", JOptionPane.WARNING_MESSAGE);
-			return false;
-		    }
-		    break;
-		case CANCEL:
-		    if(cdtm.isFreezedAnalysisManager(name)){
-			cdtm.discardAnalysisManager(name);
-		    }
-		    break;
-		case BUILD:
-		    if(cdtm.isFreezedAnalysisManager(name)){
-			cdtm.acceptAnalysisManager(name);
-		    }
-		    break;
-		}
-		return true;
-	    }
-	};
-    }
-
     private ISelectionEventListener createSelectionListener() {
 	return new ISelectionEventListener() {
 
@@ -147,5 +109,90 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 		owner.getPageHolderManager().selectPageHolder(getModel().getPageHolder());
 	    }
 	};
+    }
+
+    private Action createSaveAction() {
+	return new BlockingLayerCommand<Void>("Save", getProgressLayer()) {
+
+	    private static final long serialVersionUID = 7912294028797678105L;
+
+	    @Override
+	    protected boolean preAction() {
+		final boolean result= super.preAction();
+		if(!result){
+		    return false;
+		}
+		return fireAnalysisConfigurationEvent(new AnalysisConfigurationEvent(AbstractAnalysisConfigurationView.this, AnalysisConfigurationAction.PRE_SAVE));
+	    }
+
+	    @Override
+	    protected Void action(final ActionEvent e) throws Exception {
+		getModel().save();
+		fireAnalysisConfigurationEvent(new AnalysisConfigurationEvent(AbstractAnalysisConfigurationView.this, AnalysisConfigurationAction.SAVE));
+		return null;
+	    }
+
+	    @Override
+	    protected void postAction(final Void value) {
+		super.postAction(value);
+		fireAnalysisConfigurationEvent(new AnalysisConfigurationEvent(AbstractAnalysisConfigurationView.this, AnalysisConfigurationAction.POST_SAVE));
+	    }
+
+	    @Override
+	    protected void handlePreAndPostActionException(final Throwable ex) {
+		super.handlePreAndPostActionException(ex);
+		fireAnalysisConfigurationEvent(new AnalysisConfigurationEvent(AbstractAnalysisConfigurationView.this, AnalysisConfigurationAction.SAVE_FAILED));
+	    }
+	};
+    }
+
+    private Action createRemoveAction() {
+	return new BlockingLayerCommand<Void>("Remove", getProgressLayer()) {
+
+	    private static final long serialVersionUID = -1316746113497694217L;
+
+	    @Override
+	    protected boolean preAction() {
+		final boolean result = super.preAction();
+		if(!result){
+		    return false;
+		}
+		return fireAnalysisConfigurationEvent(new AnalysisConfigurationEvent(AbstractAnalysisConfigurationView.this, AnalysisConfigurationAction.PRE_REMOVE));
+	    }
+
+	    @Override
+	    protected Void action(final ActionEvent e) throws Exception {
+		getModel().remove();
+		fireAnalysisConfigurationEvent(new AnalysisConfigurationEvent(AbstractAnalysisConfigurationView.this, AnalysisConfigurationAction.REMOVE));
+		return null;
+	    }
+
+	    @Override
+	    protected void postAction(final Void value) {
+		super.postAction(value);
+		fireAnalysisConfigurationEvent(new AnalysisConfigurationEvent(AbstractAnalysisConfigurationView.this, AnalysisConfigurationAction.POST_REMOVE));
+	    }
+
+	    @Override
+	    protected void handlePreAndPostActionException(final Throwable ex) {
+		super.handlePreAndPostActionException(ex);
+		fireAnalysisConfigurationEvent(new AnalysisConfigurationEvent(AbstractAnalysisConfigurationView.this, AnalysisConfigurationAction.REMOVE_FAILED));
+	    }
+	};
+    }
+
+    /**
+     * Iterates through the list of {@link IAnalysisConfigurationEventListener} listeners and delegates the event to every listener.
+     *
+     * @param event
+     *
+     * @return
+     */
+    private boolean fireAnalysisConfigurationEvent(final AnalysisConfigurationEvent event){
+	boolean result = true;
+	for(final IAnalysisConfigurationEventListener listener : listenerList.getListeners(IAnalysisConfigurationEventListener.class)){
+	    result &= listener.analysisConfigurationEventPerformed(event);
+	}
+	return result;
     }
 }

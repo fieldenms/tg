@@ -27,11 +27,11 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomai
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabDialog;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabDialogModel;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabOptions;
-import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
@@ -39,6 +39,8 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.G
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.MultipleAnalysisEntityCentreConfigurationView;
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
@@ -59,8 +61,8 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     private final Action removeAnalysisAction;
 
-    public MultipleAnalysisEntityCentre(final EntityCentreModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, progressLayer);
+    public MultipleAnalysisEntityCentre(final EntityCentreModel<T> model, final MultipleAnalysisEntityCentreConfigurationView<T> owner) {
+	super(model, owner);
 	this.tabPanel = createReview();
 	this.removeAnalysisAction = createRemoveAnalysisAction();
 	getReviewProgressLayer().setView(createTabPanelWrapper(tabPanel));
@@ -72,7 +74,12 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 		addAnalysis(analysis, determineAnalysisType(analysisManager));
 	    }
 	}
-	addAnalysis(GridConfigurationModel.gridAnalysisName, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public MultipleAnalysisEntityCentreConfigurationView<T> getOwner() {
+	return (MultipleAnalysisEntityCentreConfigurationView<T>)super.getOwner();
     }
 
     @Override
@@ -110,8 +117,8 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 		if(!getReviewProgressLayer().isLocked()){
 		    tabPanel.setSelectedComponent(analysis);
 		}
-		analysis.open();
 		getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name).setVisible(true);
+		analysis.open();
 	    }
 	}
     }
@@ -128,6 +135,25 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     @Override
     public EntityCentreModel<T> getModel() {
 	return (EntityCentreModel<T>)super.getModel();
+    }
+
+    @Override
+    protected ConfigureAction createConfigureAction() {
+	return new ConfigureAction(getOwner()) {
+
+	    private static final long serialVersionUID = 9192913271058568265L;
+
+	    {
+		putValue(Action.NAME, "Configure");
+		putValue(Action.SHORT_DESCRIPTION, "Configure this entity centre");
+	    }
+
+	    @Override
+	    protected Result action(final ActionEvent e) throws Exception {
+		getOwner().getModel().freez();
+		return null;
+	    }
+	};
     }
 
     @Override
@@ -151,9 +177,9 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     protected List<Action> createCustomActionList() {
 	final List<Action> customActions = new ArrayList<Action>();
 	customActions.add(getConfigureAction());
-	customActions.add(createSaveAction());
-	customActions.add(createSaveAsAction());
-	customActions.add(createRemoveAction());
+	customActions.add(getOwner().getSave());
+	customActions.add(getOwner().getSaveAs());
+	customActions.add(getOwner().getRemove());
 	return customActions;
     }
 
@@ -185,8 +211,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
 	    @Override
 	    public String getInfo() {
-		// TODO Auto-generated method stub
-		return null;
+		return "Tab pane wrapper";
 	    }
 	};
 	tabPanelWrapper.add(tabPanel);
@@ -206,14 +231,13 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	//Initiates first tab with main details (i.e. grid analysis).
 	final GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> mainDetails = createGridAnalysis();
 	tabPane.addTab(mainDetails.getModel().getName(), mainDetails);
-
 	tabPane.setTabClosableAt(0, false);
-	tabPane.setSelectedIndex(0);
-	tabPane.setCloseAction(createCloseTabAction(tabPane));
+	tabPane.setCloseAction(createCloseTabAction());
+	mainDetails.open();
 	return tabPane;
     }
 
-    private Action createCloseTabAction(final JideTabbedPane tabPane) {
+    private Action createCloseTabAction() {
 	return new AbstractAction() {
 
 	    private static final long serialVersionUID = 6001475679820547729L;
@@ -333,7 +357,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     private GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createGridAnalysis(){
 	final GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configModel = new GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>(getModel().getCriteria());
 	final GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> gridConfigView = new GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>(configModel, this, getReviewProgressLayer());
-	gridConfigView.open();
 	return gridConfigView;
     }
 
@@ -359,42 +382,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	final PivotAnalysisConfigurationModel<T> configModel = new PivotAnalysisConfigurationModel<T>(getModel().getCriteria(), name);
 	final PivotAnalysisConfigurationView<T> configView = new PivotAnalysisConfigurationView<T>(configModel,this, getReviewProgressLayer());
 	return configView;
-    }
-
-    private Action createSaveAction() {
-	return new AbstractAction("Save") {
-
-	    private static final long serialVersionUID = 8474884103209307717L;
-
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		getModel().getConfigurationModel().save();
-	    }
-	};
-    }
-
-    private Action createSaveAsAction() {
-	return new AbstractAction("Save As") {
-
-	    private static final long serialVersionUID = 6870686264834331196L;
-
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		getModel().getConfigurationModel().saveAs();
-	    }
-	};
-    }
-
-    private Action createRemoveAction() {
-	return getModel().getName() == null ? null : new AbstractAction("Delete") {
-
-	    private static final long serialVersionUID = 8474884103209307717L;
-
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		getModel().getConfigurationModel().remove();
-	    }
-	};
     }
 
     /**

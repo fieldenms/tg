@@ -1,22 +1,25 @@
 package ua.com.fielden.platform.swing.review.report.configuration;
 
+import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
-import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.review.development.SelectableBasePanel;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
-import ua.com.fielden.platform.swing.review.report.events.ReviewEvent;
-import ua.com.fielden.platform.swing.review.report.events.WizardEvent;
+import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
+import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent.AbstractConfigurationViewEventAction;
+import ua.com.fielden.platform.swing.review.report.interfaces.IAbstractConfigurationViewEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
-import ua.com.fielden.platform.swing.review.report.interfaces.IReviewEventListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
-import ua.com.fielden.platform.swing.review.report.interfaces.IWizardEventListener;
 
 /**
  * The holder for wizard and view panels. Provides functionality that allows one to switch view between report and wizard modes.
@@ -34,6 +37,11 @@ public abstract class AbstractConfigurationView<VT extends SelectableBasePanel &
     private final BlockingIndefiniteProgressLayer progressLayer;
 
     /**
+     * The action that is responsible for opening configuration view.
+     */
+    private final Action openAction;
+
+    /**
      * Holds the previous wizard and view of the report.
      */
     private WT previousWizard = null;
@@ -48,7 +56,26 @@ public abstract class AbstractConfigurationView<VT extends SelectableBasePanel &
 	super(new MigLayout("fill, insets 0", "[fill, grow]","[fill, grow]"));
 	this.model = model;
 	this.progressLayer = progressLayer;
+	this.openAction = createOpenAction();
 	model.addPropertyChangeListener(createModeChangeListener());
+    }
+
+    /**
+     * Registers the specified {@link IAbstractConfigurationViewEventListener}.
+     * 
+     * @param l
+     */
+    public void addOpenEventListener(final IAbstractConfigurationViewEventListener l){
+	listenerList.add(IAbstractConfigurationViewEventListener.class, l);
+    }
+
+    /**
+     * Unregisters the specified {@link IAbstractConfigurationViewEventListener}.
+     * 
+     * @param l
+     */
+    public void removeOpenEventListener(final IAbstractConfigurationViewEventListener l){
+	listenerList.remove(IAbstractConfigurationViewEventListener.class, l);
     }
 
     /**
@@ -96,28 +123,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableBasePanel &
      * Opens this {@link AbstractConfigurationView}. First it tries to open this in {@link ReportMode#REPORT} mode, if it fails, then it opens in {@link ReportMode#WIZARD} mode.
      */
     public final void open(){
-
-	final Result res = getModel().canSetMode(ReportMode.REPORT);
-	if(res.isSuccessful()){
-	    try{
-		getModel().setMode(ReportMode.REPORT);
-		return;
-	    }catch(final Exception e){
-		new DialogWithDetails(null, "Exception while opening report view", e).setVisible(true);
-	    }
-	}
-	try{
-	    getModel().setMode(ReportMode.WIZARD);
-	    return;
-	}catch(final Exception e){
-	    new DialogWithDetails(null, "Exception while opening wizard view", e).setVisible(true);
-
-	}
-	try {
-	    getModel().setMode(ReportMode.NOT_SPECIFIED);
-	} catch (final Exception e) {
-	    new DialogWithDetails(null, "Exception while opening wizard view", e).setVisible(true);
-	}
+	openAction.actionPerformed(null);
     }
 
     /**
@@ -126,12 +132,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableBasePanel &
      * @param configurableView - view to configure.
      * @return
      */
-    protected VT initConfigurableView(final VT configurableView){
-	if(configurableView != null){
-	    configurableView.addReviewEventListener(createReviewListener());
-	}
-	return configurableView;
-    }
+    abstract protected VT createConfigurableView();
 
     /**
      * Override this to provide custom wizard to configure report.
@@ -139,11 +140,56 @@ public abstract class AbstractConfigurationView<VT extends SelectableBasePanel &
      * @param wizardView - wizard view to configure
      * @return
      */
-    protected WT initWizardView(final WT wizardView){
-	if(wizardView != null){
-	    wizardView.addWizardEventListener(createWizardListener());
-	}
-	return wizardView;
+    abstract protected WT createWizardView();
+
+    /**
+     * Creates the open action see {@link #openAction} for more details.
+     * 
+     * @return
+     */
+    private Action createOpenAction() {
+	return new BlockingLayerCommand<List<Result>>("Open", getProgressLayer()) {
+
+	    private static final long serialVersionUID = 6165292815580260412L;
+
+	    @Override
+	    protected boolean preAction() {
+		final boolean superResult = super.preAction();
+		if(!superResult){
+		    return false;
+		}
+		for(final Result result : fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.PRE_OPEN))){
+		    if(!result.isSuccessful()){
+			return false;
+		    }
+		}
+		return true;
+	    }
+
+	    @Override
+	    protected List<Result> action(final ActionEvent e) throws Exception {
+		return fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.OPEN));
+	    }
+
+	    @Override
+	    protected void postAction(final List<Result> value) {
+		super.postAction(value);
+		fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.POST_OPEN));
+		for(final Result valueRes : value){
+		    if(!valueRes.isSuccessful()){
+			getModel().setMode(ReportMode.WIZARD);
+			return;
+		    }
+		}
+		getModel().setMode(ReportMode.REPORT);
+	    }
+
+	    @Override
+	    protected void handlePreAndPostActionException(final Throwable ex) {
+		super.handlePreAndPostActionException(ex);
+		fireOpenEvent(new AbstractConfigurationViewEvent(AbstractConfigurationView.this, AbstractConfigurationViewEventAction.OPEN_FAILED));
+	    }
+	};
     }
 
     /**
@@ -160,11 +206,11 @@ public abstract class AbstractConfigurationView<VT extends SelectableBasePanel &
 		    final ReportMode mode = (ReportMode)evt.getNewValue();
 		    switch(mode){
 		    case WIZARD:
-			previousWizard = initWizardView(null);
+			previousWizard = createWizardView();
 			setView(previousWizard);
 			break;
 		    case REPORT:
-			previousView = initConfigurableView(null);
+			previousView = createConfigurableView();
 			setView(previousView);
 			break;
 		    case NOT_SPECIFIED:
@@ -175,71 +221,6 @@ public abstract class AbstractConfigurationView<VT extends SelectableBasePanel &
 
 	    }
 
-	};
-    }
-
-
-
-    /**
-     * Creates the {@link IReviewEventListener} for entity review, that listens the review specific actions.
-     *
-     * @return
-     */
-    private IReviewEventListener createReviewListener() {
-	return new IReviewEventListener() {
-
-	    @Override
-	    public boolean configureActionPerformed(final ReviewEvent e) {
-		switch(e.getReviewAction()){
-		case PRE_CONFIGURE:
-		    final Result res = getModel().canSetMode(ReportMode.WIZARD);
-		    if(res.isSuccessful()){
-			return true;
-		    } else {
-			new DialogWithDetails(null, "Exception while opening wizard view", res.getEx()).setVisible(true);
-			return false;
-		    }
-		case POST_CONFIGURE:
-		    try {
-			getModel().setMode(ReportMode.WIZARD);
-		    } catch (final Exception e1) {
-			e1.printStackTrace();
-		    }
-		    break;
-		}
-		return true;
-	    }
-	};
-    }
-
-    /**
-     * Creates the {@link IWizardEventListener} for entity review wizard, that listens the wizard specific actions.
-     * 
-     * @return
-     */
-    private IWizardEventListener createWizardListener() {
-	return new IWizardEventListener() {
-	    @Override
-	    public boolean wizardActionPerformed(final WizardEvent e) {
-		switch (e.getWizardAction()) {
-		case PRE_BUILD:
-		    final Result setModeRes = getModel().canSetMode(ReportMode.REPORT);
-		    if(!setModeRes.isSuccessful()){
-			JOptionPane.showMessageDialog(AbstractConfigurationView.this, setModeRes.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
-			return false;
-		    }
-		    break;
-		case POST_CANCEL:
-		case POST_BUILD:
-		    try {
-			getModel().setMode(ReportMode.REPORT);
-		    } catch (final Exception e1) {
-			e1.printStackTrace();
-		    }
-		    break;
-		}
-		return true;
-	    }
 	};
     }
 
@@ -259,4 +240,139 @@ public abstract class AbstractConfigurationView<VT extends SelectableBasePanel &
 	repaint();
     }
 
+    /**
+     * Fires the specified open event.
+     * 
+     * @param event
+     */
+    private List<Result> fireOpenEvent(final AbstractConfigurationViewEvent event){
+	final List<Result> results = new ArrayList<Result>();
+	for(final IAbstractConfigurationViewEventListener listener : listenerList.getListeners(IAbstractConfigurationViewEventListener.class)){
+	    results.add(listener.abstractConfigurationViewEventPerformed(event));
+	}
+	return results;
+    }
+
+    /**
+     * The action that changes current configuration view's mode to the {@link ReportMode#WIZARD} mode.
+     * 
+     * @author TG Team
+     *
+     * @param <VT>
+     * @param <WT>
+     */
+    public static abstract class ConfigureAction extends ChangeModeAction{
+
+	private static final long serialVersionUID = 1090639998966452323L;
+
+	/**
+	 * Initialises this {@link ConfigureAction} with the specified {@link AbstractConfigurationView}.
+	 * 
+	 * @param configurationView
+	 */
+	public ConfigureAction(final AbstractConfigurationView<?, ?> configurationView) {
+	    super(configurationView, ReportMode.WIZARD);
+	}
+    }
+
+    /**
+     * The action that accepts modification and changes current configuration view's mode to the {@link ReportMode#REPORT} mode.
+     * 
+     * @author TG Team
+     *
+     * @param <VT>
+     * @param <WT>
+     */
+    public static abstract class BuildAction extends ChangeModeAction{
+
+	private static final long serialVersionUID = 1090639998966452323L;
+
+	/**
+	 * Initialises this {@link BuildAction} with the specified {@link AbstractConfigurationView}.
+	 * 
+	 * @param configurationView
+	 */
+	public BuildAction(final AbstractConfigurationView<?, ?> configurationView) {
+	    super(configurationView, ReportMode.REPORT);
+	}
+    }
+
+    /**
+     * The action that discards modification and changes current configuration view's mode to the {@link ReportMode#REPORT} mode.
+     * 
+     * @author TG Team
+     *
+     * @param <VT>
+     * @param <WT>
+     */
+    public static abstract class CancelAction extends ChangeModeAction{
+
+	private static final long serialVersionUID = 1090639998966452323L;
+
+	/**
+	 * Initialises this {@link CancelAction} with the specified {@link AbstractConfigurationView}.
+	 * 
+	 * @param configurationView
+	 */
+	public CancelAction(final AbstractConfigurationView<?, ?> configurationView) {
+	    super(configurationView, ReportMode.REPORT);
+	}
+    }
+
+    /**
+     * The {@link BlockingLayerCommand} action that changes the report mode to the specified one.
+     * 
+     * @author TG Team
+     *
+     * @param <VT>
+     * @param <WT>
+     */
+    private static abstract class ChangeModeAction extends BlockingLayerCommand<Result>{
+
+	private static final long serialVersionUID = 1090639998966452323L;
+
+	private final AbstractConfigurationView<?, ?> configurationView;
+	private final ReportMode reportMode;
+
+	/**
+	 * Initialises this {@link ChangeModeAction} {@link AbstractConfigurationView} instance and specified report mode to which configuration view must be changed.
+	 * 
+	 * @param configurationView
+	 * @param reportMode
+	 */
+	public ChangeModeAction(final AbstractConfigurationView<?, ?> configurationView, final ReportMode reportMode) {
+	    super("", configurationView.getProgressLayer());
+	    this.configurationView = configurationView;
+	    this.reportMode = reportMode;
+	}
+
+	/**
+	 * Returns the {@link AbstractConfigurationView} instance associated with this action.
+	 * 
+	 * @return
+	 */
+	public AbstractConfigurationView<?, ?> getConfigurationView() {
+	    return configurationView;
+	}
+
+	@Override
+	protected boolean preAction() {
+	    if(!super.preAction()){
+		return false;
+	    }
+	    final Result result = getConfigurationView().getModel().canSetMode(reportMode);
+	    if(!result.isSuccessful()){
+		JOptionPane.showMessageDialog(getConfigurationView(), result.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
+		return false;
+	    }
+	    return true;
+	}
+
+	@Override
+	protected void postAction(final Result value) {
+	    super.postAction(value);
+	    getConfigurationView().getModel().setMode(reportMode);
+	}
+
+    }
 }

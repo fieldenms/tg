@@ -15,15 +15,14 @@ import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedLi
 import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 
 public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReviewModel<T, CDTME, IAbstractAnalysisDomainTreeManagerAndEnhancer, IPage<T>> {
 
     private final PropertyTableModel<?> gridModel;
 
-    public GridAnalysisModel(final GridConfigurationModel<T, CDTME> configurationModel, final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final PageHolder pageHolder) {
-	super(configurationModel, criteria, null, pageHolder);
+    public GridAnalysisModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final PageHolder pageHolder) {
+	super(criteria, null, pageHolder);
 	this.gridModel = createTableModel();
 	getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
@@ -34,11 +33,6 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	    }
 	});
 	getPageHolder().newPage(null);
-    }
-
-    @Override
-    public GridConfigurationModel<T, CDTME> getConfigurationModel() {
-	return (GridConfigurationModel<T, CDTME>)super.getConfigurationModel();
     }
 
     public final PropertyTableModel<?> getGridModel(){

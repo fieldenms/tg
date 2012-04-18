@@ -1,28 +1,22 @@
 package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
-import java.awt.event.ActionEvent;
-
-import javax.swing.Action;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
+import ua.com.fielden.platform.domaintree.ILocatorManager.Phase;
+import ua.com.fielden.platform.domaintree.ILocatorManager.Type;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityLocatorModel;
 import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder;
-import ua.com.fielden.platform.swing.review.report.events.LocatorConfigurationEvent;
-import ua.com.fielden.platform.swing.review.report.events.LocatorConfigurationEvent.LocatorConfigurationAction;
-import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorConfigurationEventListener;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
 public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ILocatorDomainTreeManagerAndEnhancer> {
@@ -30,13 +24,12 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
     /**
      * The class where the property specified with propertyName was declared.
      */
-    public final Class<R> rootType;
+    private final Class<R> rootType;
     /**
      * The associated {@link ILocatorManager} instance.
      */
-    public final ILocatorManager locatorManager;
+    private final ILocatorManager locatorManager;
 
-    private final Action save, saveAsDefault, loadDefault;
     /**
      * Initiates this {@link LocatorConfigurationModel} with instance of {@link IGlobalDomainTreeRepresentation}, entity type and {@link EntityFactory}.
      *
@@ -49,62 +42,133 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 	super(entityType, propertyName, entityFactory, null, criteriaGenerator);
 	this.rootType = rootType;
 	this.locatorManager = locatorManager;
-	this.save = createSaveAction();
-	this.saveAsDefault = createSaveAsDefaultAction();
-	this.loadDefault = createLoadDefaultAction();
+    }
+
+    /**
+     * Returns value that indicates whether this locator was changed or not.
+     * 
+     * @return
+     */
+    public boolean isChanged(){
+	return locatorManager.isChangedLocatorManager(getRootType(), getName());
+    }
+
+    /**
+     * Returns value that indicates whether locator is in usage phase or not.
+     * 
+     * @return
+     */
+    public boolean isInUsagePhase(){
+	return Phase.USAGE_PHASE == locatorManager.phaseAndTypeOfLocatorManager(getRootType(), getName()).getKey();
+    }
+
+    /**
+     * Returns value that indicates whether locator is in editing phase or not.
+     * 
+     * @return
+     */
+    public boolean isInEdititngPhase(){
+	return Phase.EDITING_PHASE == locatorManager.phaseAndTypeOfLocatorManager(getRootType(), getName()).getKey();
+    }
+
+    /**
+     * Returns value that indicates whether locator is in freeze phase or not.
+     * 
+     * @return
+     */
+    public boolean isInFreezedPhase(){
+	return Phase.FREEZED_EDITING_PHASE== locatorManager.phaseAndTypeOfLocatorManager(getRootType(), getName()).getKey();
+    }
+
+    /**
+     * Returns the type of the locator: LOCAL or GLOBAL.
+     * 
+     * @return
+     */
+    public Type getType(){
+	return locatorManager.phaseAndTypeOfLocatorManager(getRootType(), getName()).getValue();
     }
 
     /**
      * Saves this locator's configuration.
      */
     public void save(){
-	save.actionPerformed(null);
+	locatorManager.acceptLocatorManager(getRootType(), getName());
     }
 
     /**
-     * Saves this locator's configuration as default and saves it locally.
+     * Saves this locator manager in to global space.
      */
-    public void saveAsDefault(){
-	saveAsDefault.actionPerformed(null);
+    public void saveGlobally(){
+	locatorManager.saveLocatorManagerGlobally(getRootType(), getName());
     }
 
     /**
-     * Loads default locator's configuration.
+     * Discards changes for the this entity locator.
      */
-    public void loadDefault(){
-	loadDefault.actionPerformed(null);
+    public void discard(){
+	locatorManager.discardLocatorManager(getRootType(), getName());
     }
 
     /**
-     * Registers the {@link ILocatorConfigurationEventListener} to listen the locator configuration event.
-     *
-     * @param l
+     * Resets this locator manager to default one.
      */
-    public void addLocatorConfigurationEventListener(final ILocatorConfigurationEventListener l){
-	listenerList.add(ILocatorConfigurationEventListener.class, l);
+    public void reset(){
+	locatorManager.resetLocatorManagerToDefault(getRootType(), getName());
     }
 
     /**
-     * Removes the specified {@link ILocatorConfigurationEventListener} from the list of registered listeners.
-     *
-     * @param l
+     * Refreshes this locator.
      */
-    public void removeLocatorConfigurationEventListener(final ILocatorConfigurationEventListener l){
-	listenerList.remove(ILocatorConfigurationEventListener.class, l);
+    public void refresh(){
+	locatorManager.refreshLocatorManager(getRootType(), getName());
+    }
+
+    /**
+     * Freezes this locator.
+     */
+    public void freeze(){
+	locatorManager.freezeLocatorManager(getRootType(), getName());
+    }
+
+    /**
+     * Returns the {@link ILocatorDomainTreeManagerAndEnhancer} associated with this locator configuration model.
+     * 
+     * @return
+     */
+    public ILocatorDomainTreeManagerAndEnhancer getLocator(){
+	return locatorManager.getLocatorManager(getRootType(), getName());
+    }
+
+    /**
+     * Returns the {@link ILocatorManager} instance. That is used for managing this locator.
+     * 
+     * @return
+     */
+    public ILocatorManager getLocatorManager() {
+	return locatorManager;
+    }
+
+    /**
+     * Returns entity type with which this type is associated.
+     * 
+     * @return
+     */
+    public Class<R> getRootType() {
+	return rootType;
     }
 
     @Override
     protected Result canSetMode(final ReportMode mode) {
+	if(isInUsagePhase()){
+	    throw new IllegalStateException("The locator must be refreshed first before opening!");
+	}
 	if(ReportMode.REPORT.equals(mode)){
-	    ILocatorDomainTreeManager ldtm = locatorManager.getLocatorManager(rootType, name);
+	    final ILocatorDomainTreeManager ldtm = getLocator();
 	    if(ldtm == null){
-		locatorManager.refreshLocatorManager(rootType, name);
-		ldtm = locatorManager.getLocatorManager(rootType, name);
+		throw new IllegalStateException("The locator must have been initialised");
 	    }
-	    if(ldtm == null){
-		return new Result(this, new Exception("The locator manager must be initialised"));
-	    }
-	    if(ldtm.getSecondTick().checkedProperties(entityType).isEmpty()){
+	    if(ldtm.getSecondTick().checkedProperties(getEntityType()).isEmpty()){
 		return new Result(this, new CanNotSetModeException("Please choose properties to add to the result set!"));
 	    }
 	}
@@ -113,20 +177,26 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
     @Override
     protected EntityLocatorModel<T> createEntityCentreModel() {
-	final ILocatorDomainTreeManagerAndEnhancer ldtme = locatorManager.getLocatorManager(rootType, name);
-	if(ldtme == null || ldtme.getSecondTick().checkedProperties(entityType).isEmpty()){
+	if(isInUsagePhase()){
+	    throw new IllegalStateException("The locator must be refreshed!");
+	}
+	final ILocatorDomainTreeManagerAndEnhancer ldtme = getLocator();
+	if(ldtme == null || ldtme.getSecondTick().checkedProperties(getEntityType()).isEmpty()){
 	    throw new IllegalStateException("The locator manager is not specified correctly!");
 	}
-	return new EntityLocatorModel<T>(this, createInspectorModel(criteriaGenerator.generateLocatorQueryCriteria(entityType, ldtme)), name);
+	return new EntityLocatorModel<T>(createInspectorModel(getCriteriaGenerator().generateLocatorQueryCriteria(getEntityType(), ldtme)), getName());
     }
 
     @Override
     protected DomainTreeEditorModel<T> createDomainTreeEditorModel() {
-	final ILocatorDomainTreeManagerAndEnhancer ldtm = locatorManager.getLocatorManager(rootType, name);
+	if(isInUsagePhase()){
+	    throw new IllegalStateException("locator must be refreshed!");
+	}
+	final ILocatorDomainTreeManagerAndEnhancer ldtm = getLocator();
 	if(ldtm == null){
 	    throw new IllegalStateException("The locator manager can not be null!");
 	}
-	return new DomainTreeEditorModel<T>(entityFactory, ldtm, entityType);
+	return new DomainTreeEditorModel<T>(getEntityFactory(), ldtm, getEntityType());
     }
 
     /**
@@ -138,128 +208,5 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
     private EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> createInspectorModel(final EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria) {
 	return new EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>>>(criteria,//
 		CentrePropertyBinder.<T> createLocatorPropertyBinder());
-    }
-
-    private Action createSaveAction() {
-	return new Command<Void>("Save") {
-
-	    private static final long serialVersionUID = 7912294028797678105L;
-
-	    @Override
-	    protected boolean preAction() {
-		final boolean result= super.preAction();
-		if(!result){
-		    return false;
-		}
-		return fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.PRE_SAVE));
-	    }
-
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		locatorManager.acceptLocatorManager(rootType, name);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.SAVE));
-		return null;
-	    }
-
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this,  LocatorConfigurationAction.POST_SAVE));
-	    }
-
-	    @Override
-	    protected void handlePreAndPostActionException(final Throwable ex) {
-		super.handlePreAndPostActionException(ex);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.SAVE_FAILED));
-	    }
-	};
-    }
-
-    private Action createSaveAsDefaultAction() {
-	return new Command<Void>("Save As Default") {
-
-	    private static final long serialVersionUID = 7462084429292050025L;
-
-	    @Override
-	    protected boolean preAction() {
-		final boolean result= super.preAction();
-		if(!result){
-		    return false;
-		}
-		return fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.PRE_SAVE_AS_DEFAULT));
-	    }
-
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		locatorManager.saveLocatorManagerGlobally(rootType, name);
-		locatorManager.acceptLocatorManager(rootType, name);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.SAVE_AS_DEFAULT));
-		return null;
-	    }
-
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.POST_SAVE_AS_DEFAULT));
-	    }
-
-	    @Override
-	    protected void handlePreAndPostActionException(final Throwable ex) {
-		super.handlePreAndPostActionException(ex);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.SAVE_AS_DEFAULT_FAILED));
-	    }
-	};
-    }
-
-    private Action createLoadDefaultAction() {
-	return new Command<Void>("Load Default") {
-
-	    private static final long serialVersionUID = -1337109555032877767L;
-
-	    @Override
-	    protected boolean preAction() {
-		final boolean result= super.preAction();
-		if(!result){
-		    return false;
-		}
-		return fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.PRE_LOAD_DEFAULT));
-	    }
-
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		locatorManager.refreshLocatorManager(rootType, name);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.LOAD_DEFAULT));
-		return null;
-	    }
-
-	    @Override
-	    protected void postAction(final Void value) {
-		super.postAction(value);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.POST_LOAD_DEFAULT));
-	    }
-
-	    @Override
-	    protected void handlePreAndPostActionException(final Throwable ex) {
-		super.handlePreAndPostActionException(ex);
-		fireLocatorConfigurationEvent(new LocatorConfigurationEvent(LocatorConfigurationModel.this, LocatorConfigurationAction.LOAD_DEFAULT_FAILED));
-	    }
-	};
-    }
-
-
-
-    /**
-     * Iterates through the list of {@link ILocatorConfigurationEventListener} listeners and delegates the event to every listener.
-     *
-     * @param event
-     *
-     * @return
-     */
-    private boolean fireLocatorConfigurationEvent(final LocatorConfigurationEvent event){
-	boolean result = true;
-	for(final ILocatorConfigurationEventListener listener : listenerList.getListeners(ILocatorConfigurationEventListener.class)){
-	    result &= listener.locatorConfigurationEventPerformed(event);
-	}
-	return result;
     }
 }

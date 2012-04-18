@@ -18,14 +18,14 @@ public class MultipleAnalysisEntityCentreConfigurationView<T extends AbstractEnt
     }
 
     @Override
-    protected MultipleAnalysisEntityCentre<T> initConfigurableView(final MultipleAnalysisEntityCentre<T> configurableView) {
+    protected MultipleAnalysisEntityCentre<T> createConfigurableView() {
 	final MultipleAnalysisEntityCentre<T> previousView = getPreviousView();
-	final MultipleAnalysisEntityCentre<T> newView = new MultipleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), getProgressLayer());
+	final MultipleAnalysisEntityCentre<T> newView = new MultipleAnalysisEntityCentre<T>(getModel().createEntityCentreModel(), this);
 	if(previousView != null){
 	    final String selectedAnalysis = previousView.getCurrentAnalysisConfigurationView().getModel().getName();
 	    selectAnalysisView(newView, selectedAnalysis);
 	}
-	return super.initConfigurableView(newView);
+	return newView;
     }
 
     /**

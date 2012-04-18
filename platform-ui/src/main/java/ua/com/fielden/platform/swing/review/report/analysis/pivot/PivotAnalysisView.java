@@ -48,9 +48,9 @@ import ua.com.fielden.platform.swing.checkboxlist.SorterChangedEvent;
 import ua.com.fielden.platform.swing.checkboxlist.SorterEventListener;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
-import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.menu.filter.IFilter;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
+import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
@@ -82,8 +82,8 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
      */
     private final JToolBar toolBar;
 
-    public PivotAnalysisView(final PivotAnalysisModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner) {
-	super(model, progressLayer, owner);
+    public PivotAnalysisView(final PivotAnalysisModel<T> model, final PivotAnalysisConfigurationView<T> owner) {
+	super(model, owner);
 
 	this.distributionList = createDistributionList();
 	this.aggregationList = createAggregationList();
@@ -104,10 +104,14 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     @Override
     protected void enableRelatedActions(final boolean enable, final boolean navigate) {
 	if(getModel().getCriteria().isDefaultEnabled()){
-	    getOwner().getDefaultAction().setEnabled(enable);
+	    getCentre().getDefaultAction().setEnabled(enable);
 	}
-	getOwner().getExportAction().setEnabled(enable);
-	getOwner().getRunAction().setEnabled(enable);
+	getCentre().getExportAction().setEnabled(enable);
+	getCentre().getRunAction().setEnabled(enable);
+    }
+
+    private AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> getCentre(){
+	return getOwner().getOwner();
     }
 
     /**
@@ -121,18 +125,18 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public void viewWasSelected(final SelectionEvent event) {
 		//Managing the default, design and custom action changer button enablements.
-		getOwner().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
-		if(getOwner().getCriteriaPanel() != null && getOwner().getCriteriaPanel().canConfigure()){
-		    getOwner().getCriteriaPanel().getSwitchAction().setEnabled(true);
+		getCentre().getDefaultAction().setEnabled(getModel().getCriteria().isDefaultEnabled());
+		if (getCentre().getCriteriaPanel() != null && getCentre().getCriteriaPanel().canConfigure()) {
+		    getCentre().getCriteriaPanel().getSwitchAction().setEnabled(true);
 		}
-		if(getOwner().getCustomActionChanger() != null){
-		    getOwner().getCustomActionChanger().setEnabled(true);
+		if (getCentre().getCustomActionChanger() != null) {
+		    getCentre().getCustomActionChanger().setEnabled(true);
 		}
 		//Managing the paginator's enablements.
-		getOwner().getPaginator().setEnableActions(false, false);
+		getCentre().getPaginator().setEnableActions(false, false);
 		//Managing load and export enablements.
-		getOwner().getExportAction().setEnabled(true);
-		getOwner().getRunAction().setEnabled(true);
+		getCentre().getExportAction().setEnabled(true);
+		getCentre().getRunAction().setEnabled(true);
 	    }
 	};
     }

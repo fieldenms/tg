@@ -58,6 +58,7 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
 import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -104,8 +105,8 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      * @param model
      * @param progressLayer
      */
-    public AbstractEntityCentre(final AbstractEntityCentreModel<T, CDTME> model, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, progressLayer);
+    public AbstractEntityCentre(final AbstractEntityCentreModel<T, CDTME> model, final AbstractConfigurationView<? extends AbstractEntityCentre<T, CDTME>, ?> owner) {
+	super(model, owner);
 	//Initiates the paginator related properties.
 	final PaginatorModel paginatorModel = new PaginatorModel();
 	this.reviewProgressLayer = new BlockingIndefiniteProgressLayer(null, "");
@@ -175,6 +176,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     public <E extends AbstractEntity<?>> void notifyEntityChange(final E entity) {
 	if (entity.isPersisted()) {
 	    SwingUtilitiesEx.invokeLater(new Runnable() {
+		@SuppressWarnings("unchecked")
 		@Override
 		public void run() {
 		    getEntityGridInspector(AbstractEntityCentre.this).getActualModel().refresh((T) entity);
@@ -459,7 +461,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      * @return
      */
     protected Command<T> createOpenMasterCommand() {
-	final Command<T> action = new BlockingLayerCommand<T>("Edit", getProgressLayer()) {
+	final Command<T> action = new BlockingLayerCommand<T>("Edit", getReviewProgressLayer()) {
 	    private static final long serialVersionUID = 1L;
 
 	    private IEntityMasterManager masterManager;

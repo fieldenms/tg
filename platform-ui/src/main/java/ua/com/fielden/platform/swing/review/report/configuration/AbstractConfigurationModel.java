@@ -43,7 +43,7 @@ public abstract class AbstractConfigurationModel {
      * 
      * @param mode
      */
-    final void setMode(final ReportMode mode) throws Exception {
+    public final void setMode(final ReportMode mode){
 	if(mode == null){
 	    throw new IllegalArgumentException("The null mode can not be set");
 	}
@@ -75,7 +75,7 @@ public abstract class AbstractConfigurationModel {
      * 
      * @param event
      */
-    protected final void firePropertyChangeEvent(final PropertyChangeEvent event) {
+    private void firePropertyChangeEvent(final PropertyChangeEvent event) {
 	for(final PropertyChangeListener listener : listenerList.getListeners(PropertyChangeListener.class)){
 	    listener.propertyChange(event);
 	}

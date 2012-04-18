@@ -11,32 +11,27 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomai
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
-import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.pagination.model.development.IPageNavigationListener;
 import ua.com.fielden.platform.swing.pagination.model.development.PageNavigationEvent;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
-import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
+import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.ResourceLoader;
 
 public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer, ADTME extends IAbstractAnalysisDomainTreeManagerAndEnhancer, LDT> extends AbstractEntityReview<T, CDTME> {
 
     private static final long serialVersionUID = -1195915524813089236L;
 
-    private final AbstractEntityCentre<T, CDTME> owner;
 
     private final Action loadAction;
     private final Action exportAction;
 
-    public AbstractAnalysisReview(final AbstractAnalysisReviewModel<T, CDTME, ADTME, LDT> model, final BlockingIndefiniteProgressLayer progressLayer, final AbstractEntityCentre<T, CDTME> owner) {
-	super(model, progressLayer);
-	this.owner = owner;
+    public AbstractAnalysisReview(final AbstractAnalysisReviewModel<T, CDTME, ADTME, LDT> model, final AbstractAnalysisConfigurationView<T, CDTME, ADTME, LDT, ? extends AbstractAnalysisReview<T, CDTME, ADTME, LDT>> owner) {
+	super(model, owner);
 	this.loadAction = createLoadAction();
 	this.exportAction = createExportAction();
 	this.getModel().getPageHolder().addPageNavigationListener(createPageNavigationListener());
-    }
-
-    public AbstractEntityCentre<T, CDTME> getOwner() {
-	return owner;
     }
 
     @SuppressWarnings("unchecked")
@@ -45,8 +40,51 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	return (AbstractAnalysisReviewModel<T, CDTME, ADTME, LDT>)super.getModel();
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public AbstractAnalysisConfigurationView<T, CDTME, ADTME, LDT, ? extends AbstractAnalysisReview<T, CDTME, ADTME, LDT>> getOwner() {
+	return (AbstractAnalysisConfigurationView<T, CDTME, ADTME, LDT, ? extends AbstractAnalysisReview<T, CDTME, ADTME, LDT>>)super.getOwner();
+    }
+
+    public void loadData(){
+	loadAction.actionPerformed(null);
+    }
+
+    public void exportData(){
+	exportAction.actionPerformed(null);
+    }
+
+    @Override
+    protected ConfigureAction createConfigureAction() {
+	return new ConfigureAction(getOwner()) {
+
+	    private static final long serialVersionUID = 5194133338699647240L;
+
+	    {
+		putValue(Action.NAME, "Configure");
+		putValue(Action.SHORT_DESCRIPTION, "Configure analysis");
+		putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/configure.png"));
+	    }
+
+	    @Override
+	    protected Result action(final ActionEvent e) throws Exception {
+		getOwner().getModel().freeze();
+		return null;
+	    }
+	};
+    }
+
+    /**
+     * Enables or disables actions related to this analysis (run, export, paginator actions e.t.c.). The second parameter determines
+     * whether this method was invoked after page navigation or after the data loading.
+     *
+     * @param enable
+     * @param navigate
+     */
+    abstract protected void enableRelatedActions(final boolean enable, final boolean navigate);
+
     private Action createLoadAction() {
-	return new BlockingLayerCommand<Pair<Result,LDT>>("Run", getProgressLayer()) {
+	return new BlockingLayerCommand<Pair<Result,LDT>>("Run", getOwner().getProgressLayer()) {
 	    private static final long serialVersionUID = 1L;
 
 	    {
@@ -63,8 +101,8 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 		if (!result) {
 		    return result;
 		}
-		if (getOwner().getCriteriaPanel() != null) {
-		    getOwner().getCriteriaPanel().updateModel();
+		if (getOwner().getOwner().getCriteriaPanel() != null) {
+		    getOwner().getOwner().getCriteriaPanel().updateModel();
 		}
 		enableRelatedActions(false, false);
 		return true;
@@ -108,39 +146,6 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	return null;
     }
 
-    public void loadData(){
-	loadAction.actionPerformed(null);
-    }
-
-    public void exportData(){
-	exportAction.actionPerformed(null);
-    }
-
-    /**
-     * Enables or disables actions related to this analysis (run, export, paginator actions e.t.c.). The second parameter determines
-     * whether this method was invoked after page navigation or after the data loading.
-     *
-     * @param enable
-     * @param navigate
-     */
-    abstract protected void enableRelatedActions(final boolean enable, final boolean navigate);
-    //    {
-    //	if(!enable){
-    //	    getOwner().getDefaultAction().setEnabled(false);
-    //	    if(getOwner().getCriteriaPanel().canConfigure()){
-    //		getOwner().getCriteriaPanel().getSwitchAction().setEnabled(false);
-    //	    }
-    //	    if(getOwner().getCustomActionChanger() != null){
-    //		getOwner().getCustomActionChanger().setEnabled(false);
-    //	    }
-    //	    if(!navigate){
-    //		getOwner().getPaginator().disableActions();
-    //	    }
-    //	    getOwner().getPaginator().disableActions();
-    //	    getOwner().getExportAction().setEnabled(false);
-    //	    getOwner().getRunAction().setEnabled(false);
-    //	}
-    //    }
 
     //    public PageHolder<AbstractEntity> getPageHolder(){
     //	return pageHolder;

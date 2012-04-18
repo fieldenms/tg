@@ -4,20 +4,21 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.SingleAnalysisEntityCentreConfigurationView;
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 
 public class SingleAnalysisEntityCentre<T extends AbstractEntity<?>> extends AbstractSingleAnalysisEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> {
 
     private static final long serialVersionUID = -4025190200012481751L;
 
-    public SingleAnalysisEntityCentre(final EntityCentreModel<T> model, final BlockingIndefiniteProgressLayer progressLayer) {
-	super(model, progressLayer);
+    public SingleAnalysisEntityCentre(final EntityCentreModel<T> model, final SingleAnalysisEntityCentreConfigurationView<T> owner) {
+	super(model, owner);
 	createReview();
 	layoutComponents();
     }
@@ -27,59 +28,42 @@ public class SingleAnalysisEntityCentre<T extends AbstractEntity<?>> extends Abs
 	return (EntityCentreModel<T>)super.getModel();
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public SingleAnalysisEntityCentreConfigurationView<T> getOwner() {
+	return (SingleAnalysisEntityCentreConfigurationView<T>)super.getOwner();
+    }
+
     @Override
     public JComponent getReviewPanel() {
 	return getReviewProgressLayer();
     }
 
     @Override
-    public List<T> getSelectedEntities() {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
     protected List<Action> createCustomActionList() {
 	final List<Action> customActions = new ArrayList<Action>();
 	customActions.add(getConfigureAction());
-	customActions.add(createSaveAction());
-	customActions.add(createSaveAsAction());
-	customActions.add(createRemoveAction());
+	customActions.add(getOwner().getSave());
+	customActions.add(getOwner().getSaveAs());
+	customActions.add(getOwner().getRemove());
 	return customActions;
     }
 
-    private Action createSaveAction() {
-	return new AbstractAction("Save") {
+    @Override
+    protected ConfigureAction createConfigureAction() {
+	return new ConfigureAction(getOwner()) {
 
-	    private static final long serialVersionUID = 8474884103209307717L;
+	    private static final long serialVersionUID = -1973027500637301627L;
 
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		getModel().getConfigurationModel().save();
+	    {
+		putValue(Action.NAME, "Configure");
+		putValue(Action.SHORT_DESCRIPTION, "Configure this entity centre");
 	    }
-	};
-    }
-
-    private Action createSaveAsAction() {
-	return new AbstractAction("Save As") {
-
-	    private static final long serialVersionUID = 6870686264834331196L;
 
 	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		getModel().getConfigurationModel().saveAs();
-	    }
-	};
-    }
-
-    private Action createRemoveAction() {
-	return getModel().getName() == null ? null : new AbstractAction("Delete") {
-
-	    private static final long serialVersionUID = 8474884103209307717L;
-
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		getModel().getConfigurationModel().remove();
+	    protected Result action(final ActionEvent e) throws Exception {
+		getOwner().getModel().freez();
+		return null;
 	    }
 	};
     }

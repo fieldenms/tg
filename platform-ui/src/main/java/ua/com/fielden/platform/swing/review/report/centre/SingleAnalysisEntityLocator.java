@@ -25,9 +25,11 @@ import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationView;
+import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent.LocatorAction;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorEventListener;
@@ -45,8 +47,8 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
     private final Action selectAction;
     private final List<T> selectedEntities = new ArrayList<T>();
 
-    public SingleAnalysisEntityLocator(final EntityLocatorModel<T> model, final BlockingIndefiniteProgressLayer progressLayer, final boolean isMultipleSelection) {
-	super(model, progressLayer);
+    public SingleAnalysisEntityLocator(final EntityLocatorModel<T> model, final LocatorConfigurationView<T, ?> owner, final boolean isMultipleSelection) {
+	super(model, owner);
 	createReview();
 	this.closeAction = createCloseAction();
 	this.selectAction = createSelectAction();
@@ -75,6 +77,12 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 	return (EntityLocatorModel<T>)super.getModel();
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public LocatorConfigurationView<T, ?> getOwner() {
+	return (LocatorConfigurationView<T, ?>)super.getOwner();
+    }
+
     @Override
     public List<T> getSelectedEntities() {
 	return Collections.unmodifiableList(selectedEntities);
@@ -89,12 +97,31 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
     }
 
     @Override
+    protected ConfigureAction createConfigureAction() {
+	return new ConfigureAction(getOwner()) {
+
+	    private static final long serialVersionUID = 1777882711643795897L;
+
+	    {
+		putValue(Action.NAME, "Configure");
+		putValue(Action.SHORT_DESCRIPTION, "Configure this entity locator");
+	    }
+
+	    @Override
+	    protected Result action(final ActionEvent e) throws Exception {
+		getOwner().getModel().freeze();
+		return null;
+	    }
+	};
+    }
+
+    @Override
     protected List<Action> createCustomActionList() {
 	final List<Action> customActions = new ArrayList<Action>();
 	customActions.add(getConfigureAction());
-	customActions.add(createSaveAction());
-	customActions.add(createSaveAsDefaultAction());
-	customActions.add(createLoadDefaultAction());
+	customActions.add(getOwner().getSave());
+	customActions.add(getOwner().getSaveAsDefault());
+	customActions.add(getOwner().getLoadDefault());
 	return customActions;
     }
 
@@ -259,42 +286,6 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 	locatorPanel.add(new JButton(closeAction), "wrap");
 	locatorPanel.add(searchByKeyAndDesc, "skip 1");
 	return locatorPanel;
-    }
-
-    private Action createSaveAction() {
-	return new AbstractAction("Save") {
-
-	    private static final long serialVersionUID = 8474884103209307717L;
-
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		getModel().getConfigurationModel().save();
-	    }
-	};
-    }
-
-    private Action createSaveAsDefaultAction() {
-	return new AbstractAction("Save as default") {
-
-	    private static final long serialVersionUID = 6870686264834331196L;
-
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		getModel().getConfigurationModel().saveAsDefault();
-	    }
-	};
-    }
-
-    private Action createLoadDefaultAction() {
-	return new AbstractAction("Load default") {
-
-	    private static final long serialVersionUID = 8474884103209307717L;
-
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		getModel().getConfigurationModel().loadDefault();
-	    }
-	};
     }
 
     private Action createCloseAction() {

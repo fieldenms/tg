@@ -17,7 +17,6 @@ import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedLi
 import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.types.Money;
 
@@ -25,8 +24,8 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     private final ChartAnalysisDataProvider chartAnalysisDataProvider = new ChartAnalysisDataProvider();
 
-    public ChartAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisDomainTreeManagerAndEnhancer adtme, final PageHolder pageHolder) {
-	super(configurationModel, criteria, adtme, pageHolder);
+    public ChartAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IAnalysisDomainTreeManagerAndEnhancer adtme, final PageHolder pageHolder) {
+	super(criteria, adtme, pageHolder);
 	getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
 	    @SuppressWarnings("unchecked")

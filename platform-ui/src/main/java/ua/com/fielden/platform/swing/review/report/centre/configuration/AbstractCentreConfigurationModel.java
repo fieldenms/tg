@@ -14,27 +14,27 @@ public abstract class AbstractCentreConfigurationModel<T extends AbstractEntity<
     /**
      * The entity type for which this {@link AbstractCentreConfigurationModel} was created.
      */
-    protected final Class<T> entityType;
+    private final Class<T> entityType;
 
     /**
      * The name (for entity centre) or property name (for entity locator) for which this centre/locator was created.
      */
-    public final String name;
+    private final String name;
 
     /**
      * {@link EntityFactory}, needed for {@link DomainTreeEditorModel} creation.
      */
-    protected final EntityFactory entityFactory;
+    private final EntityFactory entityFactory;
 
     /**
      * {@link ICriteriaGenerator} instance needed for criteria generation.
      */
-    protected final ICriteriaGenerator criteriaGenerator;
+    private final ICriteriaGenerator criteriaGenerator;
 
     /**
      * {@link IEntityMasterManager} instance that incorporates entity masters in to entity centre.
      */
-    protected final IEntityMasterManager masterManager;
+    private final IEntityMasterManager masterManager;
 
     /**
      * Initiates this {@link AbstractCentreConfigurationModel} with appropriate entity type, name/propertyName, entity factory and criteria generator.
@@ -50,6 +50,26 @@ public abstract class AbstractCentreConfigurationModel<T extends AbstractEntity<
 	this.entityFactory = entityFactory;
 	this.criteriaGenerator = criteriaGenerator;
 	this.masterManager = masterManager;
+    }
+
+    public String getName() {
+	return name;
+    }
+
+    public Class<T> getEntityType() {
+	return entityType;
+    }
+
+    protected EntityFactory getEntityFactory() {
+	return entityFactory;
+    }
+
+    protected ICriteriaGenerator getCriteriaGenerator() {
+	return criteriaGenerator;
+    }
+
+    protected IEntityMasterManager getMasterManager() {
+	return masterManager;
     }
 
     abstract protected AbstractEntityCentreModel<T, CDTME> createEntityCentreModel();

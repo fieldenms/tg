@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.review.report.events;
 
 import java.util.EventObject;
 
-import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
+import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 
 public class AnalysisConfigurationEvent extends EventObject{
 
@@ -15,14 +15,14 @@ public class AnalysisConfigurationEvent extends EventObject{
 
     private final AnalysisConfigurationAction eventAction;
 
-    public AnalysisConfigurationEvent(final AbstractAnalysisConfigurationModel<?, ?> source, final AnalysisConfigurationAction eventAction) {
+    public AnalysisConfigurationEvent(final AbstractAnalysisConfigurationView<?, ?, ?, ?, ?> source, final AnalysisConfigurationAction eventAction) {
 	super(source);
 	this.eventAction = eventAction;
     }
 
     @Override
-    public AbstractAnalysisConfigurationModel<?, ?> getSource() {
-	return (AbstractAnalysisConfigurationModel<?, ?>)super.getSource();
+    public AbstractAnalysisConfigurationView<?, ?, ?, ?, ?> getSource() {
+	return (AbstractAnalysisConfigurationView<?, ?, ?, ?, ?>)super.getSource();
     }
 
     public AnalysisConfigurationAction getEventAction() {

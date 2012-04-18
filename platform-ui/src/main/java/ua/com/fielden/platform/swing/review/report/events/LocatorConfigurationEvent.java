@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.review.report.events;
 
 import java.util.EventObject;
 
-import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationModel;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationView;
 
 public class LocatorConfigurationEvent extends EventObject{
 
@@ -16,14 +16,14 @@ public class LocatorConfigurationEvent extends EventObject{
 
     private final LocatorConfigurationAction eventAction;
 
-    public LocatorConfigurationEvent(final LocatorConfigurationModel<?, ?> source, final LocatorConfigurationAction eventAction) {
+    public LocatorConfigurationEvent(final LocatorConfigurationView<?, ?> source, final LocatorConfigurationAction eventAction) {
 	super(source);
 	this.eventAction = eventAction;
     }
 
     @Override
-    public LocatorConfigurationModel<?, ?> getSource() {
-	return (LocatorConfigurationModel<?, ?>)super.getSource();
+    public LocatorConfigurationView<?, ?> getSource() {
+	return (LocatorConfigurationView<?, ?>)super.getSource();
     }
 
     public LocatorConfigurationAction getEventAction() {

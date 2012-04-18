@@ -8,7 +8,6 @@ import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReviewModel;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.report.centre.configuration.AbstractCentreConfigurationModel;
 
 public class AbstractEntityCentreModel<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityReviewModel<T, CDTME> {
 
@@ -17,19 +16,11 @@ public class AbstractEntityCentreModel<T extends AbstractEntity<?>, CDTME extend
     private final IEntityMasterManager masterManager;
 
 
-    public AbstractEntityCentreModel(final AbstractCentreConfigurationModel<T, CDTME> configurationModel, final EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityInspectorModel, final IEntityMasterManager masterManager, final String name) {
-	super(configurationModel, entityInspectorModel.getEntity());
+    public AbstractEntityCentreModel(final EntityInspectorModel<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityInspectorModel, final IEntityMasterManager masterManager, final String name) {
+	super(entityInspectorModel.getEntity());
 	this.entityInspectorModel = entityInspectorModel;
 	this.masterManager = masterManager;
 	this.name = name;
-
-	// TODO Auto-generated constructor stub
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public AbstractCentreConfigurationModel<T, CDTME> getConfigurationModel() {
-	return (AbstractCentreConfigurationModel<T, CDTME>)super.getConfigurationModel();
     }
 
     /**

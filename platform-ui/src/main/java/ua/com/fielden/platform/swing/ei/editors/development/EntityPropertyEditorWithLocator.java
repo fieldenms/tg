@@ -7,6 +7,7 @@ import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
+import ua.com.fielden.platform.domaintree.ILocatorManager.Phase;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -108,7 +109,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public EntityPropertyEditorWithLocator(final AbstractEntity<?> entity, final String propertyName, final LocatorConfigurationModel locatorConfigurationModel, final Class<?> elementType, final IValueMatcher<?> valueMatcher, final String caption, final String toolTip) {
-	super(entity, propertyName, new EntityLocatorValueMatcher(valueMatcher, locatorConfigurationModel.locatorManager, locatorConfigurationModel.rootType, locatorConfigurationModel.name));
+	super(entity, propertyName, new EntityLocatorValueMatcher(valueMatcher, locatorConfigurationModel.getLocatorManager(), locatorConfigurationModel.getRootType(), locatorConfigurationModel.getName()));
 	getValueMatcher().setBindedEntity(entity);
 	editor = createEditorWithLocator(entity, propertyName, locatorConfigurationModel, elementType,//
 		caption, toolTip, isSingle(entity, propertyName), isStringBinded(entity, propertyName));
@@ -225,14 +226,15 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	}
 
 	private ILocatorDomainTreeManager ldtm(){
-	    ILocatorDomainTreeManager ldtm = locatorManager.getLocatorManager(rootType, propertyName);
-	    if(ldtm == null){
-		locatorManager.refreshLocatorManager(rootType, propertyName);
-		ldtm = locatorManager.getLocatorManager(rootType, propertyName);
-		if(ldtm == null){
-		    throw new IllegalStateException("The locator manager must be initialised");
-		}
+	    if(Phase.USAGE_PHASE != locatorManager.phaseAndTypeOfLocatorManager(rootType, propertyName).getKey()){
+		throw new IllegalStateException("The locator must be in usage mode!");
 	    }
+	    locatorManager.refreshLocatorManager(rootType, propertyName);
+	    final ILocatorDomainTreeManager ldtm = locatorManager.getLocatorManager(rootType, propertyName);
+	    if(ldtm == null){
+		throw new IllegalStateException("The locator manager must be initialised");
+	    }
+	    locatorManager.discardLocatorManager(rootType, propertyName);
 	    return ldtm;
 	}
 

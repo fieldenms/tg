@@ -14,7 +14,6 @@ import javax.swing.SwingUtilities;
 
 import org.jfree.ui.RefineryUtilities;
 
-import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -33,8 +32,6 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 
     private AutocompleterTextFieldLayerWithEntityLocator<VT> autocompleter;
 
-    private LoadedLocatorType locatorType = null;
-
     public EntityLocatorDialog(final LocatorConfigurationModel<VT, RT> locatorConfigurationModel, final boolean isMulti){
 	//	this.textFieldLayer = new AutocompleterTextFieldLayerWithEntityLocator<VT>(entity, locatorConfigurationModel.name, //
 	//		textComponent, locatorConfigurationModel.entityFactory, createEntityLocatorValueMatcher(), entityMasterFactory,//
@@ -44,12 +41,13 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	//locatorType = defineLocatorType(locatorConfigurationModel);
 
 	//Configuring locator configuration mode. Add save, save as default and load default listeners those change the locator type.
-	locatorConfigurationModel.addLocatorConfigurationEventListener(createLocatorConfigurationListener());
+
 
 	//Configuring the content view of the locator dialog.
 	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "");
 	this.locatorConfigurationView = new LocatorConfigurationView<VT, RT>(locatorConfigurationModel, progressLayer, isMulti);
 	this.locatorConfigurationView.addLocatorEventListener(createLocatorEventListener());
+	this.locatorConfigurationView.addLocatorConfigurationEventListener(createLocatorConfigurationListener());
 	progressLayer.setView(locatorConfigurationView);
 	getContentPane().add(progressLayer);
 
@@ -72,17 +70,14 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
      */
     public void showDialog(){
 	//Configuring the entity locator title.
-	final LocatorConfigurationModel<VT, RT> locatorConfigurationModel = locatorConfigurationView.getModel();
-	final Class<VT> entityType = locatorConfigurationModel.entityType;
-	locatorType = defineLocatorType(locatorConfigurationView.getModel());
-	setTitle(generateTitle(locatorType, entityType));
+	setTitle(generateTitle());
 
 	//Configuring the content and size of the entity locator and display it.
-	locatorConfigurationView.open();
 	setPreferredSize(new Dimension(800, 600));
 	pack();
 	RefineryUtilities.centerFrameOnScreen(this);
 	setVisible(true);
+	locatorConfigurationView.open();
     }
 
     /**
@@ -98,26 +93,6 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
     }
 
     /**
-     * Determines the type of loaded locator. It might be Default or Local.
-     * TODO This might be removed after the ILocatorManager will allow one to determine the locator type.
-     *
-     * @param locatorConfigurationModel
-     * @return
-     */
-    private LoadedLocatorType defineLocatorType(final LocatorConfigurationModel<VT, RT> locatorConfigurationModel) {
-	//	final ILocatorManager locatorManager = locatorConfigurationModel.locatorManager;
-	//	final Class<RT> entityType = locatorConfigurationModel.rootType;
-	//	final String propertyName = locatorConfigurationModel.name;
-	//	final ILocatorDomainTreeManager ldtm = locatorManager.getLocatorManager(entityType, propertyName);
-	//	if(ldtm == null){
-	//	    locatorManager.initLocatorManagerByDefault(entityType, propertyName);
-	//	    return LoadedLocatorType.DEFAULT;
-	//	}
-	//	return LoadedLocatorType.LOCAL;
-	return null;
-    }
-
-    /**
      * Creates the {@link WindowListener} that handles entity locator's close event.
      *
      * @return
@@ -126,32 +101,36 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	return new WindowAdapter() {
 	    @Override
 	    public void windowClosing(final WindowEvent e) {
-		final ILocatorManager locatorManager = locatorConfigurationView.getModel().locatorManager;
-		final Class<RT> root = locatorConfigurationView.getModel().rootType;
-		final String name = locatorConfigurationView.getModel().name;
-		if (locatorManager.isChangedLocatorManager(root, name)) {
+		final LocatorConfigurationModel<VT, RT> model = locatorConfigurationView.getModel();
+		boolean isChanged = model.isChanged();
+		if(!isChanged && model.isInFreezedPhase()){
+		    model.discard();
+		    isChanged = model.isChanged();
+		}
+		if (isChanged) {
 		    // TODO The logic should be revised after ILocatorManager enhancements!
-		    final boolean isFreezed = ILocatorManager.Phase.FREEZED_EDITING_PHASE == locatorManager.phaseAndTypeOfLocatorManager(root, name).getKey();
+		    final boolean isFreezed = model.isInFreezedPhase();
 		    final Object options[] = { "Save", "Save as default", "No" };
 		    final int chosenOption = JOptionPane.showOptionDialog(EntityLocatorDialog.this, "This locator has been changed, would you like to save it?", "Save entity locator configuration", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 		    switch (chosenOption) {
 		    case JOptionPane.YES_OPTION:
 			if(isFreezed){
-			    locatorManager.acceptLocatorManager(root, name);
+			    model.save();
 			}
-			locatorConfigurationView.getModel().save();
+			model.save();
 			break;
 		    case JOptionPane.NO_OPTION:
 			if(isFreezed){
-			    locatorManager.acceptLocatorManager(root, name);
+			    model.save();
 			}
-			locatorConfigurationView.getModel().saveAsDefault();
+			model.saveGlobally();
+			model.save();
 			break;
 		    case JOptionPane.CANCEL_OPTION:
 			if(isFreezed){
-			    locatorManager.discardLocatorManager(root, name);
+			    model.discard();
 			}
-			locatorManager.discardLocatorManager(root, name);
+			model.discard();
 			break;
 		    }
 		}
@@ -173,19 +152,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 
 	    @Override
 	    public boolean locatorConfigurationEventPerformed(final LocatorConfigurationEvent event) {
-		final Class<VT> entityType = locatorConfigurationView.getModel().entityType;
-		switch(event.getEventAction()){
-		case POST_SAVE:
-		    locatorType = LoadedLocatorType.LOCAL;
-		    break;
-		case POST_SAVE_AS_DEFAULT:
-		case LOAD_DEFAULT:
-		    locatorType = LoadedLocatorType.DEFAULT;
-		    break;
-		default:
-		    return true;
-		}
-		setTitle(generateTitle(locatorType, entityType));
+		setTitle(generateTitle());
 		return true;
 	    }
 
@@ -193,6 +160,11 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	};
     }
 
+    /**
+     * Creates the window closing event listener.
+     * 
+     * @return
+     */
     private ILocatorEventListener createLocatorEventListener() {
 	return new ILocatorEventListener() {
 
@@ -204,30 +176,14 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	};
     }
 
-    private static <VT extends AbstractEntity<?>> String generateTitle(final LoadedLocatorType locatorType, final Class<VT> entityType) {
-	return TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey()
-		+ locatorType + " entity locator";
-    }
-
     /**
-     * Determines the locator's loaded configuration: Default or Local.
-     *
-     * @author TG Team
-     *
+     * Generates the title for the locator dialog.
+     * 
+     * @return
      */
-    private enum LoadedLocatorType{
-	DEFAULT("Default"),
-	LOCAL("");
-
-	private final String name;
-
-	private LoadedLocatorType(final String name){
-	    this.name = name;
-	}
-
-	@Override
-	public String toString() {
-	    return name;
-	}
+    private String generateTitle() {
+	final LocatorConfigurationModel<VT, RT> locatorConfigurationModel = locatorConfigurationView.getModel();
+	return TitlesDescsGetter.getEntityTitleAndDesc(locatorConfigurationModel.getEntityType()).getKey()
+		+ locatorConfigurationModel.getType() + " entity locator";
     }
 }

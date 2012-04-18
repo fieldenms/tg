@@ -10,8 +10,9 @@ import javax.swing.ListModel;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.actions.Command;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationModel;
 
 /**
  * Model for the {@link SaveReportDialog}.
@@ -19,11 +20,9 @@ import ua.com.fielden.platform.swing.actions.Command;
  * @author oleh
  * 
  */
-public class SaveReportDialogModel {
+public class SaveReportDialogModel<T extends AbstractEntity<?>> {
 
-    private final Class<?> rootType;
-
-    private final IGlobalDomainTreeManager gdtm;
+    private final CentreConfigurationModel<T> centreConfigurationModel;
 
     private SaveReportOptions returnValue;
 
@@ -33,9 +32,8 @@ public class SaveReportDialogModel {
      * @param directoryForReports
      *            - the directory where removable reports must be saved.
      */
-    public SaveReportDialogModel(final Class<?> rootType, final IGlobalDomainTreeManager gdtm) {
-	this.rootType = rootType;
-	this.gdtm = gdtm;
+    public SaveReportDialogModel(final CentreConfigurationModel<T> centreConfigurationModel) {
+	this.centreConfigurationModel = centreConfigurationModel;
 	this.returnValue = SaveReportOptions.CANCEL;
     }
 
@@ -46,10 +44,9 @@ public class SaveReportDialogModel {
      */
     public ListModel getAvailableReports() {
 	final DefaultListModel listModel = new DefaultListModel();
-	//TODO must provide list of available entity centres. Implementation must be based on global domain tree manager instance.
-	//	for (final String centerName : centerController.getNonPrincipleCenters(principleKey)) {
-	//	    listModel.addElement(centerName);
-	//	}
+	for (final String centerName : centreConfigurationModel.getNonPrincipleEntityCentreList()) {
+	    listModel.addElement(centerName);
+	}
 	return listModel;
     }
 

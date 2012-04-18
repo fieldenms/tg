@@ -21,7 +21,6 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
@@ -30,8 +29,8 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     private final PivotTreeTableModel pivotModel;
 
-    public PivotAnalysisModel(final AbstractAnalysisConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configurationModel, final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IPivotDomainTreeManagerAndEnhancer adtme, final PageHolder pageHolder) {
-	super(configurationModel, criteria, adtme, pageHolder);
+    public PivotAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IPivotDomainTreeManagerAndEnhancer adtme, final PageHolder pageHolder) {
+	super(criteria, adtme, pageHolder);
 	pivotModel = new PivotTreeTableModelEx();
     }
 

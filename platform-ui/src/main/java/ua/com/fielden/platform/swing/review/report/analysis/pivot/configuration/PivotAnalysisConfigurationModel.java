@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -21,12 +20,7 @@ public class PivotAnalysisConfigurationModel<T extends AbstractEntity<?>> extend
     @Override
     protected Result canSetMode(final ReportMode mode) {
 	if(ReportMode.REPORT.equals(mode)){
-	    final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
-	    IPivotDomainTreeManagerAndEnhancer pdtme = (IPivotDomainTreeManagerAndEnhancer)cdtme.getAnalysisManager(getName());
-	    if(pdtme == null){
-		cdtme.initAnalysisManagerByDefault(getName(), AnalysisType.PIVOT);
-		pdtme = (IPivotDomainTreeManagerAndEnhancer)cdtme.getAnalysisManager(getName());
-	    }
+	    final IPivotDomainTreeManagerAndEnhancer pdtme = (IPivotDomainTreeManagerAndEnhancer)getAnalysisManager();
 	    if(pdtme==null){
 		return new Result(this, new IllegalStateException("Simple analysis with " + getName() + " name can not be created!"));
 	    }
@@ -41,7 +35,7 @@ public class PivotAnalysisConfigurationModel<T extends AbstractEntity<?>> extend
     final PivotAnalysisModel<T> createPivotAnalysisModel() {
 	final ICentreDomainTreeManagerAndEnhancer cdtme = getCriteria().getCentreDomainTreeMangerAndEnhancer();
 	final IPivotDomainTreeManagerAndEnhancer pdtme = (IPivotDomainTreeManagerAndEnhancer)cdtme.getAnalysisManager(getName());
-	return new PivotAnalysisModel<T>(this, getCriteria(), pdtme, getPageHolder());
+	return new PivotAnalysisModel<T>(getCriteria(), pdtme, getPageHolder());
     }
 
     final DomainTreeEditorModel<T> createDomainTreeEditorModel() {
