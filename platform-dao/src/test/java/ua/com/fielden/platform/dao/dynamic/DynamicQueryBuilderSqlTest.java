@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.dao.dynamic;
 
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.buildConditions;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -18,6 +23,8 @@ import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.EntityDescriptor;
@@ -29,10 +36,6 @@ import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.DateRangeSelectorEnum;
 import ua.com.fielden.snappy.DateUtilities;
 import ua.com.fielden.snappy.MnemonicEnum;
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.buildConditions;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
@@ -167,6 +170,33 @@ public class DynamicQueryBuilderSqlTest {
     ////////////////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////// 1.1. Range type /////////////////////////////////////////
+
+    @Test
+    public void test_atomic_query_composition_with_simple_expression() throws Exception {
+	set_up();
+	final QueryProperty property = queryProperties.get("integerCalculatedProp");
+	property.setValue(3);
+	property.setValue2(7);
+
+	final String cbn = property.getConditionBuildingName();
+
+	final ExpressionModel exprModel = new ExpressionText2ModelConverter(MasterEntity.class, "integerProp * 2").convert().getModel();
+	final ICompleted expected = //
+	/**/iJoin.where().begin() //
+	/*  */.begin().expr(exprModel).isNotNull().and() //
+	/*    */.begin().expr(exprModel).ge().iVal(3).and().expr(exprModel).le().iVal(7).end() //
+	/*  */.end() //
+	/**/.end(); //
+	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+
+
+	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
+
+
+	test_atomic_query_composition_for_range_type("integerProp");
+	test_atomic_query_composition_for_range_type("entityProp.integerProp");
+    }
 
     @Test
     public void test_atomic_query_composition_for_integer_range_type() {

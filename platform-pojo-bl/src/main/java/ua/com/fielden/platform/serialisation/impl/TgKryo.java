@@ -77,6 +77,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
@@ -108,6 +109,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.serialisers.ClassSerialiser;
 import ua.com.fielden.platform.serialisation.impl.serialisers.ColorSerializer;
 import ua.com.fielden.platform.serialisation.impl.serialisers.DateTimeSerializer;
+import ua.com.fielden.platform.serialisation.impl.serialisers.DynamicallyTypedQueryContainerSerialiser;
 import ua.com.fielden.platform.serialisation.impl.serialisers.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.impl.serialisers.IntervalSerializer;
 import ua.com.fielden.platform.serialisation.impl.serialisers.MoneySerialiser;
@@ -207,6 +209,7 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer pivotDomainTreeManagerAndEnhancerSerialiser;
     private final Serializer analysisDomainTreeManagerAndEnhancerSerialiser;
     private final Serializer lifecycleDomainTreeManagerAndEnhancerSerialiser;
+    private final Serializer dynamicallyTypedQueryContainerSerialiser;
 
     @Inject
     public TgKryo(final EntityFactory factory, final ISerialisationClassProvider provider) {
@@ -250,6 +253,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	pivotDomainTreeManagerAndEnhancerSerialiser = new PivotDomainTreeManagerAndEnhancerSerialiser(this);
 	analysisDomainTreeManagerAndEnhancerSerialiser = new AnalysisDomainTreeManagerAndEnhancerSerialiser(this);
 	lifecycleDomainTreeManagerAndEnhancerSerialiser = new LifecycleDomainTreeManagerAndEnhancerSerialiser(this);
+	dynamicallyTypedQueryContainerSerialiser = new DynamicallyTypedQueryContainerSerialiser(this);
 
 	// the following order of class registration is important
 	register(String[].class);
@@ -303,6 +307,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	register(ComparisonOperator.class);
 	register(ArithmeticalOperator.class);
 	register(Functions.class);
+	register(DynamicallyTypedQueryContainer.class);
 
 	register(Class.class);
 	// "domain tree" serialisers
@@ -398,7 +403,7 @@ public class TgKryo extends Kryo implements ISerialiser {
     public Serializer newSerializer(final Class type) {
 	if (Result.class.isAssignableFrom(type)) {
 	    return resultSerialiser;
-	} else if (PropertyDescriptor.class.isAssignableFrom(type)) { // PropertyDescriptor must alway be checked before any other entity
+	} else if (PropertyDescriptor.class.isAssignableFrom(type)) { // PropertyDescriptor must always be checked before any other entity
 	    return pdSerialiser;
 	} else if (CalculatedProperty.class.isAssignableFrom(type)) {
 	    return calculatedPropertySerialiser;
@@ -476,6 +481,8 @@ public class TgKryo extends Kryo implements ISerialiser {
 	    return analysisDomainTreeManagerAndEnhancerSerialiser;
 	} else if (LifecycleDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
 	    return lifecycleDomainTreeManagerAndEnhancerSerialiser;
+	} else if (DynamicallyTypedQueryContainer.class.isAssignableFrom(type)) {
+	    return dynamicallyTypedQueryContainerSerialiser;
 	}
 	return super.newSerializer(type);
     }

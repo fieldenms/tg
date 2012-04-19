@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.impl;
+package ua.com.fielden.platform.serialisation.impl.spike;
 
 
 /**

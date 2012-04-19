@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.impl;
+package ua.com.fielden.platform.serialisation.impl.spike;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -10,25 +10,26 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.serialisation.ClientEntityConverter;
+import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
 import com.google.inject.Injector;
-import com.thoughtworks.xstream.XStream;
 
-public class XStreamSpike {
+public class KryoSpike {
 
-    public static void main(final String[] args) {
-	System.out.println("xstream");
+    public static void main(final String[] args) throws Exception {
+	System.out.println("kryo");
 
-	// for serialisation timing
 	final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
 	final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
-	final XStream ser = new XStream();
-	ser.registerConverter(new ClientEntityConverter(factory));
+	final TgKryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(DomainType1.class));
+	final TgKryo kryoReader = new TgKryo(factory, new ProvidedSerialisationClassProvider(DomainType1.class));
 
+
+	System.out.print("Creating objects...");
 	final List<DomainType1> list = new ArrayList<DomainType1>(1000);
 	for (int index = 0; index < 1000; index++) {
 	    final DomainType1 entity = factory.newByKey(DomainType1.class, "key");
@@ -43,20 +44,20 @@ public class XStreamSpike {
 	    entity1.setBigDecimal(new BigDecimal("1000.23"));
 	    entity1.setInteger(136);
 	    entity1.setDate(new Date());
-	    entity1.setItself(entity);
+	    //entity1.setItself(entity);
 	    entity.setItself(entity1);
 	    list.add(entity);
 	}
+	System.out.println("finished");
 
+	System.out.println("starting marshalling...");
 	final DateTime start = new DateTime();
 
-	final String xml = ser.toXML(list);
-	System.out.println(xml.length() / 1024);
-	ser.fromXML(xml);
+	final List restoredList = kryoReader.deserialise(kryoWriter.serialise(list), ArrayList.class);
 
 	final DateTime finish = new DateTime();
 	final Period duration = new Period(start, finish);
 	System.out.println("murshaling time: " + duration.getMinutes() + ":" + duration.getSeconds() + "." + duration.getMillis());
-    }
 
+    }
 }

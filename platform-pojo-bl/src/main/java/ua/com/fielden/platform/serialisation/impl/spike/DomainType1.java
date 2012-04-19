@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.impl;
+package ua.com.fielden.platform.serialisation.impl.spike;
 
 import java.math.BigDecimal;
 import java.util.Date;

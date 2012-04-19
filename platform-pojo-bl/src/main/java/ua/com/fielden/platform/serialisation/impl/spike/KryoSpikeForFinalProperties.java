@@ -1,9 +1,11 @@
-package ua.com.fielden.platform.serialisation.impl;
+package ua.com.fielden.platform.serialisation.impl.spike;
 
 import java.nio.ByteBuffer;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
 import com.esotericsoftware.kryo.Kryo;
