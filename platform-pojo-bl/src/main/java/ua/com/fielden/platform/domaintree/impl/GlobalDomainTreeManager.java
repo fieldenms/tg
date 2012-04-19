@@ -372,8 +372,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    error("Unable to freeze the entity-centre instance more than once for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
 	}
 	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
-	final ICentreDomainTreeManagerAndEnhancer currentCentre = currentCentres.get(key(root, name));
+	final ICentreDomainTreeManagerAndEnhancer currentCentre = currentCentres.remove(key(root, name));
 	notInitiliasedError(currentCentre, root, name);
+	currentCentres.put(key(root, name), copyCentre(currentCentre));
 	final ICentreDomainTreeManagerAndEnhancer persistentCentre = persistentCentres.remove(key(root, name));
 	freezedCentres.put(key(root, name), persistentCentre);
 	persistentCentres.put(key(root, name), copyCentre(currentCentre));
@@ -435,6 +436,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     public void saveEntityCentreManager(final Class<?> root, final String name) {
 	if (isFreezedEntityCentreManager(root, name)) {
 	    unfreeze(root, name);
+
+	    final ICentreDomainTreeManagerAndEnhancer currentCentre = currentCentres.remove(key(root, name));
+	    notInitiliasedError(currentCentre, root, name);
+	    currentCentres.put(key(root, name), copyCentre(currentCentre));
 	} else {
 	    final ICentreDomainTreeManagerAndEnhancer currentMgr = getEntityCentreManager(root, name);
 	    validateBeforeSaving(currentMgr, root, name);

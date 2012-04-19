@@ -29,6 +29,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.domaintree.testing.EntityForCentreCheckedProperties;
@@ -741,8 +742,14 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	assertFalse("Should be unchecked after modification.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
 	assertFalse("Should be NOT freezed.", dtm().isFreezedAnalysisManager(name2));
 
+	IAbstractAnalysisDomainTreeManagerAndEnhancer currentMgrBeforeFreeze = dtm().getAnalysisManager(name2);
+
 	// FREEEEEEEZEEEEEE all current changes
 	dtm().freezeAnalysisManager(name2);
+
+	assertFalse("The current mgr after freezing should not be identical to currentMgrBeforeFreeze.", dtm().getAnalysisManager(name2) == currentMgrBeforeFreeze);
+	assertTrue("The current mgr after freezing should be equal to currentMgrBeforeFreeze.", dtm().getAnalysisManager(name2).equals(currentMgrBeforeFreeze));
+
 	assertFalse("Should not be changed after freezing.", dtm().isChangedAnalysisManager(name2));
 	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
 	assertTrue("Should be freezed.", dtm().isFreezedAnalysisManager(name2));
@@ -791,8 +798,14 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
 	assertTrue("Should be freezed.", dtm().isFreezedAnalysisManager(name2));
 
+	currentMgrBeforeFreeze = dtm().getAnalysisManager(name2);
+
 	// apply after-freezing changes
 	dtm().acceptAnalysisManager(name2);
+
+	assertFalse("The current mgr after freezing should not be identical to currentMgrBeforeFreeze.", dtm().getAnalysisManager(name2) == currentMgrBeforeFreeze);
+	assertTrue("The current mgr after freezing should be equal to currentMgrBeforeFreeze.", dtm().getAnalysisManager(name2).equals(currentMgrBeforeFreeze));
+
 	assertTrue("Should be changed after applying.", dtm().isChangedAnalysisManager(name2));
 	assertTrue("Should be checked after applying.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property2));
 	assertTrue("Should be checked after applying.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));

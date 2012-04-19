@@ -324,8 +324,14 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertFalse("Should be unchecked after modification.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
 	assertFalse("Should not be freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
 
+	ICentreDomainTreeManagerAndEnhancer currentMgrBeforeFreeze = nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT");
+
 	// FREEEEEEEZEEEEEE all current changes
 	nonBaseMgr.freezeEntityCentreManager(MasterEntity.class, "REPORT");
+
+	assertFalse("The current mgr after freezing should not be identical to currentMgrBeforeFreeze.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT") == currentMgrBeforeFreeze);
+	assertTrue("The current mgr after freezing should be equal to currentMgrBeforeFreeze.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").equals(currentMgrBeforeFreeze));
+
 	assertFalse("Should not be changed after freezing.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
 	assertFalse("Should be unchecked after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
 	assertTrue("Should be freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
@@ -379,8 +385,14 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertTrue("Should be checked after modification after freezing.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));
 	assertTrue("Should be freezed.", nonBaseMgr.isFreezedEntityCentreManager(MasterEntity.class, "REPORT"));
 
+	currentMgrBeforeFreeze = nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT");
+
 	// save (precisely "apply") after-freezing changes
 	nonBaseMgr.saveEntityCentreManager(MasterEntity.class, "REPORT");
+
+	assertFalse("The current mgr after 'acceptance unfreezing' should not be identical to currentMgrBeforeFreeze.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT") == currentMgrBeforeFreeze);
+	assertTrue("The current mgr after 'acceptance unfreezing' should be equal to currentMgrBeforeFreeze.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").equals(currentMgrBeforeFreeze));
+
 	assertTrue("Should be changed after applying.", nonBaseMgr.isChangedEntityCentreManager(MasterEntity.class, "REPORT"));
 	assertTrue("Should be checked after applying.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "bigDecimalProp"));
 	assertTrue("Should be checked after applying.", nonBaseMgr.getEntityCentreManager(MasterEntity.class, "REPORT").getFirstTick().isChecked(MasterEntity.class, "integerProp"));

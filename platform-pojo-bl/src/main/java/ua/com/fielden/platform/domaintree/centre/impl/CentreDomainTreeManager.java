@@ -209,7 +209,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	protected IAddToCriteriaTickRepresentation tr() {
 	    return (IAddToCriteriaTickRepresentation) super.tr();
 	}
-	
+
 	@Override
 	protected boolean isCheckedMutably(final Class<?> root, final String property) {
 	    return super.isCheckedMutably(root, property) || property.endsWith("mutablyCheckedProp");
@@ -879,6 +879,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     public void acceptAnalysisManager(final String name) {
 	if (isFreezedAnalysisManager(name)) {
 	    unfreeze(name);
+
+	    final IAbstractAnalysisDomainTreeManagerAndEnhancer currentCentre = currentAnalyses.remove(name);
+	    currentAnalyses.put(name, EntityUtils.deepCopy(currentCentre, getSerialiser()));
 	} else {
 	    final IAbstractAnalysisDomainTreeManagerAndEnhancer dtm = EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser());
 	    if (dtm != null) {
@@ -926,6 +929,10 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	}
 	notInitiliasedError(persistentAnalyses.get(name), name);
 	notInitiliasedError(currentAnalyses.get(name), name);
+
+	final IAbstractAnalysisDomainTreeManagerAndEnhancer currentAnalysis = currentAnalyses.remove(name);
+	currentAnalyses.put(name, EntityUtils.deepCopy(currentAnalysis, getSerialiser()));
+
 	final IAbstractAnalysisDomainTreeManagerAndEnhancer persistentAnalysis = persistentAnalyses.remove(name);
 	freezedAnalyses.put(name, persistentAnalysis);
 	persistentAnalyses.put(name, EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser()));
