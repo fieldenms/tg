@@ -82,7 +82,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_loading_and_inheritance_and_number_of_properties_in_generated_entity_type_with_one_new_property() throws Exception {
 	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(pd1).endModification();
-	assertEquals("Incorrect type name.", Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "1", newType.getName());
+	assertTrue("Incorrect type name.", newType.getName().startsWith(Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 	assertEquals("Incorrect inheritance.", AbstractEntity.class, newType.getSuperclass());
 	assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 1, Finder.getPropertyDescriptors(newType).size());
     }
@@ -136,17 +136,17 @@ public class DynamicEntityTypeGenerationTest {
 	final Class<? extends AbstractEntity> newType1 = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(pd1).endModification();
 	final Class<? extends AbstractEntity> newType2 = (Class<? extends AbstractEntity>) cl.startModification(newType1.getName()).addProperties(pd2).endModification();
 
-	assertEquals("Incorrect type name.", Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "1", newType1.getName());
-	assertEquals("Incorrect type name.", Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "2", newType2.getName());
+	assertTrue("Incorrect type name.", newType1.getName().startsWith(Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
+	assertTrue("Incorrect type name.", newType2.getName().startsWith(Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 	assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 2, Finder.getPropertyDescriptors(newType2).size());
     }
 
     @Test
     public void test_new_type_name_generation() throws Exception {
 	final Class<? extends AbstractEntity> newType1 = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(pd1).endModification();
-	assertEquals("Incorrect type name.", Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "1", newType1.getName());
+	assertTrue("Incorrect type name.", newType1.getName().startsWith(Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 	final Class<? extends AbstractEntity> newType2 = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(pd1).endModification();
-	assertEquals("Incorrect type name.", Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "2", newType2.getName());
+	assertTrue("Incorrect type name.", newType2.getName().startsWith(Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
     }
 
     @Test

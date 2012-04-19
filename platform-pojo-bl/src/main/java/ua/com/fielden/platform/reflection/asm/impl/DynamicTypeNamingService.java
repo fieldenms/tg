@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.UUID;
 
 /**
  * A service for naming new classes created dynamically as the result of new property introduction or modification of existing.
@@ -10,10 +10,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class DynamicTypeNamingService {
     public static final String APPENDIX = "$$TgEntity";
-    private AtomicInteger nextNo = new AtomicInteger(0);
 
     private String enhancedName(final String name) {
-	return name + APPENDIX + nextNo.incrementAndGet();
+	return name + APPENDIX + "_" + UUID.randomUUID().toString().replace("-", "");
     }
 
     public final String nextTypeName(final String name) {

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.reflection.asm.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -162,10 +163,12 @@ public class DynamicEntityTypeModificationTest {
 	final Class<?> topLevelEntityModifiedType1 = cl.startModification(TopLevelEntity.class.getName()).modifyProperties(topLevelMp1).endModification();
 	final Class<?> topLevelEntityModifiedType2 = cl.startModification(topLevelEntityModifiedType1.getName()).modifyProperties(topLevelMp2).endModification();
 
-	assertEquals("Incorrect type name.", EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "1", entityBeingEnhancedEnhancedType.getName());
-	assertEquals("Incorrect type name.", EntityBeingModified.class.getName() + DynamicTypeNamingService.APPENDIX + "2", entityBeingModifiedModifiedType.getName());
-	assertEquals("Incorrect type name.", TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "3", topLevelEntityModifiedType1.getName());
-	assertEquals("Incorrect type name.", TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "4", topLevelEntityModifiedType2.getName());
+	assertTrue("Incorrect type name.", entityBeingEnhancedEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
+	assertTrue("Incorrect type name.", entityBeingModifiedModifiedType.getName().startsWith(EntityBeingModified.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
+	assertTrue("Incorrect type name.", topLevelEntityModifiedType1.getName().startsWith(TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
+	assertTrue("Incorrect type name.", topLevelEntityModifiedType2.getName().startsWith(TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
+	assertNotSame(entityBeingEnhancedEnhancedType.getName(), equals(entityBeingModifiedModifiedType.getName()));
+	assertNotSame(topLevelEntityModifiedType1.getName(), equals(topLevelEntityModifiedType2.getName()));
     }
 
     @Test
@@ -191,7 +194,7 @@ public class DynamicEntityTypeModificationTest {
 	// let's ensure that property types are compatible -- prop2 should be compatible with prop1 as its type is a super class for type of prop1
 	final Field enhancedProp = Finder.findFieldByName(entityBeingModifiedModifiedType, "prop1");
 	final Field unenhancedProp = Finder.findFieldByName(entityBeingModifiedModifiedType, "prop2");
-	assertEquals("Incorrect property type.", EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "1", enhancedProp.getType().getName());
+	assertTrue("Incorrect property type.", enhancedProp.getType().getName().startsWith(EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 	assertEquals("Incorrect property type.", EntityBeingEnhanced.class.getName(), unenhancedProp.getType().getName());
 	assertFalse("Original type should not be assignable to the enhanced type", unenhancedProp.getType().isAssignableFrom(enhancedProp.getType()));
 	assertFalse("Enhanced type should not be assignable to the original type", enhancedProp.getType().isAssignableFrom(unenhancedProp.getType()));
@@ -230,7 +233,7 @@ public class DynamicEntityTypeModificationTest {
 	// now take one of the properties from top level entity and ensure that it's type is property modified
 	final Field enhancedProp = prop1.getType().getDeclaredField("prop1");
 	final Field unenhancedProp = prop1.getType().getDeclaredField("prop2");
-	assertEquals("Incorrect property type.", EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "1", enhancedProp.getType().getName());
+	assertTrue("Incorrect property type.", enhancedProp.getType().getName().startsWith(EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 	assertEquals("Incorrect property type.", EntityBeingEnhanced.class.getName(), unenhancedProp.getType().getName());
 	assertFalse("Original type should not be assignable to the enhanced type", unenhancedProp.getType().isAssignableFrom(enhancedProp.getType()));
 	assertFalse("Enhanced type should not be assignable to the original type", enhancedProp.getType().isAssignableFrom(unenhancedProp.getType()));

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.reflection.asm.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 
@@ -59,10 +60,10 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
 	// get the enhanced EntityBeingEnhanced type
 	final Class<?> twoTimesEnhancedType = cl.startModification(oneTimeEnhancedType.getName()).addProperties(pd2).endModification();
 
-	assertEquals("Incorrect name.", EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "1", oneTimeEnhancedType.getName());
+	assertTrue("Incorrect name.", oneTimeEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 	assertEquals("Incorrect parent.", AbstractEntity.class, oneTimeEnhancedType.getSuperclass());
 
-	assertEquals("Incorrect name.", EntityBeingEnhanced.class.getName() + "$$TgEntity2", twoTimesEnhancedType.getName());
+	assertTrue("Incorrect name.", twoTimesEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + "$$TgEntity" + "_"));
 	assertEquals("Incorrect parent.", AbstractEntity.class, twoTimesEnhancedType.getSuperclass());
 
 	final Field field1 = Finder.findFieldByName(twoTimesEnhancedType, NEW_PROPERTY);
@@ -80,7 +81,7 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
 	addProperties(pd2).//
 	endModification();
 
-	assertEquals("Incorrect property type.", EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "2", entityBeingEnhancedEnhancedType.getName());
+	assertTrue("Incorrect property type.", entityBeingEnhancedEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 
 	// get the modified and enhanced EntityBeingModified type
 	final Class<?> entityBeingModifiedModifiedType = //
@@ -89,7 +90,7 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
 	    modifyProperties(NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType)).//
 	    endModification();
 
-	assertEquals("Incorrect property type.", EntityBeingModified.class.getName() + DynamicTypeNamingService.APPENDIX + "4", entityBeingModifiedModifiedType.getName());
+	assertTrue("Incorrect property type.", entityBeingModifiedModifiedType.getName().startsWith(EntityBeingModified.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 
 	// get the modified TopLevelEntity type
 	final Class<?> topLevelEntityModifiedType = //
@@ -100,7 +101,7 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
 	    modifyProperties(NewProperty.changeType("prop2", entityBeingModifiedModifiedType)).//
 	    endModification();
 
-	assertEquals("Incorrect property type.", TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "8", topLevelEntityModifiedType.getName());
+	assertTrue("Incorrect property type.", topLevelEntityModifiedType.getName().startsWith(TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 
 	// create a new instance of the modified TopLevelEntity type
 	final Object topLevelEntity = topLevelEntityModifiedType.newInstance();
@@ -114,7 +115,7 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
 	// now take one of the properties from top level entity and ensure that it's type is property modified
 	final Field enhancedProp = prop1.getType().getDeclaredField("prop1");
 	final Field unenhancedProp = prop1.getType().getDeclaredField("prop2");
-	assertEquals("Incorrect property type.", EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "2", enhancedProp.getType().getName());
+	assertTrue("Incorrect property type.", enhancedProp.getType().getName().startsWith(EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 	assertEquals("Incorrect property type.", EntityBeingEnhanced.class.getName(), unenhancedProp.getType().getName());
 	assertFalse("Original type should not be assignable to the enhanced type", unenhancedProp.getType().isAssignableFrom(enhancedProp.getType()));
 	assertFalse("Enhanced type should not be assignable to the original type", enhancedProp.getType().isAssignableFrom(unenhancedProp.getType()));
