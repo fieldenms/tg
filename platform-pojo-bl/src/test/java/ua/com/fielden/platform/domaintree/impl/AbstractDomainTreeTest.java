@@ -47,7 +47,7 @@ import com.google.inject.Injector;
  */
 public abstract class AbstractDomainTreeTest {
     private final static ISerialiser serialiser = createSerialiser(createFactory());
-    private static byte[] dtmArray = null;
+    protected static byte[] managerArray = null;
     private IDomainTreeManagerAndEnhancer dtm = null;
 
     /**
@@ -81,8 +81,8 @@ public abstract class AbstractDomainTreeTest {
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     @Before
-    public final void initEachTest() throws Exception {
-	dtm = dtmArray == null ? null : serialiser.deserialise(dtmArray, IDomainTreeManagerAndEnhancer.class);
+    public void initEachTest() throws Exception {
+	dtm = managerArray == null ? null : serialiser.deserialise(managerArray, IDomainTreeManagerAndEnhancer.class);
     }
 
     /**
@@ -91,7 +91,7 @@ public abstract class AbstractDomainTreeTest {
      * @param dtmArray
      */
     protected static void setDtmArray(final byte[] dtmArray) {
-        AbstractDomainTreeTest.dtmArray = dtmArray;
+        AbstractDomainTreeTest.managerArray = dtmArray;
     }
 
     private static EntityFactory createFactory() {

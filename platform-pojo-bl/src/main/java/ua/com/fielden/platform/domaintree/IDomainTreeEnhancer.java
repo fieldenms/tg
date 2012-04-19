@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.domaintree;
 
+import java.util.List;
+
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 
@@ -45,6 +48,15 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
      * @return
      */
     Class<?> getManagedType(final Class<?> type);
+
+    /**
+     * Returns a byte arrays that define an "actual" type hierarchy (possibly mutated with additional calculated properties) for passed <code>type</code>.
+     * Returns empty list if no calculated properties exist.
+     *
+     * @param type -- an entity type, which "actual" type's byte arrays are asked
+     * @return
+     */
+    List<ByteArray> getManagedTypeArrays(final Class<?> type);
 
     /**
      * Adds the <code>calculatedProperty</code> to root type's {@link ICalculatedProperty#getRoot()} hierarchy.

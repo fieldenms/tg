@@ -22,6 +22,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRe
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.IncludedAndCheckedPropertiesSynchronisationListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -201,6 +202,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	@Override
 	public Class<?> getManagedType(final Class<?> type) {
 	    return baseEnhancer.getManagedType(type);
+	}
+
+	@Override
+	public List<ByteArray> getManagedTypeArrays(final Class<?> type) {
+	    return baseEnhancer.getManagedTypeArrays(type);
 	}
 
 	@Override

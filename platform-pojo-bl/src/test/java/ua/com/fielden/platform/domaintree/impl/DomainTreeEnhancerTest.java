@@ -7,15 +7,13 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
@@ -23,22 +21,12 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
-import ua.com.fielden.platform.domaintree.testing.EnhancingEvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
-import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -50,417 +38,37 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     private IDomainTreeEnhancer dm;
 
-    /**
-     * Entity for "domain enhancer" testing (derived from {@link MasterEntity}).
-     *
-     * @author TG Team
-     *
-     */
-    @KeyType(String.class)
-    public class EnhancingMasterEntity$$TgEntity172 extends AbstractEntity<String> {
-        private static final long serialVersionUID = 1L;
-
-        protected EnhancingMasterEntity$$TgEntity172() {
-        }
-
-        @IsProperty
-        private Integer integerProp = null;
-        @IsProperty
-        private EnhancingMasterEntity$$TgEntity175 masterEntityProp;
-        @IsProperty
-        private EnhancingSlaveEntity$$TgEntity173 slaveEntityProp;
-        @IsProperty
-        private EnhancingEvenSlaverEntity$$TgEntity177 evenSlaverEntityProp;
-
-	public EnhancingMasterEntity$$TgEntity175 getMasterEntityProp() {
-	    return masterEntityProp;
-	}
-	@Observable
-	public void setMasterEntityProp(final EnhancingMasterEntity$$TgEntity175 masterEntityProp) {
-	    this.masterEntityProp = masterEntityProp;
-	}
-
-	public EnhancingSlaveEntity$$TgEntity173 getSlaveEntityProp() {
-	    return slaveEntityProp;
-	}
-	@Observable
-	public void setSlaveEntityProp(final EnhancingSlaveEntity$$TgEntity173 slaveEntityProp) {
-	    this.slaveEntityProp = slaveEntityProp;
-	}
-
-        public EnhancingEvenSlaverEntity$$TgEntity177 getEvenSlaverEntityProp() {
-            return evenSlaverEntityProp;
-        }
-        @Observable
-        public void setEvenSlaverEntityProp(final EnhancingEvenSlaverEntity$$TgEntity177 evenSlaverEntityProp) {
-            this.evenSlaverEntityProp = evenSlaverEntityProp;
-        }
-
-        @IsProperty
-        @Title(value = "Old quadruple", desc = "Desc")
-        @Calculated(contextualExpression = "4 * integerProp", contextPath = "", attribute = CalculatedPropertyAttribute.NO_ATTR, origination = "integerProp", category = CalculatedPropertyCategory.EXPRESSION)
-        private Integer oldQuadruple;
-
-        public Integer getOldQuadruple() {
-            return oldQuadruple;
-        }
-        @Observable
-        public void setOldQuadruple(final Integer oldQuadruple) {
-            this.oldQuadruple = oldQuadruple;
-        }
-
-        public Integer getIntegerProp() {
-            return integerProp;
-        }
-        @Observable
-        public void setIntegerProp(final Integer integerProp) {
-            this.integerProp = integerProp;
-        }
-    }
-
-    /**
-     * Entity for "domain tree enhancing" testing.
-     *
-     * @author TG Team
-     *
-     */
-    @KeyType(String.class)
-    @KeyTitle(value = "Key title", desc = "Key desc")
-    @DescTitle(value = "Desc title", desc = "Desc desc")
-    public class EnhancingEvenSlaverEntity$$TgEntity177 extends AbstractEntity<String> {
-        private static final long serialVersionUID = 1L;
-
-        protected EnhancingEvenSlaverEntity$$TgEntity177() {
-        }
-
-        @IsProperty
-        private Integer integerProp = null;
-        @IsProperty
-        private EnhancingMasterEntity masterEntityProp;
-        @IsProperty
-        private EnhancingSlaveEntity$$TgEntity176 slaveEntityProp;
-        @IsProperty
-        private EnhancingEvenSlaverEntity evenSlaverEntityProp;
-
-	public EnhancingMasterEntity getMasterEntityProp() {
-	    return masterEntityProp;
-	}
-	@Observable
-	public void setMasterEntityProp(final EnhancingMasterEntity masterEntityProp) {
-	    this.masterEntityProp = masterEntityProp;
-	}
-
-	public EnhancingSlaveEntity$$TgEntity176 getSlaveEntityProp() {
-	    return slaveEntityProp;
-	}
-	@Observable
-	public void setSlaveEntityProp(final EnhancingSlaveEntity$$TgEntity176 slaveEntityProp) {
-	    this.slaveEntityProp = slaveEntityProp;
-	}
-
-        public EnhancingEvenSlaverEntity getEvenSlaverEntityProp() {
-            return evenSlaverEntityProp;
-        }
-        @Observable
-        public void setEvenSlaverEntityProp(final EnhancingEvenSlaverEntity evenSlaverEntityProp) {
-            this.evenSlaverEntityProp = evenSlaverEntityProp;
-        }
-
-        public Integer getIntegerProp() {
-            return integerProp;
-        }
-        @Observable
-        public void setIntegerProp(final Integer integerProp) {
-            this.integerProp = integerProp;
-        }
-    }
-
-    /**
-     * Entity for "domain enhancer" testing (derived from {@link MasterEntity}).
-     *
-     * @author TG Team
-     *
-     */
-    @KeyType(String.class)
-    public class EnhancingMasterEntity$$TgEntity174 extends AbstractEntity<String> {
-        private static final long serialVersionUID = 1L;
-
-        protected EnhancingMasterEntity$$TgEntity174() {
-        }
-
-        @IsProperty
-        private Integer integerProp = null;
-        @IsProperty
-        private EnhancingMasterEntity masterEntityProp;
-        @IsProperty
-        private EnhancingSlaveEntity slaveEntityProp;
-        @IsProperty
-        private EnhancingEvenSlaverEntity evenSlaverEntityProp;
-
-        public EnhancingMasterEntity getMasterEntityProp() {
-    	return masterEntityProp;
-        }
-        @Observable
-        public void setMasterEntityProp(final EnhancingMasterEntity masterEntityProp) {
-    	this.masterEntityProp = masterEntityProp;
-        }
-
-        public EnhancingSlaveEntity getSlaveEntityProp() {
-    	return slaveEntityProp;
-        }
-        @Observable
-        public void setSlaveEntityProp(final EnhancingSlaveEntity slaveEntityProp) {
-    	this.slaveEntityProp = slaveEntityProp;
-        }
-
-        public EnhancingEvenSlaverEntity getEvenSlaverEntityProp() {
-            return evenSlaverEntityProp;
-        }
-        @Observable
-        public void setEvenSlaverEntityProp(final EnhancingEvenSlaverEntity evenSlaverEntityProp) {
-            this.evenSlaverEntityProp = evenSlaverEntityProp;
-        }
-
-        @IsProperty
-        @Title(value = "Old single", desc = "Desc")
-        @Calculated(contextualExpression = "1 * integerProp", contextPath = "masterEntityProp.masterEntityProp", attribute = CalculatedPropertyAttribute.NO_ATTR, origination = "integerProp", category = CalculatedPropertyCategory.EXPRESSION)
-        private Integer oldSingle;
-
-        public Integer getOldSingle() {
-            return oldSingle;
-        }
-        @Observable
-        public void setOldSingle(final Integer oldSingle) {
-            this.oldSingle = oldSingle;
-        }
-
-        public Integer getIntegerProp() {
-            return integerProp;
-        }
-        @Observable
-        public void setIntegerProp(final Integer integerProp) {
-            this.integerProp = integerProp;
-        }
-    }
-
-    /**
-     * Entity for "domain tree enhancing" testing.
-     *
-     * @author TG Team
-     *
-     */
-    @KeyTitle(value = "Key title", desc = "Key desc")
-    @KeyType(String.class)
-    public class EnhancingMasterEntity$$TgEntity175 extends AbstractEntity<String> {
-        private static final long serialVersionUID = 1L;
-
-        protected EnhancingMasterEntity$$TgEntity175() {
-        }
-
-        @IsProperty
-        private Integer integerProp = null;
-        @IsProperty
-        private EnhancingMasterEntity$$TgEntity174 masterEntityProp;
-        @IsProperty
-        private EnhancingSlaveEntity slaveEntityProp;
-        @IsProperty
-        private EnhancingEvenSlaverEntity evenSlaverEntityProp;
-
-        public EnhancingMasterEntity$$TgEntity174 getMasterEntityProp() {
-    	return masterEntityProp;
-        }
-        @Observable
-        public void setMasterEntityProp(final EnhancingMasterEntity$$TgEntity174 masterEntityProp) {
-    	this.masterEntityProp = masterEntityProp;
-        }
-
-        public EnhancingSlaveEntity getSlaveEntityProp() {
-    	return slaveEntityProp;
-        }
-        @Observable
-        public void setSlaveEntityProp(final EnhancingSlaveEntity slaveEntityProp) {
-    	this.slaveEntityProp = slaveEntityProp;
-        }
-
-        public EnhancingEvenSlaverEntity getEvenSlaverEntityProp() {
-            return evenSlaverEntityProp;
-        }
-        @Observable
-        public void setEvenSlaverEntityProp(final EnhancingEvenSlaverEntity evenSlaverEntityProp) {
-            this.evenSlaverEntityProp = evenSlaverEntityProp;
-        }
-
-        public Integer getIntegerProp() {
-            return integerProp;
-        }
-        @Observable
-        public void setIntegerProp(final Integer integerProp) {
-            this.integerProp = integerProp;
-        }
-    }
-
-    /**
-     * Entity for "domain tree enhancing" testing.
-     *
-     * @author TG Team
-     *
-     */
-    @KeyType(String.class)
-    @KeyTitle(value = "Key title", desc = "Key desc")
-    @DescTitle(value = "Desc title", desc = "Desc desc")
-    public class EnhancingSlaveEntity$$TgEntity173 extends AbstractEntity<String> {
-        private static final long serialVersionUID = 1L;
-
-        protected EnhancingSlaveEntity$$TgEntity173() {
-        }
-
-        @IsProperty
-        private Integer integerProp = null;
-        @IsProperty
-        private EnhancingMasterEntity masterEntityProp;
-        @IsProperty
-        private EnhancingSlaveEntity slaveEntityProp;
-        @IsProperty
-        private EnhancingEvenSlaverEntity evenSlaverEntityProp;
-
-        public EnhancingMasterEntity getMasterEntityProp() {
-    	return masterEntityProp;
-        }
-        @Observable
-        public void setMasterEntityProp(final EnhancingMasterEntity masterEntityProp) {
-    	this.masterEntityProp = masterEntityProp;
-        }
-
-        public EnhancingSlaveEntity getSlaveEntityProp() {
-    	return slaveEntityProp;
-        }
-        @Observable
-        public void setSlaveEntityProp(final EnhancingSlaveEntity slaveEntityProp) {
-    	this.slaveEntityProp = slaveEntityProp;
-        }
-
-        public EnhancingEvenSlaverEntity getEvenSlaverEntityProp() {
-            return evenSlaverEntityProp;
-        }
-        @Observable
-        public void setEvenSlaverEntityProp(final EnhancingEvenSlaverEntity evenSlaverEntityProp) {
-            this.evenSlaverEntityProp = evenSlaverEntityProp;
-        }
-
-        @IsProperty
-        @Title(value = "Old triple", desc = "Desc")
-        @Calculated(contextualExpression = "3 * integerProp", contextPath = "slaveEntityProp", attribute = CalculatedPropertyAttribute.NO_ATTR, origination = "integerProp", category = CalculatedPropertyCategory.EXPRESSION)
-        private Integer oldTriple;
-
-        public Integer getOldTriple() {
-            return oldTriple;
-        }
-        @Observable
-        public void setOldTriple(final Integer oldTriple) {
-            this.oldTriple = oldTriple;
-        }
-
-        public Integer getIntegerProp() {
-            return integerProp;
-        }
-        @Observable
-        public void setIntegerProp(final Integer integerProp) {
-            this.integerProp = integerProp;
-        }
-    }
-
-    /**
-     * Entity for "domain tree enhancing" testing.
-     *
-     * @author TG Team
-     *
-     */
-    @KeyType(String.class)
-    @KeyTitle(value = "Key title", desc = "Key desc")
-    @DescTitle(value = "Desc title", desc = "Desc desc")
-    public class EnhancingSlaveEntity$$TgEntity176 extends AbstractEntity<String> {
-        private static final long serialVersionUID = 1L;
-
-        protected EnhancingSlaveEntity$$TgEntity176() {
-        }
-
-        @IsProperty
-        private Integer integerProp = null;
-        @IsProperty
-        private EnhancingMasterEntity masterEntityProp;
-        @IsProperty
-        private EnhancingSlaveEntity slaveEntityProp;
-        @IsProperty
-        private EnhancingEvenSlaverEntity evenSlaverEntityProp;
-
-        public EnhancingMasterEntity getMasterEntityProp() {
-    	return masterEntityProp;
-        }
-        @Observable
-        public void setMasterEntityProp(final EnhancingMasterEntity masterEntityProp) {
-    	this.masterEntityProp = masterEntityProp;
-        }
-
-        public EnhancingSlaveEntity getSlaveEntityProp() {
-    	return slaveEntityProp;
-        }
-        @Observable
-        public void setSlaveEntityProp(final EnhancingSlaveEntity slaveEntityProp) {
-    	this.slaveEntityProp = slaveEntityProp;
-        }
-
-        public EnhancingEvenSlaverEntity getEvenSlaverEntityProp() {
-            return evenSlaverEntityProp;
-        }
-        @Observable
-        public void setEvenSlaverEntityProp(final EnhancingEvenSlaverEntity evenSlaverEntityProp) {
-            this.evenSlaverEntityProp = evenSlaverEntityProp;
-        }
-
-        @IsProperty
-        @Title(value = "Old double", desc = "Desc")
-        @Calculated(contextualExpression = "2 * integerProp", contextPath = "evenSlaverEntityProp.slaveEntityProp", attribute = CalculatedPropertyAttribute.NO_ATTR, origination = "integerProp", category = CalculatedPropertyCategory.EXPRESSION)
-        private Integer oldDouble;
-
-        public Integer getOldDouble() {
-            return oldDouble;
-        }
-        @Observable
-        public void setOldDouble(final Integer oldDouble) {
-            this.oldDouble = oldDouble;
-        }
-
-        public Integer getIntegerProp() {
-            return integerProp;
-        }
-        @Observable
-        public void setIntegerProp(final Integer integerProp) {
-            this.integerProp = integerProp;
-        }
-    }
-
+    @Override
     @Before
-    public void setUp() throws ClassNotFoundException {
+    public final void initEachTest() throws Exception {
+	dm = managerArray == null ? null : serialiser().deserialise(managerArray, DomainTreeEnhancer.class);
+    }
+
+    @BeforeClass
+    public static void initDomainTreeTest() {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
 	rootTypes.add(EnhancingMasterEntity.class);
 
-	final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
-	final List<String> names = new ArrayList<String>();
-	names.add(EnhancingMasterEntity$$TgEntity172.class.getName());
-//	names.add(EnhancingEvenSlaverEntity$$TgEntity177.class.getName());
-//	names.add(EnhancingMasterEntity$$TgEntity174.class.getName());
-//	names.add(EnhancingMasterEntity$$TgEntity175.class.getName());
-//	names.add(EnhancingSlaveEntity$$TgEntity173.class.getName());
-//	names.add(EnhancingSlaveEntity$$TgEntity176.class.getName());
-	// TODO add other enhanced sub-types?
+	final DomainTreeEnhancer dm1 = new DomainTreeEnhancer(serialiser(), rootTypes);
+	dm1.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "1 * integerProp", "Old single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm1.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "2 * integerProp", "Old double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm1.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "3 * integerProp", "Old triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm1.addCalculatedProperty(EnhancingMasterEntity.class, "", "4 * integerProp", "Old quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm1.apply();
 
-	final Map<Class<?>, List<ByteArray>> originalAndEnhancedRootTypes = new HashMap<Class<?>, List<ByteArray>>();
-	originalAndEnhancedRootTypes.put(EnhancingMasterEntity.class, new ArrayList<ByteArray>());
-	for (final String name : names) {
-	    classLoader.startModification(name).endModification();
-	    originalAndEnhancedRootTypes.get(EnhancingMasterEntity.class).add(new ByteArray(classLoader.getCachedByteArray(name)));
-	}
-	dm = new DomainTreeEnhancer(serialiser(), rootTypes, originalAndEnhancedRootTypes);
+	/////////////////////////////////////////////////////////////////
+	//////////////////////// IMPORTANT //////////////////////////////
+	/////////////////////////////////////////////////////////////////
+	// Testing enhancer will be serialised in "static" byte array.
+	// In every particular test it will be deserialised (which includes enhanced types loading).
+	// For clean experiment old classLoader should be disposed with all enhanced classes.
+	// But in this case this behaviour is slightly UNEXPECTED due to non-immediate
+	// Garbage Collection of the classLoader.
+	/////////////////////////////////////////////////////////////////
+	//////////////////////// IMPORTANT //////////////////////////////
+	/////////////////////////////////////////////////////////////////
+	setDtmArray(serialiser().serialise(dm1));
+	System.out.println("Domain Tree Enhancer with enhanced domain has been serialised successfully.");
     }
 
     private static void fieldDoesNotExist(final Class<?> type, final String prop) {

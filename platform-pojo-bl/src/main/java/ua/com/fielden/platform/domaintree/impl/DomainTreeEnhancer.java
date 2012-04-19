@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -135,15 +136,16 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 	this.originalAndEnhancedRootTypesArrays.putAll(originalAndEnhancedRootTypesArrays);
 
 	// Initialise a map with enhanced (or not) types. A new instance of classLoader is needed for loading enhanced "byte arrays".
-	final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 	this.originalAndEnhancedRootTypes = new HashMap<Class<?>, Class<?>>();
 	for (final Class<?> rootType : this.rootTypes) {
 	    this.originalAndEnhancedRootTypes.put(rootType, rootType);
 	}
+	final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 	for (final Entry<Class<?>, List<ByteArray>> entry : this.originalAndEnhancedRootTypesArrays.entrySet()) {
 	    final List<ByteArray> arrays = new ArrayList<ByteArray>(entry.getValue());
 	    if (!arrays.isEmpty()) {
-		this.originalAndEnhancedRootTypes.put(entry.getKey(), classLoader.defineClass(arrays.get(0).getArray()));
+		final ByteArray mainArray = arrays.get(0);
+		this.originalAndEnhancedRootTypes.put(entry.getKey(), classLoader.defineClass(mainArray.getArray()));
 		arrays.remove(0);
 		for (final ByteArray array : arrays) {
 		    classLoader.defineClass(array.getArray());
@@ -167,6 +169,12 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     public Class<?> getManagedType(final Class<?> type) {
 	final Class<?> mutatedType = originalAndEnhancedRootTypes.get(type);
 	return mutatedType == null ? type : mutatedType;
+    }
+
+    @Override
+    public List<ByteArray> getManagedTypeArrays(final Class<?> type) {
+	final List<ByteArray> byteArrays = originalAndEnhancedRootTypesArrays.get(type);
+	return byteArrays == null ? Collections.<ByteArray>emptyList() : byteArrays;
     }
 
     @Override
@@ -294,16 +302,8 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 	    final boolean isCollectional = Collection.class.isAssignableFrom(PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), true, false));
 	    final NewProperty propertyToBeModified = !isCollectional ? NewProperty.changeType(nameOfThePropertyToAdapt, enhancedType) : NewProperty.changeTypeSignature(nameOfThePropertyToAdapt, enhancedType);
 	    final Class<?> nextEnhancedType = classLoader.startModification(nameOfTheTypeToAdapt).modifyProperties(propertyToBeModified).endModification();
-	    //	    // add a byte array corresponding to "nextEnhancedType"
-	    //	    additionalByteArrays.add(classLoader.getCachedByteArray(nextEnhancedType.getName()));
-
 	    final String nextProp = PropertyTypeDeterminator.isDotNotation(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
 	    final Pair<Class<?>, List<byte[]>> lastTypeThatIsRootAndPropagatedArrays = propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp, classLoader);
-	    // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-	    // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-	    // TODO TODO TODO TODO TODO TODO TODO comment following line   TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-	    // TODO TODO TODO TODO TODO TODO TODO to go to previous logic with single enhanced root type loading   TODO TODO
-	    // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 	    additionalByteArrays.addAll(0, lastTypeThatIsRootAndPropagatedArrays.getValue());
 
 	    return new Pair<Class<?>, List<byte[]>>(lastTypeThatIsRootAndPropagatedArrays.getKey(), additionalByteArrays);
