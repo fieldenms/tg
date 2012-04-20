@@ -5,8 +5,6 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import java.awt.Dimension;
 import java.awt.IllegalComponentStateException;
 import java.awt.event.ActionEvent;
-import java.awt.event.HierarchyEvent;
-import java.awt.event.HierarchyListener;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -34,7 +32,6 @@ import org.jvnet.flamingo.common.icon.EmptyResizableIcon;
 import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
@@ -59,6 +56,8 @@ import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
+import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -110,6 +109,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	//Initiates the paginator related properties.
 	final PaginatorModel paginatorModel = new PaginatorModel();
 	this.reviewProgressLayer = new BlockingIndefiniteProgressLayer(null, "");
+	reviewProgressLayer.enableIncrementalLocking();
 	this.feedBack = new JLabel("Page 0 of 0");
 	this.pageHolderManager = paginatorModel;
 	this.paginator = new Paginator(paginatorModel, createPaginatorFeedback(), reviewProgressLayer);
@@ -126,28 +126,22 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	addPropertyChangeListener(createCurrentAnalysisChangeListener());
 	//If "run automatically" parameter is set to true then load data after the centre has become visible.
 	if (getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().isRunAutomatically()) {
-	    //handle first component-showed event
-	    addHierarchyListener(new HierarchyListener() {
+	    //handle entity centre load event.
+	    addLoadListener(new ILoadListener() {
 
-		boolean handleComponentResizedEvent = true;
+		private boolean handleFirstLoadEvent = true;
 
 		@Override
-		public void hierarchyChanged(final HierarchyEvent e) {
-		    // should hierarchy change event be handled?
-		    if (((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED)
-			    && handleComponentResizedEvent) {
-			// yes, so this one is first, lets handle it and set flag
-			// to indicate that we won't handle any more
-			// hierarchy changed events
-			handleComponentResizedEvent = false;
-			//The components are resized so lets load data for the current analysis.
+		public void viewWasLoaded(final LoadEvent event) {
+		    if(handleFirstLoadEvent){
+			handleFirstLoadEvent = false;
 			getRunAction().actionPerformed(null);
-			// after this handler end its execution, lets remove it
-			// from component because it is already not-useful
-			final HierarchyListener refToThis = this;
+			final ILoadListener refToThis = this;
 			SwingUtilities.invokeLater(new Runnable() {
+
+			    @Override
 			    public void run() {
-				removeHierarchyListener(refToThis);
+				removeLoadListener(refToThis);
 			    }
 			});
 		    }
@@ -196,26 +190,11 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     }
 
     /**
-     * Returns the list of available analysis associated with this entity centre.
+     * Returns the list of visible analysis associated with this entity centre.
      *
      * @return
      */
-    public abstract List<AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?>> getAnalysisList();
-
-    /**
-     * Adds new analysis specified with name and {@link AnalysisType} instance to this centre.
-     *
-     * @param name
-     * @param analysisType
-     */
-    public abstract void addAnalysis(String name, AnalysisType analysisType);
-
-    /**
-     * Removes the analysis specified with the name.
-     *
-     * @param name
-     */
-    public abstract void removeAnalysis(String name);
+    public abstract List<AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?>> getVisibleAnalysisList();
 
     /**
      * Returns the {@link IPageHolderManager} for this entity centre.
@@ -512,7 +491,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      */
     @SuppressWarnings( "unchecked")
     protected static <E extends AbstractEntity<?>, MAE extends ICentreDomainTreeManagerAndEnhancer> EntityGridInspector<E> getEntityGridInspector(final AbstractEntityCentre<E, MAE> entityCentre){
-	for(final AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?> analysis : entityCentre.getAnalysisList()){
+	for(final AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?> analysis : entityCentre.getVisibleAnalysisList()){
 	    if(analysis instanceof GridConfigurationView){
 		final GridConfigurationView<E, MAE> gridConfigPanel = (GridConfigurationView<E, MAE>)analysis;
 		return gridConfigPanel.getPreviousView().getEgiPanel().getEgi();

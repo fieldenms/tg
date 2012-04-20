@@ -30,8 +30,10 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
+import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent.LocatorAction;
+import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorEventListener;
 import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.utils.Pair;
@@ -47,28 +49,36 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
     private final Action selectAction;
     private final List<T> selectedEntities = new ArrayList<T>();
 
-    public SingleAnalysisEntityLocator(final EntityLocatorModel<T> model, final LocatorConfigurationView<T, ?> owner, final boolean isMultipleSelection) {
+    public SingleAnalysisEntityLocator(final EntityLocatorModel<T> model, final LocatorConfigurationView<T, ?> owner) {
 	super(model, owner);
 	createReview();
 	this.closeAction = createCloseAction();
 	this.selectAction = createSelectAction();
 	this.locatorPanel = createLocatorPanel();
-	final EntityGridInspector<T> egi = getEntityGridInspector(this);
-	final ListSelectionListener listener = createEgiSelectionListener(egi, isMultipleSelection);
-	egi.setSelectionMode(isMultipleSelection ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
-	egi.getSelectionModel().addListSelectionListener(listener);
-	egi.getColumnModel().getSelectionModel().addListSelectionListener(listener);
-	egi.addMouseListener(new MouseAdapter() {
+	addLoadListener(new ILoadListener() {
+
 	    @Override
-	    public void mouseClicked(final MouseEvent e) {
-		if (e.getClickCount() == 2) {
-		    final int row = egi.rowAtPoint(e.getPoint());
-		    if (row >= 0) {
-			selectAction.actionPerformed(null);
+	    public void viewWasLoaded(final LoadEvent event) {
+		final EntityGridInspector<T> egi = getEntityGridInspector(SingleAnalysisEntityLocator.this);
+		final ListSelectionListener listener = createEgiSelectionListener(egi, getOwner().isMultipleSelection());
+		egi.setSelectionMode(getOwner().isMultipleSelection() ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
+		egi.getSelectionModel().addListSelectionListener(listener);
+		egi.getColumnModel().getSelectionModel().addListSelectionListener(listener);
+		egi.addMouseListener(new MouseAdapter() {
+		    @Override
+		    public void mouseClicked(final MouseEvent e) {
+			if (e.getClickCount() == 2) {
+			    final int row = egi.rowAtPoint(e.getPoint());
+			    if (row >= 0) {
+				selectAction.actionPerformed(null);
+			    }
+			}
 		    }
-		}
+		});
+		removeLoadListener(this);
 	    }
 	});
+
 	layoutComponents();
     }
 

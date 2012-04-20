@@ -3,6 +3,10 @@ package ua.com.fielden.platform.swing.review.report.centre;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +45,8 @@ import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.MultipleAnalysisEntityCentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
+import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
+import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
@@ -59,21 +65,24 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     private final JideTabbedPane tabPanel;
 
-    private final Action removeAnalysisAction;
+    private final Action removeAction;
+
+    private final String previouslySelectedAnalysis;
+
+    private boolean wasHierarchyChanged, wasAnalysisLoaded, analysisSelected;
 
     public MultipleAnalysisEntityCentre(final EntityCentreModel<T> model, final MultipleAnalysisEntityCentreConfigurationView<T> owner) {
 	super(model, owner);
+	this.previouslySelectedAnalysis = owner.getPreviousView() != null ? owner.getPreviousView().getCurrentAnalysisConfigurationView().getModel().getName() : GridConfigurationModel.gridAnalysisName;
+	this.wasHierarchyChanged = false;
+	this.wasAnalysisLoaded = false;
+	this.analysisSelected = false;
+	this.removeAction = createRemoveAnalysisAction();
+	addHierarchyListener(createComponentWasShown());
+	addPropertyChangeListener(createAfterLoadSelectListenre());
 	this.tabPanel = createReview();
-	this.removeAnalysisAction = createRemoveAnalysisAction();
 	getReviewProgressLayer().setView(createTabPanelWrapper(tabPanel));
 	layoutComponents();
-	final ICentreDomainTreeManager centreManager = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
-	for(final String analysis : centreManager.analysisKeys()){
-	    final IAbstractAnalysisDomainTreeManager analysisManager = centreManager.getAnalysisManager(analysis);
-	    if(analysisManager.isVisible()){
-		addAnalysis(analysis, determineAnalysisType(analysisManager));
-	    }
-	}
     }
 
     @SuppressWarnings("unchecked")
@@ -89,47 +98,12 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> getAnalysisList() {
+    public List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> getVisibleAnalysisList() {
 	final List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> analysisList = new ArrayList<AbstractAnalysisConfigurationView<T,ICentreDomainTreeManagerAndEnhancer,?,?,?>>();
 	for(final Component component : tabPanel.getComponents()){
 	    analysisList.add((AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)component);
 	}
 	return analysisList;
-    }
-
-    @Override
-    public void addAnalysis(final String name, final AnalysisType analysisType) {
-	AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = null;
-	final int index = tabIndex(name);
-	if(index >=0 ){
-	    tabPanel.setSelectedIndex(index);
-	} else {
-	    switch(analysisType){
-	    case SIMPLE:
-		analysis = createChartAnalysis(name);
-		break;
-	    case PIVOT:
-		analysis = createPivotAnalysis(name);
-		break;
-	    }
-	    if(analysis != null){
-		tabPanel.addTab(analysis.getModel().getName(), analysis);
-		if(!getReviewProgressLayer().isLocked()){
-		    tabPanel.setSelectedComponent(analysis);
-		}
-		getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name).setVisible(true);
-		analysis.open();
-	    }
-	}
-    }
-
-    @Override
-    public void removeAnalysis(final String name) {
-	final int tabIndex = tabIndex(name);
-	if(canRemoveTabSheet(tabIndex)){
-	    removeTabSheet(tabIndex);
-	    getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name).setVisible(false);
-	}
     }
 
     @Override
@@ -184,6 +158,111 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     }
 
     /**
+     * Creates new or opens the existing analysis specified with name and type.
+     * 
+     * @param name
+     * @param analysisType
+     */
+    private void showAnalysis(final String name, final AnalysisType analysisType) {
+	final int index = tabIndex(tabPanel, name);
+	if(index >=0 ){
+	    tabPanel.setSelectedIndex(index);
+	} else {
+	    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = createAnalysis(name, analysisType);
+	    if(analysis != null){
+		tabPanel.addTab(analysis.getModel().getName(), analysis);
+		tabPanel.setSelectedComponent(analysis);
+		getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name).setVisible(true);
+		analysis.open();
+	    }
+	}
+    }
+
+    /**
+     * Hides the analysis specified with name.
+     * 
+     * @param name
+     */
+    private void hideAnalysis(final String name) {
+	final int tabIndex = tabIndex(tabPanel, name);
+	if(canRemoveTabSheet(tabIndex)){
+	    removeTabSheet(tabIndex);
+	    getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name).setVisible(false);
+	}
+    }
+
+    /**
+     * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined.
+     * Also if analysis components were also loaded then it fires the load event.
+     * 
+     * @return
+     */
+    private HierarchyListener createComponentWasShown() {
+	return new HierarchyListener() {
+
+	    @Override
+	    public void hierarchyChanged(final HierarchyEvent e) {
+		synchronized (MultipleAnalysisEntityCentre.this) {
+		    // should hierarchy change event be handled?
+		    if (((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED)
+			    && !wasHierarchyChanged) {
+			// yes, so this one is first, lets handle it and set flag
+			// to indicate that we won't handle any more
+			// hierarchy changed events
+			wasHierarchyChanged = true;
+
+			//The component was resized so lets see whether analysis was loaded and the active one was selected.
+			//If that is true then fire
+			//event that this component was loaded.
+			if(wasAnalysisLoaded && analysisSelected){
+			    fireLoadEvent(new LoadEvent(MultipleAnalysisEntityCentre.this));
+			}
+			// after this handler end its execution, lets remove it
+			// from component because it is already not-useful
+			final HierarchyListener refToThis = this;
+			SwingUtilities.invokeLater(new Runnable() {
+			    public void run() {
+				removeHierarchyListener(refToThis);
+			    }
+			});
+		    }
+		}
+	    }
+	};
+    }
+
+    /**
+     * Creates the after analysis load select listener. This listener fires the load event after the analysis were loaded and the active one was selected.
+     * 
+     * @return
+     */
+    private PropertyChangeListener createAfterLoadSelectListenre() {
+	return new PropertyChangeListener() {
+
+	    @Override
+	    public void propertyChange(final PropertyChangeEvent evt) {
+		synchronized (MultipleAnalysisEntityCentre.this) {
+		    if("currentAnalysisConfigurationView".equals(evt.getPropertyName()) && !analysisSelected && wasAnalysisLoaded && getCurrentAnalysisConfigurationView().getModel().getName().equals(previouslySelectedAnalysis)){
+
+			analysisSelected = true;
+			if(wasAnalysisLoaded && wasHierarchyChanged){
+			    fireLoadEvent(new LoadEvent(MultipleAnalysisEntityCentre.this));
+			}
+			final PropertyChangeListener refToThis = this;
+			SwingUtilities.invokeLater(new Runnable() {
+
+			    @Override
+			    public void run() {
+				removePropertyChangeListener(refToThis);
+			    }
+			});
+		    }
+		}
+	    }
+	};
+    }
+
+    /**
      * Returns the analysis type for the specified instance of {@link IAbstractAnalysisDomainTreeManager}.
      * 
      * @param analysisManager
@@ -218,6 +297,11 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	return tabPanelWrapper;
     }
 
+    /**
+     * Creates the view with grid analysis. Also loads other analysis.
+     * 
+     * @return
+     */
     private JideTabbedPane createReview() {
 	final JideTabbedPane tabPane = new JideTabbedPane();
 	tabPane.setModel(createTabbedPaneModel(tabPane));
@@ -230,6 +314,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	tabPane.setBorder(BorderFactory.createLineBorder(new Color(146, 151, 161)));
 	//Initiates first tab with main details (i.e. grid analysis).
 	final GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> mainDetails = createGridAnalysis();
+	addLoadAnalysisListenerTo(tabPane, mainDetails, getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().analysisKeys(), 0);
 	tabPane.addTab(mainDetails.getModel().getName(), mainDetails);
 	tabPane.setTabClosableAt(0, false);
 	tabPane.setCloseAction(createCloseTabAction());
@@ -237,6 +322,110 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	return tabPane;
     }
 
+    /**
+     * Adds {@link ILoadListener} to the specified analysis configuration view and loads next visible analysis.
+     * @param tabPanel
+     * 
+     * @param configView
+     * @param analysisKeys
+     * @param analysisIndex
+     */
+    private void addLoadAnalysisListenerTo(final JideTabbedPane tabPane, final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> configView, final List<String> analysisKeys, final int analysisIndex) {
+	if(configView == null){
+	    loadNextAnalysis(tabPane, analysisKeys, analysisIndex);
+	}else{
+	    configView.addLoadListener(new ILoadListener() {
+
+		@Override
+		public void viewWasLoaded(final LoadEvent event) {
+		    loadNextAnalysis(tabPane, analysisKeys, analysisIndex);
+
+		    final ILoadListener refToThis = this;
+		    SwingUtilities.invokeLater(new Runnable() {
+
+			@Override
+			public void run() {
+			    configView.removeLoadListener(refToThis);
+			}
+		    });
+		}
+	    });
+	}
+    }
+
+    /**
+     * Loads the analysis specified with analysis index in the analysisKeys list.
+     * @param tabPane
+     * 
+     * @param analysisKeys
+     * @param analysisIndex
+     */
+    private synchronized void loadNextAnalysis(final JideTabbedPane tabPane, final List<String> analysisKeys, final int analysisIndex) {
+	final int visibleAnalysisIndex = findFirstVisibleAnalysis(analysisKeys, analysisIndex);
+	if(analysisKeys.size() > visibleAnalysisIndex){
+	    final String name = analysisKeys.get(visibleAnalysisIndex);
+	    final AnalysisType type = determineAnalysisType(getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name));
+	    final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> newAnalysis = createAnalysis(name, type);
+	    addLoadAnalysisListenerTo(tabPane, newAnalysis, analysisKeys, visibleAnalysisIndex + 1);
+	    if(newAnalysis != null){
+		tabPane.addTab(newAnalysis.getModel().getName(), newAnalysis);
+		newAnalysis.open();
+	    }
+	} else {
+	    wasAnalysisLoaded = true;
+	    if(getCurrentAnalysisConfigurationView().getModel().getName().equals(previouslySelectedAnalysis)){
+		analysisSelected = true;
+		fireLoadEvent(new LoadEvent(this));
+	    } else {
+		final int tabIndex = tabIndex(tabPane, previouslySelectedAnalysis);
+		if(tabIndex >=0 ){
+		    tabPane.setSelectedIndex(tabIndex);
+		}
+	    }
+	}
+    }
+
+    /**
+     * Returns an index of the first visible analysis.
+     * 
+     * @param analysisKeys
+     * @param analysisIndex
+     * @return
+     */
+    private int findFirstVisibleAnalysis(final List<String> analysisKeys, final int analysisIndex){
+	final ICentreDomainTreeManager centreManager = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
+	int index = analysisIndex;
+	for(; index < analysisKeys.size(); index++){
+	    final IAbstractAnalysisDomainTreeManager analysisManager = centreManager.getAnalysisManager(analysisKeys.get(index));
+	    if(analysisManager.isVisible()){
+		return index;
+	    }
+	}
+	return index;
+    }
+
+    /**
+     * Creates the analysis configuration view for the specified name and type.
+     * 
+     * @param name - the analysis name.
+     * @param type - the analysis type.
+     * @return
+     */
+    private AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> createAnalysis(final String name, final AnalysisType type){
+	switch(type){
+	case SIMPLE:
+	    return createChartAnalysis(name);
+	case PIVOT:
+	    return createPivotAnalysis(name);
+	default: return null;
+	}
+    }
+
+    /**
+     * Returns the close tab action.
+     * 
+     * @return
+     */
     private Action createCloseTabAction() {
 	return new AbstractAction() {
 
@@ -245,14 +434,19 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
 		if(getModel().getName() == null){
-		    removeAnalysisAction.actionPerformed(null);
+		    removeAction.actionPerformed(null);
 		}else{
-		    removeAnalysis(getCurrentAnalysisConfigurationView().getModel().getName());
+		    hideAnalysis(getCurrentAnalysisConfigurationView().getModel().getName());
 		}
 	    }
 	};
     }
 
+    /**
+     * Creates and returns the action that removes currently selected analysis.
+     * 
+     * @return
+     */
     private Action createRemoveAnalysisAction() {
 	return new Command<Void>("Remove  analysis") {
 	    private static final long serialVersionUID = -1271728862598382645L;
@@ -329,6 +523,12 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	return analysis;
     }
 
+    /**
+     * Creates the {@link SingleSelectionModel} for the specified tab panel.
+     * 
+     * @param tabPane
+     * @return
+     */
     private SingleSelectionModel createTabbedPaneModel(final JideTabbedPane tabPane) {
 	return new DefaultSingleSelectionModel() {
 
@@ -386,19 +586,26 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Returns the index of the tab with specified name. If tab with specified name doesn't exists then returns negative number.
+     * @param tabPane
      *
      * @param name - the specified tab name.
      * @return
      */
-    private int tabIndex(final String name) {
-	for (int index = 0; index < tabPanel.getTabCount(); index++) {
-	    if (tabPanel.getTitleAt(index).equals(name)) {
+    private static int tabIndex(final JideTabbedPane tabPane, final String name) {
+	for (int index = 0; index < tabPane.getTabCount(); index++) {
+	    if (tabPane.getTitleAt(index).equals(name)) {
 		return index;
 	    }
 	}
 	return -1;
     }
 
+    /**
+     * The action that is responsible for creating or opening analysis.
+     * 
+     * @author TG Team
+     *
+     */
     private class AddAnalysisAction extends Command<Void>{
 
 	private static final long serialVersionUID = 1916078804942683757L;
@@ -433,7 +640,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	@Override
 	protected final void postAction(final Void value) {
 	    super.postAction(value);
-	    addAnalysis(addTabDialog.getEnteredTabName(), analysisType);
+	    showAnalysis(addTabDialog.getEnteredTabName(), analysisType);
 	}
     }
 }

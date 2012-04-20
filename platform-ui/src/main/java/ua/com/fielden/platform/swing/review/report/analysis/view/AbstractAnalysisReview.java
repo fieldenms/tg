@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.swing.review.report.analysis.view;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.awt.event.KeyEvent;
 
 import javax.swing.Action;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
@@ -16,6 +19,7 @@ import ua.com.fielden.platform.swing.pagination.model.development.PageNavigation
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
+import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
@@ -27,11 +31,15 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
     private final Action loadAction;
     private final Action exportAction;
 
+    private boolean wasLoaded;
+
     public AbstractAnalysisReview(final AbstractAnalysisReviewModel<T, CDTME, ADTME, LDT> model, final AbstractAnalysisConfigurationView<T, CDTME, ADTME, LDT, ? extends AbstractAnalysisReview<T, CDTME, ADTME, LDT>> owner) {
 	super(model, owner);
 	this.loadAction = createLoadAction();
 	this.exportAction = createExportAction();
+	this.wasLoaded = false;
 	this.getModel().getPageHolder().addPageNavigationListener(createPageNavigationListener());
+	addHierarchyListener(createComponentWasShown());
     }
 
     @SuppressWarnings("unchecked")
@@ -168,6 +176,40 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 		case POST_NAVIGATE:
 		case PAGE_NAVIGATION_EXCEPTION:
 		    enableRelatedActions(true, true);
+		}
+	    }
+	};
+    }
+
+    /**
+     * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined.
+     * 
+     * @return
+     */
+    private HierarchyListener createComponentWasShown() {
+	return new HierarchyListener() {
+
+	    @Override
+	    public void hierarchyChanged(final HierarchyEvent e) {
+		synchronized(AbstractAnalysisReview.this){
+		    // should hierarchy change event be handled?
+		    if (((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED)
+			    && !wasLoaded) {
+			// yes, so this one is first, lets handle it and set flag
+			// to indicate that we won't handle any more
+			// hierarchy changed events
+			wasLoaded = true;
+			fireLoadEvent(new LoadEvent(AbstractAnalysisReview.this));
+
+			// after this handler end its execution, lets remove it
+			// from component because it is already not-useful
+			final HierarchyListener refToThis = this;
+			SwingUtilities.invokeLater(new Runnable() {
+			    public void run() {
+				removeHierarchyListener(refToThis);
+			    }
+			});
+		    }
 		}
 	    }
 	};

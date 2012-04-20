@@ -59,6 +59,24 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 	owner.getPageHolderManager().addPageHolder(getModel().getPageHolder());
     }
 
+    /**
+     * Returns the save action.
+     * 
+     * @return
+     */
+    public Action getSave() {
+	return save;
+    }
+
+    /**
+     * Returns the remove action.
+     * 
+     * @return
+     */
+    public Action getRemove() {
+	return remove;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public AbstractAnalysisConfigurationModel<T, CDTME> getModel() {

@@ -98,7 +98,7 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 
     @Override
     protected final SingleAnalysisEntityLocator<T> createConfigurableView() {
-	final SingleAnalysisEntityLocator<T> entityLocator = new SingleAnalysisEntityLocator<T>(getModel().createEntityCentreModel(), this, isMultipleSelection);
+	final SingleAnalysisEntityLocator<T> entityLocator = new SingleAnalysisEntityLocator<T>(getModel().createEntityCentreModel(), this);
 	entityLocator.addLocatorEventListener(new ILocatorEventListener() {
 
 	    @Override

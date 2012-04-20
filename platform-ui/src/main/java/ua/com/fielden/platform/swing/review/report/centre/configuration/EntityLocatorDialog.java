@@ -76,8 +76,8 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	setPreferredSize(new Dimension(800, 600));
 	pack();
 	RefineryUtilities.centerFrameOnScreen(this);
-	setVisible(true);
 	locatorConfigurationView.open();
+	setVisible(true);
     }
 
     /**
@@ -183,7 +183,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
      */
     private String generateTitle() {
 	final LocatorConfigurationModel<VT, RT> locatorConfigurationModel = locatorConfigurationView.getModel();
-	return TitlesDescsGetter.getEntityTitleAndDesc(locatorConfigurationModel.getEntityType()).getKey()
+	return TitlesDescsGetter.getEntityTitleAndDesc(locatorConfigurationModel.getEntityType()).getKey() + " " //
 		+ locatorConfigurationModel.getType() + " entity locator";
     }
 }
