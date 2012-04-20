@@ -880,8 +880,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	if (isFreezedAnalysisManager(name)) {
 	    unfreeze(name);
 
-	    final IAbstractAnalysisDomainTreeManagerAndEnhancer currentCentre = currentAnalyses.remove(name);
-	    currentAnalyses.put(name, EntityUtils.deepCopy(currentCentre, getSerialiser()));
+	    currentAnalyses.put(name, EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser())); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
 	} else {
 	    final IAbstractAnalysisDomainTreeManagerAndEnhancer dtm = EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser());
 	    if (dtm != null) {
@@ -927,15 +926,12 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	if (isFreezedAnalysisManager(name)) {
 	    error("Unable to freeze the analysis instance more than once for title [" + name + "].");
 	}
-	notInitiliasedError(persistentAnalyses.get(name), name);
 	notInitiliasedError(currentAnalyses.get(name), name);
+	notInitiliasedError(persistentAnalyses.get(name), name);
 
-	final IAbstractAnalysisDomainTreeManagerAndEnhancer currentAnalysis = currentAnalyses.remove(name);
-	currentAnalyses.put(name, EntityUtils.deepCopy(currentAnalysis, getSerialiser()));
-
-	final IAbstractAnalysisDomainTreeManagerAndEnhancer persistentAnalysis = persistentAnalyses.remove(name);
-	freezedAnalyses.put(name, persistentAnalysis);
+	freezedAnalyses.put(name, persistentAnalyses.remove(name));
 	persistentAnalyses.put(name, EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser()));
+	currentAnalyses.put(name, EntityUtils.deepCopy(currentAnalyses.get(name), getSerialiser())); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
     }
 
     /**
@@ -959,8 +955,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	if (!isFreezedAnalysisManager(name)) {
 	    error("Unable to unfreeze the analysis instance that is not 'freezed' for title [" + name + "].");
 	}
-	final IAbstractAnalysisDomainTreeManagerAndEnhancer persistentAnalysis = freezedAnalyses.remove(name);
-	persistentAnalyses.put(name, persistentAnalysis);
+	persistentAnalyses.put(name, freezedAnalyses.remove(name));
     }
 
     /**

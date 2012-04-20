@@ -22,12 +22,13 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ILocatorManager.Phase;
 import ua.com.fielden.platform.domaintree.ILocatorManager.Type;
+import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
+ * This test case ensures correctness of Locator lifecycle.
  *
  * @author TG Team
  *
@@ -226,7 +227,10 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
     ///////////////////////////////////// Accept ///////////////////////////////////////////
     private LocatorManager move2() {
 	move1_and_change();
+	final ILocatorDomainTreeManagerAndEnhancer prev = lm.getLocatorManager(root, property);
 	/* */lm.acceptLocatorManager(root, property);
+	assertFalse("The mgr after accepting should not be identical to mgrBeforeAccept.", lm.getLocatorManager(root, property) == prev);
+	assertTrue("The mgr after accepting should be equal to mgrBeforeAccept.", lm.getLocatorManager(root, property).equals(prev));
 	return lm;
     }
 
@@ -286,7 +290,10 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
     ///////////////////////////////////// Refresh //////////////////////////////////////////
     private LocatorManager move3() {
 	move2();
+	final ILocatorDomainTreeManagerAndEnhancer prev = lm.getLocatorManager(root, property);
 	/* */lm.refreshLocatorManager(root, property);
+	assertFalse("The mgr after accepting should not be identical to mgrBeforeAccept.", lm.getLocatorManager(root, property) == prev);
+	assertTrue("The mgr after accepting should be equal to mgrBeforeAccept.", lm.getLocatorManager(root, property).equals(prev));
 	return lm;
     }
 
@@ -298,7 +305,7 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
     }
 
     @Test
-    public void test_that_Refresh_do_nothing_with_LOCAL_locator_and_moves_it_from_USAGE_PHASE_to_EDITING_PHASE() {
+    public void test_that_Refresh_refreshes_LOCAL_locator_with_its_copy_and_moves_it_from_USAGE_PHASE_to_EDITING_PHASE() {
 	move3();
 	state3();
     }
@@ -386,7 +393,10 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
     @Test
     public void test_that_Accept_accepts_LOCAL_locator_changes_and_moves_it_from_EDITING_PHASE_to_USAGE_PHASE() {
 	move3();
+	final ILocatorDomainTreeManagerAndEnhancer prev = lm.getLocatorManager(root, property);
 	/* */lm.acceptLocatorManager(root, property);
+	assertFalse("The mgr after accepting should not be identical to mgrBeforeAccept.", lm.getLocatorManager(root, property) == prev);
+	assertTrue("The mgr after accepting should be equal to mgrBeforeAccept.", lm.getLocatorManager(root, property).equals(prev));
 	state2();
 
 	lm.resetLocatorManagerToDefault(root, property); // reset
@@ -402,7 +412,11 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
     ///////////////////////////////////// Freeze ///////////////////////////////////////////
     private LocatorManager move4() {
 	move3_and_change();
+
+	final ILocatorDomainTreeManagerAndEnhancer prev = lm.getLocatorManager(root, property);
 	/* */lm.freezeLocatorManager(root, property);
+	assertFalse("The mgr after freezing should not be identical to mgrBeforeFreezing.", lm.getLocatorManager(root, property) == prev);
+	assertTrue("The mgr after freezing should be equal to mgrBeforeFreezing.", lm.getLocatorManager(root, property).equals(prev));
 	return lm;
     }
 
@@ -527,7 +541,10 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
     @Test
     public void test_that_Accept_accepts_freezed_locator_changes_and_moves_it_from_FREEZED_EDITING_PHASE_to_EDITING_PHASE() {
 	move4();
+	final ILocatorDomainTreeManagerAndEnhancer prev = lm.getLocatorManager(root, property);
 	/* */lm.acceptLocatorManager(root, property);
+	assertFalse("The mgr after accepting should not be identical to mgrBeforeAccept.", lm.getLocatorManager(root, property) == prev);
+	assertTrue("The mgr after accepting should be equal to mgrBeforeAccept.", lm.getLocatorManager(root, property).equals(prev));
 	state3_and_changed();
 
 	lm.discardLocatorManager(root, property); // move to USAGE

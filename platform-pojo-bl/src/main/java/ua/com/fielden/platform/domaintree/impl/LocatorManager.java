@@ -154,7 +154,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	}
     }
 
-    private static void move(final ISerialiser serialiser, final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> from, final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> to, final Class<?> root, final String property) {
+    private static void moveMgrCopy(final ISerialiser serialiser, final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> from, final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> to, final Class<?> root, final String property) {
 	if (from.containsKey(key(root, property))) {
 	    to.put(key(root, property), EntityUtils.deepCopy(from.get(key(root, property)), serialiser));
 	} else {
@@ -162,12 +162,16 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	}
     }
 
+    private void current_to_current(final Class<?> root, final String property) {
+	moveMgrCopy(getSerialiser(), currentLocators, currentLocators, root, property);
+    }
+
     private void current_to_persistent(final Class<?> root, final String property) {
-	move(getSerialiser(), currentLocators, persistentLocators, root, property);
+	moveMgrCopy(getSerialiser(), currentLocators, persistentLocators, root, property);
     }
 
     private void persistent_to_current(final Class<?> root, final String property) {
-	move(getSerialiser(), persistentLocators, currentLocators, root, property);
+	moveMgrCopy(getSerialiser(), persistentLocators, currentLocators, root, property);
     }
 
     private void moveToUSAGE_PHASE(final Class<?> root, final String property) {
@@ -194,6 +198,8 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 		checkEmptinessOfGlobalLocator(root, property);
 		currentLocators.put(key(root, property), produceByDefault(root, property));
 		current_to_persistent(root, property);
+	    } else { // LOCAL_PHASE
+		current_to_current(root, property);
 	    }
 	    moveToEDITING_PHASE(root, property);
 	} else { // not applicable
@@ -222,6 +228,9 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     @Override
     public void acceptLocatorManager(final Class<?> root, final String property) {
 	nonEntityTypedPropertyError(root, property);
+	if (USAGE_PHASE == phase(root, property)) { // USAGE_PHASE -- not applicable
+	    error("Could not Accept locator while it is in Usage phase. Please Refresh it (that will move it to Editing phase) before Accept. Property [" + property + "] in type [" + root.getSimpleName() + "].");
+	}
 	if (EDITING_PHASE == phase(root, property)) {
 	    if (GLOBAL == type(root, property)) {
 		makeLOCAL(root, property);
@@ -230,9 +239,8 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	    moveToUSAGE_PHASE(root, property);
 	} else if (FREEZED_EDITING_PHASE == phase(root, property)) {
 	    unfreeze(root, property);
-	} else { // USAGE_PHASE -- not applicable
-	    error("Could not Accept locator while it is in Usage phase. Please Refresh it (that will move it to Editing phase) before Accept. Property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
+	current_to_current(root, property);
     }
 
     @Override
@@ -268,6 +276,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	if (EDITING_PHASE == phase(root, property)) {
 	    freezedLocators.put(key(root, property), persistentLocators.remove(key(root, property)));
 	    current_to_persistent(root, property);
+	    current_to_current(root, property);
 	} else { // not applicable
 	    error("Could not Freeze locator while it is not in Editing phase (e.g. double freezing is not permitted). Property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}

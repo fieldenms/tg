@@ -371,13 +371,12 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	if (isFreezedEntityCentreManager(root, name)) {
 	    error("Unable to freeze the entity-centre instance more than once for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
 	}
+	notInitiliasedError(currentCentres.get(key(root, name)), root, name);
 	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
-	final ICentreDomainTreeManagerAndEnhancer currentCentre = currentCentres.remove(key(root, name));
-	notInitiliasedError(currentCentre, root, name);
-	currentCentres.put(key(root, name), copyCentre(currentCentre));
-	final ICentreDomainTreeManagerAndEnhancer persistentCentre = persistentCentres.remove(key(root, name));
-	freezedCentres.put(key(root, name), persistentCentre);
-	persistentCentres.put(key(root, name), copyCentre(currentCentre));
+
+	freezedCentres.put(key(root, name), persistentCentres.remove(key(root, name)));
+	persistentCentres.put(key(root, name), copyCentre(currentCentres.get(key(root, name))));
+	currentCentres.put(key(root, name), copyCentre(currentCentres.get(key(root, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
     }
 
     /**
@@ -402,8 +401,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	if (!isFreezedEntityCentreManager(root, name)) {
 	    error("Unable to unfreeze the entity-centre instance that is not 'freezed' for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
 	}
-	final ICentreDomainTreeManagerAndEnhancer persistentCentre = freezedCentres.remove(key(root, name));
-	persistentCentres.put(key(root, name), persistentCentre);
+	persistentCentres.put(key(root, name), freezedCentres.remove(key(root, name)));
     }
 
     /**
@@ -437,9 +435,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	if (isFreezedEntityCentreManager(root, name)) {
 	    unfreeze(root, name);
 
-	    final ICentreDomainTreeManagerAndEnhancer currentCentre = currentCentres.remove(key(root, name));
-	    notInitiliasedError(currentCentre, root, name);
-	    currentCentres.put(key(root, name), copyCentre(currentCentre));
+	    currentCentres.put(key(root, name), copyCentre(currentCentres.get(key(root, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
 	} else {
 	    final ICentreDomainTreeManagerAndEnhancer currentMgr = getEntityCentreManager(root, name);
 	    validateBeforeSaving(currentMgr, root, name);
