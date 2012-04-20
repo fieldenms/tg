@@ -13,6 +13,7 @@ import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -182,6 +183,7 @@ public abstract class AbstractSource implements ISource {
 	private Class type;
 	private Object hibType;
 	boolean nullable = false;
+	ExpressionModel expression;
 
 	public PurePropInfo(final String name, final Class type, final Object hibType, final boolean nullable) {
 	    super();
@@ -189,6 +191,14 @@ public abstract class AbstractSource implements ISource {
 	    this.type = type;
 	    this.hibType = hibType;
 	    this.nullable = nullable;
+	}
+
+	public void setExpression(final ExpressionModel expression) {
+	    this.expression = expression;
+	}
+
+	public ExpressionModel getExpression() {
+	    return expression;
 	}
 
 	@Override

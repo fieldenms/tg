@@ -42,6 +42,7 @@ public class TypeBasedSource extends AbstractSource {
 	if (finalPropInfo != null) {
 	    final boolean finalPropNullability = getDomainPersistenceMetadata().isNullable(entityType, dotNotatedPropName);
 	    final PurePropInfo ppi = new PurePropInfo(finalPropInfo.getName(), finalPropInfo.getJavaType(), finalPropInfo.getHibType(), finalPropNullability || isNullable());
+	    ppi.setExpression(finalPropInfo.getExpression());
 	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 	} else {
 	    final PropertyPersistenceInfo propInfo = getDomainPersistenceMetadata().getInfoForDotNotatedProp(entityType, dotNotatedPropName);
@@ -51,9 +52,11 @@ public class TypeBasedSource extends AbstractSource {
 		final boolean propNullability = getDomainPersistenceMetadata().isNullable(entityType, dotNotatedPropName);
 		final PropertyPersistenceInfo explicitPartPropInfo = getDomainPersistenceMetadata().getPropPersistenceInfoExplicitly(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
 		final boolean explicitPropNullability = getDomainPersistenceMetadata().isNullable(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
+		final PurePropInfo ppi = new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable());
+		ppi.setExpression(propInfo.getExpression());
 		return new Pair<PurePropInfo, PurePropInfo>( //
 		new PurePropInfo(explicitPartPropInfo.getName(), explicitPartPropInfo.getJavaType(), explicitPartPropInfo.getHibType(), explicitPropNullability || isNullable()), //
-		new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable()));
+		ppi);
 	    }
 	}
     }

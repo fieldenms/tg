@@ -141,7 +141,7 @@ public class HibernateMappingsGenerator {
 	}
 
 	for (final PropertyPersistenceInfo ppi : map.getProps().values()) {
-	    if (!ppi.getType().equals(PropertyPersistenceType.COMPOSITE_DETAILS) && !specialProps.contains(ppi.getName())) {
+	    if (!ppi.getType().equals(PropertyPersistenceType.COMPOSITE_DETAILS) && !ppi.isCalculated() && !specialProps.contains(ppi.getName())) {
 		sb.append(getCommonPropMappingString(ppi));
 	    }
 	}

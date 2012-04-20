@@ -18,6 +18,7 @@ import org.joda.time.DateTime;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -740,6 +741,16 @@ public class EntityUtils {
 	    if (!IsProperty.stubForLinkProperty.equals(propAnnotation.linkProperty())) {
 		result.add(propField);
 	    }
+	}
+
+	return result;
+    }
+
+    public static List<Field> getCalculatedProperties(final Class entityType) {
+	final List<Field> result = new ArrayList<Field>();
+
+	for (final Field propField : Finder.findRealProperties(entityType, Calculated.class)) {
+	    result.add(propField);
 	}
 
 	return result;

@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class EntProp implements ISingleOperand {
-    private final String name;
+    private String name;
     private Class propType;
     private Object hibType;
     private boolean nullable;
@@ -14,6 +14,12 @@ public class EntProp implements ISingleOperand {
     private String sql;
     private ISource source;
 
+    private Expression expression;
+
+    private boolean isExpression() {
+	return expression != null;
+    }
+
     @Override
     public String toString() {
         return name + "[" + (propType != null ? propType.getSimpleName() : "") + "]";
@@ -21,7 +27,7 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public String sql() {
-	return (source != null ? source.getSqlAlias() : "?") +  "." + sql;
+	return isExpression() ? expression.sql() : ((source != null ? source.getSqlAlias() : "?") +  "." + sql);
     }
 
     public EntProp(final String name) {
@@ -38,17 +44,17 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public List<EntProp> getLocalProps() {
-	return Arrays.asList(new EntProp[]{this});
+	return isExpression() ? expression.getLocalProps() : Arrays.asList(new EntProp[]{this});
     }
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-	return Collections.emptyList();
+	return isExpression() ? expression.getLocalSubQueries() : Collections.<EntQuery> emptyList();
     }
 
     @Override
     public List<EntValue> getAllValues() {
-	return Collections.emptyList();
+	return isExpression() ? expression.getAllValues() : Collections.<EntValue> emptyList();
     }
 
     public Class getPropType() {
@@ -122,7 +128,7 @@ public class EntProp implements ISingleOperand {
     }
 
     public String getSql() {
-        return sql;
+        return isExpression() ? expression.sql() : sql;
     }
 
     public void setSql(final String sql) {
@@ -144,5 +150,31 @@ public class EntProp implements ISingleOperand {
 
     public void setSource(final ISource source) {
 	this.source = source;
+    }
+
+    public void setExpression(final Expression expression) {
+        this.expression = expression;
+        prefixExpressionProps();
+    }
+
+    private String getContextPrefix() {
+	final int lastDotIndex = name.lastIndexOf(".");
+	if (lastDotIndex > 0) {
+	    return name.substring(0, lastDotIndex);
+	}
+	return null;
+    }
+
+    private void prefixExpressionProps() {
+	final String prefix = getContextPrefix();
+	if (prefix != null) {
+	    for (final EntProp prop : expression.getLocalProps()) {
+		prop.setName(prefix + "." + prop.getName());
+	    }
+	}
+    }
+
+    public void setName(final String name) {
+        this.name = name;
     }
 }

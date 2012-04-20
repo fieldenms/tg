@@ -10,6 +10,7 @@ import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceInfo> {
@@ -23,6 +24,11 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     private final Long precision;
     private final Long scale;
     private final boolean nullable;
+    private final ExpressionModel expression;
+
+    public boolean isCalculated() {
+	return expression != null;
+    }
 
     public Type getHibTypeAsType() {
 	return hibType instanceof Type ? (Type) hibType : null;
@@ -105,6 +111,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	hibType = builder.hibType;
 	columns = builder.columns;
 	nullable = builder.nullable;
+	expression = builder.expression;
     }
 
     public Long getLength() {
@@ -140,7 +147,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     }
 
     public String getColumn() {
-	return columns.get(0);
+	return columns.size() > 0 ? columns.get(0) : null;
     }
 
     public static class Builder {
@@ -154,6 +161,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	private long length = 0;
 	private long precision = -1;
 	private long scale = -1;
+	private ExpressionModel expression;
 
 	public PropertyPersistenceInfo build() {
 	    return new PropertyPersistenceInfo(this);
@@ -186,6 +194,11 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    return this;
 	}
 
+	public Builder expression(final ExpressionModel val) {
+	    expression = val;
+	    return this;
+	}
+
 	public Builder type(final PropertyPersistenceType val) {
 	    type = val;
 	    return this;
@@ -208,5 +221,9 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
     public static enum PropertyPersistenceType {
 	PROP, COLLECTIONAL, ENTITY, ID, ONE2ONE_ID, VERSION, PRIMITIVE_KEY, ENTITY_KEY, COMPOSITE_DETAILS;
+    }
+
+    public ExpressionModel getExpression() {
+        return expression;
     }
 }

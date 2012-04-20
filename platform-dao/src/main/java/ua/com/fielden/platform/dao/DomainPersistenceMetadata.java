@@ -21,9 +21,11 @@ import org.hibernate.type.YesNoType;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -36,6 +38,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotati
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.getCalculatedProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
@@ -189,10 +192,16 @@ public class DomainPersistenceMetadata {
 
 	for (final Field field : getPersistedProperties(entityType)) {
 	    if (!specialProps.contains(field.getName())) {
-		final PropertyPersistenceInfo ppi = getCommonPropHibInfo(entityType, field);
-		result.add(ppi);
+		result.add(getCommonPropHibInfo(entityType, field));
 	    }
 	}
+
+	for (final Field field : getCalculatedProperties(entityType)) {
+	    final PropertyPersistenceInfo ppi = getCalculatedPropInfo(entityType, field);
+	    if (ppi != null)
+	    result.add(ppi);
+	}
+
 	return result;
     }
 
@@ -294,12 +303,28 @@ public class DomainPersistenceMetadata {
 	return builder.column(columnName).build();
     }
 
+    private PropertyPersistenceInfo getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
+	try {
+	    final Field exprField = entityType.getDeclaredField(field.getName() + "_");
+	    exprField.setAccessible(true);
+	    final ExpressionModel exprModel = (ExpressionModel) exprField.get(null);
+	    return new PropertyPersistenceInfo.Builder(field.getName(), field.getType(), true).expression(exprModel).build();
+	} catch (final Exception e) {
+	    return null;
+	}
+
+    }
+
     private MapEntityTo getMapEntityTo(final Class entityType) {
 	return getAnnotation(MapEntityTo.class, entityType);
     }
 
     private MapTo getMapTo(final Class entityType, final String propName) {
 	return getPropertyAnnotation(MapTo.class, entityType, propName);
+    }
+
+    private Calculated getCalculatedPropExpression(final Class entityType, final String propName) {
+	return getPropertyAnnotation(Calculated.class, entityType, propName);
     }
 
     public Map<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata> getHibTypeInfosMap() {

@@ -14,6 +14,7 @@ import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
+import ua.com.fielden.platform.entity.query.generation.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -115,7 +116,7 @@ public class EntQuery implements ISingleOperand {
 	} else if (allPropsYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
 	    for (final PropertyPersistenceInfo ppi : domainPersistenceMetadata.getEntityPPIs(type())) {
-		if (/*!ppi.isCompositeProperty() && */!ppi.isCollection()) {
+		if (/*!ppi.isCompositeProperty() && */!ppi.isCollection() && !ppi.isCalculated()) {
 		    yields.getYields().put(ppi.getName(), new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName(), ppi));
 		}
 	    }
@@ -207,10 +208,10 @@ public class EntQuery implements ISingleOperand {
 	this.orderings = orderings;
 	this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? this.sources.getMain().sourceType() : null);
 
-	enhanceToFinalState();
+	enhanceToFinalState(generator);
     }
 
-    private void enhanceToFinalState() {
+    private void enhanceToFinalState(final EntQueryGenerator generator) {
 	for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
 	    final ISource source = sourceAndItsJoinType.getKey();
 	    source.assignNullability(sourceAndItsJoinType.getValue());
@@ -219,17 +220,25 @@ public class EntQuery implements ISingleOperand {
 
 	enhanceYieldsModel(); //!! adds new properties in yield section
 
-	final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
-	associateSubqueriesWithMasterQuery(immediateSubqueries);
+	boolean allCalculatedPropsResolved = false;
 
-	final List<EntProp> immediateProperties = getImmediateProps();
-	associatePropertiesWithHoldingQuery(immediateProperties);
+	List<EntQuery> immediateSubqueries = null;
 
-	final List<EntProp> propsToBeResolved = new ArrayList<EntProp>();
-	propsToBeResolved.addAll(immediateProperties);
-	propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
+	while (!allCalculatedPropsResolved) {
+	    immediateSubqueries = getImmediateSubqueries();
+	    associateSubqueriesWithMasterQuery(immediateSubqueries);
 
-	unresolvedProps = resolveProps(propsToBeResolved);
+	    final List<EntProp> immediateProperties = getImmediateProps();
+	    associatePropertiesWithHoldingQuery(immediateProperties);
+
+	    final List<EntProp> propsToBeResolved = new ArrayList<EntProp>();
+	    propsToBeResolved.addAll(immediateProperties);
+	    propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries));
+
+	    final Pair<List<EntProp>, Boolean> result = resolveProps(propsToBeResolved, generator);
+	    unresolvedProps = result.getKey();
+	    allCalculatedPropsResolved = result.getValue();
+	}
 
 	if (!isSubQuery() && unresolvedProps.size() > 0) {
 	    throw new RuntimeException("Couldn't resolve the following props: " + unresolvedProps);
@@ -286,8 +295,9 @@ public class EntQuery implements ISingleOperand {
 	return unresolvedPropsFromSubqueries;
     }
 
-    private List<EntProp> resolveProps(final List<EntProp> propsToBeResolved) {
+    private Pair<List<EntProp>, Boolean> resolveProps(final List<EntProp> propsToBeResolved, final EntQueryGenerator generator) {
 	final List<EntProp> unresolvedProps = new ArrayList<EntProp>();
+	boolean allCalculatedPropsResolved = true;
 
 	for (final EntProp propToBeResolvedPair : propsToBeResolved) {
 	    final Map<ISource, PropResolutionInfo> sourceCandidates = findSourceMatchCandidates(propToBeResolvedPair);
@@ -295,11 +305,17 @@ public class EntQuery implements ISingleOperand {
 		unresolvedProps.add(propToBeResolvedPair);
 	    } else {
 		final Pair<PropResolutionInfo, ISource> propResolutionResult = performPropResolveAction(sourceCandidates);
-		propResolutionResult.getValue().addReferencingProp(propResolutionResult.getKey());
+		final PropResolutionInfo pri = propResolutionResult.getKey();
+		if (pri.getProp().expression == null) {
+		    propResolutionResult.getValue().addReferencingProp(pri);
+		} else {
+		    allCalculatedPropsResolved = false;
+		    pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, Collections.<String, Object> emptyMap(), pri.getProp().expression).getResult().getValue());
+		}
 	    }
 	}
 
-	return unresolvedProps;
+	return new Pair<List<EntProp>, Boolean>(unresolvedProps, allCalculatedPropsResolved);
     }
 
     private List<EntProp> resolvePropsFinally(final List<EntProp> propsToBeResolved) {

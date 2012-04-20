@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
@@ -45,12 +47,79 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgVehicleModel vehicleModelDao = getInstance(ITgVehicleModel.class);
     private final ITgVehicleMake vehicleMakeDao = getInstance(ITgVehicleMake.class);
     private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
+    private final ITgFuelUsage fuelUsageDao = getInstance(ITgFuelUsage.class);
     private final IUserDao userDao = getInstance(IUserDao.class);
     private final IUserRoleDao userRoleDao = getInstance(IUserRoleDao.class);
     private final IUserAndRoleAssociationDao userAndRoleAssociationDao = getInstance(IUserAndRoleAssociationDao.class);
     private final IEntityAggregatesDao aggregateDao = getInstance(IEntityAggregatesDao.class);
 
     private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
+
+
+    @Test
+    public void test0_1() {
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc1").ge().val("100").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).build());
+    	final TgVehicle vehicle = models.get(0);
+	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+    }
+
+    @Test
+    public void test0_2() {
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc2").ge().val("100").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).build());
+	assertEquals("Incorrect key", 2, models.size());
+    }
+
+    @Test
+    public void test0_4() {
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc3").ge().val("100").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).build());
+	assertEquals("Incorrect key", 0, models.size());
+    }
+
+    @Test
+    @Ignore
+    public void test0_6() {
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc4").ge().val("100").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).build());
+	assertEquals("Incorrect key", 2, models.size());
+    }
+
+
+    @Test
+    public void test0_7() {
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc5").ge().val("100").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).build());
+    	final TgVehicle vehicle = models.get(0);
+	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+    }
+
+    @Test
+    public void test0_8() {
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc6").ge().val("100").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).build());
+	assertEquals("Incorrect key", 0, models.size());
+    }
+
+    @Test
+    public void test0_3() {
+	final EntityResultQueryModel<TgFuelUsage> model = select(TgFuelUsage.class).where().prop("vehicle.calc1").ge().val("100").model();
+	final List<TgFuelUsage> models = fuelUsageDao.getAllEntities(from(model).build());
+    	final TgFuelUsage fuelUsage = models.get(0);
+	assertEquals("Incorrect key", "CAR2", fuelUsage.getVehicle().getKey());
+    }
+
+    @Test
+    @Ignore
+    public void test0_5() {
+	final EntityResultQueryModel<TgFuelUsage> model = select(TgFuelUsage.class).where().prop("vehicle.calc3").ge().val("100").model();
+	final List<TgFuelUsage> models = fuelUsageDao.getAllEntities(from(model).build());
+    	final TgFuelUsage fuelUsage = models.get(0);
+	assertEquals("Incorrect key", "CAR2", fuelUsage.getVehicle().getKey());
+    }
+
+
 
     @Test
     public void test1() {
