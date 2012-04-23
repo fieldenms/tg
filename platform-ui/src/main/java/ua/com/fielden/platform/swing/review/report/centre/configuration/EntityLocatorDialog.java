@@ -133,6 +133,8 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 			model.discard();
 			break;
 		    }
+		} else {
+		    model.discard();
 		}
 		dispose();
 		SwingUtilities.windowForComponent(autocompleter.getAutocompleter().getTextComponent()).setVisible(true);

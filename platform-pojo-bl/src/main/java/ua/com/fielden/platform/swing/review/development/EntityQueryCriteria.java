@@ -2,6 +2,7 @@ package ua.com.fielden.platform.swing.review.development;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
@@ -15,23 +16,32 @@ import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
+import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.dynamictree.DynamicEntityTree;
 import ua.com.fielden.platform.dynamictree.DynamicEntityTreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItemCloseable;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
 
@@ -39,7 +49,7 @@ import com.google.inject.Inject;
 public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
 
     private static final long serialVersionUID = 9154466083364529734L;
-    
+
     private final String ALIAS = "alias_for_main_criteria_type";
 
     private final Map<String, IValueMatcher> valueMatchers = new HashMap<String, IValueMatcher>();
@@ -95,18 +105,18 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	}
 	return valueMatchers.get(propertyName);
     }
-    
+
     /**
      * Run the configured entity query.
      * 
      * @param pageSize
      * @return
      */
-    public IPage<T> run(int pageSize){
+    public IPage<T> run(final int pageSize){
 	final EntityResultQueryModel<T> notOrderedQuery = createQuery().model();
-	return dao.firstPage(from(notOrderedQuery).with(createFetchModel()).build(), pageSize);
+	return dao.firstPage(from(notOrderedQuery).with(createOrderingModel()).with(createFetchModel()).build(), pageSize);
     }
-    
+
     /**
      * Creates "fetch property" model for entity query criteria.
      * 
@@ -124,6 +134,36 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
+     * Returns the expression for calculated property specified with propName parameter. If the property is not calculated then returns null.
+     * 
+     * @param propName - the name of the calculated property.
+     * @return
+     */
+    private ExpressionModel getExpressionForProp(final String propName) {
+	try {
+	    return ((CalculatedProperty) getCentreDomainTreeMangerAndEnhancer().getEnhancer().getCalculatedProperty(getEntityClass(), propName)).getAst().getModel();
+	} catch (final IncorrectCalcPropertyKeyException e) {
+	    return null;
+	}
+    }
+
+    /**
+     * Returns the ordering model for this query criteria.
+     * 
+     * @return
+     */
+    private OrderingModel createOrderingModel(){
+	IOrderingItemCloseable closeOrderable = null;
+	for(final Pair<String, Ordering> orderPair : getCentreDomainTreeMangerAndEnhancer().getSecondTick().orderedProperties(getEntityClass())){
+	    final IOrderingItem orderingItem = closeOrderable == null ? orderBy() : closeOrderable;
+	    final ExpressionModel expression = getExpressionForProp(orderPair.getKey());
+	    final ISingleOperandOrderable part = expression == null ? orderingItem.prop(orderPair.getKey()) : orderingItem.expr(expression);
+	    closeOrderable = orderPair.getValue().equals(Ordering.ASCENDING) ? part.asc() : part.desc();
+	}
+	return closeOrderable == null ? null : closeOrderable.model();
+    }
+
+    /**
      * Creates the query with configured conditions.
      * 
      * @return
@@ -131,7 +171,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private ICompleted createQuery(){
 	return DynamicQueryBuilder.buildConditions(createJoinCondition(), createQueryProperties(), ALIAS);
     }
-    
+
     /**
      * Starts query building with appropriate join condition.
      * 
@@ -144,7 +184,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	    throw new RuntimeException("Can not create join condition due to: " + e + ".");
 	}
     }
-    
+
     /**
      * Converts existing properties model (which has separate properties for from/to, is/isNot and so on)
      * into new properties model (which has single abstraction for one criterion).
@@ -152,7 +192,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @param properties
      * @return
      */
-    protected List<QueryProperty> createQueryProperties() {
+    private List<QueryProperty> createQueryProperties() {
 	final List<QueryProperty> queryProperties = new ArrayList<QueryProperty>();
 	for (final String actualProperty : getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(getEntityClass())) {
 	    if (!AbstractDomainTree.isPlaceholder(actualProperty)) {
@@ -161,7 +201,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	}
 	return queryProperties;
     }
-    
+
     /**
      * Converts existing properties model (which has separate properties for from/to, is/isNot and so on)
      * into new properties model (which has single abstraction for one criterion).
@@ -170,23 +210,23 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     private QueryProperty createQueryProperty(final String actualProperty) {
-	IAddToCriteriaTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-	Class<T> root = getEntityClass();
+	final IAddToCriteriaTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+	final Class<T> root = getEntityClass();
 
 	final QueryProperty queryProperty = new QueryProperty(getEntityClass(), actualProperty, ALIAS);
-	
-	try{queryProperty.setValue(tickManager.getValue(root, actualProperty));}catch (Exception e) {}
-	try{queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));}catch (Exception e) {}
-	try{queryProperty.setValue2(tickManager.getValue2(root, actualProperty));}catch (Exception e) {}
-	try{queryProperty.setExclusive2(tickManager.getExclusive2(root, actualProperty));}catch (Exception e) {}
-	try{queryProperty.setDatePrefix(tickManager.getDatePrefix(root, actualProperty));}catch (Exception e) {}
-	try{queryProperty.setDateMnemonic(tickManager.getDateMnemonic(root, actualProperty));}catch (Exception e) {}
-	try{queryProperty.setAndBefore(tickManager.getAndBefore(root, actualProperty));}catch (Exception e) {}
-	try{queryProperty.setOrNull(tickManager.getOrNull(root, actualProperty));}catch (Exception e) {}
-	try{queryProperty.setNot(tickManager.getNot(root, actualProperty));}catch (Exception e) {}
+
+	try{queryProperty.setValue(tickManager.getValue(root, actualProperty));}catch (final Exception e) {}
+	try{queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));}catch (final Exception e) {}
+	try{queryProperty.setValue2(tickManager.getValue2(root, actualProperty));}catch (final Exception e) {}
+	try{queryProperty.setExclusive2(tickManager.getExclusive2(root, actualProperty));}catch (final Exception e) {}
+	try{queryProperty.setDatePrefix(tickManager.getDatePrefix(root, actualProperty));}catch (final Exception e) {}
+	try{queryProperty.setDateMnemonic(tickManager.getDateMnemonic(root, actualProperty));}catch (final Exception e) {}
+	try{queryProperty.setAndBefore(tickManager.getAndBefore(root, actualProperty));}catch (final Exception e) {}
+	try{queryProperty.setOrNull(tickManager.getOrNull(root, actualProperty));}catch (final Exception e) {}
+	try{queryProperty.setNot(tickManager.getNot(root, actualProperty));}catch (final Exception e) {}
 	return queryProperty;
     }
-    
+
     private fetch<T> buildFetchModels(final Class<T> entityType, final DynamicEntityTreeNode treeNode) throws Exception {
 	fetch<T> fetchModel = fetch(entityType);
 
