@@ -20,9 +20,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This is a helper class to retrieve classes for packages/jars etc.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ClassesRetriever {
     /**
@@ -34,15 +34,15 @@ public class ClassesRetriever {
     /**
      * This interface provides method that can be used to filter out classes. It was implemented only for methods those returns classes from package and also must satisfies some
      * additional condition implemented in the isSatisfies method.
-     * 
+     *
      * @author oleh
-     * 
+     *
      */
     public interface IFilterClass {
 
 	/**
 	 * Must return true if the given testClass satisfies implemented condition otherwise returns false
-	 * 
+	 *
 	 * @param testClass
 	 * @return
 	 */
@@ -52,7 +52,7 @@ public class ClassesRetriever {
     /**
      * Returns all classes in the specified package that is located on the path. The path might be a directory or *.jar archive according to condition specified by the filter
      * instance.
-     * 
+     *
      * @param path
      * @param packageName
      * @param filter
@@ -85,7 +85,7 @@ public class ClassesRetriever {
 
     /**
      * Returns all classes in the package and it's sub packages from the directory according to condition specified by the filter instance
-     * 
+     *
      * @param directory
      * @param packageName
      * @param filter
@@ -102,7 +102,7 @@ public class ClassesRetriever {
 		for (final File file : nextDirectory.getKey().listFiles()) {
 		    if (file.getName().endsWith(".class")) {
 			final String name = nextDirectory.getValue() + '.' + stripFilenameExtension(file.getName());
-			final Class<?> clazz = Class.forName(name);
+			final Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(name);
 			if (filter != null && filter.isSatisfies(clazz)) {
 			    classes.add(clazz);
 			} else if (filter == null) {
@@ -120,7 +120,7 @@ public class ClassesRetriever {
 
     /**
      * Utility method for checking string for existence of spaces. Value "%20" is needed to be checked for Windows paths.
-     * 
+     *
      * @param name
      * @return
      */
@@ -130,7 +130,7 @@ public class ClassesRetriever {
 
     /**
      * Returns all classes in the package and it's sub packages from the *.jar archive according to condition specified in the filter instance
-     * 
+     *
      * @param jar
      * @param packageName
      * @param filter
@@ -149,7 +149,7 @@ public class ClassesRetriever {
 		if (className.endsWith(".class")) {
 		    className = stripFilenameExtension(className);
 		    if (className.startsWith(packageName + "/")) {
-			final Class<?> clazz = Class.forName(className.replace('/', '.'));
+			final Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(className.replace('/', '.'));
 			if (filter != null && filter.isSatisfies(clazz)) {
 			    classes.add(clazz);
 			} else if (filter == null) {
@@ -165,7 +165,7 @@ public class ClassesRetriever {
 
     /**
      * removes the extension of the file
-     * 
+     *
      * @param className
      * @return
      */
@@ -175,7 +175,7 @@ public class ClassesRetriever {
 
     /**
      * Determines weather <code>derivedClass</code> is derived from <code>superClass</code>.
-     * 
+     *
      * @param derivedClass
      * @param superClass
      * @return
@@ -186,7 +186,7 @@ public class ClassesRetriever {
 
     /**
      * Searches for all classes defined in the provided package and located in the directory or archive specified with path.
-     * 
+     *
      * @param path
      * @param packageName
      * @return
@@ -198,7 +198,7 @@ public class ClassesRetriever {
 
     /**
      * returns all classes from the package that is located in the directory or archive specified with path and annotated with specified annotation
-     * 
+     *
      * @param path
      * @param packageName
      * @param annotation
@@ -218,7 +218,7 @@ public class ClassesRetriever {
 
     /**
      * Searches for all classes defined in the provided package from the directory or archive specified with path, which are derived from a specified superclass.
-     * 
+     *
      * @param path
      * @param packageName
      * @param superClass
@@ -238,7 +238,7 @@ public class ClassesRetriever {
 
     /**
      * Searches for all non-abstract classes defined in the provided package from the directory or archive specified with path, which are derived from a specified superclass.
-     * 
+     *
      * @param path
      * @param packageName
      * @param superClass
@@ -259,7 +259,7 @@ public class ClassesRetriever {
 
     /**
      * Returns classes in the package those are directly derived from the {@code superClass}
-     * 
+     *
      * @param path
      * @param packageName
      * @param superClass
@@ -280,7 +280,7 @@ public class ClassesRetriever {
     /**
      * Searches for all classes defined in the provided package, which have methods annotated with the specified annotation and located in the directory or archive specified with
      * path.
-     * 
+     *
      * @param path
      * @param packageName
      * @param annotation
@@ -301,7 +301,7 @@ public class ClassesRetriever {
 
     /**
      * Returns list of classes extended from the {@code superClass} and is not {@code abstract}
-     * 
+     *
      * @param path
      * @param packageName
      * @param superClass
@@ -321,7 +321,7 @@ public class ClassesRetriever {
 
     /**
      * Adds specified path to the class path. It works only if the system class loader is an instance of URLClassLoader.
-     * 
+     *
      * @param path
      * @throws Exception
      */

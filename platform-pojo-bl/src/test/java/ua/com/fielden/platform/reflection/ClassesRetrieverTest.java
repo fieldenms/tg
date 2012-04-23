@@ -33,6 +33,7 @@ public class ClassesRetrieverTest {
 	    classesInPackage = ClassesRetriever.getAllClassesInPackage("src/test/resources", "ua.com.fielden.platform.reflection.testclasses");
 	    assertEquals("incorrect number of classes in ua.com.fielden.platform.reflection.testclasses package", 7, classesInPackage.size());
 	} catch (final Exception e) {
+	    e.printStackTrace();
 	    fail("There suppose to be no exception.");
 	}
     }

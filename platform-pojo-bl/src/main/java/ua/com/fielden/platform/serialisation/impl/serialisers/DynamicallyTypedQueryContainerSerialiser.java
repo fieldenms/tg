@@ -39,6 +39,7 @@ public class DynamicallyTypedQueryContainerSerialiser extends TgSimpleSerializer
 
 	// now we should be able to restore the query model
 	final QueryExecutionModel<?, ?> qem = readValue(buffer, QueryExecutionModel.class);
+
 	return new DynamicallyTypedQueryContainer(binaryTypes, qem);
     }
 }

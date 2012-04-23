@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import ua.com.fielden.platform.classloader.TgSystemClassLoader;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -26,6 +27,9 @@ public class DynamicEntityClassLoader extends ClassLoader {
 
     public DynamicEntityClassLoader(final ClassLoader parent) {
 	super(parent);
+	if (parent instanceof TgSystemClassLoader) {
+	    ((TgSystemClassLoader) parent).register(this);
+	}
 	this.namingService = new DynamicTypeNamingService();
     }
 
@@ -162,6 +166,17 @@ public class DynamicEntityClassLoader extends ClassLoader {
 
     public static boolean isEnhanced(final Class<?> type) {
 	return type.getName().contains(DynamicTypeNamingService.APPENDIX);
+    }
+
+
+    @Override
+    public Class<?> findClass(final String name) throws ClassNotFoundException {
+	final Pair<Class<?>, byte[]> pair = cache.get(name);
+	if (pair != null) {
+	    return pair.getKey();
+	}
+
+	return super.findClass(name);
     }
 
     /**

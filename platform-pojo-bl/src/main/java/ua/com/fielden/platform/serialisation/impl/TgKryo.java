@@ -213,6 +213,9 @@ public class TgKryo extends Kryo implements ISerialiser {
 
     @Inject
     public TgKryo(final EntityFactory factory, final ISerialisationClassProvider provider) {
+	setRegistrationOptional(true);
+	setClassLoader(ClassLoader.getSystemClassLoader());
+
 	this.factory = factory;
 	this.provider = provider;
 
