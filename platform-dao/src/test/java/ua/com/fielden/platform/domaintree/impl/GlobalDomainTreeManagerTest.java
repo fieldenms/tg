@@ -29,7 +29,7 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntityForGlobalDomainTre
 public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationTest {
     private static final Class<?> ROOT = MasterEntityForGlobalDomainTree.class;
     private final String NON_BASE_USERS_SAVE_AS = "NON_BASE_USER'S_SAVE_AS";
-    private final String property = "simpleEntityProp";
+    private final String  property = "simpleEntityProp";
 
     private IGlobalDomainTreeManager initGlobalManagerWithEntityCentre() {
 	final IGlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
