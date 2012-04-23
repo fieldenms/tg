@@ -2,6 +2,11 @@ package ua.com.fielden.platform.domaintree.impl;
 
 
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+
 import java.util.HashSet;
 import java.util.List;
 
@@ -27,10 +32,6 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
@@ -119,6 +120,7 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
 	final User baseUser1 = save(new_(User.class, "USER1").setBase(true));
 	save(new_(User.class, "USER2").setBase(false).setBasedOnUser(baseUser1));
 	save(new_(User.class, "USER3").setBase(false).setBasedOnUser(baseUser1));
-	save(new_(MainMenuItem.class, "ua.com.fielden.platform.domaintree.testing.MasterEntity").setOrder(1));
+//	save(new_(MainMenuItem.class, "ua.com.fielden.platform.domaintree.testing.MasterEntity").setOrder(1));
+	save(new_(MainMenuItem.class, "ua.com.fielden.platform.domaintree.testing.MasterEntityForGlobalDomainTree").setOrder(1));
     }
 }

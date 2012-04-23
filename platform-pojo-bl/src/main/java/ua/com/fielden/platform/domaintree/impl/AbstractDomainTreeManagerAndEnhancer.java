@@ -125,13 +125,12 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    final Map<Class<?>, List<ICalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<ICalculatedProperty>>(baseEnhancer.calculatedProperties());
 
 	    final Set<Pair<Class<?>, String>> was = migrateToSet(oldCalculatedProperties);
-	    System.out.println("-------------------------------------------------------");
 	    for (final Pair<Class<?>, String> rootAndProp : was) {
-		logger.info("The property (was): root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
+		logger.debug("The property (was): root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
 	    }
 	    final Set<Pair<Class<?>, String>> is = migrateToSet(newCalculatedProperties);
 	    for (final Pair<Class<?>, String> rootAndProp : is) {
-		logger.info("The property (is): root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
+		logger.debug("The property (is): root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
 	    }
 
 	    final Set<Pair<Class<?>, String>> wasUnionIs = new HashSet<Pair<Class<?>,String>>(was);
@@ -148,7 +147,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 		if (!dtr.isExcludedImmutably(root, newProperty)) {
 		    // the property is not excluded 1) by contract 2) was not excluded manually
 		    // this is a new property. "includedProperties" should be updated (the new property added).
-		    logger.info("The property to be added: root == " + root + ", property == " + newProperty);
+		    logger.debug("The property to be added: root == " + root + ", property == " + newProperty);
 		    final String parent = PropertyTypeDeterminator.isDotNotation(newProperty) ? PropertyTypeDeterminator.penultAndLast(newProperty).getKey() : "";
 		    // ! important ! the parent should be warmed up before adding anything to it!
 		    dtr.warmUp(root, parent);
@@ -174,7 +173,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 		final Class<?> root = rootAndProp.getKey();
 		final String removedProperty = rootAndProp.getValue();
 		// this is a removed property. "includedProperties" should be updated (the removed property should be removed in incl properties).
-		logger.info("The property to be removed: root == " + root + ", property == " + removedProperty);
+		logger.debug("The property to be removed: root == " + root + ", property == " + removedProperty);
 		dtr.includedPropertiesMutable(root).remove(removedProperty);
 		// the "excludedProperties" set should be updated after the property has been physically removed from domain
 		if (dtr.excludedPropertiesMutable().contains(AbstractDomainTree.key(root, removedProperty))) {
@@ -190,7 +189,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	    final Set<Pair<Class<?>, String>> retained = new HashSet<Pair<Class<?>, String>>(is);
 	    retained.retainAll(was);
 	    for (final Pair<Class<?>, String> rootAndProp : retained) {
-		logger.info("The property to be retained: root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
+		logger.debug("The property to be retained: root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
 	    }
 	}
 

@@ -444,7 +444,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    }
 	    enableListening(true);
 	    includedProperties.put(root, includedProps);
-	    logger().info("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + includedProps.size() + " included properties => [" + includedProps + "].");
+	    logger().info("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + includedProps.size() + " included properties."); // => [" + includedProps + "]
 	}
         return includedProperties.get(root);
     }

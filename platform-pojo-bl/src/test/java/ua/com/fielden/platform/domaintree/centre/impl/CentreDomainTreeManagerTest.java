@@ -37,6 +37,7 @@ import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
+import ua.com.fielden.platform.domaintree.testing.MasterEntityForCentreDomainTree;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterSyntheticEntity;
 import ua.com.fielden.platform.types.Money;
@@ -68,6 +69,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
      */
     protected static Set<Class<?>> createRootTypes_for_CentreDomainTreeManagerTest() {
 	final Set<Class<?>> rootTypes = createRootTypes_for_AbstractDomainTreeManagerTest();
+	rootTypes.add(MasterEntityForCentreDomainTree.class);
 	rootTypes.add(EntityWithCompositeKey.class);
 	rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
 	rootTypes.add(MasterSyntheticEntity.class);
@@ -611,7 +613,8 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 
 	// obtain a current instance of analysis and alter it
 	IAbstractAnalysisDomainTreeManager analysisMgr = dtm().getAnalysisManager(name);
-	analysisMgr.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	final Class<?> root = MasterEntityForCentreDomainTree.class;
+	analysisMgr.getFirstTick().check(root, "simpleEntityProp", true);
 	assertTrue("The instance should remain 'changed' after some operations.", dtm().isChangedAnalysisManager(name));
 
 	// discard just created analysis
@@ -624,23 +627,23 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	assertTrue("The instance should be 'changed' after initialisation.", dtm().isChangedAnalysisManager(name));
 	// obtain a current instance of analysis and alter it
 	analysisMgr = dtm().getAnalysisManager(name);
-	analysisMgr.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	analysisMgr.getFirstTick().check(root, "simpleEntityProp", true);
 	assertTrue("The instance should remain 'changed' after some operations.", dtm().isChangedAnalysisManager(name));
 
 	// accept just created analysis
 	dtm().acceptAnalysisManager(name);
 	assertFalse("The instance should become 'unchanged' after accept operation.", dtm().isChangedAnalysisManager(name));
 	assertNotNull("Should be not null after accepting.", dtm().getAnalysisManager(name));
-	assertTrue("Should be checked.", dtm().getAnalysisManager(name).getFirstTick().isChecked(MasterEntity.class, "simpleEntityProp"));
+	assertTrue("Should be checked.", dtm().getAnalysisManager(name).getFirstTick().isChecked(root, "simpleEntityProp"));
 
 	// alter and discard
-	dtm().getAnalysisManager(name).getFirstTick().check(MasterEntity.class, "booleanProp", true);
+	dtm().getAnalysisManager(name).getFirstTick().check(root, "booleanProp", true);
 	assertTrue("The instance should become 'changed' after some operations.", dtm().isChangedAnalysisManager(name));
 	dtm().discardAnalysisManager(name);
 	assertFalse("The instance should be 'unchanged' after discard operation.", dtm().isChangedAnalysisManager(name));
 	assertNotNull("Should be not null after accept operation.", dtm().getAnalysisManager(name));
-	assertTrue("Should be checked.", dtm().getAnalysisManager(name).getFirstTick().isChecked(MasterEntity.class, "simpleEntityProp"));
-	assertFalse("Should be unchecked after discarding.", dtm().getAnalysisManager(name).getFirstTick().isChecked(MasterEntity.class, "booleanProp"));
+	assertTrue("Should be checked.", dtm().getAnalysisManager(name).getFirstTick().isChecked(root, "simpleEntityProp"));
+	assertFalse("Should be unchecked after discarding.", dtm().getAnalysisManager(name).getFirstTick().isChecked(root, "booleanProp"));
 
 	// remove just accepted analysis
 	dtm().removeAnalysisManager(name);
@@ -651,7 +654,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	dtm().initAnalysisManagerByDefault(name, analysisType);
 	assertTrue("The instance should be 'changed' after initialisation.", dtm().isChangedAnalysisManager(name));
 	analysisMgr = dtm().getAnalysisManager(name);
-	analysisMgr.getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	analysisMgr.getFirstTick().check(root, "simpleEntityProp", true);
 	assertTrue("The instance should remain 'changed' after some operations.", dtm().isChangedAnalysisManager(name));
 	dtm().removeAnalysisManager(name);
 	assertNull("Should be null after removal.", dtm().getAnalysisManager(name));
@@ -688,7 +691,8 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	assertEquals("Incorrect value 'i'.", 1, i);
 	assertEquals("Incorrect value 'j'.", 0, j);
 
-	dtm().getAnalysisManager(name).getFirstTick().check(MasterEntity.class, "simpleEntityProp", true);
+	final Class<?> root = MasterEntityForCentreDomainTree.class;
+	dtm().getAnalysisManager(name).getFirstTick().check(root, "simpleEntityProp", true);
 	assertEquals("Incorrect value 'i'.", 1, i);
 	assertEquals("Incorrect value 'j'.", 0, j);
 
@@ -727,19 +731,19 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	final AnalysisType analysisType = AnalysisType.SIMPLE;
 	final String name2 = "A brand new SIMPLE analysis";
 
-	final String property1 = "booleanProp", property2 = "entityProp.booleanProp";
-
+	final String property1 = "booleanProp", property2 = "booleanProp2";
 
 	// initialise a brand new instance of analysis again (e.g. pivot)
 	dtm().initAnalysisManagerByDefault(name2, analysisType);
-	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property1, true);
+	final Class<?> root = MasterEntityForCentreDomainTree.class;
+	dtm().getAnalysisManager(name2).getFirstTick().check(root, property1, true);
 	dtm().acceptAnalysisManager(name2);
 
 	assertFalse("Should not be changed.", dtm().isChangedAnalysisManager(name2));
-	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property1, false);
+	dtm().getAnalysisManager(name2).getFirstTick().check(root, property1, false);
 
 	assertTrue("Should be changed after modification.", dtm().isChangedAnalysisManager(name2));
-	assertFalse("Should be unchecked after modification.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertFalse("Should be unchecked after modification.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(root, property1));
 	assertFalse("Should be NOT freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	IAbstractAnalysisDomainTreeManagerAndEnhancer currentMgrBeforeFreeze = dtm().getAnalysisManager(name2);
@@ -751,7 +755,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	assertTrue("The current mgr after freezing should be equal to currentMgrBeforeFreeze.", dtm().getAnalysisManager(name2).equals(currentMgrBeforeFreeze));
 
 	assertFalse("Should not be changed after freezing.", dtm().isChangedAnalysisManager(name2));
-	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(root, property1));
 	assertTrue("Should be freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	////////////////////// Not permitted tasks after report has been freezed //////////////////////
@@ -772,30 +776,30 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	}
 
 	// change smth.
-	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property1, true);
+	dtm().getAnalysisManager(name2).getFirstTick().check(root, property1, true);
 	assertTrue("Should be changed after modification after freezing.", dtm().isChangedAnalysisManager(name2));
-	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(root, property1));
 	assertTrue("Should be freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	// discard after-freezing changes
 	dtm().discardAnalysisManager(name2);
 	assertTrue("Should be changed after discard after freezing (due to existence of before-freezing changes).", dtm().isChangedAnalysisManager(name2));
-	assertFalse("Should be unchecked after discard after freezing (according to before-freezing changes).", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertFalse("Should be unchecked after discard after freezing (according to before-freezing changes).", dtm().getAnalysisManager(name2).getFirstTick().isChecked(root, property1));
 	assertFalse("Should be NOT freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	// FREEEEEEEZEEEEEE all current changes (again)
 	dtm().freezeAnalysisManager(name2);
 	assertFalse("Should not be changed after freezing.", dtm().isChangedAnalysisManager(name2));
-	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
-	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property2));
+	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(root, property1));
+	assertFalse("Should be unchecked after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(root, property2));
 	assertTrue("Should be freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	// change smth.
-	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property2, true);
-	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property1, true);
+	dtm().getAnalysisManager(name2).getFirstTick().check(root, property2, true);
+	dtm().getAnalysisManager(name2).getFirstTick().check(root, property1, true);
 	assertTrue("Should be changed after modification after freezing.", dtm().isChangedAnalysisManager(name2));
-	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property2));
-	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(root, property2));
+	assertTrue("Should be checked after modification after freezing.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(root, property1));
 	assertTrue("Should be freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	currentMgrBeforeFreeze = dtm().getAnalysisManager(name2);
@@ -807,12 +811,12 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	assertTrue("The current mgr after freezing should be equal to currentMgrBeforeFreeze.", dtm().getAnalysisManager(name2).equals(currentMgrBeforeFreeze));
 
 	assertTrue("Should be changed after applying.", dtm().isChangedAnalysisManager(name2));
-	assertTrue("Should be checked after applying.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property2));
-	assertTrue("Should be checked after applying.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(MasterEntity.class, property1));
+	assertTrue("Should be checked after applying.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(root, property2));
+	assertTrue("Should be checked after applying.", dtm().getAnalysisManager(name2).getFirstTick().isChecked(root, property1));
 	assertFalse("Should be NOT freezed.", dtm().isFreezedAnalysisManager(name2));
 
 	// return to the original version of the manager and check if it really is not changed
-	dtm().getAnalysisManager(name2).getFirstTick().check(MasterEntity.class, property2, false);
+	dtm().getAnalysisManager(name2).getFirstTick().check(root, property2, false);
 
 	assertFalse("Should not be changed after returning to original version.", dtm().isChangedAnalysisManager(name2));
     }
