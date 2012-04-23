@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -23,9 +24,11 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 public class EntityEnhancer<E extends AbstractEntity<?>> {
     private final static String ID_PROPERTY_NAME = "id";
     private final EntityFetcher fetcher;
+    private final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser;
 
-    protected EntityEnhancer(final EntityFetcher fetcher) {
+    protected EntityEnhancer(final EntityFetcher fetcher, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser) {
 	this.fetcher = fetcher;
+	this.domainPersistenceMetadataAnalyser = domainPersistenceMetadataAnalyser;
     }
 
     /**
@@ -46,7 +49,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 		final String propName = entry.getKey();
 		final fetch<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
 		if (fetchModel.getEntityType() != EntityAggregates.class) {
-			final PropertyPersistenceInfo ppi = fetcher.getDomainPersistenceMetadata().getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
+			final PropertyPersistenceInfo ppi = domainPersistenceMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
 			if (ppi == null || ppi.isCollection()) {
 			    final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
 			    for (final Field field : collProps) {
@@ -113,7 +116,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	    final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
 	    final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
 		getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel) : //
-	    	new EntityEnhancer<T>(fetcher).enhance(retrievedPropertyInstances, fetchModel);
+	    	new EntityEnhancer<T>(fetcher, domainPersistenceMetadataAnalyser).enhance(retrievedPropertyInstances, fetchModel);
 
 	    // Replacing in entities the proxies of properties with properly enhanced property instances.
 	    for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {

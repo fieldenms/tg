@@ -259,7 +259,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     /** Ensures that values of special types such as {@link Class} or {@link PropertyDescriptor} are converted to String. */
     private Object convertValue(final Object value) {
 	if (value instanceof Boolean) {
-	    return getQueryBuilder().getDomainPersistenceMetadata().getBooleanValue((Boolean) value);
+	    return getQueryBuilder().getDomainPersistenceMetadataAnalyser().getDomainPersistenceMetadata().getBooleanValue((Boolean) value);
 	}
 	return value;
     }

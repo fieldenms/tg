@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.query;
+package ua.com.fielden.platform.entity.query.fluent;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

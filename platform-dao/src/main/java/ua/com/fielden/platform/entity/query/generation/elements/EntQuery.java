@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
@@ -31,7 +31,7 @@ public class EntQuery implements ISingleOperand {
     private final OrderBys orderings;
     private final Class resultType;
     private final QueryCategory category;
-    private final DomainPersistenceMetadata domainPersistenceMetadata;
+    private final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser;
 
     private EntQuery master;
 
@@ -115,7 +115,7 @@ public class EntQuery implements ISingleOperand {
 	    yields.getYields().put(idModel.getAlias(), idModel);
 	} else if (allPropsYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-	    for (final PropertyPersistenceInfo ppi : domainPersistenceMetadata.getEntityPPIs(type())) {
+	    for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(type())) {
 		if (/*!ppi.isCompositeProperty() && */!ppi.isCollection() && !ppi.isCalculated()) {
 		    yields.getYields().put(ppi.getName(), new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName(), ppi));
 		}
@@ -139,7 +139,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Object determineYieldHibType(final Yield yield) {
-	final PropertyPersistenceInfo finalPropInfo = domainPersistenceMetadata.getInfoForDotNotatedProp(type(), yield.getAlias());
+	final PropertyPersistenceInfo finalPropInfo = domainPersistenceMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
 	if (finalPropInfo != null) {
 	    return finalPropInfo.getHibType();
 	} else {
@@ -190,17 +190,17 @@ public class EntQuery implements ISingleOperand {
     private Sources enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final Sources sources, final EntQueryGenerator generator) {
 	final ISource newMain =
 		(sources.getMain() instanceof TypeBasedSource && filter != null && filter.enhance(sources.getMain().sourceType(), username) != null) ?
-	    new QueryBasedSource(sources.getMain().getAlias(), domainPersistenceMetadata, generator.generateEntQueryAsSourceQuery(filter.enhance(sources.getMain().sourceType(), username))) : null;
+	    new QueryBasedSource(sources.getMain().getAlias(), domainPersistenceMetadataAnalyser, generator.generateEntQueryAsSourceQuery(filter.enhance(sources.getMain().sourceType(), username))) : null;
 
 	return newMain != null ? new Sources(newMain, sources.getCompounds()) : sources;
     }
 
     public EntQuery(final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
-	    final Class resultType, final QueryCategory category, final DomainPersistenceMetadata domainPersistenceMetadata, //
+	    final Class resultType, final QueryCategory category, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser, //
 	    final IFilter filter, final String username, final EntQueryGenerator generator) {
 	super();
 	this.category = category;
-	this.domainPersistenceMetadata = domainPersistenceMetadata;
+	this.domainPersistenceMetadataAnalyser = domainPersistenceMetadataAnalyser;
 	this.sources = enhanceSourcesWithUserDataFiltering(filter, username, sources, generator);
 	this.conditions = conditions;
 	this.yields = yields;

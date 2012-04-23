@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -16,8 +16,8 @@ import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 
 public class ModelResultProducer {
 
-    public <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DbVersion dbVersion, final DomainPersistenceMetadata domainPersistenceMetadata, final IFilter filter, final String username) {
-	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, domainPersistenceMetadata, filter, username);
+    public <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DbVersion dbVersion, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser, final IFilter filter, final String username) {
+	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, domainPersistenceMetadataAnalyser, filter, username);
 	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getParamValues());
 	final String sql = entQuery.sql();
 	return new QueryModelResult<T>(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());

@@ -8,16 +8,13 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 final class EntityResultTreeBuilder {
-    private DomainPersistenceMetadata domainPersistenceMetadata;
     private ResultIndex index = new ResultIndex();
 
-    protected EntityResultTreeBuilder(final DomainPersistenceMetadata domainPersistenceMetadata) {
-	this.domainPersistenceMetadata = domainPersistenceMetadata;
+    protected EntityResultTreeBuilder() {
     }
 
     private class MetaP {

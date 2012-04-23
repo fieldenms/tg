@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -13,12 +14,12 @@ public class TypeBasedSource extends AbstractSource {
     private final Class<? extends AbstractEntity<?>> entityType;
     private final boolean generated;
 
-    public TypeBasedSource(final Class<? extends AbstractEntity<?>> entityType, final String alias, final DomainPersistenceMetadata domainPersistenceMetadata) {
-	this(entityType, alias, false, domainPersistenceMetadata);
+    public TypeBasedSource(final Class<? extends AbstractEntity<?>> entityType, final String alias, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser) {
+	this(entityType, alias, false, domainPersistenceMetadataAnalyser);
     }
 
-    public TypeBasedSource(final Class<? extends AbstractEntity<?>> entityType, final String alias, final boolean generated, final DomainPersistenceMetadata domainPersistenceMetadata) {
-	super(alias, domainPersistenceMetadata);
+    public TypeBasedSource(final Class<? extends AbstractEntity<?>> entityType, final String alias, final boolean generated, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser) {
+	super(alias, domainPersistenceMetadataAnalyser);
 	if (entityType == null) {
 	    throw new IllegalArgumentException("Missing entity type!");
 	}
@@ -28,7 +29,7 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public void populateSourceItems(final boolean parentLeftJoinLegacy) {
-	for (final PropertyPersistenceInfo ppi : getDomainPersistenceMetadata().getEntityPPIs(sourceType())) {
+	for (final PropertyPersistenceInfo ppi : getDomainPersistenceMetadataAnalyser().getEntityPPIs(sourceType())) {
 		// if parent nullability = false then take the one from ppi, else true
 	    sourceItems.put(ppi.getName(), new PropertyPersistenceInfo.Builder(ppi.getName(), ppi.getJavaType(), ppi.isNullable() || parentLeftJoinLegacy). //
 		    hibType(ppi.getHibType()).column(ppi.getColumn()).build());
@@ -37,21 +38,21 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     protected Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName) {
-	final PropertyPersistenceInfo finalPropInfo = getDomainPersistenceMetadata().getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
+	final PropertyPersistenceInfo finalPropInfo = getDomainPersistenceMetadataAnalyser().getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
 
 	if (finalPropInfo != null) {
-	    final boolean finalPropNullability = getDomainPersistenceMetadata().isNullable(entityType, dotNotatedPropName);
+	    final boolean finalPropNullability = getDomainPersistenceMetadataAnalyser().isNullable(entityType, dotNotatedPropName);
 	    final PurePropInfo ppi = new PurePropInfo(finalPropInfo.getName(), finalPropInfo.getJavaType(), finalPropInfo.getHibType(), finalPropNullability || isNullable());
 	    ppi.setExpression(finalPropInfo.getExpression());
 	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 	} else {
-	    final PropertyPersistenceInfo propInfo = getDomainPersistenceMetadata().getInfoForDotNotatedProp(entityType, dotNotatedPropName);
+	    final PropertyPersistenceInfo propInfo = getDomainPersistenceMetadataAnalyser().getInfoForDotNotatedProp(entityType, dotNotatedPropName);
 	    if (propInfo == null) {
 		return null;
 	    } else {
-		final boolean propNullability = getDomainPersistenceMetadata().isNullable(entityType, dotNotatedPropName);
-		final PropertyPersistenceInfo explicitPartPropInfo = getDomainPersistenceMetadata().getPropPersistenceInfoExplicitly(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
-		final boolean explicitPropNullability = getDomainPersistenceMetadata().isNullable(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
+		final boolean propNullability = getDomainPersistenceMetadataAnalyser().isNullable(entityType, dotNotatedPropName);
+		final PropertyPersistenceInfo explicitPartPropInfo = getDomainPersistenceMetadataAnalyser().getPropPersistenceInfoExplicitly(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
+		final boolean explicitPropNullability = getDomainPersistenceMetadataAnalyser().isNullable(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
 		final PurePropInfo ppi = new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable());
 		ppi.setExpression(propInfo.getExpression());
 		return new Pair<PurePropInfo, PurePropInfo>( //
@@ -73,7 +74,7 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public String sql() {
-	return getDomainPersistenceMetadata().getTableClause(sourceType()) + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
+	return DomainPersistenceMetadata.getTableClause(sourceType()) + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
     }
 
     @Override

@@ -13,6 +13,7 @@ import org.hibernate.Session;
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -53,10 +54,11 @@ public class EntityFetcher {
     }
 
     protected <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainers(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-	final QueryModelResult<E> modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), getDomainPersistenceMetadata(), getFilter(), getUsername());
+	final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser = new DomainPersistenceMetadataAnalyser(getDomainPersistenceMetadata());
+	final QueryModelResult<E> modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), domainPersistenceMetadataAnalyser, getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
 	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetch(modelResult.getResultType());
-	return new EntityEnhancer<E>(this).enhance(result, fetchModel);
+	return new EntityEnhancer<E>(this, domainPersistenceMetadataAnalyser).enhance(result, fetchModel);
     }
 
     protected Query produceHibernateQuery(final String sql, final SortedSet<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams) {
@@ -120,7 +122,7 @@ public class EntityFetcher {
     }
 
     protected <E extends AbstractEntity<?>>List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-	final EntityTree<E> resultTree = new EntityResultTreeBuilder(getDomainPersistenceMetadata()).buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
+	final EntityTree<E> resultTree = new EntityResultTreeBuilder().buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
 
 	final Query query = produceHibernateQuery(modelResult.getSql(), getScalarFromEntityTree(resultTree), modelResult.getParamValues());
 	if (pageNumber != null && pageCapacity != null) {

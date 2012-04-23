@@ -3,7 +3,6 @@ package ua.com.fielden.platform.dao;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,7 +27,6 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
 
@@ -71,15 +69,19 @@ public class DomainPersistenceMetadata {
 	this.hibTypesInjector = hibTypesInjector;
 	for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
 	    try {
-		final Set<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
-		final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
-		result.addAll(ppis);
-		result.addAll(generatePPIsForCompositeTypeProps(ppis));
-		hibTypeInfosMap.put(entityType, new EntityPersistenceMetadata(getTableClause(entityType), entityType, getMap(result)));
+		hibTypeInfosMap.put(entityType, generateEntityPersistenceMetadata(entityType));
 	    } catch (final Exception e) {
 		e.printStackTrace();
 	    }
 	}
+    }
+
+    public EntityPersistenceMetadata generateEntityPersistenceMetadata(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
+	final Set<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
+	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
+	result.addAll(ppis);
+	result.addAll(generatePPIsForCompositeTypeProps(ppis));
+	return new EntityPersistenceMetadata(getTableClause(entityType), entityType, getMap(result));
     }
 
     private Set<PropertyPersistenceInfo> generatePPIsForCompositeTypeProps(final Set<PropertyPersistenceInfo> ppis) {
@@ -103,61 +105,6 @@ public class DomainPersistenceMetadata {
 	}
 
 	throw new IllegalStateException("No appropriate converting hib type found for java boolean type");
-    }
-
-    /**
-     * Retrieves persistence info for entity property, which is explicitly persisted within this entity type.
-     * @param entityType
-     * @param propName
-     * @return
-     */
-    public PropertyPersistenceInfo getPropPersistenceInfoExplicitly(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
-	final EntityPersistenceMetadata map = hibTypeInfosMap.get(entityType);
-	return map != null ? map.getProps().get(propName) : null;
-    }
-
-    /**
-     * Retrieves persistence info for entity property or its nested subproperty.
-     * @param entityType
-     * @param propName
-     * @return
-     */
-    public PropertyPersistenceInfo getInfoForDotNotatedProp(final Class<? extends AbstractEntity<?>> entityType, final String dotNotatedPropName) {
-	final PropertyPersistenceInfo simplePropInfo = getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
-	if (simplePropInfo != null) {
-	    return simplePropInfo;
-	} else {
-	    final Pair<String, String> propSplit = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
-	    final PropertyPersistenceInfo firstPropInfo = getPropPersistenceInfoExplicitly(entityType, propSplit.getKey());
-	    if (firstPropInfo != null && firstPropInfo.getJavaType() != null) {
-		return getInfoForDotNotatedProp(firstPropInfo.getJavaType(), propSplit.getValue());
-	    } else {
-		return null;
-	    }
-	}
-    }
-
-    public boolean isNullable (final Class<? extends AbstractEntity<?>> entityType, final String dotNotatedPropName) {
-	final PropertyPersistenceInfo simplePropInfo = getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
-	if (simplePropInfo != null) {
-	    return simplePropInfo.isNullable();
-	} else {
-	    final Pair<String, String> propSplit = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
-	    final PropertyPersistenceInfo firstPropInfo = getPropPersistenceInfoExplicitly(entityType, propSplit.getKey());
-	    if (firstPropInfo != null && firstPropInfo.getJavaType() != null) {
-		return isNullable(firstPropInfo.getJavaType(), propSplit.getValue()) || firstPropInfo.isNullable();
-	    } else {
-		throw new IllegalArgumentException("Couldn't determine nullability for prop [" + dotNotatedPropName + "] in type [" + entityType + "]" );
-	    }
-	}
-    }
-
-    public Collection<PropertyPersistenceInfo> getEntityPPIs(final Class<? extends AbstractEntity<?>> entityType) {
-	final EntityPersistenceMetadata epm = hibTypeInfosMap.get(entityType);
-	if (epm == null) {
-	    throw new IllegalStateException("Missing ppi map for entity type: " + entityType);
-	}
-	return epm.getProps().values();
     }
 
     private SortedMap<String, PropertyPersistenceInfo> getMap(final Set<PropertyPersistenceInfo> collection) {

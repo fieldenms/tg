@@ -44,7 +44,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     }
 
     private Pair<TokenCategory, Object> getResultForEntityTypeAsSource() {
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource((Class) firstValue(), (String) secondValue(), getQueryBuilder().getDomainPersistenceMetadata()));
+	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource((Class) firstValue(), (String) secondValue(), getQueryBuilder().getDomainPersistenceMetadataAnalyser()));
     }
 
     private Pair<TokenCategory, Object> getResultForEntityModelAsSource() {
@@ -54,7 +54,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
 	    queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, getParamValues()));
 	}
 
-	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new QueryBasedSource((String) secondValue(), getQueryBuilder().getDomainPersistenceMetadata(), queries.toArray(new EntQuery[]{})));
+	return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new QueryBasedSource((String) secondValue(), getQueryBuilder().getDomainPersistenceMetadataAnalyser(), queries.toArray(new EntQuery[]{})));
     }
 
     @Override

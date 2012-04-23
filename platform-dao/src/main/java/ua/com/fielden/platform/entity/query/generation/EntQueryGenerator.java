@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
@@ -16,14 +16,14 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
     private final DbVersion dbVersion;
-    private final DomainPersistenceMetadata domainPersistenceMetadata;
+    private final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser;
     private final IFilter filter;
     private final String username;
 
 
-    public EntQueryGenerator(final DbVersion dbVersion, final DomainPersistenceMetadata domainPersistenceMetadata, final IFilter filter, final String username) {
+    public EntQueryGenerator(final DbVersion dbVersion, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser, final IFilter filter, final String username) {
 	this.dbVersion = dbVersion;
-	this.domainPersistenceMetadata = domainPersistenceMetadata;
+	this.domainPersistenceMetadataAnalyser = domainPersistenceMetadataAnalyser;
 	this.filter = filter;
 	this.username = username;
     }
@@ -116,14 +116,14 @@ public class EntQueryGenerator {
 	}
 
 	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), orderBy.getModel(), qryModel.getResultType(), category, //
-		domainPersistenceMetadata, filter, username, this);
+		domainPersistenceMetadataAnalyser, filter, username, this);
     }
 
     public DbVersion getDbVersion() {
         return dbVersion;
     }
 
-    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
-        return domainPersistenceMetadata;
+    public DomainPersistenceMetadataAnalyser getDomainPersistenceMetadataAnalyser() {
+        return domainPersistenceMetadataAnalyser;
     }
 }

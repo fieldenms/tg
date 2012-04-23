@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.query.fliuent;
+package ua.com.fielden.platform.entity.query.fluent;
 
 import org.junit.Test;
 
