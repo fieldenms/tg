@@ -35,6 +35,7 @@ public class FluencyApiTest extends TestCase {
     private static String model = "model";
     private static String modelAsAggregate = "modelAsAggregate";
     private static String prop = "prop";
+    private static String extProp = "extProp";
     private static String param = "param";
     private static String iParam = "iParam";
     private static String val = "val";
@@ -117,37 +118,37 @@ public class FluencyApiTest extends TestCase {
     public void test_IWhere0(){
 	checkFluency( //
 		select(TgVehicle.class).where(), //
-		array(model, prop, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
+		array(model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
     }
 
     public void test_IWhere1(){
 	checkFluency( //
 		select(TgVehicle.class).where().begin(), //
-		array(model, prop, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
+		array(model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
     }
 
     public void test_IWhere2(){
 	checkFluency( //
 		select(TgVehicle.class).where().begin().begin(), //
-		array(model, prop, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
+		array(model, prop, extProp, param, iParam, val, iVal, begin, notBegin, beginExpr, expr), exists, functions, anyOfs, allOfs);
     }
 
     public void test_IWhere3(){
 	checkFluency( //
 		select(TgVehicle.class).where().begin().begin().begin(), //
-		array(model, prop, param, iParam, val, iVal, beginExpr, expr), exists, functions, anyOfs, allOfs);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), exists, functions, anyOfs, allOfs);
     }
 
     public void test_IFunctionLastArgument_with_ICompleted(){
 	checkFluency( //
 		select(TgVehicle.class).groupBy(), //
-		array(model, prop, param, iParam, val, iVal, beginExpr, expr), functions);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions);
     }
 
     public void test_IFunctionYieldedLastArgument_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
 	checkFluency( //
 		select(TgVehicle.class).yield(), //
-		array(model, prop, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
     }
 
     public void test_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded() {
@@ -159,36 +160,36 @@ public class FluencyApiTest extends TestCase {
     public void test_IFunctionLastArgument_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
 	checkFluency( //
 		select(TgVehicle.class).yield().secondOf(), //
-		array(model, prop, param, iParam, val, iVal, beginExpr, expr), functions);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions);
     }
 
     public void test_IFunctionLastArgument_with_IComparisonOperator0(){
 	checkFluency( //
 		select(TgVehicle.class).where().secondOf(), //
-		array(model, prop, param, iParam, val, iVal, beginExpr, expr), functions);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), functions);
     }
 
     public void test_IYieldExprItem0_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
 	checkFluency( //
 		select(TgVehicle.class).yield().beginExpr(), //
-		array(model, prop, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
     }
 
     public void test_IYieldExprItem1_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
 	checkFluency( //
 		select(TgVehicle.class).yield().beginExpr().beginExpr(), //
-		array(model, prop, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
     }
 
     public void test_IYieldExprItem2_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
 	checkFluency( //
 		select(TgVehicle.class).yield().beginExpr().beginExpr().beginExpr(), //
-		array(model, prop, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
+		array(model, prop, extProp, param, iParam, val, iVal, beginExpr, expr, join), functions, aggregateFunctions);
     }
 
     public void test_IYieldExprItem3_with_IFirstYieldedItemAlias_with_ISubsequentCompletedAndYielded(){
 	checkFluency( //
 		select(TgVehicle.class).yield().beginExpr().beginExpr().beginExpr().beginExpr(), //
-		array(model, prop, param, iParam, val, iVal, expr, join), functions, aggregateFunctions);
+		array(model, prop, extProp, param, iParam, val, iVal, expr, join), functions, aggregateFunctions);
     }
 }
