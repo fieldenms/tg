@@ -212,6 +212,8 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	switch (cat) {
 	case PROP:
 	    return new EntProp((String) value);
+	case EXT_PROP:
+	    return new EntProp((String) value, true);
 	case PARAM:
 	    return new EntValue(getParamValue((String) value));
 	case IPARAM:

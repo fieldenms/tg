@@ -38,7 +38,7 @@ public class TgVehicle extends AbstractEntity<String> {
 
     private static final ExpressionModel calc1_ = expr().prop("price.amount").add().prop("purchasePrice.amount").model();
     private static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
-    private static final ExpressionModel calc3_ = expr().model(select(TgFuelUsage.class).where().prop("date").lt().prop("initDate").yield().sumOf().prop("qty").modelAsPrimitive()).model();
+    private static final ExpressionModel calc3_ = expr().model(select(TgFuelUsage.class).where().prop("date").lt().extProp("initDate").yield().sumOf().prop("qty").modelAsPrimitive()).model();
     private static final ExpressionModel calc4_ = expr().model(select(TgFuelUsage.class).where().prop("qty").lt().prop("calc2").yield().sumOf().prop("qty").modelAsPrimitive()).model();
     private static final ExpressionModel calc5_ = expr().prop("calc1").add().prop("calc1").model();
     private static final ExpressionModel calc6_ = expr().prop("calc1").div().prop("calc3").model();

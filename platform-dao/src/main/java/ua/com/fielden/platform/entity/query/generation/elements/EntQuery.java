@@ -211,6 +211,22 @@ public class EntQuery implements ISingleOperand {
 	enhanceToFinalState(generator);
     }
 
+    private Pair<List<EntProp>, List<EntProp>> separateInternalFromExternalProps(final List<EntProp> allProps) {
+	final List<EntProp> internal = new ArrayList<EntProp>();
+	final List<EntProp> external = new ArrayList<EntProp>();
+
+	for (final EntProp entProp : allProps) {
+	    if (entProp.isExternal()) {
+		external.add(entProp);
+	    } else {
+		internal.add(entProp);
+	    }
+	}
+
+	return new Pair<List<EntProp>, List<EntProp>>(internal, external);
+
+    }
+
     private void enhanceToFinalState(final EntQueryGenerator generator) {
 	for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
 	    final ISource source = sourceAndItsJoinType.getKey();
@@ -228,7 +244,9 @@ public class EntQuery implements ISingleOperand {
 	    immediateSubqueries = getImmediateSubqueries();
 	    associateSubqueriesWithMasterQuery(immediateSubqueries);
 
-	    final List<EntProp> immediateProperties = getImmediateProps();
+	    final Pair<List<EntProp>, List<EntProp>> immediateAllProperties = separateInternalFromExternalProps(getImmediateProps());
+	    final List<EntProp> immediateProperties = immediateAllProperties.getKey();
+	    final List<EntProp> immediateExtProperties = immediateAllProperties.getValue();
 	    associatePropertiesWithHoldingQuery(immediateProperties);
 
 	    final List<EntProp> propsToBeResolved = new ArrayList<EntProp>();
@@ -237,6 +255,7 @@ public class EntQuery implements ISingleOperand {
 
 	    final Pair<List<EntProp>, Boolean> result = resolveProps(propsToBeResolved, generator);
 	    unresolvedProps = result.getKey();
+	    unresolvedProps.addAll(immediateExtProperties);
 	    allCalculatedPropsResolved = result.getValue();
 	}
 

@@ -30,7 +30,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class ConditionBuilder extends AbstractTokensBuilder {
     private final static ICondition alwaysTrue = new ComparisonTest(new EntValue(0), ComparisonOperator.EQ, new EntValue(0));
 
-    private final static List<TokenCategory> singleOperands = Arrays.asList(new TokenCategory[] { TokenCategory.PROP, TokenCategory.PARAM, TokenCategory.IPARAM, TokenCategory.VAL,
+    private final static List<TokenCategory> singleOperands = Arrays.asList(new TokenCategory[] { TokenCategory.PROP, TokenCategory.EXT_PROP, TokenCategory.PARAM, TokenCategory.IPARAM, TokenCategory.VAL,
 	    TokenCategory.IVAL, TokenCategory.EXPR, TokenCategory.FUNCTION_MODEL, TokenCategory.EQUERY_TOKENS, TokenCategory.EXPR_TOKENS });
     private final static List<TokenCategory> mutlipleAnyOperands = Arrays.asList(new TokenCategory[] { TokenCategory.ANY_OF_PROPS, TokenCategory.ANY_OF_PARAMS,
 	    TokenCategory.ANY_OF_VALUES, TokenCategory.ANY_OF_EQUERY_TOKENS, TokenCategory.ANY_OF_EXPR_TOKENS });

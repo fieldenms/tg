@@ -141,6 +141,10 @@ final class Tokens {
 	return add(TokenCategory.PROP, propName);
     }
 
+    public Tokens extProp(final String propName) {
+	return add(TokenCategory.EXT_PROP, propName);
+    }
+
     public Tokens val(final Object value) {
 	return add(TokenCategory.VAL, valuePreprocessor.apply(value));
     }

@@ -9,6 +9,7 @@ public class EntProp implements ISingleOperand {
     private Class propType;
     private Object hibType;
     private boolean nullable;
+    private boolean external = false;
 
     private EntQuery holder; // query, where given property resides (not to be mixed with the query, which source given property is resolved to - in case of correlated subqueries these two may be different queries (subquery and one of its master).
     private String sql;
@@ -33,6 +34,12 @@ public class EntProp implements ISingleOperand {
     public EntProp(final String name) {
 	super();
 	this.name = name;
+    }
+
+    public EntProp(final String name, final boolean external) {
+	super();
+	this.name = name;
+	this.external = external;
     }
 
     public EntProp(final String name, final Class propType, final Object hibType, final EntQuery holder) {
@@ -176,5 +183,9 @@ public class EntProp implements ISingleOperand {
 
     public void setName(final String name) {
         this.name = name;
+    }
+
+    public boolean isExternal() {
+        return external;
     }
 }

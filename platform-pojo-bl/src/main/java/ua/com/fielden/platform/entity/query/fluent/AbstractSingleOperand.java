@@ -47,6 +47,11 @@ abstract class AbstractSingleOperand<T> extends AbstractQueryLink implements ISi
     }
 
     @Override
+    public T extProp(final String propertyName) {
+	return copy(getParent(), getTokens().extProp(propertyName));
+    }
+
+    @Override
     public T expr(final ExpressionModel expr) {
 	return copy(getParent(), getTokens().expr(expr));
     }
