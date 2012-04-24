@@ -7,13 +7,9 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.treemodel.IPropertyFilter;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -29,64 +25,9 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
      *
      * @param declaringType
      * @param dotNotationExp
-     * @param propertyFilter
      */
-    public DynamicPropertyAnalyser(final Class<?> declaringType, final String dotNotationExp, final IPropertyFilter propertyFilter) {
-	super(declaringType, dotNotationExp, propertyFilter);
-    }
-
-    /**
-     * Creates {@link DynamicPropertyAnalyser} instance with specified {@link IPropertyFilter}.
-     *
-     * @param propertyFilter
-     */
-    public DynamicPropertyAnalyser(final IPropertyFilter propertyFilter) {
-	super();
-	setPropertyFilter(propertyFilter);
-    }
-
-    /**
-     * Returns the title and description for the property.
-     *
-     * @return
-     */
-    public Pair<String, String> getTitleAndDesc() {
-	if (propertyTypes != null) {
-	    final String prefix = getCriteiraFullNamePrefix();
-	    return TitlesDescsGetter.getTitleAndDesc(isEmpty(getAnalysingProperty()) ? prefix : getPropertyField().getName(), isEmpty(getAnalysingProperty()) ? getPropertyType()
-		    : getDeclaringClasses(propertyNames.length - 1).get(0));
-	}
-	return new Pair<String, String>("property", "property description");
-    }
-
-    /**
-     * Returns the prefix that is needed for composing full property name.
-     *
-     * @return
-     */
-    private String getCriteiraFullNamePrefix() {
-	try {
-	    final String fullNamePrefix = getCriteriaFullName().replace(getAnalysingProperty(), "");
-	    if (isEmpty(fullNamePrefix)) {
-		return fullNamePrefix;
-	    } else {
-		return fullNamePrefix.startsWith(".") ? fullNamePrefix.substring(1) : fullNamePrefix;
-	    }
-	} catch (final NullPointerException e) {
-	}
-	return null;
-    }
-
-    /**
-     * Returns the {@link Field} instance that represents analysing property.
-     *
-     * @return
-     */
-    public Field getPropertyField() {
-	if (propertyFields != null) {
-	    return propertyFields[propertyFields.length - 1];
-	}
-	return null;
+    public DynamicPropertyAnalyser(final Class<?> declaringType, final String dotNotationExp) {
+	super(declaringType, dotNotationExp);
     }
 
     /**
@@ -184,6 +125,18 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
     }
 
     /**
+     * Returns the {@link Field} instance that represents analysing property.
+     *
+     * @return
+     */
+    private Field getPropertyField() {
+        if (propertyFields != null) {
+            return propertyFields[propertyFields.length - 1];
+        }
+        return null;
+    }
+
+    /**
      * Determines whether analysing property has simple key or complex key (i.e is key is {@link AbstractEntity} or {@link DynamicEntityKey}).
      *
      * @param keyType
@@ -193,51 +146,4 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
 	return AnnotationReflector.isAnnotationPresent(KeyType.class, keyType)
 		&& !DynamicEntityKey.class.isAssignableFrom(AnnotationReflector.getAnnotation(KeyType.class, keyType).value());
     }
-
-    /**
-     * Returns {@link Field} for the full property name. See {@link #getCriteriaFullName()} for more information.
-     *
-     * @return
-     */
-    public Field getCriteriaPropertyField() {
-	final String prefix = getCriteiraFullNamePrefix();
-	Field propertyField = null;
-	try {
-	    propertyField = isEmpty(prefix) ? getPropertyField() : Finder.findFieldByName(getPropertyType(), prefix);
-	} catch (final NullPointerException e) {
-
-	}
-	return propertyField;
-    }
-
-    /**
-     * Returns the annotation of the criteria property.
-     *
-     * @param annotationType
-     *            - specified annotation type.
-     *
-     * @return
-     */
-    public <T extends Annotation> T getCriteriaAnnotation(final Class<T> annotationType) {
-	final Field propertyField = getCriteriaPropertyField();
-	return propertyField == null ? null : propertyField.getAnnotation(annotationType);
-    }
-
-    /**
-     * Returns the value that indicates whether analysing property contains AbstractUnionEntity instance in dot-notation.
-     *
-     * @return
-     */
-    public boolean isAbstractUnionProperty() {
-	if (propertyTypes == null || propertyTypes.length == 0) {
-	    return false;
-	}
-	for (final Class<?> propertyType : propertyTypes) {
-	    if (propertyType != null && AbstractUnionEntity.class.isAssignableFrom(propertyType)) {
-		return true;
-	    }
-	}
-	return false;
-    }
-
 }

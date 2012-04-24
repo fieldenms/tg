@@ -14,7 +14,6 @@ import java.util.List;
 
 import javax.swing.Icon;
 import javax.swing.JTable;
-import javax.swing.JToggleButton;
 import javax.swing.SortOrder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
@@ -55,6 +54,10 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	super(model, owner);
 	this.egiPanel = new EgiPanel(getModel().getGridModel(), false);
 	this.addSelectionEventListener(createGridAnalysisSelectionListener());
+
+	//Set this analysis view for model.
+	model.setAnalysisView(this);
+
 	configureEgiWithOrdering();
 	layoutView();
     }
@@ -88,6 +91,22 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     protected void layoutView() {
 	setLayout(new MigLayout("fill, insets 0","[fill, grow]","[fill, grow]"));
 	add(this.egiPanel);
+    }
+
+    /**
+     * Determines the number of rows in the table those must be shown on the page using the size of the content panel as the basis.
+     * If the calculated size is zero then value of 25 is returned.
+     * This is done to handle cases where calculation happens prior to panel resizing takes place.
+     *
+     * @return
+     */
+    final int getPageSize() {
+	double pageSize = egiPanel.getEgiScrollPane().getSize().getHeight() / egiPanel.getEgi().getRowHeight();
+	if (getOwner().getOwner().getCriteriaPanel() != null) {
+	    pageSize += getOwner().getOwner().getCriteriaPanel().getSize().getHeight() / egiPanel.getEgi().getRowHeight();
+	}
+	final int pageCapacity = (int) Math.floor(pageSize);
+	return pageCapacity > 1 ? pageCapacity : 1;
     }
 
     //    /**

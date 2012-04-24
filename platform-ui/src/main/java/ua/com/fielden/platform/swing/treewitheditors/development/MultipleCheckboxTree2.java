@@ -15,7 +15,6 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeSelectionModel;
 
 import ua.com.fielden.platform.swing.menu.filter.AbstractFilterableTreeModel;
-import ua.com.fielden.platform.swing.treewitheditors.Tree;
 
 /**
  * A multiple checkbox tree with a model.
@@ -53,11 +52,6 @@ public class MultipleCheckboxTree2 extends Tree {
 	getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(enter, EDITING_MODE);
     }
 
-    private void setSpecificModel(final MultipleCheckboxTreeModel2 model) {
-	this.model = model;
-	this.model.makeTreeRepaintable(this);
-    }
-
     /**
      * Sets the TreeModel and links it to the existing {@link TreeCheckingModel} s.
      */
@@ -80,6 +74,15 @@ public class MultipleCheckboxTree2 extends Tree {
 	}
     }
 
+    public MultipleCheckboxTreeModel2 getSpecificModel() {
+        return model;
+    }
+
+    private void setSpecificModel(final MultipleCheckboxTreeModel2 model) {
+        this.model = model;
+        this.model.makeTreeRepaintable(this);
+    }
+
     private Action createEditingModeAction() {
 	return new AbstractAction() {
 	    private static final long serialVersionUID = -5565139442029535686L;
@@ -93,9 +96,5 @@ public class MultipleCheckboxTree2 extends Tree {
 		}
 	    }
 	};
-    }
-
-    public MultipleCheckboxTreeModel2 getSpecificModel() {
-	return model;
     }
 }

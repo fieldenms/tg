@@ -50,7 +50,6 @@ import ua.com.fielden.platform.swing.components.bind.development.Binder.Rebinder
 import ua.com.fielden.platform.swing.components.bind.development.Binder.RequiredChangeListener;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitActionable;
-import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -439,8 +438,7 @@ public final class ToggleButtonAdapter extends JToggleButton.ToggleButtonModel i
 
     @Override
     public final MetaProperty boundedMetaProperty() {
-	// TODO doesn't work for non-AE "entity" !!!
-	return !(entity instanceof DynamicEntityQueryCriteria) ? EntityUtils.findFirstFailedMetaProperty((AbstractEntity<?>) Rebinder.getActualEntity(entity), propertyName) : null;
+	return EntityUtils.findFirstFailedMetaProperty((AbstractEntity<?>) Rebinder.getActualEntity(entity), propertyName);
     }
 
     @Override

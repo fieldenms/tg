@@ -6,21 +6,25 @@ import java.util.List;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.ILocatorManager.Phase;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import ua.com.fielden.platform.swing.review.development.EnhancedLocatorEntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationModel;
+import ua.com.fielden.platform.utils.Pair;
 
 public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEditor {
 
@@ -109,7 +113,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public EntityPropertyEditorWithLocator(final AbstractEntity<?> entity, final String propertyName, final LocatorConfigurationModel locatorConfigurationModel, final Class<?> elementType, final IValueMatcher<?> valueMatcher, final String caption, final String toolTip) {
-	super(entity, propertyName, new EntityLocatorValueMatcher(valueMatcher, locatorConfigurationModel.getLocatorManager(), locatorConfigurationModel.getRootType(), locatorConfigurationModel.getName()));
+	super(entity, propertyName, new EntityLocatorValueMatcher(valueMatcher, locatorConfigurationModel.getLocatorManager(), locatorConfigurationModel.getCriteriaGenerator(), locatorConfigurationModel.getEntityType(), locatorConfigurationModel.getRootType(), locatorConfigurationModel.getName()));
 	getValueMatcher().setBindedEntity(entity);
 	editor = createEditorWithLocator(entity, propertyName, locatorConfigurationModel, elementType,//
 		caption, toolTip, isSingle(entity, propertyName), isStringBinded(entity, propertyName));
@@ -155,13 +159,15 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	return ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, locatorConfigurationModel, entityType, getValueMatcher(), "key", "desc", caption, isSingle ? null : ",", toolTip, stringBinding);
     }
 
-    public static class EntityLocatorValueMatcher<T extends AbstractEntity, R extends AbstractEntity> implements IValueMatcher<T>{
+    private static class EntityLocatorValueMatcher<T extends AbstractEntity<?>, R extends AbstractEntity<?>> implements IValueMatcher<T>{
 
 	private final IValueMatcher<T> autocompleterValueMatcher;
 
 	private final ILocatorManager locatorManager;
 
-	//private final Class<T> entityType;
+	private final ICriteriaGenerator criteriaGenerator;
+
+	private final Class<T> entityType;
 
 	private final Class<R> rootType;
 
@@ -172,12 +178,14 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	public EntityLocatorValueMatcher(//
 		final IValueMatcher<T> autocompleterValueMatcher,//
 		final ILocatorManager locatorManager,//
-		//	final Class<T> entityType,//
+		final ICriteriaGenerator criteriaGenerator,//
+		final Class<T> entityType,//
 		final Class<R> rootType,//
 		final String propertyName){
 	    this.autocompleterValueMatcher = autocompleterValueMatcher;
 	    this.locatorManager = locatorManager;
-	    //  this.entityType = entityType;
+	    this.criteriaGenerator = criteriaGenerator;
+	    this.entityType = entityType;
 	    this.rootType = rootType;
 	    this.propertyName = propertyName;
 	}
@@ -210,11 +218,21 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	    return findMatches(value, getFetchModel());
 	}
 
+	@SuppressWarnings("unchecked")
 	private List<T> findMatches(final String value, final fetch<?> fetchModel) {
-	    final ILocatorDomainTreeManager ldtm = ldtm();
-	    if(ldtm.isUseForAutocompletion()){
-		//TODO implement this method when the ldtm is used for autocompleter.
-		return new ArrayList<T>();
+	    final ILocatorDomainTreeManagerAndEnhancer ldtme = ldtme();
+	    if(ldtme.isUseForAutocompletion()){
+		final MetaProperty searchProp = getBindedEntity().getProperty(propertyName);
+		final List<Pair<String, Object>> dependentValues = new ArrayList<Pair<String,Object>>();
+		if (searchProp != null) {
+		    for (final String dependentProperty : searchProp.getDependentPropertyNames()) {
+			if (Finder.isPropertyPresent(searchProp.getType(), dependentProperty)) {
+			    dependentValues.add(new Pair<String, Object>(dependentProperty, getBindedEntity().get(dependentProperty)));
+			}
+		    }
+		}
+		final EnhancedLocatorEntityQueryCriteria<T, IEntityDao<T>> criteria = criteriaGenerator.generateLocatorQueryCriteria(entityType, ldtme);
+		return criteria.runLocatorQuery(getPageSize(), value, fetchModel, dependentValues.toArray(new Pair[0]));
 	    }else{
 		if(fetchModel == null){
 		    return autocompleterValueMatcher.findMatches(value);
@@ -225,17 +243,17 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
 	}
 
-	private ILocatorDomainTreeManager ldtm(){
+	private ILocatorDomainTreeManagerAndEnhancer ldtme(){
 	    if(Phase.USAGE_PHASE != locatorManager.phaseAndTypeOfLocatorManager(rootType, propertyName).getKey()){
 		throw new IllegalStateException("The locator must be in usage mode!");
 	    }
 	    locatorManager.refreshLocatorManager(rootType, propertyName);
-	    final ILocatorDomainTreeManager ldtm = locatorManager.getLocatorManager(rootType, propertyName);
-	    if(ldtm == null){
+	    final ILocatorDomainTreeManagerAndEnhancer ldtme = locatorManager.getLocatorManager(rootType, propertyName);
+	    if(ldtme == null){
 		throw new IllegalStateException("The locator manager must be initialised");
 	    }
 	    locatorManager.discardLocatorManager(rootType, propertyName);
-	    return ldtm;
+	    return ldtme;
 	}
 
 	@Override

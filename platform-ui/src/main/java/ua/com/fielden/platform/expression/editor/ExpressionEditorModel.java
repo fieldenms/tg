@@ -536,11 +536,6 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
 	}
 
-	@Override
-	public boolean isIgnored() {
-	    return false;
-	}
-
 	/**
 	 * Triggers commit action for this property editor.
 	 */
@@ -660,12 +655,6 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	public IValueMatcher<?> getValueMatcher() {
 	    throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
 	}
-
-	@Override
-	public boolean isIgnored() {
-	    return false;
-	}
-
     }
 
     /**

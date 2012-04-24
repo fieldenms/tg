@@ -7,14 +7,13 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.criteria.enhanced.CentreEntityQueryCriteriaToEnhance;
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
-import ua.com.fielden.platform.criteria.enhanced.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.criteria.enhanced.EnhancedLocatorEntityQueryCriteria;
+import ua.com.fielden.platform.criteria.enhanced.LocatorEntityQueryCriteriaToEnhance;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -35,6 +34,8 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.development.EnhancedLocatorEntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -64,21 +65,21 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     @Override
-    public <T extends AbstractEntity<?>> EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme) {
-	return generateQueryCriteria(root, cdtme, EnhancedCentreEntityQueryCriteria.class);
+    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme) {
+	return (EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>>)generateQueryCriteria(root, cdtme, CentreEntityQueryCriteriaToEnhance.class);
     }
 
     @Override
-    public <T extends AbstractEntity<?>> EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>> generateLocatorQueryCriteria(final Class<T> root, final ILocatorDomainTreeManagerAndEnhancer ldtme) {
-	return generateQueryCriteria(root, ldtme, EnhancedLocatorEntityQueryCriteria.class);
+    public <T extends AbstractEntity<?>> EnhancedLocatorEntityQueryCriteria<T, IEntityDao<T>> generateLocatorQueryCriteria(final Class<T> root, final ILocatorDomainTreeManagerAndEnhancer ldtme) {
+	return (EnhancedLocatorEntityQueryCriteria<T, IEntityDao<T>>)generateQueryCriteria(root, ldtme, LocatorEntityQueryCriteriaToEnhance.class);
     }
 
     private <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> EntityQueryCriteria<CDTME, T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final CDTME cdtme, final Class<? extends EntityQueryCriteria> entityClass) {
 	final List<NewProperty> newProperties = new ArrayList<NewProperty>();
 	for(final String propertyName : cdtme.getFirstTick().checkedProperties(root)){
 	    if (!AbstractDomainTree.isPlaceholder(propertyName)) {
-                newProperties.addAll(generateCriteriaProperties(root, cdtme.getEnhancer(), propertyName));
-            }
+		newProperties.addAll(generateCriteriaProperties(root, cdtme.getEnhancer(), propertyName));
+	    }
 	}
 	final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 

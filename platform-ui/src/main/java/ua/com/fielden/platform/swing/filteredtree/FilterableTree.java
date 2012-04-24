@@ -1,11 +1,7 @@
 package ua.com.fielden.platform.swing.filteredtree;
 
 import javax.swing.JTree;
-import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeWillExpandListener;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
@@ -16,8 +12,7 @@ import ua.com.fielden.platform.swing.menu.filter.FilterableTreeModel;
 import ua.com.fielden.platform.swing.menu.filter.IFilter;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
-import ua.com.fielden.platform.swing.treewitheditors.Tree;
-import ua.com.fielden.platform.treemodel.EntitiesTreeModel;
+import ua.com.fielden.platform.swing.treewitheditors.development.Tree;
 
 /**
  * {@link JTree} that supports filtering.
@@ -92,18 +87,6 @@ public class FilterableTree extends Tree{
 	    }
 	});
 
-	addTreeWillExpandListener(new TreeWillExpandListener() {
-	    @Override
-	    public void treeWillExpand(final TreeExpansionEvent event) throws ExpandVetoException {
-		if (getModel().getOriginModel() instanceof EntitiesTreeModel) {
-		    ((EntitiesTreeModel) getModel().getOriginModel()).loadProperties((DefaultMutableTreeNode) event.getPath().getLastPathComponent());
-		}
-	    }
-
-	    @Override
-	    public void treeWillCollapse(final TreeExpansionEvent event) throws ExpandVetoException {
-	    }
-	});
 
 	setCellRenderer(new FilterCellRenderer(getModel()));
 	final TreeSelectionModel selectionModel = getSelectionModel();

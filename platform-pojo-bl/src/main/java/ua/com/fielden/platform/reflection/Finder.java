@@ -26,7 +26,6 @@ import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.treemodel.IPropertyFilter;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -205,7 +204,7 @@ public class Finder {
      * @return
      */
     public static List<Field> findRealProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
-        return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations);
+	return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations);
     }
 
     /**
@@ -251,25 +250,25 @@ public class Finder {
      * @return
      */
     public static List<Field> getKeyMembers(final Class<?> type) {
-        final SortedMap<Integer, Field> properties = new TreeMap<Integer, Field>(); // the use of SortedMap ensures the correct order of properties to be used the composite key
-        final List<Field> compositeKeyFields = findRealProperties(type, CompositeKeyMember.class);
+	final SortedMap<Integer, Field> properties = new TreeMap<Integer, Field>(); // the use of SortedMap ensures the correct order of properties to be used the composite key
+	final List<Field> compositeKeyFields = findRealProperties(type, CompositeKeyMember.class);
 
-        for (final Field field : compositeKeyFields) {
-            final CompositeKeyMember annotation = field.getAnnotation(CompositeKeyMember.class);
-            final int order = annotation.value();
-            if (properties.containsKey(order)) {
-        	throw new IllegalArgumentException("Annotation " + CompositeKeyMember.class.getName() + " in class " + type.getName() + " for property '" + field.getName()
-        		+ "' has a duplicate order value of " + order + ", which is already present in property '" + properties.get(order) + "'.");
-            }
-            properties.put(order, field);
-        }
-        final List<Field> keyMembers = new ArrayList<Field>(properties.values());
-        // if there where no fields annotated with CompositeKeyMember then this
-        // entity uses a non-composite (simple) key.
-        if (keyMembers.size() == 0) {
-            keyMembers.add(getFieldByName(type, AbstractEntity.KEY));
-        }
-        return keyMembers;
+	for (final Field field : compositeKeyFields) {
+	    final CompositeKeyMember annotation = field.getAnnotation(CompositeKeyMember.class);
+	    final int order = annotation.value();
+	    if (properties.containsKey(order)) {
+		throw new IllegalArgumentException("Annotation " + CompositeKeyMember.class.getName() + " in class " + type.getName() + " for property '" + field.getName()
+			+ "' has a duplicate order value of " + order + ", which is already present in property '" + properties.get(order) + "'.");
+	    }
+	    properties.put(order, field);
+	}
+	final List<Field> keyMembers = new ArrayList<Field>(properties.values());
+	// if there where no fields annotated with CompositeKeyMember then this
+	// entity uses a non-composite (simple) key.
+	if (keyMembers.size() == 0) {
+	    keyMembers.add(getFieldByName(type, AbstractEntity.KEY));
+	}
+	return keyMembers;
     }
 
     // ======================================================================================================
@@ -286,28 +285,28 @@ public class Finder {
      * @throws NoSuchFieldException
      */
     public static Field getFieldByName(final Class<?> type, final String name) {
-        Class<?> klass = type;
-        if (AbstractUnionEntity.class.isAssignableFrom(klass)) {
-            final List<String> commonPropertiesList = AbstractUnionEntity.commonProperties((Class<AbstractUnionEntity>) type);
-            if (commonPropertiesList.contains(name)) {
-        	return getFieldByName(AbstractUnionEntity.unionProperties(((Class<AbstractUnionEntity>) type)).get(0).getType(), name);
-            }
-        }
-        while (klass != Object.class) { // need to iterated thought hierarchy in
-            // order to retrieve fields from above
-            // the current instance
-            // iterate though the list of fields declared in the class
-            // represented by klass variable
-            for (final Field field : klass.getDeclaredFields()) {
-        	if (name.equals(field.getName())) {
-        	    return field;
-        	}
-            }
-            // move to the upper class in the hierarchy in search for more
-            // fields
-            klass = klass.getSuperclass();
-        }
-        throw new IllegalArgumentException("Failed to locate field " + name + " in " + type);
+	Class<?> klass = type;
+	if (AbstractUnionEntity.class.isAssignableFrom(klass)) {
+	    final List<String> commonPropertiesList = AbstractUnionEntity.commonProperties((Class<AbstractUnionEntity>) type);
+	    if (commonPropertiesList.contains(name)) {
+		return getFieldByName(AbstractUnionEntity.unionProperties(((Class<AbstractUnionEntity>) type)).get(0).getType(), name);
+	    }
+	}
+	while (klass != Object.class) { // need to iterated thought hierarchy in
+	    // order to retrieve fields from above
+	    // the current instance
+	    // iterate though the list of fields declared in the class
+	    // represented by klass variable
+	    for (final Field field : klass.getDeclaredFields()) {
+		if (name.equals(field.getName())) {
+		    return field;
+		}
+	    }
+	    // move to the upper class in the hierarchy in search for more
+	    // fields
+	    klass = klass.getSuperclass();
+	}
+	throw new IllegalArgumentException("Failed to locate field " + name + " in " + type);
     }
 
     /**
@@ -326,13 +325,13 @@ public class Finder {
      * @return
      */
     public static Field findFieldByName(final Class<?> type, final String dotNotationExp) {
-        // check if passed "dotNotationExp" is correct:
-        PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
-        if (dotNotationExp.endsWith("()")) {
-            throw new MethodFoundException("Legal situation : method was found by according dot-notation expression == [" + dotNotationExp + "]");
-        }
-        final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExp);
-        return getFieldByName(transformed.getKey(), transformed.getValue());
+	// check if passed "dotNotationExp" is correct:
+	PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
+	if (dotNotationExp.endsWith("()")) {
+	    throw new MethodFoundException("Legal situation : method was found by according dot-notation expression == [" + dotNotationExp + "]");
+	}
+	final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExp);
+	return getFieldByName(transformed.getKey(), transformed.getValue());
     }
 
     /**
@@ -344,18 +343,18 @@ public class Finder {
      * @throws Exception
      */
     public static Object findFieldValueByName(final Object instance, final String dotNotationExp) throws Exception {
-        if (instance == null) {
-            return null;
-        }
-        final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
-        Object value = instance;
-        for (final String property : properties) {
-            value = getPropertyValue(value, property);
-            if (value == null) {
-        	return null;
-            }
-        }
-        return value;
+	if (instance == null) {
+	    return null;
+	}
+	final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
+	Object value = instance;
+	for (final String property : properties) {
+	    value = getPropertyValue(value, property);
+	    if (value == null) {
+		return null;
+	    }
+	}
+	return value;
     }
 
     //    /**
@@ -450,19 +449,19 @@ public class Finder {
      * @return
      */
     private static List<Field> getFieldsAnnotatedWith(final List<Field> fields, final Collection<Class<? extends Annotation>> allAnnotations) {
-        final List<Field> properties = new ArrayList<Field>();
-        for (final Field field : fields) {
-            int count = 0;
-            for (final Class<? extends Annotation> annotation : allAnnotations) {
-        	if (field.isAnnotationPresent(annotation)) {
-        	    count++;
-        	}
-            }
-            if (count == allAnnotations.size()) {
-        	properties.add(field);
-            }
-        }
-        return properties;
+	final List<Field> properties = new ArrayList<Field>();
+	for (final Field field : fields) {
+	    int count = 0;
+	    for (final Class<? extends Annotation> annotation : allAnnotations) {
+		if (field.isAnnotationPresent(annotation)) {
+		    count++;
+		}
+	    }
+	    if (count == allAnnotations.size()) {
+		properties.add(field);
+	    }
+	}
+	return properties;
     }
 
     /**
@@ -474,23 +473,23 @@ public class Finder {
      */
     public static List<Field> getFields(final Class<?> type, final boolean withUnion){
 	final List<Field> properties = new ArrayList<Field>();
-        Class<?> klass = type;
+	Class<?> klass = type;
 	if (AbstractUnionEntity.class.isAssignableFrom(klass) && withUnion) {
-            properties.addAll(getUnionEntityFields((Class<AbstractUnionEntity>) type));
-        } else {
-            while (klass != Object.class) { // need to iterated thought
-        	// hierarchy in order to retrieve
-        	// fields from above the current
-        	// instance
-        	// iterate though the list of fields declared in the class
-        	// represented by klass variable, and add those annotated with
-        	// the specified annotation
-        	properties.addAll(Arrays.asList(klass.getDeclaredFields()));
-        	// move to the upper class in the hierarchy in search for more
-        	// fields
-        	klass = klass.getSuperclass();
-            }
-        }
+	    properties.addAll(getUnionEntityFields((Class<AbstractUnionEntity>) type));
+	} else {
+	    while (klass != Object.class) { // need to iterated thought
+		// hierarchy in order to retrieve
+		// fields from above the current
+		// instance
+		// iterate though the list of fields declared in the class
+		// represented by klass variable, and add those annotated with
+		// the specified annotation
+		properties.addAll(Arrays.asList(klass.getDeclaredFields()));
+		// move to the upper class in the hierarchy in search for more
+		// fields
+		klass = klass.getSuperclass();
+	    }
+	}
 	return properties;
     }
 
@@ -504,29 +503,29 @@ public class Finder {
      * @return
      */
     private static List<Field> getFieldsAnnotatedWith(final Class<?> type, final boolean withUnion, final Class<? extends Annotation> annot, final Class<? extends Annotation>... annotations) {
-        final Set<Class<? extends Annotation>> allAnnotations = new HashSet<Class<? extends Annotation>>();
-        allAnnotations.add(annot);
-        allAnnotations.addAll(Arrays.asList(annotations));
-        return getFieldsAnnotatedWith(getFields(type, withUnion), allAnnotations);
-//        final List<Field> properties = new ArrayList<Field>();
-//        Class<?> klass = type;
-//        if (AbstractUnionEntity.class.isAssignableFrom(klass) && withUnion) {
-//            properties.addAll(getFieldsAnnotatedWith(getUnionEntityFields((Class<AbstractUnionEntity>) type), allAnnotations));
-//        } else {
-//            while (klass != Object.class) { // need to iterated thought
-//        	// hierarchy in order to retrieve
-//        	// fields from above the current
-//        	// instance
-//        	// iterate though the list of fields declared in the class
-//        	// represented by klass variable, and add those annotated with
-//        	// the specified annotation
-//        	properties.addAll(getFieldsAnnotatedWith(Arrays.asList(klass.getDeclaredFields()), allAnnotations));
-//        	// move to the upper class in the hierarchy in search for more
-//        	// fields
-//        	klass = klass.getSuperclass();
-//            }
-//        }
-//        return properties;
+	final Set<Class<? extends Annotation>> allAnnotations = new HashSet<Class<? extends Annotation>>();
+	allAnnotations.add(annot);
+	allAnnotations.addAll(Arrays.asList(annotations));
+	return getFieldsAnnotatedWith(getFields(type, withUnion), allAnnotations);
+	//        final List<Field> properties = new ArrayList<Field>();
+	//        Class<?> klass = type;
+	//        if (AbstractUnionEntity.class.isAssignableFrom(klass) && withUnion) {
+	//            properties.addAll(getFieldsAnnotatedWith(getUnionEntityFields((Class<AbstractUnionEntity>) type), allAnnotations));
+	//        } else {
+	//            while (klass != Object.class) { // need to iterated thought
+	//        	// hierarchy in order to retrieve
+	//        	// fields from above the current
+	//        	// instance
+	//        	// iterate though the list of fields declared in the class
+	//        	// represented by klass variable, and add those annotated with
+	//        	// the specified annotation
+	//        	properties.addAll(getFieldsAnnotatedWith(Arrays.asList(klass.getDeclaredFields()), allAnnotations));
+	//        	// move to the upper class in the hierarchy in search for more
+	//        	// fields
+	//        	klass = klass.getSuperclass();
+	//            }
+	//        }
+	//        return properties;
     }
 
     /**
@@ -538,26 +537,26 @@ public class Finder {
      * @throws IllegalAccessException
      */
     private static Object getAbstractUnionEntityFieldValue(final AbstractUnionEntity value, final String property) throws IllegalAccessException {
-        Field field = null;
-        Object valueToRetrieveFrom = null;
-        final List<String> unionProperties = getFieldNames(AbstractUnionEntity.unionProperties(value.getClass()));
-        final List<String> commonProperties = AbstractUnionEntity.commonProperties(value.getClass());
+	Field field = null;
+	Object valueToRetrieveFrom = null;
+	final List<String> unionProperties = getFieldNames(AbstractUnionEntity.unionProperties(value.getClass()));
+	final List<String> commonProperties = AbstractUnionEntity.commonProperties(value.getClass());
 
-        try {
-            if (unionProperties.contains(property)) { // union properties:
-        	field = getFieldByName(value.getClass(), property);
-        	valueToRetrieveFrom = value;
-            } else if (commonProperties.contains(property) || AbstractEntity.KEY.equals(property) || AbstractEntity.ID.equals(property) || AbstractEntity.DESC.equals(property)) { // common property:
-        	final AbstractEntity<?> activeEntity = value.activeEntity();
-        	field = getFieldByName(activeEntity.getClass(), property);
-        	valueToRetrieveFrom = activeEntity;
-            } else { // not-properly specified property:
-        	throw new RuntimeException("Property [" + property + "] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.");
-            }
-            return getFieldValue(field, valueToRetrieveFrom);
-        } catch (final Exception e) {
-            throw new RuntimeException("Property [" + property + "] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.");
-        }
+	try {
+	    if (unionProperties.contains(property)) { // union properties:
+		field = getFieldByName(value.getClass(), property);
+		valueToRetrieveFrom = value;
+	    } else if (commonProperties.contains(property) || AbstractEntity.KEY.equals(property) || AbstractEntity.ID.equals(property) || AbstractEntity.DESC.equals(property)) { // common property:
+		final AbstractEntity<?> activeEntity = value.activeEntity();
+		field = getFieldByName(activeEntity.getClass(), property);
+		valueToRetrieveFrom = activeEntity;
+	    } else { // not-properly specified property:
+		throw new RuntimeException("Property [" + property + "] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.");
+	    }
+	    return getFieldValue(field, valueToRetrieveFrom);
+	} catch (final Exception e) {
+	    throw new RuntimeException("Property [" + property + "] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.");
+	}
     }
 
     /**
@@ -575,19 +574,19 @@ public class Finder {
      * @throws InvocationTargetException
      */
     private static Object getAbstractUnionEntityMethodValue(final AbstractUnionEntity instance, final String methodName, final Class<?>... arguments) throws NoSuchMethodException,
-            IllegalArgumentException, IllegalAccessException, InvocationTargetException {
-        try {
-            final Method method = Reflector.getMethodForClass(instance.getClass(), methodName, arguments);
-            return getMethodValue(method, instance);
-        } catch (final NoSuchMethodException e) {
-            final AbstractEntity activeEntity = instance.activeEntity();
-            if (activeEntity != null && AbstractUnionEntity.commonMethodNames((Class<AbstractUnionEntity>) instance.getType()).contains(methodName)) {
-        	final Method method = Reflector.getMethodForClass(activeEntity.getClass(), methodName, arguments);
-        	return getMethodValue(method, activeEntity);
-            } else {
-        	throw new RuntimeException("active entity can not be null");
-            }
-        }
+    IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+	try {
+	    final Method method = Reflector.getMethodForClass(instance.getClass(), methodName, arguments);
+	    return getMethodValue(method, instance);
+	} catch (final NoSuchMethodException e) {
+	    final AbstractEntity activeEntity = instance.activeEntity();
+	    if (activeEntity != null && AbstractUnionEntity.commonMethodNames((Class<AbstractUnionEntity>) instance.getType()).contains(methodName)) {
+		final Method method = Reflector.getMethodForClass(activeEntity.getClass(), methodName, arguments);
+		return getMethodValue(method, activeEntity);
+	    } else {
+		throw new RuntimeException("active entity can not be null");
+	    }
+	}
     }
 
     /**
@@ -599,11 +598,11 @@ public class Finder {
      * @throws IllegalAccessException
      */
     public static Object getFieldValue(final Field field, final Object valueToRetrieveFrom) throws IllegalAccessException {
-        final boolean isAccessible = field.isAccessible();
-        field.setAccessible(true);
-        final Object value = field.get(valueToRetrieveFrom);
-        field.setAccessible(isAccessible);
-        return value;
+	final boolean isAccessible = field.isAccessible();
+	field.setAccessible(true);
+	final Object value = field.get(valueToRetrieveFrom);
+	field.setAccessible(isAccessible);
+	return value;
     }
 
     /**
@@ -617,11 +616,11 @@ public class Finder {
      * @throws InvocationTargetException
      */
     private static Object getMethodValue(final Method method, final Object objectToInvokeOn) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
-        final boolean isAccessible = method.isAccessible();
-        method.setAccessible(true);
-        final Object value = method.invoke(objectToInvokeOn);
-        method.setAccessible(isAccessible);
-        return value;
+	final boolean isAccessible = method.isAccessible();
+	method.setAccessible(true);
+	final Object value = method.invoke(objectToInvokeOn);
+	method.setAccessible(isAccessible);
+	return value;
     }
 
     /**
@@ -633,26 +632,26 @@ public class Finder {
      * @throws IllegalAccessException
      */
     private static Object getPropertyValue(Object value, final String property) throws IllegalAccessException {
-        if (!property.contains("()")) {
-            if (value instanceof AbstractUnionEntity) {
-        	value = getAbstractUnionEntityFieldValue((AbstractUnionEntity) value, property);
-            } else {
-        	value = getFieldValue(getFieldByName(value.getClass(), property), value);
-            }
-        } else {
-            try {
-        	if (value instanceof AbstractUnionEntity) {
-        	    value = getAbstractUnionEntityMethodValue((AbstractUnionEntity) value, property.substring(0, property.length() - 2));
-        	} else {
-        	    value = getMethodValue(Reflector.getMethod(value.getClass(), property.substring(0, property.length() - 2)), value);
-        	}
-            } catch (final NoSuchMethodException e) {
-        	throw new IllegalArgumentException("Failed to locate parameterless method " + property + " in " + value.getClass(), e);
-            } catch (final InvocationTargetException e) {
-        	throw new IllegalArgumentException("Failed to invoke parameterless method " + property + " on instance of " + value.getClass(), e);
-            }
-        }
-        return value;
+	if (!property.contains("()")) {
+	    if (value instanceof AbstractUnionEntity) {
+		value = getAbstractUnionEntityFieldValue((AbstractUnionEntity) value, property);
+	    } else {
+		value = getFieldValue(getFieldByName(value.getClass(), property), value);
+	    }
+	} else {
+	    try {
+		if (value instanceof AbstractUnionEntity) {
+		    value = getAbstractUnionEntityMethodValue((AbstractUnionEntity) value, property.substring(0, property.length() - 2));
+		} else {
+		    value = getMethodValue(Reflector.getMethod(value.getClass(), property.substring(0, property.length() - 2)), value);
+		}
+	    } catch (final NoSuchMethodException e) {
+		throw new IllegalArgumentException("Failed to locate parameterless method " + property + " in " + value.getClass(), e);
+	    } catch (final InvocationTargetException e) {
+		throw new IllegalArgumentException("Failed to invoke parameterless method " + property + " on instance of " + value.getClass(), e);
+	    }
+	}
+	return value;
     }
 
     // ========================================================================================================
@@ -664,33 +663,31 @@ public class Finder {
      * @param entityTypes
      * @return
      */
-    public static List<String> findCommonProperties(final List<Class<? extends AbstractEntity>> entityTypes, final IPropertyFilter propertyFilter) {
-        final List<List<Field>> propertiesSet = new ArrayList<List<Field>>();
-        for (int classIndex = 0; classIndex < entityTypes.size(); classIndex++) {
-            final List<Field> fields = new ArrayList<Field>();
-            for (final Field propertyField : findProperties(entityTypes.get(classIndex))) {
-        	if (propertyFilter == null || !propertyFilter.shouldExcludeProperty(entityTypes.get(classIndex), propertyField)) {
-        	    fields.add(propertyField);
-        	}
-            }
-            propertiesSet.add(fields);
-        }
-        final List<String> commonProperties = new ArrayList<String>();
-        if (propertiesSet.size() > 0) {
-            for (final Field property : propertiesSet.get(0)) {
-        	boolean common = true;
-        	for (int setIndex = 1; setIndex < propertiesSet.size(); setIndex++) {
-        	    if (!isPropertyPresent(property, propertiesSet.get(setIndex))) {
-        		common = false;
-        		break;
-        	    }
-        	}
-        	if (common) {
-        	    commonProperties.add(property.getName());
-        	}
-            }
-        }
-        return commonProperties;
+    public static List<String> findCommonProperties(final List<Class<? extends AbstractEntity>> entityTypes) {
+	final List<List<Field>> propertiesSet = new ArrayList<List<Field>>();
+	for (int classIndex = 0; classIndex < entityTypes.size(); classIndex++) {
+	    final List<Field> fields = new ArrayList<Field>();
+	    for (final Field propertyField : findProperties(entityTypes.get(classIndex))) {
+		fields.add(propertyField);
+	    }
+	    propertiesSet.add(fields);
+	}
+	final List<String> commonProperties = new ArrayList<String>();
+	if (propertiesSet.size() > 0) {
+	    for (final Field property : propertiesSet.get(0)) {
+		boolean common = true;
+		for (int setIndex = 1; setIndex < propertiesSet.size(); setIndex++) {
+		    if (!isPropertyPresent(property, propertiesSet.get(setIndex))) {
+			common = false;
+			break;
+		    }
+		}
+		if (common) {
+		    commonProperties.add(property.getName());
+		}
+	    }
+	}
+	return commonProperties;
     }
 
     /**
@@ -702,24 +699,24 @@ public class Finder {
      * @return
      */
     private static boolean isPropertyPresent(final Field field, final List<Field> properties) {
-        for (final Field property : properties) {
-            // Need a special handle for property key
-            if (field.getName().equals(property.getName())) {
-        	Class<?> fieldType = field.getType();
-        	Class<?> propertyType = property.getType();
-        	if (AbstractEntity.KEY.equals(field.getName())) {
-        	    final Class<AbstractEntity> fieldOwner = (Class<AbstractEntity>) field.getDeclaringClass();
-        	    final Class<AbstractEntity> propertyOwner = (Class<AbstractEntity>) property.getDeclaringClass();
+	for (final Field property : properties) {
+	    // Need a special handle for property key
+	    if (field.getName().equals(property.getName())) {
+		Class<?> fieldType = field.getType();
+		Class<?> propertyType = property.getType();
+		if (AbstractEntity.KEY.equals(field.getName())) {
+		    final Class<AbstractEntity> fieldOwner = (Class<AbstractEntity>) field.getDeclaringClass();
+		    final Class<AbstractEntity> propertyOwner = (Class<AbstractEntity>) property.getDeclaringClass();
 
-        	    fieldType = AnnotationReflector.getKeyType(fieldOwner);
-        	    propertyType = AnnotationReflector.getKeyType(propertyOwner);
-        	}
-        	if (fieldType != null && propertyType != null && fieldType.equals(propertyType)) {
-        	    return true;
-        	}
-            }
-        }
-        return false;
+		    fieldType = AnnotationReflector.getKeyType(fieldOwner);
+		    propertyType = AnnotationReflector.getKeyType(propertyOwner);
+		}
+		if (fieldType != null && propertyType != null && fieldType.equals(propertyType)) {
+		    return true;
+		}
+	    }
+	}
+	return false;
     }
 
     /**
@@ -747,11 +744,11 @@ public class Finder {
      * @return
      */
     public static List<String> getFieldNames(final List<Field> fields) {
-        final List<String> result = new ArrayList<String>();
-        for (int index = 0; index < fields.size(); index++) {
-            result.add(fields.get(index).getName());
-        }
-        return result;
+	final List<String> result = new ArrayList<String>();
+	for (int index = 0; index < fields.size(); index++) {
+	    result.add(fields.get(index).getName());
+	}
+	return result;
     }
 
     /**
@@ -759,9 +756,9 @@ public class Finder {
      *
      */
     public interface IPropertyPathFilteringCondition {
-        boolean ignore(String propertyName);
+	boolean ignore(String propertyName);
 
-        boolean ignore(Class<?> enttyType);
+	boolean ignore(Class<?> enttyType);
     }
 
     /**
@@ -771,11 +768,11 @@ public class Finder {
      *
      */
     public static class MethodFoundException extends RuntimeException {
-        private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-        public MethodFoundException(final String message) {
-            super(message);
-        }
+	public MethodFoundException(final String message) {
+	    super(message);
+	}
     }
 
     /**
@@ -790,40 +787,40 @@ public class Finder {
      * @return
      */
     public static List<String> findPathsForPropertiesOfType(final Class<? extends AbstractEntity> entityType, final Class<? extends AbstractEntity> propertyType, final IPropertyPathFilteringCondition filter) {
-        if (entityType == propertyType) {
-            return new ArrayList<String>() {
-        	{
-        	    add("id");
-        	}
-            };
-        }
-        return findPathsForPropertiesOfType("", new ArrayList<Class<?>>() {
-            {
-        	add(entityType);
-            }
-        }, propertyType, filter);
+	if (entityType == propertyType) {
+	    return new ArrayList<String>() {
+		{
+		    add("id");
+		}
+	    };
+	}
+	return findPathsForPropertiesOfType("", new ArrayList<Class<?>>() {
+	    {
+		add(entityType);
+	    }
+	}, propertyType, filter);
     }
 
     /** This is an actual implementation of the above method. */
     private static List<String> findPathsForPropertiesOfType(final String name, final List<Class<?>> entityTypes, final Class<? extends AbstractEntity> propertyType, final IPropertyPathFilteringCondition filter) {
-        final List<String> result = new ArrayList<String>();
+	final List<String> result = new ArrayList<String>();
 
-        if (filter.ignore(entityTypes.get(entityTypes.size() - 1))) {
-            return result;
-        }
+	if (filter.ignore(entityTypes.get(entityTypes.size() - 1))) {
+	    return result;
+	}
 
-        final List<Field> fields = findPropertiesThatAreEntities(entityTypes.get(entityTypes.size() - 1));
-        for (final Field field : fields) {
-            if (!filter.ignore(field.getName())) {
-        	if (propertyType.equals(field.getType())) {
-        	    result.add((!StringUtils.isEmpty(name) ? name + "." : "") + field.getName());
-        	} else if (!entityTypes.contains(field.getType())) {
-        	    entityTypes.add(field.getType());
-        	    result.addAll(findPathsForPropertiesOfType((!StringUtils.isEmpty(name) ? name + "." : "") + field.getName(), entityTypes, propertyType, filter));
-        	    entityTypes.remove(field.getType());
-        	}
-            }
-        }
-        return result;
+	final List<Field> fields = findPropertiesThatAreEntities(entityTypes.get(entityTypes.size() - 1));
+	for (final Field field : fields) {
+	    if (!filter.ignore(field.getName())) {
+		if (propertyType.equals(field.getType())) {
+		    result.add((!StringUtils.isEmpty(name) ? name + "." : "") + field.getName());
+		} else if (!entityTypes.contains(field.getType())) {
+		    entityTypes.add(field.getType());
+		    result.addAll(findPathsForPropertiesOfType((!StringUtils.isEmpty(name) ? name + "." : "") + field.getName(), entityTypes, propertyType, filter));
+		    entityTypes.remove(field.getType());
+		}
+	    }
+	}
+	return result;
     }
 }

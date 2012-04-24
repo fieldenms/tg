@@ -17,7 +17,6 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
@@ -28,7 +27,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.swing.dynamicreportstree.EntitiesTreeColumn;
 import ua.com.fielden.platform.swing.menu.filter.FilterableTreeModel;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
 import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeModel2;
@@ -54,7 +52,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
     private final TreeCheckingListener [] listeners;
     private final EntitiesTreeCellRenderer cellRenderer1, cellRenderer2;
     private final FilterableTreeModel filterableModel;
-    private final Logger logger = Logger.getLogger(getClass());
+    //private final Logger logger = Logger.getLogger(getClass());
     private final String firstTickCaption, secondTickCaption;
 
     /**
@@ -79,8 +77,8 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	this.firstTickCaption = firstTickCaption;
 	this.secondTickCaption = secondTickCaption;
 
-	this.getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()).setCheckingMode(CheckingMode.SIMPLE);
-	this.getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()).setCheckingMode(CheckingMode.SIMPLE);
+	this.getCheckingModel(0).setCheckingMode(CheckingMode.SIMPLE);
+	this.getCheckingModel(1).setCheckingMode(CheckingMode.SIMPLE);
 
 	this.manager = manager;
 	this.listeners = new TreeCheckingListener [] { createTreeCheckingListener(this.manager.getFirstTick()), createTreeCheckingListener(this.manager.getSecondTick()) };
@@ -110,11 +108,11 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	// add the listener into manager's representation to correctly reflect 'structural' changes (property added / removed) in this EntitiesTreeModel
 	this.manager.getRepresentation().addPropertyListener(new PropertyListener());
 	// add two listeners into manager's representation's first and second ticks to correctly reflect 'disablement' changes (property disabled / enabled) in this EntitiesTreeModel
-	this.manager.getRepresentation().getFirstTick().addPropertyDisablementListener(new PropertyDisablementListener(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()));
-	this.manager.getRepresentation().getSecondTick().addPropertyDisablementListener(new PropertyDisablementListener(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()));
+	this.manager.getRepresentation().getFirstTick().addPropertyDisablementListener(new PropertyDisablementListener(0));
+	this.manager.getRepresentation().getSecondTick().addPropertyDisablementListener(new PropertyDisablementListener(1));
 	// add two listeners into manager's first and second tick to correctly reflect 'checking' changes (property checked / unchecked) in this EntitiesTreeModel
-	this.manager.getFirstTick().addPropertyCheckingListener(new PropertyCheckingListener(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()));
-	this.manager.getSecondTick().addPropertyCheckingListener(new PropertyCheckingListener(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()));
+	this.manager.getFirstTick().addPropertyCheckingListener(new PropertyCheckingListener(0));
+	this.manager.getSecondTick().addPropertyCheckingListener(new PropertyCheckingListener(1));
 
 	// add the listener into EntitiesTreeModel to correctly reflect changes (node checked / unchecked) in its manager
 	this.addTreeCheckingListener(listeners[0], 0);
@@ -216,12 +214,12 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	final EntitiesTreeNode2 parentNode = StringUtils.isEmpty(property) ? rootNode //
 		: !PropertyTypeDeterminator.isDotNotation(property) ? node(root, "", true) //
 			: node(root, PropertyTypeDeterminator.penultAndLast(property).getKey(), true);
-	final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
-	nodesCache.put(AbstractDomainTree.key(root, property), node);
-	if (isNotDummyAndNotCommonProperty(property)) {
-	    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
-	}
-	this.insertNodeInto(node, parentNode, parentNode.getChildCount());
+		final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
+		nodesCache.put(AbstractDomainTree.key(root, property), node);
+		if (isNotDummyAndNotCommonProperty(property)) {
+		    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
+		}
+		this.insertNodeInto(node, parentNode, parentNode.getChildCount());
     }
 
     protected boolean isNotDummyAndNotCommonProperty(final String property) {
@@ -286,8 +284,8 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      */
     protected void provideNodeState(final IDomainTreeManagerAndEnhancer manager, final Class<?> root, final String property) {
 	final TreePath path = new TreePath(getPathToRoot(node(root, property, false)));
-	final TreeCheckingModel firstCheckingModel = getCheckingModel(EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex());
-	final TreeCheckingModel secondCheckingModel = getCheckingModel(EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex());
+	final TreeCheckingModel firstCheckingModel = getCheckingModel(0);
+	final TreeCheckingModel secondCheckingModel = getCheckingModel(1);
 
 	provideCheckingForPath(firstCheckingModel, path, manager.getFirstTick().isChecked(root, property));
 	provideCheckingForPath(secondCheckingModel, path, manager.getSecondTick().isChecked(root, property));

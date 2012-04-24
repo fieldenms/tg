@@ -845,12 +845,6 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 	public IValueMatcher<?> getValueMatcher() {
 	    throw new UnsupportedOperationException();
 	}
-
-	@Override
-	public boolean isIgnored() {
-	    return true;
-	}
-
     }
 
 }

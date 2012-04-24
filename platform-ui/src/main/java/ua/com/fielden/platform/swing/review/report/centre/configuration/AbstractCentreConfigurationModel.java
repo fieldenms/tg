@@ -60,12 +60,12 @@ public abstract class AbstractCentreConfigurationModel<T extends AbstractEntity<
 	return entityType;
     }
 
-    protected EntityFactory getEntityFactory() {
-	return entityFactory;
+    public ICriteriaGenerator getCriteriaGenerator() {
+	return criteriaGenerator;
     }
 
-    protected ICriteriaGenerator getCriteriaGenerator() {
-	return criteriaGenerator;
+    protected EntityFactory getEntityFactory() {
+	return entityFactory;
     }
 
     protected IEntityMasterManager getMasterManager() {

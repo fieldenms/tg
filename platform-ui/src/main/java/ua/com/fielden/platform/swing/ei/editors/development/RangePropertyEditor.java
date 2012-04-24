@@ -162,12 +162,6 @@ public class RangePropertyEditor implements IPropertyEditor {
 	throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
     }
 
-    @Override
-    public boolean isIgnored() {
-	// if both editors are ignored - range editor will be ignored:
-	return fromEditor.isIgnored() && toEditor.isIgnored() || (isBool() && !fromEditor.isIgnored() && !toEditor.isIgnored());
-    }
-
     public IPropertyEditor getFromEditor() {
 	return fromEditor;
     }

@@ -603,6 +603,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * @author TG Team
      *
      */
+    @SuppressWarnings("unused")
     private class AddAnalysisAction extends Command<Void>{
 
 	private static final long serialVersionUID = 1916078804942683757L;

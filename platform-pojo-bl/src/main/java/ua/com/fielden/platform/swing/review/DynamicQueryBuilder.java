@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.swing.review;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -10,6 +13,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -25,13 +29,14 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere3;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.EntityDescriptor;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.DateRangeSelectorEnum;
 import ua.com.fielden.snappy.DateUtilities;
 import ua.com.fielden.snappy.MnemonicEnum;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 /**
  * An utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
  *
@@ -71,7 +76,7 @@ public class DynamicQueryBuilder {
 	    if (StringUtils.isEmpty(alias)) {
 		throw new IllegalArgumentException("The alias for dynamic query should not be empty.");
 	    }
-	    final DynamicPropertyAnalyser analyser = new DynamicPropertyAnalyser(entityClass, propertyName, null);
+	    final DynamicPropertyAnalyser analyser = new DynamicPropertyAnalyser(entityClass, propertyName);
 	    this.propertyName = propertyName;
 	    if (!isSupported(analyser.getPropertyType())) {
 		throw new UnsupportedTypeException(analyser.getPropertyType());
@@ -356,6 +361,89 @@ public class DynamicQueryBuilder {
 
 
     /**
+     * Defines a logic that determines an empty value according to <code>type</code> and <code>single</code> flag.
+     *
+     * @param type
+     * @param single
+     * @return
+     */
+    public static Object getEmptyValue(final Class<?> type, final boolean single) {
+	if (EntityUtils.isEntityType(type)) {
+	    if (single) {
+		return null;
+	    } else {
+		return new ArrayList<String>();
+	    }
+	} else if (EntityUtils.isString(type)) {
+	    return "";
+	} else if (EntityUtils.isBoolean(type)) {
+	    return true;
+	} else if (EntityUtils.isRangeType(type)) {
+	    return null;
+	} else {
+	    throw new UnsupportedTypeException(type);
+	}
+    }
+
+    /**
+     * Creates a date period [from; to] from a period defined by (datePrefix; dateMnemonic).
+     *
+     * IMPORTANT : please consider that left boundary should be inclusive and right -- exclusive! E.g. CURR YEAR converts to (01.01.2011 00:00; 01.01.2012 00:00) and need
+     * to be used as <i>prop(propertyName).<b>ge()</b>.val(from).and().prop(propertyName).<b>lt()</b>.val(to)</i> in terms of Entity Query.
+     *
+     * @param datePrefix
+     * @param dateMnemonic
+     * @return
+     */
+    public static Pair<Date, Date> getDateValuesFrom(final DateRangePrefixEnum datePrefix, final MnemonicEnum dateMnemonic, final Boolean andBefore) {
+	final DateUtilities du = new DateUtilities();
+	final Date currentDate = new Date();
+	final Date from = (Boolean.TRUE.equals(andBefore)) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, datePrefix, dateMnemonic), //
+		/*         */to = (Boolean.FALSE.equals(andBefore)) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, datePrefix, dateMnemonic);
+	// left boundary should be inclusive and right -- exclusive!
+	return new Pair<Date, Date>(from, to);
+    }
+
+    /**
+     * Creates a new array of values based on the passed string by splitting criteria using comma and by changing * to %.
+     *
+     * @param criteria
+     * @return
+     */
+    public static String[] prepare(final String criteria) {
+	if (StringUtils.isEmpty(criteria)) {
+	    return new String[] {};
+	}
+
+	final List<String> result = new ArrayList<String>();
+	for (final String crit : criteria.split(",")) {
+	    result.add(PojoValueMatcher.prepare(crit));
+	}
+	return result.toArray(new String[] {});
+    }
+
+    /**
+     * Creates new array based on the passed list of string. This method also changes * to % for every element of the passed list.
+     * 
+     * @param criteria
+     * @return
+     */
+    public static String[] prepare(final List<String> criteria) {
+	return MiscUtilities.prepare(criteria);
+    }
+
+    /**
+     * Returns <code>true</code> if the <code>type</code> is supported in dynamic criteria, <code>false</code> otherwise.
+     *
+     * @param type
+     * @return
+     */
+    private static boolean isSupported(final Class<?> type) {
+	return EntityUtils.isEntityType(type) || EntityUtils.isString(type) || EntityUtils.isBoolean(type) || EntityUtils.isRangeType(type);
+    }
+
+
+    /**
      * Builds collection condition including exists / not exists inner models based on ALL/ANY properties inside collection.
      * <p>
      * Both ALL and ANY conditions are allowed for property.
@@ -383,7 +471,7 @@ public class DynamicQueryBuilder {
 	    throw new RuntimeException("Collection of type " + collectionContainerType + " ANY+ALL properties should not be empty.");
 	}
 	final QueryProperty p = any_and_all_properties.get(0);
-	final String nameOfCollectionController = DynamicProperty.getNameOfCollectionController(collectionContainerType, p.getCollectionContainerParentType());
+	final String nameOfCollectionController = getNameOfCollectionController(collectionContainerType, p.getCollectionContainerParentType());
 	final String mainModelProperty = p.getPropertyNameOfCollectionParent().isEmpty() ? alias : (alias + "." + p.getPropertyNameOfCollectionParent());
 
 	final IWhere2 collectionBegin = whereAtGroup1.begin();
@@ -397,8 +485,8 @@ public class DynamicQueryBuilder {
 	    }
 	    // enhance main model by EXISTS model relevant to ANY properties in collectional hierarchy
 	    compoundConditionAtGroup2 = getWhereAtGroup2(compoundConditionAtGroup2, collectionBegin).begin()//
-	    	.exists(anyExists_withDirectConditions.end().model())//
-	    	.end();
+		    .exists(anyExists_withDirectConditions.end().model())//
+		    .end();
 	}
 	// enhance collection by ALL part
 	if (!allProperties.isEmpty()) {
@@ -414,10 +502,10 @@ public class DynamicQueryBuilder {
 	    }
 	    // enhance main model by EXISTS / NOT_EXISTS models relevant to ALL properties in collectional hierarchy
 	    compoundConditionAtGroup2 = getWhereAtGroup2(compoundConditionAtGroup2, collectionBegin).begin()//
-	    	.notExists(allNotExists_withNoConditions)// entities with empty collection should be included!
-	    	.or()//
-	    	.exists(allExists_withDirectConditions.end().model()).and().notExists(allNotExists_withNegatedConditions.end().model())//
-	    	.end();
+		    .notExists(allNotExists_withNoConditions)// entities with empty collection should be included!
+		    .or()//
+		    .exists(allExists_withDirectConditions.end().model()).and().notExists(allNotExists_withNegatedConditions.end().model())//
+		    .end();
 	}
 	if (compoundConditionAtGroup2 == null) {
 	    throw new RuntimeException("Collection of type " + collectionContainerType + " did not alter query.");
@@ -425,59 +513,6 @@ public class DynamicQueryBuilder {
 	return compoundConditionAtGroup2.end();
     }
 
-    /**
-     * Defines a logic that determines an empty value according to <code>type</code> and <code>single</code> flag.
-     *
-     * @param type
-     * @param single
-     * @return
-     */
-    public static Object getEmptyValue(final Class<?> type, final boolean single) {
-	if (EntityUtils.isEntityType(type)) {
-	    if (single) {
-		return null;
-	    } else {
-		return new ArrayList<String>();
-	    }
-	} else if (EntityUtils.isString(type)) {
-	    return "";
-	} else if (EntityUtils.isBoolean(type)) {
-	    return true;
-	} else if (EntityUtils.isRangeType(type)) {
-	    return null;
-	} else {
-	    throw new UnsupportedTypeException(type);
-	}
-    }
-
-    /**
-     * Returns <code>true</code> if the <code>type</code> is supported in dynamic criteria, <code>false</code> otherwise.
-     *
-     * @param type
-     * @return
-     */
-    private static boolean isSupported(final Class<?> type) {
-	return EntityUtils.isEntityType(type) || EntityUtils.isString(type) || EntityUtils.isBoolean(type) || EntityUtils.isRangeType(type);
-    }
-
-    /**
-     * Indicates the unsupported type exception for dynamic criteria.
-     *
-     * @author TG Team
-     *
-     */
-    protected static class UnsupportedTypeException extends RuntimeException {
-	private static final long serialVersionUID = 8310488278117580979L;
-
-	/**
-	 * Creates the unsupported type exception for dynamic criteria.
-	 *
-	 * @param type
-	 */
-	public UnsupportedTypeException(final Class<?> type) {
-	    super("The [" + type + "] type is not supported for dynamic criteria.");
-	}
-    }
 
     /**
      * Creates submodel for collection.
@@ -490,6 +525,24 @@ public class DynamicQueryBuilder {
     private static ICompoundCondition0 createSubmodel(final Class<? extends AbstractEntity> collectionContainerType, final String nameOfCollectionController, final String mainModelProperty) {
 	return select(collectionContainerType).where().prop(nameOfCollectionController).eq().prop(mainModelProperty);
     }
+
+    /**
+     * Returns the name of "keyMember" which defines "collectivity" for "collectionElementType".
+     *
+     * @param collectionElementType
+     * @param collectionOwnerType
+     * @return
+     */
+    private static String getNameOfCollectionController(final Class collectionElementType, final Class collectionOwnerType) {
+	final List<Field> keyFields = Finder.getKeyMembers(collectionElementType);
+	for (final Field field : keyFields) {
+	    if (field.getType().equals(collectionOwnerType)) {
+		return field.getName();
+	    }
+	}
+	throw new RuntimeException("There is no key member of type [" + collectionOwnerType + "] in type [" + collectionElementType + "].");
+    }
+
 
     /**
      * Helper method to form IWhereAtGroup1 instance from "compoundConditionAtGroup1" and "whereAtGroup1".
@@ -544,25 +597,6 @@ public class DynamicQueryBuilder {
     }
 
     /**
-     * Creates a date period [from; to] from a period defined by (datePrefix; dateMnemonic).
-     *
-     * IMPORTANT : please consider that left boundary should be inclusive and right -- exclusive! E.g. CURR YEAR converts to (01.01.2011 00:00; 01.01.2012 00:00) and need
-     * to be used as <i>prop(propertyName).<b>ge()</b>.val(from).and().prop(propertyName).<b>lt()</b>.val(to)</i> in terms of Entity Query.
-     *
-     * @param datePrefix
-     * @param dateMnemonic
-     * @return
-     */
-    public static Pair<Date, Date> getDateValuesFrom(final DateRangePrefixEnum datePrefix, final MnemonicEnum dateMnemonic, final Boolean andBefore) {
-	final DateUtilities du = new DateUtilities();
-	final Date currentDate = new Date();
-	final Date from = (Boolean.TRUE.equals(andBefore)) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, datePrefix, dateMnemonic), //
-	/*         */to = (Boolean.FALSE.equals(andBefore)) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, datePrefix, dateMnemonic);
-	// left boundary should be inclusive and right -- exclusive!
-	return new Pair<Date, Date>(from, to);
-    }
-
-    /**
      * Builds atomic condition for some property like "is True", ">= and <", "like" etc. based on property type and assigned parameters.
      *
      * @param key
@@ -582,22 +616,42 @@ public class DynamicQueryBuilder {
 	    } else {
 		final IComparisonOperator3 scag = conditionGroup.prop(propertyName);
 		final IComparisonOperator3 scag2 = (Boolean.TRUE.equals(property.getExclusive())) ? //
-		/*      */scag.gt().iVal(property.getValue()).and().prop(propertyName) // exclusive
+			/*      */scag.gt().iVal(property.getValue()).and().prop(propertyName) // exclusive
 			: scag.ge().iVal(property.getValue()).and().prop(propertyName); // inclusive
-		return (Boolean.TRUE.equals(property.getExclusive2())) ? //
-		/*      */scag2.lt().iVal(property.getValue2()).end() // exclusive
-			: scag2.le().iVal(property.getValue2()).end(); // inclusive
+			return (Boolean.TRUE.equals(property.getExclusive2())) ? //
+				/*      */scag2.lt().iVal(property.getValue2()).end() // exclusive
+				: scag2.le().iVal(property.getValue2()).end(); // inclusive
 	    }
 	} else if (EntityUtils.isBoolean(property.getType())) {
 	    final boolean is = (Boolean) property.getValue();
 	    final boolean isNot = (Boolean) property.getValue2();
 	    return (is && !isNot) ? conditionGroup.prop(propertyName).eq().val(true).end() : (!is && isNot ? conditionGroup.prop(propertyName).eq().val(false).end() : null);
 	} else if (EntityUtils.isString(property.getType())) {
-	    return conditionGroup.prop(propertyName).like().anyOfValues(DynamicEntityQueryCriteria.prepare((String) property.getValue())).end();
+	    return conditionGroup.prop(propertyName).like().anyOfValues(prepare((String) property.getValue())).end();
 	} else if (EntityUtils.isEntityType(property.getType())) {
-	    return conditionGroup.prop(propertyName).like().anyOfValues(DynamicEntityQueryCriteria.prepare((List<String>) property.getValue())).end();
+	    return conditionGroup.prop(propertyName).like().anyOfValues(prepare((List<String>) property.getValue())).end();
 	} else {
 	    throw new UnsupportedTypeException(property.getType());
+	}
+    }
+
+
+    /**
+     * Indicates the unsupported type exception for dynamic criteria.
+     *
+     * @author TG Team
+     *
+     */
+    protected static class UnsupportedTypeException extends RuntimeException {
+	private static final long serialVersionUID = 8310488278117580979L;
+
+	/**
+	 * Creates the unsupported type exception for dynamic criteria.
+	 *
+	 * @param type
+	 */
+	public UnsupportedTypeException(final Class<?> type) {
+	    super("The [" + type + "] type is not supported for dynamic criteria.");
 	}
     }
 }

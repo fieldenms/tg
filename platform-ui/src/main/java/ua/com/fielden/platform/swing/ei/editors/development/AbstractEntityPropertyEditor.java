@@ -73,10 +73,4 @@ public abstract class AbstractEntityPropertyEditor implements IPropertyEditor {
     public IValueMatcher<?> getValueMatcher() {
 	return valueMatcher;
     }
-
-    @Override
-    public boolean isIgnored() {
-	throw new RuntimeException("(Is Ignored) checking is not supported for this property editor.");
-    }
-
 }

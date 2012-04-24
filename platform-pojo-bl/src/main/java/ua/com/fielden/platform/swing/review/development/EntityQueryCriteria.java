@@ -52,6 +52,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     private final String ALIAS = "alias_for_main_criteria_type";
 
+    @SuppressWarnings("rawtypes")
     private final Map<String, IValueMatcher> valueMatchers = new HashMap<String, IValueMatcher>();
     private final IValueMatcherFactory valueMatcherFactory;
 
@@ -112,7 +113,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @param pageSize
      * @return
      */
-    public IPage<T> run(final int pageSize){
+    public final IPage<T> run(final int pageSize){
 	final EntityResultQueryModel<T> notOrderedQuery = createQuery().model();
 	return dao.firstPage(from(notOrderedQuery).with(createOrderingModel()).with(createFetchModel()).build(), pageSize);
     }
@@ -122,7 +123,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * 
      * @return
      */
-    private fetch<T> createFetchModel() {
+    protected fetch<T> createFetchModel() {
 	try {
 	    final DynamicEntityTree<T> fetchTree = new DynamicEntityTree<T>(//
 		    getCentreDomainTreeMangerAndEnhancer().getSecondTick().checkedProperties(getEntityClass()), getEntityClass());
@@ -152,7 +153,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * 
      * @return
      */
-    private OrderingModel createOrderingModel(){
+    protected OrderingModel createOrderingModel(){
 	IOrderingItemCloseable closeOrderable = null;
 	for(final Pair<String, Ordering> orderPair : getCentreDomainTreeMangerAndEnhancer().getSecondTick().orderedProperties(getEntityClass())){
 	    final IOrderingItem orderingItem = closeOrderable == null ? orderBy() : closeOrderable;
@@ -168,7 +169,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * 
      * @return
      */
-    private ICompleted createQuery(){
+    protected ICompleted createQuery(){
 	return DynamicQueryBuilder.buildConditions(createJoinCondition(), createQueryProperties(), ALIAS);
     }
 
@@ -227,6 +228,15 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	return queryProperty;
     }
 
+    /**
+     * Builds the fetch model for subtree specified with treeNode parameter.
+     * 
+     * @param entityType - The type for fetch model.
+     * @param treeNode - the root of subtree for which fetch model must be build.
+     * @return
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
     private fetch<T> buildFetchModels(final Class<T> entityType, final DynamicEntityTreeNode treeNode) throws Exception {
 	fetch<T> fetchModel = fetch(entityType);
 
@@ -236,17 +246,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
 	for (final DynamicEntityTreeNode dynamicTreeNode : treeNode.getChildren()) {
 	    final Class<?> propertyType = dynamicTreeNode.getType();
-	    if (/* isKey(childField) || */!EntityUtils.isEntityType(propertyType)) {
+	    if (!EntityUtils.isEntityType(propertyType)) {
 		continue;
 	    }
-	    // commented to prevent the logic for determining polymorphic entities -- this logic will need to be changed in the future.
-	    // final List<Class<?>> classes = Reflector.getAllNonAbstractClassesDerivedFrom(path, entityPackage, childField.getType());
-	    // if (classes.size() == 0) {
-	    // classes.add(childField.getType());
-	    // }
-	    // for (final Class<?> clazz : classes) {
 	    final fetch<T> fetchSubModel = buildFetchModels((Class<T>) propertyType, dynamicTreeNode);
-	    // }
 	    fetchModel = fetchModel.with(dynamicTreeNode.getName(), fetchSubModel);
 	}
 

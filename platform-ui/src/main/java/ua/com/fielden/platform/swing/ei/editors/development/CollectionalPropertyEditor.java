@@ -12,7 +12,6 @@ import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
@@ -93,15 +92,5 @@ public class CollectionalPropertyEditor implements IPropertyEditor {
     @Override
     public IValueMatcher<?> getValueMatcher() {
 	throw new UnsupportedOperationException("Value matcher are not applicable for collectional properties.");
-    }
-
-    @Override
-    public boolean isIgnored() {
-	if (entity instanceof DynamicEntityQueryCriteria) {
-	    final DynamicEntityQueryCriteria dynamicEntity = (DynamicEntityQueryCriteria) entity;
-	    return dynamicEntity.isEmptyValue(propertyName);
-	} else {
-	    return false;
-	}
     }
 }

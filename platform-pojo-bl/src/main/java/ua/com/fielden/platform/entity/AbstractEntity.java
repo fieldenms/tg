@@ -58,7 +58,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
 
@@ -448,7 +447,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	if (listener == null) {
 	    throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
 	}
-	if (!DynamicEntityQueryCriteria.class.isAssignableFrom(this.getType()) && !isObservable(propertyName)) {
+	if (!isObservable(propertyName)) {
 	    throw new IllegalArgumentException("Cannot register PropertyChangeListener with non-observable property '" + propertyName + "'.");
 	}
 	changeSupport.addPropertyChangeListener(propertyName, listener);
@@ -1117,10 +1116,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     public String getPreferredProperty() {
-        return preferredProperty;
+	return preferredProperty;
     }
 
     public void setPreferredProperty(final String preferredProperty) {
-        this.preferredProperty = preferredProperty;
+	this.preferredProperty = preferredProperty;
     }
 }

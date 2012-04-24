@@ -10,7 +10,6 @@ import ua.com.fielden.platform.swing.components.bind.development.Binder.Property
 import ua.com.fielden.platform.swing.components.bind.development.Binder.PropertyValidationResultsChangeListener;
 import ua.com.fielden.platform.swing.components.bind.development.Binder.Rebinder;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.ReadOnlyLabel;
-import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -82,8 +81,7 @@ public final class LabelConnector extends PropertyConnectorAdapter implements IR
      */
     @Override
     public MetaProperty boundedMetaProperty() {
-	// TODO doesn't work for non-AE "entity" !!!
-	return (entity instanceof AbstractEntity && !(entity instanceof DynamicEntityQueryCriteria)) ? EntityUtils.findFirstFailedMetaProperty((AbstractEntity<?>) Rebinder.getActualEntity(entity), propertyName)
+	return entity instanceof AbstractEntity ? EntityUtils.findFirstFailedMetaProperty((AbstractEntity<?>) Rebinder.getActualEntity(entity), propertyName)
 		: null;
     }
 

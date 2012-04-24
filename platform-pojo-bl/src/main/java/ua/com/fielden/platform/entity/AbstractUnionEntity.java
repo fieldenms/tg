@@ -14,8 +14,6 @@ import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.swing.review.DefaultDynamicCriteriaPropertyFilter;
-import ua.com.fielden.platform.treemodel.IPropertyFilter;
 
 /**
  * A base class for implementing synthetic entities to be used for modelling situations where a property of some entity can be of multiple types, but any individual instance of a
@@ -143,34 +141,23 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     }
 
     /**
-     * Provides that list of property names, which are common for entity types used in "polymorphic" association. This method use {@link DefaultDynamicCriteriaPropertyFilter} to
-     * check whether property is visible or not. Use {@link #commonProperties(Class, IPropertyFilter)} to specify which {@link IPropertyFilter} to use instead of default one.
-     * 
-     * @return
-     */
-    public static final List<String> commonProperties(final Class<? extends AbstractUnionEntity> type) {
-	return commonProperties(type, null);
-    }
-
-    /**
-     * Provides that list of property names, which are common for entity types used in "polymorphic" association. {@code propertyFilter} - specified {@link IPropertyFilter}
-     * instance which allows to determine which properties are visible and which are not.
+     * Provides the list of property names, which are common for entity types used in "polymorphic" association.
      * 
      * @param type
      * @param propertyFilter
      * @return
      */
-    public static final List<String> commonProperties(final Class<? extends AbstractUnionEntity> type, final IPropertyFilter propertyFilter) {
+    public static final List<String> commonProperties(final Class<? extends AbstractUnionEntity> type) {
 	// collect all properties of entity type
 	final List<Class<? extends AbstractEntity>> propertyTypes = new ArrayList<Class<? extends AbstractEntity>>();
-	final List<Field> fields = unionProperties(type, propertyFilter);
+	final List<Field> fields = unionProperties(type);
 	for (final Field field : fields) {
 	    if (AbstractEntity.class.isAssignableFrom(field.getType())) {
 		propertyTypes.add((Class<AbstractEntity>) field.getType());
 	    }
 	}
 	// return the list of common properties
-	final List<String> list = Finder.findCommonProperties(propertyTypes, propertyFilter);
+	final List<String> list = Finder.findCommonProperties(propertyTypes);
 	// list.remove(KEY);
 	return list;
     }
@@ -180,30 +167,17 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     }
 
     /**
-     * Returns all properties of {@link AbstractUnionEntity} type those will form "union" property. This method use {@link DefaultDynamicCriteriaPropertyFilter} for property
-     * filtering.
-     * 
-     * @param type
-     *            - type for which "union" properties must be found.
-     * @return
-     */
-    public static final List<Field> unionProperties(final Class<? extends AbstractUnionEntity> type) {
-	return unionProperties(type, null);
-    }
-
-    /**
      * Finds all properties of {@link AbstractEntity} type that will form properties "union".
      * 
      * Important : no other (non-union) properties should exist inside {@link AbstractUnionEntity} class.
      * 
      * @return
      */
-    public static final List<Field> unionProperties(final Class<? extends AbstractUnionEntity> type, final IPropertyFilter propertyFilter) {
+    public static final List<Field> unionProperties(final Class<? extends AbstractUnionEntity> type) {
 	final List<Field> unionProperties = new ArrayList<Field>();
 	// find all properties of AE type that will form properties "union". Note 1 : no other properties should exist inside AUE class. Note 2: desc and key are ignored.
 	for (final Field field : Finder.findRealProperties(type)) {
-	    if (/* field.isAnnotationPresent(IsProperty.class) && */AbstractEntity.class.isAssignableFrom(field.getType())
-		    && (propertyFilter == null || !propertyFilter.shouldExcludeProperty(type, field))) {
+	    if (AbstractEntity.class.isAssignableFrom(field.getType())){
 		unionProperties.add(field);
 	    }
 	}
@@ -211,24 +185,23 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     }
 
     /**
-     * Returns getters and setters method names for AbstractUnionEntity common properties. Uses {@link IPropertyFilter} instance to filter common properties.
+     * Returns getters and setters method names for AbstractUnionEntity common properties.
      * 
      * @param type
-     * @param propertyFilter
      * @return
      * @throws NoSuchMethodException
      *             - throws when couldn't found property getter or setter for some property.
      */
-    public static final List<String> commonMethodNames(final Class<? extends AbstractUnionEntity> type, final IPropertyFilter propertyFilter) {
+    public static final List<String> commonMethodNames(final Class<? extends AbstractUnionEntity> type) {
 	final List<String> commonMethods = new ArrayList<String>();
-	for (final Method method : commonMethods(type, propertyFilter)) {
+	for (final Method method : commonMethods(type)) {
 	    commonMethods.add(method.getName());
 	}
 	return commonMethods;
     }
 
     /**
-     * Returns getters and setters for AbstractUnionEntity common properties. Uses {@link IPropertyFilter} instance to filter common properties.
+     * Returns getters and setters for AbstractUnionEntity common properties.
      * 
      * @param type
      * @param propertyFilter
@@ -236,9 +209,9 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      * @throws NoSuchMethodException
      *             - throws when couldn't found property getter or setter for some property.
      */
-    public static final List<Method> commonMethods(final Class<? extends AbstractUnionEntity> type, final IPropertyFilter propertyFilter) {
-	final List<String> commonProperties = commonProperties(type, propertyFilter);
-	final List<Field> unionProperties = unionProperties(type, propertyFilter);
+    public static final List<Method> commonMethods(final Class<? extends AbstractUnionEntity> type) {
+	final List<String> commonProperties = commonProperties(type);
+	final List<Field> unionProperties = unionProperties(type);
 	final List<Method> commonMethods = new ArrayList<Method>();
 	final Class<?> propertyType = unionProperties.get(0).getType();
 	for (final String property : commonProperties) {
@@ -250,29 +223,5 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 	    }
 	}
 	return commonMethods;
-    }
-
-    /**
-     * Returns getters and setters for AbstractUnionEntity common properties. It doesn't uses any property filter to filter common properties.
-     * 
-     * @param type
-     * @return
-     * @throws NoSuchMethodException
-     *             - throws when couldn't found property getter or setter for some property.
-     */
-    public static final List<Method> commonMethods(final Class<? extends AbstractUnionEntity> type) {
-	return commonMethods(type, null);
-    }
-
-    /**
-     * Returns getters and setters method names for AbstractUnionEntity common properties. It doesn't uses any property filter to filter common properties.
-     * 
-     * @param type
-     * @return
-     * @throws NoSuchMethodException
-     *             - throws when couldn't found property getter or setter for some property.
-     */
-    public static final List<String> commonMethodNames(final Class<? extends AbstractUnionEntity> type) {
-	return commonMethodNames(type, null);
     }
 }

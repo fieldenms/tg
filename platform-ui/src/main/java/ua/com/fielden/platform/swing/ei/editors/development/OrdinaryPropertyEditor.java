@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.swing.ei.editors.development;
 
+import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.MIXED_CASE;
+import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.UPPER_CASE;
+
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -35,14 +38,11 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.components.smart.datepicker.DatePickerLayer;
-import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.swing.utils.TabAction;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.MIXED_CASE;
-import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.UPPER_CASE;
 
 /**
  * Editor for an entity property of ordinary types (i.e. not entity and non-collectional).
@@ -249,16 +249,5 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
     @Override
     public IValueMatcher<?> getValueMatcher() {
 	throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
-    }
-
-    //Refactor later after testing consider whether to remove this method from the IPropertyEditor interface.
-    @Override
-    public boolean isIgnored() {
-	if (entity instanceof DynamicEntityQueryCriteria) {
-	    final DynamicEntityQueryCriteria dynamicEntity = (DynamicEntityQueryCriteria) entity;
-	    return dynamicEntity.isEmptyValue(propertyName);
-	} else {
-	    return false;
-	}
     }
 }

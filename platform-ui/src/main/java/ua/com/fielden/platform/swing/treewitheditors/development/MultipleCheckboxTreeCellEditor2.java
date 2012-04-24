@@ -12,10 +12,6 @@ import javax.swing.tree.TreeCellEditor;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import ua.com.fielden.platform.domaintree.ITooltipProvider;
-import ua.com.fielden.platform.swing.treewitheditors.EntitiesTree;
-import ua.com.fielden.platform.swing.treewitheditors.MultipleCheckboxTreeCellRendererWithParameter;
-
 /**
  * Class that provides basic functionality for editing {@link TreeNode} meta parameters.
  *
@@ -30,8 +26,7 @@ public class MultipleCheckboxTreeCellEditor2 extends AbstractCellEditor implemen
     private final MultipleCheckboxTreeCellRenderer2 renderer;
 
     /**
-     * Creates {@link MultipleCheckboxTreeCellEditor2} and initiates it with {@link EntitiesTree}, {@link MultipleCheckboxTreeCellRendererWithParameter} and
-     * {@link ITooltipProvider} for editor.
+     * Creates {@link MultipleCheckboxTreeCellEditor2} and initiates it with {@link MultipleCheckboxTree2}, {@link MultipleCheckboxTreeCellRenderer2}.
      *
      * @param tree
      * @param renderer

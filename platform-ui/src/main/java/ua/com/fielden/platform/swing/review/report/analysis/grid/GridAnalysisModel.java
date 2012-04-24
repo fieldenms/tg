@@ -21,8 +21,11 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     private final PropertyTableModel<?> gridModel;
 
+    private GridAnalysisView<T, CDTME> analysisView;
+
     public GridAnalysisModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteria, final PageHolder pageHolder) {
 	super(criteria, null, pageHolder);
+	this.analysisView = null;
 	this.gridModel = createTableModel();
 	getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
@@ -35,13 +38,27 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	getPageHolder().newPage(null);
     }
 
+    /**
+     * Set the analysis view for this model.
+     * Please note that one can set analysis view only once.
+     * Otherwise The {@link IllegalStateException} will be thrown.
+     * 
+     * @param analysisView
+     */
+    final void setAnalysisView(final GridAnalysisView<T, CDTME> analysisView){
+	if(this.analysisView != null){
+	    throw new IllegalStateException("The analysis view can be set only once!");
+	}
+	this.analysisView = analysisView;
+    }
+
     public final PropertyTableModel<?> getGridModel(){
 	return gridModel;
     }
 
     @Override
     protected IPage<T> executeAnalysisQuery() {
-	IPage<T> newPage = getCriteria().run(10);
+	final IPage<T> newPage = getCriteria().run(analysisView.getPageSize());
 	getPageHolder().newPage(newPage);
 	return newPage;
     }
@@ -53,13 +70,13 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private PropertyTableModel<?> createTableModel() {
-        final Class<T> entityClass = getCriteria().getEntityClass();
-        final Class<?> managedType = getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(entityClass);
-        final PropertyTableModelBuilder<?> tableModelBuilder = new PropertyTableModelBuilder(managedType);
-        final IAddToResultTickManager resultTickManager = getCriteria().getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        for(final String propertyName : resultTickManager.checkedProperties(entityClass)){
-            tableModelBuilder.addReadonly(propertyName, resultTickManager.getWidth(entityClass, propertyName));
-        }
-        return tableModelBuilder.build(new ArrayList());
+	final Class<T> entityClass = getCriteria().getEntityClass();
+	final Class<?> managedType = getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(entityClass);
+	final PropertyTableModelBuilder<?> tableModelBuilder = new PropertyTableModelBuilder(managedType);
+	final IAddToResultTickManager resultTickManager = getCriteria().getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+	for(final String propertyName : resultTickManager.checkedProperties(entityClass)){
+	    tableModelBuilder.addReadonly(propertyName, resultTickManager.getWidth(entityClass, propertyName));
+	}
+	return tableModelBuilder.build(new ArrayList());
     }
 }

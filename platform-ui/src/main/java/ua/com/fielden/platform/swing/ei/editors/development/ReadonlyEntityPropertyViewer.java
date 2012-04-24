@@ -77,9 +77,4 @@ public class ReadonlyEntityPropertyViewer implements IPropertyEditor {
     public IValueMatcher<?> getValueMatcher() {
 	throw new UnsupportedOperationException("Value matcher are not applicable for readonly editors.");
     }
-
-    @Override
-    public boolean isIgnored() {
-        throw new RuntimeException("(Is Ignored) checking is not supported for this property editor.");
-    }
 }

@@ -37,7 +37,6 @@ import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityWithoutDesc;
-import ua.com.fielden.platform.swing.review.DefaultDynamicCriteriaPropertyFilter;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
 import com.google.inject.Injector;
@@ -108,7 +107,7 @@ public class FinderTest {
 	types.add(SimpleEntityWithCommonProperties.class);
 	types.add(ComplexEntity.class);
 	types.add(DynamicKeyEntity.class);
-	final List<String> commonProperties = Finder.findCommonProperties(types, new DefaultDynamicCriteriaPropertyFilter());
+	final List<String> commonProperties = Finder.findCommonProperties(types);
 	assertEquals("The number of common properties must be 2", 2, commonProperties.size());
 	assertFalse("Key can not be common property", commonProperties.contains("key"));
 	assertTrue("Desc must be common property", commonProperties.contains("desc"));
@@ -123,12 +122,13 @@ public class FinderTest {
 	types.add(ComplexEntity.class);
 	types.add(DynamicKeyEntity.class);
 	types.add(EntityWithoutDesc.class);
-	final List<String> commonProperties = Finder.findCommonProperties(types, new DefaultDynamicCriteriaPropertyFilter());
-	assertEquals("The number of common properties must be 1", 1, commonProperties.size());
+	final List<String> commonProperties = Finder.findCommonProperties(types);
+	System.out.println(commonProperties);
+	assertEquals("The number of common properties must be 2", 2, commonProperties.size());
 	assertFalse("Key can not be common property", commonProperties.contains("key"));
 	assertTrue("commonProperty must be common for all tested classes", commonProperties.contains("commonProperty"));
 	assertFalse("uncommonProperty can not be common", commonProperties.contains("uncommonProperty"));
-	assertFalse("desc property can not be common", commonProperties.contains("desc"));
+	assertTrue("desc must be common for all tested classes", commonProperties.contains("desc"));
     }
 
     @Test
@@ -212,430 +212,430 @@ public class FinderTest {
 
     @Test
     public void testThatFieldsAnnotatedWithWorksForFirstLevelOfInheritance() {
-        List<Field> properties = Finder.findProperties(FirstLevelEntity.class);
-        assertEquals("Incorrect number of properties in class FirstLevelEntity.", 5, properties.size()); // key is annotated
-        assertEquals("Incorrect property name.", "property", properties.get(0).getName());
-        assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
+	List<Field> properties = Finder.findProperties(FirstLevelEntity.class);
+	assertEquals("Incorrect number of properties in class FirstLevelEntity.", 5, properties.size()); // key is annotated
+	assertEquals("Incorrect property name.", "property", properties.get(0).getName());
+	assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
-        properties = Finder.findProperties(FirstLevelEntity.class, Title.class, CompositeKeyMember.class);
-        assertEquals("Incorrect number of properties with title in class FirstLevelEntity.", 1, properties.size()); // key is annotated
-        assertEquals("Incorrect property name.", "property", properties.get(0).getName());
-        assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
+	properties = Finder.findProperties(FirstLevelEntity.class, Title.class, CompositeKeyMember.class);
+	assertEquals("Incorrect number of properties with title in class FirstLevelEntity.", 1, properties.size()); // key is annotated
+	assertEquals("Incorrect property name.", "property", properties.get(0).getName());
+	assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
-        properties = Finder.findProperties(UnionEntityForReflector.class);
-        assertEquals("Incorrect number of properties in class UnionEntity", 6, properties.size());
-        assertTrue("UnionEntity must have commonProperty", properties.contains(Finder.getFieldByName(UnionEntityForReflector.class, "commonProperty")));
-        assertTrue("UnionEntity must have commonProperty levelEntity", properties.contains(Finder.getFieldByName(UnionEntityForReflector.class, "levelEntity")));
+	properties = Finder.findProperties(UnionEntityForReflector.class);
+	assertEquals("Incorrect number of properties in class UnionEntity", 6, properties.size());
+	assertTrue("UnionEntity must have commonProperty", properties.contains(Finder.getFieldByName(UnionEntityForReflector.class, "commonProperty")));
+	assertTrue("UnionEntity must have commonProperty levelEntity", properties.contains(Finder.getFieldByName(UnionEntityForReflector.class, "levelEntity")));
     }
 
     @Test
     public void test_that_getSimpleFieldsAnnotatedWith() {
-        List<Field> properties = Finder.findRealProperties(FirstLevelEntity.class);
-        assertEquals("Incorrect number of properties in class FirstLevelEntity.", 5, properties.size()); // key is annotated
-        assertEquals("Incorrect property name.", "property", properties.get(0).getName());
-        assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
+	List<Field> properties = Finder.findRealProperties(FirstLevelEntity.class);
+	assertEquals("Incorrect number of properties in class FirstLevelEntity.", 5, properties.size()); // key is annotated
+	assertEquals("Incorrect property name.", "property", properties.get(0).getName());
+	assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
-        properties = Finder.findRealProperties(FirstLevelEntity.class, Title.class, CompositeKeyMember.class);
-        assertEquals("Incorrect number of properties with title in class FirstLevelEntity.", 1, properties.size()); // key is annotated
-        assertEquals("Incorrect property name.", "property", properties.get(0).getName());
-        assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
+	properties = Finder.findRealProperties(FirstLevelEntity.class, Title.class, CompositeKeyMember.class);
+	assertEquals("Incorrect number of properties with title in class FirstLevelEntity.", 1, properties.size()); // key is annotated
+	assertEquals("Incorrect property name.", "property", properties.get(0).getName());
+	assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
-        properties = Finder.findRealProperties(UnionEntityForReflector.class);
-        assertEquals("Incorrect number of properties in class UnionEntity", 5, properties.size());
-        assertTrue("UnionEntity must contain simplePartEntity property", Finder.getFieldNames(properties).contains("simplePartEntity"));
-        assertTrue("UnionEntity must contain complexPartEntity property", Finder.getFieldNames(properties).contains("complexPartEntity"));
-        assertTrue("UnionEntity must contain dynamicKeyPartEntity property", Finder.getFieldNames(properties).contains("dynamicKeyPartEntity"));
+	properties = Finder.findRealProperties(UnionEntityForReflector.class);
+	assertEquals("Incorrect number of properties in class UnionEntity", 5, properties.size());
+	assertTrue("UnionEntity must contain simplePartEntity property", Finder.getFieldNames(properties).contains("simplePartEntity"));
+	assertTrue("UnionEntity must contain complexPartEntity property", Finder.getFieldNames(properties).contains("complexPartEntity"));
+	assertTrue("UnionEntity must contain dynamicKeyPartEntity property", Finder.getFieldNames(properties).contains("dynamicKeyPartEntity"));
     }
 
     @Test
     public void testThatFieldsAnnotatedWithWorksForSecondLevelOfInheritance() {
-        List<Field> properties = Finder.findProperties(SecondLevelEntity.class);
-        assertEquals("Incorrect number of properties in class SecondLevelEntity.", 8, properties.size());
-        assertEquals("Incorrect property name.", "anotherProperty", properties.get(0).getName());
-        assertEquals("Incorrect property type.", Long.class, properties.get(0).getType());
-        assertEquals("Incorrect property name.", "propertyOfSelfType", properties.get(1).getName());
-        assertEquals("Incorrect property type.", SecondLevelEntity.class, properties.get(1).getType());
+	List<Field> properties = Finder.findProperties(SecondLevelEntity.class);
+	assertEquals("Incorrect number of properties in class SecondLevelEntity.", 8, properties.size());
+	assertEquals("Incorrect property name.", "anotherProperty", properties.get(0).getName());
+	assertEquals("Incorrect property type.", Long.class, properties.get(0).getType());
+	assertEquals("Incorrect property name.", "propertyOfSelfType", properties.get(1).getName());
+	assertEquals("Incorrect property type.", SecondLevelEntity.class, properties.get(1).getType());
 
-        properties = Finder.findProperties(SecondLevelEntity.class, CompositeKeyMember.class);
-        assertEquals("Incorrect number of composite key properties in class SecondLevelEntity.", 3, properties.size());
+	properties = Finder.findProperties(SecondLevelEntity.class, CompositeKeyMember.class);
+	assertEquals("Incorrect number of composite key properties in class SecondLevelEntity.", 3, properties.size());
 
-        properties = Finder.findProperties(UnionEntityForReflector.class);
-        assertEquals("Incorrect number of properties in the UnionEntity class", 6, properties.size());
-        assertTrue("The UnionEntity must have desc property", properties.contains(Finder.getFieldByName(UnionEntityForReflector.class, AbstractEntity.DESC)));
+	properties = Finder.findProperties(UnionEntityForReflector.class);
+	assertEquals("Incorrect number of properties in the UnionEntity class", 6, properties.size());
+	assertTrue("The UnionEntity must have desc property", properties.contains(Finder.getFieldByName(UnionEntityForReflector.class, AbstractEntity.DESC)));
 
-        properties = Finder.findProperties(UnionEntityForReflector.class, CompositeKeyMember.class);
-        assertEquals("Incorrect number of composite key properties in class UnionEntity", 0, properties.size());
+	properties = Finder.findProperties(UnionEntityForReflector.class, CompositeKeyMember.class);
+	assertEquals("Incorrect number of composite key properties in class UnionEntity", 0, properties.size());
     }
 
     @Test
     public void testThatGetCompositeKeyMembersWorksForFirstLevelOfInheritance() {
-        List<Field> members = Finder.getKeyMembers(FirstLevelEntity.class);
-        assertEquals("Incorrect number of composite key members in FirstLevelEntity.", 2, members.size());
+	List<Field> members = Finder.getKeyMembers(FirstLevelEntity.class);
+	assertEquals("Incorrect number of composite key members in FirstLevelEntity.", 2, members.size());
 
-        members = Finder.getKeyMembers(UnionEntityWithoutDesc.class);
-        assertEquals("IncorrectNumber of key members in the UnionEntityWithoutDesc", 1, members.size());
+	members = Finder.getKeyMembers(UnionEntityWithoutDesc.class);
+	assertEquals("IncorrectNumber of key members in the UnionEntityWithoutDesc", 1, members.size());
     }
 
     @Test
     public void testThatGetCompositeKeyMembersWorksForSecondLevelOfInheritance() {
-        final List<Field> members = Finder.getKeyMembers(SecondLevelEntity.class);
-        // two properties annotated as composite keys are inherited from ForstLevelEntity and one declared within SecondLevelEntity
-        assertEquals("Incorrect number of composite key members in SecondLevelEntity.", 3, members.size());
+	final List<Field> members = Finder.getKeyMembers(SecondLevelEntity.class);
+	// two properties annotated as composite keys are inherited from ForstLevelEntity and one declared within SecondLevelEntity
+	assertEquals("Incorrect number of composite key members in SecondLevelEntity.", 3, members.size());
     }
 
     @Test
     public void testThatGetSimpleKeyMembersWorks() {
-        List<Field> members = Finder.getKeyMembers(SimpleEntity.class);
-        assertEquals("Incorrect number of simple key members in SimpleEntity.", 1, members.size());
-        assertEquals("Incorrect property name used for a simple key in SimpleEntity.", "key", members.get(0).getName());
+	List<Field> members = Finder.getKeyMembers(SimpleEntity.class);
+	assertEquals("Incorrect number of simple key members in SimpleEntity.", 1, members.size());
+	assertEquals("Incorrect property name used for a simple key in SimpleEntity.", "key", members.get(0).getName());
 
-        members = Finder.getKeyMembers(UnionEntityForReflector.class);
-        assertEquals("Incorrect number of key members in the UnionEntity class.", 1, members.size());
-        assertEquals("Incorrect property name used for a simple key member", "key", members.get(0).getName());
+	members = Finder.getKeyMembers(UnionEntityForReflector.class);
+	assertEquals("Incorrect number of key members in the UnionEntity class.", 1, members.size());
+	assertEquals("Incorrect property name used for a simple key member", "key", members.get(0).getName());
     }
 
     @Test
     public void testThatGetFieldByNameWorks() throws Exception {
-        final Field field = Finder.getFieldByName(SecondLevelEntity.class, "property");
-        assertNotNull("Failed to located a filed.", field);
-        assertEquals("Incorrect type.", String.class, field.getType());
-        final Field unionEntityField = Finder.getFieldByName(UnionEntityForReflector.class, "commonProperty");
-        assertNotNull("Failed to locate field in the UnionEntity class", unionEntityField);
-        assertEquals("Incorrect commonProperty type.", String.class, unionEntityField.getType());
+	final Field field = Finder.getFieldByName(SecondLevelEntity.class, "property");
+	assertNotNull("Failed to located a filed.", field);
+	assertEquals("Incorrect type.", String.class, field.getType());
+	final Field unionEntityField = Finder.getFieldByName(UnionEntityForReflector.class, "commonProperty");
+	assertNotNull("Failed to locate field in the UnionEntity class", unionEntityField);
+	assertEquals("Incorrect commonProperty type.", String.class, unionEntityField.getType());
 
-        try {
-            Finder.getFieldByName(SecondLevelEntity.class, "nonExistingProperty");
-            fail("Should have thrown an exception.");
-        } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
-        }
+	try {
+	    Finder.getFieldByName(SecondLevelEntity.class, "nonExistingProperty");
+	    fail("Should have thrown an exception.");
+	} catch (final Exception ex) {
+	    System.out.println(ex.getMessage());
+	}
     }
 
     @Test
     public void test_that_findFieldByName_works() throws Exception {
-        Field field = Finder.findFieldByName(SecondLevelEntity.class, "propertyOfSelfType.property");
-        assertNotNull("Failed to located a filed.", field);
-        assertEquals("Incorrect type.", String.class, field.getType());
-        field = Finder.findFieldByName(ComplexKeyEntity.class, "key.key");
-        assertNotNull("Faild to locate field in Complex entity class", field);
-        assertEquals("Incorrect type of the KeyEntity key field", Comparable.class, field.getType());
-        field = Finder.findFieldByName(ComplexKeyEntity.class, "key.simpleEntity");
-        assertNotNull("Faild to locate simpleEntity field in Complex entity class", field);
-        assertEquals("Incorrect type of the simpleEntity field", SimpleEntity.class, field.getType());
-        field = Finder.findFieldByName(ComplexKeyEntity.class, "key.simpleEntity.key");
-        assertNotNull("Faild to locate simpleEntity's key field in Complex entity class", field);
-        assertEquals("Incorrect type of the simpleEntity's key field", Comparable.class, field.getType());
-        field = Finder.findFieldByName(UnionEntityForReflector.class, "levelEntity.propertyOfSelfType.anotherProperty");
-        assertNotNull("Faild to locate levelEntity.propertyOfSelfType.anotherProperty field in the UnionEntity class", field);
-        assertEquals("Incorrect type of the levelEntity.propertyOfSelfType.anotherProperty field", Long.class, field.getType());
-        try {
-            Finder.findFieldByName(SecondLevelEntity.class, "propertyOfSelfType.property.nonExistingProperty");
-            fail("Should have thrown an exception.");
-        } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
-        }
+	Field field = Finder.findFieldByName(SecondLevelEntity.class, "propertyOfSelfType.property");
+	assertNotNull("Failed to located a filed.", field);
+	assertEquals("Incorrect type.", String.class, field.getType());
+	field = Finder.findFieldByName(ComplexKeyEntity.class, "key.key");
+	assertNotNull("Faild to locate field in Complex entity class", field);
+	assertEquals("Incorrect type of the KeyEntity key field", Comparable.class, field.getType());
+	field = Finder.findFieldByName(ComplexKeyEntity.class, "key.simpleEntity");
+	assertNotNull("Faild to locate simpleEntity field in Complex entity class", field);
+	assertEquals("Incorrect type of the simpleEntity field", SimpleEntity.class, field.getType());
+	field = Finder.findFieldByName(ComplexKeyEntity.class, "key.simpleEntity.key");
+	assertNotNull("Faild to locate simpleEntity's key field in Complex entity class", field);
+	assertEquals("Incorrect type of the simpleEntity's key field", Comparable.class, field.getType());
+	field = Finder.findFieldByName(UnionEntityForReflector.class, "levelEntity.propertyOfSelfType.anotherProperty");
+	assertNotNull("Faild to locate levelEntity.propertyOfSelfType.anotherProperty field in the UnionEntity class", field);
+	assertEquals("Incorrect type of the levelEntity.propertyOfSelfType.anotherProperty field", Long.class, field.getType());
+	try {
+	    Finder.findFieldByName(SecondLevelEntity.class, "propertyOfSelfType.property.nonExistingProperty");
+	    fail("Should have thrown an exception.");
+	} catch (final Exception ex) {
+	    System.out.println(ex.getMessage());
+	}
 
-        // methods finding tests: (including method inheritance & nested dot-notation properties)
-        String methodName = "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.methodSecondLevel()";
-        try {
-            Finder.findFieldByName(SecondLevelEntity.class, methodName);
-            fail("Field should not be found for method [" + methodName + "] definition.");
-        } catch (final Finder.MethodFoundException e) {
-            System.out.println("All is ok: " + e.getMessage());
-        } catch (final IllegalArgumentException e) {
-            fail("Method [" + methodName + "] should be found.");
-        }
+	// methods finding tests: (including method inheritance & nested dot-notation properties)
+	String methodName = "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.methodSecondLevel()";
+	try {
+	    Finder.findFieldByName(SecondLevelEntity.class, methodName);
+	    fail("Field should not be found for method [" + methodName + "] definition.");
+	} catch (final Finder.MethodFoundException e) {
+	    System.out.println("All is ok: " + e.getMessage());
+	} catch (final IllegalArgumentException e) {
+	    fail("Method [" + methodName + "] should be found.");
+	}
 
-        methodName = "propertyOfSelfType.propertyOfSelfType.methodFirstLevel()";
-        try {
-            Finder.findFieldByName(SecondLevelEntity.class, methodName);
-            fail("Field should not be found for inherited method [" + methodName + "] definition.");
-        } catch (final Finder.MethodFoundException e) {
-            System.out.println("All is ok: " + e.getMessage());
-        } catch (final IllegalArgumentException e) {
-            fail("Inherited method [" + methodName + "] should be found.");
-        }
+	methodName = "propertyOfSelfType.propertyOfSelfType.methodFirstLevel()";
+	try {
+	    Finder.findFieldByName(SecondLevelEntity.class, methodName);
+	    fail("Field should not be found for inherited method [" + methodName + "] definition.");
+	} catch (final Finder.MethodFoundException e) {
+	    System.out.println("All is ok: " + e.getMessage());
+	} catch (final IllegalArgumentException e) {
+	    fail("Inherited method [" + methodName + "] should be found.");
+	}
 
-        methodName = "propertyOfSelfType.propertyOfSelfType.methodFirstLevel1()";
-        try {
-            Finder.findFieldByName(SecondLevelEntity.class, methodName);
-            fail("Field should not be found for method [" + methodName + "] definition.");
-        } catch (final Finder.MethodFoundException e) {
-            fail("Method [" + methodName + "] should not be found.");
-        } catch (final IllegalArgumentException e) {
-            System.out.println("All is ok: " + e.getMessage());
-        }
+	methodName = "propertyOfSelfType.propertyOfSelfType.methodFirstLevel1()";
+	try {
+	    Finder.findFieldByName(SecondLevelEntity.class, methodName);
+	    fail("Field should not be found for method [" + methodName + "] definition.");
+	} catch (final Finder.MethodFoundException e) {
+	    fail("Method [" + methodName + "] should not be found.");
+	} catch (final IllegalArgumentException e) {
+	    System.out.println("All is ok: " + e.getMessage());
+	}
 
-        final String fieldName = "propertyOfSelfType.getPropertyOfSelfType().propertyOfSelfType";
-        field = Finder.findFieldByName(SecondLevelEntity.class, fieldName);
-        assertNotNull("Faild to locate " + fieldName + " field in the SecondLevelEntity class", field);
-        assertEquals("Incorrect type of the " + fieldName + " field", SecondLevelEntity.class, field.getType());
+	final String fieldName = "propertyOfSelfType.getPropertyOfSelfType().propertyOfSelfType";
+	field = Finder.findFieldByName(SecondLevelEntity.class, fieldName);
+	assertNotNull("Faild to locate " + fieldName + " field in the SecondLevelEntity class", field);
+	assertEquals("Incorrect type of the " + fieldName + " field", SecondLevelEntity.class, field.getType());
     }
 
     @Test
     public void testThatFindFieldValueByNameWorks() throws Exception {
-        final SecondLevelEntity inst = new SecondLevelEntity();
-        inst.setPropertyOfSelfType(inst);
-        inst.setProperty("value");
+	final SecondLevelEntity inst = new SecondLevelEntity();
+	inst.setPropertyOfSelfType(inst);
+	inst.setProperty("value");
 
-        assertNull("Incorrect value.", Finder.findFieldValueByName(null, "property"));
-        assertEquals("Incorrect value.", "value", Finder.findFieldValueByName(inst, "property"));
-        assertEquals("Incorrect value.", "value", Finder.findFieldValueByName(inst, "propertyOfSelfType.property"));
-        assertEquals("Incorrect value.", "value", Finder.findFieldValueByName(inst, "propertyOfSelfType.propertyOfSelfType.property"));
-        assertEquals("Incorrect value.", "value", Finder.findFieldValueByName(inst, "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.property"));
+	assertNull("Incorrect value.", Finder.findFieldValueByName(null, "property"));
+	assertEquals("Incorrect value.", "value", Finder.findFieldValueByName(inst, "property"));
+	assertEquals("Incorrect value.", "value", Finder.findFieldValueByName(inst, "propertyOfSelfType.property"));
+	assertEquals("Incorrect value.", "value", Finder.findFieldValueByName(inst, "propertyOfSelfType.propertyOfSelfType.property"));
+	assertEquals("Incorrect value.", "value", Finder.findFieldValueByName(inst, "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.property"));
 
-        inst.setPropertyOfSelfType(null);
-        assertNull("Incorrect value.", Finder.findFieldValueByName(inst, "propertyOfSelfType.propertyOfSelfType"));
-        assertNull("Incorrect value.", Finder.findFieldValueByName(inst, "propertyOfSelfType.propertyOfSelfType.property"));
+	inst.setPropertyOfSelfType(null);
+	assertNull("Incorrect value.", Finder.findFieldValueByName(inst, "propertyOfSelfType.propertyOfSelfType"));
+	assertNull("Incorrect value.", Finder.findFieldValueByName(inst, "propertyOfSelfType.propertyOfSelfType.property"));
 
     }
 
     @Test
     public void test_that_findFieldValueByName_works_for_AbstractUnionEntity() throws Exception {
-        final SecondLevelEntity inst = new SecondLevelEntity();
-        inst.setPropertyOfSelfType(inst);
-        inst.setProperty("value");
+	final SecondLevelEntity inst = new SecondLevelEntity();
+	inst.setPropertyOfSelfType(inst);
+	inst.setProperty("value");
 
-        final SimplePartEntity simpleProperty = factory.newEntity(SimplePartEntity.class, 1L, "KEY");
-        simpleProperty.setDesc("DESC");
-        simpleProperty.setCommonProperty("common value");
-        simpleProperty.setLevelEntity(inst);
-        simpleProperty.setUncommonProperty("uncommon value");
-        final FirstLevelEntity firstLevelEntity = factory.newByKey(FirstLevelEntity.class, "property", "property two");
-        firstLevelEntity.setDesc("COMPLEX DESC FOR KEY");
-        final ComplexPartEntity complexEntity = factory.newEntity(ComplexPartEntity.class, 1L, firstLevelEntity);
-        complexEntity.setDesc("COMPLEX DESC");
-        complexEntity.setCommonProperty("common property");
-        complexEntity.setLevelEntity(inst);
-        complexEntity.setAnotherUncommonProperty("another uncommon property");
+	final SimplePartEntity simpleProperty = factory.newEntity(SimplePartEntity.class, 1L, "KEY");
+	simpleProperty.setDesc("DESC");
+	simpleProperty.setCommonProperty("common value");
+	simpleProperty.setLevelEntity(inst);
+	simpleProperty.setUncommonProperty("uncommon value");
+	final FirstLevelEntity firstLevelEntity = factory.newByKey(FirstLevelEntity.class, "property", "property two");
+	firstLevelEntity.setDesc("COMPLEX DESC FOR KEY");
+	final ComplexPartEntity complexEntity = factory.newEntity(ComplexPartEntity.class, 1L, firstLevelEntity);
+	complexEntity.setDesc("COMPLEX DESC");
+	complexEntity.setCommonProperty("common property");
+	complexEntity.setLevelEntity(inst);
+	complexEntity.setAnotherUncommonProperty("another uncommon property");
 
-        final SecondLevelEntity secondKeyParameter = factory.newByKey(SecondLevelEntity.class, "property_one", "property_two", 2L);
-        secondKeyParameter.setProperty("prp");
-        secondKeyParameter.setPropertyOfSelfType(secondKeyParameter);
+	final SecondLevelEntity secondKeyParameter = factory.newByKey(SecondLevelEntity.class, "property_one", "property_two", 2L);
+	secondKeyParameter.setProperty("prp");
+	secondKeyParameter.setPropertyOfSelfType(secondKeyParameter);
 
-        final DynamicKeyPartEntity dynamicEntity = factory.newByKey(DynamicKeyPartEntity.class, "first_key", secondKeyParameter);
-        dynamicEntity.setDesc("DYNAMIC DESC");
-        dynamicEntity.setCommonProperty("common property");
-        dynamicEntity.setLevelEntity(inst);
-        dynamicEntity.setUncommonProperty("dynamic uncommon property");
+	final DynamicKeyPartEntity dynamicEntity = factory.newByKey(DynamicKeyPartEntity.class, "first_key", secondKeyParameter);
+	dynamicEntity.setDesc("DYNAMIC DESC");
+	dynamicEntity.setCommonProperty("common property");
+	dynamicEntity.setLevelEntity(inst);
+	dynamicEntity.setUncommonProperty("dynamic uncommon property");
 
-        UnionEntityForReflector unionEntity = factory.newEntity(UnionEntityForReflector.class);
-        unionEntity.setSimplePartEntity(simpleProperty);
+	UnionEntityForReflector unionEntity = factory.newEntity(UnionEntityForReflector.class);
+	unionEntity.setSimplePartEntity(simpleProperty);
 
-        assertEquals("Incorrect value.", "common value", Finder.findFieldValueByName(unionEntity, "commonProperty"));
-        assertEquals("Incorrect value retrieved from getCommonProperty()", "common value", Finder.findFieldValueByName(unionEntity, "getCommonProperty()"));
-        assertEquals("Incorrect common property of simple part entity", "common value", Finder.findFieldValueByName(unionEntity, "simplePartEntity.commonProperty"));
-        assertEquals("Incorrect common property of simple part entity", "uncommon value", Finder.findFieldValueByName(unionEntity, "simplePartEntity.uncommonProperty"));
-        assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByName(unionEntity, "levelEntity.property"));
+	assertEquals("Incorrect value.", "common value", Finder.findFieldValueByName(unionEntity, "commonProperty"));
+	assertEquals("Incorrect value retrieved from getCommonProperty()", "common value", Finder.findFieldValueByName(unionEntity, "getCommonProperty()"));
+	assertEquals("Incorrect common property of simple part entity", "common value", Finder.findFieldValueByName(unionEntity, "simplePartEntity.commonProperty"));
+	assertEquals("Incorrect common property of simple part entity", "uncommon value", Finder.findFieldValueByName(unionEntity, "simplePartEntity.uncommonProperty"));
+	assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByName(unionEntity, "levelEntity.property"));
 
-        assertEquals("Incorrect key value of the union entity", "KEY", Finder.findFieldValueByName(unionEntity, "key"));
-        assertEquals("Incorrect key value of the union entity", "KEY", Finder.findFieldValueByName(unionEntity, "getKey()"));
-        assertEquals("Incorrect desc value of the union entity", "DESC", Finder.findFieldValueByName(unionEntity, "desc"));
-        assertEquals("Incorrect desc value of the union entity", "DESC", Finder.findFieldValueByName(unionEntity, "getDesc()"));
-        try {
-            Finder.findFieldValueByName(unionEntity, "uncommonProperty");
-            fail("There shouldn't be any uncommonProperty");
-        } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        try {
-            Finder.findFieldValueByName(unionEntity, "getUncommonProperty()");
-            fail("There shouldn't be any getUncommonProperty()");
-        } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        unionEntity = factory.newEntity(UnionEntityForReflector.class);
-        unionEntity.setComplexPartEntity(complexEntity);
-        assertEquals("Incorrect value.", "common property", Finder.findFieldValueByName(unionEntity, "commonProperty"));
-        assertEquals("Incorrect value retrieved from getCommonProperty()", "common property", Finder.findFieldValueByName(unionEntity, "getCommonProperty()"));
-        assertEquals("Incorrect common property of simple part entity", "common property", Finder.findFieldValueByName(unionEntity, "complexPartEntity.commonProperty"));
-        assertEquals("Incorrect common property of simple part entity", "another uncommon property", Finder.findFieldValueByName(unionEntity, "complexPartEntity.anotherUncommonProperty"));
-        assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByName(unionEntity, "levelEntity.property"));
+	assertEquals("Incorrect key value of the union entity", "KEY", Finder.findFieldValueByName(unionEntity, "key"));
+	assertEquals("Incorrect key value of the union entity", "KEY", Finder.findFieldValueByName(unionEntity, "getKey()"));
+	assertEquals("Incorrect desc value of the union entity", "DESC", Finder.findFieldValueByName(unionEntity, "desc"));
+	assertEquals("Incorrect desc value of the union entity", "DESC", Finder.findFieldValueByName(unionEntity, "getDesc()"));
+	try {
+	    Finder.findFieldValueByName(unionEntity, "uncommonProperty");
+	    fail("There shouldn't be any uncommonProperty");
+	} catch (final Exception ex) {
+	    System.out.println(ex.getMessage());
+	}
+	try {
+	    Finder.findFieldValueByName(unionEntity, "getUncommonProperty()");
+	    fail("There shouldn't be any getUncommonProperty()");
+	} catch (final Exception ex) {
+	    System.out.println(ex.getMessage());
+	}
+	unionEntity = factory.newEntity(UnionEntityForReflector.class);
+	unionEntity.setComplexPartEntity(complexEntity);
+	assertEquals("Incorrect value.", "common property", Finder.findFieldValueByName(unionEntity, "commonProperty"));
+	assertEquals("Incorrect value retrieved from getCommonProperty()", "common property", Finder.findFieldValueByName(unionEntity, "getCommonProperty()"));
+	assertEquals("Incorrect common property of simple part entity", "common property", Finder.findFieldValueByName(unionEntity, "complexPartEntity.commonProperty"));
+	assertEquals("Incorrect common property of simple part entity", "another uncommon property", Finder.findFieldValueByName(unionEntity, "complexPartEntity.anotherUncommonProperty"));
+	assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByName(unionEntity, "levelEntity.property"));
 
-        assertEquals("Incorrect key value of the union entity", firstLevelEntity, Finder.findFieldValueByName(unionEntity, "key"));
-        assertEquals("Incorrect key value of the union entity", "property property two", Finder.findFieldValueByName(unionEntity, "getKey()"));
-        assertEquals("Incorrect desc value of the union entity", "COMPLEX DESC", Finder.findFieldValueByName(unionEntity, "desc"));
-        assertEquals("Incorrect desc value of the union entity", "COMPLEX DESC FOR KEY", Finder.findFieldValueByName(unionEntity, "getDesc()"));
-        try {
-            Finder.findFieldValueByName(unionEntity, "anotherUncommonProperty");
-            fail("There shouldn't be any uncommonProperty");
-        } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        try {
-            Finder.findFieldValueByName(unionEntity, "getAnotherUncommonProperty()");
-            fail("There shouldn't be any getAnotherUncommonProperty()");
-        } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        unionEntity = factory.newEntity(UnionEntityForReflector.class);
-        unionEntity.setDynamicKeyPartEntity(dynamicEntity);
-        assertEquals("Incorrect value.", "common property", Finder.findFieldValueByName(unionEntity, "commonProperty"));
-        assertEquals("Incorrect value retrieved from getCommonProperty()", "common property", Finder.findFieldValueByName(unionEntity, "getCommonProperty()"));
-        assertEquals("Incorrect common property of simple part entity", "common property", Finder.findFieldValueByName(unionEntity, "dynamicKeyPartEntity.commonProperty"));
-        assertEquals("Incorrect common property of simple part entity", "dynamic uncommon property", Finder.findFieldValueByName(unionEntity, "dynamicKeyPartEntity.uncommonProperty"));
-        assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByName(unionEntity, "levelEntity.property"));
+	assertEquals("Incorrect key value of the union entity", firstLevelEntity, Finder.findFieldValueByName(unionEntity, "key"));
+	assertEquals("Incorrect key value of the union entity", "property property two", Finder.findFieldValueByName(unionEntity, "getKey()"));
+	assertEquals("Incorrect desc value of the union entity", "COMPLEX DESC", Finder.findFieldValueByName(unionEntity, "desc"));
+	assertEquals("Incorrect desc value of the union entity", "COMPLEX DESC FOR KEY", Finder.findFieldValueByName(unionEntity, "getDesc()"));
+	try {
+	    Finder.findFieldValueByName(unionEntity, "anotherUncommonProperty");
+	    fail("There shouldn't be any uncommonProperty");
+	} catch (final Exception ex) {
+	    System.out.println(ex.getMessage());
+	}
+	try {
+	    Finder.findFieldValueByName(unionEntity, "getAnotherUncommonProperty()");
+	    fail("There shouldn't be any getAnotherUncommonProperty()");
+	} catch (final Exception ex) {
+	    System.out.println(ex.getMessage());
+	}
+	unionEntity = factory.newEntity(UnionEntityForReflector.class);
+	unionEntity.setDynamicKeyPartEntity(dynamicEntity);
+	assertEquals("Incorrect value.", "common property", Finder.findFieldValueByName(unionEntity, "commonProperty"));
+	assertEquals("Incorrect value retrieved from getCommonProperty()", "common property", Finder.findFieldValueByName(unionEntity, "getCommonProperty()"));
+	assertEquals("Incorrect common property of simple part entity", "common property", Finder.findFieldValueByName(unionEntity, "dynamicKeyPartEntity.commonProperty"));
+	assertEquals("Incorrect common property of simple part entity", "dynamic uncommon property", Finder.findFieldValueByName(unionEntity, "dynamicKeyPartEntity.uncommonProperty"));
+	assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByName(unionEntity, "levelEntity.property"));
 
-        assertEquals("Incorrect key value of the union entity", dynamicEntity.getKey(), Finder.findFieldValueByName(unionEntity, "key"));
-        assertEquals("Incorrect key value of the union entity", "first_key prp property_two 2", Finder.findFieldValueByName(unionEntity, "getKey()"));
-        assertEquals("Incorrect desc value of the union entity", "DYNAMIC DESC", Finder.findFieldValueByName(unionEntity, "desc"));
-        assertEquals("Incorrect desc value of the union entity", "DYNAMIC DESC", Finder.findFieldValueByName(unionEntity, "getDesc()"));
-        try {
-            Finder.findFieldValueByName(unionEntity, "uncommonProperty");
-            fail("There shouldn't be any uncommonProperty");
-        } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        try {
-            Finder.findFieldValueByName(unionEntity, "getUncommonProperty()");
-            fail("There shouldn't be any getUncommonProperty()");
-        } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        // Testing AbstractUnionEntity when it's instance is within another AbstractEntity instance.
-        unionEntity = factory.newEntity(UnionEntityForReflector.class);
-        unionEntity.setSimplePartEntity(simpleProperty);
-        final UnionEntityHolder unionHolder = factory.newByKey(UnionEntityHolder.class, "KEY");
-        unionHolder.setUnionEntity(unionEntity);
-        assertEquals("Incorrect value of unionEntity.levelEntity.property", "value", Finder.findFieldValueByName(unionHolder, "unionEntity.levelEntity.property"));
-        assertEquals("Incorrect value of unionEntity.simplePartEntity.uncommonProperty", "uncommon value", Finder.findFieldValueByName(unionHolder, "unionEntity.simplePartEntity.uncommonProperty"));
-        assertEquals("Incorrect value of unionEntity.getLevelEntity().property", "value", Finder.findFieldValueByName(unionHolder, "unionEntity.getLevelEntity().property"));
+	assertEquals("Incorrect key value of the union entity", dynamicEntity.getKey(), Finder.findFieldValueByName(unionEntity, "key"));
+	assertEquals("Incorrect key value of the union entity", "first_key prp property_two 2", Finder.findFieldValueByName(unionEntity, "getKey()"));
+	assertEquals("Incorrect desc value of the union entity", "DYNAMIC DESC", Finder.findFieldValueByName(unionEntity, "desc"));
+	assertEquals("Incorrect desc value of the union entity", "DYNAMIC DESC", Finder.findFieldValueByName(unionEntity, "getDesc()"));
+	try {
+	    Finder.findFieldValueByName(unionEntity, "uncommonProperty");
+	    fail("There shouldn't be any uncommonProperty");
+	} catch (final Exception ex) {
+	    System.out.println(ex.getMessage());
+	}
+	try {
+	    Finder.findFieldValueByName(unionEntity, "getUncommonProperty()");
+	    fail("There shouldn't be any getUncommonProperty()");
+	} catch (final Exception ex) {
+	    System.out.println(ex.getMessage());
+	}
+	// Testing AbstractUnionEntity when it's instance is within another AbstractEntity instance.
+	unionEntity = factory.newEntity(UnionEntityForReflector.class);
+	unionEntity.setSimplePartEntity(simpleProperty);
+	final UnionEntityHolder unionHolder = factory.newByKey(UnionEntityHolder.class, "KEY");
+	unionHolder.setUnionEntity(unionEntity);
+	assertEquals("Incorrect value of unionEntity.levelEntity.property", "value", Finder.findFieldValueByName(unionHolder, "unionEntity.levelEntity.property"));
+	assertEquals("Incorrect value of unionEntity.simplePartEntity.uncommonProperty", "uncommon value", Finder.findFieldValueByName(unionHolder, "unionEntity.simplePartEntity.uncommonProperty"));
+	assertEquals("Incorrect value of unionEntity.getLevelEntity().property", "value", Finder.findFieldValueByName(unionHolder, "unionEntity.getLevelEntity().property"));
     }
 
     @Test
     public void test_field_of_type_search_routine() {
-        assertEquals("Incorrect number of string fields.", 10, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, String.class).size());
-        assertEquals("Incorrect number of SimpleEntity fields.", 1, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, SimpleEntity.class).size());
+	assertEquals("Incorrect number of string fields.", 10, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, String.class).size());
+	assertEquals("Incorrect number of SimpleEntity fields.", 1, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, SimpleEntity.class).size());
     }
 
-//    @Test
-//    public void testThatFindFieldValueByNameRecWorks() throws Exception {
-//        final SecondLevelEntity inst = new SecondLevelEntity();
-//        inst.setPropertyOfSelfType(inst);
-//        inst.setProperty("value");
-//
-//        assertNull("Incorrect value.", Finder.findFieldValueByNameRec(null, "property"));
-//        assertEquals("Incorrect value.", "value", Finder.findFieldValueByNameRec(inst, "property"));
-//        assertEquals("Incorrect value.", "value", Finder.findFieldValueByNameRec(inst, "propertyOfSelfType.property"));
-//        assertEquals("Incorrect value.", "value", Finder.findFieldValueByNameRec(inst, "propertyOfSelfType.propertyOfSelfType.property"));
-//        assertEquals("Incorrect value.", "value", Finder.findFieldValueByNameRec(inst, "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.property"));
-//
-//        inst.setPropertyOfSelfType(null);
-//        assertNull("Incorrect value.", Finder.findFieldValueByNameRec(inst, "propertyOfSelfType.propertyOfSelfType"));
-//        assertNull("Incorrect value.", Finder.findFieldValueByNameRec(inst, "propertyOfSelfType.propertyOfSelfType.property"));
-//    }
-//
-//    @Test
-//    public void test_that_findFieldValueByNameRec_works_for_AbstractUnionEntity() throws Exception {
-//        final SecondLevelEntity inst = new SecondLevelEntity();
-//        inst.setPropertyOfSelfType(inst);
-//        inst.setProperty("value");
-//
-//        final SimplePartEntity simpleProperty = factory.newEntity(SimplePartEntity.class, 1L, "KEY");
-//        simpleProperty.setDesc("DESC");
-//        simpleProperty.setCommonProperty("common value");
-//        simpleProperty.setLevelEntity(inst);
-//        simpleProperty.setUncommonProperty("uncommon value");
-//        final FirstLevelEntity firstLevelEntity = factory.newByKey(FirstLevelEntity.class, "property", "property two");
-//        firstLevelEntity.setDesc("COMPLEX DESC FOR KEY");
-//        final ComplexPartEntity complexEntity = factory.newEntity(ComplexPartEntity.class, 1L, firstLevelEntity);
-//        complexEntity.setDesc("COMPLEX DESC");
-//        complexEntity.setCommonProperty("common property");
-//        complexEntity.setLevelEntity(inst);
-//        complexEntity.setAnotherUncommonProperty("another uncommon property");
-//
-//        final SecondLevelEntity secondKeyParameter = factory.newByKey(SecondLevelEntity.class, "property_one", "property_two", 2L);
-//        secondKeyParameter.setProperty("prp");
-//        secondKeyParameter.setPropertyOfSelfType(secondKeyParameter);
-//
-//        final DynamicKeyPartEntity dynamicEntity = factory.newByKey(DynamicKeyPartEntity.class, "first_key", secondKeyParameter);
-//        dynamicEntity.setDesc("DYNAMIC DESC");
-//        dynamicEntity.setCommonProperty("common property");
-//        dynamicEntity.setLevelEntity(inst);
-//        dynamicEntity.setUncommonProperty("dynamic uncommon property");
-//
-//        UnionEntityForReflector unionEntity = factory.newEntity(UnionEntityForReflector.class);
-//        unionEntity.setSimplePartEntity(simpleProperty);
-//
-//        assertEquals("Incorrect value.", "common value", Finder.findFieldValueByNameRec(unionEntity, "commonProperty"));
-//        assertEquals("Incorrect value retrieved from getCommonProperty()", "common value", Finder.findFieldValueByNameRec(unionEntity, "getCommonProperty()"));
-//        assertEquals("Incorrect common property of simple part entity", "common value", Finder.findFieldValueByNameRec(unionEntity, "simplePartEntity.commonProperty"));
-//        assertEquals("Incorrect common property of simple part entity", "uncommon value", Finder.findFieldValueByNameRec(unionEntity, "simplePartEntity.uncommonProperty"));
-//        assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByNameRec(unionEntity, "levelEntity.property"));
-//
-//        assertEquals("Incorrect key value of the union entity", "KEY", Finder.findFieldValueByNameRec(unionEntity, "key"));
-//        assertEquals("Incorrect key value of the union entity", "KEY", Finder.findFieldValueByNameRec(unionEntity, "getKey()"));
-//        assertEquals("Incorrect desc value of the union entity", "DESC", Finder.findFieldValueByNameRec(unionEntity, "desc"));
-//        assertEquals("Incorrect desc value of the union entity", "DESC", Finder.findFieldValueByNameRec(unionEntity, "getDesc()"));
-//        try {
-//            Finder.findFieldValueByNameRec(unionEntity, "uncommonProperty");
-//            fail("There shouldn't be any uncommonProperty");
-//        } catch (final Exception ex) {
-//            System.out.println(ex.getMessage());
-//        }
-//        try {
-//            Finder.findFieldValueByNameRec(unionEntity, "getUncommonProperty()");
-//            fail("There shouldn't be any getUncommonProperty()");
-//        } catch (final Exception ex) {
-//            System.out.println(ex.getMessage());
-//        }
-//        unionEntity = factory.newEntity(UnionEntityForReflector.class);
-//        unionEntity.setComplexPartEntity(complexEntity);
-//        assertEquals("Incorrect value.", "common property", Finder.findFieldValueByNameRec(unionEntity, "commonProperty"));
-//        assertEquals("Incorrect value retrieved from getCommonProperty()", "common property", Finder.findFieldValueByNameRec(unionEntity, "getCommonProperty()"));
-//        assertEquals("Incorrect common property of simple part entity", "common property", Finder.findFieldValueByNameRec(unionEntity, "complexPartEntity.commonProperty"));
-//        assertEquals("Incorrect common property of simple part entity", "another uncommon property", Finder.findFieldValueByNameRec(unionEntity, "complexPartEntity.anotherUncommonProperty"));
-//        assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByNameRec(unionEntity, "levelEntity.property"));
-//
-//        assertEquals("Incorrect key value of the union entity", firstLevelEntity, Finder.findFieldValueByNameRec(unionEntity, "key"));
-//        assertEquals("Incorrect key value of the union entity", "propertyproperty two", Finder.findFieldValueByNameRec(unionEntity, "getKey()"));
-//        assertEquals("Incorrect desc value of the union entity", "COMPLEX DESC", Finder.findFieldValueByNameRec(unionEntity, "desc"));
-//        assertEquals("Incorrect desc value of the union entity", "COMPLEX DESC FOR KEY", Finder.findFieldValueByNameRec(unionEntity, "getDesc()"));
-//        try {
-//            Finder.findFieldValueByNameRec(unionEntity, "anotherUncommonProperty");
-//            fail("There shouldn't be any uncommonProperty");
-//        } catch (final Exception ex) {
-//            System.out.println(ex.getMessage());
-//        }
-//        try {
-//            Finder.findFieldValueByNameRec(unionEntity, "getAnotherUncommonProperty()");
-//            fail("There shouldn't be any getAnotherUncommonProperty()");
-//        } catch (final Exception ex) {
-//            System.out.println(ex.getMessage());
-//        }
-//        unionEntity = factory.newEntity(UnionEntityForReflector.class);
-//        unionEntity.setDynamicKeyPartEntity(dynamicEntity);
-//        assertEquals("Incorrect value.", "common property", Finder.findFieldValueByNameRec(unionEntity, "commonProperty"));
-//        assertEquals("Incorrect value retrieved from getCommonProperty()", "common property", Finder.findFieldValueByNameRec(unionEntity, "getCommonProperty()"));
-//        assertEquals("Incorrect common property of simple part entity", "common property", Finder.findFieldValueByNameRec(unionEntity, "dynamicKeyPartEntity.commonProperty"));
-//        assertEquals("Incorrect common property of simple part entity", "dynamic uncommon property", Finder.findFieldValueByNameRec(unionEntity, "dynamicKeyPartEntity.uncommonProperty"));
-//        assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByNameRec(unionEntity, "levelEntity.property"));
-//
-//        assertEquals("Incorrect key value of the union entity", dynamicEntity.getKey(), Finder.findFieldValueByNameRec(unionEntity, "key"));
-//        assertEquals("Incorrect key value of the union entity", "first_keyprpproperty_two2", Finder.findFieldValueByNameRec(unionEntity, "getKey()"));
-//        assertEquals("Incorrect desc value of the union entity", "DYNAMIC DESC", Finder.findFieldValueByNameRec(unionEntity, "desc"));
-//        assertEquals("Incorrect desc value of the union entity", "DYNAMIC DESC", Finder.findFieldValueByNameRec(unionEntity, "getDesc()"));
-//        try {
-//            Finder.findFieldValueByNameRec(unionEntity, "uncommonProperty");
-//            fail("There shouldn't be any uncommonProperty");
-//        } catch (final Exception ex) {
-//            System.out.println(ex.getMessage());
-//        }
-//        try {
-//            Finder.findFieldValueByNameRec(unionEntity, "getUncommonProperty()");
-//            fail("There shouldn't be any getUncommonProperty()");
-//        } catch (final Exception ex) {
-//            System.out.println(ex.getMessage());
-//        }
-//        // Testing AbstractUnionEntity when it's instance is within another AbstractEntity instance.
-//        unionEntity = factory.newEntity(UnionEntityForReflector.class);
-//        unionEntity.setSimplePartEntity(simpleProperty);
-//        final UnionEntityHolder unionHolder = factory.newByKey(UnionEntityHolder.class, "KEY");
-//        unionHolder.setUnionEntity(unionEntity);
-//        assertEquals("Incorrect value of unionEntity.levelEntity.property", "value", Finder.findFieldValueByNameRec(unionHolder, "unionEntity.levelEntity.property"));
-//        assertEquals("Incorrect value of unionEntity.simplePartEntity.uncommonProperty", "uncommon value", Finder.findFieldValueByNameRec(unionHolder, "unionEntity.simplePartEntity.uncommonProperty"));
-//        assertEquals("Incorrect value of unionEntity.getLevelEntity().property", "value", Finder.findFieldValueByNameRec(unionHolder, "unionEntity.getLevelEntity().property"));
-//    }
+    //    @Test
+    //    public void testThatFindFieldValueByNameRecWorks() throws Exception {
+    //        final SecondLevelEntity inst = new SecondLevelEntity();
+    //        inst.setPropertyOfSelfType(inst);
+    //        inst.setProperty("value");
+    //
+    //        assertNull("Incorrect value.", Finder.findFieldValueByNameRec(null, "property"));
+    //        assertEquals("Incorrect value.", "value", Finder.findFieldValueByNameRec(inst, "property"));
+    //        assertEquals("Incorrect value.", "value", Finder.findFieldValueByNameRec(inst, "propertyOfSelfType.property"));
+    //        assertEquals("Incorrect value.", "value", Finder.findFieldValueByNameRec(inst, "propertyOfSelfType.propertyOfSelfType.property"));
+    //        assertEquals("Incorrect value.", "value", Finder.findFieldValueByNameRec(inst, "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.property"));
+    //
+    //        inst.setPropertyOfSelfType(null);
+    //        assertNull("Incorrect value.", Finder.findFieldValueByNameRec(inst, "propertyOfSelfType.propertyOfSelfType"));
+    //        assertNull("Incorrect value.", Finder.findFieldValueByNameRec(inst, "propertyOfSelfType.propertyOfSelfType.property"));
+    //    }
+    //
+    //    @Test
+    //    public void test_that_findFieldValueByNameRec_works_for_AbstractUnionEntity() throws Exception {
+    //        final SecondLevelEntity inst = new SecondLevelEntity();
+    //        inst.setPropertyOfSelfType(inst);
+    //        inst.setProperty("value");
+    //
+    //        final SimplePartEntity simpleProperty = factory.newEntity(SimplePartEntity.class, 1L, "KEY");
+    //        simpleProperty.setDesc("DESC");
+    //        simpleProperty.setCommonProperty("common value");
+    //        simpleProperty.setLevelEntity(inst);
+    //        simpleProperty.setUncommonProperty("uncommon value");
+    //        final FirstLevelEntity firstLevelEntity = factory.newByKey(FirstLevelEntity.class, "property", "property two");
+    //        firstLevelEntity.setDesc("COMPLEX DESC FOR KEY");
+    //        final ComplexPartEntity complexEntity = factory.newEntity(ComplexPartEntity.class, 1L, firstLevelEntity);
+    //        complexEntity.setDesc("COMPLEX DESC");
+    //        complexEntity.setCommonProperty("common property");
+    //        complexEntity.setLevelEntity(inst);
+    //        complexEntity.setAnotherUncommonProperty("another uncommon property");
+    //
+    //        final SecondLevelEntity secondKeyParameter = factory.newByKey(SecondLevelEntity.class, "property_one", "property_two", 2L);
+    //        secondKeyParameter.setProperty("prp");
+    //        secondKeyParameter.setPropertyOfSelfType(secondKeyParameter);
+    //
+    //        final DynamicKeyPartEntity dynamicEntity = factory.newByKey(DynamicKeyPartEntity.class, "first_key", secondKeyParameter);
+    //        dynamicEntity.setDesc("DYNAMIC DESC");
+    //        dynamicEntity.setCommonProperty("common property");
+    //        dynamicEntity.setLevelEntity(inst);
+    //        dynamicEntity.setUncommonProperty("dynamic uncommon property");
+    //
+    //        UnionEntityForReflector unionEntity = factory.newEntity(UnionEntityForReflector.class);
+    //        unionEntity.setSimplePartEntity(simpleProperty);
+    //
+    //        assertEquals("Incorrect value.", "common value", Finder.findFieldValueByNameRec(unionEntity, "commonProperty"));
+    //        assertEquals("Incorrect value retrieved from getCommonProperty()", "common value", Finder.findFieldValueByNameRec(unionEntity, "getCommonProperty()"));
+    //        assertEquals("Incorrect common property of simple part entity", "common value", Finder.findFieldValueByNameRec(unionEntity, "simplePartEntity.commonProperty"));
+    //        assertEquals("Incorrect common property of simple part entity", "uncommon value", Finder.findFieldValueByNameRec(unionEntity, "simplePartEntity.uncommonProperty"));
+    //        assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByNameRec(unionEntity, "levelEntity.property"));
+    //
+    //        assertEquals("Incorrect key value of the union entity", "KEY", Finder.findFieldValueByNameRec(unionEntity, "key"));
+    //        assertEquals("Incorrect key value of the union entity", "KEY", Finder.findFieldValueByNameRec(unionEntity, "getKey()"));
+    //        assertEquals("Incorrect desc value of the union entity", "DESC", Finder.findFieldValueByNameRec(unionEntity, "desc"));
+    //        assertEquals("Incorrect desc value of the union entity", "DESC", Finder.findFieldValueByNameRec(unionEntity, "getDesc()"));
+    //        try {
+    //            Finder.findFieldValueByNameRec(unionEntity, "uncommonProperty");
+    //            fail("There shouldn't be any uncommonProperty");
+    //        } catch (final Exception ex) {
+    //            System.out.println(ex.getMessage());
+    //        }
+    //        try {
+    //            Finder.findFieldValueByNameRec(unionEntity, "getUncommonProperty()");
+    //            fail("There shouldn't be any getUncommonProperty()");
+    //        } catch (final Exception ex) {
+    //            System.out.println(ex.getMessage());
+    //        }
+    //        unionEntity = factory.newEntity(UnionEntityForReflector.class);
+    //        unionEntity.setComplexPartEntity(complexEntity);
+    //        assertEquals("Incorrect value.", "common property", Finder.findFieldValueByNameRec(unionEntity, "commonProperty"));
+    //        assertEquals("Incorrect value retrieved from getCommonProperty()", "common property", Finder.findFieldValueByNameRec(unionEntity, "getCommonProperty()"));
+    //        assertEquals("Incorrect common property of simple part entity", "common property", Finder.findFieldValueByNameRec(unionEntity, "complexPartEntity.commonProperty"));
+    //        assertEquals("Incorrect common property of simple part entity", "another uncommon property", Finder.findFieldValueByNameRec(unionEntity, "complexPartEntity.anotherUncommonProperty"));
+    //        assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByNameRec(unionEntity, "levelEntity.property"));
+    //
+    //        assertEquals("Incorrect key value of the union entity", firstLevelEntity, Finder.findFieldValueByNameRec(unionEntity, "key"));
+    //        assertEquals("Incorrect key value of the union entity", "propertyproperty two", Finder.findFieldValueByNameRec(unionEntity, "getKey()"));
+    //        assertEquals("Incorrect desc value of the union entity", "COMPLEX DESC", Finder.findFieldValueByNameRec(unionEntity, "desc"));
+    //        assertEquals("Incorrect desc value of the union entity", "COMPLEX DESC FOR KEY", Finder.findFieldValueByNameRec(unionEntity, "getDesc()"));
+    //        try {
+    //            Finder.findFieldValueByNameRec(unionEntity, "anotherUncommonProperty");
+    //            fail("There shouldn't be any uncommonProperty");
+    //        } catch (final Exception ex) {
+    //            System.out.println(ex.getMessage());
+    //        }
+    //        try {
+    //            Finder.findFieldValueByNameRec(unionEntity, "getAnotherUncommonProperty()");
+    //            fail("There shouldn't be any getAnotherUncommonProperty()");
+    //        } catch (final Exception ex) {
+    //            System.out.println(ex.getMessage());
+    //        }
+    //        unionEntity = factory.newEntity(UnionEntityForReflector.class);
+    //        unionEntity.setDynamicKeyPartEntity(dynamicEntity);
+    //        assertEquals("Incorrect value.", "common property", Finder.findFieldValueByNameRec(unionEntity, "commonProperty"));
+    //        assertEquals("Incorrect value retrieved from getCommonProperty()", "common property", Finder.findFieldValueByNameRec(unionEntity, "getCommonProperty()"));
+    //        assertEquals("Incorrect common property of simple part entity", "common property", Finder.findFieldValueByNameRec(unionEntity, "dynamicKeyPartEntity.commonProperty"));
+    //        assertEquals("Incorrect common property of simple part entity", "dynamic uncommon property", Finder.findFieldValueByNameRec(unionEntity, "dynamicKeyPartEntity.uncommonProperty"));
+    //        assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByNameRec(unionEntity, "levelEntity.property"));
+    //
+    //        assertEquals("Incorrect key value of the union entity", dynamicEntity.getKey(), Finder.findFieldValueByNameRec(unionEntity, "key"));
+    //        assertEquals("Incorrect key value of the union entity", "first_keyprpproperty_two2", Finder.findFieldValueByNameRec(unionEntity, "getKey()"));
+    //        assertEquals("Incorrect desc value of the union entity", "DYNAMIC DESC", Finder.findFieldValueByNameRec(unionEntity, "desc"));
+    //        assertEquals("Incorrect desc value of the union entity", "DYNAMIC DESC", Finder.findFieldValueByNameRec(unionEntity, "getDesc()"));
+    //        try {
+    //            Finder.findFieldValueByNameRec(unionEntity, "uncommonProperty");
+    //            fail("There shouldn't be any uncommonProperty");
+    //        } catch (final Exception ex) {
+    //            System.out.println(ex.getMessage());
+    //        }
+    //        try {
+    //            Finder.findFieldValueByNameRec(unionEntity, "getUncommonProperty()");
+    //            fail("There shouldn't be any getUncommonProperty()");
+    //        } catch (final Exception ex) {
+    //            System.out.println(ex.getMessage());
+    //        }
+    //        // Testing AbstractUnionEntity when it's instance is within another AbstractEntity instance.
+    //        unionEntity = factory.newEntity(UnionEntityForReflector.class);
+    //        unionEntity.setSimplePartEntity(simpleProperty);
+    //        final UnionEntityHolder unionHolder = factory.newByKey(UnionEntityHolder.class, "KEY");
+    //        unionHolder.setUnionEntity(unionEntity);
+    //        assertEquals("Incorrect value of unionEntity.levelEntity.property", "value", Finder.findFieldValueByNameRec(unionHolder, "unionEntity.levelEntity.property"));
+    //        assertEquals("Incorrect value of unionEntity.simplePartEntity.uncommonProperty", "uncommon value", Finder.findFieldValueByNameRec(unionHolder, "unionEntity.simplePartEntity.uncommonProperty"));
+    //        assertEquals("Incorrect value of unionEntity.getLevelEntity().property", "value", Finder.findFieldValueByNameRec(unionHolder, "unionEntity.getLevelEntity().property"));
+    //    }
 
     @Test
     public void test_that_isPropertyPresent_works() {

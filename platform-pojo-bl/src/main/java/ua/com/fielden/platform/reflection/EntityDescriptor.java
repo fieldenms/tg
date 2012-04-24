@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import ua.com.fielden.platform.swing.review.DynamicEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -23,6 +22,9 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class EntityDescriptor {
+
+    private static final String _IS = "_is", _NOT = "_not", _FROM = "_from", _TO = "_to";
+
     private final Class<?> rootType;
     private final List<String> properties = new ArrayList<String>();
     private final Map<String, Pair<String, String>> mapByNames = new HashMap<String, Pair<String, String>>(); // [name, (title, desc)]
@@ -131,10 +133,10 @@ public class EntityDescriptor {
      */
     public static String removeSuffixes(final String propertyName) {
 	String s = propertyName;
-	s = replaceLast(s, DynamicEntityQueryCriteria._FROM, "");
-	s = replaceLast(s, DynamicEntityQueryCriteria._TO, "");
-	s = replaceLast(s, DynamicEntityQueryCriteria._IS, "");
-	s = replaceLast(s, DynamicEntityQueryCriteria._NOT, "");
+	s = replaceLast(s, _FROM, "");
+	s = replaceLast(s, _TO, "");
+	s = replaceLast(s, _IS, "");
+	s = replaceLast(s, _NOT, "");
 	return s;
     }
 

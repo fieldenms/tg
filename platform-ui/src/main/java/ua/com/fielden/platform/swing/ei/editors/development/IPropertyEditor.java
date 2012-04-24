@@ -64,11 +64,4 @@ public interface IPropertyEditor {
      * @return
      */
     IValueMatcher<?> getValueMatcher();
-
-    /**
-     * Returns true if the criterion is empty and should be ignored while constructing a criteria.
-     *
-     * @return
-     */
-    boolean isIgnored();
 }

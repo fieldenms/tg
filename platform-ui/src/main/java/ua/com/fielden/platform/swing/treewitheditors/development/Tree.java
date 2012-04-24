@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.treewitheditors;
+package ua.com.fielden.platform.swing.treewitheditors.development;
 
 import java.awt.Dimension;
 import java.awt.Point;

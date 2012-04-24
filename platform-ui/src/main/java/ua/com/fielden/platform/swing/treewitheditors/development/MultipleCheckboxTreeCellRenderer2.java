@@ -15,8 +15,6 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 
-import ua.com.fielden.platform.swing.treewitheditors.ITreeCheckingModelComponent;
-
 /**
  * {@link TreeCellRenderer} for the {@link MultipleCheckboxTree2}.
  *
@@ -142,7 +140,7 @@ public class MultipleCheckboxTreeCellRenderer2 extends JPanel implements TreeCel
     }
 
     /**
-     * Set specified {@link ITreeCheckingModelComponent} visible property to specified one.
+     * Set specified checking component visible property to specified one.
      *
      * @param index
      * @param visible

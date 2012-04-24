@@ -15,7 +15,6 @@ import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.swing.dynamicreportstree.EntitiesTreeColumn;
 import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeCellRenderer2;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2.EntitiesTreeUserObject;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -184,9 +183,9 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
     protected String getCheckingComponentToolTipText(final int index, final TreePath treePath) {
 	if (treePath != null) {
 	    final EntitiesTreeUserObject userObject = ((EntitiesTreeNode2) treePath.getLastPathComponent()).getUserObject();
-	    if (index == EntitiesTreeColumn.CRITERIA_COLUMN.getColumnIndex()) {
+	    if (index == 0) {
 		return userObject.getFirstTickTooltip(); // createCriteriaCheckboxToolTipText(root, property);
-	    } else if (index == EntitiesTreeColumn.TABLE_HEADER_COLUMN.getColumnIndex()) {
+	    } else if (index == 1) {
 		return userObject.getSecondTickTooltip(); // createResultSetCheckboxToolTipText(root, property);
 	    }
 	    return super.getCheckingComponentToolTipText(index, treePath);

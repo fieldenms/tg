@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.dao.filtering;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -14,8 +16,6 @@ import ua.com.fielden.platform.test.domain.entities.Workshop;
 import ua.com.fielden.platform.test.domain.entities.daos.IWorkshopDao;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * This is a filter providing a mock implementation to be used for testing purposes.

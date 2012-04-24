@@ -5,20 +5,12 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.ResultOnly;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.treemodel.IPropertyFilter;
 
 /**
  * This class provides convenient API to determine whether property is available to add to the criteria or fetch model.
@@ -32,16 +24,13 @@ public class DynamicCriteriaPropertyAnalyser {
     protected Field propertyFields[];
     protected Class<?> propertyTypes[];
 
-    protected IPropertyFilter propertyFilter;
-
     /**
      * Creates new {@link DynamicCriteriaPropertyAnalyser} instance for the specified dot notation property and it's declaring class.
      * 
      * @param declaringType
      * @param dotNotationExp
      */
-    public DynamicCriteriaPropertyAnalyser(final Class<?> declaringType, final String dotNotationExp, final IPropertyFilter propertyFilter) {
-	setPropertyFilter(propertyFilter);
+    public DynamicCriteriaPropertyAnalyser(final Class<?> declaringType, final String dotNotationExp) {
 	setAnalyseProperty(declaringType, dotNotationExp);
     }
 
@@ -52,7 +41,6 @@ public class DynamicCriteriaPropertyAnalyser {
 	propertyNames = null;
 	propertyTypes = null;
 	propertyFields = null;
-	propertyFilter = null;
     }
 
     /**
@@ -121,16 +109,6 @@ public class DynamicCriteriaPropertyAnalyser {
     }
 
     /**
-     * Set the {@link IPropertyFilter} instance. This property filter will be used during property visibility determination process.
-     * 
-     * @param propertyFilter
-     */
-    public void setPropertyFilter(final IPropertyFilter propertyFilter) {
-	this.propertyFilter = propertyFilter;
-	setAnalyseProperty(getDeclaredClass(), getAnalysingProperty());
-    }
-
-    /**
      * Returns value that indicates whether specified {@code propertyName} is among list of {@code unionProperties} fields.
      * 
      * @param propertyName
@@ -147,164 +125,6 @@ public class DynamicCriteriaPropertyAnalyser {
     }
 
     /**
-     * Determines whether this property is visible in the entity tree.
-     * 
-     * @return
-     */
-    private boolean isPropertyIncluded() {
-	if (propertyTypes == null) {
-	    return true;
-	}
-	for (int typeIndex = 0; typeIndex < propertyTypes.length - 1; typeIndex++) {
-	    if (!AbstractEntity.class.isAssignableFrom(propertyTypes[0])) {
-		return false;
-	    }
-	}
-	for (int typeIndex = 1; typeIndex < propertyTypes.length; typeIndex++) {
-	    for (int previousTypeIndex = typeIndex - 1; previousTypeIndex >= 0; previousTypeIndex--) {
-		if (propertyTypes[typeIndex].equals(propertyTypes[previousTypeIndex])
-			&& Finder.getKeyMembers(propertyTypes[typeIndex - 1]).contains(propertyFields[typeIndex - 1])) {
-		    return false;
-		}
-	    }
-	}
-	return true;
-    }
-
-    /**
-     * Also uses {@link IPropertyFilter} to determines whether this property is visible.
-     * 
-     * @param propertyFilter
-     * @return
-     */
-    public boolean isPropertyVisible() {
-	if (!isPropertyIncluded()) {
-	    return false;
-	}
-	if (propertyTypes == null) {
-	    return true;
-	}
-	if (propertyTypes.length <= 1 || propertyFilter == null) {
-	    return true;
-	}
-	for (int fieldIndex = 0; fieldIndex < propertyFields.length - 1; fieldIndex++) {
-	    for (final Class<?> declaringClass : getDeclaringClasses(fieldIndex)) {
-		if (propertyFilter.shouldExcludeProperty(declaringClass, propertyFields[fieldIndex])
-			|| !propertyFilter.shouldBuildChildrenFor(declaringClass, propertyFields[fieldIndex])) {
-		    return false;
-		}
-	    }
-	}
-	for (final Class<?> declaringClass : getDeclaringClasses(propertyFields.length - 1)) {
-	    if (propertyFilter.shouldExcludeProperty(declaringClass, propertyFields[propertyFields.length - 1])) {
-		return false;
-	    }
-	}
-	return true;
-    }
-
-    /**
-     * Determines whether analysing property is union property or not.
-     * 
-     * @return
-     */
-    public boolean isPropertyUnion() {
-	if (propertyTypes == null) {
-	    return false;
-	}
-	if (propertyFields.length > 1) {
-	    return AbstractEntity.class.isAssignableFrom(propertyTypes[propertyTypes.length - 1])
-		    && AbstractUnionEntity.class.isAssignableFrom(propertyTypes[propertyTypes.length - 2]);
-	} else {
-	    return false;
-	}
-    }
-
-    /**
-     * Determines whether criteria property can be removed or not.
-     * 
-     * @return
-     */
-    public boolean canRemoveCriteraProperty() {
-	return !isMarkedWithAnnotation(CritOnly.class);
-    }
-
-    /**
-     * Returns true if criteria property is visible in the criteria tree but can not be checked.
-     * 
-     * @return
-     */
-    public boolean isCriteriaPropertyAvailable() {
-	if (isMarkedWithAnnotation(ResultOnly.class) || isComplexKey()) {
-	    return false;
-	}
-	return true;
-    }
-
-    /**
-     * Returns value that indicates whether criteria sub-properties for analysing property are available or not.
-     * 
-     * @return
-     */
-    public boolean isCriteriaProertyChildrenAvailable() {
-	if (isMarkedWithAnnotation(ResultOnly.class)) {
-	    return false;
-	}
-	return true;
-    }
-
-    /**
-     * Returns true if criteria property is visible in the criteria tree but can not be checked.
-     * 
-     * @return
-     */
-    public boolean isFetchPropertyAvailable() {
-	if (isMarkedWithAnnotation(CritOnly.class) || isSyntheticEntity() || isCollectionalProperty() || isComplexKey()) {
-	    return false;
-	}
-	return true;
-    }
-
-    /**
-     * Returns value that indicates whether property type is synthetic or not.
-     * 
-     * @return
-     */
-    private boolean isSyntheticEntity() {
-	return getPropertyType() != null && Reflector.isSynthetic(getPropertyType());
-    }
-
-    /**
-     * Returns value that indicates whether fetch sub-properties for analysing property are available or not.
-     * 
-     * @return
-     */
-    public boolean isFetchPropertyChildrenAvailable() {
-	if (isMarkedWithAnnotation(CritOnly.class) || isCollectionalProperty()) {
-	    return false;
-	}
-	return true;
-    }
-
-    /**
-     * Returns value that indicates whether this property is Collectional or not.
-     * 
-     * @return
-     */
-    private boolean isCollectionalProperty() {
-	if (propertyTypes == null || propertyFields == null) {
-	    return false;
-	}
-	for (final Field propertyField : propertyFields) {
-	    if (Collection.class.isAssignableFrom(propertyField.getType())) {
-		return true;
-	    }
-	}
-	return false;
-
-    }
-
-    /**
      * Returns value that indicates whether this property was marked with specified annotation.
      * 
      * @param annotationClass
@@ -316,25 +136,6 @@ public class DynamicCriteriaPropertyAnalyser {
 	}
 	for (final Field propertyField : propertyFields) {
 	    if (propertyField.isAnnotationPresent(annotationClass)) {
-		return true;
-	    }
-	}
-	return false;
-    }
-
-    /**
-     * Returns value that indicates whether the type of the last property name is AbstractEntity and whether it's key is AbstractEntity or DynamicEntityKey.
-     * 
-     * @return
-     */
-    private boolean isComplexKey() {
-	if (propertyTypes == null) {
-	    return false;
-	}
-	final Class<?> clazz = propertyTypes[propertyTypes.length - 1];
-	if (AnnotationReflector.isAnnotationPresent(KeyType.class, clazz)) {
-	    final Class<?> keyType = AnnotationReflector.getAnnotation(KeyType.class, clazz).value();
-	    if (AbstractEntity.class.isAssignableFrom(keyType) || DynamicEntityKey.class.isAssignableFrom(keyType)) {
 		return true;
 	    }
 	}
@@ -366,8 +167,8 @@ public class DynamicCriteriaPropertyAnalyser {
 	}
 	final Class<?> declaringClass = propertyTypes[propertyNameIndex];
 	if (AbstractUnionEntity.class.isAssignableFrom(declaringClass)) {
-	    final List<Field> unionProperties = AbstractUnionEntity.unionProperties((Class<AbstractUnionEntity>) declaringClass, propertyFilter);
-	    final List<String> commonProperties = AbstractUnionEntity.commonProperties((Class<AbstractUnionEntity>) declaringClass, propertyFilter);
+	    final List<Field> unionProperties = AbstractUnionEntity.unionProperties((Class<AbstractUnionEntity>) declaringClass);
+	    final List<String> commonProperties = AbstractUnionEntity.commonProperties((Class<AbstractUnionEntity>) declaringClass);
 	    if (!isPropertyAmongUnion(propertyNames[propertyNameIndex], unionProperties) && commonProperties.contains(propertyNames[propertyNameIndex])) {
 		for (final Field unionField : unionProperties) {
 		    declaringClasses.add(unionField.getType());
