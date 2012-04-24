@@ -64,17 +64,15 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
      *
      * @param dtm
      */
-    protected static void manageTestingDTM_for_AbstractDomainTreeManagerTest(final IDomainTreeManager dtm) {
-	manageTestingDTM_for_AbstractDomainTreeTest(dtm);
-
+    protected static void manageTestingDTM_for_CalculatedPropertyTest(final IDomainTreeManager dtm) {
 	dtm.getFirstTick().checkedProperties(MasterEntity.class);
-	dtm.getSecondTick().checkedProperties(MasterEntity.class);
+	// dtm.getSecondTick().checkedProperties(MasterEntity.class);
     }
 
     @BeforeClass
     public static void initDomainTreeTest() {
 	final IDomainTreeManagerAndEnhancer dtm = new DomainTreeManagerAndEnhancer1(serialiser(), createRootTypes_for_AbstractDomainTreeManagerTest());
-	manageTestingDTM_for_AbstractDomainTreeManagerTest(dtm);
+	manageTestingDTM_for_CalculatedPropertyTest(dtm);
 	setDtmArray(serialiser().serialise(dtm));
     }
 
@@ -120,14 +118,14 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertCalculatedProperty(calc, null, null, null, null, MasterEntity.class, null, null);
 
 	CalculatedProperty copy = calc.copy(getSerialiser());
-	
+
 	checkTrivialParams(calc, MasterEntity.class, "", null, null, null, NO_ATTR, "", dtm().getEnhancer());
 	assertCalculatedProperty(calc, null, null, null, null, MasterEntity.class, null, null);
-	
+
 	assertValidationResultsEquals(calc, copy);
-	
+
 	// ============================================
-	
+
 	calc = CalculatedProperty.createAndValidate(factory(), MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
 	checkTrivialParams(calc, MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
 	assertCalculatedProperty(calc, EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
@@ -136,7 +134,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	dtm().getEnhancer().apply();
 
 	copy = (CalculatedProperty) dtm().getEnhancer().copyCalculatedProperty(MasterEntity.class, "calculatedProperty");
-	if (!copy.isValid().isSuccessful()) { // Should be successful 
+	if (!copy.isValid().isSuccessful()) { // Should be successful
 	    throw copy.isValid();
 	}
 	checkTrivialParams(copy, MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
