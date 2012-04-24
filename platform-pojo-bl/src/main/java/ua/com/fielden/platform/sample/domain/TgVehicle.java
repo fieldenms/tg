@@ -47,15 +47,15 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty
     @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
     @Title(value = "Calc1", desc = "Calculated property 1")
-    private String calc1;
+    private BigDecimal calc1;
 
     @Observable
-    public TgVehicle setCalc1(final String calc1) {
+    public TgVehicle setCalc1(final BigDecimal calc1) {
 	this.calc1 = calc1;
 	return this;
     }
 
-    public String getCalc1() {
+    public BigDecimal getCalc1() {
 	return calc1;
     }
 
@@ -89,9 +89,9 @@ public class TgVehicle extends AbstractEntity<String> {
 	return calc3;
     }
 
-    @IsProperty
-    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
-    @Title(value = "Calc4", desc = "Calc4")
+//    @IsProperty
+//    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
+//    @Title(value = "Calc4", desc = "Calc4")
     private BigDecimal calc4;
 
     @Observable
