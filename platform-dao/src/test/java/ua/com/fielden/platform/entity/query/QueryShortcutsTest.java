@@ -122,8 +122,10 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("calc1").as("calc1"). //
 		yield().prop("calc2").as("calc2"). //
 		yield().prop("calc3").as("calc3"). //
+		yield().prop("calc4").as("calc4"). //
 		yield().prop("calc5").as("calc5"). //
 		yield().prop("calc6").as("calc6"). //
+		yield().prop("lastFuelUsageQty").as("lastFuelUsageQty"). //
 		modelAsEntity(VEHICLE));
     }
 
@@ -167,8 +169,10 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("calc1").as("calc1"). //
 		yield().prop("calc2").as("calc2"). //
 		yield().prop("calc3").as("calc3"). //
+		yield().prop("calc4").as("calc4"). //
 		yield().prop("calc5").as("calc5"). //
 		yield().prop("calc6").as("calc6"). //
+		yield().prop("lastFuelUsageQty").as("lastFuelUsageQty"). //
 		modelAsEntity(VEHICLE));
     }
 
@@ -385,8 +389,10 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("calc1").as("calc1"). //
 		yield().prop("calc2").as("calc2"). //
 		yield().prop("calc3").as("calc3"). //
+		yield().prop("calc4").as("calc4"). //
 		yield().prop("calc5").as("calc5"). //
 		yield().prop("calc6").as("calc6"). //
+		yield().prop("lastFuelUsageQty").as("lastFuelUsageQty"). //
 		modelAsEntity(VEHICLE);
     }
 

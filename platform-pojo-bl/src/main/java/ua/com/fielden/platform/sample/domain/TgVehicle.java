@@ -37,12 +37,29 @@ public class TgVehicle extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     private static final ExpressionModel calc1_ = expr().prop("price.amount").add().prop("purchasePrice.amount").model();
-    private static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
     private static final ExpressionModel calc3_ = expr().model(select(TgFuelUsage.class).where().prop("date").lt().extProp("initDate").yield().sumOf().prop("qty").modelAsPrimitive()).model();
-    private static final ExpressionModel calc4_ = expr().model(select(TgFuelUsage.class).where().prop("qty").lt().prop("calc2").yield().sumOf().prop("qty").modelAsPrimitive()).model();
+    private static final ExpressionModel calc4_ = expr().model(select(TgFuelUsage.class).where().prop("qty").lt().extProp("calc2").yield().sumOf().prop("qty").modelAsPrimitive()).model();
+    private static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
     private static final ExpressionModel calc5_ = expr().prop("calc1").add().prop("calc1").model();
     private static final ExpressionModel calc6_ = expr().prop("calc1").div().prop("calc3").model();
+    private static final ExpressionModel lastFuelUsageQty_ = expr().model(
+      select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(
+      select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model();
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Last fuel usage qty", desc = "Last fuel usage qty")
+    private BigDecimal lastFuelUsageQty;
+
+    @Observable
+    public TgVehicle setLastFuelUsageQty(final BigDecimal lastFuelUsageQty) {
+	this.lastFuelUsageQty = lastFuelUsageQty;
+	return this;
+    }
+
+    public BigDecimal getLastFuelUsageQty() {
+	return lastFuelUsageQty;
+    }
 
     @IsProperty
     @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
@@ -61,21 +78,6 @@ public class TgVehicle extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
-    @Title(value = "Calc2", desc = "Calc2")
-    private BigDecimal calc2;
-
-    @Observable
-    public TgVehicle setCalc2(final BigDecimal calc2) {
-	this.calc2 = calc2;
-	return this;
-    }
-
-    public BigDecimal getCalc2() {
-	return calc2;
-    }
-
-    @IsProperty
-    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
     @Title(value = "Calc3", desc = "Calc3")
     private BigDecimal calc3;
 
@@ -89,9 +91,9 @@ public class TgVehicle extends AbstractEntity<String> {
 	return calc3;
     }
 
-//    @IsProperty
-//    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
-//    @Title(value = "Calc4", desc = "Calc4")
+    @IsProperty
+    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
+    @Title(value = "Calc4", desc = "Calc4")
     private BigDecimal calc4;
 
     @Observable
@@ -102,6 +104,21 @@ public class TgVehicle extends AbstractEntity<String> {
 
     public BigDecimal getCalc4() {
 	return calc4;
+    }
+
+    @IsProperty
+    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
+    @Title(value = "Calc2", desc = "Calc2")
+    private BigDecimal calc2;
+
+    @Observable
+    public TgVehicle setCalc2(final BigDecimal calc2) {
+	this.calc2 = calc2;
+	return this;
+    }
+
+    public BigDecimal getCalc2() {
+	return calc2;
     }
 
     @IsProperty
@@ -253,8 +270,9 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setInitDate(final Date initDate) {
+    public TgVehicle setInitDate(final Date initDate) {
         this.initDate = initDate;
+        return this;
     }
 
     public TgVehicle getReplacedBy() {
@@ -262,7 +280,8 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @Observable  @EntityExists(TgVehicle.class)
-    public void setReplacedBy(final TgVehicle replacedBy) {
+    public TgVehicle setReplacedBy(final TgVehicle replacedBy) {
         this.replacedBy = replacedBy;
+        return this;
     }
 }

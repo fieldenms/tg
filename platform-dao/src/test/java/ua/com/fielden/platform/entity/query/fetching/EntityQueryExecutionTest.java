@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
@@ -75,11 +74,10 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     public void test0_4() {
 	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc3").ge().val("100").model();
 	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).build());
-	assertEquals("Incorrect key", 0, models.size());
+	assertEquals("Incorrect key", 1, models.size());
     }
 
     @Test
-    @Ignore
     public void test0_6() {
 	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc4").ge().val("100").model();
 	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).build());
@@ -111,7 +109,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
     public void test0_5() {
 	final EntityResultQueryModel<TgFuelUsage> model = select(TgFuelUsage.class).where().prop("vehicle.calc3").ge().val("100").model();
 	final List<TgFuelUsage> models = fuelUsageDao.getAllEntities(from(model).build());
@@ -564,12 +561,12 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final TgVehicleModel m321 = save(new_(TgVehicleModel.class, "321", "321").setMake(bmw));
 	final TgVehicleModel m322 = save(new_(TgVehicleModel.class, "322", "322").setMake(bmw));
 
-	final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").setModel(m318).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
-	final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")));
+	final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").setInitDate(date("2001-01-01 00:00:00")).setModel(m318).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
+	final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")));
 
 	save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
 
-	save(new_(TgFuelUsage.class, car2, date("2008-02-09 00:00:00")).setQty(new BigDecimal("100")));
+	save(new_(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")));
 	save(new_(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")));
 
 	save(new_(TgTimesheet.class, "USER1", date("2011-11-01 13:00:00")).setFinishDate(date("2011-11-01 15:00:00")).setIncident("002"));

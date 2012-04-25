@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -17,7 +18,7 @@ public class EntProp implements ISingleOperand {
 
     private Expression expression;
 
-    private boolean isExpression() {
+    public boolean isExpression() {
 	return expression != null;
     }
 
@@ -176,6 +177,15 @@ public class EntProp implements ISingleOperand {
 	final String prefix = getContextPrefix();
 	if (prefix != null) {
 	    for (final EntProp prop : expression.getLocalProps()) {
+		prop.setName(prefix + "." + prop.getName());
+	    }
+	    
+	    final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<EntProp>();
+	    for (final EntQuery entQuery : getLocalSubQueries()) {
+		unresolvedPropsFromSubqueries.addAll(entQuery.getUnresolvedProps());
+	    }
+
+	    for (final EntProp prop : unresolvedPropsFromSubqueries) {
 		prop.setName(prefix + "." + prop.getName());
 	    }
 	}

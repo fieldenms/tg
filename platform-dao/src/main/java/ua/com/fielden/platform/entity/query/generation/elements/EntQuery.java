@@ -325,9 +325,10 @@ public class EntQuery implements ISingleOperand {
 	    } else {
 		final Pair<PropResolutionInfo, ISource> propResolutionResult = performPropResolveAction(sourceCandidates);
 		final PropResolutionInfo pri = propResolutionResult.getKey();
-		if (pri.getProp().expression == null) {
+		if (pri.getProp().expression == null || (pri.getProp().expression != null && pri.getEntProp().isExpression())) {
 		    propResolutionResult.getValue().addReferencingProp(pri);
 		} else {
+		    //System.out.println(pri.getProp().getName() + "_______________________________ " + pri.getProp().expression);
 		    allCalculatedPropsResolved = false;
 		    pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, Collections.<String, Object> emptyMap(), pri.getProp().expression).getResult().getValue());
 		}
