@@ -54,6 +54,31 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
 
+    @Test
+    public void test_nested_uncorrelated_subqueries() {
+	final EntityResultQueryModel<TgVehicle> vehSubqry = select(TgVehicle.class).where().prop("model").eq().extProp("id").model();
+	final EntityResultQueryModel<TgVehicleModel> vehModelSubqry = select(TgVehicleModel.class).where().prop("key").eq().val("316").and().exists(vehSubqry).model();
+	final EntityResultQueryModel<TgVehicleMake> makeModel = select(TgVehicleMake.class).where().exists(vehModelSubqry).model();
+	final List<TgVehicleMake> models = vehicleMakeDao.getAllEntities(from(makeModel).build());
+	assertEquals("Incorrect key", 4, models.size());
+     }
+
+    @Test
+    public void test_nested_subqueries_with_ext_props() {
+	final EntityResultQueryModel<TgVehicle> vehSubqry = select(TgVehicle.class).where().prop("model").eq().extProp("id").model();
+	final EntityResultQueryModel<TgVehicleModel> vehModelSubqry = select(TgVehicleModel.class).where().prop("make").eq().extProp("id").and().exists(vehSubqry).model();
+	final EntityResultQueryModel<TgVehicleMake> makeModel = select(TgVehicleMake.class).where().exists(vehModelSubqry).model();
+	final List<TgVehicleMake> models = vehicleMakeDao.getAllEntities(from(makeModel).build());
+	assertEquals("Incorrect key", 2, models.size());
+     }
+
+    @Test
+    public void test0_0() {
+	final AggregatedResultQueryModel model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").yield().prop("lastFuelUsageQty").as("lq").modelAsAggregate();
+	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).build());
+    	final EntityAggregates item = models.get(0);
+	assertEquals("Incorrect key", new BigDecimal("120"), item.get("lq"));
+    }
 
     @Test
     public void test0_1() {
@@ -442,7 +467,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    public void testParameterSetting() {
+    public void test_parameter_setting() {
 	final EntityResultQueryModel<TgVehicleMake> queryModel = select(TgVehicleMake.class).where().prop("key").eq().param("makeParam").model();
 
 	assertEquals("Mercedes", vehicleMakeDao.getAllEntities(from(queryModel).with("makeParam", "MERC").build()).get(0).getDesc());
@@ -456,52 +481,52 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    public void testThatCanQueryWithListParams() {
+    public void test_that_can_query_with_list_params() {
 	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param1", "param2", "param3").model();
 	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param1", "316").with("param2", "317").with("param3", "318").build()).size());
     }
 
     @Test
-    public void testThatCanQueryWithPrimitivaBooleanParams() {
+    public void test_that_can_query_with_primitive_boolean_params() {
 	final EntityResultQueryModel<TgVehicle> queryModel = select(TgVehicle.class).where().prop("active").eq().param("param").model();
 	assertEquals("Incorrect key.", 1, vehicleDao.getAllEntities(from(queryModel).with("param", true).build()).size());
     }
 
     @Test
-    public void testThatCanQueryWithBooleanParams() {
+    public void test_that_can_query_with_boolean_params() {
 	final EntityResultQueryModel<TgVehicle> queryModel = select(TgVehicle.class).where().prop("active").eq().param("param").model();
 	assertEquals("Incorrect key.", 1, vehicleDao.getAllEntities(from(queryModel).with("param", Boolean.TRUE).build()).size());
     }
 
     @Test
-    public void testThatCanQueryWithEntityParams() {
+    public void test_that_can_query_with_entity_params() {
 	final TgVehicleModel m316 = vehicleModelDao.findByKey("316");
 	final EntityResultQueryModel<TgVehicle> queryModel = select(TgVehicle.class).where().prop("model").eq().param("param").model();
 	assertEquals("Incorrect key.", 1, vehicleDao.getAllEntities(from(queryModel).with("param", m316).build()).size());
     }
 
     @Test
-    public void testThatQueryCountModelWorks() {
+    public void test_that_query_count_model_works() {
 	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().values("316", "317", "318").model();
 	assertEquals("Incorrect number of veh models.", 3, vehicleModelDao.count(queryModel));
     }
 
     @Test
-    public void testThatCanQueryWithArrays() {
+    public void test_that_can_query_with_arrays() {
 	final String[] modelKeys = new String[] { "316", "317", "318", "318" };
 	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().values(modelKeys).model();
 	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).build()).size());
     }
 
     @Test
-    public void testThatCanQueryWithArrayParam() {
+    public void test_that_can_query_with_array_param() {
 	final String[] modelKeys = new String[] { "316", "317", "318", "318" };
 	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
 	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).build()).size());
     }
 
     @Test
-    public void testThatCanQueryWithListParam() {
+    public void test_that_can_query_with_list_param() {
 	final List<String> modelKeys = Arrays.asList(new String[] { "316", "317", "318", "318" });
 	final EntityResultQueryModel<TgVehicleModel> queryModel = select(TgVehicleModel.class).where().prop("key").in().params("param").model();
 	assertEquals("Incorrect number of retrieved veh models.", 3, vehicleModelDao.getAllEntities(from(queryModel).with("param", modelKeys).build()).size());

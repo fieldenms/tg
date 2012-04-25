@@ -198,4 +198,8 @@ public class EntProp implements ISingleOperand {
     public boolean isExternal() {
         return external;
     }
+
+    public void setExternal(final boolean external) {
+        this.external = external;
+    }
 }

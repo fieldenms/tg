@@ -240,6 +240,8 @@ public class EntQuery implements ISingleOperand {
 
 	List<EntQuery> immediateSubqueries = null;
 
+	final List<EntProp> extProps = new ArrayList<EntProp>();
+
 	while (!allCalculatedPropsResolved) {
 	    immediateSubqueries = getImmediateSubqueries();
 	    associateSubqueriesWithMasterQuery(immediateSubqueries);
@@ -255,7 +257,7 @@ public class EntQuery implements ISingleOperand {
 
 	    final Pair<List<EntProp>, Boolean> result = resolveProps(propsToBeResolved, generator);
 	    unresolvedProps = result.getKey();
-	    unresolvedProps.addAll(immediateExtProperties);
+	    extProps.addAll(immediateExtProperties);
 	    allCalculatedPropsResolved = result.getValue();
 	}
 
@@ -268,7 +270,7 @@ public class EntQuery implements ISingleOperand {
 	    getSources().getCompounds().addAll(source.generateMissingSources(source.getReferencingProps()));
 	}
 
-	final List<EntProp> immediatePropertiesFinally = getImmediateProps();
+	final List<EntProp> immediatePropertiesFinally = separateInternalFromExternalProps(getImmediateProps()).getKey();
 	associatePropertiesWithHoldingQuery(immediatePropertiesFinally);
 
 	final List<EntProp> propsToBeResolvedFinally = new ArrayList<EntProp>();
@@ -280,6 +282,11 @@ public class EntQuery implements ISingleOperand {
 
 	if (unresolvedFinalProps.size() > 0) {
 	    throw new RuntimeException("Couldn't finally resolve the following props: " + unresolvedFinalProps);
+	}
+
+	for (final EntProp entProp : extProps) {
+		entProp.setExternal(false);
+		unresolvedProps.add(entProp);
 	}
 
 	assignPropertyPersistenceInfoToYields();
