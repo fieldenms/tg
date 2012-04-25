@@ -3,7 +3,6 @@ package ua.com.fielden.platform.pagination;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 
 /**
  * Represents a page abstraction for the data pagination functionality, which provides size of the page (i.e. the maximum number of instance page can include, the actual size could
@@ -94,5 +93,5 @@ public interface IPage<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    EntityAggregates summary();
+    T summary();
 }

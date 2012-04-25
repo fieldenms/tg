@@ -27,7 +27,9 @@ import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -131,6 +133,9 @@ public final class RestClientUtil implements IUserProvider {
      * @return
      */
     public String getUri(final Class<? extends AbstractEntity> type, final WebResourceType rt) {
+	if (type.getName().contains(DynamicTypeNamingService.APPENDIX)) {
+	    throw new IllegalArgumentException("Dynamically generated types do not have explicitly registered web resources.");
+	}
 	return getBaseUri(rt) + "/" + type.getSimpleName();
     }
 
@@ -143,17 +148,41 @@ public final class RestClientUtil implements IUserProvider {
 	return getBaseUri(rt) + "/entity-aggregates";
     }
 
+    /**
+     * Constructs a URI for EQL requests.
+     * A distinction is made when constructing URI for coded entity types and generated ones.
+     *
+     * @param type -- could be a type of either coded or generated entity type
+     * @param rt
+     * @return
+     */
     public String getQueryUri(final Class<? extends AbstractEntity> type, final WebResourceType rt) {
-	return getBaseUri(rt) + "/query/" + type.getSimpleName();
+	if (type.getName().contains(DynamicTypeNamingService.APPENDIX)) {
+	    return getBaseUri(rt) + "/query/generated-type";
+	} else {
+	    return getBaseUri(rt) + "/query/" + type.getSimpleName();
+	}
+    }
+
+    /**
+     * Constructs a URI for data export requests.
+     * A distinction is made when constructing URI for coded entity types and generated ones.
+     *
+     * @param type
+     * @return
+     */
+    public String getExportUri(final Class<? extends AbstractEntity> type) {
+	if (type.getName().contains(DynamicTypeNamingService.APPENDIX)) {
+	    return getBaseUri(WebResourceType.VERSIONED) + "/export/generated-type";
+	} else {
+	    return getBaseUri(WebResourceType.VERSIONED) + "/export/" + type.getSimpleName();
+	}
     }
 
     public String getSnappyQueryUri() {
 	return getBaseUri(WebResourceType.VERSIONED) + "/snappyquery";
     }
 
-    public String getExportUri(final Class<? extends AbstractEntity> type) {
-	return getBaseUri(WebResourceType.VERSIONED) + "/export/" + type.getSimpleName();
-    }
 
     public String getLifecycleUri(final Class<? extends AbstractEntity> type) {
 	return getBaseUri(WebResourceType.VERSIONED) + "/lifecycle/" + type.getSimpleName();
@@ -387,6 +416,24 @@ public final class RestClientUtil implements IUserProvider {
 	final byte[] bytes = serialiser.serialise(query);
 	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
     }
+
+
+    /**
+     * Produces {@link DynamicallyTypedQueryContainer} representation, which can be used as a request envelope.
+     *
+     * @param query
+     * @param dynamicTypes
+     * @return
+     */
+    public Representation represent(final QueryExecutionModel<?, ?> query, final List<byte[]> dynamicTypes) {
+	query.setLightweight(true);
+
+	final DynamicallyTypedQueryContainer container = new DynamicallyTypedQueryContainer(dynamicTypes, query);
+
+	final byte[] bytes = serialiser.serialise(container);
+	return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM);
+    }
+
 
     /**
      * Produces {@link SnappyQuery} representation, which can be used as a request envelope.

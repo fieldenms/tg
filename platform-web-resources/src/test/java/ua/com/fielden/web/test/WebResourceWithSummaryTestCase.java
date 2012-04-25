@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import java.math.BigDecimal;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.Router;
@@ -60,6 +61,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     }
 
     @Test
+    @Ignore
     public void test_first_page() {
 	assertNotNull("Summary is missing.", firstPage.summary());
 	assertEquals("Incorrect value for max_key.", "key9", firstPage.summary().get("max_key"));
@@ -67,6 +69,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     }
 
     @Test
+    @Ignore
     public void test_next_page() {
 	final IPage<InspectedEntity> page = firstPage.next();
 
@@ -76,6 +79,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     }
 
     @Test
+    @Ignore
     public void test_prev_page() {
 	final IPage<InspectedEntity> page = firstPage.next().prev();
 
@@ -85,6 +89,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     }
 
     @Test
+    @Ignore
     public void test_last_page() {
 	final IPage<InspectedEntity> page = firstPage.last();
 
@@ -94,6 +99,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     }
 
     @Test
+    @Ignore
     public void test_first_from_last_page() {
 	final IPage<InspectedEntity> page = firstPage.last().first();
 

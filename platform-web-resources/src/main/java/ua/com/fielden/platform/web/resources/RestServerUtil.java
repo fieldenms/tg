@@ -16,6 +16,7 @@ import org.restlet.resource.Representation;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
@@ -181,15 +182,26 @@ public class RestServerUtil {
     }
 
     /**
-     * Converts representation of QueryExecutionModel to an actual instance.
+     * Converts representation of {@link QueryExecutionModel} to an actual instance.
      *
-     * @param <T>
      * @param representation
      * @return
      * @throws Exception
      */
     public QueryExecutionModel<?, ?> restoreQueryExecutionModel(final Representation representation) throws Exception {
 	return serialiser.deserialise(representation.getStream(), QueryExecutionModel.class);
+    }
+
+    /**
+     * Converts representation of {@link DynamicallyTypedQueryContainer} to an instance of {@link QueryExecutionModel}.
+     *
+     * @param <T>
+     * @param representation
+     * @return
+     * @throws Exception
+     */
+    public QueryExecutionModel<?, ?> restoreDynamicQueryExecutionModel(final Representation representation) throws Exception {
+	return serialiser.deserialise(representation.getStream(), DynamicallyTypedQueryContainer.class).getQem();
     }
 
     public SnappyQuery restoreSnappyQuery(final Representation representation) throws Exception {

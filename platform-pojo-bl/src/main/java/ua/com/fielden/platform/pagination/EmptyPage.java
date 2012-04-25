@@ -7,17 +7,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 
 /**
- * This class represents empty page list
+ * A convenient implementation of an empty page.
  *
- * @author Yura, Oleh
+ * @author TG Team
  */
 public class EmptyPage<T extends AbstractEntity<?>> implements IPage<T> {
 
     @Override
-    public EntityAggregates summary() {
+    public T summary() {
 	return null;
     }
 
