@@ -12,11 +12,12 @@ public class Expression implements ISingleOperand {
     @Override
     public String sql() {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("(" + first.sql());
+	sb.append(items.size() > 0 ? "(" : "");
+	sb.append(first.sql());
 	for (final CompoundSingleOperand compoundOperand : items) {
 	    sb.append(compoundOperand.sql());
 	}
-	sb.append(")");
+	sb.append(items.size() > 0 ? ")" : "");
 
 	return sb.toString();
     }
