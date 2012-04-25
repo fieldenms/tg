@@ -79,7 +79,7 @@ public class QueryForDynamicEntityTypeSerialisationTest {
     }
 
     @Test
-    public void seralisation_of_simple_query_should_not_have_failed() throws Exception {
+    public void seralisation_of_simple_query_for_dynamically_genereated_type_should_not_have_failed() throws Exception {
 	final Class<? extends AbstractEntity> newType1 = (Class<? extends AbstractEntity>) cl.startModification(TgVehicle.class.getName()).addProperties(pd1).endModification();
 
 	final EntityResultQueryModel q =  select(newType1).model();
