@@ -250,7 +250,7 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
     }
 
     /**
-     * Changes all the occurences of <code>owner<code> with <code>enhancedName</code>.
+     * Changes all the occurrences of <code>owner<code> with <code>enhancedName</code>.
      */
     private String fix(String s) {
 
