@@ -1,11 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>fielden</groupId>
 		<artifactId>platform-parent</artifactId>
 		<version>1.2-SNAPSHOT</version>
 	</parent>
-	
+
 	<artifactId>platform-pojo-bl</artifactId>
 	<packaging>jar</packaging>
 
@@ -28,26 +29,16 @@
 			<artifactId>minlog</artifactId>
 			<version>1.2</version>
 		</dependency>
-		<!-- kryo depends on asm only for managing public fields -->
-		<!-- dependency> <groupId>asm</groupId> <artifactId>asm</artifactId> <version>3.2</version> 
-			</dependency -->
-<!-- 		<dependency>
-			<groupId>asm</groupId>
-			<artifactId>asm</artifactId>
-			<version>3.3.1</version>
-		</dependency>
-		<dependency>
-			<groupId>asm</groupId>
-			<artifactId>asm-util</artifactId>
-			<version>3.3.1</version>
-		</dependency>
-		<dependency>
-			<groupId>asm</groupId>
-			<artifactId>asm-commons</artifactId>
-			<version>3.3.1</version>
-		</dependency> -->
-
 		<!-- end of Kryo specific libs -->
+
+		<!-- Hibernate 3.2.6.ga conflicts with A 3.3.1, thus Guice packaged version of ASM is used. -->
+		<!-- kryo depends on asm only for managing public fields -->
+		<!-- dependency>
+			<groupId>asm</groupId>
+			<artifactId>asm-all</artifactId>
+			<version>3.3.1</version>
+		</dependency-->
+
 
 		<dependency>
 			<groupId>com.thoughtworks.xstream</groupId>
@@ -70,11 +61,11 @@
 			<version>3.1.1</version>
 		</dependency>
 		<dependency>
-      		<groupId>jasperreports</groupId>
-      		<artifactId>jasperreports</artifactId>
-      		<version>3.7.1</version>
-      		<scope>compile</scope>
-    	</dependency>
+			<groupId>jasperreports</groupId>
+			<artifactId>jasperreports</artifactId>
+			<version>3.7.1</version>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>antlr</groupId>
 			<artifactId>antlr3-runtime</artifactId>

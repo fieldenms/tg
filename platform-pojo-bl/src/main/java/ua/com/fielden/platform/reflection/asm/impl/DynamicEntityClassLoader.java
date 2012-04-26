@@ -14,6 +14,7 @@ import ua.com.fielden.platform.utils.Pair;
 import com.google.inject.asm.ClassReader;
 import com.google.inject.asm.ClassWriter;
 
+
 /**
  * A class loader for dynamically constructed or modified entity types.
  * <p>
@@ -128,10 +129,10 @@ public class DynamicEntityClassLoader extends ClassLoader {
 	try {
 	    final ClassReader cr = new ClassReader(currentType);
 	    final ClassWriter cw = new ClassWriter(0);
-	    final AdvancedChangeNameAdapter cv = new AdvancedChangeNameAdapter(cw, newTypeName.replace('.', '/'));
-	    cr.accept(cv, 0);
+	    final AdvancedChangeNameAdapter cv = new AdvancedChangeNameAdapter(cw, currentName.replace('.', '/'), newTypeName.replace('.', '/')); //
+	    cr.accept(cv, ClassReader.EXPAND_FRAMES);
 	    currentType = cw.toByteArray();
-	    currentName = cv.getEnhancedName().replace('/', '.');
+	    currentName = cv.getNewTypeName().replace('/', '.');
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}

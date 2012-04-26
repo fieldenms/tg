@@ -2,6 +2,7 @@ package ua.com.fielden.platform.persistence.types;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import ua.com.fielden.platform.basic.autocompleter.HibernateValueMatcher;
@@ -40,9 +41,9 @@ public class EntityWithMoney extends AbstractEntity<String> {
     @MapTo("DATE_TIME")
     private Date dateTimeProperty;
 
-    private static final ExpressionModel calculatedProperty_ = expr().prop("money").add().prop("money").model();
+    private static final ExpressionModel calculatedProperty_ = expr().prop("money.amount").add().prop("money.amount").model();
     @IsProperty @Calculated
-    private String calculatedProperty;
+    private BigDecimal calculatedProperty;
 
     @IsProperty @TransactionDate
     @MapTo("TRANS_DATE_TIME")
@@ -69,12 +70,12 @@ public class EntityWithMoney extends AbstractEntity<String> {
 	return money;
     }
 
-    public String getCalculatedProperty() {
+    public BigDecimal getCalculatedProperty() {
         return calculatedProperty;
     }
 
     @Observable
-    public EntityWithMoney setCalculatedProperty(final String calculatedProperty) {
+    public EntityWithMoney setCalculatedProperty(final BigDecimal calculatedProperty) {
         this.calculatedProperty = calculatedProperty;
         return this;
     }

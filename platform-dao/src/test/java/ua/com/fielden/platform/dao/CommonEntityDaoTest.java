@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
@@ -14,8 +17,6 @@ import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeK
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.types.Money;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 
 /**
@@ -127,8 +128,8 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     public void test_entity_is_dirty_support() {
 	EntityWithMoney entity = dao.findByKey("key1");
 	assertFalse("Entity should not be dirty after retrieval", entity.isDirty());
-	entity.setCalculatedProperty("new value");
-	entity.setCalculatedProperty("new value again");
+	entity.setCalculatedProperty(new BigDecimal("0.00"));
+	entity.setCalculatedProperty(new BigDecimal("1.00"));
 	assertFalse("Entity should not be dirty after calcualted propeties have changed.", entity.isDirty());
 
 	entity.setDesc("modified desc");

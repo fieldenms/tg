@@ -23,6 +23,7 @@ import com.google.inject.asm.MethodVisitor;
 import com.google.inject.asm.Opcodes;
 import com.google.inject.asm.Type;
 
+
 /**
  * A class adapter designed for adding new properties to a class.
  *

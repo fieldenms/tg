@@ -3,6 +3,7 @@ package ua.com.fielden.platform.reflection.asm.impl;
 import com.google.inject.asm.ClassAdapter;
 import com.google.inject.asm.ClassVisitor;
 
+
 /**
  * A class adapter that does nothing.
  *

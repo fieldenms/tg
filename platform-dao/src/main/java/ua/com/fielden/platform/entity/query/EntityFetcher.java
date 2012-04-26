@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -20,7 +22,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 
 public class EntityFetcher {

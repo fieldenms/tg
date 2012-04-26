@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -98,7 +97,7 @@ public class DynamicEntityTypeGenerationTest {
 	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(), newType);
     }
 
-    @Test @Ignore
+    @Test
     public void test_type_name_modification_after_properties_modification() throws Exception {
 	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
 	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).modifyProperties(NewProperty.changeType("firstProperty", BigDecimal.class)).modifyTypeName(Entity.class.getName() + "_enhanced").endModification();

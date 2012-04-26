@@ -7,9 +7,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * A test entity with two properties of the same type, which gets enhanced and one property of self-type.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
 public class EntityBeingModified extends AbstractEntity<String> {
@@ -28,8 +28,9 @@ public class EntityBeingModified extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setProp1(final EntityBeingEnhanced prop1) {
+    public EntityBeingModified setProp1(final EntityBeingEnhanced prop1) {
 	this.prop1 = prop1;
+	return this;
     }
 
     public EntityBeingEnhanced getProp2() {

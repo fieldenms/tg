@@ -18,6 +18,7 @@ import com.google.inject.asm.MethodVisitor;
 import com.google.inject.asm.Opcodes;
 import com.google.inject.asm.Type;
 
+
 /**
  * A class adapter designed for modification of existing fields based on the new specification.
  *
@@ -101,11 +102,13 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
 			final String paramTypeReplacement = Type.getDescriptor(newProperty.type);
 			signatureMod = signature.substring(0, signature.indexOf("<") + 1) + paramTypeReplacement + signature.substring(signature.indexOf(">"));
 		    } else {
-			descMod = "(" + Type.getDescriptor(newProperty.type) + ")V";
+			descMod = "(" + Type.getDescriptor(newProperty.type) + ")" + Type.getReturnType(desc).getDescriptor();
 			signatureMod = signature;
 		    }
 		} else {
-		    descMod = name.startsWith("get") ? ("()" + Type.getDescriptor(newProperty.type)) : "(" + Type.getDescriptor(newProperty.type) + ")V";
+		    descMod = name.startsWith("get") ? // are we handling getter?
+			    ("()" + Type.getDescriptor(newProperty.type)) : // getter
+				"(" + Type.getDescriptor(newProperty.type) + ")" + Type.getReturnType(desc).getDescriptor(); // setter
 		    signatureMod = signature;
 		}
 	    } else {

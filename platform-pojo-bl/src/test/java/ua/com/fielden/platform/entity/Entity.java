@@ -29,9 +29,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity class used for testing.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
