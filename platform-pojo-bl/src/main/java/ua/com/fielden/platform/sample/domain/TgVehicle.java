@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
@@ -26,6 +23,8 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(String.class)
 @MapEntityTo
@@ -41,10 +40,41 @@ public class TgVehicle extends AbstractEntity<String> {
     private static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
     private static final ExpressionModel calc5_ = expr().prop("calc1").add().prop("calc1").model();
     private static final ExpressionModel calc6_ = expr().prop("calc1").div().prop("calc3").model();
+    private static final ExpressionModel constValueProp_ = expr().val(new Date()).model();
 
     private static final ExpressionModel lastFuelUsageQty_ = expr().model(
       select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(
       select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model();
+
+    @IsProperty
+    //@Calculated
+    @Title(value = "Const value prop", desc = "Const value prop")
+    private Date constValueProp;
+
+    @Observable
+    public TgVehicle setConstValueProp(final Date constValueProp) {
+	this.constValueProp = constValueProp;
+	return this;
+    }
+
+    public Date getConstValueProp() {
+	return constValueProp;
+    }
+
+    @IsProperty
+    @Calculated("price.amount + purchasePrice.amount")
+    @Title(value = "Calc0", desc = "Calc0")
+    private BigDecimal calc0;
+
+    @Observable
+    public TgVehicle setCalc0(final BigDecimal calc0) {
+	this.calc0 = calc0;
+	return this;
+    }
+
+    public BigDecimal getCalc0() {
+	return calc0;
+    }
 
     @IsProperty
     @Calculated

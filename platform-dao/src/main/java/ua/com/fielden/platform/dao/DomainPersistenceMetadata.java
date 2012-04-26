@@ -1,17 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.utils.EntityUtils.getCalculatedProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,10 +25,23 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Injector;
+
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.getCalculatedProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
 
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.
@@ -144,9 +145,7 @@ public class DomainPersistenceMetadata {
 	}
 
 	for (final Field field : getCalculatedProperties(entityType)) {
-	    final PropertyPersistenceInfo ppi = getCalculatedPropInfo(entityType, field);
-	    if (ppi != null)
-	    result.add(ppi);
+	    result.add(getCalculatedPropInfo(entityType, field));
 	}
 
 	return result;
@@ -251,15 +250,34 @@ public class DomainPersistenceMetadata {
     }
 
     private PropertyPersistenceInfo getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
-	try {
-	    final Field exprField = entityType.getDeclaredField(field.getName() + "_");
-	    exprField.setAccessible(true);
-	    final ExpressionModel exprModel = (ExpressionModel) exprField.get(null);
-	    return new PropertyPersistenceInfo.Builder(field.getName(), field.getType(), true).expression(exprModel).build();
-	} catch (final Exception e) {
-	    return null;
-	}
+	return new PropertyPersistenceInfo.Builder(field.getName(), field.getType(), true).expression(extractExpressionModelFromCalculatedProperty(entityType, field)).build();
+    }
 
+    private ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
+	final Calculated calcAnnotation = calculatedPropfield.getAnnotation(Calculated.class);
+	if (!"".equals(calcAnnotation.value())) {
+	    return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
+	} else {
+	    try {
+		final Field exprField = entityType.getDeclaredField(calculatedPropfield.getName() + "_");
+		exprField.setAccessible(true);
+		return (ExpressionModel) exprField.get(null);
+	    } catch (final Exception e) {
+		throw new IllegalStateException("Hard-coded expression model for prop [" + calculatedPropfield.getName() + "] is missing!");
+	    }
+	}
+    }
+
+    private ExpressionText2ModelConverter createExpressionText2ModelConverter(final Class<? extends AbstractEntity<?>> entityType, final Calculated calcAnnotation) throws Exception {
+	if (AnnotationReflector.isContextual(calcAnnotation)) {
+	    return new ExpressionText2ModelConverter(getRootType(calcAnnotation), calcAnnotation.contextPath(), calcAnnotation.value());
+	} else {
+	    return new ExpressionText2ModelConverter(entityType, calcAnnotation.value());
+	}
+    }
+
+    private Class<? extends AbstractEntity<?>> getRootType(final Calculated calcAnnotation) throws ClassNotFoundException {
+	return (Class<? extends AbstractEntity<?>>) ClassLoader.getSystemClassLoader().loadClass(calcAnnotation.rootTypeName());
     }
 
     private MapEntityTo getMapEntityTo(final Class entityType) {

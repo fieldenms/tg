@@ -24,10 +24,10 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     private final Long precision;
     private final Long scale;
     private final boolean nullable;
-    private final ExpressionModel expression;
+    private final ExpressionModel expressionModel;
 
     public boolean isCalculated() {
-	return expression != null;
+	return expressionModel != null;
     }
 
     public Type getHibTypeAsType() {
@@ -111,7 +111,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	hibType = builder.hibType;
 	columns = builder.columns;
 	nullable = builder.nullable;
-	expression = builder.expression;
+	expressionModel = builder.expressionModel;
     }
 
     public Long getLength() {
@@ -161,7 +161,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	private long length = 0;
 	private long precision = -1;
 	private long scale = -1;
-	private ExpressionModel expression;
+	private ExpressionModel expressionModel;
 
 	public PropertyPersistenceInfo build() {
 	    return new PropertyPersistenceInfo(this);
@@ -195,7 +195,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	}
 
 	public Builder expression(final ExpressionModel val) {
-	    expression = val;
+	    expressionModel = val;
 	    return this;
 	}
 
@@ -223,7 +223,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	PROP, COLLECTIONAL, ENTITY, ID, ONE2ONE_ID, VERSION, PRIMITIVE_KEY, ENTITY_KEY, COMPOSITE_DETAILS;
     }
 
-    public ExpressionModel getExpression() {
-        return expression;
+    public ExpressionModel getExpressionModel() {
+        return expressionModel;
     }
 }

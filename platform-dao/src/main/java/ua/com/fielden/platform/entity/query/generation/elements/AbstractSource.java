@@ -183,7 +183,7 @@ public abstract class AbstractSource implements ISource {
 	private Class type;
 	private Object hibType;
 	boolean nullable = false;
-	ExpressionModel expression;
+	ExpressionModel expressionModel;
 
 	public PurePropInfo(final String name, final Class type, final Object hibType, final boolean nullable) {
 	    super();
@@ -193,12 +193,12 @@ public abstract class AbstractSource implements ISource {
 	    this.nullable = nullable;
 	}
 
-	public void setExpression(final ExpressionModel expression) {
-	    this.expression = expression;
+	public void setExpressionModel(final ExpressionModel expressionModel) {
+	    this.expressionModel = expressionModel;
 	}
 
-	public ExpressionModel getExpression() {
-	    return expression;
+	public ExpressionModel getExpressionModel() {
+	    return expressionModel;
 	}
 
 	@Override

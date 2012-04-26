@@ -119,6 +119,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("active").as("active"). //
 		yield().prop("leased").as("leased"). //
 		yield().prop("lastMeterReading").as("lastMeterReading"). //
+		yield().prop("calc0").as("calc0"). //
 		yield().prop("calc1").as("calc1"). //
 		yield().prop("calc2").as("calc2"). //
 		yield().prop("calc3").as("calc3"). //
@@ -166,6 +167,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("active").as("active"). //
 		yield().prop("leased").as("leased"). //
 		yield().prop("lastMeterReading").as("lastMeterReading"). //
+		yield().prop("calc0").as("calc0"). //
 		yield().prop("calc1").as("calc1"). //
 		yield().prop("calc2").as("calc2"). //
 		yield().prop("calc3").as("calc3"). //
@@ -386,6 +388,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("active").as("active"). //
 		yield().prop("leased").as("leased"). //
 		yield().prop("lastMeterReading").as("lastMeterReading"). //
+		yield().prop("calc0").as("calc0"). //
 		yield().prop("calc1").as("calc1"). //
 		yield().prop("calc2").as("calc2"). //
 		yield().prop("calc3").as("calc3"). //

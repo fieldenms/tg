@@ -35,6 +35,7 @@ import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -53,6 +54,13 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final IEntityAggregatesDao aggregateDao = getInstance(IEntityAggregatesDao.class);
 
     private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
+
+    @Test
+    public void test_yielding_const_value() {
+	final AggregatedResultQueryModel makeModel = select(TgVehicleMake.class).where().prop("key").eq().val("MERC").yield().prop("key").as("key").yield().val("MERC").as("konst").modelAsAggregate();
+	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(makeModel).build());
+	assertEquals("Incorrect key", 1, models.size());
+     }
 
     @Test
     public void test_nested_uncorrelated_subqueries() {
@@ -86,6 +94,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).build());
     	final TgVehicle vehicle = models.get(0);
 	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+	assertTrue("Values of props calc1 [" + vehicle.getCalc1() + "] and calc0 [" + vehicle.getCalc0() + "] should be equal", vehicle.getCalc1().equals(vehicle.getCalc0()));
     }
 
     @Test
