@@ -33,7 +33,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class GeneratedEntityRao<T extends AbstractEntity> implements IGeneratedEntityController<T> {
+public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGeneratedEntityController<T> {
 
     private Class<T> entityType;
     private Class<? extends Comparable> keyType;
@@ -120,6 +120,8 @@ public class GeneratedEntityRao<T extends AbstractEntity> implements IGeneratedE
 	    final String[] propertyNames,//
 	    final String[] propertyTitles,//
 	    final List<byte[]> binaryTypes) throws IOException {
+	// TODO need to implemented security token check based on the pure entity type
+
 	// create request envelope containing Entity Query
 	final List<Object> requestContent = new ArrayList<Object>();
 	requestContent.add(new DynamicallyTypedQueryContainer(binaryTypes, qem));
@@ -155,6 +157,8 @@ public class GeneratedEntityRao<T extends AbstractEntity> implements IGeneratedE
      * The number of returned entities is constrained by the information provided as part of <code>pageInfo</code> argument.
      */
     protected List<T> list(final QueryExecutionModel<T, ?> query, final PageInfo pageInfo, final List<byte[]> binaryTypes) {
+	// TODO need to implemented security token check based on the pure entity type
+
 	// create request envelope containing Entity Query
 	final Representation envelope = restUtil.represent(query, binaryTypes);
 	// create a request URI containing page capacity and number

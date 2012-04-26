@@ -14,7 +14,7 @@ import ua.com.fielden.platform.pagination.IPage;
  * @author TG Team
  *
  */
-public interface IGeneratedEntityController<T extends AbstractEntity> {
+public interface IGeneratedEntityController<T extends AbstractEntity<?>> {
 
     /**
      * Should return an entity type the DAO instance is managing.
