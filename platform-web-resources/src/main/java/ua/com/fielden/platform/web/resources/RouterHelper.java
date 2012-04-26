@@ -20,6 +20,8 @@ import ua.com.fielden.platform.web.EntityInstanceResourceFactory;
 import ua.com.fielden.platform.web.EntityLifecycleResourceFactory;
 import ua.com.fielden.platform.web.EntityQueryExportResourceFactory;
 import ua.com.fielden.platform.web.EntityTypeResourceFactory;
+import ua.com.fielden.platform.web.GeneratedEntityQueryExportResourceFactory;
+import ua.com.fielden.platform.web.GeneratedEntityQueryResourceFactory;
 import ua.com.fielden.platform.web.ReportResourceFactory;
 import ua.com.fielden.platform.web.SnappyQueryRestlet;
 
@@ -55,6 +57,12 @@ public final class RouterHelper {
 	router.attach("/users/{username}/query/" + EntityAggregates.class.getSimpleName(), new EntityAggregatesQueryResourceFactory(injector));
 	router.attach("/users/{username}/export/" + EntityAggregates.class.getSimpleName(), new EntityAggregatesQueryExportResourceFactory(injector, factory));
     }
+
+    public void registerGeneratedTypeResources(final Router router) {
+	router.attach("/users/{username}/query/generated-type", new GeneratedEntityQueryResourceFactory(injector));
+	router.attach("/users/{username}/export/generated-type", new GeneratedEntityQueryExportResourceFactory(injector));
+    }
+
 
     /**
      * Registers all the necessary resources for {@link Attachment} with the router.

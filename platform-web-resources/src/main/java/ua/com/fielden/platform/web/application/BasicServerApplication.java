@@ -66,8 +66,9 @@ public abstract class BasicServerApplication extends Application {
 	routerForResources.attach("/users/{username}/securitytokens", tokenRoleAssociationRestlet);
 	routerForResources.attach("/users/{username}/securitytokens/{token}", tokenRoleAssociationRestlet); // authorisation resources
 	routerForResources.attach("/users/{username}/securitytokens/{token}/useroles", tokenRoleAssociationRestlet);
-	// register entity aggregation resource
+	// register resource for handling entity aggregation and generated type related requests
 	helper.registerAggregates(routerForResources);
+	helper.registerGeneratedTypeResources(routerForResources);
 
 	/////////////////////////////////////////////////////////////
 	/////////////// application specific resources //////////////

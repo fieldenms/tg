@@ -200,7 +200,7 @@ public class RestServerUtil {
      * @return
      * @throws Exception
      */
-    public QueryExecutionModel<?, ?> restoreDynamicQueryExecutionModel(final Representation representation) throws Exception {
+    public QueryExecutionModel<?, ?> restoreQueryExecutionModelForGeneratedType(final Representation representation) throws Exception {
 	return serialiser.deserialise(representation.getStream(), DynamicallyTypedQueryContainer.class).getQem();
     }
 

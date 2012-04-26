@@ -5,31 +5,25 @@ import org.restlet.data.Method;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.dao.DynamicEntityDao;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.web.resources.EntityQueryExportResource;
+import ua.com.fielden.platform.web.resources.GeneratedEntityQueryExportResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct entity export resource instantiation. Specifically, it should be used to instantiate
- * {@link EntityQueryExportResource} for specific entity types.
+ * {@link GeneratedEntityQueryExportResource}.
  *
  * @author TG Team
  *
  */
-public class EntityQueryExportResourceFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends Restlet {
-    private final Class<DAO> daoType;
+public class GeneratedEntityQueryExportResourceFactory extends Restlet {
     private final Injector injector;
     private final RestServerUtil restUtil;
 
-    /**
-     * Instances of DAO and factory should be thread-safe as they are used by multiple instances of resources serving concurrent requests.
-     */
-    public EntityQueryExportResourceFactory(final Class<DAO> daoType, final Injector injector) {
-	this.daoType = daoType;
+    public GeneratedEntityQueryExportResourceFactory(final Injector injector) {
 	this.injector = injector;
 	this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
     }
@@ -38,9 +32,10 @@ public class EntityQueryExportResourceFactory<T extends AbstractEntity<?>, DAO e
     public void handle(final Request request, final Response response) {
 	super.handle(request, response);
 
+
 	if (Method.POST.equals(request.getMethod())) {
-	    final DAO dao = injector.getInstance(daoType);
-	    new EntityQueryExportResource<T>(dao, restUtil, getContext(), request, response).handlePost();
+	    final DynamicEntityDao dao = injector.getInstance(DynamicEntityDao.class);
+	    new GeneratedEntityQueryExportResource(dao, restUtil, getContext(), request, response).handlePost();
 	}
     }
 }
