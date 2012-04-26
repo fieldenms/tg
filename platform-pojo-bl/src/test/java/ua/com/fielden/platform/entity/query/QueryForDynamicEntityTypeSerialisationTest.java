@@ -96,6 +96,30 @@ public class QueryForDynamicEntityTypeSerialisationTest {
 	assertEquals(container.hashCode(), restored.hashCode());
     }
 
+    @Test
+    public void seralisation_of_simple_query_for_dynamically_genereated_type_as_part_of_list_should_not_have_failed() throws Exception {
+	final Class<? extends AbstractEntity> newType1 = (Class<? extends AbstractEntity>) cl.startModification(TgVehicle.class.getName()).addProperties(pd1).endModification();
+
+	final EntityResultQueryModel q =  select(newType1).model();
+	final QueryExecutionModel original = from(q).build();
+
+	final byte[] data = cl.getCachedByteArray(newType1.getName());
+	final List<byte[]> listOfClasses = new ArrayList<byte[]>();
+	listOfClasses.add(data);
+
+	final DynamicallyTypedQueryContainer container = new DynamicallyTypedQueryContainer(listOfClasses, original);
+
+	final List<Object> requestContent = new ArrayList<Object>();
+	requestContent.add(container);
+	requestContent.add("value of some other type");
+
+	final List<?> restored = serialiseAndRestore(requestContent);
+
+	assertEquals(requestContent.size(), restored.size());
+	assertEquals(requestContent.get(0), restored.get(0));
+	assertEquals(container, restored.get(0));
+    }
+
 
 
     /**
@@ -104,6 +128,17 @@ public class QueryForDynamicEntityTypeSerialisationTest {
     private DynamicallyTypedQueryContainer serialiseAndRestore(final DynamicallyTypedQueryContainer originalQuery) {
 	try {
 	    return kryoReader.deserialise(kryoWriter.serialise(originalQuery), DynamicallyTypedQueryContainer.class);
+	} catch (final Exception e) {
+	    throw new IllegalStateException(e);
+	}
+    }
+
+    /**
+     * A convenient method to serialise and deserialise the passed in model allocating a buffer of the specified size.
+     */
+    private List<?> serialiseAndRestore(final List<Object> original) {
+	try {
+	    return kryoReader.deserialise(kryoWriter.serialise(original), List.class);
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
 	}

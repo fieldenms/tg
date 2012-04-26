@@ -14,14 +14,14 @@ import ua.com.fielden.platform.pagination.IPage;
  * @author TG Team
  *
  */
-public interface IGeneratedEntityDao {
+public interface IGeneratedEntityController<T extends AbstractEntity> {
 
     /**
      * Should return an entity type the DAO instance is managing.
      *
      * @return
      */
-    Class<? extends AbstractEntity> getEntityType();
+    Class<T> getEntityType();
 
     /**
      * Should return entity's key type.
@@ -38,8 +38,8 @@ public interface IGeneratedEntityDao {
      * @param binaryTypes -- a list of binary representation for generated types.
      * @return
      */
-    IPage<?> firstPage(//
-	    final QueryExecutionModel<?, ?> qem,//
+    IPage<T> firstPage(//
+	    final QueryExecutionModel<T, ?> qem,//
 	    final int pageCapacity, //
 	    final List<byte[]> binaryTypes);
 
@@ -53,9 +53,9 @@ public interface IGeneratedEntityDao {
      * @param binaryTypes -- a list of binary representation for generated types.
      * @return
      */
-    IPage<?> firstPage(//
-	    final QueryExecutionModel<?, ?> qem,//
-	    final QueryExecutionModel<?, ?> summaryModel,//
+    IPage<T> firstPage(//
+	    final QueryExecutionModel<T, ?> qem,//
+	    final QueryExecutionModel<T, ?> summaryModel,//
 	    final int pageCapacity, //
 	    final List<byte[]> binaryTypes);
 
@@ -68,9 +68,26 @@ public interface IGeneratedEntityDao {
      * @param binaryTypes -- a list of binary representation of generated types.
      * @return
      */
-    IPage<?> getPage(//
-	    final QueryExecutionModel<?, ?> qem,//
+    IPage<T> getPage(//
+	    final QueryExecutionModel<T, ?> qem,//
 	    final int pageNo, //
+	    final int pageCapacity,//
+	    final List<byte[]> binaryTypes);
+
+    /**
+     * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query execution model.
+     *
+     * @param model
+     * @param pageNo
+     * @param pageCount
+     * @param pageCapacity
+     * @param binaryTypes
+     * @return
+     */
+    IPage<T> getPage(//
+	    final QueryExecutionModel<T, ?> model, //
+	    final int pageNo, //
+	    final int pageCount, //
 	    final int pageCapacity,//
 	    final List<byte[]> binaryTypes);
 
@@ -81,8 +98,8 @@ public interface IGeneratedEntityDao {
      * @param binaryTypes -- a list of binary representation of generated types.
      * @return
      */
-    List<? extends AbstractEntity> getAllEntities(//
-	    final QueryExecutionModel<?, ?> qem,//
+    List<T> getAllEntities(//
+	    final QueryExecutionModel<T, ?> qem,//
 	    final List<byte[]> binaryTypes);
 
     /**
@@ -100,7 +117,7 @@ public interface IGeneratedEntityDao {
      * @return
      */
     byte[] export(//
-	    final QueryExecutionModel<?, ?> query, //
+	    final QueryExecutionModel<T, ?> query, //
 	    final String[] propertyNames, //
 	    final String[] propertyTitles, //
 	    final List<byte[]> binaryTypes) throws IOException;

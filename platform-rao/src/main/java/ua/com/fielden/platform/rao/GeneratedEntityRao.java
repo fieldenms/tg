@@ -5,22 +5,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.lang.StringUtils;
 import org.restlet.data.Method;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.data.Status;
 import org.restlet.resource.Representation;
 
+import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.rao.CommonEntityRao.PageInfo;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
@@ -31,40 +33,68 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-@EntityType(AbstractEntity.class)
-public class GeneratedEntityRao extends CommonEntityRao {
+public class GeneratedEntityRao<T extends AbstractEntity> implements IGeneratedEntityController<T> {
 
-    private Class<? extends AbstractEntity> entityType;
+    private Class<T> entityType;
     private Class<? extends Comparable> keyType;
+
+    protected final RestClientUtil restUtil;
 
     /**
      * Needed for reflective instantiation.
      */
     @Inject
     public GeneratedEntityRao(final RestClientUtil util) {
-	super(util);
+	this.restUtil = util;
     }
 
-    public void setEntityType(final Class<? extends AbstractEntity> type) {
+    protected WebResourceType getDefaultWebResourceType() {
+	return WebResourceType.VERSIONED;
+    }
+
+    public void setEntityType(final Class<T> type) {
 	this.entityType = type;
 	this.keyType = AnnotationReflector.getKeyType(entityType);
     }
 
-    @Override
-    public Class<? extends AbstractEntity> getEntityType() {
+    public Class<T> getEntityType() {
 	return entityType;
     }
 
-    @Override
     public Class<? extends Comparable> getKeyType() {
 	return keyType;
     }
 
+    @Override
+    public IPage<T> firstPage(final QueryExecutionModel<T, ?> qem, final int pageCapacity, final List<byte[]> binaryTypes) {
+	return new EntityQueryPage(qem, new PageInfo(0, 0, pageCapacity), binaryTypes);
+    }
 
     @Override
-    public List getAllEntities(final QueryExecutionModel query) {
+    public IPage<T> firstPage(final QueryExecutionModel<T, ?> qem, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity, final List<byte[]> binaryTypes) {
+	return new EntityQueryPage(qem, summaryModel, new PageInfo(0, 0, pageCapacity), binaryTypes);
+    }
+
+    @Override
+    public IPage<T> getPage(final QueryExecutionModel<T, ?> qem, final int pageNo, final int pageCapacity, final List<byte[]> binaryTypes) {
+	return new EntityQueryPage(qem, new PageInfo(pageNo, 0, pageCapacity), binaryTypes);
+    }
+
+    @Override
+    public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity, final List<byte[]> binaryTypes) {
+	return new EntityQueryPage(model, new PageInfo(pageNo, pageCount, pageCapacity), binaryTypes);
+    }
+
+
+    /**
+     * Sends a POST request to /query/generated-type??page-capacity=all with an envelope containing instance of {@link QueryExecutionModel} and binary representation of generated types.
+     * The response suppose to return an envelope containing all entities resulting from the query.
+     */
+
+    @Override
+    public List<T> getAllEntities(final QueryExecutionModel<T, ?> qem, final List<byte[]> binaryTypes) {
 	// create request envelope containing Entity Query
-	final Representation envelope = restUtil.represent(query);
+	final Representation envelope = restUtil.represent(qem, binaryTypes);
 	// create a request URI containing page capacity and number
 	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=all";
 	final Request request = new Request(Method.POST, uri, envelope);
@@ -73,19 +103,26 @@ public class GeneratedEntityRao extends CommonEntityRao {
 	final Result result = res.getValue();
 	// process result
 	if (result.isSuccessful()) {
-	    return (List) result.getInstance();
+	    return (List<T>) result.getInstance();
 	} else {
 	    throw result;
 	}
+
     }
 
-
-
+    /**
+     * Sends a POST request to /export/generated-type with an envelope containing instance of {@link QueryExecutionModel} and binary representation of generated types.
+     * The response suppose to return an file with exported information.
+     */
     @Override
-    public byte[] export(final QueryExecutionModel query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
+    public byte[] export(//
+	    final QueryExecutionModel<T, ?> qem,//
+	    final String[] propertyNames,//
+	    final String[] propertyTitles,//
+	    final List<byte[]> binaryTypes) throws IOException {
 	// create request envelope containing Entity Query
 	final List<Object> requestContent = new ArrayList<Object>();
-	requestContent.add(query);
+	requestContent.add(new DynamicallyTypedQueryContainer(binaryTypes, qem));
 	requestContent.add(propertyNames);
 	requestContent.add(propertyTitles);
 	final Representation envelope = restUtil.represent(requestContent);
@@ -112,6 +149,45 @@ public class GeneratedEntityRao extends CommonEntityRao {
     }
 
 
+    /**
+     * Sends a POST request to /query/generated-type?page-capacity=pageCapacity&page-no=pageNumber with an envelope containing instance of {@link QueryExecutionModel} and binary representation of generated types.
+     * The response suppose to return an envelope containing entities resulting from the query.
+     * The number of returned entities is constrained by the information provided as part of <code>pageInfo</code> argument.
+     */
+    protected List<T> list(final QueryExecutionModel<T, ?> query, final PageInfo pageInfo, final List<byte[]> binaryTypes) {
+	// create request envelope containing Entity Query
+	final Representation envelope = restUtil.represent(query, binaryTypes);
+	// create a request URI containing page capacity and number
+	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?page-capacity=" + pageInfo.pageCapacity + "&page-no=" + pageInfo.pageNumber
+		+ "&page-count=" + pageInfo.numberOfPages;
+	final Request request = new Request(Method.POST, uri, envelope);
+	// process request
+	final Pair<Response, Result> res = restUtil.process(request);
+
+	final Response response = res.getKey();
+	final Result result = res.getValue();
+	// process result
+	if (result.isSuccessful()) {
+	    // process header values
+	    final String pageNo = restUtil.getHeaderValue(response, HttpHeaders.PAGE_NO);
+	    if (!StringUtils.isEmpty(pageNo)) {
+		pageInfo.pageNumber = Integer.parseInt(pageNo);
+	    }
+	    final String numberOfPages = restUtil.getHeaderValue(response, HttpHeaders.PAGES);
+	    if (!StringUtils.isEmpty(numberOfPages)) {
+		pageInfo.numberOfPages = Integer.parseInt(numberOfPages);
+	    }
+	    return (List<T>) result.getInstance();
+	} else {
+	    throw result;
+	}
+    }
+
+    protected T calcSummary(final QueryExecutionModel<T, ?> qem, final List<byte[]> binaryTypes) {
+	final List<T> list = getAllEntities(qem, binaryTypes);
+	return list.size() == 1 ? list.get(0) : null;
+    }
+
 
     /**
      * Implements pagination based on the provided query for either generated or coded entity type.
@@ -119,19 +195,21 @@ public class GeneratedEntityRao extends CommonEntityRao {
      * @author TG Team
      *
      */
-    private class EntityQueryPage implements IPage<AbstractEntity<?>> {
+    private class EntityQueryPage implements IPage<T> {
 	private int pageNumber; // zero-based
 	private int numberOfPages = 0;
 	private final int pageCapacity;
-	private final List<AbstractEntity<?>> data;
-	private final QueryExecutionModel<?, ?> model;
-	private final AbstractEntity<?> summary;
-	private final QueryExecutionModel<?, ?> summaryModel;
+	private final List<T> data;
+	private final QueryExecutionModel<T, ?> model;
+	private final T summary;
+	private final QueryExecutionModel<T, ?> summaryModel;
+	private final List<byte[]> binaryTypes;
 
 	/** This constructor should be used when summary is not required. */
-	public EntityQueryPage(final QueryExecutionModel<?, ?> model, final PageInfo pageInfo) {
-	    data = list(model, pageInfo);
+	public EntityQueryPage(final QueryExecutionModel<T, ?> model, final PageInfo pageInfo, final List<byte[]> binaryTypes) {
+	    data = list(model, pageInfo, binaryTypes);
 	    pageNumber = pageInfo.pageNumber;
+	    this.binaryTypes = binaryTypes;
 	    setNumberOfPages(pageInfo.numberOfPages);
 	    pageCapacity = pageInfo.pageCapacity;
 	    this.model = model;
@@ -142,10 +220,11 @@ public class GeneratedEntityRao extends CommonEntityRao {
 	/**
 	 * This constructor should be used when both data and summary should be retrieved. Passing <code>null</code> for a summary model is handled gracefully.
 	 */
-	public EntityQueryPage(final QueryExecutionModel<?, ?> model, final QueryExecutionModel<?, ?> summaryModel, final PageInfo pageInfo) {
-	    data = list(model, pageInfo);
-	    summary = summaryModel != null ? calcSummary(summaryModel) : null;
+	public EntityQueryPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final PageInfo pageInfo, final List<byte[]> binaryTypes) {
+	    data = list(model, pageInfo, binaryTypes);
+	    summary = summaryModel != null ? calcSummary(summaryModel, binaryTypes) : null;
 	    pageNumber = pageInfo.pageNumber;
+	    this.binaryTypes = binaryTypes;
 	    setNumberOfPages(pageInfo.numberOfPages);
 	    pageCapacity = pageInfo.pageCapacity;
 	    this.model = model;
@@ -153,9 +232,10 @@ public class GeneratedEntityRao extends CommonEntityRao {
 	}
 
 	/** This constructor is required purely for navigation implementation in case where summary was calculated and needs to be preserved in another page. */
-	private EntityQueryPage(final QueryExecutionModel<?, ?> model, final AbstractEntity summary, final PageInfo pageInfo) {
-	    data = list(model, pageInfo);
+	private EntityQueryPage(final QueryExecutionModel<T, ?> model, final T summary, final PageInfo pageInfo, final List<byte[]> binaryTypes) {
+	    data = list(model, pageInfo, binaryTypes);
 	    pageNumber = pageInfo.pageNumber;
+	    this.binaryTypes = binaryTypes;
 	    setNumberOfPages(pageInfo.numberOfPages);
 	    pageCapacity = pageInfo.pageCapacity;
 	    this.model = model;
@@ -164,7 +244,7 @@ public class GeneratedEntityRao extends CommonEntityRao {
 	}
 
 	@Override
-	public AbstractEntity<?> summary() {
+	public T summary() {
 	    return summary;
 	}
 
@@ -173,7 +253,7 @@ public class GeneratedEntityRao extends CommonEntityRao {
 	}
 
 	@Override
-	public List<AbstractEntity<?>> data() {
+	public List<T> data() {
 	    return hasNext() ? data.subList(0, capacity()) : data;
 	}
 
@@ -188,12 +268,12 @@ public class GeneratedEntityRao extends CommonEntityRao {
 	}
 
 	@Override
-	public IPage<AbstractEntity<?>> next() {
+	public IPage<T> next() {
 	    if (hasNext()) {
 		if (model != null && summary != null) {
-		    return new EntityQueryPage(model, summary, new PageInfo(no() + 1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, summary, new PageInfo(no() + 1, numberOfPages(), capacity()), binaryTypes);
 		} else if (model != null) {
-		    return new EntityQueryPage(model, new PageInfo(no() + 1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, new PageInfo(no() + 1, numberOfPages(), capacity()), binaryTypes);
 		} else {
 		    throw new IllegalStateException("There was no query provided to retrieve the data.");
 		}
@@ -207,12 +287,12 @@ public class GeneratedEntityRao extends CommonEntityRao {
 	}
 
 	@Override
-	public IPage<AbstractEntity<?>> prev() {
+	public IPage<T> prev() {
 	    if (hasPrev()) {
 		if (model != null && summary != null) {
-		    return new EntityQueryPage(model, summary, new PageInfo(no() - 1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, summary, new PageInfo(no() - 1, numberOfPages(), capacity()), binaryTypes);
 		} else if (model != null) {
-		    return new EntityQueryPage(model, new PageInfo(no() - 1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, new PageInfo(no() - 1, numberOfPages(), capacity()), binaryTypes);
 		} else {
 		    throw new IllegalStateException("There was no query provided to retrieve the data.");
 		}
@@ -226,12 +306,12 @@ public class GeneratedEntityRao extends CommonEntityRao {
 	}
 
 	@Override
-	public IPage<AbstractEntity<?>> first() {
+	public IPage<T> first() {
 	    if (hasPrev()) {
 		if (model != null && summary != null) {
-		    return new EntityQueryPage(model, summary, new PageInfo(0, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, summary, new PageInfo(0, numberOfPages(), capacity()), binaryTypes);
 		} else if (model != null) {
-		    return new EntityQueryPage(model, new PageInfo(0, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, new PageInfo(0, numberOfPages(), capacity()), binaryTypes);
 		} else {
 		    throw new IllegalStateException("There was no query provided to retrieve the data.");
 		}
@@ -240,12 +320,12 @@ public class GeneratedEntityRao extends CommonEntityRao {
 	}
 
 	@Override
-	public IPage<AbstractEntity<?>> last() {
+	public IPage<T> last() {
 	    if (hasNext()) {
 		if (model != null && summary != null) {
-		    return new EntityQueryPage(model, summary, new PageInfo(-1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, summary, new PageInfo(-1, numberOfPages(), capacity()), binaryTypes);
 		} else if (model != null) {
-		    return new EntityQueryPage(model, new PageInfo(-1, numberOfPages(), capacity()));
+		    return new EntityQueryPage(model, new PageInfo(-1, numberOfPages(), capacity()), binaryTypes);
 		} else {
 		    throw new IllegalStateException("There was no query provided to retrieve the data.");
 		}
@@ -269,65 +349,4 @@ public class GeneratedEntityRao extends CommonEntityRao {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    public IPage firstPage(final int pageCapacity) {
-	throw new UnsupportedOperationException("Generated type do not have a default model. This exception suggests a programming mistake.");
-    }
-
-    @Override
-    public IPage getPage(final int pageNo, final int pageCapacity) {
-	throw new UnsupportedOperationException("Generated type do not have a default model. This exception suggests a programming mistake.");
-    }
-
-    @Override
-    public boolean entityExists(final AbstractEntity entity) {
-	throw new UnsupportedOperationException("");
-    }
-
-    @Override
-    public boolean entityExists(final Long id) {
-	throw new UnsupportedOperationException("");
-    }
-
-    @Override
-    public AbstractEntity save(final AbstractEntity entity) {
-	throw new UnsupportedOperationException("");
-    }
-
-    @Override
-    public void delete(final AbstractEntity entity) {
-	throw new UnsupportedOperationException("");
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel model) {
-	throw new UnsupportedOperationException("");
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel query, final Map params) {
-	throw new UnsupportedOperationException("");
-    }
 }
