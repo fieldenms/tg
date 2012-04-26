@@ -162,7 +162,8 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	// check Calculated annotation
 	final Calculated calcAnno = field.getAnnotation(Calculated.class);
 	assertNotNull("The annotation Calculated should exist.", calcAnno);
-	assertEquals("Incorrect expression.", expr, calcAnno.contextualExpression());
+	assertEquals("Incorrect expression.", expr, calcAnno.value());
+	assertEquals("Incorrect root.", type.getName(), calcAnno.rootTypeName());
 	assertEquals("Incorrect origination property.", originationProp, calcAnno.origination());
 	assertEquals("Incorrect category.", category, calcAnno.category());
 	// check Title annotation

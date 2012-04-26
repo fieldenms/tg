@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.persistence.types;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+
 import java.util.Date;
 
 import ua.com.fielden.platform.basic.autocompleter.HibernateValueMatcher;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyUserType;
@@ -38,7 +39,9 @@ public class EntityWithMoney extends AbstractEntity<String> {
     @IsProperty
     @MapTo("DATE_TIME")
     private Date dateTimeProperty;
-    @IsProperty @Calculated(contextPath = "", contextualExpression = "", attribute = CalculatedPropertyAttribute.NO_ATTR, origination = "", category = CalculatedPropertyCategory.EXPRESSION)
+
+    private static final ExpressionModel calculatedProperty_ = expr().prop("money").add().prop("money").model();
+    @IsProperty @Calculated
     private String calculatedProperty;
 
     @IsProperty @TransactionDate

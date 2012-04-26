@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -17,7 +15,7 @@ import ua.com.fielden.platform.types.Money;
 public class EntityLevel1 extends AbstractEntity<String> {
 
     @IsProperty
-    @Calculated(contextualExpression = "", contextPath = "", attribute = ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR, origination = "", category = CalculatedPropertyCategory.EXPRESSION)
+    @Calculated("intProperty + intProperty")
     private Money calcuatedProperty;
 
     @IsProperty

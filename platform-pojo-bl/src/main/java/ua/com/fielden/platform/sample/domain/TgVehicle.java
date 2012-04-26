@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
@@ -7,8 +10,6 @@ import java.util.Set;
 
 import org.junit.Ignore;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -25,8 +26,6 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(String.class)
 @MapEntityTo
@@ -48,7 +47,7 @@ public class TgVehicle extends AbstractEntity<String> {
       select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model();
 
     @IsProperty
-    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
+    @Calculated
     @Title(value = "Last fuel usage qty", desc = "Last fuel usage qty")
     private BigDecimal lastFuelUsageQty;
 
@@ -63,7 +62,7 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @IsProperty
-    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
+    @Calculated
     @Title(value = "Calc1", desc = "Calculated property 1")
     private BigDecimal calc1;
 
@@ -78,7 +77,7 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @IsProperty
-    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
+    @Calculated
     @Title(value = "Calc3", desc = "Calc3")
     private BigDecimal calc3;
 
@@ -93,7 +92,7 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @IsProperty
-    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
+    @Calculated
     @Title(value = "Calc4", desc = "Calc4")
     private BigDecimal calc4;
 
@@ -108,7 +107,7 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @IsProperty
-    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
+    @Calculated
     @Title(value = "Calc2", desc = "Calc2")
     private BigDecimal calc2;
 
@@ -123,7 +122,7 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @IsProperty
-    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
+    @Calculated
     @Title(value = "Calc5", desc = "Calc5")
     private BigDecimal calc5;
 
@@ -138,7 +137,7 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @IsProperty
-    @Calculated(attribute = CalculatedPropertyAttribute.NO_ATTR, category = CalculatedPropertyCategory.EXPRESSION, contextPath = "", contextualExpression = "", origination = "")
+    @Calculated
     @Title(value = "Calc6", desc = "Calc6")
     private BigDecimal calc6;
 

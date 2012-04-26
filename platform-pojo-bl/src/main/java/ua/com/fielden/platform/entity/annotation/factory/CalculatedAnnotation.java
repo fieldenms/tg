@@ -16,9 +16,10 @@ import ua.com.fielden.platform.error.Result;
  */
 public class CalculatedAnnotation {
     private String contextualExpression = "";
-    private String contextPath = "";
+    private String rootTypeName = Calculated.NOTHING;
+    private String contextPath = Calculated.NOTHING;
     private CalculatedPropertyAttribute attribute = CalculatedPropertyAttribute.NO_ATTR;
-    private String origination = "";
+    private String origination = Calculated.NOTHING;
     private CalculatedPropertyCategory category = CalculatedPropertyCategory.EXPRESSION;
 
     public CalculatedAnnotation contextualExpression(final String contextualExpression) {
@@ -26,6 +27,14 @@ public class CalculatedAnnotation {
 	    throw new Result("The calculated property 'contextualExpression' cannot be 'null' or empty.");
 	}
 	this.contextualExpression = contextualExpression;
+	return this;
+    }
+
+    public CalculatedAnnotation rootTypeName(final String rootTypeName) {
+	if (StringUtils.isEmpty(rootTypeName)) {
+	    throw new Result("The calculated property 'root' cannot be 'null' or empty.");
+	}
+	this.rootTypeName = rootTypeName;
 	return this;
     }
 
@@ -70,8 +79,13 @@ public class CalculatedAnnotation {
 	    }
 
 	    @Override
-	    public String contextualExpression() {
+	    public String value() {
 		return contextualExpression;
+	    }
+
+	    @Override
+	    public String rootTypeName() {
+	        return rootTypeName;
 	    }
 
 	    @Override
@@ -95,30 +109,4 @@ public class CalculatedAnnotation {
 	    }
 	};
     }
-
-//    public Calculated copyFrom(final Calculated original) {
-//	return new Calculated() {
-//
-//	    @Override
-//	    public Class<Calculated> annotationType() {
-//		return Calculated.class;
-//	    }
-//
-//	    @Override
-//	    public String contextualExpression() {
-//		return original.contextualExpression();
-//	    }
-//
-//	    @Override
-//	    public String origination() {
-//		return original.origination();
-//	    }
-//
-//	    @Override
-//	    public CalculatedPropertyCategory category() {
-//		return original.category();
-//	    }
-//
-//	};
-//    }
 }

@@ -12,8 +12,10 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Collectional;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -233,6 +235,20 @@ public final class AnnotationReflector {
 	} else {
 	    return Finder.findFieldByName(forType, dotNotationExp).getAnnotation(annotationType);
 	}
+    }
+
+    /**
+     * Returns <code>true</code> if {@link Calculated} annotation represents <i>contextual</i> calculated property, <code>false</code> otherwise.
+     * <i>Contextual</i> calculated properties are generated using {@link IDomainTreeEnhancer} and can be dependent on type higher than direct parent type.
+     *
+     * @param root
+     * @param property
+     * @return
+     */
+    public static boolean isContextual(final Calculated calculatedAnnotation) {
+	return !calculatedAnnotation.rootTypeName().equals(Calculated.NOTHING) && //
+		!calculatedAnnotation.contextPath().equals(Calculated.NOTHING) && //
+		!calculatedAnnotation.origination().equals(Calculated.NOTHING);
     }
 
     /**

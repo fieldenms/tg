@@ -4,8 +4,11 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.classloader.TgSystemClassLoader;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.asm.ClassReader;
@@ -109,6 +112,33 @@ public class DynamicEntityClassLoader extends ClassLoader {
     }
 
     /**
+     * Modifies type's name with the specified <code>newTypeName</code>.
+     * Note that, if type name is needed to be changed, it should be made after all other modifications (properties adding / adapting etc.).
+     *
+     * @param newTypeName
+     * @return
+     */
+    public DynamicEntityClassLoader modifyTypeName(final String newTypeName) {
+	if (StringUtils.isEmpty(newTypeName)) {
+	    throw new IllegalStateException("New type name is 'null' or empty.");
+	}
+	if (currentType == null || currentName == null) {
+	    throw new IllegalStateException("Current type or name are not specified.");
+	}
+	try {
+	    final ClassReader cr = new ClassReader(currentType);
+	    final ClassWriter cw = new ClassWriter(0);
+	    final AdvancedChangeNameAdapter cv = new AdvancedChangeNameAdapter(cw, newTypeName.replace('.', '/'));
+	    cr.accept(cv, 0);
+	    currentType = cw.toByteArray();
+	    currentName = cv.getEnhancedName().replace('/', '.');
+	} catch (final Exception e) {
+	    throw new IllegalStateException(e);
+	}
+	return this;
+    }
+
+    /**
      * Modifies type's properties with the specified information.
      *
      *  TODO cover with unit tests
@@ -144,6 +174,16 @@ public class DynamicEntityClassLoader extends ClassLoader {
 	return this;
     }
 
+    public static void main(final String[] args) throws ClassNotFoundException {
+	final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(getSystemClassLoader());
+
+	cl.startModification(TgVehicle.class.getName());
+	cl.modifyTypeName(TgVehicle.class.getName() + "_enhanced");
+	cl.endModification();
+
+	System.out.println(cl.findClass(TgVehicle.class.getName() + "_enhanced"));
+    }
+
     public Class<?> endModification() {
 	final Class<?> klass = defineClass(currentName, currentType, 0, currentType.length);
 	cache.put(currentName, new Pair<Class<?>, byte[]>(klass, currentType));
@@ -167,7 +207,6 @@ public class DynamicEntityClassLoader extends ClassLoader {
     public static boolean isEnhanced(final Class<?> type) {
 	return type.getName().contains(DynamicTypeNamingService.APPENDIX);
     }
-
 
     @Override
     public Class<?> findClass(final String name) throws ClassNotFoundException {

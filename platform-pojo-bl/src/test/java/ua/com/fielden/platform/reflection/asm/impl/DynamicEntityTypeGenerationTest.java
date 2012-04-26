@@ -8,11 +8,13 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -57,7 +59,6 @@ public class DynamicEntityTypeGenerationTest {
     private static final String NEW_PROPERTY_DESC = "Description  for new money property";
     private static final String NEW_PROPERTY_TITLE = "New money property";
     private static final String NEW_PROPERTY_EXPRESSION = "2 * 3 - [integerProp]";
-    private static final String NEW_PROPERTY_ORIGINATION = "integerProp";
     private static final String NEW_PROPERTY_1 = "newProperty_1";
     private static final String NEW_PROPERTY_2 = "newProperty_2";
     private boolean observed = false;
@@ -66,17 +67,44 @@ public class DynamicEntityTypeGenerationTest {
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private DynamicEntityClassLoader cl;
 
-    private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
+    private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
 
     private final NewProperty pd1 = new NewProperty(NEW_PROPERTY_1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
     private final NewProperty pd2 = new NewProperty(NEW_PROPERTY_2, Money.class, false,  NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
-
 
 
     @Before
     public void setUp() {
 	observed = false;
 	cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+    }
+
+    @Test
+    public void test_type_name_modification() throws Exception {
+	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
+	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).modifyTypeName(Entity.class.getName() + "_enhanced").endModification();
+	assertTrue("Incorrect type name.", newType.getName().equals(Entity.class.getName() + "_enhanced"));
+	assertEquals("Incorrect inheritance.", AbstractEntity.class, newType.getSuperclass());
+	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(), newType);
+    }
+
+    @Test
+    public void test_type_name_modification_after_properties_addition() throws Exception {
+	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
+	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).addProperties(pd1).modifyTypeName(Entity.class.getName() + "_enhanced").endModification();
+	assertTrue("Incorrect type name.", newType.getName().equals(Entity.class.getName() + "_enhanced"));
+	assertEquals("Incorrect inheritance.", AbstractEntity.class, newType.getSuperclass());
+	assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 1, Finder.getPropertyDescriptors(newType).size());
+	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(), newType);
+    }
+
+    @Test @Ignore
+    public void test_type_name_modification_after_properties_modification() throws Exception {
+	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
+	final Class<? extends AbstractEntity> newType = (Class<? extends AbstractEntity>) cl.startModification(Entity.class.getName()).modifyProperties(NewProperty.changeType("firstProperty", BigDecimal.class)).modifyTypeName(Entity.class.getName() + "_enhanced").endModification();
+	assertTrue("Incorrect type name.", newType.getName().equals(Entity.class.getName() + "_enhanced"));
+	assertEquals("Incorrect inheritance.", AbstractEntity.class, newType.getSuperclass());
+	assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(), newType);
     }
 
     @Test
@@ -164,8 +192,7 @@ public class DynamicEntityTypeGenerationTest {
 	assertNotNull("The field should exist.", field);
 	final Calculated calcAnno = field.getAnnotation(Calculated.class);
 	assertNotNull("The annotation Calculated should exist.", calcAnno);
-	assertEquals("Incorrect expression.", "2 * 3 - [integerProp]", calcAnno.contextualExpression());
-	assertEquals("Incorrect origination property.", "integerProp", calcAnno.origination());
+	assertEquals("Incorrect expression.", "2 * 3 - [integerProp]", calcAnno.value());
 
 	final AbstractEntity entity = factory.newByKey(newType, "key");
 	final MetaProperty newPropertyMeta = entity.getProperty(NEW_PROPERTY_1);
@@ -251,7 +278,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_addition_of_collectional_property() throws Exception {
 	// create
-	final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).origination(NEW_PROPERTY_ORIGINATION).newInstance();
+	final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
 	final IsProperty isProperty = new IsPropertyAnnotation(String.class).newInstance();
 
 	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description",	calculated, isProperty);
