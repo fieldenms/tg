@@ -111,9 +111,34 @@ public class WebResourceForGeneratedTypeQueryTestCase extends WebBasedTestCase {
     public void test_first_page() {
 	assertEquals("Incorrect value for max_key.", 15, firstPage.data().size());
 	final AbstractEntity instance = (AbstractEntity) firstPage.data().get(0);
-	assertEquals("Incorrect value for max_key.", (Integer) instance.get("intProperty") * 2, instance.get("calculatedProperty"));
+	assertEquals("Incorrect value.", (Integer) instance.get("intProperty") * 2, instance.get("calculatedProperty"));
+	assertEquals("Incorrect value.", 20, instance.get("calculatedProperty"));
+    }
 
+    @Test
+    public void test_next_page() {
+	final IPage next = firstPage.next();
+	assertEquals("Incorrect value for max_key.", 15, next.data().size());
+	final AbstractEntity instance = (AbstractEntity) next.data().get(0);
+	assertEquals("Incorrect value.", 40, instance.get("calculatedProperty"));
+    }
 
+    @Test
+    public void test_last_page() {
+	final IPage last = firstPage.last();
+	assertEquals("Incorrect value for max_key.", 15, last.data().size());
+	final AbstractEntity instance = (AbstractEntity) last.data().get(0);
+	assertEquals("Incorrect value.", (Integer) instance.get("intProperty") * 2, instance.get("calculatedProperty"));
+	assertEquals("Incorrect value.", 60, instance.get("calculatedProperty"));
+    }
+
+    @Test
+    public void test_back_to_first_page() {
+	final IPage first = firstPage.last().first();
+	assertEquals("Incorrect value for max_key.", 15, first.data().size());
+	final AbstractEntity instance = (AbstractEntity) first.data().get(0);
+	assertEquals("Incorrect value.", (Integer) instance.get("intProperty") * 2, instance.get("calculatedProperty"));
+	assertEquals("Incorrect value.", 20, instance.get("calculatedProperty"));
     }
 
 }
