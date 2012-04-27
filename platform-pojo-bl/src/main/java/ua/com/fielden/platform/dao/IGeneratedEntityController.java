@@ -24,6 +24,13 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> {
     Class<T> getEntityType();
 
     /**
+     * Provides a way to set the generated entity type for which an instance of this controller should be used.
+     *
+     * @param type
+     */
+    void setEntityType(final Class<T> type);
+
+    /**
      * Should return entity's key type.
      *
      * @return

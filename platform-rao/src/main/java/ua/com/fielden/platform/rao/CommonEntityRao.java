@@ -499,7 +499,8 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 	// send request
 	final Response response = restUtil.send(new Request(Method.POST, uri, envelope));
 	if (!Status.SUCCESS_OK.equals(response.getStatus())) {
-	    throw new IllegalStateException(response.getStatus().toString());
+	    final Result result = restUtil.process(response);
+	    throw new IllegalStateException(result.getEx());
 	}
 	final InputStream content = response.getEntity().getStream();
 	final GZIPInputStream stream = new GZIPInputStream(content);

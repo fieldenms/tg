@@ -7,6 +7,7 @@ import org.restlet.Context;
 import org.restlet.data.MediaType;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
+import org.restlet.data.Status;
 import org.restlet.resource.InputRepresentation;
 import org.restlet.resource.Representation;
 import org.restlet.resource.Resource;
@@ -72,9 +73,10 @@ public class GeneratedEntityQueryExportResource extends Resource {
 	    dao.setEntityType(qem.getQueryModel().getResultType());
 	    final String[] propertyNames = (String[]) list.get(1);
 	    final String[] propertyTitles = (String[]) list.get(2);
-	    getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(dao.export(qem, propertyNames, propertyTitles)), MediaType.APPLICATION_OCTET_STREAM));
+	    final byte[] export = dao.export(qem, propertyNames, propertyTitles);
+	    getResponse().setEntity(new InputRepresentation(new ByteArrayInputStream(export), MediaType.APPLICATION_OCTET_STREAM));
 	} catch (final Exception ex) {
-	    ex.printStackTrace();
+	    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
 	    getResponse().setEntity(restUtil.errorRepresentation("Could not process POST request:\n" + ex.getMessage()));
 	}
     }

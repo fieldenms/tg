@@ -17,8 +17,9 @@ import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
 import ua.com.fielden.platform.security.provider.UserController;
 import ua.com.fielden.platform.security.user.IUserDao;
-import ua.com.fielden.platform.serialisation.ServerSerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntityDao;
 
@@ -30,14 +31,21 @@ import ua.com.fielden.web.entities.InspectedEntityDao;
  */
 public class WebHibernateModule extends CommonFactoryModule {
 
-    public WebHibernateModule(final SessionFactory sessionFactory, final DomainPersistenceMetadata domainPersistenceMetadata) {
+    private final ISerialisationClassProvider serialisationClassProvider;
+
+    public WebHibernateModule(//
+	    final SessionFactory sessionFactory,//
+	    final DomainPersistenceMetadata domainPersistenceMetadata,//
+	    final ISerialisationClassProvider serialisationClassProvider) {
 	super(sessionFactory, domainPersistenceMetadata);
+	this.serialisationClassProvider = serialisationClassProvider;
     }
 
     @Override
     protected void configure() {
 	super.configure();
-	bind(ISerialiser.class).to(ServerSerialiser.class);
+	bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
+	bind(ISerialiser.class).to(TgKryo.class);
 	// bind DAO
 	bind(IInspectedEntityDao.class).to(InspectedEntityDao.class);
 	bind(IUserRoleDao.class).to(UserRoleDao.class);

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -81,7 +82,7 @@ public class QueryForDynamicEntityTypeSerialisationTest {
     public void seralisation_of_simple_query_for_dynamically_genereated_type_should_not_have_failed() throws Exception {
 	final Class<? extends AbstractEntity> newType1 = (Class<? extends AbstractEntity>) cl.startModification(TgVehicle.class.getName()).addProperties(pd1).endModification();
 
-	final EntityResultQueryModel q =  select(newType1).model();
+	final EntityResultQueryModel q =  select(newType1).modelAsEntity(newType1);
 	final QueryExecutionModel original = from(q).build();
 
 	final byte[] data = cl.getCachedByteArray(newType1.getName());
@@ -94,13 +95,16 @@ public class QueryForDynamicEntityTypeSerialisationTest {
 
 	assertEquals(container, restored);
 	assertEquals(container.hashCode(), restored.hashCode());
+	assertEquals(original, restored.getQem());
+	assertNotNull(original.getQueryModel().getResultType());
+	assertEquals(original.getQueryModel().getResultType(), restored.getQem().getQueryModel().getResultType());
     }
 
     @Test
     public void seralisation_of_simple_query_for_dynamically_genereated_type_as_part_of_list_should_not_have_failed() throws Exception {
 	final Class<? extends AbstractEntity> newType1 = (Class<? extends AbstractEntity>) cl.startModification(TgVehicle.class.getName()).addProperties(pd1).endModification();
 
-	final EntityResultQueryModel q =  select(newType1).model();
+	final EntityResultQueryModel q =  select(newType1).modelAsEntity(newType1);
 	final QueryExecutionModel original = from(q).build();
 
 	final byte[] data = cl.getCachedByteArray(newType1.getName());
@@ -118,6 +122,8 @@ public class QueryForDynamicEntityTypeSerialisationTest {
 	assertEquals(requestContent.size(), restored.size());
 	assertEquals(requestContent.get(0), restored.get(0));
 	assertEquals(container, restored.get(0));
+	assertNotNull(original.getQueryModel().getResultType());
+	assertEquals(original.getQueryModel().getResultType(), ((DynamicallyTypedQueryContainer)restored.get(0)).getQem().getQueryModel().getResultType());
     }
 
 

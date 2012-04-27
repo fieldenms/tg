@@ -330,7 +330,7 @@ public final class RestClientUtil implements IUserProvider {
 	final Period duration = new Period(requestInitiated, new DateTime());
 	logger.debug("Request/response duration: " + duration.getMinutes() + ":" + duration.getSeconds() + ":" + duration.getMillis());
 
-	final Result res = processs(response);
+	final Result res = process(response);
 	return new Pair<Response, Result>(response, res);
     }
 
@@ -340,7 +340,7 @@ public final class RestClientUtil implements IUserProvider {
      * @param response
      * @return
      */
-    public Result processs(final Response response) {
+    public Result process(final Response response) {
 	logger.debug("Start response envelop processing...");
 	final DateTime startEnvelopeConverion = new DateTime();
 	try {

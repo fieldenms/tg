@@ -26,6 +26,8 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
@@ -56,6 +58,8 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
 	hibTypeDefaults.put(Money.class, MoneyUserType.class);
     }
 
+    private ISerialisationClassProvider serialisationClassProvider = new ProvidedSerialisationClassProvider(new Class[] {InspectedEntity.class});
+
     /**
      * Required for dynamic instantiation by {@link DbDrivenTestCase}
      */
@@ -85,7 +89,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
 	    cfg.setProperty("hibernate.connection.password", "");
 
 	    hibernateUtil = new HibernateUtil(interceptor, cfg);
-	    hibernateModule = new WebHibernateModule(hibernateUtil.getSessionFactory(), domainPersistenceMetadata);
+	    hibernateModule = new WebHibernateModule(hibernateUtil.getSessionFactory(), domainPersistenceMetadata, serialisationClassProvider);
 	    injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
 	    entityFactory = injector.getInstance(EntityFactory.class);
 	    interceptor.setFactory(entityFactory);

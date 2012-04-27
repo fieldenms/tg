@@ -2,8 +2,11 @@ package ua.com.fielden.platform.web.test;
 
 import ua.com.fielden.platform.ioc.CommonRestFactoryModule;
 import ua.com.fielden.platform.rao.RestClientUtil;
-import ua.com.fielden.platform.serialisation.ClientSerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.impl.TgKryo;
+
+import com.google.inject.Scopes;
 
 /**
  * Module for REST test clients.
@@ -13,14 +16,18 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
  */
 public class CommonRestFactoryModuleForTestingPurposes extends CommonRestFactoryModule {
 
-    public CommonRestFactoryModuleForTestingPurposes(final RestClientUtil restUtil) {
+    private final ISerialisationClassProvider serialisationClassProvider;
+
+    public CommonRestFactoryModuleForTestingPurposes(final RestClientUtil restUtil, final ISerialisationClassProvider serialisationClassProvider) {
 	super(restUtil);
+	this.serialisationClassProvider = serialisationClassProvider;
     }
 
     @Override
     protected void configure() {
 	super.configure();
 
-	bind(ISerialiser.class).to(ClientSerialiser.class);
+	bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
+	bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
     }
 }

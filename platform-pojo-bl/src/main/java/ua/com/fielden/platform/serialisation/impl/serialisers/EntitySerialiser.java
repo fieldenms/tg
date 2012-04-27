@@ -11,7 +11,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -63,7 +62,7 @@ public final class EntitySerialiser extends Serializer {
 	properties = new ArrayList<CachedProperty>();
 	for (final Field propertyField : Finder.findRealProperties(type)) {
 	    // take into account only persistent properties
-	    if (!propertyField.isAnnotationPresent(Calculated.class)) {
+	    //if (!propertyField.isAnnotationPresent(Calculated.class)) {
 		propertyField.setAccessible(true);
 		// need to handle property key in a special way -- composite key does not have to be serialised
 		if (AbstractEntity.KEY.equals(propertyField.getName())) {
@@ -85,7 +84,7 @@ public final class EntitySerialiser extends Serializer {
 			prop.setPropertyType(fieldType);
 		    }
 		}
-	    }
+	    //}
 	}
     }
 
