@@ -11,10 +11,6 @@ public class EntityResultQueryModel<T extends AbstractEntity<?>> extends SingleR
     protected EntityResultQueryModel() {
     }
 
-    public EntityResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
-	super(tokens);
-    }
-
     public EntityResultQueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType) {
 	super(tokens, resultType);
     }

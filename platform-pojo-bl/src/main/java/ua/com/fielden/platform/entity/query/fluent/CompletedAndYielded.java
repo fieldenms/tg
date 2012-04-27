@@ -15,7 +15,7 @@ class CompletedAndYielded extends CompletedCommon implements ICompletedAndYielde
 
     @Override
     public <T extends AbstractEntity<?>> EntityResultQueryModel<T> model() {
-	return new EntityResultQueryModel<T>(getTokens().getValues());
+	return new EntityResultQueryModel<T>(getTokens().getValues(), (Class<T>) getTokens().getMainSourceType());
     }
 
     @Override

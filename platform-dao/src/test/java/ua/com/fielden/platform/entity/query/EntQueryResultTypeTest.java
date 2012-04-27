@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity.query;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -47,5 +46,23 @@ public class EntQueryResultTypeTest extends BaseEntQueryTCase {
     public void test5() {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).yield().prop("key").modelAsPrimitive();
 	assertEquals("Incorrect result type", null, entResultQry(qry).getResultType());
+    }
+
+    @Test
+    public void test6() {
+	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).model();
+	assertEquals("Incorrect result type", VEHICLE, qry.getResultType());
+    }
+
+    @Test
+    public void test7() {
+	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).leftJoin(MODEL).as("model").on().prop("model.id").eq().prop("model").model();
+	assertEquals("Incorrect result type", VEHICLE, qry.getResultType());
+    }
+
+    @Test
+    public void test8() {
+	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).yield().prop("model").modelAsEntity(MODEL);
+	assertEquals("Incorrect result type", MODEL, qry.getResultType());
     }
 }

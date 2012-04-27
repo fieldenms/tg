@@ -9,7 +9,6 @@ import ua.com.fielden.platform.utils.Pair;
 public abstract class SingleResultQueryModel<T extends AbstractEntity<?>> extends QueryModel<T> {
 
     protected SingleResultQueryModel() {
-
     }
 
     protected SingleResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {

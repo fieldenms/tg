@@ -23,14 +23,16 @@ import ua.com.fielden.platform.utils.Pair;
  */
 final class Tokens {
     private final List<Pair<TokenCategory, Object>> values = new ArrayList<Pair<TokenCategory, Object>>();
+    private Class<? extends AbstractEntity<?>> mainSourceType;
     private final ValuePreprocessor valuePreprocessor;
 
     public Tokens() {
 	valuePreprocessor = new ValuePreprocessor();
     }
 
-    private Tokens(final ValuePreprocessor valuePreprocessor) {
+    private Tokens(final ValuePreprocessor valuePreprocessor, final Class<? extends AbstractEntity<?>>  mainSourceType) {
 	this.valuePreprocessor = valuePreprocessor;
+	this.mainSourceType = mainSourceType;
     }
 
     @Override
@@ -39,14 +41,14 @@ final class Tokens {
     }
 
     private Tokens add(final TokenCategory cat, final Object value) {
-	final Tokens result = new Tokens(valuePreprocessor);
+	final Tokens result = new Tokens(valuePreprocessor, mainSourceType);
 	result.values.addAll(values);
 	result.values.add(new Pair<TokenCategory, Object>(cat, value));
 	return result;
     }
 
     private Tokens add(final TokenCategory cat1, final Object value1, final TokenCategory cat2, final Object value2) {
-	final Tokens result = new Tokens(valuePreprocessor);
+	final Tokens result = new Tokens(valuePreprocessor, mainSourceType);
 	result.values.addAll(values);
 	result.values.add(new Pair<TokenCategory, Object>(cat1, value1));
 	result.values.add(new Pair<TokenCategory, Object>(cat2, value2));
@@ -397,6 +399,7 @@ final class Tokens {
 	if (entityType == null) {
 	    throw new IllegalArgumentException("Missing entity type in query: " + this.values);
 	}
+	this.mainSourceType = entityType;
 	return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
@@ -458,5 +461,9 @@ final class Tokens {
 
     public List<Pair<TokenCategory, Object>> getValues() {
 	return values;
+    }
+
+    public Class<? extends AbstractEntity<?>> getMainSourceType() {
+        return mainSourceType;
     }
 }
