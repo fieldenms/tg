@@ -14,6 +14,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class ExpressionModel {
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
+    private boolean contextPrefixNeeded;
 
     protected ExpressionModel() {}
 
@@ -45,5 +46,13 @@ public class ExpressionModel {
     @Override
     public String toString() {
 	return tokens.toString();
+    }
+
+    public boolean isContextPrefixNeeded() {
+        return contextPrefixNeeded;
+    }
+
+    public void setContextPrefixNeeded(final boolean contextPrefixNeeded) {
+        this.contextPrefixNeeded = contextPrefixNeeded;
     }
 }

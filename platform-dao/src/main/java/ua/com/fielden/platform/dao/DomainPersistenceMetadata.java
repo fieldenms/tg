@@ -249,8 +249,15 @@ public class DomainPersistenceMetadata {
 	return builder.column(columnName).build();
     }
 
-    private PropertyPersistenceInfo getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
-	return new PropertyPersistenceInfo.Builder(field.getName(), field.getType(), true).expression(extractExpressionModelFromCalculatedProperty(entityType, field)).build();
+    private PropertyPersistenceInfo getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
+	final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
+	expressionModel.setContextPrefixNeeded(needsContextPrefix(entityType, calculatedPropfield));
+	return new PropertyPersistenceInfo.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).build();
+    }
+
+    private boolean needsContextPrefix(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) {
+	final Calculated calcAnnotation = calculatedPropfield.getAnnotation(Calculated.class);
+	return "".equals(calcAnnotation.value()) || !AnnotationReflector.isContextual(calcAnnotation);
     }
 
     private ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {

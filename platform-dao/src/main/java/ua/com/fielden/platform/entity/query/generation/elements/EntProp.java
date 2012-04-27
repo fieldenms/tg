@@ -160,9 +160,11 @@ public class EntProp implements ISingleOperand {
 	this.source = source;
     }
 
-    public void setExpression(final Expression expression) {
+    public void setExpression(final Expression expression, final boolean needsContextPrefix) {
         this.expression = expression;
-        prefixExpressionProps();
+        if (needsContextPrefix) {
+            prefixExpressionProps();
+        }
     }
 
     private String getContextPrefix() {
@@ -179,7 +181,7 @@ public class EntProp implements ISingleOperand {
 	    for (final EntProp prop : expression.getLocalProps()) {
 		prop.setName(prefix + "." + prop.getName());
 	    }
-	    
+
 	    final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<EntProp>();
 	    for (final EntQuery entQuery : getLocalSubQueries()) {
 		unresolvedPropsFromSubqueries.addAll(entQuery.getUnresolvedProps());

@@ -337,7 +337,7 @@ public class EntQuery implements ISingleOperand {
 		} else {
 		    //System.out.println(pri.getProp().getName() + "_______________________________ " + pri.getProp().expression);
 		    allCalculatedPropsResolved = false;
-		    pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, Collections.<String, Object> emptyMap(), pri.getProp().expressionModel).getResult().getValue());
+		    pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, Collections.<String, Object> emptyMap(), pri.getProp().expressionModel).getResult().getValue(), pri.getProp().expressionModel.isContextPrefixNeeded());
 		}
 	    }
 	}
