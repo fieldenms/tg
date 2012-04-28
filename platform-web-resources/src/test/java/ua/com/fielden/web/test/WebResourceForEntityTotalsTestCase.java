@@ -39,28 +39,28 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 /**
- * Provides a unit test to ensure correct interaction with IPage summary model.
+ * Provides a unit test to ensure correct operation of EQL with generated types when it comes to calculation of totals.
  *
  * @author TG Team
  *
  */
-public class WebResourceForGeneratedTypeQueryTestCase extends WebBasedTestCase {
+public class WebResourceForEntityTotalsTestCase extends WebBasedTestCase {
     private final IGeneratedEntityController rao = new GeneratedEntityRao(config.restClientUtil());
     private final IInspectedEntityDao dao = DbDrivenTestCase.injector.getInstance(IInspectedEntityDao.class);
-
-    private IPage firstPage;
 
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
-    private final ISerialiser serialiser = new TgKryo(factory, new ProvidedSerialisationClassProvider(new Class[] {InspectedEntity.class}));
+    private final ISerialiser serialiser = new TgKryo(factory, new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class }));
     private final Set<Class<?>> rootTypes = new HashSet<Class<?>>() {
 	{
 	    add(InspectedEntity.class);
 	}
     };
     private IDomainTreeManagerAndEnhancer dtm;
+    private List<byte[]> binaryTypes;
+    private Class<? extends AbstractEntity<?>> type;
 
     @Override
     protected String[] getDataSetPaths() {
@@ -84,15 +84,16 @@ public class WebResourceForGeneratedTypeQueryTestCase extends WebBasedTestCase {
 	super.setUp();
 
 	dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
-	final CalculatedProperty calc = CalculatedProperty.createAndValidate(factory, InspectedEntity.class, "", "2 * intProperty", "Calculated property", "desc", NO_ATTR, "intProperty", dtm.getEnhancer());
-	dtm.getEnhancer().addCalculatedProperty(calc);
+	final CalculatedProperty totalProperty1 = CalculatedProperty.createAndValidate(factory, InspectedEntity.class, "", "MAX(intProperty) * 2", "intProperty Sum", "desc", NO_ATTR, "intProperty", dtm.getEnhancer());
+	final CalculatedProperty totalProperty2 = CalculatedProperty.createAndValidate(factory, InspectedEntity.class, "", "MAX(intProperty) - MIN(intProperty)", "minimaxDiff", "desc", NO_ATTR, "intProperty", dtm.getEnhancer());
+	dtm.getEnhancer().addCalculatedProperty(totalProperty1);
+	dtm.getEnhancer().addCalculatedProperty(totalProperty2);
 	dtm.getEnhancer().apply();
-	final List<ByteArray> binaryTypes = dtm.getEnhancer().getManagedTypeArrays(InspectedEntity.class);
-
-	final Class<? extends AbstractEntity<?>> type = (Class<? extends AbstractEntity<?>>) dtm.getEnhancer().getManagedType(InspectedEntity.class);
+	final List<ByteArray> byteListOfTypes = dtm.getEnhancer().getManagedTypeArrays(InspectedEntity.class);
+	binaryTypes = toByteArray(byteListOfTypes);
+	type = (Class<? extends AbstractEntity<?>>) dtm.getEnhancer().getManagedType(InspectedEntity.class);
 	rao.setEntityType(type);
-	final EntityResultQueryModel model = select(type).model();
-	firstPage = rao.firstPage(from(model).build(), 15, toByteArray(binaryTypes));
+
     }
 
     private List<byte[]> toByteArray(final List<ByteArray> list) {
@@ -104,37 +105,16 @@ public class WebResourceForGeneratedTypeQueryTestCase extends WebBasedTestCase {
     }
 
     @Test
-    public void test_first_page() {
-	assertEquals("Incorrect value for max_key.", 15, firstPage.data().size());
+    public void test_selection_of_totals() {
+	final EntityResultQueryModel model = select(type).where().prop("intProperty").lt().val(30).//
+		yield().prop("intPropertySum").as("intPropertySum").//
+		yield().prop("minimaxDiff").as("minimaxDiff").//
+		modelAsEntity(type);
+	final IPage firstPage = rao.firstPage(from(model).build(), 15, binaryTypes);
+
+	assertEquals("Incorrect value of returned items.", 1, firstPage.data().size());
 	final AbstractEntity instance = (AbstractEntity) firstPage.data().get(0);
-	assertEquals("Incorrect value.", (Integer) instance.get("intProperty") * 2, instance.get("calculatedProperty"));
-	assertEquals("Incorrect value.", 20, instance.get("calculatedProperty"));
+	assertEquals("Incorrect value.", 40, instance.get("intPropertySum"));
+	assertEquals("Incorrect value.", 10, instance.get("minimaxDiff"));
     }
-
-    @Test
-    public void test_next_page() {
-	final IPage next = firstPage.next();
-	assertEquals("Incorrect value for max_key.", 15, next.data().size());
-	final AbstractEntity instance = (AbstractEntity) next.data().get(0);
-	assertEquals("Incorrect value.", 40, instance.get("calculatedProperty"));
-    }
-
-    @Test
-    public void test_last_page() {
-	final IPage last = firstPage.last();
-	assertEquals("Incorrect value for max_key.", 15, last.data().size());
-	final AbstractEntity instance = (AbstractEntity) last.data().get(0);
-	assertEquals("Incorrect value.", (Integer) instance.get("intProperty") * 2, instance.get("calculatedProperty"));
-	assertEquals("Incorrect value.", 60, instance.get("calculatedProperty"));
-    }
-
-    @Test
-    public void test_back_to_first_page() {
-	final IPage first = firstPage.last().first();
-	assertEquals("Incorrect value for max_key.", 15, first.data().size());
-	final AbstractEntity instance = (AbstractEntity) first.data().get(0);
-	assertEquals("Incorrect value.", (Integer) instance.get("intProperty") * 2, instance.get("calculatedProperty"));
-	assertEquals("Incorrect value.", 20, instance.get("calculatedProperty"));
-    }
-
 }

@@ -552,23 +552,30 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (getClass() != obj.getClass())
+	}
+	if (getClass() != obj.getClass()) {
 	    return false;
+	}
 	final AbstractDomainTreeManagerAndEnhancer other = (AbstractDomainTreeManagerAndEnhancer) obj;
 	if (base == null) {
-	    if (other.base != null)
+	    if (other.base != null) {
 		return false;
-	} else if (!base.equals(other.base))
+	    }
+	} else if (!base.equals(other.base)) {
 	    return false;
+	}
 	if (enhancer == null) {
-	    if (other.enhancer != null)
+	    if (other.enhancer != null) {
 		return false;
-	} else if (!enhancer.equals(other.enhancer))
+	    }
+	} else if (!enhancer.equals(other.enhancer)) {
 	    return false;
+	}
 	return true;
     }
 }

@@ -122,6 +122,8 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	if (operand.getModel() == null) {
 	    final EgTokenCategory cat = EgTokenCategory.byIndex(operand.getToken().category.getIndex());
 	    exprWithOperand = cat == EgTokenCategory.NAME ? expr.prop(relative2Absolute(operand.getToken().text)) : expr.val(operand.getToken().text);
+	    // TODO paths should become context independent
+	    //exprWithOperand = cat == EgTokenCategory.NAME ? expr.prop((operand.getToken().text)) : expr.val(operand.getToken().text);
 	} else {
 	    exprWithOperand = expr.expr(operand.getModel());
 	}
