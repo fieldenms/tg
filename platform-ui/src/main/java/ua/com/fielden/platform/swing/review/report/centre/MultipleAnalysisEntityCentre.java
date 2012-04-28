@@ -3,7 +3,9 @@ package ua.com.fielden.platform.swing.review.report.centre;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.awt.event.HierarchyEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.HierarchyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -44,6 +46,7 @@ import ua.com.fielden.platform.swing.review.report.centre.configuration.Multiple
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
@@ -66,16 +69,16 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     private final String previouslySelectedAnalysis;
 
-    private boolean wasHierarchyChanged, wasAnalysisLoaded, analysisSelected;
+    private boolean wasSizeChanged, wasAnalysisLoaded, analysisSelected;
 
     public MultipleAnalysisEntityCentre(final EntityCentreModel<T> model, final MultipleAnalysisEntityCentreConfigurationView<T> owner) {
 	super(model, owner);
 	this.previouslySelectedAnalysis = owner.getPreviousView() != null ? owner.getPreviousView().getCurrentAnalysisConfigurationView().getModel().getName() : GridConfigurationModel.gridAnalysisName;
-	this.wasHierarchyChanged = false;
+	this.wasSizeChanged = false;
 	this.wasAnalysisLoaded = false;
 	this.analysisSelected = false;
 	this.removeAction = createRemoveAnalysisAction();
-	addHierarchyListener(createComponentWasShown());
+	addComponentListener(createComponentWasResized());
 	addPropertyChangeListener(createAfterLoadSelectListenre());
 	this.tabPanel = createReview();
 	getReviewProgressLayer().setView(createTabPanelWrapper(tabPanel));
@@ -194,19 +197,18 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * 
      * @return
      */
-    private HierarchyListener createComponentWasShown() {
-	return new HierarchyListener() {
+    private ComponentListener createComponentWasResized() {
+	return new ComponentAdapter() {
 
 	    @Override
-	    public void hierarchyChanged(final HierarchyEvent e) {
+	    public void componentResized(final ComponentEvent e) {
 		synchronized (MultipleAnalysisEntityCentre.this) {
-		    // should hierarchy change event be handled?
-		    if (((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED)
-			    && !wasHierarchyChanged) {
+		    // should size change event be handled?
+		    if (!wasSizeChanged) {
 			// yes, so this one is first, lets handle it and set flag
 			// to indicate that we won't handle any more
-			// hierarchy changed events
-			wasHierarchyChanged = true;
+			// size changed events
+			wasSizeChanged = true;
 
 			//The component was resized so lets see whether analysis was loaded and the active one was selected.
 			//If that is true then fire
@@ -216,10 +218,10 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 			}
 			// after this handler end its execution, lets remove it
 			// from component because it is already not-useful
-			final HierarchyListener refToThis = this;
-			SwingUtilities.invokeLater(new Runnable() {
+			final ComponentListener refToThis = this;
+			SwingUtilitiesEx.invokeLater(new Runnable() {
 			    public void run() {
-				removeHierarchyListener(refToThis);
+				removeComponentListener(refToThis);
 			    }
 			});
 		    }
@@ -242,11 +244,11 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 		    if("currentAnalysisConfigurationView".equals(evt.getPropertyName()) && !analysisSelected && wasAnalysisLoaded && getCurrentAnalysisConfigurationView().getModel().getName().equals(previouslySelectedAnalysis)){
 
 			analysisSelected = true;
-			if(wasAnalysisLoaded && wasHierarchyChanged){
+			if(wasAnalysisLoaded && wasSizeChanged){
 			    fireLoadEvent(new LoadEvent(MultipleAnalysisEntityCentre.this));
 			}
 			final PropertyChangeListener refToThis = this;
-			SwingUtilities.invokeLater(new Runnable() {
+			SwingUtilitiesEx.invokeLater(new Runnable() {
 
 			    @Override
 			    public void run() {
@@ -338,7 +340,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 		    loadNextAnalysis(tabPane, analysisKeys, analysisIndex);
 
 		    final ILoadListener refToThis = this;
-		    SwingUtilities.invokeLater(new Runnable() {
+		    SwingUtilitiesEx.invokeLater(new Runnable() {
 
 			@Override
 			public void run() {

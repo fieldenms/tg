@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.io.FileInputStream;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.jfree.ui.RefineryUtilities;
 
@@ -42,7 +41,6 @@ public class EntityCentreExample extends AbstractUiApplication {
     private IGlobalDomainTreeManager gdtm;
     private EntityMasterManager emm;
     private IUserProvider userProvider;
-    private Logger logger = Logger.getLogger(EntityCentreExample.class);
 
     @Override
     protected void beforeUiExposure(final String[] args, final SplashController splashController) throws Throwable {
@@ -58,7 +56,7 @@ public class EntityCentreExample extends AbstractUiApplication {
 	in.close();
 
 	// override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
-	props.put("hibernate.show_sql", "false");
+	props.put("hibernate.show_sql", "true");
 	props.put("hibernate.format_sql", "true");
 	props.put("hibernate.hbm2ddl.auto", "create");
 
@@ -111,7 +109,6 @@ public class EntityCentreExample extends AbstractUiApplication {
 
 	RefineryUtilities.centerFrameOnScreen(mainApplicationFrame);
 	SimpleLauncher.show("Expression editor example", mainApplicationFrame, null);
-	//logger.info("__________________________________________________________________________________________");
     }
 
     public static void main(final String[] args) {

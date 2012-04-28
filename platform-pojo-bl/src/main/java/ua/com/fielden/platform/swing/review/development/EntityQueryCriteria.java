@@ -16,6 +16,7 @@ import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -119,6 +120,17 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
+     * Returns the first result page for query model. The page size is specified with second parameter.
+     * 
+     * @param queryModel - query model for which the first result page must be returned.
+     * @param pageSize - the page size.
+     * @return
+     */
+    protected final IPage<T> firstPage(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final int pageSize){
+	return dao.firstPage(queryModel, pageSize);
+    }
+
+    /**
      * Creates "fetch property" model for entity query criteria.
      * 
      * @return
@@ -135,6 +147,41 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
+     * Returns the ordering model for this query criteria.
+     * 
+     * @return
+     */
+    protected OrderingModel createOrderingModel(){
+	IOrderingItemCloseable closeOrderable = null;
+	for(final Pair<String, Ordering> orderPair : getCentreDomainTreeMangerAndEnhancer().getSecondTick().orderedProperties(getEntityClass())){
+	    final IOrderingItem orderingItem = closeOrderable == null ? orderBy() : closeOrderable;
+	    final ExpressionModel expression = getExpressionForProp(orderPair.getKey());
+	    final ISingleOperandOrderable part = expression == null ? orderingItem.prop(createNotInitialisedQueryProperty(orderPair.getKey()).getConditionBuildingName()) : orderingItem.expr(expression);
+	    closeOrderable = orderPair.getValue().equals(Ordering.ASCENDING) ? part.asc() : part.desc();
+	}
+	return closeOrderable == null ? null : closeOrderable.model();
+    }
+
+    /**
+     * Returns the not configured query property instance for the specified property.
+     * 
+     * @param propertyName
+     * @return
+     */
+    protected QueryProperty createNotInitialisedQueryProperty(final String propertyName){
+	return new QueryProperty(getEntityClass(), propertyName, ALIAS);
+    }
+
+    /**
+     * Creates the query with configured conditions.
+     * 
+     * @return
+     */
+    protected ICompleted createQuery(){
+	return DynamicQueryBuilder.buildConditions(createJoinCondition(), createQueryProperties(), ALIAS);
+    }
+
+    /**
      * Returns the expression for calculated property specified with propName parameter. If the property is not calculated then returns null.
      * 
      * @param propName - the name of the calculated property.
@@ -146,31 +193,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	} catch (final IncorrectCalcPropertyKeyException e) {
 	    return null;
 	}
-    }
-
-    /**
-     * Returns the ordering model for this query criteria.
-     * 
-     * @return
-     */
-    protected OrderingModel createOrderingModel(){
-	IOrderingItemCloseable closeOrderable = null;
-	for(final Pair<String, Ordering> orderPair : getCentreDomainTreeMangerAndEnhancer().getSecondTick().orderedProperties(getEntityClass())){
-	    final IOrderingItem orderingItem = closeOrderable == null ? orderBy() : closeOrderable;
-	    final ExpressionModel expression = getExpressionForProp(orderPair.getKey());
-	    final ISingleOperandOrderable part = expression == null ? orderingItem.prop(orderPair.getKey()) : orderingItem.expr(expression);
-	    closeOrderable = orderPair.getValue().equals(Ordering.ASCENDING) ? part.asc() : part.desc();
-	}
-	return closeOrderable == null ? null : closeOrderable.model();
-    }
-
-    /**
-     * Creates the query with configured conditions.
-     * 
-     * @return
-     */
-    protected ICompleted createQuery(){
-	return DynamicQueryBuilder.buildConditions(createJoinCondition(), createQueryProperties(), ALIAS);
     }
 
     /**
@@ -214,7 +236,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final IAddToCriteriaTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	final Class<T> root = getEntityClass();
 
-	final QueryProperty queryProperty = new QueryProperty(getEntityClass(), actualProperty, ALIAS);
+	final QueryProperty queryProperty = createNotInitialisedQueryProperty(actualProperty);
 
 	try{queryProperty.setValue(tickManager.getValue(root, actualProperty));}catch (final Exception e) {}
 	try{queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));}catch (final Exception e) {}

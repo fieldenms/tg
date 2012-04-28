@@ -19,7 +19,9 @@ import javax.swing.tree.TreePath;
  *
  */
 public class MultipleCheckboxTreeModel2 extends DefaultTreeModel {
+
     private static final long serialVersionUID = -4494528923282828671L;
+
     private final List<TreeCheckingModel> checkingModels;
     private final int numOfCheckingModel;
 

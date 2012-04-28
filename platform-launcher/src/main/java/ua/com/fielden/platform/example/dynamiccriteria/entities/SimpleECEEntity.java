@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleECEEntityDao;
 @EntityTitle("Simple entity type")
 @KeyType(String.class)
 @KeyTitle(value = "Simple entity", desc = "Simple entity description")
+@DescTitle(value = "Description", desc = "Simple entity description")
 @MapEntityTo("SIMPLEECEENTITY")
 @DefaultController(ISimpleECEEntityDao.class)
 public class SimpleECEEntity extends AbstractEntity<String> {
@@ -52,15 +54,21 @@ public class SimpleECEEntity extends AbstractEntity<String> {
 
     @IsProperty(value = SimpleCompositeEntity.class, linkProperty = "simpleEntity") @Title("Collection property") @MapTo("ID_SIMPLE_ENTITY")
     private Set<SimpleCompositeEntity> entities = new HashSet<SimpleCompositeEntity>();
-    public Set<SimpleCompositeEntity> getFuelUsages() { return entities; }
+    public Set<SimpleCompositeEntity> getEntities() { return entities; }
+    @Observable
+    public SimpleECEEntity setEntities(final Set<SimpleCompositeEntity> entities) {
+	this.entities = entities;
+	return this;
+    }
 
     public String getStringProperty() {
 	return stringProperty;
     }
 
     @Observable
-    public void setStringProperty(final String stringProperty) {
+    public SimpleECEEntity setStringProperty(final String stringProperty) {
 	this.stringProperty = stringProperty;
+	return this;
     }
 
     public Date getInitDate() {
@@ -68,8 +76,9 @@ public class SimpleECEEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setInitDate(final Date initDate) {
+    public SimpleECEEntity setInitDate(final Date initDate) {
 	this.initDate = initDate;
+	return this;
     }
 
     public boolean isActive() {
@@ -77,8 +86,9 @@ public class SimpleECEEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setActive(final boolean active) {
+    public SimpleECEEntity setActive(final boolean active) {
 	this.active = active;
+	return this;
     }
 
     public Integer getNumValue() {
@@ -86,8 +96,9 @@ public class SimpleECEEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setNumValue(final Integer numValue) {
+    public SimpleECEEntity setNumValue(final Integer numValue) {
 	this.numValue = numValue;
+	return this;
     }
 
     public SimpleNestedEntity getNestedEntity() {
@@ -95,7 +106,15 @@ public class SimpleECEEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setNestedEntity(final SimpleNestedEntity nestedEntity) {
+    public SimpleECEEntity setNestedEntity(final SimpleNestedEntity nestedEntity) {
 	this.nestedEntity = nestedEntity;
+	return this;
+    }
+
+    @Override
+    @Observable
+    public SimpleECEEntity setDesc(final String desc) {
+	super.setDesc(desc);
+	return this;
     }
 }

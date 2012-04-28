@@ -21,7 +21,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 
 import net.miginfocom.swing.MigLayout;
@@ -137,7 +136,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 			handleFirstLoadEvent = false;
 			getRunAction().actionPerformed(null);
 			final ILoadListener refToThis = this;
-			SwingUtilities.invokeLater(new Runnable() {
+			SwingUtilitiesEx.invokeLater(new Runnable() {
 
 			    @Override
 			    public void run() {

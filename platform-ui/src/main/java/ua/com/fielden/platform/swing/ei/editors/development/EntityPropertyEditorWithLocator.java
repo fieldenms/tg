@@ -117,6 +117,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	getValueMatcher().setBindedEntity(entity);
 	editor = createEditorWithLocator(entity, propertyName, locatorConfigurationModel, elementType,//
 		caption, toolTip, isSingle(entity, propertyName), isStringBinded(entity, propertyName));
+	getValueMatcher().setBindedPropertyEditor(this);
     }
 
     @Override
@@ -175,6 +176,11 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
 	private AbstractEntity<?> bindedEntity;
 
+	/**
+	 * The "entity property editor with locator" that is associated with this value matcher.
+	 */
+	private EntityPropertyEditorWithLocator bindedPropertyEditor;
+
 	public EntityLocatorValueMatcher(//
 		final IValueMatcher<T> autocompleterValueMatcher,//
 		final ILocatorManager locatorManager,//
@@ -188,6 +194,20 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	    this.entityType = entityType;
 	    this.rootType = rootType;
 	    this.propertyName = propertyName;
+	}
+
+	/**
+	 * Set the binded property editor for this value matcher. The binded property editor must have reference on to this value matcher.
+	 * Otherwise it throws {@link IllegalArgumentException}.
+	 * 
+	 * @param bindedPropertyEditor
+	 */
+	public void setBindedPropertyEditor(final EntityPropertyEditorWithLocator bindedPropertyEditor) {
+	    if (bindedPropertyEditor != null && bindedPropertyEditor.getValueMatcher() == this) {
+		this.bindedPropertyEditor = bindedPropertyEditor;
+	    } else {
+		throw new IllegalArgumentException("The property editor has incorrect value matcher, or it is null!");
+	    }
 	}
 
 	public void setBindedEntity(final AbstractEntity<?> bindedEntity) {
@@ -222,6 +242,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 	private List<T> findMatches(final String value, final fetch<?> fetchModel) {
 	    final ILocatorDomainTreeManagerAndEnhancer ldtme = ldtme();
 	    if(ldtme.isUseForAutocompletion()){
+		initEditor(ldtme);
 		final MetaProperty searchProp = getBindedEntity().getProperty(propertyName);
 		final List<Pair<String, Object>> dependentValues = new ArrayList<Pair<String,Object>>();
 		if (searchProp != null) {
@@ -234,6 +255,8 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 		final EnhancedLocatorEntityQueryCriteria<T, IEntityDao<T>> criteria = criteriaGenerator.generateLocatorQueryCriteria(entityType, ldtme);
 		return criteria.runLocatorQuery(getPageSize(), value, fetchModel, dependentValues.toArray(new Pair[0]));
 	    }else{
+		bindedPropertyEditor.getEditor().getView().highlightFirstHintValue(true);
+		bindedPropertyEditor.getEditor().getView().highlightSecondHintValue(false);
 		if(fetchModel == null){
 		    return autocompleterValueMatcher.findMatches(value);
 		} else {
@@ -243,6 +266,32 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
 	}
 
+	/**
+	 * Initialises the property editor's autocompleter. Set highlight for first and second value.
+	 * 
+	 * @param ldtme
+	 * 
+	 */
+	private void initEditor(final ILocatorDomainTreeManagerAndEnhancer ldtme) {
+	    if(bindedPropertyEditor != null && ldtme.isUseForAutocompletion()){
+		boolean highlightKey = true;
+		boolean highlightDesc = false;
+		switch(ldtme.getSearchBy()){
+		case DESC:
+		    highlightKey = false;
+		case DESC_AND_KEY:
+		    highlightDesc = true;
+		}
+		bindedPropertyEditor.getEditor().getView().highlightFirstHintValue(highlightKey);
+		bindedPropertyEditor.getEditor().getView().highlightSecondHintValue(highlightDesc);
+	    }
+	}
+
+	/**
+	 * Returns the instance of {@link ILocatorDomainTreeManagerAndEnhancer} associated with this value matcher.
+	 * 
+	 * @return
+	 */
 	private ILocatorDomainTreeManagerAndEnhancer ldtme(){
 	    if(Phase.USAGE_PHASE != locatorManager.phaseAndTypeOfLocatorManager(rootType, propertyName).getKey()){
 		throw new IllegalStateException("The locator must be in usage mode!");

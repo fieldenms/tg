@@ -82,14 +82,6 @@ public class EntityPropertyEditor extends AbstractEntityPropertyEditor {
 	return editor;
     }
 
-    public void highlightFirstHintValue(final boolean highlight) {
-	getEditor().getView().highlightFirstHintValue(highlight);
-    }
-
-    public void highlightSecondHintValue(final boolean highlight) {
-	getEditor().getView().highlightSecondHintValue(highlight);
-    }
-
     private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditor(final AbstractEntity<?> bindingEntity, final String bindingPropertyName, final Class<?> elementType, final String caption, final String tooltip, final boolean isSingle, final boolean stringBinding) {
 	if (!AbstractEntity.class.isAssignableFrom(elementType)) {
 	    throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + elementType + ".");

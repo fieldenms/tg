@@ -36,12 +36,12 @@ public class SelectableAndLoadBasePanel extends BasePanel implements ISelectable
     }
 
     @Override
-    public void addSelectionEventListener(final ISelectionEventListener l) {
+    public synchronized void addSelectionEventListener(final ISelectionEventListener l) {
 	listenerList.add(ISelectionEventListener.class, l);
     }
 
     @Override
-    public void removeSelectionEventListener(final ISelectionEventListener l) {
+    public synchronized void removeSelectionEventListener(final ISelectionEventListener l) {
 	listenerList.remove(ISelectionEventListener.class, l);
     }
 
@@ -64,12 +64,12 @@ public class SelectableAndLoadBasePanel extends BasePanel implements ISelectable
     }
 
     @Override
-    public void addLoadListener(final ILoadListener listener) {
+    public synchronized void addLoadListener(final ILoadListener listener) {
 	listenerList.add(ILoadListener.class, listener);
     }
 
     @Override
-    public void removeLoadListener(final ILoadListener listener) {
+    public synchronized void removeLoadListener(final ILoadListener listener) {
 	listenerList.remove(ILoadListener.class, listener);
     }
 

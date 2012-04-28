@@ -2,6 +2,9 @@ package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -18,6 +21,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayerWithEntityLocator;
+import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterUiWithEntityLocator;
 import ua.com.fielden.platform.swing.review.report.events.LocatorConfigurationEvent;
 import ua.com.fielden.platform.swing.review.report.events.LocatorEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILocatorConfigurationEventListener;
@@ -30,7 +34,20 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 
     private final LocatorConfigurationView<VT, RT> locatorConfigurationView;
 
+    /**
+     * The focus listener for binded autocompleter.
+     */
+    private final FocusListener autocompleterFocusListener;
+
+    /**
+     * The autocompleter to which this locator is binded.
+     */
     private AutocompleterTextFieldLayerWithEntityLocator<VT> autocompleter;
+
+    /**
+     * Properties those holds the information about the autocompleter state.
+     */
+    private int startSelectedIndex, endSelectedIndex, previousCaretPosition;
 
     public EntityLocatorDialog(final LocatorConfigurationModel<VT, RT> locatorConfigurationModel, final boolean isMulti){
 	//	this.textFieldLayer = new AutocompleterTextFieldLayerWithEntityLocator<VT>(entity, locatorConfigurationModel.name, //
@@ -48,6 +65,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	this.locatorConfigurationView = new LocatorConfigurationView<VT, RT>(locatorConfigurationModel, progressLayer, isMulti);
 	this.locatorConfigurationView.addLocatorEventListener(createLocatorEventListener());
 	this.locatorConfigurationView.addLocatorConfigurationEventListener(createLocatorConfigurationListener());
+	this.autocompleterFocusListener = createComponentFocusListener();
 	progressLayer.setView(locatorConfigurationView);
 	getContentPane().add(progressLayer);
 
@@ -60,15 +78,43 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 
     }
 
+    /**
+     * Binds this entity locator dialog to the passed autocompleter.
+     * 
+     * @param autocompleter
+     */
+    @SuppressWarnings("unchecked")
     public void bindToAutocompleter(final AutocompleterTextFieldLayerWithEntityLocator<VT> autocompleter){
-	//TODO must also provide condition that determines whether specified autocompleter has this entity locator dialog.
-	this.autocompleter = autocompleter;
+	if(this.autocompleter == autocompleter){
+	    return;
+	}
+	if(autocompleter == null){
+	    this.autocompleter.getAutocompleter().getTextComponent().removeFocusListener(autocompleterFocusListener);
+	    this.autocompleter = null;
+	} else {
+	    final AutocompleterUiWithEntityLocator<VT> ui = (AutocompleterUiWithEntityLocator<VT>) autocompleter.getUI();
+	    if(ui.getEntityLocatorDialog() == this){
+		if(this.autocompleter != null){
+		    this.autocompleter.getAutocompleter().getTextComponent().removeFocusListener(autocompleterFocusListener);
+		}
+		this.autocompleter = autocompleter;
+		this.autocompleter.getAutocompleter().getTextComponent().addFocusListener(autocompleterFocusListener);
+	    } else {
+		throw new IllegalArgumentException("The autocompleter is not bind with this entity locaotr dialog!");
+	    }
+	}
+
     }
 
     /**
      * Shows this entity locator dialog.
      */
     public void showDialog(){
+	//save the autocompleter's state.
+	previousCaretPosition = autocompleter.getView().getCaretPosition();
+	startSelectedIndex = autocompleter.getView().getSelectionStart();
+	endSelectedIndex = autocompleter.getView().getSelectionEnd();
+
 	//Configuring the entity locator title.
 	setTitle(generateTitle());
 
@@ -85,7 +131,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
      *
      * @return
      */
-    public List<VT> getSelectedEntities(){
+    private List<VT> getSelectedEntities(){
 	if(locatorConfigurationView.getPreviousView() != null){
 	    return locatorConfigurationView.getPreviousView().getSelectedEntities();
 	}
@@ -127,6 +173,7 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 			model.save();
 			break;
 		    case JOptionPane.CANCEL_OPTION:
+		    case JOptionPane.CLOSED_OPTION:
 			if(isFreezed){
 			    model.discard();
 			}
@@ -174,6 +221,24 @@ public class EntityLocatorDialog<VT extends AbstractEntity<?>, RT extends Abstra
 	    public void locatorActionPerformed(final LocatorEvent event) {
 		final WindowEvent wev = new WindowEvent(EntityLocatorDialog.this, WindowEvent.WINDOW_CLOSING);
 		Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(wev);
+	    }
+	};
+    }
+
+    /**
+     * Creates the focus listener for autocompleter's component.
+     * 
+     * @return
+     */
+    private FocusListener createComponentFocusListener() {
+	return new FocusAdapter() {
+	    @Override
+	    public void focusGained(final FocusEvent e) {
+		final List<VT> selectedEntities = getSelectedEntities();
+		if (selectedEntities.size() > 0) {
+		    final Object selectedString = autocompleter.getAutocompleter().getSelectedHint(selectedEntities, startSelectedIndex, endSelectedIndex, previousCaretPosition);
+		    autocompleter.getAutocompleter().acceptHint(selectedString);
+		}
 	    }
 	};
     }

@@ -96,19 +96,6 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
 	return (LocatorConfigurationModel<T, R>)super.getModel();
     }
 
-    @Override
-    protected final SingleAnalysisEntityLocator<T> createConfigurableView() {
-	final SingleAnalysisEntityLocator<T> entityLocator = new SingleAnalysisEntityLocator<T>(getModel().createEntityCentreModel(), this);
-	entityLocator.addLocatorEventListener(new ILocatorEventListener() {
-
-	    @Override
-	    public void locatorActionPerformed(final LocatorEvent event) {
-		fireLocatorEvent(event);
-	    }
-	});
-	return entityLocator;
-    }
-
     /**
      * Registers the {@link ILocatorConfigurationEventListener} to listen the locator configuration event.
      *
@@ -131,6 +118,19 @@ public class LocatorConfigurationView<T extends AbstractEntity<?>, R extends Abs
     protected final EntityLocatorWizard<T, R> createWizardView() {
 	final EntityLocatorWizard<T, R> newWizardView = new EntityLocatorWizard<T, R>(this, getModel().createDomainTreeEditorModel());
 	return newWizardView;
+    }
+
+    @Override
+    protected final SingleAnalysisEntityLocator<T> createConfigurableView() {
+	final SingleAnalysisEntityLocator<T> entityLocator = new SingleAnalysisEntityLocator<T>(getModel().createEntityCentreModel(), this);
+	entityLocator.addLocatorEventListener(new ILocatorEventListener() {
+
+	    @Override
+	    public void locatorActionPerformed(final LocatorEvent event) {
+		fireLocatorEvent(event);
+	    }
+	});
+	return entityLocator;
     }
 
     private void fireLocatorEvent(final LocatorEvent event){

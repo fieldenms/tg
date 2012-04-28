@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.swing.review.report.analysis.view;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.HierarchyEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.HierarchyListener;
 import java.awt.event.KeyEvent;
 
 import javax.swing.Action;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
@@ -20,6 +21,7 @@ import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
@@ -39,7 +41,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	this.exportAction = createExportAction();
 	this.wasLoaded = false;
 	this.getModel().getPageHolder().addPageNavigationListener(createPageNavigationListener());
-	addHierarchyListener(createComponentWasShown());
+	addComponentListener(createComponentWasResized());
     }
 
     @SuppressWarnings("unchecked")
@@ -186,27 +188,26 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
      * 
      * @return
      */
-    private HierarchyListener createComponentWasShown() {
-	return new HierarchyListener() {
+    private ComponentListener createComponentWasResized() {
+	return new ComponentAdapter() {
 
 	    @Override
-	    public void hierarchyChanged(final HierarchyEvent e) {
+	    public void componentResized(final ComponentEvent e) {
 		synchronized(AbstractAnalysisReview.this){
-		    // should hierarchy change event be handled?
-		    if (((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED)
-			    && !wasLoaded) {
+		    // should size change event be handled?
+		    if (!wasLoaded) {
 			// yes, so this one is first, lets handle it and set flag
 			// to indicate that we won't handle any more
-			// hierarchy changed events
+			// size changed events.
 			wasLoaded = true;
 			fireLoadEvent(new LoadEvent(AbstractAnalysisReview.this));
 
 			// after this handler end its execution, lets remove it
 			// from component because it is already not-useful
-			final HierarchyListener refToThis = this;
-			SwingUtilities.invokeLater(new Runnable() {
+			final ComponentListener refToThis = this;
+			SwingUtilitiesEx.invokeLater(new Runnable() {
 			    public void run() {
-				removeHierarchyListener(refToThis);
+				removeComponentListener(refToThis);
 			    }
 			});
 		    }

@@ -390,6 +390,7 @@ public class ComponentFactory {
 		caption,//
 		valueSeparator);
 	cellRenderer.setAuto(autocompleter.getAutocompleter());
+	entityLocatorDialog.bindToAutocompleter(autocompleter);
 	return autocompleter;
     }
 

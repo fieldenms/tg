@@ -48,8 +48,9 @@ public class SimpleNestedEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setStringProperty(final String stringProperty) {
+    public SimpleNestedEntity setStringProperty(final String stringProperty) {
 	this.stringProperty = stringProperty;
+	return this;
     }
 
     public Date getInitDate() {
@@ -57,8 +58,9 @@ public class SimpleNestedEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setInitDate(final Date initDate) {
+    public SimpleNestedEntity setInitDate(final Date initDate) {
 	this.initDate = initDate;
+	return this;
     }
 
     public boolean isActive() {
@@ -66,8 +68,9 @@ public class SimpleNestedEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setActive(final boolean active) {
+    public SimpleNestedEntity setActive(final boolean active) {
 	this.active = active;
+	return this;
     }
 
     public Integer getNumValue() {
@@ -75,7 +78,8 @@ public class SimpleNestedEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setNumValue(final Integer numValue) {
+    public SimpleNestedEntity setNumValue(final Integer numValue) {
 	this.numValue = numValue;
+	return this;
     }
 }

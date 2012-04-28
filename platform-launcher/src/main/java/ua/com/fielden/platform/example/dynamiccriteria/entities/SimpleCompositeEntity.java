@@ -62,8 +62,9 @@ public class SimpleCompositeEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public void setSimpleEntity(final SimpleECEEntity simpleEntity) {
+    public SimpleCompositeEntity setSimpleEntity(final SimpleECEEntity simpleEntity) {
 	this.simpleEntity = simpleEntity;
+	return this;
     }
 
     public String getStringKey() {
@@ -71,8 +72,9 @@ public class SimpleCompositeEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public void setStringKey(final String stringKey) {
+    public SimpleCompositeEntity setStringKey(final String stringKey) {
 	this.stringKey = stringKey;
+	return this;
     }
 
     public Date getInitDate() {
@@ -80,8 +82,9 @@ public class SimpleCompositeEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public void setInitDate(final Date initDate) {
+    public SimpleCompositeEntity setInitDate(final Date initDate) {
 	this.initDate = initDate;
+	return this;
     }
 
     public boolean isActive() {
@@ -89,8 +92,9 @@ public class SimpleCompositeEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public void setActive(final boolean active) {
+    public SimpleCompositeEntity setActive(final boolean active) {
 	this.active = active;
+	return this;
     }
 
     public Integer getNumValue() {
@@ -98,7 +102,8 @@ public class SimpleCompositeEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public void setNumValue(final Integer numValue) {
+    public SimpleCompositeEntity setNumValue(final Integer numValue) {
 	this.numValue = numValue;
+	return this;
     }
 }

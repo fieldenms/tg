@@ -21,11 +21,16 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import net.miginfocom.swing.MigLayout;
+
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.LocatorConfigurationView;
@@ -242,18 +247,69 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 	}
     }
 
+    /**
+     * Creates locator specific panel with next controls: "use for autocompleter" check box, "filter by description" and "filter by key or description" , close and select buttons.
+     * 
+     * @return
+     */
     private JPanel createLocatorPanel() {
-	final JPanel locatorPanel = new JPanel(new MigLayout("fill, insets 0", "[fill][fill]push[][]", "[fill,grow][fill,grow]"));
 
 	final Class<T> entityType = getModel().getCriteria().getEntityClass();
 	final Class<?> managedType = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(entityType);
 	final ILocatorDomainTreeManager ldtm = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
 
+	final boolean containDesc = AnnotationReflector.isAnnotationPresent(DescTitle.class, managedType);
+
+	final JPanel locatorPanel = new JPanel(new MigLayout("fill, insets 0", "[fill]" + (containDesc ? "[fill]" : "") + "push[][]", "[fill,grow]" + (containDesc ? "[fill,grow]" : "")));
+
+
+	final Pair<JCheckBox, JCheckBox> filterCheckBoxes = containDesc ? createFilterCheckBoxes(ldtm, managedType) : null;
+
+	locatorPanel.add(createUseForAutocompleterCheckBox(ldtm));
+	if(filterCheckBoxes != null){
+	    locatorPanel.add(filterCheckBoxes.getKey());
+	}
+	locatorPanel.add(new JButton(selectAction));
+	locatorPanel.add(new JButton(closeAction), (filterCheckBoxes != null ? "wrap" : ""));
+	if(filterCheckBoxes != null){
+	    locatorPanel.add(filterCheckBoxes.getValue(), "skip 1");
+	}
+	return locatorPanel;
+    }
+
+    /**
+     * Creates the "use for autocompleter" check box.
+     * @param ldtm
+     * 
+     * @param descTitle
+     * @return
+     */
+    private JCheckBox createUseForAutocompleterCheckBox(final ILocatorDomainTreeManager ldtm){
+	final JCheckBox useForAutocompleter = new JCheckBox("Use for autocompleter");
+	useForAutocompleter.setSelected(ldtm.isUseForAutocompletion());
+	useForAutocompleter.addActionListener(new ActionListener() {
+
+	    @Override
+	    public void actionPerformed(final ActionEvent e) {
+		ldtm.setUseForAutocompletion(useForAutocompleter.isSelected());
+	    }
+	});
+	return useForAutocompleter;
+    }
+
+    /**
+     * Creates pair of checkbox : first - is "filter by description", and the second one - "filter by key or description".
+     * 
+     * @param ldtm
+     * @param managedType
+     * @return
+     */
+    private Pair<JCheckBox, JCheckBox> createFilterCheckBoxes(final ILocatorDomainTreeManager ldtm, final Class<?> managedType){
 	final Pair<String, String> keyTitle = TitlesDescsGetter.getTitleAndDesc("key", managedType);
 	final Pair<String, String> descTitle = TitlesDescsGetter.getTitleAndDesc("desc", managedType);
-	final JCheckBox searchByDesc = new JCheckBox("Search by " + (descTitle.getKey() != null ? descTitle.getKey() : "description"));
-	final JCheckBox searchByKeyAndDesc = new JCheckBox("Search by " + (keyTitle.getKey() != null ? keyTitle.getKey() : "key") + " and "
-		+ (descTitle.getKey() != null ? descTitle.getKey() : "description"));
+	final JCheckBox searchByDesc = new JCheckBox("Search by " + (!StringUtils.isEmpty(descTitle.getKey()) ? descTitle.getKey() : "description"));
+	final JCheckBox searchByKeyAndDesc = new JCheckBox("Search by " + (!StringUtils.isEmpty(keyTitle.getKey()) ? keyTitle.getKey() : "key") + " and "
+		+ (!StringUtils.isEmpty(descTitle.getKey()) ? descTitle.getKey() : "description"));
 	if (SearchBy.DESC_AND_KEY == ldtm.getSearchBy()) {
 	    searchByKeyAndDesc.setSelected(true);
 	} else if (SearchBy.DESC == ldtm.getSearchBy()) {
@@ -280,22 +336,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 		updateModel(searchByDesc.isSelected(), searchByKeyAndDesc.isSelected());
 	    }
 	});
-	final JCheckBox useForAutocompleter = new JCheckBox("Use for autocompleter");
-	useForAutocompleter.addActionListener(new ActionListener() {
-
-	    @Override
-	    public void actionPerformed(final ActionEvent e) {
-		ldtm.setUseForAutocompletion(useForAutocompleter.isSelected());
-	    }
-	});
-	useForAutocompleter.setSelected(ldtm.isUseForAutocompletion());
-
-	locatorPanel.add(useForAutocompleter);
-	locatorPanel.add(searchByDesc);
-	locatorPanel.add(new JButton(selectAction));
-	locatorPanel.add(new JButton(closeAction), "wrap");
-	locatorPanel.add(searchByKeyAndDesc, "skip 1");
-	return locatorPanel;
+	return new Pair<JCheckBox, JCheckBox>(searchByDesc, searchByKeyAndDesc);
     }
 
     private Action createCloseAction() {

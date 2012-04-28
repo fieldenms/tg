@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.swing.review.report.configuration;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.HierarchyEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.HierarchyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -10,7 +12,6 @@ import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.error.Result;
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.swing.review.report.interfaces.IAbstractConfigura
 import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.review.report.interfaces.IReview;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
  * The holder for wizard and view panels. Provides functionality that allows one to switch view between report and wizard modes.
@@ -52,7 +54,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     private WT previousWizard = null;
     private VT previousView = null;
 
-    private boolean wasHierarchyChanged;
+    private boolean wasResized;
     private boolean wasChildLoaded;
 
     /**
@@ -65,9 +67,9 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	this.model = model;
 	this.progressLayer = progressLayer;
 	this.openAction = createOpenAction();
-	wasHierarchyChanged = false;
+	wasResized = false;
 	wasChildLoaded = false;
-	addHierarchyListener(createComponentWasShown());
+	addComponentListener(createComponentWasResized());
 	model.addPropertyChangeListener(createModeChangeListener());
 
 	//TODO remove after testing
@@ -168,19 +170,18 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
      * 
      * @return
      */
-    private HierarchyListener createComponentWasShown() {
-	return new HierarchyListener() {
+    private ComponentListener createComponentWasResized() {
+	return new ComponentAdapter() {
 
 	    @Override
-	    public void hierarchyChanged(final HierarchyEvent e) {
+	    public void componentResized(final ComponentEvent e) {
 		synchronized (AbstractConfigurationView.this) {
-		    // should hierarchy change event be handled?
-		    if (((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED)
-			    && !wasHierarchyChanged) {
+		    // should "component resized" event be handled?
+		    if (!wasResized) {
 			// yes, so this one is first, lets handle it and set flag
 			// to indicate that we won't handle any more
-			// hierarchy changed events
-			wasHierarchyChanged = true;
+			// "component resized" event
+			wasResized = true;
 
 			//The component was resized so lets see whether child was loaded if that is true then fire
 			//event that this component was loaded.
@@ -189,15 +190,43 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 			}
 			// after this handler end its execution, lets remove it
 			// from component because it is already not-useful
-			final HierarchyListener refToThis = this;
-			SwingUtilities.invokeLater(new Runnable() {
+			final ComponentListener refToThis = this;
+			SwingUtilitiesEx.invokeLater(new Runnable() {
 			    public void run() {
-				removeHierarchyListener(refToThis);
+				removeComponentListener(refToThis);
 			    }
 			});
 		    }
 		}
 	    }
+
+	    //	    @Override
+	    //	    public void hierarchyChanged(final HierarchyEvent e) {
+	    //		synchronized (AbstractConfigurationView.this) {
+	    //		    // should hierarchy change event be handled?
+	    //		    if (((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED)
+	    //			    && !wasHierarchyChanged) {
+	    //			// yes, so this one is first, lets handle it and set flag
+	    //			// to indicate that we won't handle any more
+	    //			// hierarchy changed events
+	    //			wasHierarchyChanged = true;
+	    //
+	    //			//The component was resized so lets see whether child was loaded if that is true then fire
+	    //			//event that this component was loaded.
+	    //			if(wasChildLoaded){
+	    //			    fireLoadEvent(new LoadEvent(AbstractConfigurationView.this));
+	    //			}
+	    //			// after this handler end its execution, lets remove it
+	    //			// from component because it is already not-useful
+	    //			final HierarchyListener refToThis = this;
+	    //			SwingUtilities.invokeLater(new Runnable() {
+	    //			    public void run() {
+	    //				removeHierarchyListener(refToThis);
+	    //			    }
+	    //			});
+	    //		    }
+	    //		}
+	    //	    }
 	};
     }
 
@@ -308,7 +337,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     private synchronized void fireChildNullLoaded(){
 	if (!wasChildLoaded) {
 	    wasChildLoaded = true;
-	    if(wasHierarchyChanged){
+	    if(wasResized){
 		fireLoadEvent(new LoadEvent(AbstractConfigurationView.this));
 	    }
 	}
@@ -335,13 +364,13 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 			//The child was loaded so lets see whether this component was resized if that is true then fire
 			//event that this was loaded.
-			if(wasHierarchyChanged){
+			if(wasResized){
 			    fireLoadEvent(new LoadEvent(AbstractConfigurationView.this));
 			}
 			// after this handler end its execution, lets remove it
 			// from component because it is already not-useful
 			final ILoadListener refToThis = this;
-			SwingUtilities.invokeLater(new Runnable() {
+			SwingUtilitiesEx.invokeLater(new Runnable() {
 			    public void run() {
 				component.removeLoadListener(refToThis);
 			    }

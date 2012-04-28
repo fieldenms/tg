@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
-import java.awt.event.HierarchyEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.HierarchyListener;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JComponent;
-import javax.swing.SwingUtilities;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.G
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityCentre<T, CDTME> {
 
@@ -26,16 +28,16 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 
     private GridConfigurationView<T, CDTME> gridConfigurationView;
 
-    private boolean wasHierarchyChanged;
+    private boolean wasResized;
     private boolean wasAnalysisLoaded;
 
     public AbstractSingleAnalysisEntityCentre(final AbstractEntityCentreModel<T, CDTME> model, final AbstractConfigurationView<? extends AbstractEntityCentre<T, CDTME>, ?> owner) {
 	super(model, owner);
 	this.analysisCounter = 0;
 	this.gridConfigurationView = null;
-	this.wasHierarchyChanged = false;
+	this.wasResized = false;
 	this.wasAnalysisLoaded = false;
-	addHierarchyListener(createComponentWasShown());
+	addComponentListener(createComponentWasResized());
     }
 
     @Override
@@ -66,13 +68,13 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 
 			//The child was loaded so lets see whether this component was resized if that is true then fire
 			//event that this was loaded.
-			if(wasHierarchyChanged){
+			if(wasResized){
 			    fireLoadEvent(new LoadEvent(AbstractSingleAnalysisEntityCentre.this));
 			}
 			// after this handler end its execution, lets remove it
 			// from component because it is already not-useful
 			final ILoadListener refToThis = this;
-			SwingUtilities.invokeLater(new Runnable() {
+			SwingUtilitiesEx.invokeLater(new Runnable() {
 			    public void run() {
 				configView.removeLoadListener(refToThis);
 			    }
@@ -106,19 +108,18 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
      * 
      * @return
      */
-    private HierarchyListener createComponentWasShown() {
-	return new HierarchyListener() {
+    private ComponentListener createComponentWasResized() {
+	return new ComponentAdapter() {
 
 	    @Override
-	    public void hierarchyChanged(final HierarchyEvent e) {
+	    public void componentResized(final ComponentEvent e) {
 		synchronized (AbstractSingleAnalysisEntityCentre.this) {
-		    // should hierarchy change event be handled?
-		    if (((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED)
-			    && !wasHierarchyChanged) {
+		    // should size change event be handled?
+		    if (!wasResized) {
 			// yes, so this one is first, lets handle it and set flag
 			// to indicate that we won't handle any more
-			// hierarchy changed events
-			wasHierarchyChanged = true;
+			// size changed events
+			wasResized = true;
 
 			//The component was resized so lets see whether analysis was loaded if that is true then fire
 			//event that this component was loaded.
@@ -127,10 +128,10 @@ public abstract class AbstractSingleAnalysisEntityCentre<T extends AbstractEntit
 			}
 			// after this handler end its execution, lets remove it
 			// from component because it is already not-useful
-			final HierarchyListener refToThis = this;
-			SwingUtilities.invokeLater(new Runnable() {
+			final ComponentListener refToThis = this;
+			SwingUtilitiesEx.invokeLater(new Runnable() {
 			    public void run() {
-				removeHierarchyListener(refToThis);
+				removeComponentListener(refToThis);
 			    }
 			});
 		    }

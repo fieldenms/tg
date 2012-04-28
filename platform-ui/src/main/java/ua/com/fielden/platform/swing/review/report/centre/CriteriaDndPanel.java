@@ -159,8 +159,8 @@ public class CriteriaDndPanel extends StubCriteriaPanel {
 			final LinkedComponentCopy editorCopy = copyPair.getValue();
 			alreadyUsed.add(labelCopy);
 			alreadyUsed.add(editorCopy);
-			add(labelCopy, pos.getLabelConstr());
-			add(editorCopy, pos.getEditorConstr());
+			add(labelCopy, pos.getLabelConstraints());
+			add(editorCopy, pos.getEditorConstraints());
 		    }
 		}
 	    }
