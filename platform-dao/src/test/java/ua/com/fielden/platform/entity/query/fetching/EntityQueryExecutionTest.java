@@ -97,6 +97,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     	final TgVehicle vehicle = models.get(0);
 	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
 	assertTrue("Values of props calc1 [" + vehicle.getCalc1() + "] and calc0 [" + vehicle.getCalc0() + "] should be equal", vehicle.getCalc1().equals(vehicle.getCalc0()));
+	assertEquals("Incorrect key", new Integer(30), vehicle.getConstValueProp());
     }
 
     @Test

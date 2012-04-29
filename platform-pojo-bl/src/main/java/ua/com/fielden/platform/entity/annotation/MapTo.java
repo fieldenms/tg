@@ -32,7 +32,7 @@ public @interface MapTo {
      * Returns implementers of IUserTypeInstantiate or ICompositeUserTypeInstantiate (e.g. ISimpleMoneyType.class, ISimplyMoneyWithTaxAmountType.class). Class.class means that nothing has been specified (i.e. Null).
      * @return
      */
-    Class userType() default Class.class; // represents hibernate type class
+    Class userType() default Void.class; // represents hibernate type class
 
     long length() default 0;
 

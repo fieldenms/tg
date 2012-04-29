@@ -40,24 +40,24 @@ public class TgVehicle extends AbstractEntity<String> {
     private static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
     private static final ExpressionModel calc5_ = expr().prop("calc1").add().prop("calc1").model();
     private static final ExpressionModel calc6_ = expr().prop("calc1").div().prop("calc3").model();
-    private static final ExpressionModel constValueProp_ = expr().val(new Date()).model();
+    private static final ExpressionModel constValueProp_ = expr().val(10).add().val(20).model();
 
     private static final ExpressionModel lastFuelUsageQty_ = expr().model(
       select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(
       select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model();
 
     @IsProperty
-    //@Calculated
+    @Calculated
     @Title(value = "Const value prop", desc = "Const value prop")
-    private Date constValueProp;
+    private Integer constValueProp;
 
     @Observable
-    public TgVehicle setConstValueProp(final Date constValueProp) {
+    public TgVehicle setConstValueProp(final Integer constValueProp) {
 	this.constValueProp = constValueProp;
 	return this;
     }
 
-    public Date getConstValueProp() {
+    public Integer getConstValueProp() {
 	return constValueProp;
     }
 
