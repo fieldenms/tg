@@ -76,24 +76,29 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
     public int hashCode() {
 	final int prime = 31;
 	int result = super.hashCode();
-	result = prime * result + ((visible == null) ? 0 : visible.hashCode());
+	result = prime * result + (visible == null ? 0 : visible.hashCode());
 	return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (!super.equals(obj))
+	}
+	if (!super.equals(obj)) {
 	    return false;
-	if (getClass() != obj.getClass())
+	}
+	if (getClass() != obj.getClass()) {
 	    return false;
+	}
 	final AbstractAnalysisDomainTreeManager other = (AbstractAnalysisDomainTreeManager) obj;
 	if (visible == null) {
-	    if (other.visible != null)
+	    if (other.visible != null) {
 		return false;
-	} else if (!visible.equals(other.visible))
+	    }
+	} else if (!visible.equals(other.visible)) {
 	    return false;
+	}
 	return true;
     }
 
@@ -166,24 +171,29 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	public int hashCode() {
 	    final int prime = 31;
 	    int result = super.hashCode();
-	    result = prime * result + ((rootsListsOfUsedProperties == null) ? 0 : rootsListsOfUsedProperties.hashCode());
+	    result = prime * result + (rootsListsOfUsedProperties == null ? 0 : rootsListsOfUsedProperties.hashCode());
 	    return result;
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
-	    if (this == obj)
+	    if (this == obj) {
 		return true;
-	    if (!super.equals(obj))
+	    }
+	    if (!super.equals(obj)) {
 		return false;
-	    if (getClass() != obj.getClass())
+	    }
+	    if (getClass() != obj.getClass()) {
 		return false;
+	    }
 	    final AbstractAnalysisAddToDistributionTickManager other = (AbstractAnalysisAddToDistributionTickManager) obj;
 	    if (rootsListsOfUsedProperties == null) {
-		if (other.rootsListsOfUsedProperties != null)
+		if (other.rootsListsOfUsedProperties != null) {
 		    return false;
-	    } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties))
+		}
+	    } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties)) {
 		return false;
+	    }
 	    return true;
 	}
     }
@@ -327,30 +337,37 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	public int hashCode() {
 	    final int prime = 31;
 	    int result = super.hashCode();
-	    result = prime * result + ((rootsListsOfOrderings == null) ? 0 : rootsListsOfOrderings.hashCode());
-	    result = prime * result + ((rootsListsOfUsedProperties == null) ? 0 : rootsListsOfUsedProperties.hashCode());
+	    result = prime * result + (rootsListsOfOrderings == null ? 0 : rootsListsOfOrderings.hashCode());
+	    result = prime * result + (rootsListsOfUsedProperties == null ? 0 : rootsListsOfUsedProperties.hashCode());
 	    return result;
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
-	    if (this == obj)
+	    if (this == obj) {
 		return true;
-	    if (!super.equals(obj))
+	    }
+	    if (!super.equals(obj)) {
 		return false;
-	    if (getClass() != obj.getClass())
+	    }
+	    if (getClass() != obj.getClass()) {
 		return false;
+	    }
 	    final AbstractAnalysisAddToAggregationTickManager other = (AbstractAnalysisAddToAggregationTickManager) obj;
 	    if (rootsListsOfOrderings == null) {
-		if (other.rootsListsOfOrderings != null)
+		if (other.rootsListsOfOrderings != null) {
 		    return false;
-	    } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings))
+		}
+	    } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings)) {
 		return false;
+	    }
 	    if (rootsListsOfUsedProperties == null) {
-		if (other.rootsListsOfUsedProperties != null)
+		if (other.rootsListsOfUsedProperties != null) {
 		    return false;
-	    } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties))
+		}
+	    } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties)) {
 		return false;
+	    }
 	    return true;
 	}
     }
@@ -369,7 +386,11 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 	@Override
 	public void write(final ByteBuffer buffer, final T manager) {
 	    super.write(buffer, manager);
-	    writeValue(buffer, manager.visible);
+	    writeValue(buffer, manager.getVisible());
 	}
+    }
+
+    public Boolean getVisible() {
+	return visible;
     }
 }

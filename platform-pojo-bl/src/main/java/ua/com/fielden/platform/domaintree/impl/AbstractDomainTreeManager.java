@@ -285,8 +285,8 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	@Override
 	public boolean isCheckedNaturally(final Class<?> root, final String property) {
 	    AbstractDomainTreeRepresentation.illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return (isCheckedMutably(root, property)) || // checked properties by a "contract"
-		    (tr.isCheckedImmutably(root, property)); // the checked by default properties should be checked (immutable checking)
+	    return isCheckedMutably(root, property) || // checked properties by a "contract"
+		    tr.isCheckedImmutably(root, property); // the checked by default properties should be checked (immutable checking)
 	}
 
 	@Override
@@ -371,6 +371,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	    return Collections.unmodifiableList(checkedPropertiesMutable(root));
 	}
 
+	@Override
 	public synchronized List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
 	    final Class<?> root = DynamicEntityClassLoader.getOriginalType(rootPossiblyEnhanced);
 	    if (checkedProperties.get(root) == null) { // not yet loaded
@@ -439,24 +440,29 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 	public int hashCode() {
 	    final int prime = 31;
 	    int result = 1;
-	    result = prime * result + ((checkedProperties == null) ? 0 : checkedProperties.hashCode());
+	    result = prime * result + (checkedProperties == null ? 0 : checkedProperties.hashCode());
 	    return result;
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
-	    if (this == obj)
+	    if (this == obj) {
 		return true;
-	    if (obj == null)
+	    }
+	    if (obj == null) {
 		return false;
-	    if (getClass() != obj.getClass())
+	    }
+	    if (getClass() != obj.getClass()) {
 		return false;
+	    }
 	    final TickManager other = (TickManager) obj;
 	    if (checkedProperties == null) {
-		if (other.checkedProperties != null)
+		if (other.checkedProperties != null) {
 		    return false;
-	    } else if (!checkedProperties.equals(other.checkedProperties))
+		}
+	    } else if (!checkedProperties.equals(other.checkedProperties)) {
 		return false;
+	    }
 	    return true;
 	}
     }
@@ -489,9 +495,9 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
 
 	@Override
 	public void write(final ByteBuffer buffer, final T manager) {
-	    writeValue(buffer, manager.dtr);
-	    writeValue(buffer, manager.firstTick);
-	    writeValue(buffer, manager.secondTick);
+	    writeValue(buffer, manager.getDtr());
+	    writeValue(buffer, manager.getFirstTick());
+	    writeValue(buffer, manager.getSecondTick());
 	}
     }
 
@@ -499,36 +505,49 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	result = prime * result + ((dtr == null) ? 0 : dtr.hashCode());
-	result = prime * result + ((firstTick == null) ? 0 : firstTick.hashCode());
-	result = prime * result + ((secondTick == null) ? 0 : secondTick.hashCode());
+	result = prime * result + (dtr == null ? 0 : dtr.hashCode());
+	result = prime * result + (firstTick == null ? 0 : firstTick.hashCode());
+	result = prime * result + (secondTick == null ? 0 : secondTick.hashCode());
 	return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (getClass() != obj.getClass())
+	}
+	if (getClass() != obj.getClass()) {
 	    return false;
+	}
 	final AbstractDomainTreeManager other = (AbstractDomainTreeManager) obj;
 	if (dtr == null) {
-	    if (other.dtr != null)
+	    if (other.dtr != null) {
 		return false;
-	} else if (!dtr.equals(other.dtr))
+	    }
+	} else if (!dtr.equals(other.dtr)) {
 	    return false;
+	}
 	if (firstTick == null) {
-	    if (other.firstTick != null)
+	    if (other.firstTick != null) {
 		return false;
-	} else if (!firstTick.equals(other.firstTick))
+	    }
+	} else if (!firstTick.equals(other.firstTick)) {
 	    return false;
+	}
 	if (secondTick == null) {
-	    if (other.secondTick != null)
+	    if (other.secondTick != null) {
 		return false;
-	} else if (!secondTick.equals(other.secondTick))
+	    }
+	} else if (!secondTick.equals(other.secondTick)) {
 	    return false;
+	}
 	return true;
+    }
+
+    public AbstractDomainTreeRepresentation getDtr() {
+	return dtr;
     }
 }

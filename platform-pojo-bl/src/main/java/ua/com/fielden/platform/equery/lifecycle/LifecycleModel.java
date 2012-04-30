@@ -98,16 +98,16 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
 	groupingValues = null;
     }
 
-//    /**
-//     * Creates {@link LifecycleModel} and performs all necessary calculation for lifecycle model analysis.
-//     *
-//     * @param leftBoundary
-//     * @param rightBoundary
-//     * @param lifecycleData
-//     */
-//    public LifecycleModel(final DateTime leftBoundary, final DateTime rightBoundary, final List<? extends EntityPropertyLifecycle<T>> lifecycleData, final boolean calculateSummaryAvailability) {
-//	this(leftBoundary, rightBoundary, lifecycleData, new LinkedHashMap<IProperty, Object>(), calculateSummaryAvailability);
-//    }
+    //    /**
+    //     * Creates {@link LifecycleModel} and performs all necessary calculation for lifecycle model analysis.
+    //     *
+    //     * @param leftBoundary
+    //     * @param rightBoundary
+    //     * @param lifecycleData
+    //     */
+    //    public LifecycleModel(final DateTime leftBoundary, final DateTime rightBoundary, final List<? extends EntityPropertyLifecycle<T>> lifecycleData, final boolean calculateSummaryAvailability) {
+    //	this(leftBoundary, rightBoundary, lifecycleData, new LinkedHashMap<IProperty, Object>(), calculateSummaryAvailability);
+    //    }
 
     /**
      * Creates {@link LifecycleModel} and performs all necessary calculation for lifecycle model analysis.
@@ -118,7 +118,7 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
      */
     public LifecycleModel(final DateTime leftBoundary, final DateTime rightBoundary, final List<? extends EntityPropertyLifecycle<T>> lifecycleData, final LinkedHashMap<IProperty, Object> groupingValues, final boolean calculateSummaryAvailability) {
 	final Long curr = new DateTime().getMillis();
-//	System.out.println("1. begin => " + new DateTime());
+	//	System.out.println("1. begin => " + new DateTime());
 	this.leftBoundary = leftBoundary;
 	this.rightBoundary = rightBoundary;
 	this.groupingValues = groupingValues;
@@ -137,11 +137,11 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
 	    }
 	}
 
-//	System.out.println("2. summaryAvailability = calculateSummaryAvailability() => " + new DateTime());
+	//	System.out.println("2. summaryAvailability = calculateSummaryAvailability() => " + new DateTime());
 	this.summaryAvailability = calculateSummaryAvailability ? calculateSummaryAvailability() : new ArrayList<ValuedInterval>();
-//	System.out.println("3. averageRelativeAvailability = calculateAverageRelativeAvailability() => " + new DateTime());
+	//	System.out.println("3. averageRelativeAvailability = calculateAverageRelativeAvailability() => " + new DateTime());
 	averageRelativeAvailability = calculateAverageRelativeAvailability();
-//	System.out.println("4. averageSummaryAvailability = calculateAverageSummaryAvailability() => " + new DateTime());
+	//	System.out.println("4. averageSummaryAvailability = calculateAverageSummaryAvailability() => " + new DateTime());
 
 	// Calculates average/max/min number of available entities for time-period of this {@link LifecycleModel}.
 	long sum = 0, max = -1, min = Integer.MAX_VALUE;
@@ -158,7 +158,7 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
 	minSummaryAvailability = min;
 	averageSummaryAvailability = new Double(sum) / boundaries().toDurationMillis();
 
-//	System.out.println("5. EPL colors and category durations => " + new DateTime());
+	//	System.out.println("5. EPL colors and category durations => " + new DateTime());
 
 	for (final EntityPropertyLifecycle<T> epl : this.lifecycleData) {
 	    // enforce fractions calculation:
@@ -170,7 +170,7 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
 	    }
 	}
 
-//	System.out.println("6. uncategorized values colors => " + new DateTime());
+	//	System.out.println("6. uncategorized values colors => " + new DateTime());
 	uncategorizedValuesWithColors = new ArrayList<ValuedInterval>();
 	x = 1000;
 	for (final Entry<Object, Color> entry : uncategorizedValueColors.entrySet()) {
@@ -178,7 +178,7 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
 	    final String desc = entry.getKey() instanceof AbstractEntity ? ((AbstractEntity) entry.getKey()).getDesc() + "" : entry.getKey() + "";
 	    uncategorizedValuesWithColors.add(new ValuedInterval(new DateTime(x++), key, desc, entry.getValue()));
 	}
-//	System.out.println("7. end => " + new DateTime());
+	//	System.out.println("7. end => " + new DateTime());
 	final String debugStr = "Lifecycle model created (and summary availability calculated) in " + (new DateTime().getMillis() - curr) + "ms. Entities count = " + lifecycleData.size() + ". Period = [" + leftBoundary.toDate() + "; " + rightBoundary.toDate() + "].";
 	System.out.println(debugStr);
 	logger.debug(debugStr);
@@ -388,27 +388,27 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
      * @return
      */
     private List<IGroup<T>> groupBy(final ITimeProperty timeProperty, final LifecycleModel<T> parent, final boolean copy) {
-//	final Interval interval = boundaries();
-//	final DateTime next = addAndPossiblyTruncate(interval.getStart(), timeProperty);
-//
-//	final List<IGroup<T>> groups = new ArrayList<IGroup<T>>();
-//	if (Period.ZERO.equals(timeProperty.getPeriod().toPeriod()) || !interval.contains(next)) {
-//	    groups.add(createGroupByModelAndPeriod(timeProperty, this, parent));
-//	} else {
-//	    // The first two parts of continuum will be copied:
-//	    final Pair<? extends LifecycleModel<T>, ? extends LifecycleModel<T>> leftRight = split(next, copy, false);
-//	    if (progressUpdater != null){
-//		groupNumber++;
-//		progressUpdater.updateProgress("Grouping..." + EntityPropertyLifecycle.strPercentage(EntityPropertyLifecycle.roundedPercents(EntityPropertyLifecycle.divide(new BigDecimal(groupNumber).setScale(15), new BigDecimal(groupsCount).setScale(15)))));
-//		leftRight.getValue().groupNumber = groupNumber;
-//		leftRight.getValue().groupsCount = groupsCount;
-//		leftRight.getValue().progressUpdater = progressUpdater;
-//	    }
-//	    groups.add(createGroupByModelAndPeriod(timeProperty, leftRight.getKey(), parent));
-//	    // No copy process should be done - only periods cutting:
-//	    groups.addAll(leftRight.getValue().groupBy(timeProperty, parent, false));
-//	}
-//	return groups;
+	//	final Interval interval = boundaries();
+	//	final DateTime next = addAndPossiblyTruncate(interval.getStart(), timeProperty);
+	//
+	//	final List<IGroup<T>> groups = new ArrayList<IGroup<T>>();
+	//	if (Period.ZERO.equals(timeProperty.getPeriod().toPeriod()) || !interval.contains(next)) {
+	//	    groups.add(createGroupByModelAndPeriod(timeProperty, this, parent));
+	//	} else {
+	//	    // The first two parts of continuum will be copied:
+	//	    final Pair<? extends LifecycleModel<T>, ? extends LifecycleModel<T>> leftRight = split(next, copy, false);
+	//	    if (progressUpdater != null){
+	//		groupNumber++;
+	//		progressUpdater.updateProgress("Grouping..." + EntityPropertyLifecycle.strPercentage(EntityPropertyLifecycle.roundedPercents(EntityPropertyLifecycle.divide(new BigDecimal(groupNumber).setScale(15), new BigDecimal(groupsCount).setScale(15)))));
+	//		leftRight.getValue().groupNumber = groupNumber;
+	//		leftRight.getValue().groupsCount = groupsCount;
+	//		leftRight.getValue().progressUpdater = progressUpdater;
+	//	    }
+	//	    groups.add(createGroupByModelAndPeriod(timeProperty, leftRight.getKey(), parent));
+	//	    // No copy process should be done - only periods cutting:
+	//	    groups.addAll(leftRight.getValue().groupBy(timeProperty, parent, false));
+	//	}
+	//	return groups;
 
 	if (Period.ZERO.equals(timeProperty.getPeriod().toPeriod())){
 	    throw new RuntimeException("Could not be grouped by empty period.");
@@ -426,9 +426,10 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
 		groupNumber++;
 		progressUpdater.updateProgress("Distributing..."
 			+ EntityPropertyLifecycle.strPercentage(EntityPropertyLifecycle.roundedPercents(EntityPropertyLifecycle.divide(new BigDecimal(groupNumber).setScale(15), new BigDecimal(groupsCount).setScale(15)))));
-		leftRight.getValue().groupNumber = groupNumber;
-		leftRight.getValue().groupsCount = groupsCount;
-		leftRight.getValue().progressUpdater = progressUpdater;
+		final LifecycleModel<T> value = leftRight.getValue();
+		value.groupNumber = groupNumber;
+		value.groupsCount = groupsCount;
+		value.progressUpdater = progressUpdater;
 	    }
 	    groups.add(createGroupByModelAndPeriod(timeProperty, leftRight.getKey(), parent));
 
@@ -634,6 +635,6 @@ public abstract class LifecycleModel<T extends AbstractEntity> {
 	if (groupingValues == null){
 	    groupingValues = new LinkedHashMap<IProperty, Object>();
 	}
-        return groupingValues;
+	return groupingValues;
     }
 }

@@ -237,8 +237,8 @@ public class PropertyTypeDeterminatorTest {
 	assertEquals(Number.class, PropertyTypeDeterminator.determinePropertyType(GenericsPropertiesTestClass.class, "getProp2()"));
 	assertEquals(Float.class, PropertyTypeDeterminator.determinePropertyType(GenericsPropertiesTestClass.class, "prop3"));
 	assertEquals(Float.class, PropertyTypeDeterminator.determinePropertyType(GenericsPropertiesTestClass.class, "getProp3()"));
-	assertEquals(BigInteger.class, PropertyTypeDeterminator.determinePropertyType(GenericsPropertiesTestClass.class, "prop4"));
-	assertEquals(BigInteger.class, PropertyTypeDeterminator.determinePropertyType(GenericsPropertiesTestClass.class, "getProp4()"));
+	assertEquals(new BigInteger[]{}.getClass(), PropertyTypeDeterminator.determinePropertyType(GenericsPropertiesTestClass.class, "prop4"));
+	assertEquals(new BigInteger[]{}.getClass(), PropertyTypeDeterminator.determinePropertyType(GenericsPropertiesTestClass.class, "getProp4()"));
     }
 
 }

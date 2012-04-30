@@ -116,7 +116,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private List<String> constructProperties(final Class<?> rootType, final String path, final List<Field> fieldsAndKeys) {
 	final List<String> newIncludedProps = new ArrayList<String>();
 	for (final Field field : fieldsAndKeys) {
-	    final String property = (StringUtils.isEmpty(path)) ? field.getName() : (path + "." + field.getName());
+	    final String property = StringUtils.isEmpty(path) ? field.getName() : path + "." + field.getName();
 	    final String reflectionProperty = reflectionProperty(property);
 	    if (!isExcludedImmutably(rootType, reflectionProperty)) {
 		newIncludedProps.add(property);
@@ -157,7 +157,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     @Override
     public Set<Pair<Class<?>, String>> excludedPropertiesMutable() {
-        return manuallyExcludedProperties;
+	return manuallyExcludedProperties;
     }
 
     /**
@@ -168,7 +168,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     private static Pair<List<Field>, List<Field>> commonAndUnion(final Class<? extends AbstractUnionEntity> unionClass) {
 	final List<Field> unionProperties = AbstractUnionEntity.unionProperties(unionClass);
-	final Class<? extends AbstractEntity> concreteUnionClass = (Class<? extends AbstractEntity>) (unionProperties.get(0).getType());
+	final Class<? extends AbstractEntity> concreteUnionClass = (Class<? extends AbstractEntity>) unionProperties.get(0).getType();
 	final List<String> commonNames = AbstractUnionEntity.commonProperties(unionClass);
 	final List<Field> commonProperties = constructKeysAndProperties(concreteUnionClass, commonNames);
 	return new Pair<List<Field>, List<Field>>(commonProperties, unionProperties);
@@ -226,7 +226,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	}
 	final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
 	final Class<?> realType = isEntityItself ? null : PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
-	return (!isEntityItself && realType != null && Collection.class.isAssignableFrom(realType)); // or collections itself
+	return !isEntityItself && realType != null && Collection.class.isAssignableFrom(realType); // or collections itself
     }
 
     /**
@@ -240,7 +240,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	if (!isCollectionOrInCollectionHierarchy(root, property)) {
 	    throw new IllegalArgumentException("The property [" + property + "] is not in collection hierarchy.");
 	}
-        return isCollection(root, property) ? property : parentCollection(root, PropertyTypeDeterminator.penultAndLast(property).getKey());
+	return isCollection(root, property) ? property : parentCollection(root, PropertyTypeDeterminator.penultAndLast(property).getKey());
     }
 
     /**
@@ -252,7 +252,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     public static boolean isInCollectionHierarchy(final Class<?> root, final String property) {
 	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-	return (!isEntityItself && typesInHierarchy(root, property, false).contains(Collection.class)); // properties in collectional hierarchy
+	return !isEntityItself && typesInHierarchy(root, property, false).contains(Collection.class); // properties in collectional hierarchy
     }
 
     /**
@@ -275,21 +275,21 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determineClass(penultType, lastPropertyName, true, true);
 	final Field field = isEntityItself ? null : Finder.getFieldByName(penultType, lastPropertyName);
 
-	return 	(manuallyExcludedProperties.contains(key(root, property))) || // exclude manually excluded properties
-		(!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null) || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
-		(!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresent(KeyTitle.class, penultType)) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
-		(!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType)) || // exclude "key" -- "key" is not of entity type
-		(!isEntityItself && AbstractEntity.DESC.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresent(DescTitle.class, penultType)) || // exclude "desc" -- no DescTitle annotation exists in direct owner of "desc"
-		(!isEntityItself && !Finder.findFieldByName(root, property).isAnnotationPresent(IsProperty.class)) || // exclude non-TG properties (not annotated by @IsProperty)
-		(isEntityItself && !rootTypes().contains(propertyType)) || // exclude entities of non-"root types"
-		(EntityUtils.isEnum(propertyType)) || // exclude enumeration properties / entities
-		(EntityUtils.isEntityType(propertyType) && Modifier.isAbstract(propertyType.getModifiers()) || // exclude properties / entities of entity type with 'abstract' modifier
-		(EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresent(KeyType.class, propertyType))) || // exclude properties / entities of entity type without KeyType annotation
-		(!isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType))) || // exclude key parts which type was in hierarchy
-		(!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName)) || // exclude invisible properties
-		(!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName)) || // exclude invisible properties
-		(!isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, root, PropertyTypeDeterminator.penultAndLast(property).getKey())) || // exclude property if it is a child of other AE crit-only property (collection)
-		(!isEntityItself && isExcludedImmutably(root, PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : "")); // exclude property if it is an ascender (any level) of already excluded property
+	return 	manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
+		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
+		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresent(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
+		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType) || // exclude "key" -- "key" is not of entity type
+		!isEntityItself && AbstractEntity.DESC.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresent(DescTitle.class, penultType) || // exclude "desc" -- no DescTitle annotation exists in direct owner of "desc"
+		!isEntityItself && !Finder.findFieldByName(root, property).isAnnotationPresent(IsProperty.class) || // exclude non-TG properties (not annotated by @IsProperty)
+		isEntityItself && !rootTypes().contains(propertyType) || // exclude entities of non-"root types"
+		EntityUtils.isEnum(propertyType) || // exclude enumeration properties / entities
+		EntityUtils.isEntityType(propertyType) && Modifier.isAbstract(propertyType.getModifiers()) || // exclude properties / entities of entity type with 'abstract' modifier
+		EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresent(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
+		!isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
+		!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName) || // exclude invisible properties
+		!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude invisible properties
+		!isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, root, PropertyTypeDeterminator.penultAndLast(property).getKey()) || // exclude property if it is a child of other AE crit-only property (collection)
+		!isEntityItself && isExcludedImmutably(root, PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : ""); // exclude property if it is an ascender (any level) of already excluded property
     }
 
     /**
@@ -446,7 +446,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    includedProperties.put(root, includedProps);
 	    logger().info("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + includedProps.size() + " included properties."); // => [" + includedProps + "]
 	}
-        return includedProperties.get(root);
+	return includedProperties.get(root);
     }
 
     /**
@@ -471,12 +471,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     @Override
     public boolean removePropertyListener(final IPropertyListener listener) {
-        return propertyListeners.remove(listener);
+	return propertyListeners.remove(listener);
     }
 
     @Override
     public List<String> includedProperties(final Class<?> root) {
-        return Collections.unmodifiableList(includedPropertiesMutable(root));
+	return Collections.unmodifiableList(includedPropertiesMutable(root));
     }
 
     /**
@@ -500,7 +500,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	    if (!EntityUtils.equalsEx(fromPath, toPath)) { // not the leaf is trying to be warmed up
 		final String part = "".equals(fromPath) ? toPath : toPath.replaceFirst(fromPath + ".", "");
 		final String part2 = part.indexOf(".") > 0 ? part.substring(0, part.indexOf(".")) : part;
-		final String part3 = "".equals(fromPath) ? part2 : (fromPath + "." + part2);
+		final String part3 = "".equals(fromPath) ? part2 : fromPath + "." + part2;
 		final boolean hasBeenWarmedUp = warmUp(root, part3, toPath);
 		return shouldBeLoaded || hasBeenWarmedUp;
 	    } else {
@@ -570,8 +570,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	@Override
 	public boolean isDisabledImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not ask a 'disabled' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return (disabledManuallyProperties.contains(key(root, property))) || // disable manually disabled properties
-	    		(isCheckedImmutably(root, property)); // the checked by default properties should be disabled (immutable checking)
+	    return disabledManuallyProperties.contains(key(root, property)) || // disable manually disabled properties
+		    isCheckedImmutably(root, property); // the checked by default properties should be disabled (immutable checking)
 	}
 
 	@Override
@@ -608,7 +608,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	@Override
 	public boolean isCheckedImmutably(final Class<?> root, final String property) {
 	    illegalExcludedProperties(dtr, root, property, "Could not ask a 'checked' state for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    return (checkedManuallyProperties.contains(key(root, property))); // check+disable manually checked properties
+	    return checkedManuallyProperties.contains(key(root, property)); // check+disable manually checked properties
 	}
 
 	@Override
@@ -628,30 +628,37 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	public int hashCode() {
 	    final int prime = 31;
 	    int result = 1;
-	    result = prime * result + ((checkedManuallyProperties == null) ? 0 : checkedManuallyProperties.hashCode());
-	    result = prime * result + ((disabledManuallyProperties == null) ? 0 : disabledManuallyProperties.hashCode());
+	    result = prime * result + (checkedManuallyProperties == null ? 0 : checkedManuallyProperties.hashCode());
+	    result = prime * result + (disabledManuallyProperties == null ? 0 : disabledManuallyProperties.hashCode());
 	    return result;
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
-	    if (this == obj)
+	    if (this == obj) {
 		return true;
-	    if (obj == null)
+	    }
+	    if (obj == null) {
 		return false;
-	    if (getClass() != obj.getClass())
+	    }
+	    if (getClass() != obj.getClass()) {
 		return false;
+	    }
 	    final AbstractTickRepresentation other = (AbstractTickRepresentation) obj;
 	    if (checkedManuallyProperties == null) {
-		if (other.checkedManuallyProperties != null)
+		if (other.checkedManuallyProperties != null) {
 		    return false;
-	    } else if (!checkedManuallyProperties.equals(other.checkedManuallyProperties))
+		}
+	    } else if (!checkedManuallyProperties.equals(other.checkedManuallyProperties)) {
 		return false;
+	    }
 	    if (disabledManuallyProperties == null) {
-		if (other.disabledManuallyProperties != null)
+		if (other.disabledManuallyProperties != null) {
 		    return false;
-	    } else if (!disabledManuallyProperties.equals(other.disabledManuallyProperties))
+		}
+	    } else if (!disabledManuallyProperties.equals(other.disabledManuallyProperties)) {
 		return false;
+	    }
 	    return true;
 	}
 
@@ -673,12 +680,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
     @Override
     public ITickRepresentation getSecondTick() {
-        return secondTick;
+	return secondTick;
     }
 
     @Override
     public Set<Class<?>> rootTypes() {
-        return rootTypes;
+	return rootTypes;
     }
 
     @Override
@@ -749,37 +756,37 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 	return  calculatedAnnotation != null && !Integer.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination()));
     }
 
-//    public static class Tuple <K, L, M, N> {
-//	private final K first;
-//	private final L second;
-//	private final M third;
-//	private final N fourth;
-//
-//	public Tuple(final K first, final L second, final M third, final N fourth) {
-//	    super();
-//	    this.first = first;
-//	    this.second = second;
-//	    this.third = third;
-//	    this.fourth = fourth;
-//	}
-//
-//	public K first() {
-//	    return first;
-//	}
-//
-//	public L second() {
-//	    return second;
-//	}
-//
-//	public M third() {
-//	    return third;
-//	}
-//
-//	public N fourth() {
-//	    return fourth;
-//	}
-//    }
-//
+    //    public static class Tuple <K, L, M, N> {
+    //	private final K first;
+    //	private final L second;
+    //	private final M third;
+    //	private final N fourth;
+    //
+    //	public Tuple(final K first, final L second, final M third, final N fourth) {
+    //	    super();
+    //	    this.first = first;
+    //	    this.second = second;
+    //	    this.third = third;
+    //	    this.fourth = fourth;
+    //	}
+    //
+    //	public K first() {
+    //	    return first;
+    //	}
+    //
+    //	public L second() {
+    //	    return second;
+    //	}
+    //
+    //	public M third() {
+    //	    return third;
+    //	}
+    //
+    //	public N fourth() {
+    //	    return fourth;
+    //	}
+    //    }
+    //
     /**
      * A specific Kryo serialiser for {@link AbstractDomainTreeRepresentation}.
      *
@@ -793,11 +800,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
 	@Override
 	public void write(final ByteBuffer buffer, final T representation) {
-	    writeValue(buffer, representation.rootTypes);
-	    writeValue(buffer, representation.manuallyExcludedProperties);
-	    writeValue(buffer, representation.firstTick);
-	    writeValue(buffer, representation.secondTick);
-	    writeValue(buffer, representation.includedProperties);
+	    writeValue(buffer, representation.getRootTypes());
+	    writeValue(buffer, representation.getManuallyExcludedProperties());
+	    writeValue(buffer, representation.getFirstTick());
+	    writeValue(buffer, representation.getSecondTick());
+	    writeValue(buffer, representation.getIncludedProperties());
 	}
     }
 
@@ -805,57 +812,82 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
-	result = prime * result + ((manuallyExcludedProperties == null) ? 0 : manuallyExcludedProperties.hashCode());
-	result = prime * result + ((firstTick == null) ? 0 : firstTick.hashCode());
-	result = prime * result + ((includedProperties == null) ? 0 : includedProperties.hashCode());
-	result = prime * result + ((rootTypes == null) ? 0 : rootTypes.hashCode());
-	result = prime * result + ((secondTick == null) ? 0 : secondTick.hashCode());
+	result = prime * result + (manuallyExcludedProperties == null ? 0 : manuallyExcludedProperties.hashCode());
+	result = prime * result + (firstTick == null ? 0 : firstTick.hashCode());
+	result = prime * result + (includedProperties == null ? 0 : includedProperties.hashCode());
+	result = prime * result + (rootTypes == null ? 0 : rootTypes.hashCode());
+	result = prime * result + (secondTick == null ? 0 : secondTick.hashCode());
 	return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj)
+	if (this == obj) {
 	    return true;
-	if (obj == null)
+	}
+	if (obj == null) {
 	    return false;
-	if (getClass() != obj.getClass())
+	}
+	if (getClass() != obj.getClass()) {
 	    return false;
+	}
 	final AbstractDomainTreeRepresentation other = (AbstractDomainTreeRepresentation) obj;
 	if (manuallyExcludedProperties == null) {
-	    if (other.manuallyExcludedProperties != null)
+	    if (other.manuallyExcludedProperties != null) {
 		return false;
-	} else if (!manuallyExcludedProperties.equals(other.manuallyExcludedProperties))
+	    }
+	} else if (!manuallyExcludedProperties.equals(other.manuallyExcludedProperties)) {
 	    return false;
+	}
 	if (firstTick == null) {
-	    if (other.firstTick != null)
+	    if (other.firstTick != null) {
 		return false;
-	} else if (!firstTick.equals(other.firstTick))
+	    }
+	} else if (!firstTick.equals(other.firstTick)) {
 	    return false;
+	}
 	if (includedProperties == null) {
-	    if (other.includedProperties != null)
+	    if (other.includedProperties != null) {
 		return false;
-	} else if (!includedProperties.equals(other.includedProperties))
+	    }
+	} else if (!includedProperties.equals(other.includedProperties)) {
 	    return false;
+	}
 	if (rootTypes == null) {
-	    if (other.rootTypes != null)
+	    if (other.rootTypes != null) {
 		return false;
-	} else if (!rootTypes.equals(other.rootTypes))
+	    }
+	} else if (!rootTypes.equals(other.rootTypes)) {
 	    return false;
+	}
 	if (secondTick == null) {
-	    if (other.secondTick != null)
+	    if (other.secondTick != null) {
 		return false;
-	} else if (!secondTick.equals(other.secondTick))
+	    }
+	} else if (!secondTick.equals(other.secondTick)) {
 	    return false;
+	}
 	return true;
     }
 
     /** Please do not use this directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
     protected EnhancementRootsMap<ListenedArrayList> includedProperties() {
-        return includedProperties;
+	return includedProperties;
     }
 
     public AbstractDomainTreeManager dtm() {
-        return dtm;
+	return dtm;
+    }
+
+    public EnhancementLinkedRootsSet getRootTypes() {
+	return rootTypes;
+    }
+
+    public EnhancementSet getManuallyExcludedProperties() {
+	return manuallyExcludedProperties;
+    }
+
+    public EnhancementRootsMap<ListenedArrayList> getIncludedProperties() {
+	return includedProperties;
     }
 }
