@@ -120,12 +120,13 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("leased").as("leased"). //
 		yield().prop("lastMeterReading").as("lastMeterReading"). //
 		yield().prop("calc0").as("calc0"). //
-		yield().prop("calc1").as("calc1"). //
+		yield().prop("sumOfPrices").as("sumOfPrices"). //
 		yield().prop("calc2").as("calc2"). //
 		yield().prop("calc3").as("calc3"). //
 		yield().prop("calc4").as("calc4"). //
 		yield().prop("calc5").as("calc5"). //
 		yield().prop("calc6").as("calc6"). //
+		yield().prop("lastFuelUsage").as("lastFuelUsage"). //
 		yield().prop("lastFuelUsageQty").as("lastFuelUsageQty"). //
 		yield().prop("constValueProp").as("constValueProp"). //
 		modelAsEntity(VEHICLE));
@@ -168,13 +169,14 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("active").as("active"). //
 		yield().prop("leased").as("leased"). //
 		yield().prop("lastMeterReading").as("lastMeterReading"). //
+		yield().prop("sumOfPrices").as("sumOfPrices"). //
 		yield().prop("calc0").as("calc0"). //
-		yield().prop("calc1").as("calc1"). //
 		yield().prop("calc2").as("calc2"). //
 		yield().prop("calc3").as("calc3"). //
 		yield().prop("calc4").as("calc4"). //
 		yield().prop("calc5").as("calc5"). //
 		yield().prop("calc6").as("calc6"). //
+		yield().prop("lastFuelUsage").as("lastFuelUsage"). //
 		yield().prop("lastFuelUsageQty").as("lastFuelUsageQty"). //
 		yield().prop("constValueProp").as("constValueProp"). //
 		modelAsEntity(VEHICLE));
@@ -391,12 +393,13 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("leased").as("leased"). //
 		yield().prop("lastMeterReading").as("lastMeterReading"). //
 		yield().prop("calc0").as("calc0"). //
-		yield().prop("calc1").as("calc1"). //
+		yield().prop("sumOfPrices").as("sumOfPrices"). //
 		yield().prop("calc2").as("calc2"). //
 		yield().prop("calc3").as("calc3"). //
 		yield().prop("calc4").as("calc4"). //
 		yield().prop("calc5").as("calc5"). //
 		yield().prop("calc6").as("calc6"). //
+		yield().prop("lastFuelUsage").as("lastFuelUsage"). //
 		yield().prop("lastFuelUsageQty").as("lastFuelUsageQty"). //
 		yield().prop("constValueProp").as("constValueProp"). //
 		modelAsEntity(VEHICLE);

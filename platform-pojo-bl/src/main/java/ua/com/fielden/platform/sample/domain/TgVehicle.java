@@ -34,17 +34,38 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 public class TgVehicle extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    private static final ExpressionModel calc1_ = expr().prop("price.amount").add().prop("purchasePrice.amount").model();
+    private static final ExpressionModel sumOfPrices_ = expr().prop("price.amount").add().prop("purchasePrice.amount").model();
     private static final ExpressionModel calc3_ = expr().model(select(TgFuelUsage.class).where().prop("date").lt().extProp("initDate").yield().sumOf().prop("qty").modelAsPrimitive()).model();
     private static final ExpressionModel calc4_ = expr().model(select(TgFuelUsage.class).where().prop("qty").lt().extProp("calc2").yield().sumOf().prop("qty").modelAsPrimitive()).model();
     private static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
-    private static final ExpressionModel calc5_ = expr().prop("calc1").add().prop("calc1").model();
-    private static final ExpressionModel calc6_ = expr().prop("calc1").div().prop("calc3").model();
+    private static final ExpressionModel calc5_ = expr().prop("sumOfPrices").mult().val(2).model();
+    private static final ExpressionModel calc6_ = expr().prop("sumOfPrices").div().prop("calc3").model();
     private static final ExpressionModel constValueProp_ = expr().val(10).add().val(20).model();
 
     private static final ExpressionModel lastFuelUsageQty_ = expr().model(
       select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(
       select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model();
+
+    private static final ExpressionModel lastFuelUsage_ = expr().model(
+	      select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(
+	      select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).model()).model();
+
+    @IsProperty
+    @Calculated
+    @Title(value = "Last fuel usage", desc = "Last fuel usage")
+    private TgFuelUsage lastFuelUsage;
+
+    @Observable
+    public TgVehicle setLastFuelUsage(final TgFuelUsage lastFuelUsage) {
+	this.lastFuelUsage = lastFuelUsage;
+	return this;
+    }
+
+    public TgFuelUsage getLastFuelUsage() {
+	return lastFuelUsage;
+    }
+
+
 
     @IsProperty
     @Calculated
@@ -93,17 +114,17 @@ public class TgVehicle extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated
-    @Title(value = "Calc1", desc = "Calculated property 1")
-    private BigDecimal calc1;
+    @Title(value = "Sum of prices", desc = "Sum of price.amount and purchasePrice.amount")
+    private BigDecimal sumOfPrices;
 
     @Observable
-    public TgVehicle setCalc1(final BigDecimal calc1) {
-	this.calc1 = calc1;
+    public TgVehicle setSumOfPrices(final BigDecimal sumOfPrices) {
+	this.sumOfPrices = sumOfPrices;
 	return this;
     }
 
-    public BigDecimal getCalc1() {
-	return calc1;
+    public BigDecimal getSumOfPrices() {
+	return sumOfPrices;
     }
 
     @IsProperty

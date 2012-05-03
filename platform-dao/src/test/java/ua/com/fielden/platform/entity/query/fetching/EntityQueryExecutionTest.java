@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
@@ -95,11 +96,11 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test0_1() {
-	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc1").ge().val("100").model();
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("sumOfPrices").ge().val("100").model();
 	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).build());
     	final TgVehicle vehicle = models.get(0);
 	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
-	assertTrue("Values of props calc1 [" + vehicle.getCalc1() + "] and calc0 [" + vehicle.getCalc0() + "] should be equal", vehicle.getCalc1().equals(vehicle.getCalc0()));
+	assertTrue("Values of props sumOfPrices [" + vehicle.getSumOfPrices() + "] and calc0 [" + vehicle.getCalc0() + "] should be equal", vehicle.getSumOfPrices().equals(vehicle.getCalc0()));
 	assertEquals("Incorrect key", new Integer(30), vehicle.getConstValueProp());
     }
 
@@ -142,7 +143,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test0_3() {
-	final EntityResultQueryModel<TgFuelUsage> model = select(TgFuelUsage.class).where().prop("vehicle.calc1").ge().val("100").model();
+	final EntityResultQueryModel<TgFuelUsage> model = select(TgFuelUsage.class).where().prop("vehicle.sumOfPrices").ge().val("100").model();
 	final List<TgFuelUsage> models = fuelUsageDao.getAllEntities(from(model).build());
     	final TgFuelUsage fuelUsage = models.get(0);
 	assertEquals("Incorrect key", "CAR2", fuelUsage.getVehicle().getKey());
@@ -488,6 +489,29 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final EntityAggregates value = aggregateDao.getAllEntities(from(model).with(fetchModel).build()).get(0);
 	assertEquals("Incorrect key", "orgunit5", ((TgOrgUnit5) value.get("station")).getKey());
     }
+
+    @Test
+    @Ignore
+    //FIXME
+    public void test_calculated_entity_props_in_condition() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).model();
+	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).build());
+	assertEquals("Incorrect count", 1, vehicles.size());
+	final TgVehicle vehicle = vehicles.get(0);
+	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+
+    }
+
+    @Test
+    public void test_calculated_entity_props_in_condition2() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).leftJoin(TgFuelUsage.class).as("lastFuelUsage").on().prop("lastFuelUsage").eq().prop("lastFuelUsage.id").where().prop("lastFuelUsage.qty").gt().val(100).model();
+	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).build());
+	assertEquals("Incorrect count", 1, vehicles.size());
+	final TgVehicle vehicle = vehicles.get(0);
+	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+
+    }
+
 
     @Test
     public void test_parameter_setting() {
