@@ -14,6 +14,8 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.EntityWithCollection;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
@@ -78,7 +80,7 @@ public class PropertyTypeDeterminatorTest {
 
     @Test
     public void testDeterminePropertyTypeWithCorrectTypeParameters() {
-	final Type type = PropertyTypeDeterminator.determinePropertyTypeWithCorrectTypeParameters(SecondLevelEntity.class, "dummyReferenceProperty");
+	Type type = PropertyTypeDeterminator.determinePropertyTypeWithCorrectTypeParameters(SecondLevelEntity.class, "dummyReferenceProperty");
 	assertEquals(Reference.class, ((ParameterizedType) type).getRawType());
 	assertEquals(1, ((ParameterizedType) type).getActualTypeArguments().length);
 	assertEquals(SecondLevelEntity.class, ((ParameterizedType) type).getActualTypeArguments()[0]);
@@ -90,6 +92,17 @@ public class PropertyTypeDeterminatorTest {
 	assertEquals(DynamicEntityKey.class, PropertyTypeDeterminator.determinePropertyTypeWithCorrectTypeParameters(SecondLevelEntity.class, "getKey()"));
 	assertEquals(DynamicEntityKey.class, PropertyTypeDeterminator.determinePropertyTypeWithCorrectTypeParameters(SecondLevelEntity.class, "propertyOfSelfType.getKey()"));
 	assertEquals(DynamicEntityKey.class, PropertyTypeDeterminator.determinePropertyTypeWithCorrectTypeParameters(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.getKey()"));
+
+
+	type = PropertyTypeDeterminator.determinePropertyTypeWithCorrectTypeParameters(Entity.class, "propertyDescriptor");
+	assertEquals(PropertyDescriptor.class, ((ParameterizedType) type).getRawType());
+	assertEquals(1, ((ParameterizedType) type).getActualTypeArguments().length);
+	assertEquals(Entity.class, ((ParameterizedType) type).getActualTypeArguments()[0]);
+
+	type = PropertyTypeDeterminator.determinePropertyTypeWithCorrectTypeParameters(Entity.class, "getPropertyDescriptor()");
+	assertEquals(PropertyDescriptor.class, ((ParameterizedType) type).getRawType());
+	assertEquals(1, ((ParameterizedType) type).getActualTypeArguments().length);
+	assertEquals(Entity.class, ((ParameterizedType) type).getActualTypeArguments()[0]);
     }
 
     @Test
@@ -241,5 +254,11 @@ public class PropertyTypeDeterminatorTest {
 	// TODO See java.lang.reflect.GenericArrayType interface and PropertyTypeDeterminator.classFrom() method for more details.
 	assertEquals(BigInteger.class, PropertyTypeDeterminator.determinePropertyType(GenericsPropertiesTestClass.class, "prop4"));
 	assertEquals(BigInteger.class, PropertyTypeDeterminator.determinePropertyType(GenericsPropertiesTestClass.class, "getProp4()"));
+    }
+
+    @Test
+    public void test_type_detrmination_for_property_descriptors(){
+	assertEquals(Entity.class, PropertyTypeDeterminator.determinePropertyType(Entity.class, "propertyDescriptor"));
+	assertEquals(Entity.class, PropertyTypeDeterminator.determinePropertyType(Entity.class, "getPropertyDescriptor()"));
     }
 }

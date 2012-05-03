@@ -25,6 +25,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -542,6 +543,15 @@ public class EntityUtils {
      */
     public static boolean isCollectional(final Class<?> type) {
         return Collection.class.isAssignableFrom(type);
+    }
+
+    /**
+     * Indicates whether type represents {@link PropertyDescriptor}-typed values.
+     *
+     * @return
+     */
+    public static boolean isPropertyDescriptor(final Class<?> type) {
+        return PropertyDescriptor.class.isAssignableFrom(type);
     }
 
     /**

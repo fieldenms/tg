@@ -7,11 +7,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -58,11 +58,11 @@ public class PropertyTypeDeterminator {
      *            -- the name of property or function (e.g. "isObservable()", "vehicle", "key", "getKey()") -- no dot-notation!
      * @param determineKeyType
      *            -- true => then correct "key"/"getKey()" class is returned, otherwise {@link Comparable} is returned.
-     * @param determineCollectionalElementType -- true => then correct element type of collectional property is returned, otherwise a type of collection (list, set etc.) is returned.
+     * @param determineElementType -- true => then correct element type of collectional/propertyDescriptor property is returned, otherwise a type of collection (list, set etc., or PropertyDescriptor itself) is returned.
      *
      * @return
      */
-    public static Class<?> determineClass(final Class<?> clazz, final String propertyOrFunction, final boolean determineKeyType, final boolean determineCollectionalElementType) {
+    public static Class<?> determineClass(final Class<?> clazz, final String propertyOrFunction, final boolean determineKeyType, final boolean determineElementType) {
 	if (StringUtils.isEmpty(propertyOrFunction)) {
 	    throw new IllegalArgumentException("Empty string should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
 	}
@@ -77,24 +77,22 @@ public class PropertyTypeDeterminator {
 		try {
 		    ////////////////// Parameterless Function return type determination //////////////////
 		    final Method method = Reflector.getMethod(clazz, propertyOrFunction.substring(0, propertyOrFunction.length() - 2));
-		    if (determineCollectionalElementType && Collection.class.isAssignableFrom(method.getReturnType())) { // collection property element type should be retrieved:
-			return determineCollectionElementClassForMethod(method);
-		    } else {
-			return method.getReturnType();
-		    }
+		    final Class<?> theType = method.getReturnType();
+		    return determineElementType && isParameterizedType(theType) ? determineElementClassForMethod(method) : theType; // property element type should be retrieved if determineElementType == true
 		} catch (final Exception e) {
 		    throw new IllegalArgumentException("No " + propertyOrFunction + " method in " + clazz.getSimpleName() + " class.");
 		}
 	    } else { // property -- assuming that "propertyOrFunction" is a name of a property (because its name contains no braces)
 		////////////////// Property class determination using property field. //////////////////
 		final Field field = Finder.getFieldByName(clazz, propertyOrFunction);
-		if (determineCollectionalElementType && Collection.class.isAssignableFrom(field.getType())) { // collection property element type should be retrieved:
-		    return determineCollectionElementClass(field);
-		} else {
-		    return field.getType();
-		}
+		final Class<?> theType = field.getType();
+		return determineElementType && isParameterizedType(theType) ? determineElementClass(field) : theType; // property element type should be retrieved if determineElementType == true
 	    }
 	}
+    }
+
+    private static boolean isParameterizedType(final Class<?> theType) {
+	return EntityUtils.isCollectional(theType) || EntityUtils.isPropertyDescriptor(theType);
     }
 
     /**
@@ -103,13 +101,20 @@ public class PropertyTypeDeterminator {
      * @param field
      * @return
      */
-    public static Class<?> determineCollectionElementClassForMethod(final Method method) {
-        if (Collection.class.isAssignableFrom(method.getReturnType())) {
-            final ParameterizedType paramType = (ParameterizedType) method.getGenericReturnType();
-            return classFrom(paramType.getActualTypeArguments()[0]);
-        } else {
-            return null;
-        }
+    private static Class<?> determineElementClassForMethod(final Method method) {
+	final ParameterizedType paramType = (ParameterizedType) method.getGenericReturnType();
+	return classFrom(paramType.getActualTypeArguments()[0]);
+    }
+
+    /**
+     * If field is collectional property then it returns type of collection elements.
+     *
+     * @param field
+     * @return
+     */
+    private static Class<?> determineElementClass(final Field field) {
+	final ParameterizedType paramType = (ParameterizedType) field.getGenericType();
+	return classFrom(paramType.getActualTypeArguments()[0]);
     }
 
     /**
@@ -164,22 +169,6 @@ public class PropertyTypeDeterminator {
 	    return null;
 	}
     }
-
-    /**
-     * If field is collectional property then it returns type of collection elements.
-     *
-     * @param field
-     * @return
-     */
-    public static Class<?> determineCollectionElementClass(final Field field) {
-        if (Collection.class.isAssignableFrom(field.getType())) {
-            final ParameterizedType paramType = (ParameterizedType) field.getGenericType();
-            return classFrom(paramType.getActualTypeArguments()[0]);
-        } else {
-            return null;
-        }
-    }
-
 
     /**
      * Determines a type ({@link Type}) of property/function defined by "dotNotationExp".
