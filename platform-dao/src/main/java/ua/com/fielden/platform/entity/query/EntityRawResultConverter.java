@@ -57,7 +57,7 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
 
 	for (final Map.Entry<String, EntityTree<? extends AbstractEntity<?>>> entityEntry : resultTree.getComposites().entrySet()) {
 	    final EntityContainer<? extends AbstractEntity<?>> entContainer = transformTuple(data, entityEntry.getValue(), shouldBeFetched);
-	    if (entContainer != null) {
+	    if (entContainer != null || (entContainer == null && EntityAggregates.class.equals(resultTree.getResultType()))) {
 		entCont.getEntities().put(entityEntry.getKey(), entContainer);
 	    }
 	}

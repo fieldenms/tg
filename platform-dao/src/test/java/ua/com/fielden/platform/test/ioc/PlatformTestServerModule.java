@@ -19,6 +19,11 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogieClass;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgMeterReading;
+import ua.com.fielden.platform.sample.domain.controller.ITgOrgUnit1;
+import ua.com.fielden.platform.sample.domain.controller.ITgOrgUnit2;
+import ua.com.fielden.platform.sample.domain.controller.ITgOrgUnit3;
+import ua.com.fielden.platform.sample.domain.controller.ITgOrgUnit4;
+import ua.com.fielden.platform.sample.domain.controller.ITgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.controller.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleFinDetails;
@@ -34,6 +39,11 @@ import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleMakeDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleModelDao;
 import ua.com.fielden.platform.test.entities.daos.TgBogieClassDao;
 import ua.com.fielden.platform.test.entities.daos.TgFuelUsageDao;
+import ua.com.fielden.platform.test.entities.daos.TgOrgUnit1Dao;
+import ua.com.fielden.platform.test.entities.daos.TgOrgUnit2Dao;
+import ua.com.fielden.platform.test.entities.daos.TgOrgUnit3Dao;
+import ua.com.fielden.platform.test.entities.daos.TgOrgUnit4Dao;
+import ua.com.fielden.platform.test.entities.daos.TgOrgUnit5Dao;
 import ua.com.fielden.platform.test.entities.daos.TgTimesheetDao;
 import ua.com.fielden.platform.test.entities.daos.TgVehicleDao;
 import ua.com.fielden.platform.test.entities.daos.TgVehicleFinDetailsDao;
@@ -83,6 +93,12 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 //	bind(IWorkorderDao.class).to(WorkorderDao.class);
 //	bind(IWorkorderableDao.class).to(WorkorderableDao.class);
 //	bind(IAdviceDao.class).to(AdviceDao.class);
+
+	bind(ITgOrgUnit1.class).to(TgOrgUnit1Dao.class);
+	bind(ITgOrgUnit2.class).to(TgOrgUnit2Dao.class);
+	bind(ITgOrgUnit3.class).to(TgOrgUnit3Dao.class);
+	bind(ITgOrgUnit4.class).to(TgOrgUnit4Dao.class);
+	bind(ITgOrgUnit5.class).to(TgOrgUnit5Dao.class);
 
 	bind(ITgBogieClass.class).to(TgBogieClassDao.class);
 	bind(ITgWagon.class).to(TgWagonDao.class);

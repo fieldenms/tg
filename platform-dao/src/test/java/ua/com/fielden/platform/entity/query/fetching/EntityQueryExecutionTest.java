@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
@@ -19,6 +18,10 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
@@ -479,12 +482,11 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
     public void test_aggregates_fetching_with_nullable_props() {
 	final AggregatedResultQueryModel model = select(TgFuelUsage.class).yield().prop("vehicle.station").as("station").yield().sumOf().prop("qty").as("totalQty").modelAsAggregate();
 	final fetch<EntityAggregates> fetchModel = fetch(EntityAggregates.class).with("station", fetch(TgOrgUnit5.class));
 	final EntityAggregates value = aggregateDao.getAllEntities(from(model).with(fetchModel).build()).get(0);
-	assertEquals("Incorrect key", "316", ((TgVehicleModel) value.get("station")).getKey());
+	assertEquals("Incorrect key", "orgunit5", ((TgOrgUnit5) value.get("station")).getKey());
     }
 
     @Test
@@ -594,6 +596,13 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Override
     protected void populateDomain() {
+
+	final TgOrgUnit1 orgUnit1 = save(new_(TgOrgUnit1.class, "orgunit1", "desc orgunit1"));
+	final TgOrgUnit2 orgUnit2 = save(new_(TgOrgUnit2.class, "orgunit2", "desc orgunit2").setParent(orgUnit1));
+	final TgOrgUnit3 orgUnit3 = save(new_(TgOrgUnit3.class, "orgunit3", "desc orgunit3").setParent(orgUnit2));
+	final TgOrgUnit4 orgUnit4 = save(new_(TgOrgUnit4.class, "orgunit4", "desc orgunit4").setParent(orgUnit3));
+	final TgOrgUnit5 orgUnit5 = save(new_(TgOrgUnit5.class, "orgunit5", "desc orgunit5").setParent(orgUnit4));
+
 	final TgVehicleMake merc = save(new_(TgVehicleMake.class, "MERC", "Mercedes"));
 	final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));
 	final TgVehicleMake bmw = save(new_(TgVehicleMake.class, "BMW", "BMW"));
@@ -608,7 +617,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final TgVehicleModel m322 = save(new_(TgVehicleModel.class, "322", "322").setMake(bmw));
 
 	final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").setInitDate(date("2001-01-01 00:00:00")).setModel(m318).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
-	final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")));
+	final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5));
 
 	save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
 
