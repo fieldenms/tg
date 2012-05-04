@@ -257,8 +257,8 @@ public class PropertyTypeDeterminatorTest {
     }
 
     @Test
-    public void test_type_detrmination_for_property_descriptors(){
-	assertEquals(Entity.class, PropertyTypeDeterminator.determinePropertyType(Entity.class, "propertyDescriptor"));
-	assertEquals(Entity.class, PropertyTypeDeterminator.determinePropertyType(Entity.class, "getPropertyDescriptor()"));
+    public void test_type_detrmination_for_property_descriptors() {
+	assertEquals(PropertyDescriptor.class, PropertyTypeDeterminator.determinePropertyType(Entity.class, "propertyDescriptor"));
+	assertEquals(PropertyDescriptor.class, PropertyTypeDeterminator.determinePropertyType(Entity.class, "getPropertyDescriptor()"));
     }
 }

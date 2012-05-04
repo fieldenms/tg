@@ -58,7 +58,7 @@ public class PropertyTypeDeterminator {
      *            -- the name of property or function (e.g. "isObservable()", "vehicle", "key", "getKey()") -- no dot-notation!
      * @param determineKeyType
      *            -- true => then correct "key"/"getKey()" class is returned, otherwise {@link Comparable} is returned.
-     * @param determineElementType -- true => then correct element type of collectional/propertyDescriptor property is returned, otherwise a type of collection (list, set etc., or PropertyDescriptor itself) is returned.
+     * @param determineElementType -- true => then correct element type of collectional property is returned, otherwise a type of collection (list, set etc.) is returned.
      *
      * @return
      */
@@ -92,7 +92,7 @@ public class PropertyTypeDeterminator {
     }
 
     private static boolean isParameterizedType(final Class<?> theType) {
-	return EntityUtils.isCollectional(theType) || EntityUtils.isPropertyDescriptor(theType);
+	return EntityUtils.isCollectional(theType) /* || EntityUtils.isPropertyDescriptor(theType) */;
     }
 
     /**
