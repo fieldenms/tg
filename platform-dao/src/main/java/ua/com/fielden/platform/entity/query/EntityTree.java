@@ -3,8 +3,8 @@ package ua.com.fielden.platform.entity.query;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 
 /**
  * Tree of entity's properties hierarchy and correspondent property value index in raw data array. Tree structure to contain either ENTITY.
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  */
 public class EntityTree<E extends AbstractEntity<?>> {
     private Class<E> resultType; // e.g. Vehicle
-    private SortedMap<PropertyPersistenceInfo, Integer/*position in raw result array*/> singles = new TreeMap<PropertyPersistenceInfo, Integer>();
+    private SortedMap<ResultQueryYieldDetails, Integer/*position in raw result array*/> singles = new TreeMap<ResultQueryYieldDetails, Integer>();
     private SortedMap<String /*composite value property name*/, ValueTree> compositeValues = new TreeMap<String, ValueTree>();
     private SortedMap<String /*composite property name*/, EntityTree<? extends AbstractEntity<?>>> composites = new TreeMap<String, EntityTree<? extends AbstractEntity<?>>>();
 
@@ -31,7 +31,7 @@ public class EntityTree<E extends AbstractEntity<?>> {
         return resultType;
     }
 
-    public SortedMap<PropertyPersistenceInfo, Integer> getSingles() {
+    public SortedMap<ResultQueryYieldDetails, Integer> getSingles() {
         return singles;
     }
 

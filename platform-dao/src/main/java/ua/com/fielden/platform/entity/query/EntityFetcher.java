@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.entity.query;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,12 +14,13 @@ import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
+import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 
 public class EntityFetcher {
@@ -89,7 +88,7 @@ public class EntityFetcher {
     protected SortedSet<HibernateScalar> getScalarFromValueTree(final ValueTree tree) {
 	final SortedSet<HibernateScalar> result = new TreeSet<HibernateScalar>();
 
-	for (final Map.Entry<PropertyPersistenceInfo, Integer> single : tree.getSingles().entrySet()) {
+	for (final Map.Entry<ResultQueryYieldDetails, Integer> single : tree.getSingles().entrySet()) {
 	    result.add(new HibernateScalar(single.getKey().getColumn(), single.getKey().getHibTypeAsType(), single.getValue()));
 	}
 
@@ -99,7 +98,7 @@ public class EntityFetcher {
     protected SortedSet<HibernateScalar> getScalarFromEntityTree(final EntityTree<? extends AbstractEntity<?>> tree) {
 	final SortedSet<HibernateScalar> result = new TreeSet<HibernateScalar>();
 
-	for (final Map.Entry<PropertyPersistenceInfo, Integer> single : tree.getSingles().entrySet()) {
+	for (final Map.Entry<ResultQueryYieldDetails, Integer> single : tree.getSingles().entrySet()) {
 	    result.add(new HibernateScalar(single.getKey().getColumn(), single.getKey().getHibTypeAsType(), single.getValue()));
 	}
 

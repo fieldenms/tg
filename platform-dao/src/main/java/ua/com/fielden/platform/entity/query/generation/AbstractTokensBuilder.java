@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.Functions;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
@@ -258,7 +257,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	}
     }
 
-    /** Ensures that values of special types such as {@link Class} or {@link PropertyDescriptor} are converted to String. */
+    /** Ensures that values of boolean types are converted properly. */
     private Object convertValue(final Object value) {
 	if (value instanceof Boolean) {
 	    return getQueryBuilder().getDomainPersistenceMetadataAnalyser().getDomainPersistenceMetadata().getBooleanValue((Boolean) value);

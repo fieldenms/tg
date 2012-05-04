@@ -6,9 +6,9 @@ import java.util.Map;
 
 import org.hibernate.type.Type;
 
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 
 public class EntityRawResultConverter<E extends AbstractEntity<?>> {
     private EntityFactory entityFactory;
@@ -47,7 +47,7 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
 
 	final EntityContainer<ET> entCont = new EntityContainer<ET>(resultTree.getResultType(), shouldBeFetched);
 
-	for (final Map.Entry<PropertyPersistenceInfo, Integer> primEntry : resultTree.getSingles().entrySet()) {
+	for (final Map.Entry<ResultQueryYieldDetails, Integer> primEntry : resultTree.getSingles().entrySet()) {
 	    entCont.getPrimitives().put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsType(), primEntry.getKey().getHibTypeAsUserType()));
 	}
 
@@ -69,7 +69,7 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
 
 	final ValueContainer entCont = new ValueContainer(resultTree.getHibType());
 
-	for (final Map.Entry<PropertyPersistenceInfo, Integer> primEntry : resultTree.getSingles().entrySet()) {
+	for (final Map.Entry<ResultQueryYieldDetails, Integer> primEntry : resultTree.getSingles().entrySet()) {
 	    entCont.primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsType(), primEntry.getKey().getHibTypeAsUserType()));
 	}
 

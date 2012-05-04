@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.query;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 
 /**
  * Tree of entity's properties hierarchy and correspondent property value index in raw data array. Tree structure to contain COMPOSITE VALUE OBJECT
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
  */
 public class ValueTree {
     private final ICompositeUserTypeInstantiate hibType; //e.g. ISimpleMoneyType
-    private SortedMap<PropertyPersistenceInfo, Integer/*position in raw result array*/> singles = new TreeMap<PropertyPersistenceInfo, Integer>();
+    private SortedMap<ResultQueryYieldDetails, Integer/*position in raw result array*/> singles = new TreeMap<ResultQueryYieldDetails, Integer>();
 
     protected ValueTree(final ICompositeUserTypeInstantiate hibType) {
 	this.hibType = hibType;
@@ -24,7 +24,7 @@ public class ValueTree {
 	return "\n\tResult type: " + hibType.getClass().getSimpleName() + "\n\tsingles: " + singles;
     }
 
-    public SortedMap<PropertyPersistenceInfo, Integer> getSingles() {
+    public SortedMap<ResultQueryYieldDetails, Integer> getSingles() {
         return singles;
     }
 
