@@ -19,7 +19,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.generation.DbVersion;
+import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
+import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
+import ua.com.fielden.platform.entity.query.generation.elements.Yield;
+import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 
@@ -53,9 +57,25 @@ public class EntityFetcher {
 	return getEntitiesOnPage(queryModel, null, null);
     }
 
+    private <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DbVersion dbVersion, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser, final IFilter filter, final String username) {
+	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, domainPersistenceMetadataAnalyser, filter, username);
+	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getParamValues());
+	final String sql = entQuery.sql();
+	return new QueryModelResult<T>(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
+    }
+
+    private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
+	final SortedSet<ResultQueryYieldDetails> result = new TreeSet<ResultQueryYieldDetails>();
+	for (final Yield yield : model.getYields().values()) {
+	    result.add(new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn()));
+	}
+	return result;
+    }
+
+
     protected <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainers(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) throws Exception {
 	final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser = new DomainPersistenceMetadataAnalyser(getDomainPersistenceMetadata());
-	final QueryModelResult<E> modelResult = new ModelResultProducer().getModelResult(queryModel, getDbVersion(), domainPersistenceMetadataAnalyser, getFilter(), getUsername());
+	final QueryModelResult<E> modelResult = getModelResult(queryModel, getDbVersion(), domainPersistenceMetadataAnalyser, getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
 	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetch(modelResult.getResultType());
 	return new EntityEnhancer<E>(this, domainPersistenceMetadataAnalyser).enhance(result, fetchModel);
