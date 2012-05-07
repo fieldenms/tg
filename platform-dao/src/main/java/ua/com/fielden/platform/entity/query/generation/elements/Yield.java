@@ -1,17 +1,16 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 
 public class Yield {
     private final ISingleOperand operand;
     private final String alias;
-    private PropertyPersistenceInfo info;
+    private ResultQueryYieldDetails info;
 
     public Yield(final ISingleOperand operand, final String alias) {
 	this(operand, alias, null);
     }
 
-    public Yield(final ISingleOperand operand, final String alias, final PropertyPersistenceInfo info) {
+    public Yield(final ISingleOperand operand, final String alias, final ResultQueryYieldDetails info) {
 	super();
 	this.operand = operand;
 	this.alias = alias;
@@ -73,11 +72,11 @@ public class Yield {
 	return true;
     }
 
-    public PropertyPersistenceInfo getInfo() {
+    public ResultQueryYieldDetails getInfo() {
 	return info;
     }
 
-    public void setInfo(final PropertyPersistenceInfo info) {
+    public void setInfo(final ResultQueryYieldDetails info) {
 	this.info = info;
     }
 }

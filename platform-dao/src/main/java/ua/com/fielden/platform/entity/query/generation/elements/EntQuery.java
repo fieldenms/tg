@@ -117,7 +117,8 @@ public class EntQuery implements ISingleOperand {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
 	    for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(type())) {
 		if (/*!ppi.isCompositeProperty() && */!ppi.isCollection()/* && !ppi.isCalculated()*/) {
-		    yields.getYields().put(ppi.getName(), new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName(), ppi));
+		    final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), ppi.getColumn());
+		    yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
 		}
 	    }
 	} else if (idPropYieldEnhancementRequired()) {
@@ -130,10 +131,7 @@ public class EntQuery implements ISingleOperand {
 	int yieldIndex = 0;
 	for (final Yield yield : yields.getYields().values()) {
 	    yieldIndex = yieldIndex + 1;
-	    final PropertyPersistenceInfo ppi = new PropertyPersistenceInfo.Builder(yield.getAlias(), determineYieldJavaType(yield), determineYieldNullability(yield)). //
-	    column("C" + yieldIndex). //
-	    hibType(determineYieldHibType(yield)). //
-	    build();
+	    final ResultQueryYieldDetails ppi = new ResultQueryYieldDetails(yield.getAlias(), determineYieldJavaType(yield), determineYieldHibType(yield), "C" + yieldIndex, determineYieldNullability(yield));
 	    yield.setInfo(ppi);
 	}
     }
@@ -224,7 +222,6 @@ public class EntQuery implements ISingleOperand {
 	}
 
 	return new Pair<List<EntProp>, List<EntProp>>(internal, external);
-
     }
 
     private void enhanceToFinalState(final EntQueryGenerator generator) {

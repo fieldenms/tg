@@ -10,7 +10,6 @@ import java.util.TreeMap;
 import org.hibernate.Hibernate;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -42,7 +41,7 @@ public abstract class AbstractSource implements ISource {
     /**
      * Map between source properties business names and persistence infos.
      */
-    protected Map<String, PropertyPersistenceInfo> sourceItems = new HashMap<String, PropertyPersistenceInfo>();
+    protected Map<String, ResultQueryYieldDetails> sourceItems = new HashMap<String, ResultQueryYieldDetails>();
 
     /**
      * Reference to mappings generator instance - used for acquiring properties persistence infos.
@@ -297,7 +296,18 @@ public abstract class AbstractSource implements ISource {
 
     protected Conditions joinCondition(final String leftProp, final String rightProp) {
 	//TODO provide proper hibType and holder while instantiating EntProps.
-	return new Conditions(new ComparisonTest(new EntProp(leftProp, Long.class, null, null/*TEMP*/), ComparisonOperator.EQ, new EntProp(rightProp, Long.class, null, null/*TEMP*/)));
+	//EntProp leftPropFound = null;
+	for (final PropResolutionInfo pri : referencingProps) {
+	    //if (leftProp.equals(pri.getEntProp().getName())) {
+		//System.out.println("--------------------- prop = " + pri.hashCode());
+	//	leftPropFound = pri.getEntProp();
+	//}
+	}
+	//System.out.println("--------------------- alias = " + alias);
+	//
+
+	//System.out.println("--------------------- leftProp = " + leftProp + "; rightProp = " + rightProp);
+	return new Conditions(new ComparisonTest(new EntProp(leftProp, Long.class, null, null)/*leftPropFound*/, ComparisonOperator.EQ, new EntProp(rightProp, Long.class, null, null/*TEMP*/)));
     }
 
     protected JoinType joinType(final boolean leftJoin) {

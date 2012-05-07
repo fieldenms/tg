@@ -24,7 +24,7 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public String toString() {
-        return name + "[" + (propType != null ? propType.getSimpleName() : "") + "]";
+        return name + " [" + (propType != null ? propType.getSimpleName() : "") + "]";
     }
 
     @Override

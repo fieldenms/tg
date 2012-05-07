@@ -8,18 +8,24 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetails> {
 
-    public ResultQueryYieldDetails(final String name, final Class javaType, final Object hibType, final String column) {
+    public ResultQueryYieldDetails(final String name, final Class javaType, final Object hibType, final String column, final boolean nullable) {
 	super();
 	this.name = name;
 	this.javaType = javaType;
 	this.hibType = hibType;
 	this.column = column;
+	this.nullable = nullable;
+    }
+
+    public ResultQueryYieldDetails(final String name, final Class javaType, final Object hibType, final String column) {
+	this(name, javaType, hibType, column, false);
     }
 
     private final String name;
     private final Class javaType;
     private final Object hibType;
     private final String column;
+    private final boolean nullable;
 
     public Type getHibTypeAsType() {
 	return hibType instanceof Type ? (Type) hibType : null;
@@ -74,5 +80,9 @@ public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetai
 
     public String getColumn() {
 	return column;
+    }
+
+    public boolean isNullable() {
+        return nullable;
     }
 }

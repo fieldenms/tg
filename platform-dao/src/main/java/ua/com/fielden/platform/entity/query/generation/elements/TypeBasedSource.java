@@ -31,8 +31,7 @@ public class TypeBasedSource extends AbstractSource {
     public void populateSourceItems(final boolean parentLeftJoinLegacy) {
 	for (final PropertyPersistenceInfo ppi : getDomainPersistenceMetadataAnalyser().getEntityPPIs(sourceType())) {
 		// if parent nullability = false then take the one from ppi, else true
-	    sourceItems.put(ppi.getName(), new PropertyPersistenceInfo.Builder(ppi.getName(), ppi.getJavaType(), ppi.isNullable() || parentLeftJoinLegacy). //
-		    hibType(ppi.getHibType()).column(ppi.getColumn()).build());
+	    sourceItems.put(ppi.getName(), new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), ppi.getColumn(), ppi.isNullable() || parentLeftJoinLegacy));
 	}
     }
 

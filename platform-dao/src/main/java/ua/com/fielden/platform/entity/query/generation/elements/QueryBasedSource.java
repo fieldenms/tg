@@ -26,8 +26,7 @@ public class QueryBasedSource extends AbstractSource {
     @Override
     public void populateSourceItems(final boolean parentLeftJoinLegacy) {
 	for (final Yield yield : model().getYields().getYields().values()) {
-	    sourceItems.put(yield.getAlias(), new PropertyPersistenceInfo.Builder(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().isNullable() || parentLeftJoinLegacy). //
-		    hibType(yield.getInfo().getHibType()).column(yield.getInfo().getColumn()).build());
+	    sourceItems.put(yield.getAlias(), new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), yield.getInfo().isNullable() || parentLeftJoinLegacy));
 	}
     }
 

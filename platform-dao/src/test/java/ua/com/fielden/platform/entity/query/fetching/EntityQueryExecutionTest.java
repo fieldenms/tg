@@ -62,6 +62,13 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
 
     @Test
+    public void test_sql_injection() {
+	final EntityResultQueryModel<TgVehicle> vehSubqry = select(TgVehicle.class).where().prop("desc").eq().val("x'; DROP TABLE members; --").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(vehSubqry).build());
+	assertEquals("Incorrect key", 0, models.size());
+    }
+
+    @Test
     public void test_yielding_const_value() {
 	final AggregatedResultQueryModel makeModel = select(TgVehicleMake.class).where().prop("key").eq().val("MERC").yield().prop("key").as("key").yield().val("MERC").as("konst").modelAsAggregate();
 	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(makeModel).build());
@@ -499,6 +506,18 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Incorrect count", 1, vehicles.size());
 	final TgVehicle vehicle = vehicles.get(0);
 	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+
+    }
+
+    @Test
+    @Ignore
+    //FIXME
+    public void test_calculated_entity_props_in_condition_() {
+	final AggregatedResultQueryModel qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).yield().countAll().as("aa").modelAsAggregate();
+	final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).build());
+	assertEquals("Incorrect count", 1, vehicles.size());
+//	final TgVehicle vehicle = vehicles.get(0);
+//	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
 
     }
 
