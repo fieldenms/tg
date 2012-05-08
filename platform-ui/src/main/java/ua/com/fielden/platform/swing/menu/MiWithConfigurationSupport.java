@@ -5,6 +5,9 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
+import ua.com.fielden.platform.swing.review.report.interfaces.ICentreConfigurationFactory;
+
+import com.google.inject.Injector;
 
 /**
  * The base class for implementing menu items, which require configuration support. Mainly used for representing entity center related menu items.
@@ -16,22 +19,11 @@ public class MiWithConfigurationSupport<T extends AbstractEntity<?>> extends MiW
 
     private static final long serialVersionUID = -4608369671314218118L;
 
-    //Tree menu item related properties.
-    private final TreeMenuWithTabs<?> treeMenu;
-
-    //Entity centre related properties.
-    private final Class<T> entityType;
-    private final IGlobalDomainTreeManager gdtm;
-    private final EntityFactory entityFactory;
-    private final IEntityMasterManager masterManager;
-    private final ICriteriaGenerator criteriaGenerator;
-
     /**
      * Creates new {@link MiWithConfigurationSupport} instance and generates all his children reports. Unlike parent report, Children reports can be remove.
      *
      * @param visibilityProvider
      * @param entityType
-     * @param name
      * @param gdtm
      * @param entityFactory
      * @param criteriaGenerator
@@ -40,47 +32,18 @@ public class MiWithConfigurationSupport<T extends AbstractEntity<?>> extends MiW
 	    //Menu item related parameters
 	    final String caption,//
 	    final String description,//
+	    final Injector injector,//
 	    final TreeMenuWithTabs<?> treeMenu,//
 	    //Entity centre related parameters
+	    final ICentreConfigurationFactory<T> centreFactory,//
 	    final ITreeMenuItemVisibilityProvider visibilityProvider,//
-	    final Class<T> entityType,//
-	    final String name,//
-	    final IGlobalDomainTreeManager gdtm,//
-	    final EntityFactory entityFactory,//
-	    final IEntityMasterManager masterManager,//
-	    final ICriteriaGenerator criteriaGenerator) {
-	super(new DynamicReportWrapper<T>(caption, description, treeMenu, entityType, name, gdtm, entityFactory, masterManager, criteriaGenerator), visibilityProvider);
-	this.treeMenu = treeMenu;
-	this.entityType = entityType;
-	this.gdtm = gdtm;
-	this.entityFactory = entityFactory;
-	this.masterManager = masterManager;
-	this.criteriaGenerator = criteriaGenerator;
+	    final Class<? extends MiWithConfigurationSupport<T>> menuItemType) {
+	super(new DynamicReportWrapper<T>(caption, description, treeMenu, null, menuItemType, centreFactory, //
+		injector.getInstance(IGlobalDomainTreeManager.class), //
+		injector.getInstance(EntityFactory.class), //
+		injector.getInstance(IEntityMasterManager.class), //
+		injector.getInstance(ICriteriaGenerator.class)), visibilityProvider);
 	scanForNonPrincipleReports();
-    }
-
-    public final Class<T> getEntityType() {
-	return entityType;
-    }
-
-    public final IGlobalDomainTreeManager getGlobalDomainTreeManager(){
-	return gdtm;
-    }
-
-    public EntityFactory getEntityFactory() {
-	return entityFactory;
-    }
-
-    public IEntityMasterManager getMasterManager() {
-	return masterManager;
-    }
-
-    public ICriteriaGenerator getCriteriaGenerator() {
-	return criteriaGenerator;
-    }
-
-    public TreeMenuWithTabs<?> getTreeMenu() {
-	return treeMenu;
     }
 
     /**

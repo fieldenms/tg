@@ -21,7 +21,6 @@ import ua.com.fielden.platform.utils.Pair;
  * 
  * @author Yura
  */
-@SuppressWarnings("unchecked")
 public abstract class SingleFrameApplication extends AbstractUiApplication {
 
     private final Map<Long, BaseFrame> entityMasters = new HashMap<Long, BaseFrame>();
@@ -37,11 +36,11 @@ public abstract class SingleFrameApplication extends AbstractUiApplication {
      * @param entityMasterFactory
      *            - factory, which should create master's title and panel. Will be used only when master is not visible and only during invocation of this method.
      */
-    public void showMasterFor(final AbstractEntity entity, final IEntityMasterFactory entityMasterFactory) {
+    public void showMasterFor(final AbstractEntity<?> entity, final IEntityMasterFactory entityMasterFactory) {
 	if (entityMasters.get(entity.getId()) == null) {
 	    final ICloseHook<BaseFrame> entityMastersHook = new ICloseHook<BaseFrame>() {
 		@Override
-		public void closed(BaseFrame frame) {
+		public void closed(final BaseFrame frame) {
 		    entityMasters.remove(entity.getId());
 		}
 	    };

@@ -10,16 +10,11 @@ import org.jfree.ui.RefineryUtilities;
 import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.client.ui.DefaultApplicationMainPanel;
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
-import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleECEEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.master.SimpleCompositeEntityMasterFactory;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.menu.UndockableTreeMenuWithTabs;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
@@ -35,10 +30,8 @@ import com.jidesoft.plaf.LookAndFeelFactory;
 
 public class EntityCentreExample extends AbstractUiApplication {
 
-    private EntityFactory entityFactory;
-    private ICriteriaGenerator criteriaGenerator;
-    private IEntityMasterManager masterManager;
-    private IGlobalDomainTreeManager gdtm;
+    private EntityCentreDataPopulationConfiguration config;
+
     private EntityMasterManager emm;
     private IUserProvider userProvider;
 
@@ -60,17 +53,13 @@ public class EntityCentreExample extends AbstractUiApplication {
 	props.put("hibernate.format_sql", "true");
 	props.put("hibernate.hbm2ddl.auto", "create");
 
-	final EntityCentreDataPopulationConfiguration config = new EntityCentreDataPopulationConfiguration();
+	config = new EntityCentreDataPopulationConfiguration();
 
 	final PopulateDbForEntityCentreExample popDb = new PopulateDbForEntityCentreExample(config);
 	popDb.createAndPopulate();
 
 	configEntityMasterManager(config.getInjector());
 
-	entityFactory = config.getEntityFactory();
-	masterManager = config.getInstance(IEntityMasterManager.class);
-	criteriaGenerator = config.getInstance(ICriteriaGenerator.class);
-	gdtm = config.getInstance(IGlobalDomainTreeManager.class);
 	emm = EntityCentreExampleMasterManagerConfig.createEntityMasterFactory(config.getInjector());
 	userProvider = config.getInstance(IUserProvider.class);
 
@@ -95,11 +84,8 @@ public class EntityCentreExample extends AbstractUiApplication {
 	final UndockableTreeMenuWithTabs<?> menu = new UndockableTreeMenuWithTabs(menuItems, new WordFilter(), userProvider, new BlockingIndefiniteProgressPane(mainApplicationFrame));
 
 	//Configuring menu
-	menuItems.addItem(new MiWithConfigurationSupport<SimpleECEEntity>("Simple entity", "Simple entity description",//
-		menu,new StubMenuItemVisibilityProvider(),SimpleECEEntity.class,null,gdtm,entityFactory,masterManager,criteriaGenerator));
-	menuItems.addItem(new MiWithConfigurationSupport<SimpleCompositeEntity>("Simple composite entity", //
-		"Simple composite entity description", menu, new StubMenuItemVisibilityProvider(),//
-		SimpleCompositeEntity.class,null,gdtm,entityFactory,masterManager,criteriaGenerator));
+	menuItems.addItem(new MiSimpleECEEntity(menu, config.getInjector(), new StubMenuItemVisibilityProvider()));
+	menuItems.addItem(new MiSimpleCompositeEntity(menu, config.getInjector(), new StubMenuItemVisibilityProvider()));
 	menu.getModel().getOriginModel().reload();
 
 

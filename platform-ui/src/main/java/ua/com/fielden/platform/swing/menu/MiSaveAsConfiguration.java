@@ -23,13 +23,14 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
 		//Tree menu item related parameters
 		name,//
 		parentItem.getView().getInfo(),//
-		parentItem.getTreeMenu(),//
-		parentItem.getEntityType(),//
+		parentItem.getView().getTreeMenu(),//
 		name,//
-		parentItem.getGlobalDomainTreeManager(),//
-		parentItem.getEntityFactory(),//
-		parentItem.getMasterManager(),//
-		parentItem.getCriteriaGenerator()));
+		parentItem.getView().getMenuItemClass(),//
+		parentItem.getView().getCentreFactory(),//
+		parentItem.getView().getGlobalDomainTreeManager(),//
+		parentItem.getView().getEntityFactory(),//
+		parentItem.getView().getMasterManager(),//
+		parentItem.getView().getCriteriaGenerator()));
 	//	getView().addCentreClosingListener(new CentreClosingListener() {
 	//
 	//	    @Override

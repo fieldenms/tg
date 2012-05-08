@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.menu.ITreeMenuItemVisibilityProvider;
 import ua.com.fielden.platform.swing.menu.MiGroupItem;
-import ua.com.fielden.platform.swing.menu.TreeMenuItem;
+import ua.com.fielden.platform.swing.menu.MiWithVisibilityProvider;
 import ua.com.fielden.platform.swing.menu.TreeMenuWithTabs;
 import ua.com.fielden.platform.swing.menu.api.ITreeMenuItemFactory;
 import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
@@ -27,25 +27,25 @@ public class DefaultTreeMenuItemFactory implements ITreeMenuItemFactory {
 
     private final Logger logger = Logger.getLogger(getClass());
 
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public TreeMenuItem create(final Class menuItemClass, final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ICenterConfigurationController centerController, final ITreeMenuItemVisibilityProvider visibilityProvider) {
+    public MiWithVisibilityProvider<?> create(final Class<?> clazz, final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ITreeMenuItemVisibilityProvider visibilityProvider) {
 	// try creating an item based on a constructor for non-group items
 	// if it fails then try group item option
 	try {
-	    final Constructor constructor = Reflector.getConstructorForClass(menuItemClass, TreeMenuWithTabs.class, Injector.class, ICenterConfigurationController.class, ITreeMenuItemVisibilityProvider.class);
-	    return (TreeMenuItem) constructor.newInstance(treeMenu, injector, centerController, visibilityProvider);
-	} catch (final NoSuchMethodException e) {
-	    try { // find default constructor:
-		final Constructor constructor = Reflector.getConstructorForClass(menuItemClass, ITreeMenuItemVisibilityProvider.class);
-		return (TreeMenuItem) constructor.newInstance(visibilityProvider);
-	    } catch (final Exception ex) {
-		logger.error(ex);
-		throw new IllegalArgumentException("Most likely this is an incorrect factory for this type of menu item.", ex);
-	    }
+	    final Constructor<?> constructor = Reflector.getConstructorForClass(clazz, TreeMenuWithTabs.class, Injector.class, ITreeMenuItemVisibilityProvider.class);
+	    return (MiWithVisibilityProvider<?>) constructor.newInstance(treeMenu, injector, visibilityProvider);
+	}catch(final Exception ex){
+	    logger.error(ex);
+	}
+	try {
+	    final Constructor<?> constructor = Reflector.getConstructorForClass(clazz, Injector.class, ITreeMenuItemVisibilityProvider.class);
+	    return (MiWithVisibilityProvider<?>) constructor.newInstance(injector, visibilityProvider);
+	}catch (final Exception ex) {
+	    logger.error(ex);
+	}
+	try { // find default constructor:
+	    final Constructor<?> constructor = Reflector.getConstructorForClass(clazz, ITreeMenuItemVisibilityProvider.class);
+	    return (MiWithVisibilityProvider<?>) constructor.newInstance(visibilityProvider);
 	} catch (final Exception ex) {
 	    logger.error(ex);
 	    throw new IllegalArgumentException("Most likely this is an incorrect factory for this type of menu item.", ex);

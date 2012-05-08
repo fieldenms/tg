@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.swing.menu.api;
 
 import ua.com.fielden.platform.swing.menu.ITreeMenuItemVisibilityProvider;
+import ua.com.fielden.platform.swing.menu.MiWithVisibilityProvider;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.menu.TreeMenuWithTabs;
-import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
 
 import com.google.inject.Injector;
 
@@ -18,17 +18,15 @@ public interface ITreeMenuItemFactory {
     /**
      * Creates a tree menu item from its class and appropriate configuration controller.
      *
-     * @param menuItemClass
-     *            -- a type of tree menu item
+     * @param clazz
+     *            -- a type for which menu item must be created.
      * @param treeMenu
      *            -- a tree menu to which an item will be added
      * @param injector
      *            -- for getting all other needed information
-     * @param centerController
-     *            -- an {@link ICenterConfigurationController} for new menu item
      * @param visibilityProvider -- a contract to identify menu item's visibility
      * @return
      */
-    TreeMenuItem<?> create(final Class menuItemClass, final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ICenterConfigurationController centerController, ITreeMenuItemVisibilityProvider visibilityProvider);
+    MiWithVisibilityProvider<?> create(final Class<?> clazz, final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ITreeMenuItemVisibilityProvider visibilityProvider);
 
 }

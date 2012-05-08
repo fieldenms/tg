@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.swing.menu.ITreeMenuItemVisibilityProvider;
+import ua.com.fielden.platform.swing.menu.MiWithVisibilityProvider;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.menu.TreeMenuWithTabs;
 import ua.com.fielden.platform.swing.menu.api.ITreeMenuFactory;
 import ua.com.fielden.platform.swing.menu.api.ITreeMenuItemFactory;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
 
 import com.google.inject.Injector;
 
@@ -22,13 +22,13 @@ import com.google.inject.Injector;
  */
 public class LocalTreeMenuFactory implements ITreeMenuFactory {
 
-    private final Map<Class<? extends TreeMenuItem>, ITreeMenuItemFactory> bindings = new HashMap<Class<? extends TreeMenuItem>, ITreeMenuItemFactory>();
-    private final TreeMenuItem root;
-    private final TreeMenuWithTabs menu;
+    private final Map<Class<?>, ITreeMenuItemFactory> bindings = new HashMap<Class<?>, ITreeMenuItemFactory>();
+    private final TreeMenuItem<?> root;
+    private final TreeMenuWithTabs<?> menu;
     private final Injector injector;
     private final ITreeMenuItemFactory defaultFactory;
 
-    public LocalTreeMenuFactory(final TreeMenuItem root, final TreeMenuWithTabs menu, final Injector injector) {
+    public LocalTreeMenuFactory(final TreeMenuItem<?> root, final TreeMenuWithTabs<?> menu, final Injector injector) {
 	this.root = root;
 	this.menu = menu;
 	this.injector = injector;
@@ -51,14 +51,13 @@ public class LocalTreeMenuFactory implements ITreeMenuFactory {
 	}
     }
 
-    private void traceTree(final MainMenuItem menuItem, final TreeMenuItem parent) {
+    private void traceTree(final MainMenuItem menuItem, final TreeMenuItem<?> parent) {
 	if (!menuItem.isPrincipal()) {
 	    return;
 	}
 	final ITreeMenuItemFactory factory = getFactory(menuItem.getMenuItemType());
-	final ICenterConfigurationController centerController = injector.getInstance(ICenterConfigurationController.class);
 	final ITreeMenuItemVisibilityProvider visibilityProvider = injector.getInstance(ITreeMenuItemVisibilityProvider.class);;
-	final TreeMenuItem node = factory.create(menuItem.getMenuItemType(), menu, injector, centerController, visibilityProvider);
+	final MiWithVisibilityProvider<?> node = factory.create(menuItem.getMenuItemType(), menu, injector, visibilityProvider);
 	parent.addItem(node);
 	for (final MainMenuItem child : menuItem.getChildren()) {
 	    traceTree(child, node);
