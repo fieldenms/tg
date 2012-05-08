@@ -26,6 +26,8 @@ import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -851,5 +853,41 @@ public class Finder {
 	} else {
 	    throw new IllegalArgumentException("Field " + dotNotationExp + " in type " + type.getName() + " is not a property.");
 	}
+    }
+
+    /**
+     * Determines whether specified property is one2many or one2one association.
+     * <p>
+     * The rule is following : if the type of property contains reference to the type of property parent then return <code>true</code>, otherwise <code>false</code>.
+     *
+     * @param type
+     * @param dotNotationExp
+     * @return
+     */
+    public static boolean isOne2Many_or_One2One_association(final Class<?> type, final String dotNotationExp) {
+	if (EntityAggregates.class.isAssignableFrom(type)) {
+	    return false;
+	}
+	final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
+	final Class<?> masterType = PropertyTypeDeterminator.transform(type, dotNotationExp).getKey();
+	return isOne2One_association(type, dotNotationExp) || EntityUtils.isEntityType(propertyType) && !masterType.equals(propertyType) && getFieldsOfSpecifiedType(propertyType, masterType).size() > 0;
+    }
+
+    /**
+     * Determines whether specified property is one2one association.
+     * <p>
+     * The rule is following : if the type of property contains the "key" of the type of property parent then return <code>true</code>, otherwise <code>false</code>.
+     *
+     * @param type
+     * @param dotNotationExp
+     * @return
+     */
+    public static boolean isOne2One_association(final Class<?> type, final String dotNotationExp) {
+	if (EntityAggregates.class.isAssignableFrom(type)) {
+	    return false;
+	}
+	final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
+	final Class<?> masterType = PropertyTypeDeterminator.transform(type, dotNotationExp).getKey();
+	return EntityUtils.isEntityType(propertyType) && PropertyTypeDeterminator.determinePropertyType(propertyType, AbstractEntity.KEY).equals(masterType);
     }
 }

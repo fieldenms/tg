@@ -21,6 +21,9 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
+import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity1;
+import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity2;
+import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity3;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
@@ -983,6 +986,42 @@ public class AbstractEntityTest {
 	    fail("There is no uncommonProperty in the UnionEntity");
 	} catch (final Exception e) {
 	    System.out.println(e.getMessage());
+	}
+    }
+
+    @Test
+    public void test_illegal_propertyDescriptor_property_definition_without_type_definition() {
+	try {
+	    factory.newEntity(MasterEntity2.class, "key", "description");
+	    fail("Should be failed.");
+	} catch (final IllegalStateException e) {
+	}
+    }
+
+    @Test
+    public void test_illegal_one2many_collectional_property_definition_without_type_definition() {
+	try {
+	    factory.newEntity(MasterEntity1.class, "key", "description");
+	    fail("Should be failed.");
+	} catch (final IllegalStateException e) {
+	}
+    }
+
+    @Test
+    public void test_illegal_one2many_collectional_property_definition_without_linkProperty_definition() {
+	try {
+	    factory.newEntity(MasterEntity3.class, "key", "description");
+	    fail("Should be failed.");
+	} catch (final IllegalStateException e) {
+	}
+    }
+
+    @Test
+    public void test_illegal_one2many_single_special_case_property_definition_without_linkProperty_definition() {
+	try {
+	    factory.newEntity(MasterEntity3.class, "key", "description");
+	    fail("Should be failed.");
+	} catch (final IllegalStateException e) {
 	}
     }
 }

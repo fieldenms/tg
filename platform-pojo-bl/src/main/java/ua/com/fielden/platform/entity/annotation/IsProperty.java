@@ -6,10 +6,47 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Should be used for indication of fields that are properties.
+ * Annotation that should be used for indication of fields that are properties and to indicate a kind of relation used by the property.
+ * <p>
+ * Currently following usage cases are supported: <br>
+ * 1. <b>ordinary property</b> -- just use @IsProperty:
  *
- * Setting {@link #value()} should be used to specify type of elements in case of annotating collectional property. This is required to cater for Java's approach not to store any
- * generic info for RTTI.
+ * <pre>
+ * ...
+ * &#64;IsProperty
+ * private BigDecimal bigDecimalProp;
+ * ...
+ * </pre>
+ *
+ * 2. <b>property descriptor</b> -- use @IsProperty with class parameter: <br>
+ *
+ * <pre>
+ * ...
+ * &#64;IsProperty(Rotable.class)
+ * private PropertyDescriptor&lt;Rotable&gt; rotablePropertyDescriptor;
+ * ...
+ * </pre>
+ *
+ * 3. <b>many-to-one</b> association -- just use @IsProperty:
+ *
+ * <pre>
+ * ...
+ * &#64;IsProperty
+ * private Make make;
+ * ...
+ * </pre>
+ *
+ * 4. <b>one-to-many</b> association -- use @IsProperty with class parameter and linkProperty:
+ *
+ * <pre>
+ * ...
+ * &#64;IsProperty(value = FuelUsage.class, linkProperty = "vehicle")
+ * private Set&lt;FuelUsage&gt; fuelUsages;
+ * ...
+ * </pre>
+ * In case of one-to-many association setting {@link #value()} should be used to specify type of collection elements (necessary).
+ * {@link #linkProperty()} is used to determine by which property of element type the association occurs (it can be omitted only in case
+ * when FuelUsage has a composite key with the same type as parent).
  * <p>
  * For example:
  *
@@ -57,30 +94,27 @@ public @interface IsProperty {
 
     /**
      * This setting makes sense only in case of collection property, which elements are entities. It should be used (and not missed!) to specify a property by which this
-     * collection is linked to some "parent" type. A parent can be direct or not, see examples below :
+     * collection is linked to some "parent" type. Only direct "parents" are allowed, see example below :
      *
      * <pre>
      * WorkOrder
      *   serviced : Vehicle
+     *     <i><b>IsProperty(value = WorkOrder.class, linkProperty = "backedUp")</b></i>
+     *     <i><b>backedUpWorkorders : WorkOrder []</b></i>
+     *       serviced : Vehicle
+     *       <i><b>backedUp : Vehicle</b> (the same as <b>WorkOrder->serviced</b> and will be deleted)</i>
+     *       movedUp  : Vehicle
+     *     <i><b>IsProperty(value = WorkOrder.class, linkProperty = "backedUp")</b></i>
+     *     <i><b>lastBackedUpWorkorder : WorkOrder</b></i>
+     *       serviced : Vehicle
+     *       <i><b>backedUp : Vehicle</b> (the same as <b>WorkOrder->serviced</b> and will be deleted)</i>
+     *       movedUp  : Vehicle
      *     orderDetails : VehicleOrderDetails
      *       key : Vehicle <i>(the same as <b>WorkOrder->serviced</b> and will be deleted)</i>
-     *       <i><b>IsProperty(value = WorkOrder.class, linkProperty = "backedUp")</b></i>
-     *       <i><b>backedUpWorkorders : WorkOrder []</b></i>
-     *         serviced : Vehicle
-     *         <i><b>backedUp : Vehicle</b> (the same as <b>WorkOrder->serviced</b> and will be deleted)</i>
-     *         movedUp  : Vehicle
      *   backedUp : Vehicle
      *     ...
      *   serviced : Vehicle
      *     ...
-     * =================================================================================================
-     * VehicleOrderDetails
-     *   key : Vehicle
-     *   <i><b>IsProperty(value = WorkOrder.class, linkProperty = "backedUp")</b></i>
-     *   <i><b>backedUpWorkorders : WorkOrder []</b></i>
-     *     serviced : Vehicle
-     *     <i><b>backedUp : Vehicle</b> (the same as <b>VehicleOrderDetails->key</b> and will be deleted)</i>
-     *     movedUp  : Vehicle
      * </pre>
      *
      * @return

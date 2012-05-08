@@ -270,11 +270,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     public boolean isExcludedImmutably(final Class<?> root, final String property) {
 	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 	final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(root, property);
+	final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
 	final Class<?> penultType = transformed.getKey();
 	final String lastPropertyName = transformed.getValue();
 	final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determineClass(penultType, lastPropertyName, true, true);
 	final Field field = isEntityItself ? null : Finder.getFieldByName(penultType, lastPropertyName);
-
 	return 	manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresent(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
@@ -285,11 +285,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		EntityUtils.isEnum(propertyType) || // exclude enumeration properties / entities
 		EntityUtils.isEntityType(propertyType) && Modifier.isAbstract(propertyType.getModifiers()) || // exclude properties / entities of entity type with 'abstract' modifier
 		EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresent(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
-		!isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
 		!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName) || // exclude invisible properties
 		!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude invisible properties
-		!isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, root, PropertyTypeDeterminator.penultAndLast(property).getKey()) || // exclude property if it is a child of other AE crit-only property (collection)
-		!isEntityItself && isExcludedImmutably(root, PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : ""); // exclude property if it is an ascender (any level) of already excluded property
+		!isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
+		// TODO !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(root, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) root, penultPropertyName)) || // exclude link properties in one2many and one2one associations
+		!isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, root, penultPropertyName) || // exclude property if it is a child of other AE crit-only property (collection)
+		!isEntityItself && isExcludedImmutably(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : ""); // exclude property if it is an ascender (any level) of already excluded property
     }
 
     /**

@@ -2,7 +2,6 @@ package ua.com.fielden.platform.swing.review;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -68,8 +67,8 @@ public class DynamicQueryBuilder {
 	private final boolean critOnly, single;
 	private final Class<?> type;
 	/** The type of collection which contain this property. If this property is not in collection hierarchy it should be null. */
-	private final Class<? extends AbstractEntity> collectionContainerType, collectionContainerParentType;
-	private final String propertyNameOfCollectionParent;
+	private final Class<? extends AbstractEntity<?>> collectionContainerType, collectionContainerParentType;
+	private final String propertyNameOfCollectionParent, collectionNameInItsParentTypeContext;
 	private final Boolean inNestedCollections;
 
 	public QueryProperty(final Class<?> entityClass, final String propertyName, final String alias) {
@@ -83,7 +82,7 @@ public class DynamicQueryBuilder {
 	    }
 	    this.type = analyser.getPropertyType();
 
-	    final Pair<Class<? extends AbstractEntity>, Class<? extends AbstractEntity>> collectionalTypes = analyser.getCollectionContainerAndItsParentType();
+	    final Pair<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> collectionalTypes = analyser.getCollectionContainerAndItsParentType();
 	    final String propertyNameWithinCollectionalHierarchy;
 	    if (collectionalTypes != null) {
 		this.collectionContainerType = collectionalTypes.getKey();
@@ -93,6 +92,7 @@ public class DynamicQueryBuilder {
 		    throw new IllegalArgumentException("The property [" + this.propertyName + "] is a collection itself. It could not be used for quering.");
 		}
 		this.propertyNameOfCollectionParent = analyser.getNamesWithinCollectionalHierarchy().getValue();
+		this.collectionNameInItsParentTypeContext = analyser.getCollectionNameInItsParentTypeContext();
 		this.inNestedCollections = analyser.isInNestedCollections();
 		if (this.isInNestedCollections()) {
 		    throw new IllegalArgumentException("Properties in nested collections are not supported yet. Please remove property [" + this.propertyName + "] from criteria.");
@@ -102,6 +102,7 @@ public class DynamicQueryBuilder {
 		this.collectionContainerParentType = null;
 		propertyNameWithinCollectionalHierarchy = null;
 		this.propertyNameOfCollectionParent = null;
+		this.collectionNameInItsParentTypeContext = null;
 		this.inNestedCollections = null;
 	    }
 	    this.conditionBuildingName = isWithinCollectionalHierarchy() ? propertyNameWithinCollectionalHierarchy : (alias + "." + analyser.getCriteriaFullName());
@@ -245,7 +246,7 @@ public class DynamicQueryBuilder {
 	 *
 	 * @return
 	 */
-	public Class<? extends AbstractEntity> getCollectionContainerType() {
+	public Class<? extends AbstractEntity<?>> getCollectionContainerType() {
 	    return collectionContainerType;
 	}
 
@@ -254,7 +255,7 @@ public class DynamicQueryBuilder {
 	 *
 	 * @return
 	 */
-	public Class<? extends AbstractEntity> getCollectionContainerParentType() {
+	public Class<? extends AbstractEntity<?>> getCollectionContainerParentType() {
 	    return collectionContainerParentType;
 	}
 
@@ -274,6 +275,15 @@ public class DynamicQueryBuilder {
 	 */
 	public String getPropertyNameOfCollectionParent() {
 	    return propertyNameOfCollectionParent;
+	}
+
+	/**
+	 * The name of collection, which contains this query property, in context of collection parent type.
+	 *
+	 * @return
+	 */
+	public String getCollectionNameInItsParentTypeContext() {
+	    return collectionNameInItsParentTypeContext;
 	}
 
 	/**
@@ -332,13 +342,13 @@ public class DynamicQueryBuilder {
 	ICompoundCondition1 compoundConditionAtGroup1 = null;
 
 	// create empty map consisting of [collectionType => (ANY properties, ALL properties)] entries, which forms exactly one entry for one collectional hierarchy
-	final Map<Class<? extends AbstractEntity>, Pair<List<QueryProperty>, List<QueryProperty>>> collectionalProperties = new LinkedHashMap<Class<? extends AbstractEntity>, Pair<List<QueryProperty>, List<QueryProperty>>>();
+	final Map<Class<? extends AbstractEntity<?>>, Pair<List<QueryProperty>, List<QueryProperty>>> collectionalProperties = new LinkedHashMap<Class<? extends AbstractEntity<?>>, Pair<List<QueryProperty>, List<QueryProperty>>>();
 
 	// traverse all properties to enhance resulting query
 	for (final QueryProperty property : properties) {
 	    if (!property.shouldBeIgnored()) {
 		if (property.isWithinCollectionalHierarchy()) { // the property is in collection hierarchy. So, separate collection sub-model (EXISTS or NOT_EXISTS) should be enhanced by this property's criteria.
-		    final Class<? extends AbstractEntity> ccType = property.getCollectionContainerType();
+		    final Class<? extends AbstractEntity<?>> ccType = property.getCollectionContainerType();
 		    if (!collectionalProperties.containsKey(ccType)) {
 			collectionalProperties.put(ccType, new Pair<List<QueryProperty>, List<QueryProperty>>(new ArrayList<QueryProperty>(), new ArrayList<QueryProperty>()));
 		    }
@@ -353,7 +363,7 @@ public class DynamicQueryBuilder {
 	    }
 	}
 	// enhance main model with collectional hierarchies models
-	for (final Entry<Class<? extends AbstractEntity>, Pair<List<QueryProperty>, List<QueryProperty>>> entry : collectionalProperties.entrySet()) {
+	for (final Entry<Class<? extends AbstractEntity<?>>, Pair<List<QueryProperty>, List<QueryProperty>>> entry : collectionalProperties.entrySet()) {
 	    compoundConditionAtGroup1 = buildCollection(getWhereAtGroup1(compoundConditionAtGroup1, whereAtGroup1), entry, alias);
 	}
 	return compoundConditionAtGroup1 == null ? query : compoundConditionAtGroup1.end();
@@ -424,7 +434,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Creates new array based on the passed list of string. This method also changes * to % for every element of the passed list.
-     * 
+     *
      * @param criteria
      * @return
      */
@@ -455,13 +465,14 @@ public class DynamicQueryBuilder {
      * @param entry -- an entry consisting of [collectionType => (anyProperties, allProperties)] which forms exactly one collectional hierarchy
      * @return
      */
-    private static ICompoundCondition1 buildCollection(final IWhere1 whereAtGroup1, final Entry<Class<? extends AbstractEntity>, Pair<List<QueryProperty>, List<QueryProperty>>> entry, final String alias) {
+    private static ICompoundCondition1 buildCollection(final IWhere1 whereAtGroup1, final Entry<Class<? extends AbstractEntity<?>>, Pair<List<QueryProperty>, List<QueryProperty>>> entry, final String alias) {
 	// e.g. : "WorkOrder.vehicle.statusChanges.[vehicleKey/status.active]". Then:
 	// property.getCollectionContainerType() == VehicleStatusChange.class
 	// property.getCollectionContainerParentType() == Vehicle.class
+	// property.getCollectionNameInItsParentTypeContext() == statusChanges
 	// nameOfCollectionController == "vehicleKey"
 	// property.getPropertyNameOfCollectionParent() == "vehicle"
-	final Class<? extends AbstractEntity> collectionContainerType = entry.getKey();
+	final Class<? extends AbstractEntity<?>> collectionContainerType = entry.getKey();
 	final List<QueryProperty> anyProperties = entry.getValue().getKey();
 	final List<QueryProperty> allProperties = entry.getValue().getValue();
 
@@ -471,7 +482,7 @@ public class DynamicQueryBuilder {
 	    throw new RuntimeException("Collection of type " + collectionContainerType + " ANY+ALL properties should not be empty.");
 	}
 	final QueryProperty p = any_and_all_properties.get(0);
-	final String nameOfCollectionController = getNameOfCollectionController(collectionContainerType, p.getCollectionContainerParentType());
+	final String nameOfCollectionController = getNameOfCollectionController(p.getCollectionContainerParentType(), p.getCollectionNameInItsParentTypeContext());
 	final String mainModelProperty = p.getPropertyNameOfCollectionParent().isEmpty() ? alias : (alias + "." + p.getPropertyNameOfCollectionParent());
 
 	final IWhere2 collectionBegin = whereAtGroup1.begin();
@@ -522,27 +533,20 @@ public class DynamicQueryBuilder {
      * @param mainModelProperty
      * @return
      */
-    private static ICompoundCondition0 createSubmodel(final Class<? extends AbstractEntity> collectionContainerType, final String nameOfCollectionController, final String mainModelProperty) {
+    private static ICompoundCondition0 createSubmodel(final Class<? extends AbstractEntity<?>> collectionContainerType, final String nameOfCollectionController, final String mainModelProperty) {
 	return select(collectionContainerType).where().prop(nameOfCollectionController).eq().prop(mainModelProperty);
     }
 
     /**
      * Returns the name of "keyMember" which defines "collectivity" for "collectionElementType".
      *
-     * @param collectionElementType
      * @param collectionOwnerType
+     * @param collectionName
      * @return
      */
-    private static String getNameOfCollectionController(final Class collectionElementType, final Class collectionOwnerType) {
-	final List<Field> keyFields = Finder.getKeyMembers(collectionElementType);
-	for (final Field field : keyFields) {
-	    if (field.getType().equals(collectionOwnerType)) {
-		return field.getName();
-	    }
-	}
-	throw new RuntimeException("There is no key member of type [" + collectionOwnerType + "] in type [" + collectionElementType + "].");
+    private static String getNameOfCollectionController(final Class<? extends AbstractEntity<?>> collectionOwnerType, final String collectionName) {
+	return Finder.findLinkProperty(collectionOwnerType, collectionName);
     }
-
 
     /**
      * Helper method to form IWhereAtGroup1 instance from "compoundConditionAtGroup1" and "whereAtGroup1".

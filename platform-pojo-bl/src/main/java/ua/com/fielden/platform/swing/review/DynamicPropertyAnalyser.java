@@ -48,14 +48,30 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
      *
      * @return
      */
-    @SuppressWarnings("rawtypes")
-    public Pair<Class<? extends AbstractEntity>, Class<? extends AbstractEntity>> getCollectionContainerAndItsParentType() {
+    public Pair<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> getCollectionContainerAndItsParentType() {
 	if (propertyFields == null) {
 	    return null;
 	}
 	for (int i = 0; i < propertyFields.length; i++) {
 	    if (Collection.class.isAssignableFrom(propertyFields[i].getType())) {
-		return new Pair<Class<? extends AbstractEntity>, Class<? extends AbstractEntity>>((Class<? extends AbstractEntity>) propertyTypes[i + 1], (Class<? extends AbstractEntity>) propertyTypes[i]);
+		return new Pair<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>>((Class<? extends AbstractEntity<?>>) propertyTypes[i + 1], (Class<? extends AbstractEntity<?>>) propertyTypes[i]);
+	    }
+	}
+	return null;
+    }
+
+    /**
+     * The name of the high level collection which contain this property in context of collection parent. If this property is not in collection hierarchy it should be null.
+     *
+     * @return
+     */
+    public String getCollectionNameInItsParentTypeContext() {
+	if (propertyFields == null) {
+	    return null;
+	}
+	for (int i = 0; i < propertyFields.length; i++) {
+	    if (Collection.class.isAssignableFrom(propertyFields[i].getType())) {
+		return propertyFields[i].getName();
 	    }
 	}
 	return null;

@@ -595,15 +595,26 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		//logger.debug("IS_KEY (" + field.getName() + ") : " + isKey);
 		final boolean isCollectional = Collection.class.isAssignableFrom(type);
 		//logger.debug("IS_COLLECTIONAL (" + field.getName() + ") : " + isCollectional);
-		final Class<?> propertyAnnotationType = field.getAnnotation(IsProperty.class).value();
-		final boolean isUpperCase = field.isAnnotationPresent(UpperCase.class);
-		//logger.debug("IS_UPPERCASE (" + field.getName() + ") : " + isUpperCase);
+
+		final IsProperty isPropertyAnnotation = field.getAnnotation(IsProperty.class);
+		final Class<?> propertyAnnotationType = isPropertyAnnotation.value();
+
 		// perform some early runtime validation whether property was defined correctly
 		if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
-		    final String error = "Property " + field.getName() + " in " + getType()
-			    + " is collectional, but has missing collectional type, which should be specified as part of annotation IsProperty.";
+		    final String error = "Property " + field.getName() + " in " + getType() + " is collectional (or property descriptor), but has missing type argument, which should be specified as part of annotation IsProperty.";
 		    logger.error(error);
 		    throw new IllegalStateException(error);
+		}
+
+		final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) getType();
+		if (Finder.isOne2Many_or_One2One_association(entityType, field.getName())) {
+		    try {
+			Finder.findLinkProperty(entityType, field.getName());
+		    } catch (final IllegalArgumentException e) {
+			final String error = "Property " + field.getName() + " in " + getType() + " has one2many or one2one association, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation. [" + e.getMessage() + "] ";
+			logger.error(error);
+			throw new IllegalStateException(error);
+		    }
 		}
 
 		// if setter is annotated then try to instantiate specified validator
@@ -615,6 +626,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		final IAfterChangeEventHandler definer = metaPropertyFactory.create(this, field);
 		// create meta-property
 		//logger.debug("Creating meta-property for " + field.getName());
+		final boolean isUpperCase = field.isAnnotationPresent(UpperCase.class);
+		//logger.debug("IS_UPPERCASE (" + field.getName() + ") : " + isUpperCase);
 		final MetaProperty metaProperty = new MetaProperty(this, field, type, isKey, isCollectional, propertyAnnotationType, field.isAnnotationPresent(Calculated.class), isUpperCase, declatedValidationAnnotations, validators, definer, extractDependentProperties(field, fields));
 		// define meta-property properties used most commonly for UI construction: required, editable, title and desc //
 		//logger.debug("Initialising meta-property for " + field.getName());
