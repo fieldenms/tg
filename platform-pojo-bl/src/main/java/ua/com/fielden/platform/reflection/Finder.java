@@ -357,25 +357,6 @@ public class Finder {
 	return value;
     }
 
-    //    /**
-    //     * An alternative implementation to the above method using tail recursion calls instead of iteration.
-    //     *
-    //     * @param instance
-    //     * @param dotNotationExp
-    //     * @return
-    //     * @throws Exception
-    //     */
-    //    public static Object findFieldValueByNameRec(final Object instance, final String dotNotationExp) throws Exception {
-    //        return instance == null ? null : // if instance if null then return null
-    //        	// -- cannot continue
-    //        	!dotNotationExp.contains(".") ? // if the dot notation is a
-    //        	// simple property name then
-    //        	// return its value
-    //        	getPropertyValue(instance, dotNotationExp)
-    //        		: // otherwise recursively traverse the dot expression
-    //        		findFieldValueByNameRec(getPropertyValue(instance, dotNotationExp.substring(0, dotNotationExp.indexOf("."))), dotNotationExp.substring(dotNotationExp.indexOf(".") + 1));
-    //    }
-
     /**
      * Searches through the owner type hierarchy for all fields of the type assignable to the provided field type.
      *
@@ -822,5 +803,53 @@ public class Finder {
 	    }
 	}
 	return result;
+    }
+
+    /**
+     * Looks for the value of <code>linkProperty</code> for the specified property in a form of dot notation expression starting with a given type.
+     * The value of <code>linkProperty</code> is either read from property annotation or dynamically determined based on its type and key composition.
+     * <p>
+     * In case <code>linkProperty</code> could not be either read or determined, a runtime exception is thrown.
+     * <p>
+     * This method covers situation of all possible entity associations, including One-to-One where <code>linkProperty</code> is not present.
+     * @param type
+     * @param dotNotationExp
+     * @return
+     */
+    public static String findLinkProperty(final Class<? extends AbstractEntity<?>> type, final String dotNotationExp) {
+	final Field field = Finder.findFieldByName(type, dotNotationExp);
+	if (field.isAnnotationPresent(IsProperty.class)) {
+	    final IsProperty propAnnotation = field.getAnnotation(IsProperty.class);
+	    // check if meta-data is present and if so use it
+	    if (!IsProperty.stubForLinkProperty.equals(propAnnotation.linkProperty())) {
+		return propAnnotation.linkProperty();
+	    }
+	    // otherwise try to determine link property dynamically based on property type and composite key
+	    final Class<?> masterType = field.getDeclaringClass();
+	    final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
+	    if (AbstractEntity.class.isAssignableFrom(propType)) {
+		final List<Field> keyMembers = getKeyMembers(propType); // returns exactly one element in case of One-to-One association, or multiple in case of One-to-Many associaton
+		// there should be exactly one key member of the
+		String linkProperty = null;
+		int count = 0;
+		for (final Field keyMember: keyMembers) {
+		    if (keyMember.getType().isAssignableFrom(masterType)) {
+			linkProperty = keyMember.getName();
+			count++;
+		    }
+		}
+		// let's see a key member was found, and if not try to report a pricise cause of the problem
+		if (count == 0) {
+		    throw new IllegalArgumentException("Field " + dotNotationExp + " in type " + type.getName() + " does not have an appropriate key member of type " + masterType.getName() + ".");
+		} else if (count > 1) {
+		    throw new IllegalArgumentException("Field " + dotNotationExp + " in type " + type.getName() + " has more than one key of type " + masterType.getName() + ".");
+		}
+		return linkProperty;
+	    } else {
+		throw new IllegalArgumentException("Field " + dotNotationExp + " in type " + type.getName() + " is not an entity (" + propType.getName() + ").");
+	    }
+	} else {
+	    throw new IllegalArgumentException("Field " + dotNotationExp + " in type " + type.getName() + " is not a property.");
+	}
     }
 }
