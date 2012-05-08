@@ -12,6 +12,7 @@ import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.StandAloneExpressionBuilder;
@@ -21,8 +22,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
-
-    private static String id = "id";
 
     private final Sources sources;
     private final Conditions conditions;
@@ -110,7 +109,7 @@ public class EntQuery implements ISingleOperand {
     private void enhanceYieldsModel() {
 	// enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
 	if (idAliasEnhancementRequired()) {
-	    final Yield idModel = new Yield(yields.getYields().values().iterator().next().getOperand(), id);
+	    final Yield idModel = new Yield(yields.getYields().values().iterator().next().getOperand(), AbstractEntity.ID);
 	    yields.getYields().clear();
 	    yields.getYields().put(idModel.getAlias(), idModel);
 	} else if (allPropsYieldEnhancementRequired()) {
@@ -123,7 +122,7 @@ public class EntQuery implements ISingleOperand {
 	    }
 	} else if (idPropYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-	    yields.getYields().put(id, new Yield(new EntProp(yieldPropAliasPrefix + id), id));
+	    yields.getYields().put(AbstractEntity.ID, new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
 	}
     }
 

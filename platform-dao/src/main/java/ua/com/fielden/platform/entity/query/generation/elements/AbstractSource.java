@@ -10,6 +10,7 @@ import java.util.TreeMap;
 import org.hibernate.Hibernate;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -126,7 +127,7 @@ public abstract class AbstractSource implements ISource {
 
     protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
 	if (isPersistedEntityType(sourceType()) && prop.getName().equalsIgnoreCase(getAlias())) {
-	    final PurePropInfo idProp = new PurePropInfo("id", Long.class, Hibernate.LONG, false || isNullable());
+	    final PurePropInfo idProp = new PurePropInfo(AbstractEntity.ID, Long.class, Hibernate.LONG, false || isNullable());
 	    return new PropResolutionInfo(prop, getAlias(), idProp, idProp, true); // id property is meant here, but is it for all contexts?
 	} else {
 	    return null;

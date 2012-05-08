@@ -16,6 +16,7 @@ import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.controller.ITgBogie;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogieClass;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgMeterReading;
@@ -32,12 +33,14 @@ import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.controller.ITgWagon;
 import ua.com.fielden.platform.sample.domain.controller.ITgWagonClass;
 import ua.com.fielden.platform.sample.domain.controller.ITgWagonClassCompatibility;
+import ua.com.fielden.platform.sample.domain.controller.ITgWagonSlot;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.test.domain.entities.daos.TgMeterReadingDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleMakeDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleModelDao;
 import ua.com.fielden.platform.test.entities.daos.TgBogieClassDao;
+import ua.com.fielden.platform.test.entities.daos.TgBogieDao;
 import ua.com.fielden.platform.test.entities.daos.TgFuelUsageDao;
 import ua.com.fielden.platform.test.entities.daos.TgOrgUnit1Dao;
 import ua.com.fielden.platform.test.entities.daos.TgOrgUnit2Dao;
@@ -50,6 +53,7 @@ import ua.com.fielden.platform.test.entities.daos.TgVehicleFinDetailsDao;
 import ua.com.fielden.platform.test.entities.daos.TgWagonClassCompatibilityDao;
 import ua.com.fielden.platform.test.entities.daos.TgWagonClassDao;
 import ua.com.fielden.platform.test.entities.daos.TgWagonDao;
+import ua.com.fielden.platform.test.entities.daos.TgWagonSlotDao;
 
 import com.google.inject.TypeLiteral;
 
@@ -85,11 +89,9 @@ public class PlatformTestServerModule extends BasicWebServerModule {
     protected void configure() {
 	super.configure();
 	// bind DAO
-//	bind(IBogieDao.class).to(BogieDao.class);
 //	bind(IWheelsetDao.class).to(WheelsetDao.class);
 //	bind(IWorkshopDao2.class).to(WorkshopDao2.class);
 //	bind(IWheelsetClassDao.class).to(WheelsetClassDao.class);
-//	bind(IWagonSlotDao.class).to(WagonSlotDao.class);
 //	bind(IWorkorderDao.class).to(WorkorderDao.class);
 //	bind(IWorkorderableDao.class).to(WorkorderableDao.class);
 //	bind(IAdviceDao.class).to(AdviceDao.class);
@@ -100,8 +102,10 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 	bind(ITgOrgUnit4.class).to(TgOrgUnit4Dao.class);
 	bind(ITgOrgUnit5.class).to(TgOrgUnit5Dao.class);
 
+	bind(ITgBogie.class).to(TgBogieDao.class);
 	bind(ITgBogieClass.class).to(TgBogieClassDao.class);
 	bind(ITgWagon.class).to(TgWagonDao.class);
+	bind(ITgWagonSlot.class).to(TgWagonSlotDao.class);
 	bind(ITgWagonClass.class).to(TgWagonClassDao.class);
 	bind(ITgWagonClassCompatibility.class).to(TgWagonClassCompatibilityDao.class);
 	bind(ITgTimesheet.class).to(TgTimesheetDao.class);

@@ -117,7 +117,7 @@ final class EntityResultTreeBuilder {
 
 	    } else if (prop.isEntity()) {
 		final SortedSet<ResultQueryYieldDetails> subprops = new TreeSet<ResultQueryYieldDetails>();
-		subprops.add(new ResultQueryYieldDetails("id", Long.class, prop.getHibType(), prop.getColumn()));
+		subprops.add(new ResultQueryYieldDetails(AbstractEntity.ID, Long.class, prop.getHibType(), prop.getColumn()));
 		result.put(prop.getName(), new MetaP(prop.getName(), prop.getJavaType(), subprops));
 	    }
 	}
@@ -133,15 +133,9 @@ final class EntityResultTreeBuilder {
 		final int firstDotIndex = prop.getName().indexOf(".");
 		final String group = prop.getName().substring(0, firstDotIndex);
 
-//		if (EntityAggregates.class != resultType) {
-//		    final PropertyPersistenceInfo groupPpi = domainPersistenceMetadata.getPropPersistenceInfoExplicitly(resultType, group);
-
-//		    if (groupPpi.isCompositeProperty()) {
-			if (result.containsKey(group)) {
-				result.get(group).items.add(new ResultQueryYieldDetails(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), prop.getHibType(), prop.getColumn()));
-			}
-//		    }
-//		}
+		if (result.containsKey(group)) {
+		    result.get(group).items.add(new ResultQueryYieldDetails(prop.getName().substring(firstDotIndex + 1), prop.getJavaType(), prop.getHibType(), prop.getColumn()));
+		}
 	    } else if (prop.isCompositeProperty()) {
 		final SortedSet<ResultQueryYieldDetails> subprops = new TreeSet<ResultQueryYieldDetails>();
 		result.put(prop.getName(), new MetaP(prop.getName(), prop.getHibTypeAsCompositeUserType(), subprops));

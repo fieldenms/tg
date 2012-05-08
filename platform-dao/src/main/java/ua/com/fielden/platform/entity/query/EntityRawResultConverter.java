@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.type.Type;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
@@ -29,7 +27,7 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
 
 	for (final Object nativeEntry : nativeResult) {
 	    final Object[] nativeEntries = nativeEntry instanceof Object[] ? (Object[]) nativeEntry : new Object[] { nativeEntry };
-	    result.add(transformTuple(nativeEntries, resultTree, true));
+	    result.add(transformTuple(nativeEntries, resultTree));
 	}
 
 	return result;
@@ -43,20 +41,20 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
      * @param shouldBeFetched
      * @return
      */
-    private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTuple(final Object[] data, final EntityTree<ET> resultTree, final boolean shouldBeFetched) {
+    private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTuple(final Object[] data, final EntityTree<ET> resultTree) {
 
-	final EntityContainer<ET> entCont = new EntityContainer<ET>(resultTree.getResultType(), shouldBeFetched);
+	final EntityContainer<ET> entCont = new EntityContainer<ET>(resultTree.getResultType());
 
 	for (final Map.Entry<ResultQueryYieldDetails, Integer> primEntry : resultTree.getSingles().entrySet()) {
-	    entCont.getPrimitives().put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsType(), primEntry.getKey().getHibTypeAsUserType()));
+	    entCont.getPrimitives().put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsUserType()));
 	}
 
 	for (final Map.Entry<String, ValueTree> compositeEntry : resultTree.getCompositeValues().entrySet()) {
-	    entCont.getComposites().put(compositeEntry.getKey(), transformTuple(data, compositeEntry.getValue(), shouldBeFetched));
+	    entCont.getComposites().put(compositeEntry.getKey(), transformTuple(data, compositeEntry.getValue()));
 	}
 
 	for (final Map.Entry<String, EntityTree<? extends AbstractEntity<?>>> entityEntry : resultTree.getComposites().entrySet()) {
-	    final EntityContainer<? extends AbstractEntity<?>> entContainer = transformTuple(data, entityEntry.getValue(), shouldBeFetched);
+	    final EntityContainer<? extends AbstractEntity<?>> entContainer = transformTuple(data, entityEntry.getValue());
 	    if (entContainer != null || (entContainer == null && EntityAggregates.class.equals(resultTree.getResultType()))) {
 		entCont.getEntities().put(entityEntry.getKey(), entContainer);
 	    }
@@ -65,21 +63,19 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
 	return !entCont.isEmpty() ? entCont : null;
     }
 
-    private ValueContainer transformTuple(final Object[] data, final ValueTree resultTree, final boolean shouldBeFetched) {
+    private ValueContainer transformTuple(final Object[] data, final ValueTree resultTree) {
 
 	final ValueContainer entCont = new ValueContainer(resultTree.getHibType());
 
 	for (final Map.Entry<ResultQueryYieldDetails, Integer> primEntry : resultTree.getSingles().entrySet()) {
-	    entCont.primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsType(), primEntry.getKey().getHibTypeAsUserType()));
+	    entCont.primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsUserType()));
 	}
 
 	return entCont;
     }
 
-    private Object convertValue(final Object rawValue, final Type hibType, final IUserTypeInstantiate userType) {
-	if (hibType != null) {
-	    return rawValue;
-	} else if (userType != null) {
+    private Object convertValue(final Object rawValue, final IUserTypeInstantiate userType) {
+	if (userType != null) {
 	    return userType.instantiate(rawValue, entityFactory);
 	} else {
 	    return rawValue;

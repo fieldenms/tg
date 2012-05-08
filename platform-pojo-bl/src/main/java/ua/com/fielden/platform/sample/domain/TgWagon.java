@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.sample.domain;
 
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -20,16 +23,15 @@ import ua.com.fielden.platform.sample.domain.controller.ITgWagon;
 public class TgWagon extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty @MapTo
-    @Title(value = "Serial No", desc = "Wagon serial number")
+    @IsProperty @MapTo @Title(value = "Serial No", desc = "Wagon serial number")
     private String serialNo;
-    @IsProperty @MapTo
-    @Title(value = "Class", desc = "Wagon class")
+
+    @IsProperty @MapTo @Title(value = "Class", desc = "Wagon class")
     private TgWagonClass wagonClass;
 
-//    @IsProperty(WagonSlot.class)
-//    @Title(value = "Wagon slots", desc = "A list of slots for the wagon")
-//    private List<WagonSlot> slots = new ArrayList<WagonSlot>();
+    @IsProperty(value = TgWagonSlot.class, linkProperty = "wagon")
+    @Title(value = "Wagon slots", desc = "A list of slots for the wagon")
+    private SortedSet<TgWagonSlot> slots = new TreeSet<TgWagonSlot>();
 
     protected TgWagon() {
     }
@@ -46,7 +48,6 @@ public class TgWagon extends AbstractEntity<String> {
     public TgWagon setSerialNo(final String serialNo) {
 	this.serialNo = serialNo;
 	return this;
-
     }
 
     public TgWagonClass getWagonClass() {
@@ -59,12 +60,12 @@ public class TgWagon extends AbstractEntity<String> {
 	return this;
     }
 
-//    public List<WagonSlot> getSlots() {
-//	return slots;
-//    }
-//
-//    @Observable
-//    protected void setSlots(final List<WagonSlot> slots) {
-//	this.slots = slots;
-//    }
+    public SortedSet<TgWagonSlot> getSlots() {
+	return slots;
+    }
+
+    @Observable
+    protected void setSlots(final SortedSet<TgWagonSlot> slots) {
+	this.slots = slots;
+    }
 }

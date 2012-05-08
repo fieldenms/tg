@@ -7,6 +7,7 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -92,14 +93,14 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
 
     @Override
     public User findUserByKeyWithRoles(final String key) {
-	final EntityResultQueryModel<User> query = select(User.class).where().prop("key").eq().val(key).model();
+	final EntityResultQueryModel<User> query = select(User.class).where().prop(AbstractEntity.KEY).eq().val(key).model();
 	return getEntity(from(query).with(fetchModel).build());
     }
 
     @Override
     public List<User> findAllUsersWithRoles() {
-	final EntityResultQueryModel<User> model = select(User.class).where().prop("key").isNotNull().model();
-	final OrderingModel orderBy = orderBy().prop("key").asc().model();
+	final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
+	final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
 	return getAllEntities(from(model).with(fetchModel).with(orderBy).build());
     }
 

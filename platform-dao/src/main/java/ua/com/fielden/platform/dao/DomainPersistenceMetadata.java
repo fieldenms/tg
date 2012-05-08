@@ -43,6 +43,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
 
+
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.
  *
@@ -50,7 +51,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
  *
  */
 public class DomainPersistenceMetadata {
-    private final static List<String> specialProps = Arrays.asList(new String[] { "id", "key", "version" });
+    public final static List<String> specialProps = Arrays.asList(new String[] { AbstractEntity.ID, AbstractEntity.KEY, AbstractEntity.VERSION });
     private final static String id = "_ID";
     private final static String version = "_VERSION";
     private final static String key = "KEY_";
@@ -128,14 +129,14 @@ public class DomainPersistenceMetadata {
      */
     private Set<PropertyPersistenceInfo> generateEntityPersistenceInfo(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
 	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
-	result.add(new PropertyPersistenceInfo.Builder("id", Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(isOneToOne(entityType) ? PropertyPersistenceType.ONE2ONE_ID : PropertyPersistenceType.ID).build());
-	result.add(new PropertyPersistenceInfo.Builder("version", Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.VERSION).build());
+	result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(isOneToOne(entityType) ? PropertyPersistenceType.ONE2ONE_ID : PropertyPersistenceType.ID).build());
+	result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.VERSION).build());
 
 	final String keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? getMapEntityTo(entityType).keyColumn() : key;
 	if (isOneToOne(entityType)) {
-	    result.add(new PropertyPersistenceInfo.Builder("key", getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
+	    result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
 	} else if (!DynamicEntityKey.class.equals(getKeyType(entityType))){
-	    result.add(new PropertyPersistenceInfo.Builder("key", getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PropertyPersistenceType.PRIMITIVE_KEY).build());
+	    result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PropertyPersistenceType.PRIMITIVE_KEY).build());
 	}
 
 	for (final Field field : getPersistedProperties(entityType)) {

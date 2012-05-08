@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.dao;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import static ua.com.fielden.platform.dao.DomainPersistenceMetadata.specialProps;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 /**
@@ -15,7 +15,6 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
  *
  */
 public class HibernateMappingsGenerator {
-    private static List<String> specialProps = Arrays.asList(new String[] { "id", "key", "version" });
     private final Map<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata> hibTypeInfosMap;
 
     public HibernateMappingsGenerator(final Map<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata> hibTypeInfosMap) {
@@ -134,10 +133,10 @@ public class HibernateMappingsGenerator {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("<class name=\"" + map.getType().getName() + "\" table=\"" + map.getTable() + "\">\n");
 
-	sb.append(getCommonPropMappingString(map.getProps().get("id")));
-	sb.append(getCommonPropMappingString(map.getProps().get("version")));
-	if (map.getProps().get("key") != null) {
-	    sb.append(getCommonPropMappingString(map.getProps().get("key")));
+	sb.append(getCommonPropMappingString(map.getProps().get(AbstractEntity.ID)));
+	sb.append(getCommonPropMappingString(map.getProps().get(AbstractEntity.VERSION)));
+	if (map.getProps().get(AbstractEntity.KEY) != null) {
+	    sb.append(getCommonPropMappingString(map.getProps().get(AbstractEntity.KEY)));
 	}
 
 	for (final PropertyPersistenceInfo ppi : map.getProps().values()) {

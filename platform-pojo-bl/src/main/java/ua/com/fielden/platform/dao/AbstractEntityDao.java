@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
@@ -12,9 +8,9 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -22,6 +18,9 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Provides common implementation shared between Hibernate and REST implementation of DAOs.
@@ -31,7 +30,6 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
  */
 public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements IEntityDao<T> {
 
-    protected final static String ID_PROPERTY_NAME = "id";
     private final Class<? extends Comparable> keyType;
     private final Class<T> entityType;
     private final QueryExecutionModel<T, EntityResultQueryModel<T>> defaultModel;
@@ -54,7 +52,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 
     protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
 	final EntityResultQueryModel<T> query = select(entityType).model();
-	final OrderingModel orderBy = orderBy().prop(ID_PROPERTY_NAME).asc().model();
+	final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
 	return from(query).with(orderBy).build();
     }
 
@@ -84,7 +82,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
 	try {
-	    final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(ID_PROPERTY_NAME).eq().val(id).model();
+	    final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
 	    return getEntity(from(query).with(fetchModel).build());
 	} catch (final Exception e) {
 	    throw new IllegalStateException(e);
@@ -156,7 +154,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 	    throw new IllegalArgumentException("Only one key value is expected instead of " + keyValues.length + " when looking for an entity by a non-composite key.");
 	} else {
 	    return qry//
-		    .where().prop("key")//
+		    .where().prop(AbstractEntity.KEY)//
 		    .eq().val(keyValues[0]).model();
 	}
     }

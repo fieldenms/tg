@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
@@ -29,10 +30,13 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgWagon;
+import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
+import ua.com.fielden.platform.sample.domain.controller.ITgWagon;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -41,6 +45,7 @@ import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
@@ -50,6 +55,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
+    private final ITgWagon wagonDao = getInstance(ITgWagon.class);
     private final ITgVehicleModel vehicleModelDao = getInstance(ITgVehicleModel.class);
     private final ITgVehicleMake vehicleMakeDao = getInstance(ITgVehicleMake.class);
     private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
@@ -62,9 +68,20 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
 
     @Test
+    public void test_fetch_with_sorted_collection() {
+	final EntityResultQueryModel<TgWagon> qry = select(TgWagon.class).where().prop("key").eq().val("WAGON1").model();
+	final List<TgWagon> models = wagonDao.getAllEntities(from(qry).with(fetch(TgWagon.class).with("slots", fetch(TgWagonSlot.class).with("bogie"))).build());
+	assertEquals("Incorrect key", 1, models.size());
+	assertEquals("Incorrect key", 8, models.get(0).getSlots().size());
+	assertEquals("Incorrect slot position", new Integer("1"), models.get(0).getSlots().iterator().next().getPosition());
+	assertNotNull("Bogie should be present", models.get(0).getSlots().iterator().next().getBogie());
+	assertEquals("Incorrect key", "BOGIE4", models.get(0).getSlots().iterator().next().getBogie().getKey());
+    }
+
+    @Test
     public void test_sql_injection() {
-	final EntityResultQueryModel<TgVehicle> vehSubqry = select(TgVehicle.class).where().prop("desc").eq().val("x'; DROP TABLE members; --").model();
-	final List<TgVehicle> models = vehicleDao.getAllEntities(from(vehSubqry).build());
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("desc").eq().val("x'; DROP TABLE members; --").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).build());
 	assertEquals("Incorrect key", 0, models.size());
     }
 
@@ -208,6 +225,26 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     	final EntityAggregates vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.get("key"));
 	assertEquals("Incorrect key", "MERC", ((EntityAggregates) vehModel.get("make")).get("key"));
+    }
+
+    @Test
+    public void test_partial_fetching() {
+	final EntityResultQueryModel<TgVehicle> model = select(select(TgVehicle.class).where().prop("key").eq().val("CAR1").model()). //
+		yield().prop("id").as("id").
+		yield().prop("version").as("version").
+		yield().prop("key").as("key").
+		yield().prop("desc").as("desc").
+		yield().prop("model").as("model").
+		yield().prop("model.id").as("model.id").
+		yield().prop("model.version").as("model.version").
+		yield().prop("model.key").as("model.key").
+		yield().prop("model.desc").as("model.desc").
+		yield().prop("model.make").as("model.make").
+		modelAsEntity(TgVehicle.class);
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).with(fetch(TgVehicle.class).with("model", fetch(TgVehicleModel.class).with("make"))).build());
+    	final TgVehicle vehModel = models.get(0);
+	assertEquals("Incorrect key", "318", vehModel.getModel().getKey());
+	assertEquals("Incorrect key", "AUDI", vehModel.getModel().getMake().getKey());
     }
 
     @Test
@@ -639,6 +676,29 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Override
     protected void populateDomain() {
+	final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1"));
+	final TgBogie bogie2 = save(new_(TgBogie.class, "BOGIE2", "Bogie 2"));
+	final TgBogie bogie3 = save(new_(TgBogie.class, "BOGIE3", "Bogie 3"));
+	final TgBogie bogie4 = save(new_(TgBogie.class, "BOGIE4", "Bogie 4"));
+	final TgBogie bogie5 = save(new_(TgBogie.class, "BOGIE5", "Bogie 5"));
+	final TgBogie bogie6 = save(new_(TgBogie.class, "BOGIE6", "Bogie 6"));
+	final TgBogie bogie7 = save(new_(TgBogie.class, "BOGIE7", "Bogie 7"));
+
+	final TgWagon wagon1 = save(new_(TgWagon.class, "WAGON1", "Wagon 1"));
+	final TgWagon wagon2 = save(new_(TgWagon.class, "WAGON2", "Wagon 2"));
+
+	save(new_(TgWagonSlot.class, wagon1, 5));
+	save(new_(TgWagonSlot.class, wagon1, 6));
+	save(new_(TgWagonSlot.class, wagon1, 7));
+	save(new_(TgWagonSlot.class, wagon1, 8));
+	save(new_(TgWagonSlot.class, wagon1, 4).setBogie(bogie1));
+	save(new_(TgWagonSlot.class, wagon1, 3).setBogie(bogie2));
+	save(new_(TgWagonSlot.class, wagon1, 2).setBogie(bogie3));
+	save(new_(TgWagonSlot.class, wagon1, 1).setBogie(bogie4));
+
+	save(new_(TgWagonSlot.class, wagon2, 1).setBogie(bogie5));
+	save(new_(TgWagonSlot.class, wagon2, 2).setBogie(bogie6));
+	save(new_(TgWagonSlot.class, wagon2, 3).setBogie(bogie7));
 
 	final TgOrgUnit1 orgUnit1 = save(new_(TgOrgUnit1.class, "orgunit1", "desc orgunit1"));
 	final TgOrgUnit2 orgUnit2 = save(new_(TgOrgUnit2.class, "orgunit2", "desc orgunit2").setParent(orgUnit1));

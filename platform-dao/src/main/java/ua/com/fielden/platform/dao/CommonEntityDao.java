@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -48,6 +45,9 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
@@ -178,10 +178,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 		getSession().save(entity);
 	    } else if (!entity.getDirtyProperties().isEmpty()) {
 		// let's also make sure that duplicate entities are not allowed
-		final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop("id").as("id").modelAsAggregate();
+		final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
 		final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, null, null).getEntities(from(model).build());
 		final int count = ids.size();
-		if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get("id")).longValue())) {
+		if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
 		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " entity already exists."));
 		}
 

@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
@@ -15,14 +17,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class EntityEnhancer<E extends AbstractEntity<?>> {
-    private final static String ID_PROPERTY_NAME = "id";
     private final EntityFetcher fetcher;
     private final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser;
 
@@ -31,16 +30,6 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	this.domainPersistenceMetadataAnalyser = domainPersistenceMetadataAnalyser;
     }
 
-    /**
-     * Enhances entities according to provided fetch model.
-     *
-     * @param entities
-     *            - entities that will enhanced
-     * @param fetchModel
-     * @param entitiesType
-     * @return
-     * @throws Exception
-     */
     protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final fetch<E> fetchModel) throws Exception {
 	if (fetchModel != null) {
 	    final Map<String, fetch<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getFetchModels();
@@ -49,20 +38,20 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 		final String propName = entry.getKey();
 		final fetch<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
 		if (fetchModel.getEntityType() != EntityAggregates.class) {
-			final PropertyPersistenceInfo ppi = domainPersistenceMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
-			if (ppi == null || ppi.isCollection()) {
-			    final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
-			    for (final Field field : collProps) {
-				if (field.getName().equals(propName)) {
-				    enhanceCollectional(entities, propName, HashSet.class, field.getAnnotation(IsProperty.class).linkProperty(), null, propFetchModel);
-				}
+		    final PropertyPersistenceInfo ppi = domainPersistenceMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
+		    if (ppi == null || ppi.isCollection()) {
+			final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
+			for (final Field field : collProps) {
+			    if (field.getName().equals(propName)) {
+				// TODO need to use getLinkProperty method instead of invoking linkProperty on IsProperty annotation.
+				enhanceCollectional(entities, propName, field.getType(), field.getAnnotation(IsProperty.class).linkProperty(), propFetchModel);
 			    }
-			    //
-			} else if (ppi.isEntity() || ppi.isOne2OneId()) {
-			    enhanceProperty(entities, propName, propFetchModel);
-			} else  {
-			    // do nothing
 			}
+		    } else if (ppi.isEntity() || ppi.isOne2OneId()) {
+			enhanceProperty(entities, propName, propFetchModel);
+		    } else {
+			// do nothing
+		    }
 		} else {
 		    enhanceProperty(entities, propName, propFetchModel);
 		}
@@ -87,36 +76,30 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	return propValuesMap;
     }
 
-    /**
-     * Retrieves from the provided entity aggregates instances list of values for the specified property (of the specified type -- to cover polymorphic properties).
-     *
-     * @param entities
-     * @param propName
-     * @param propType
-     * @return
-     */
     private <T extends AbstractEntity<?>> List<EntityContainer<T>> getRetrievedPropertyInstances(final List<EntityContainer<E>> entities, final String propName) {
 	final List<EntityContainer<T>> propValues = new ArrayList<EntityContainer<T>>();
 	for (final EntityContainer<E> entity : entities) {
 	    final EntityContainer<T> prop = (EntityContainer<T>) entity.getEntities().get(propName);
 	    if (prop != null && !prop.notYetInitialised()) {
 		propValues.add(prop);
-		prop.setShouldBeFetched(true);
 	    }
 	}
 	return propValues;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceProperty(final List<EntityContainer<E>> entities, final String propertyName, final fetch<T> fetchModel) throws Exception {
+    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceProperty(final List<EntityContainer<E>> entities, final String propertyName, final fetch<T> fetchModel)
+	    throws Exception {
 	// Obtaining map between property id and list of entities where this property occurs
 	final Map<Long, List<EntityContainer<E>>> propertyValuesIds = getEntityPropertyIds(entities, propertyName);
 
 	if (propertyValuesIds.size() > 0) {
 	    // Constructing model for retrieving property instances based on the provided fetch model and list of instances ids
 	    final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
+	    // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
 	    final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
-		getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel) : //
-	    	new EntityEnhancer<T>(fetcher, domainPersistenceMetadataAnalyser).enhance(retrievedPropertyInstances, fetchModel);
+	    getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel)
+		    : //
+		    new EntityEnhancer<T>(fetcher, domainPersistenceMetadataAnalyser).enhance(retrievedPropertyInstances, fetchModel);
 
 	    // Replacing in entities the proxies of properties with properly enhanced property instances.
 	    for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -144,7 +127,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 		to = allParentIds.length;
 	    }
 	    final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
-	    final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(ID_PROPERTY_NAME).in().values(batch).model();
+	    final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(AbstractEntity.ID).in().values(batch).model();
 	    final List<EntityContainer<T>> properties = fetcher.listContainers(from(currTypePropertyModel).with(fetchModel).build(), null, null);
 	    result.addAll(properties);
 	    from = to;
@@ -154,74 +137,68 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	return result;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(final List<EntityContainer<E>> entitiesToBeEnhanced, final String propertyName, final Class propType, final String parentPropName, final String indexPropName, final fetch<T> fetchModel) throws Exception {
-        // collect parental ids
-        final Map<Long, EntityContainer<E>> parentIds = new HashMap<Long, EntityContainer<E>>();
-        for (final EntityContainer<E> parentEntity : entitiesToBeEnhanced) {
-            parentIds.put(parentEntity.getId(), parentEntity);
-        }
-        final List<EntityContainer<T>> properties = getCollectionalDataInBatches(parentIds.keySet(), parentPropName, indexPropName, fetchModel);
+    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(final List<EntityContainer<E>> entitiesToBeEnhanced, final String propertyName, final Class propType, final String parentPropName, final fetch<T> fetchModel)
+	    throws Exception {
+	// collect parental ids
+	final Map<Long, EntityContainer<E>> parentIds = new HashMap<Long, EntityContainer<E>>();
+	for (final EntityContainer<E> parentEntity : entitiesToBeEnhanced) {
+	    parentIds.put(parentEntity.getId(), parentEntity);
+	}
+	final List<EntityContainer<T>> properties = getCollectionalDataInBatches(parentIds.keySet(), parentPropName, fetchModel);
 
-        // group retrieved collections by parents
-        @SuppressWarnings("unchecked")
-        final Map<Long, List<EntityContainer<T>>> results = new HashMap<Long, List<EntityContainer<T>>>();
-        for (final EntityContainer<T> collectionalItem : properties) {
-            final Long currentParentId = collectionalItem.getEntities().get(parentPropName).getId();
-            if (!results.containsKey(currentParentId)) {
-                results.put(currentParentId, new ArrayList<EntityContainer<T>>());
-            }
-            // assign collectional item parent property reference to its already fetched parent
-            collectionalItem.getEntities().put(parentPropName, parentIds.get(currentParentId));
-            results.get(currentParentId).add(collectionalItem);
-        }
+	// group retrieved collections by parents
+	@SuppressWarnings("unchecked")
+	final Map<Long, List<EntityContainer<T>>> results = new HashMap<Long, List<EntityContainer<T>>>();
+	for (final EntityContainer<T> collectionalItem : properties) {
+	    final Long currentParentId = collectionalItem.getEntities().get(parentPropName).getId();
+	    if (!results.containsKey(currentParentId)) {
+		results.put(currentParentId, new ArrayList<EntityContainer<T>>());
+	    }
+	    // assign collectional item parent property reference to its already fetched parent
+	    collectionalItem.getEntities().put(parentPropName, parentIds.get(currentParentId));
+	    results.get(currentParentId).add(collectionalItem);
+	}
 
-        // set the retrieved data for those entities where collectional property is not empty
-        for (final Map.Entry<Long, List<EntityContainer<T>>> resultEntry : results.entrySet()) {
-            // assigns initialised collection to parent collectional property (lazy-collection is already evicted)
-            final EntityContainer<E> entity = parentIds.get(resultEntry.getKey());
-            if (List.class.isAssignableFrom(propType)) {
-        	final List<EntityContainer<? extends AbstractEntity<?>>> value = new ArrayList<EntityContainer<? extends AbstractEntity<?>>>(resultEntry.getValue());
-                entity.getCollections().put(propertyName, value);
-            } else if (Set.class.isAssignableFrom(propType)) {
-                // TODO need to implement proper collection instantiation (prop type)
-                entity.getCollections().put(propertyName, new HashSet<EntityContainer<? extends AbstractEntity<?>>>(resultEntry.getValue()));
-            } else {
-                throw new UnsupportedOperationException("Fetching via models for collections of type ["
-                        + /* parentIds.get(resultEntry.getKey()).get(propertyName).getClass() */propType + "] is not yet supported.");
-            }
-        }
+	// set the retrieved data for those entities where collectional property is not empty
+	for (final Map.Entry<Long, List<EntityContainer<T>>> resultEntry : results.entrySet()) {
+	    // assigns initialised collection to parent collectional property (lazy-collection is already evicted)
+	    final EntityContainer<E> entity = parentIds.get(resultEntry.getKey());
+	    if (SortedSet.class.equals(propType)) {
+		entity.getCollections().put(propertyName, new CollectionContainer<T>(new TreeSet<T>(), resultEntry.getValue()));
+	    } else if (Set.class.equals(propType)) {
+		entity.getCollections().put(propertyName, new CollectionContainer<T>(new HashSet<T>(), resultEntry.getValue()));
+	    } else {
+		throw new UnsupportedOperationException("Fetching via models for collections of type [" + propType + "] is not yet supported.");
+	    }
+	}
 
-        return entitiesToBeEnhanced;
+	return entitiesToBeEnhanced;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getCollectionalDataInBatches(final Set<Long> parentIds, final String parentPropName, final String indexPropName, final fetch<T> fetchModel) throws Exception {
-        final List<EntityContainer<T>> result = new ArrayList<EntityContainer<T>>();
-        final String idProp = parentPropName  + "." + ID_PROPERTY_NAME;
-        final Long[] allParentIds = new ArrayList<Long>(parentIds).toArray(new Long[]{});
+    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getCollectionalDataInBatches(final Set<Long> parentIds, final String parentPropName, final fetch<T> fetchModel)
+	    throws Exception {
+	final List<EntityContainer<T>> result = new ArrayList<EntityContainer<T>>();
+	final String idProp = parentPropName;
+	final Long[] allParentIds = new ArrayList<Long>(parentIds).toArray(new Long[] {});
 
-        final Integer batchSize = 990;
-        Integer from = 0;
-        Integer to = batchSize;
-        boolean endReached = false;
-        while (!endReached) {
-            if (to >= allParentIds.length) {
-                endReached = true;
-                to = allParentIds.length;
-            }
-            final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
-            System.out.println("fetchModel.getEntityType() = " + fetchModel.getEntityType() + " idProp = " + idProp + " batch = " + Arrays.asList(batch));
-                @SuppressWarnings("unchecked")
+	final Integer batchSize = 990;
+	Integer from = 0;
+	Integer to = batchSize;
+	boolean endReached = false;
+	while (!endReached) {
+	    if (to >= allParentIds.length) {
+		endReached = true;
+		to = allParentIds.length;
+	    }
+	    final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
+	    final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
+	    final List<EntityContainer<T>> properties = fetcher.listContainers(from(currTypePropertyModel).with(fetchModel).build(), null, null);
+	    result.addAll(properties);
+	    // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
+	    from = to;
+	    to = to + batchSize;
+	}
 
-                final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
-                final OrderingModel currTypePropertyOrderModel = indexPropName != null ? orderBy().prop(parentPropName).asc().prop(indexPropName).asc().model() : orderBy().prop(parentPropName).asc().model();
-                @SuppressWarnings("unchecked")
-                final List<EntityContainer<T>> properties = fetcher.listContainers(from(currTypePropertyModel).with(currTypePropertyOrderModel).with(fetchModel).build(), null, null);
-                result.addAll(properties);
-                // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
-                from = to;
-                to =  to + batchSize;
-        }
-
-        return result;
+	return result;
     }
 }

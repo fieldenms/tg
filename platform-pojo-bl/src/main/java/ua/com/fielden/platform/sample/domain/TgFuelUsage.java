@@ -24,20 +24,15 @@ import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty
-    @Title("Vehicle")
+    @IsProperty @MapTo @Title("Vehicle")
     @CompositeKeyMember(1)
-    @MapTo
     private TgVehicle vehicle;
-    @IsProperty
-    @Title("Purchase Date")
+
+    @IsProperty @MapTo @Title("Purchase Date")
     @CompositeKeyMember(2)
-    @MapTo
     private Date date;
 
-    @IsProperty
-    @MapTo
-    @Title(value = "Fuel Qty", desc = "Fuel Qty")
+    @IsProperty @MapTo @Title(value = "Fuel Qty", desc = "Fuel Qty")
     private BigDecimal qty;
 
     public BigDecimal getQty() {

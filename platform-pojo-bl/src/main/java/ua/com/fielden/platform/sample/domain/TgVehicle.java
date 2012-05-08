@@ -34,13 +34,13 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 public class TgVehicle extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
+    private static final ExpressionModel constValueProp_ = expr().val(10).add().val(20).model();
     private static final ExpressionModel sumOfPrices_ = expr().prop("price.amount").add().prop("purchasePrice.amount").model();
+    private static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
     private static final ExpressionModel calc3_ = expr().model(select(TgFuelUsage.class).where().prop("date").lt().extProp("initDate").yield().sumOf().prop("qty").modelAsPrimitive()).model();
     private static final ExpressionModel calc4_ = expr().model(select(TgFuelUsage.class).where().prop("qty").lt().extProp("calc2").yield().sumOf().prop("qty").modelAsPrimitive()).model();
-    private static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
     private static final ExpressionModel calc5_ = expr().prop("sumOfPrices").mult().val(2).model();
     private static final ExpressionModel calc6_ = expr().prop("sumOfPrices").div().prop("calc3").model();
-    private static final ExpressionModel constValueProp_ = expr().val(10).add().val(20).model();
 
     private static final ExpressionModel lastFuelUsageQty_ = expr().model(
       select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(
@@ -50,10 +50,72 @@ public class TgVehicle extends AbstractEntity<String> {
 	      select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(
 	      select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).model()).model();
 
-    @IsProperty
-    @Calculated
-    @Title(value = "Last fuel usage", desc = "Last fuel usage")
+    @IsProperty @MapTo
+    private Date initDate;
+
+    @IsProperty @MapTo
+    private TgVehicle replacedBy;
+
+    @IsProperty @MapTo
+    private TgOrgUnit5 station;
+
+    @IsProperty @MapTo @Required @Title("Model")
+    private TgVehicleModel model;
+
+    @IsProperty @MapTo @Title("Price")
+    private Money price;
+
+    @IsProperty @MapTo(userType = ISimpleMoneyType.class)
+    private Money purchasePrice;
+
+    @IsProperty @MapTo @Title("Active")
+    private boolean active;
+
+    @IsProperty @MapTo @Title("Leased?")
+    private boolean leased;
+
+    @IsProperty(value = TgFuelUsage.class, linkProperty = "vehicle") @Title("Fuel usages")
+    private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
+
+    @IsProperty @MapTo(length = 10, precision = 3, scale = 10)  @Title("Last meter reading")
+    private BigDecimal lastMeterReading;
+
+    @IsProperty @Calculated  @Title("Last fuel usage")
     private TgFuelUsage lastFuelUsage;
+
+    @IsProperty @Calculated @Title("Const value prop")
+    private Integer constValueProp;
+
+    @IsProperty @Calculated("price.amount + purchasePrice.amount") @Title("Calc0")
+    private BigDecimal calc0;
+
+    @IsProperty @Calculated @Title("Last fuel usage qty")
+    private BigDecimal lastFuelUsageQty;
+
+    @IsProperty @Calculated @Title(value = "Sum of prices", desc = "Sum of price.amount and purchasePrice.amount")
+    private BigDecimal sumOfPrices;
+
+    @IsProperty @Calculated @Title("Calc2")
+    private BigDecimal calc2;
+
+    @IsProperty @Calculated @Title("Calc3")
+    private BigDecimal calc3;
+
+    @IsProperty @Calculated @Title("Calc4")
+    private BigDecimal calc4;
+
+    @IsProperty @Calculated @Title("Calc5")
+    private BigDecimal calc5;
+
+    @IsProperty @Calculated @Title("Calc6")
+    private BigDecimal calc6;
+
+
+    /**
+     * Constructor for (@link EntityFactory}.
+     */
+    protected TgVehicle() {
+    }
 
     @Observable
     public TgVehicle setLastFuelUsage(final TgFuelUsage lastFuelUsage) {
@@ -65,13 +127,6 @@ public class TgVehicle extends AbstractEntity<String> {
 	return lastFuelUsage;
     }
 
-
-
-    @IsProperty
-    @Calculated
-    @Title(value = "Const value prop", desc = "Const value prop")
-    private Integer constValueProp;
-
     @Observable
     public TgVehicle setConstValueProp(final Integer constValueProp) {
 	this.constValueProp = constValueProp;
@@ -81,11 +136,6 @@ public class TgVehicle extends AbstractEntity<String> {
     public Integer getConstValueProp() {
 	return constValueProp;
     }
-
-    @IsProperty
-    @Calculated("price.amount + purchasePrice.amount")
-    @Title(value = "Calc0", desc = "Calc0")
-    private BigDecimal calc0;
 
     @Observable
     public TgVehicle setCalc0(final BigDecimal calc0) {
@@ -97,11 +147,6 @@ public class TgVehicle extends AbstractEntity<String> {
 	return calc0;
     }
 
-    @IsProperty
-    @Calculated
-    @Title(value = "Last fuel usage qty", desc = "Last fuel usage qty")
-    private BigDecimal lastFuelUsageQty;
-
     @Observable
     public TgVehicle setLastFuelUsageQty(final BigDecimal lastFuelUsageQty) {
 	this.lastFuelUsageQty = lastFuelUsageQty;
@@ -111,11 +156,6 @@ public class TgVehicle extends AbstractEntity<String> {
     public BigDecimal getLastFuelUsageQty() {
 	return lastFuelUsageQty;
     }
-
-    @IsProperty
-    @Calculated
-    @Title(value = "Sum of prices", desc = "Sum of price.amount and purchasePrice.amount")
-    private BigDecimal sumOfPrices;
 
     @Observable
     public TgVehicle setSumOfPrices(final BigDecimal sumOfPrices) {
@@ -127,11 +167,6 @@ public class TgVehicle extends AbstractEntity<String> {
 	return sumOfPrices;
     }
 
-    @IsProperty
-    @Calculated
-    @Title(value = "Calc3", desc = "Calc3")
-    private BigDecimal calc3;
-
     @Observable
     public TgVehicle setCalc3(final BigDecimal calc3) {
 	this.calc3 = calc3;
@@ -141,11 +176,6 @@ public class TgVehicle extends AbstractEntity<String> {
     public BigDecimal getCalc3() {
 	return calc3;
     }
-
-    @IsProperty
-    @Calculated
-    @Title(value = "Calc4", desc = "Calc4")
-    private BigDecimal calc4;
 
     @Observable
     public TgVehicle setCalc4(final BigDecimal calc4) {
@@ -157,11 +187,6 @@ public class TgVehicle extends AbstractEntity<String> {
 	return calc4;
     }
 
-    @IsProperty
-    @Calculated
-    @Title(value = "Calc2", desc = "Calc2")
-    private BigDecimal calc2;
-
     @Observable
     public TgVehicle setCalc2(final BigDecimal calc2) {
 	this.calc2 = calc2;
@@ -171,11 +196,6 @@ public class TgVehicle extends AbstractEntity<String> {
     public BigDecimal getCalc2() {
 	return calc2;
     }
-
-    @IsProperty
-    @Calculated
-    @Title(value = "Calc5", desc = "Calc5")
-    private BigDecimal calc5;
 
     @Observable
     public TgVehicle setCalc5(final BigDecimal calc5) {
@@ -187,11 +207,6 @@ public class TgVehicle extends AbstractEntity<String> {
 	return calc5;
     }
 
-    @IsProperty
-    @Calculated
-    @Title(value = "Calc6", desc = "Calc6")
-    private BigDecimal calc6;
-
     @Observable
     public TgVehicle setCalc6(final BigDecimal calc6) {
 	this.calc6 = calc6;
@@ -201,39 +216,6 @@ public class TgVehicle extends AbstractEntity<String> {
     public BigDecimal getCalc6() {
 	return calc6;
     }
-
-    @IsProperty @MapTo
-    private Date initDate;
-
-    @IsProperty @MapTo
-    private TgVehicle replacedBy;
-
-    @IsProperty @MapTo
-    private TgOrgUnit5 station;
-
-    @IsProperty @MapTo @Required @Title(value = "Model", desc = "Model")
-    private TgVehicleModel model;
-
-    @IsProperty @MapTo @Title(value = "Price", desc = "Price")
-    private Money price;
-
-    @IsProperty @MapTo(userType = ISimpleMoneyType.class)
-    private Money purchasePrice;
-
-    @IsProperty @MapTo @Title(value = "Active", desc = "Active")
-    private boolean active;
-
-    @IsProperty @MapTo @Title(value = "Leased", desc = "Leased?")
-    private boolean leased;
-
-    @IsProperty(value = TgFuelUsage.class, linkProperty = "vehicle") @Title(value = "Fuel usages", desc = "Fuel usages")
-    private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
-    public Set<TgFuelUsage> getFuelUsages() { return fuelUsages; }
-
-    @IsProperty
-    @MapTo(length = 10, precision = 3, scale = 10)
-    @Title(value = "Last Meter Reading", desc = "Last meter reading")
-    private BigDecimal lastMeterReading;
 
     @Observable
     public TgVehicle setLastMeterReading(final BigDecimal lastMeterReading) {
@@ -249,6 +231,8 @@ public class TgVehicle extends AbstractEntity<String> {
     public void setFuelUsages(final Set<TgFuelUsage> fuelUsages) {
 	this.fuelUsages = fuelUsages;
     }
+
+    public Set<TgFuelUsage> getFuelUsages() { return fuelUsages; }
 
     @Observable
     public TgVehicle setLeased(final boolean leased) {
@@ -268,12 +252,6 @@ public class TgVehicle extends AbstractEntity<String> {
 
     public boolean getActive() {
 	return active;
-    }
-
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgVehicle() {
     }
 
     public Money getPrice() {
