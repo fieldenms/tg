@@ -34,11 +34,11 @@ public class MasterEntityForIncludedPropertiesLogic extends AbstractEntity<Strin
     private MasterEntityForIncludedPropertiesLogic entityPropOfSelfType;
 
     ////////// Entity type //////////
-    @IsProperty
+    @IsProperty(linkProperty = "keyPartProp")
     private SlaveEntityForIncludedPropertiesLogic entityProp;
 
     ///////// Collections /////////
-    @IsProperty(SlaveEntityForIncludedPropertiesLogic.class)
+    @IsProperty(value = SlaveEntityForIncludedPropertiesLogic.class, linkProperty = "keyPartProp")
     private List<SlaveEntityForIncludedPropertiesLogic> entityPropCollection = new ArrayList<SlaveEntityForIncludedPropertiesLogic>();
 
     public Integer getIntegerProp() {

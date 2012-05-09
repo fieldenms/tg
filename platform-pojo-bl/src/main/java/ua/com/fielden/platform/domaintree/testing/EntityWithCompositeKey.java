@@ -28,23 +28,11 @@ public class EntityWithCompositeKey extends AbstractEntity<DynamicEntityKey> {
 
     @CompositeKeyMember(1)
     @IsProperty
-    private MasterEntity keyPartProp;
+    private Integer key1;
 
     @CompositeKeyMember(2)
     @IsProperty
     private Integer integerProp = null;
-
-    @CompositeKeyMember(3)
-    @IsProperty
-    private SlaveEntity keyPartPropFromSlave;
-
-    public MasterEntity getKeyPartProp() {
-        return keyPartProp;
-    }
-    @Observable
-    public void setKeyPartProp(final MasterEntity keyPartProp) {
-        this.keyPartProp = keyPartProp;
-    }
 
     public Integer getIntegerProp() {
         return integerProp;
@@ -53,11 +41,11 @@ public class EntityWithCompositeKey extends AbstractEntity<DynamicEntityKey> {
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
     }
-    public SlaveEntity getKeyPartPropFromSlave() {
-        return keyPartPropFromSlave;
+    public Integer getKey1() {
+	return key1;
     }
-    public void setKeyPartPropFromSlave(final SlaveEntity keyPartPropFromSlave) {
-        this.keyPartPropFromSlave = keyPartPropFromSlave;
+    @Observable
+    public void setKey1(final Integer key1) {
+	this.key1 = key1;
     }
-
 }

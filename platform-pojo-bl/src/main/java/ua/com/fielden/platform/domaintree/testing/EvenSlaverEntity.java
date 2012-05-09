@@ -35,7 +35,10 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     @IsProperty
-    private SlaveEntity slaveEntityProp;
+    private EvenSlaverEntity slaveEntityProp;
+    
+    @IsProperty
+    private SlaveEntity slaveEntityLinkProp;
 
     ////////// Enum types //////////
     @IsProperty
@@ -79,10 +82,6 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     ////////// String type //////////
     @IsProperty
     private String stringProp;
-
-    ////////// Any property to be specifically excluded //////////
-    @IsProperty
-    private SlaveEntity excludedManuallyProp;
 
     ////////// Any property to be specifically disabled //////////
     @IsProperty
@@ -138,35 +137,39 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     ////////// Result-only property //////////
     @ResultOnly
     @IsProperty
-    private SlaveEntity resultOnlyProp = null;
+    private EvenSlaverEntity resultOnlyProp = null;
 
     ////////// A property of AbstractEntity type with CritOnly assigned //////////
     @CritOnly
     @IsProperty
-    private SlaveEntity critOnlyAEProp;
+    private EvenSlaverEntity critOnlyAEProp;
 
     @CritOnly(Type.SINGLE)
     @IsProperty
-    private SlaveEntity critOnlySingleAEProp;
+    private EvenSlaverEntity critOnlySingleAEProp;
 
     ////////// A collection of AbstractEntity type with CritOnly assigned //////////
     @CritOnly
-    @IsProperty(SlaveEntity.class)
-    private List<SlaveEntity> critOnlyAECollectionProp = new ArrayList<SlaveEntity>();
+    @IsProperty(EvenSlaverEntity.class)
+    private List<EvenSlaverEntity> critOnlyAECollectionProp = new ArrayList<EvenSlaverEntity>();
 
     ////////// A collection //////////
-    @IsProperty(SlaveEntity.class)
-    private List<SlaveEntity> collection = new ArrayList<SlaveEntity>();
+    @IsProperty(EvenSlaverEntity.class)
+    private List<EvenSlaverEntity> collection = new ArrayList<EvenSlaverEntity>();
+    
+    ////////// Any property to be specifically excluded //////////
+    @IsProperty
+    private EvenSlaverEntity excludedManuallyProp;
 
     ////////// A property of "entity with composite key" type //////////
     @IsProperty
     private EntityWithCompositeKey entityWithCompositeKeyProp;
 
-    public SlaveEntity getSlaveEntityProp() {
+    public EvenSlaverEntity getSlaveEntityProp() {
         return slaveEntityProp;
     }
     @Observable
-    public void setSlaveEntityProp(final SlaveEntity slaveEntityProp) {
+    public void setSlaveEntityProp(final EvenSlaverEntity slaveEntityProp) {
         this.slaveEntityProp = slaveEntityProp;
     }
 
@@ -234,11 +237,11 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
 	this.enumProp = enumProp;
     }
 
-    public SlaveEntity getExcludedManuallyProp() {
+    public EvenSlaverEntity getExcludedManuallyProp() {
 	return excludedManuallyProp;
     }
     @Observable
-    public void setExcludedManuallyProp(final SlaveEntity excludedManuallyProp) {
+    public void setExcludedManuallyProp(final EvenSlaverEntity excludedManuallyProp) {
 	this.excludedManuallyProp = excludedManuallyProp;
     }
 
@@ -290,19 +293,19 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
 	this.ignoreProp = ignoreProp;
     }
 
-    public SlaveEntity getCritOnlyAEProp() {
+    public EvenSlaverEntity getCritOnlyAEProp() {
 	return critOnlyAEProp;
     }
     @Observable
-    public void setCritOnlyAEProp(final SlaveEntity critOnlyAEProp) {
+    public void setCritOnlyAEProp(final EvenSlaverEntity critOnlyAEProp) {
 	this.critOnlyAEProp = critOnlyAEProp;
     }
 
-    public List<SlaveEntity> getCritOnlyAECollectionProp() {
+    public List<EvenSlaverEntity> getCritOnlyAECollectionProp() {
 	return critOnlyAECollectionProp;
     }
     @Observable
-    public void setCritOnlyAECollectionProp(final List<SlaveEntity> critOnlyAECollectionProp) {
+    public void setCritOnlyAECollectionProp(final List<EvenSlaverEntity> critOnlyAECollectionProp) {
         this.critOnlyAECollectionProp.clear();
         this.critOnlyAECollectionProp.addAll(critOnlyAECollectionProp);
     }
@@ -331,19 +334,19 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
         this.disabledManuallyProp = disabledManuallyProp;
     }
 
-    public SlaveEntity getResultOnlyProp() {
+    public EvenSlaverEntity getResultOnlyProp() {
         return resultOnlyProp;
     }
     @Observable
-    public void setResultOnlyProp(final SlaveEntity resultOnlyProp) {
+    public void setResultOnlyProp(final EvenSlaverEntity resultOnlyProp) {
         this.resultOnlyProp = resultOnlyProp;
     }
 
-    public List<SlaveEntity> getCollection() {
+    public List<EvenSlaverEntity> getCollection() {
         return collection;
     }
     @Observable
-    public void setCollection(final List<SlaveEntity> collection) {
+    public void setCollection(final List<EvenSlaverEntity> collection) {
         this.collection = collection;
     }
 
@@ -419,11 +422,11 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
         this.entityProp = entityProp;
     }
 
-    public SlaveEntity getCritOnlySingleAEProp() {
+    public EvenSlaverEntity getCritOnlySingleAEProp() {
         return critOnlySingleAEProp;
     }
     @Observable
-    public void setCritOnlySingleAEProp(final SlaveEntity critOnlySingleAEProp) {
+    public void setCritOnlySingleAEProp(final EvenSlaverEntity critOnlySingleAEProp) {
         this.critOnlySingleAEProp = critOnlySingleAEProp;
     }
 
@@ -441,5 +444,12 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     @Observable
     public void setCheckedManuallyProp2(final Integer checkedManuallyProp2) {
         this.checkedManuallyProp2 = checkedManuallyProp2;
+    }
+    @Observable
+    public void setSlaveEntityLinkProp(final SlaveEntity slaveEntityLinkProp) {
+	this.slaveEntityLinkProp = slaveEntityLinkProp;
+    }
+    public SlaveEntity getSlaveEntityLinkProp() {
+	return slaveEntityLinkProp;
     }
 }

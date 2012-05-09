@@ -78,15 +78,15 @@ public class MasterEntity extends AbstractEntity<String> {
     private String stringProp;
 
     ////////// Entity type //////////
-    @IsProperty
+    @IsProperty(linkProperty = "masterEntityProp")
     private SlaveEntity entityProp;
 
     ///////// Collections /////////
-    @IsProperty(SlaveEntity.class)
+    @IsProperty(value = SlaveEntity.class, linkProperty = "masterEntityProp")
     private List<SlaveEntity> collection = new ArrayList<SlaveEntity>();
 
     ////////// Any property to be specifically excluded //////////
-    @IsProperty
+    @IsProperty(linkProperty = "masterEntityProp")
     private SlaveEntity excludedManuallyProp;
 
     ////////// Any property to be specifically disabled //////////
@@ -143,24 +143,24 @@ public class MasterEntity extends AbstractEntity<String> {
 
     ////////// Result-only property //////////
     @ResultOnly
-    @IsProperty
+    @IsProperty(linkProperty = "masterEntityProp")
     private SlaveEntity resultOnlyProp = null;
 
     ////////// A property of AbstractEntity type with CritOnly assigned //////////
     @CritOnly
-    @IsProperty
+    @IsProperty(linkProperty = "masterEntityProp")
     private SlaveEntity critOnlyAEProp;
 
     @CritOnly(Type.SINGLE)
-    @IsProperty
+    @IsProperty(linkProperty = "masterEntityProp")
     private SlaveEntity critOnlySingleAEProp;
 
     ////////// A collection of AbstractEntity type with CritOnly assigned //////////
     @CritOnly
-    @IsProperty(SlaveEntity.class)
+    @IsProperty(value = SlaveEntity.class, linkProperty = "masterEntityProp")
     private List<SlaveEntity> critOnlyAECollectionProp = new ArrayList<SlaveEntity>();
 
-    ////////// A property of "entity with composite key" type //////////
+    //////// A property of "entity with composite key" type //////////
     @IsProperty
     private EntityWithCompositeKey entityWithCompositeKeyProp;
 
