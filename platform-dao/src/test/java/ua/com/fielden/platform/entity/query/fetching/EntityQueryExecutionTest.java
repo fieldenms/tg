@@ -375,8 +375,21 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    @Ignore //FIXME
+    public void test15_() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("model.make").eq().prop("make").model();
+
+	try {
+	    vehicleDao.getAllEntities(from(qry).build());
+	    fail("Prop make should not be resolved and lead to exception");
+	} catch (final RuntimeException e) {
+	}
+
+    }
+
+    @Test
     public void test15() {
-	final PrimitiveResultQueryModel subQry = select(TgVehicle.class).where().prop("model.make").eq().prop("make.id").yield().countAll().modelAsPrimitive();
+	final PrimitiveResultQueryModel subQry = select(TgVehicle.class).where().prop("model.make").eq().prop("make.id")/*extProp("id")*/.yield().countAll().modelAsPrimitive();
 	final AggregatedResultQueryModel countModel = select(TgVehicleMake.class).as("make").yield().prop("key").as("make"). //
 	yield().model(subQry).as("vehicleCount"). //
 	modelAsAggregate();
@@ -535,8 +548,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
-    //FIXME
+    @Ignore //FIXME
     public void test_calculated_entity_props_in_condition() {
 	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).model();
 	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).build());
@@ -547,8 +559,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
-    //FIXME
+    @Ignore //FIXME
     public void test_calculated_entity_props_in_condition_() {
 	final AggregatedResultQueryModel qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).yield().countAll().as("aa").modelAsAggregate();
 	final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).build());
