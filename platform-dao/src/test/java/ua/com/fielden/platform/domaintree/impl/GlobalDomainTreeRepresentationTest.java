@@ -57,7 +57,11 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
     }
 
     private GlobalDomainTreeManager createGlobalDomainTreeManager(final String userName) {
-	return new GlobalDomainTreeManager(serialiser, entityFactory, createUserProvider(userName), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityMasterConfigController.class), getInstance(IEntityLocatorConfigController.class));
+	return new GlobalDomainTreeManager(serialiser, entityFactory, createUserProvider(userName), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityMasterConfigController.class), getInstance(IEntityLocatorConfigController.class)) {
+	    @Override
+	    protected void validateMenuItemType(final Class<?> menuItemType) { // no menu item validation due to non-existence of MiWithConfigurationSupport at platform-dao (it exists only on platform-ui level)
+	    }
+	};
     }
 
     private IUserProvider createUserProvider(final String userName) {
@@ -120,7 +124,6 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
 	final User baseUser1 = save(new_(User.class, "USER1").setBase(true));
 	save(new_(User.class, "USER2").setBase(false).setBasedOnUser(baseUser1));
 	save(new_(User.class, "USER3").setBase(false).setBasedOnUser(baseUser1));
-//	save(new_(MainMenuItem.class, "ua.com.fielden.platform.domaintree.testing.MasterEntity").setOrder(1));
-	save(new_(MainMenuItem.class, "ua.com.fielden.platform.domaintree.testing.MasterEntityForGlobalDomainTree").setOrder(1));
+	save(new_(MainMenuItem.class, "ua.com.fielden.platform.domaintree.testing.MiMasterEntityForGlobalDomainTree").setOrder(1));
     }
 }

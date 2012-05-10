@@ -36,7 +36,7 @@ public interface IGlobalDomainTreeManager {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Gets a current version of <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>.
+     * Gets a current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>.
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
@@ -47,14 +47,14 @@ public interface IGlobalDomainTreeManager {
      * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
      * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      * @return
      */
-    ICentreDomainTreeManagerAndEnhancer getEntityCentreManager(final Class<?> root, final String name);
+    ICentreDomainTreeManagerAndEnhancer getEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
-     * Freezes all the changes of a current version of <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>.
+     * Freezes all the changes of a current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>.
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
@@ -65,14 +65,14 @@ public interface IGlobalDomainTreeManager {
      * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
      * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      * @return
      */
-    void freezeEntityCentreManager(final Class<?> root, final String name);
+    void freezeEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
-     * Returns <code>true</code> if the current version of <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b> is in freezed state.
+     * Returns <code>true</code> if the current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b> is in freezed state.
      * Use {@link #discardEntityCentreManager(Class, String)} or {@link #saveEntityCentreManager(Class, String)} to discard / accept the changes that were made after
      * freezing (these actions trigger automatic unfreezing after that).
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
@@ -87,13 +87,13 @@ public interface IGlobalDomainTreeManager {
      * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
      * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    boolean isFreezedEntityCentreManager(final Class<?> root, final String name);
+    boolean isFreezedEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
-     * Initialises a brand new <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>.
+     * Initialises a brand new <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>.
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
@@ -104,13 +104,13 @@ public interface IGlobalDomainTreeManager {
      * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
      * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    void initEntityCentreManager(final Class<?> root, final String name);
+    void initEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
-     * Discards a current version of <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>.
+     * Discards a current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>.
      * If a current version of <b>entity-centre manager</b> was freezed then it just "discards" the changes after freezing.
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
@@ -124,13 +124,13 @@ public interface IGlobalDomainTreeManager {
      * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
      * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    void discardEntityCentreManager(final Class<?> root, final String name);
+    void discardEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
-     * Saves a current version of <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>.
+     * Saves a current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>.
      * If a current version of <b>entity-centre manager</b> was freezed then it just "accepts" the current version.
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
@@ -144,13 +144,13 @@ public interface IGlobalDomainTreeManager {
      * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
      * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    void saveEntityCentreManager(final Class<?> root, final String name);
+    void saveEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
-     * Duplicates an <b>entity-centre manager</b> for domain type <b>root</b> with <b>originalName</b> to an <b>entity-centre manager</b> with <b>newName</b> and then saves a manager copy.
+     * Duplicates an <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with <b>originalName</b> to an <b>entity-centre manager</b> with <b>newName</b> and then saves a manager copy.
      * The <b>originalName</b> and <b>newName</b> should represent a names of non-principle entity-centres or <code>null</code> for principle entity-centres. <br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
@@ -163,14 +163,14 @@ public interface IGlobalDomainTreeManager {
      * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
      * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param originalName -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre, which should be copied.
      * @param newName -- should represent a not empty (if empty -- throws {@link IllegalArgumentException}) name of new entity-centre.
      */
-    void saveAsEntityCentreManager(final Class<?> root, final String originalName, final String newName);
+    void saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName);
 
     /**
-     * Returns <code>true</code> if the current version of <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b> has been changed since last saving/discard (or since the beginning of manager history).
+     * Returns <code>true</code> if the current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b> has been changed since last saving/discard (or since the beginning of manager history).
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
@@ -183,13 +183,13 @@ public interface IGlobalDomainTreeManager {
      * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
      * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    boolean isChangedEntityCentreManager(final Class<?> root, final String name);
+    boolean isChangedEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
-     * Removes the <b>entity-centre manager</b> for domain type <b>root</b> with specified <b>name</b>. Throws {@link IllegalArgumentException} when manager does not exist. The manager to be removed can be persisted or not (but should exist - at least locally).
+     * Removes the <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>. Throws {@link IllegalArgumentException} when manager does not exist. The manager to be removed can be persisted or not (but should exist - at least locally).
      * The <b>name</b> should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
@@ -202,13 +202,13 @@ public interface IGlobalDomainTreeManager {
      * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
      * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param menuItemType -- a domain type relevant to an entity-centre manager.
      * @param name -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    void removeEntityCentreManager(final Class<?> root, final String name);
+    void removeEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
-     * Returns unordered names of current versions of <b>entity-centre managers</b> for domain type <b>root</b>.
+     * Returns unordered names of current versions of <b>entity-centre managers</b> for menu item type <b>menuItemType</b> .
      * The <b>name</b> could represent a non-empty name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
@@ -219,10 +219,10 @@ public interface IGlobalDomainTreeManager {
      * then can be altered by its methods, and then saved ({@link #saveEntityCentreManager(Class, String)}), saved as non-principle entity-centre ({@link #saveAsEntityCentreManager(Class, String, String)}) or discarded ({@link #discardEntityCentreManager(Class, String)}).
      * After that it can be removed ({@link #removeEntityCentreManager(Class, String)}) and asked "if changed" ({@link #isChangedEntityCentreManager(Class, String)}).<br><br>
      *
-     * @param root -- a domain type relevant to an entity-centre manager.
+     * @param menuItemType -- a menu item type relevant to an entity-centre manager.
      * @return
      */
-    Set<String> entityCentreNames(final Class<?> root);
+    Set<String> entityCentreNames(final Class<?> menuItemType);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////// ENTITY MASTER MANAGERS //////////////////////////////////////////////

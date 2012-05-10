@@ -27,6 +27,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
@@ -91,9 +92,38 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	return gdtr;
     }
 
+    /**
+     * Validates the type of menu item (a part of centre key) to be actually "menu item type".
+     *
+     * @param menuItemType
+     */
+    protected void validateMenuItemType(final Class<?> menuItemType) {
+	try {
+	    final Class<?> parentClassForMenuItems = ClassLoader.getSystemClassLoader().loadClass("ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport");
+	    if (!parentClassForMenuItems.isAssignableFrom(menuItemType)) {
+		error("The menu item type " + menuItemType.getSimpleName() + " is not 'MiWithConfigurationSupport' descendant, which should be a parent type for menu items for all entity centres.");
+	    }
+	} catch (final ClassNotFoundException e) {
+	    e.printStackTrace();
+	    error("There are no loaded class 'MiWithConfigurationSupport', which should be a parent type for menu items for entity centres. [" + e.getMessage() + "]");
+	}
+    }
+
+    private Class<?> validateMenuItemTypeRootType(final Class<?> menuItemType) {
+	final EntityType etAnnotation = menuItemType.getAnnotation(EntityType.class);
+	if (etAnnotation == null || etAnnotation.value() == null) {
+	    error("The menu item type " + menuItemType.getSimpleName() + " has no 'EntityType' annotation, which is necessary to specify the root type of the centre.");
+	}
+	final Class<?> root = etAnnotation.value();
+	validateRootType(root);
+	return root;
+    }
+
     @Override
-    public ICentreDomainTreeManagerAndEnhancer getEntityCentreManager(final Class<?> root, final String name) {
-	return currentCentres.get(key(root, name));
+    public ICentreDomainTreeManagerAndEnhancer getEntityCentreManager(final Class<?> menuItemType, final String name) {
+	validateMenuItemType(menuItemType);
+	validateMenuItemTypeRootType(menuItemType);
+	return currentCentres.get(key(menuItemType, name));
     }
 
     private User currentUser() {
@@ -105,87 +135,90 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     /**
-     * Gets a {@link EntityCentreConfig#getTitle()} component in {@link EntityCentreConfig}'s key from {@link IGlobalDomainTreeManager}'s contract for entity-centre naming --
-     * [root class, name].
+     * Gets a {@link EntityCentreConfig#getTitle()} component in {@link EntityCentreConfig}'s key from {@link IGlobalDomainTreeManager}'s contract
+     * for entity-centre naming -- 'menu item type name' or 'name' (in case of 'saveAs' centre).
      *
-     * @param root
+     * @param menuItemType
      * @param name
      * @return
      */
-    private String title(final Class<?> root, final String name) {
-	return name == null ? root.getName() : name;
+    private String title(final Class<?> menuItemType, final String name) {
+	validateMenuItemType(menuItemType);
+	validateMenuItemTypeRootType(menuItemType);
+	return name == null ? menuItemType.getName() : name;
     }
 
     @Override
-    public void initEntityCentreManager(final Class<?> root, final String name) {
-	AbstractDomainTree.validateRootType(root);
-	if (isFreezedEntityCentreManager(root, name)) {
-	    error("Unable to Init the 'freezed' entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
+    public void initEntityCentreManager(final Class<?> menuItemType, final String name) {
+	validateMenuItemType(menuItemType);
+	final Class<?> root = validateMenuItemTypeRootType(menuItemType);
+	if (isFreezedEntityCentreManager(menuItemType, name)) {
+	    error("Unable to Init the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
 	}
-	final String rootName = root.getName();
-	final String title = title(root, name);
-	final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(rootName, title);
+	final String title = title(menuItemType, name);
+	final String menuItemTypeName = menuItemType.getName();
+	final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, title);
 	final int count = entityCentreConfigController.count(model);
 	if (count == 1) { // the persistence layer contains a entity-centre, so it should be retrieved and deserialised
-	    retrieveAndInit(root, name, model);
+	    retrieveAndInit(menuItemType, name, model);
 	    return;
 	} else if (count < 1) { // there is no entity-centre
 	    if (name == null) { // principle entity-centre
 		// Principle entity-centre should be initialised and then saved. This can be done naturally by base user.
 		// But if base user haven't done that yet, it will be done by non-base user automatically.
 		final boolean owning = currentUser().isBase();
-		init(root, name, new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {{ add(root); }}), owning);
+		init(menuItemType, name, new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {{ add(root); }}), owning);
 		// save a new instance of EntityCentreConfig
-		final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, baseOfTheCurrentUser(), title, mainMenuItemController.findByKey(rootName));
-		ecc.setConfigBody(getSerialiser().serialise(getEntityCentreManager(root, null)));
+		final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, baseOfTheCurrentUser(), title, mainMenuItemController.findByKey(menuItemTypeName));
+		ecc.setConfigBody(getSerialiser().serialise(getEntityCentreManager(menuItemType, null)));
 		entityCentreConfigController.save(ecc);
 		return;
 	    } else {
-		error("Unable to initialise a non-existent entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+		error("Unable to initialise a non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    }
 	} else if (count == 2) {
-	    final EntityResultQueryModel<EntityCentreConfig> model1 = modelForCurrentUser(rootName, title);
+	    final EntityResultQueryModel<EntityCentreConfig> model1 = modelForCurrentUser(menuItemTypeName, title);
 	    final int count1 = entityCentreConfigController.count(model1);
 	    if (count1 == 1) { // for current user => 1 entity-centre, for base => another one with same title
 		// initialise an instance for current user (base configuration will be ignored)
-		retrieveAndInit(root, name, model1);
+		retrieveAndInit(menuItemType, name, model1);
 	    } else {
-		error("There are more than one entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+		error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    }
 	} else {
-	    error("There are more than one entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+	    error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	}
     }
 
     /**
-     * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user with a <code>title</code> and <code>rootName</code> specified.
+     * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user with a <code>title</code> and <code>menuItemTypeName</code> specified.
      *
-     * @param rootName
+     * @param menuItemTypeName
      * @param title
      * @return
      */
-    private EntityResultQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsers(final String rootName, final String title) {
+    private EntityResultQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsers(final String menuItemTypeName, final String title) {
 	final EntityResultQueryModel<EntityCentreConfig> model =
 	    /*    */select(EntityCentreConfig.class).where().//
 	    /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
 	    /*    */prop("title").eq().val(title).and().//
-	    /*    */prop("menuItem.key").eq().val(rootName).model();
+	    /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
 	return model;
     }
 
     /**
-     * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user and its base user with a <code>title</code> and <code>rootName</code> specified.
+     * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user and its base user with a <code>title</code> and <code>menuItemTypeName</code> specified.
      *
-     * @param rootName
+     * @param menuItemTypeName
      * @param title
      * @return
      */
-    private EntityResultQueryModel<EntityCentreConfig> modelForCurrentUser(final String rootName, final String title) {
+    private EntityResultQueryModel<EntityCentreConfig> modelForCurrentUser(final String menuItemTypeName, final String title) {
 	final EntityResultQueryModel<EntityCentreConfig> model1 =
 	    /*    */select(EntityCentreConfig.class).where().//
 	    /*    */prop("owner").eq().val(currentUser()).and().// look for entity-centres for only current user
 	    /*    */prop("title").eq().val(title).and().//
-	    /*    */prop("menuItem.key").eq().val(rootName).model();
+	    /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
 	return model1;
     }
 
@@ -230,19 +263,19 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     /**
      * Retrieves and initialises a instance of manager.
      *
-     * @param root
+     * @param menuItemType
      * @param name
      * @param model
      */
-    private void retrieveAndInit(final Class<?> root, final String name, final EntityResultQueryModel<EntityCentreConfig> model) {
+    private void retrieveAndInit(final Class<?> menuItemType, final String name, final EntityResultQueryModel<EntityCentreConfig> model) {
 	final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).build());
 	final boolean owning = ecc.getOwner().equals(currentUser());
 	try {
-	    init(root, name, getSerialiser().deserialise(ecc.getConfigBody(), ICentreDomainTreeManagerAndEnhancer.class), owning);
+	    init(menuItemType, name, getSerialiser().deserialise(ecc.getConfigBody(), ICentreDomainTreeManagerAndEnhancer.class), owning);
 	    return;
 	} catch (final Exception e) {
 	    e.printStackTrace();
-	    final String message = "Unable to deserialise a entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].";
+	    final String message = "Unable to deserialise a entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "].";
 	    error(message);
 	}
     }
@@ -272,7 +305,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param mgr
      * @return
      */
-    public ICentreDomainTreeManagerAndEnhancer initCriteriaManagerCrossReferences(final ICentreDomainTreeManagerAndEnhancer mgr) {
+    public ICentreDomainTreeManagerAndEnhancer initCentreManagerCrossReferences(final ICentreDomainTreeManagerAndEnhancer mgr) {
 	final LocatorManager locatorManager = (((AddToCriteriaTickManagerAndEnhancer)mgr.getFirstTick()).base()).locatorManager();
 	final IGlobalDomainTreeRepresentation globalRepresentation = this.getGlobalRepresentation();
 	initLocatorManagerCrossReferences(locatorManager, globalRepresentation);
@@ -317,7 +350,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre) {
 	final TgKryo kryo = (TgKryo) getSerialiser();
 	kryo.register(CentreDomainTreeManager.class, new CentreDomainTreeManagerSerialiserWithTransientAnalyses(kryo));
-	final ICentreDomainTreeManagerAndEnhancer copy = initCriteriaManagerCrossReferences(EntityUtils.deepCopy(centre, getSerialiser()));
+	final ICentreDomainTreeManagerAndEnhancer copy = initCentreManagerCrossReferences(EntityUtils.deepCopy(centre, getSerialiser()));
 	kryo.register(CentreDomainTreeManager.class);
 	return copy;
     }
@@ -329,16 +362,16 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     /**
      * Initiates an application instances with a new <code>mgr</code> instance.
      *
-     * @param root
+     * @param menuItemType
      * @param name
      * @param mgr
      * @param owning
      */
-    private void init(final Class<?> root, final String name, final ICentreDomainTreeManagerAndEnhancer mgr, final boolean owning) {
-	final ICentreDomainTreeManagerAndEnhancer fullyDefinedMgr = initCriteriaManagerCrossReferences(mgr);
-	currentCentres.put(key(root, name), fullyDefinedMgr);
-	persistentCentres.put(key(root, name), copyCentre(fullyDefinedMgr));
-	centresOwning.put(key(root, name), owning);
+    private void init(final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer mgr, final boolean owning) {
+	final ICentreDomainTreeManagerAndEnhancer fullyDefinedMgr = initCentreManagerCrossReferences(mgr);
+	currentCentres.put(key(menuItemType, name), fullyDefinedMgr);
+	persistentCentres.put(key(menuItemType, name), copyCentre(fullyDefinedMgr));
+	centresOwning.put(key(menuItemType, name), owning);
     }
 
     /**
@@ -356,64 +389,71 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public void discardEntityCentreManager(final Class<?> root, final String name) {
-	final ICentreDomainTreeManagerAndEnhancer persistentCentre = persistentCentres.get(key(root, name));
-	notInitiliasedError(persistentCentre, root, name);
-	currentCentres.put(key(root, name), copyCentre(persistentCentre));
+    public void discardEntityCentreManager(final Class<?> menuItemType, final String name) {
+	validateMenuItemType(menuItemType);
+	validateMenuItemTypeRootType(menuItemType);
+	final ICentreDomainTreeManagerAndEnhancer persistentCentre = persistentCentres.get(key(menuItemType, name));
+	notInitiliasedError(persistentCentre, menuItemType, name);
+	currentCentres.put(key(menuItemType, name), copyCentre(persistentCentre));
 
-	if (isFreezedEntityCentreManager(root, name)) {
-	    unfreeze(root, name);
+	if (isFreezedEntityCentreManager(menuItemType, name)) {
+	    unfreeze(menuItemType, name);
 	}
     }
 
     @Override
-    public void freezeEntityCentreManager(final Class<?> root, final String name) {
-	if (isFreezedEntityCentreManager(root, name)) {
-	    error("Unable to freeze the entity-centre instance more than once for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
+    public void freezeEntityCentreManager(final Class<?> menuItemType, final String name) {
+	validateMenuItemType(menuItemType);
+	validateMenuItemTypeRootType(menuItemType);
+	if (isFreezedEntityCentreManager(menuItemType, name)) {
+	    error("Unable to freeze the entity-centre instance more than once for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
 	}
-	notInitiliasedError(currentCentres.get(key(root, name)), root, name);
-	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
+	notInitiliasedError(currentCentres.get(key(menuItemType, name)), menuItemType, name);
+	notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
 
-	freezedCentres.put(key(root, name), persistentCentres.remove(key(root, name)));
-	persistentCentres.put(key(root, name), copyCentre(currentCentres.get(key(root, name))));
-	currentCentres.put(key(root, name), copyCentre(currentCentres.get(key(root, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
+	freezedCentres.put(key(menuItemType, name), persistentCentres.remove(key(menuItemType, name)));
+	persistentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name))));
+	currentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
     }
 
     /**
      * Returns <code>true</code> if the centre instance is in 'freezed' state, <code>false</code> otherwise.
      *
-     * @param root
+     * @param menuItemType
      * @param name
      * @return
      */
     @Override
-    public boolean isFreezedEntityCentreManager(final Class<?> root, final String name) {
-	return freezedCentres.get(key(root, name)) != null;
+    public boolean isFreezedEntityCentreManager(final Class<?> menuItemType, final String name) {
+	validateMenuItemType(menuItemType);
+	validateMenuItemTypeRootType(menuItemType);
+
+	return freezedCentres.get(key(menuItemType, name)) != null;
     }
 
     /**
      * Unfreezes the centre instance that is currently freezed.
      *
-     * @param root
+     * @param menuItemType
      * @param name
      */
-    protected void unfreeze(final Class<?> root, final String name) {
-	if (!isFreezedEntityCentreManager(root, name)) {
-	    error("Unable to unfreeze the entity-centre instance that is not 'freezed' for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
+    protected void unfreeze(final Class<?> menuItemType, final String name) {
+	if (!isFreezedEntityCentreManager(menuItemType, name)) {
+	    error("Unable to unfreeze the entity-centre instance that is not 'freezed' for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
 	}
-	persistentCentres.put(key(root, name), freezedCentres.remove(key(root, name)));
+	persistentCentres.put(key(menuItemType, name), freezedCentres.remove(key(menuItemType, name)));
     }
 
     /**
      * Throws an error when the instance is <code>null</code> (not initialised).
      *
      * @param mgr
-     * @param root
+     * @param menuItemType
      * @param name
      */
-    private void notInitiliasedError(final ICentreDomainTreeManagerAndEnhancer mgr, final Class<?> root, final String name) {
+    private void notInitiliasedError(final ICentreDomainTreeManagerAndEnhancer mgr, final Class<?> menuItemType, final String name) {
 	if (mgr == null) {
-	    error("Unable to perform this operation on the entity-centre instance, that wasn't initialised, for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
+	    error("Unable to perform this operation on the entity-centre instance, that wasn't initialised, for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
 	}
     }
 
@@ -431,30 +471,32 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public void saveEntityCentreManager(final Class<?> root, final String name) {
-	if (isFreezedEntityCentreManager(root, name)) {
-	    unfreeze(root, name);
+    public void saveEntityCentreManager(final Class<?> menuItemType, final String name) {
+	validateMenuItemType(menuItemType);
+	validateMenuItemTypeRootType(menuItemType);
+	if (isFreezedEntityCentreManager(menuItemType, name)) {
+	    unfreeze(menuItemType, name);
 
-	    currentCentres.put(key(root, name), copyCentre(currentCentres.get(key(root, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
+	    currentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
 	} else {
-	    final ICentreDomainTreeManagerAndEnhancer currentMgr = getEntityCentreManager(root, name);
-	    validateBeforeSaving(currentMgr, root, name);
+	    final ICentreDomainTreeManagerAndEnhancer currentMgr = getEntityCentreManager(menuItemType, name);
+	    validateBeforeSaving(currentMgr, menuItemType, name);
 
 	    // save an instance of EntityCentreConfig with overridden body, which should exist in DB
-	    final String title = title(root, name);
+	    final String title = title(menuItemType, name);
 
-	    final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(root.getName(), title);
+	    final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title);
 	    final int count = entityCentreConfigController.count(model);
 	    if (count == 1) { // for current user => 1 entity-centre
 		final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).build());
 		ecc.setConfigBody(getSerialiser().serialise(currentMgr));
 		entityCentreConfigController.save(ecc);
 
-		persistentCentres.put(key(root, name), copyCentre(currentMgr));
+		persistentCentres.put(key(menuItemType, name), copyCentre(currentMgr));
 	    } else if (count < 1) { // there is no entity-centre
-		error("Unable to save a non-existent (non-visible for current user) entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+		error("Unable to save a non-existent (non-visible for current user) entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    } else { // > 1
-		error("There are more than one entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+		error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
 	    }
 	}
     }
@@ -463,11 +505,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * Checks if an instance of manager has been initialised and its inner parts (locators, analyses) have been fully accepted/discarded.
      *
      * @param currentMgr
-     * @param root
+     * @param menuItemType
      * @param name
      */
-    private void validateBeforeSaving(final ICentreDomainTreeManagerAndEnhancer currentMgr, final Class<?> root, final String name) {
-	notInitiliasedError(currentMgr, root, name);
+    private void validateBeforeSaving(final ICentreDomainTreeManagerAndEnhancer currentMgr, final Class<?> menuItemType, final String name) {
+	notInitiliasedError(currentMgr, menuItemType, name);
 	// let's iterate through all locators and ask if they are in USAGE phase!
 	for (final Pair<Class<?>, String> locatorKey : currentMgr.getFirstTick().locatorKeys()) {
 	    if (USAGE_PHASE != currentMgr.getFirstTick().phaseAndTypeOfLocatorManager(locatorKey.getKey(), locatorKey.getValue()).getKey()) {
@@ -500,69 +542,76 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public void saveAsEntityCentreManager(final Class<?> root, final String originalName, final String newName) {
-	if (isFreezedEntityCentreManager(root, originalName)) {
-	    error("Unable to SaveAs the 'freezed' entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title(root, originalName) + "] for current user [" + currentUser() + "].");
+    public void saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName) {
+	validateMenuItemType(menuItemType);
+	validateMenuItemTypeRootType(menuItemType);
+
+	if (isFreezedEntityCentreManager(menuItemType, originalName)) {
+	    error("Unable to SaveAs the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, originalName) + "] for current user [" + currentUser() + "].");
 	}
-	final ICentreDomainTreeManagerAndEnhancer originationMgr = getEntityCentreManager(root, originalName);
-	validateBeforeSaving(originationMgr, root, originalName);
+	final ICentreDomainTreeManagerAndEnhancer originationMgr = getEntityCentreManager(menuItemType, originalName);
+	validateBeforeSaving(originationMgr, menuItemType, originalName);
 	// create a copy of current instance of entity centre
 	final ICentreDomainTreeManagerAndEnhancer copyMgr = copyCentre(originationMgr);
 
 	// save an instance of EntityCentreConfig with overridden body, which should exist in DB
-	final String rootName = root.getName();
-	final String newTitle = title(root, newName);
+	final String menuItemTypeName = menuItemType.getName();
+	final String newTitle = title(menuItemType, newName);
 
-	final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(rootName, newTitle);
-	System.out.println("////////////////////////////////////////////////////////");
-
+	final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, newTitle);
 	entityCentreConfigController.getAllEntities(from(model).build());
-
-	System.out.println("////////////////////////////////////////////////////////");
 
 	final int count = entityCentreConfigController.count(model);
 	if (count == 0) { // for current user or its base => there are no entity-centres, so persist a copy with a new title
-	    final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, currentUser(), newTitle, mainMenuItemController.findByKey(rootName));
+	    final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, currentUser(), newTitle, mainMenuItemController.findByKey(menuItemTypeName));
 	    ecc.setConfigBody(getSerialiser().serialise(copyMgr));
 	    entityCentreConfigController.save(ecc);
-	    init(root, newName, copyMgr, true);
+	    init(menuItemType, newName, copyMgr, true);
 	} else { // > 1
-	    error("There are at least one entity-centre instance for type [" + root.getSimpleName() + "] with title [" + newTitle + "] for current user [" + currentUser() + "] or its base [" + baseOfTheCurrentUser() + "].");
+	    error("There are at least one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + newTitle + "] for current user [" + currentUser() + "] or its base [" + baseOfTheCurrentUser() + "].");
 	}
     }
 
     @Override
-    public boolean isChangedEntityCentreManager(final Class<?> root, final String name) {
-	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
-	return !EntityUtils.equalsEx(currentCentres.get(key(root, name)), persistentCentres.get(key(root, name)));
+    public boolean isChangedEntityCentreManager(final Class<?> menuItemType, final String name) {
+	validateMenuItemType(menuItemType);
+	validateMenuItemTypeRootType(menuItemType);
+
+	notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
+	return !EntityUtils.equalsEx(currentCentres.get(key(menuItemType, name)), persistentCentres.get(key(menuItemType, name)));
     }
 
     @Override
-    public void removeEntityCentreManager(final Class<?> root, final String name) {
-	if (isFreezedEntityCentreManager(root, name)) {
-	    error("Unable to Remove the 'freezed' entity-centre instance for type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
+    public void removeEntityCentreManager(final Class<?> menuItemType, final String name) {
+	validateMenuItemType(menuItemType);
+	validateMenuItemTypeRootType(menuItemType);
+
+	if (isFreezedEntityCentreManager(menuItemType, name)) {
+	    error("Unable to Remove the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
 	}
-	notInitiliasedError(persistentCentres.get(key(root, name)), root, name);
+	notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
 	if (name == null) {
-	    error("Unable to remove a principle entity-centre for type [" + root.getSimpleName() + "].");
-	} else if (Boolean.FALSE.equals(centresOwning.get(key(root, name)))) { // the report not owns by current user. It can not be removed by current user.
-	    error("Unable to remove the entity-centre instance, that current user does not own. The type [" + root.getSimpleName() + "] with title [" + title(root, name) + "] for current user [" + currentUser() + "].");
+	    error("Unable to remove a principle entity-centre for type [" + menuItemType.getSimpleName() + "].");
+	} else if (Boolean.FALSE.equals(centresOwning.get(key(menuItemType, name)))) { // the report not owns by current user. It can not be removed by current user.
+	    error("Unable to remove the entity-centre instance, that current user does not own. The type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
 	} else {
-	    currentCentres.remove(key(root, name));
-	    persistentCentres.remove(key(root, name));
-	    centresOwning.remove(key(root, name));
+	    currentCentres.remove(key(menuItemType, name));
+	    persistentCentres.remove(key(menuItemType, name));
+	    centresOwning.remove(key(menuItemType, name));
 
 	    // remove an instance of EntityCentreConfig which should exist in DB
-	    entityCentreConfigController.delete(modelForCurrentUser(root.getName(), title(root, name)));
+	    entityCentreConfigController.delete(modelForCurrentUser(menuItemType.getName(), title(menuItemType, name)));
 	}
     }
 
     @Override
-    public Set<String> entityCentreNames(final Class<?> root) {
-	AbstractDomainTree.validateRootType(root);
+    public Set<String> entityCentreNames(final Class<?> menuItemType) {
+	validateMenuItemType(menuItemType);
+	validateMenuItemTypeRootType(menuItemType);
+
 	final Set<String> names = new HashSet<String>();
 	for (final Pair<Class<?>, String> key : currentCentres.keySet()) {
-	    if (root.equals(key.getKey())) {
+	    if (menuItemType.equals(key.getKey())) {
 		names.add(key.getValue());
 	    }
 	}
@@ -570,7 +619,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     /////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////// Master management /////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////
 
     @Override
