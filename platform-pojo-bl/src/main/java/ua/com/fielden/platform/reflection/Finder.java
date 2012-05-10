@@ -242,6 +242,25 @@ public class Finder {
     }
 
     /**
+     * Returns a list of properties of the specified type that are declared in the provided entity type.
+     *
+     * @param entityType
+     * @param propertyType
+     * @return
+     */
+    public static List<Field> findPropertiesOfSpecifiedType(final Class<?> entityType, final Class<?> propertyType) {
+	final List<Field> properties = findProperties(entityType);
+
+	for (final Iterator<Field> iter = properties.iterator(); iter.hasNext();) {
+	    final Field property = iter.next();
+	    if (!propertyType.isAssignableFrom(property.getType())) {
+		iter.remove();
+	    }
+	}
+	return properties;
+    }
+
+    /**
      * Determines properties within the provided class to be used for a key. There are two cases: either entity uses a composite key or a single property <code>key</code> represent
      * a key.
      * <p>
@@ -367,7 +386,7 @@ public class Finder {
      * @return list of found fields, which can be empty
      */
     public static List<Field> getFieldsOfSpecifiedType(final Class<?> ownerType, final Class<?> fieldType) {
-	return getFieldsOfSpecifiedTypes(ownerType, Arrays.<Class<?>>asList(fieldType));
+	return getFieldsOfSpecifiedTypes(ownerType, Arrays.<Class<?>> asList(fieldType));
     }
 
     /**
@@ -451,10 +470,11 @@ public class Finder {
      * Returns a list of fields (including private, protected and public). This method processes the whole class hierarchy.
      *
      * @param type
-     * @param withUnion - determines whether include union entitie's properties (i.e. common properties, union properties) or just simple union entity fields.
+     * @param withUnion
+     *            - determines whether include union entitie's properties (i.e. common properties, union properties) or just simple union entity fields.
      * @return
      */
-    public static List<Field> getFields(final Class<?> type, final boolean withUnion){
+    public static List<Field> getFields(final Class<?> type, final boolean withUnion) {
 	final List<Field> properties = new ArrayList<Field>();
 	Class<?> klass = type;
 	if (AbstractUnionEntity.class.isAssignableFrom(klass) && withUnion) {
@@ -481,7 +501,8 @@ public class Finder {
      *
      * @param type
      * @param annotation
-     * @param withUnion - determines whether include union entitie's properties (i.e. common properties, union properties) or just simple union entity fields.
+     * @param withUnion
+     *            - determines whether include union entitie's properties (i.e. common properties, union properties) or just simple union entity fields.
      *
      * @return
      */
@@ -557,7 +578,7 @@ public class Finder {
      * @throws InvocationTargetException
      */
     private static Object getAbstractUnionEntityMethodValue(final AbstractUnionEntity instance, final String methodName, final Class<?>... arguments) throws NoSuchMethodException,
-    IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+	    IllegalArgumentException, IllegalAccessException, InvocationTargetException {
 	try {
 	    final Method method = Reflector.getMethodForClass(instance.getClass(), methodName, arguments);
 	    return getMethodValue(method, instance);
@@ -703,8 +724,8 @@ public class Finder {
     }
 
     /**
-     * Returns <code>true</code> if property (defined by <code>dotNotationExp</code>) is present in type <code>forType</code>.
-     * Field should have {@link IsProperty} annotation assigned to be recognised as "property".
+     * Returns <code>true</code> if property (defined by <code>dotNotationExp</code>) is present in type <code>forType</code>. Field should have {@link IsProperty} annotation
+     * assigned to be recognised as "property".
      *
      * @param forType
      * @param dotNotationExp
@@ -808,51 +829,75 @@ public class Finder {
     }
 
     /**
-     * Looks for the value of <code>linkProperty</code> for the specified property in a form of dot notation expression starting with a given type.
-     * The value of <code>linkProperty</code> is either read from property annotation or dynamically determined based on its type and key composition.
+     * Looks for the value of <code>linkProperty</code> for the specified property in a form of dot notation expression starting with a given type. The value of
+     * <code>linkProperty</code> is either read from property annotation or dynamically determined based on its type and key composition.
      * <p>
      * In case <code>linkProperty</code> could not be either read or determined, a runtime exception is thrown.
      * <p>
      * This method covers situation of all possible entity associations, including One-to-One where <code>linkProperty</code> is not present.
+     *
      * @param type
      * @param dotNotationExp
      * @return
      */
     public static String findLinkProperty(final Class<? extends AbstractEntity<?>> type, final String dotNotationExp) {
 	final Field field = Finder.findFieldByName(type, dotNotationExp);
-	if (field.isAnnotationPresent(IsProperty.class)) {
-	    final IsProperty propAnnotation = field.getAnnotation(IsProperty.class);
-	    // check if meta-data is present and if so use it
-	    if (!IsProperty.stubForLinkProperty.equals(propAnnotation.linkProperty())) {
-		return propAnnotation.linkProperty();
-	    }
-	    // otherwise try to determine link property dynamically based on property type and composite key
-	    final Class<?> masterType = field.getDeclaringClass();
-	    final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
-	    if (AbstractEntity.class.isAssignableFrom(propType)) {
-		final List<Field> keyMembers = getKeyMembers(propType); // returns exactly one element in case of One-to-One association, or multiple in case of One-to-Many associaton
-		// there should be exactly one key member of the
-		String linkProperty = null;
-		int count = 0;
-		for (final Field keyMember: keyMembers) {
-		    if (keyMember.getType().isAssignableFrom(masterType)) {
-			linkProperty = keyMember.getName();
-			count++;
-		    }
-		}
-		// let's see a key member was found, and if not try to report a pricise cause of the problem
-		if (count == 0) {
-		    throw new IllegalArgumentException("Field " + dotNotationExp + " in type " + type.getName() + " does not have an appropriate key member of type " + masterType.getName() + ".");
-		} else if (count > 1) {
-		    throw new IllegalArgumentException("Field " + dotNotationExp + " in type " + type.getName() + " has more than one key of type " + masterType.getName() + ".");
-		}
-		return linkProperty;
-	    } else {
-		throw new IllegalArgumentException("Field " + dotNotationExp + " in type " + type.getName() + " is not an entity (" + propType.getName() + ").");
-	    }
-	} else {
+	if (!field.isAnnotationPresent(IsProperty.class)) {
 	    throw new IllegalArgumentException("Field " + dotNotationExp + " in type " + type.getName() + " is not a property.");
 	}
+
+	final IsProperty propAnnotation = field.getAnnotation(IsProperty.class);
+	// check if meta-data is present and if so use it
+	if (!IsProperty.stubForLinkProperty.equals(propAnnotation.linkProperty())) {
+	    return propAnnotation.linkProperty();
+	}
+	// otherwise try to determine link property dynamically based on property type and composite key
+	final Class<?> masterType = field.getDeclaringClass();
+	final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
+	if (!AbstractEntity.class.isAssignableFrom(propType)) {
+	    throw new IllegalArgumentException("Property " + dotNotationExp + " in type " + type.getName() + " is not an entity (" + propType.getName() + ").");
+	} else if (masterType.isAssignableFrom(propType)) {
+	    throw new IllegalArgumentException("Property " + dotNotationExp + " in type " + type.getName() + " is of the same type as the master type, indicating a circular reference.");
+	}
+
+	// first check for a link property amongst key members
+	final Pair<Integer, String> keyPair = lookForLinkProperty(masterType, getKeyMembers(propType));
+	final Integer matchingKeyMemembersCount = keyPair.getKey(); // the number of matched fields that are key members
+	final String keylinkProperty = keyPair.getValue(); // the matched key member name
+	// check if a key member was found
+	if (matchingKeyMemembersCount == 0) {
+	    // let's try to find a potential match for a linkProperty amongst non-key properties;
+	    final Pair<Integer, String> propertyPair = lookForLinkProperty(masterType, findPropertiesOfSpecifiedType(propType, masterType));
+	    final Integer matchingPropertiesCount = propertyPair.getKey(); // the number of matched properties that are not key members
+	    final String propertyLinkProperty = propertyPair.getValue(); // the matched property name
+	    if (matchingPropertiesCount == 0) {
+		throw new IllegalArgumentException("Property " + dotNotationExp + " in type " + type.getName()
+			+ " does not have either an appropriate key member or ordinary property of type " + masterType.getName() + ".");
+	    } else if (matchingPropertiesCount > 1) {
+		throw new IllegalArgumentException("Property " + dotNotationExp + " in type " + type.getName()
+			+ " does not have an appropriate key member and has more than one ordinary property of type " + masterType.getName() + ".");
+	    }
+	    return propertyLinkProperty;
+	} else if (matchingKeyMemembersCount > 1) {
+	    // more than one matching key member means ambiguity
+	    throw new IllegalArgumentException("Property " + dotNotationExp + " in type " + type.getName() + " has more than one key of type " + masterType.getName() + ".");
+	}
+	// otherwise, a single possible link property has been found
+	return keylinkProperty;
+    }
+
+    /** A helper function to assist in checking field for a potential linkProperty role match. */
+    private static Pair<Integer, String> lookForLinkProperty(final Class<?> masterType, final List<Field> fieldsToCheck) {
+	String linkProperty = null;
+	int count = 0;
+	for (final Field field : fieldsToCheck) {
+	    if (field.getType().isAssignableFrom(masterType)) {
+		linkProperty = field.getName();
+		count++;
+	    }
+	}
+
+	return new Pair<Integer, String>(count, linkProperty);
     }
 
     /**
@@ -868,9 +913,18 @@ public class Finder {
 	if (EntityAggregates.class.isAssignableFrom(type)) {
 	    return false;
 	}
-	final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
-	final Class<?> masterType = PropertyTypeDeterminator.transform(type, dotNotationExp).getKey();
-	return isOne2One_association(type, dotNotationExp) || EntityUtils.isEntityType(propertyType) && !masterType.equals(propertyType) && getFieldsOfSpecifiedType(propertyType, masterType).size() > 0;
+
+	if (isOne2One_association(type, dotNotationExp)) {
+	    return true;
+	}
+	// if it is not one-to-one than may be it is one-to-many
+	// for this we should try to identify linkProperty, it it is identifiable then return true, otherwise -- false
+	try {
+	    return !StringUtils.isEmpty(findLinkProperty((Class<? extends AbstractEntity<?>>)type, dotNotationExp));
+	} catch (final Exception ex) {
+	    // exception is possible in various cases of incorrectly constructed associations, which should not be recognised as valid one-to-many
+	    return false;
+	}
     }
 
     /**

@@ -3,11 +3,14 @@ package ua.com.fielden.platform.reflection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity5;
+import ua.com.fielden.platform.associations.one2many.multiple_matches.MasterEntityWithInvalidOneToManyAssociation;
+import ua.com.fielden.platform.associations.one2many.non_key.MasterEntityWithNonKeyOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 
 /**
@@ -58,4 +61,29 @@ public class FindLinkPropertyTest {
     public void self_type_association_should_not_be_one2many() {
 	assertFalse(Finder.isOne2Many_or_One2One_association(MasterEntity5.class, "selfTypeAssociation"));
     }
+
+    @Test
+    public void should_have_found_link_property_in_non_key_based_one_to_many_association() {
+	assertTrue(Finder.isOne2Many_or_One2One_association(MasterEntityWithNonKeyOneToManyAssociation.class, "one2manyAssociationCollectional"));
+	assertEquals("many2oneProp", Finder.findLinkProperty(MasterEntityWithNonKeyOneToManyAssociation.class, "one2manyAssociationCollectional"));
+    }
+
+    @Test
+    public void should_have_failed_to_find_link_property_in_one_to_many_association_due_to_multiple_matching_key_members() {
+	try {
+	    Finder.findLinkProperty(MasterEntityWithInvalidOneToManyAssociation.class, "one2manyAssociationCollectional");
+	    fail("Invalid association should have been recognised.");
+	} catch (final Exception ex) {
+	    assertEquals("Incorrect error message", "Property one2manyAssociationCollectional in type ua.com.fielden.platform.associations.one2many.multiple_matches.MasterEntityWithInvalidOneToManyAssociation has more than one key of type ua.com.fielden.platform.associations.one2many.multiple_matches.MasterEntityWithInvalidOneToManyAssociation.", ex.getMessage());
+	}
+    }
+
+    @Test
+    public void should_not_have_to_recognise_invalid_one_to_many_association() {
+	assertFalse(Finder.isOne2Many_or_One2One_association(MasterEntityWithInvalidOneToManyAssociation.class, "one2manyAssociationCollectional"));
+    }
+
+
+
+
 }
