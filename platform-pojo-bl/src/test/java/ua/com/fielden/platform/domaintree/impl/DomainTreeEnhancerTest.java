@@ -197,6 +197,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "slaveEntityProp.oldTriple", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "3 * integerProp", "Old triple", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "oldQuadruple", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "4 * integerProp", "Old quadruple", "Desc");
 	checkDomainPreparedForEnhancements(dm);
+	assertEquals("Incorrect count of enhanced types byte arrays.", 6, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 
     private static void checkEmptyDomain(final IDomainTreeEnhancer dm) {
@@ -206,6 +207,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "oldTriple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "oldQuadruple");
 	checkDomainPreparedForEnhancements(dm);
+	assertEquals("Incorrect count of enhanced types byte arrays.", 0, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 
     protected static void checkDomainPreparedForEnhancements(final IDomainTreeEnhancer dm) {
@@ -251,6 +253,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "sextuple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "septuple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "octuple");
+	assertEquals("Incorrect count of enhanced types byte arrays.", 6, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
 
 	// modify domain
 	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
@@ -269,6 +272,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "sextuple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "septuple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "octuple");
+	assertEquals("Incorrect count of enhanced types byte arrays.", 6, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 
     private static void checkSecondLevelEnhancements(final IDomainTreeEnhancer dm) {
@@ -293,6 +297,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "sextuple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "septuple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "octuple");
+	assertEquals("Incorrect count of enhanced types byte arrays.", 6, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 
     private static void checkThirdLevelEnhancements(final IDomainTreeEnhancer dm) {
@@ -314,6 +319,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "sextuple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "septuple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "octuple");
+	assertEquals("Incorrect count of enhanced types byte arrays.", 5, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
 
 	// modify domain
 	dm.getCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.newTitle").setContextualExpression("2 * integerProp").setTitle("Old double").setDesc("Desc");
@@ -336,6 +342,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityProp.slaveEntityProp.sextuple", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "6 * integerProp", "Sextuple", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "slaveEntityProp.masterEntityProp.septuple", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "7 * integerProp", "Septuple", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityProp.masterEntityProp.octuple", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "8 * integerProp", "Octuple", "Desc");
+	assertEquals("Incorrect count of enhanced types byte arrays.", 8, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 
     @Test
@@ -428,6 +435,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "oldTriple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "oldQuadruple");
 	checkDomainPreparedForEnhancements(dm);
+	assertEquals("Incorrect count of enhanced types byte arrays.", 0, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
 
 	// modify domain
 
@@ -447,6 +455,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "slaveEntityProp.sextuple", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "6 * integerProp", "Sextuple", "Desc");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "septuple");
 	fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "octuple");
+	assertEquals("Incorrect count of enhanced types byte arrays.", 2, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 
     private void failAddition(final IDomainTreeEnhancer dm, final Class<?> rootType, final String contextPath, final String title) {
@@ -559,6 +568,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityCollProp.evenSlaverEntityCollProp.sextuple", CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "6 * integerProp", "Sextuple", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "masterEntityProp.masterEntityCollProp.slaveEntityProp.septuple", CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "7 * integerProp", "Septuple", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp.octuple", CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "8 * integerProp", "Octuple", "Desc");
+	assertEquals("Incorrect count of enhanced types byte arrays.", 10, copy.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 
     @Test
@@ -603,6 +613,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityCollProp.anyOfSextuple", CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "6 * integerProp", "Any of sextuple", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "masterEntityProp.allOfSeptuple", CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "7 * integerProp", "All of septuple", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "slaveEntityCollProp.slaveEntityProp.anyOfOctuple", CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "8 * integerProp", "Any of octuple", "Desc");
+	assertEquals("Incorrect count of enhanced types byte arrays.", 5, copy.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 
     @Test
@@ -647,6 +658,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityCollProp.sumOfSextuple", CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "SUM(6 * integerProp)", "Sum of sextuple", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "masterEntityProp.sumOfSeptuple", CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "SUM(7 * integerProp)", "Sum of septuple", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "slaveEntityCollProp.slaveEntityProp.sumOfOctuple", CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "SUM(8 * integerProp)", "Sum of octuple", "Desc");
+	assertEquals("Incorrect count of enhanced types byte arrays.", 5, copy.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 
     @Test
@@ -691,5 +703,6 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "sumOfSextuple", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "SUM(6 * integerProp)", "Sum of sextuple", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "sumOfSeptuple", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "SUM(7 * integerProp)", "Sum of septuple", "Desc");
 	calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "sumOfOctuple", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "SUM(8 * integerProp)", "Sum of octuple", "Desc");
+	assertEquals("Incorrect count of enhanced types byte arrays.", 1, copy.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 }
