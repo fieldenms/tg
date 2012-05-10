@@ -854,10 +854,17 @@ public class Finder {
 	// otherwise try to determine link property dynamically based on property type and composite key
 	final Class<?> masterType = field.getDeclaringClass();
 	final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
+	final boolean collectionalProp = PropertyTypeDeterminator.isCollectional(type, dotNotationExp);
+
+	// to be in association property should be an entity type
 	if (!AbstractEntity.class.isAssignableFrom(propType)) {
 	    throw new IllegalArgumentException("Property " + dotNotationExp + " in type " + type.getName() + " is not an entity (" + propType.getName() + ").");
-	} else if (masterType.isAssignableFrom(propType)) {
-	    throw new IllegalArgumentException("Property " + dotNotationExp + " in type " + type.getName() + " is of the same type as the master type, indicating a circular reference.");
+	}
+
+	// non-collectional properties must have their linkProperty specified explicitly, otherwise they're considered to be Many-to-One
+	if (!collectionalProp && !isOne2One_association(type, dotNotationExp)) {
+	    throw new IllegalStateException("Non-collectional property " + dotNotationExp + " in type " + type.getName() + //
+		    " represents a Many-to-One association.");
 	}
 
 	// first check for a link property amongst key members
@@ -866,18 +873,8 @@ public class Finder {
 	final String keylinkProperty = keyPair.getValue(); // the matched key member name
 	// check if a key member was found
 	if (matchingKeyMemembersCount == 0) {
-	    // let's try to find a potential match for a linkProperty amongst non-key properties;
-	    final Pair<Integer, String> propertyPair = lookForLinkProperty(masterType, findPropertiesOfSpecifiedType(propType, masterType));
-	    final Integer matchingPropertiesCount = propertyPair.getKey(); // the number of matched properties that are not key members
-	    final String propertyLinkProperty = propertyPair.getValue(); // the matched property name
-	    if (matchingPropertiesCount == 0) {
-		throw new IllegalArgumentException("Property " + dotNotationExp + " in type " + type.getName()
-			+ " does not have either an appropriate key member or ordinary property of type " + masterType.getName() + ".");
-	    } else if (matchingPropertiesCount > 1) {
-		throw new IllegalArgumentException("Property " + dotNotationExp + " in type " + type.getName()
-			+ " does not have an appropriate key member and has more than one ordinary property of type " + masterType.getName() + ".");
-	    }
-	    return propertyLinkProperty;
+	    throw new IllegalArgumentException("Property " + dotNotationExp + " in type " + type.getName()
+		    + " does not have an appropriate key member of type " + masterType.getName() + ".");
 	} else if (matchingKeyMemembersCount > 1) {
 	    // more than one matching key member means ambiguity
 	    throw new IllegalArgumentException("Property " + dotNotationExp + " in type " + type.getName() + " has more than one key of type " + masterType.getName() + ".");
@@ -920,7 +917,7 @@ public class Finder {
 	// if it is not one-to-one than may be it is one-to-many
 	// for this we should try to identify linkProperty, it it is identifiable then return true, otherwise -- false
 	try {
-	    return !StringUtils.isEmpty(findLinkProperty((Class<? extends AbstractEntity<?>>)type, dotNotationExp));
+	    return !StringUtils.isEmpty(findLinkProperty((Class<? extends AbstractEntity<?>>) type, dotNotationExp));
 	} catch (final Exception ex) {
 	    // exception is possible in various cases of incorrectly constructed associations, which should not be recognised as valid one-to-many
 	    return false;

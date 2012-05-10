@@ -12,6 +12,7 @@ import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity5;
 import ua.com.fielden.platform.associations.one2many.multiple_matches.MasterEntityWithInvalidOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2many.non_key.MasterEntityWithNonKeyOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
+import ua.com.fielden.platform.associations.test_entities.EntityWithManyToOneAssociations;
 
 /**
  * Test case for {@link Finder}'s functionality for finding <code>linkProperty</code> and determining association type.
@@ -84,6 +85,15 @@ public class FindLinkPropertyTest {
     }
 
 
-
+    @Test
+    public void should_have_failed_to_find_link_property_in_many_to_one_association() {
+	try {
+	    Finder.findLinkProperty(EntityWithManyToOneAssociations.class, "many2oneProp");
+	    fail("Many-to-One association should have been recognised.");
+	} catch (final Exception ex) {
+	    assertEquals("Incorrect error message", "Non-collectional property many2oneProp in type " + EntityWithManyToOneAssociations.class.getName() + //
+		    " represents a Many-to-One association.", ex.getMessage());
+	}
+    }
 
 }

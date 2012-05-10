@@ -29,7 +29,7 @@ public class MasterEntityWithOneToManyAssociation extends AbstractEntity<String>
     @Title(value = "Property 1", desc = "Desc")
     private Money moneyProp;
 
-    @IsProperty // linkProperty="key1" is missing on purpose
+    @IsProperty(linkProperty="key1") //
     @MapTo
     @Title(value = "Property 1", desc = "Desc")
     private DetailsEntityForOneToManyAssociation one2manyAssociationSpecialCase;

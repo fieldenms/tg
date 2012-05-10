@@ -275,4 +275,16 @@ public class PropertyTypeDeterminator {
 	    return new Pair<Class<?>, String>(type, dotNotationExp);
 	}
     }
+
+    /**
+     * Identifies whether property <code>doNotationExp</code> in type <code>entityType</code> is collectional.
+     *
+     * @param enityType
+     * @param doNotationExp
+     * @return
+     */
+    public static boolean isCollectional(final Class<?> enityType, final String doNotationExp) {
+	final Field field = Finder.findFieldByName(enityType, doNotationExp);
+	return EntityUtils.isCollectional(field.getType());
+    }
 }

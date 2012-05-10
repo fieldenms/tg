@@ -29,7 +29,7 @@ public class MasterEntityWithNonKeyOneToManyAssociation extends AbstractEntity<S
     @Title(value = "Property 1", desc = "Desc")
     private Money moneyProp;
 
-    @IsProperty(value = DetailsEntityForNonKeyOneToManyAssociation.class) // linkProperty is missing on purpose
+    @IsProperty(value = DetailsEntityForNonKeyOneToManyAssociation.class, linkProperty="many2oneProp")
     @MapTo
     @Title(value = "Collectional Property", desc = "Desc")
     private List<DetailsEntityForNonKeyOneToManyAssociation> one2manyAssociationCollectional;
