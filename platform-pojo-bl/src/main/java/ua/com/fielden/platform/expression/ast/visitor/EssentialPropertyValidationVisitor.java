@@ -40,10 +40,10 @@ public class EssentialPropertyValidationVisitor extends AbstractAstVisitor {
     public void visit(final AstNode node) throws SemanticException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
 	if (cat == EgTokenCategory.NAME) {
-	    final String absolutePropertyPath = relative2Absolute(node.getToken().text);
+	    final String absolutePropertyPath = relative2AbsoluteInverted(node.getToken().text);
 	    final Field field;
 	    try {
-		field = Finder.findFieldByName(getHigherOrderType(), absolutePropertyPath);
+		field = Finder.findFieldByName(getContextPropertyType(), absolutePropertyPath);
 	    } catch (final Exception ex) {
 		throw new MissingPropertyException("Could not find property " + absolutePropertyPath, ex, node.getToken());
 	    }

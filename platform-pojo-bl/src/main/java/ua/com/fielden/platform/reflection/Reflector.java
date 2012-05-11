@@ -382,20 +382,20 @@ public final class Reflector {
      *
      * @param type
      * @param contextProperty
-     * @param notNotaionalExp
+     * @param dotNotaionalExp
      * @return
      */
-    public static String relative2AbsoluteInverted(final Class<? extends AbstractEntity<?>> type, final String contextProperty, final String notNotaionalExp) {
+    public static String relative2AbsoluteInverted(final Class<? extends AbstractEntity<?>> type, final String contextProperty, final String dotNotaionalExp) {
 	// if the context property is not specified then there should be no relative paths
-	if (StringUtils.isEmpty(contextProperty)) {
-	    return notNotaionalExp;
+	if (StringUtils.isEmpty(contextProperty) || !dotNotaionalExp.contains("←")) {
+	    return dotNotaionalExp;
 	}
 	// otherwise transformation from relative to absolute path is required
 	final StringBuilder absProp = new StringBuilder();
 
 	String currProp = contextProperty;
 
-	final String[] path = notNotaionalExp.split("\\.");
+	final String[] path = dotNotaionalExp.split("\\.");
 	int index = 0;
 	while ("←".equals(path[index])) {
 	    // find link property and add it to the absolute path

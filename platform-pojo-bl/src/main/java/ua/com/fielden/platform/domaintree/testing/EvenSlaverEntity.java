@@ -36,7 +36,7 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     private EvenSlaverEntity slaveEntityProp;
-    
+
     @IsProperty
     private SlaveEntity slaveEntityLinkProp;
 
@@ -156,7 +156,7 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     ////////// A collection //////////
     @IsProperty(EvenSlaverEntity.class)
     private List<EvenSlaverEntity> collection = new ArrayList<EvenSlaverEntity>();
-    
+
     ////////// Any property to be specifically excluded //////////
     @IsProperty
     private EvenSlaverEntity excludedManuallyProp;

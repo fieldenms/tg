@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.associations.one2one;
 
+import java.math.BigDecimal;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -27,6 +29,22 @@ public class DetailsEntityForOneToOneDetailTypeInOneToManyAssociation extends Ab
     @Title(value = "Key 2", desc = "Desc")
     @CompositeKeyMember(2)
     private Integer key2;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Decimal Prop", desc = "Desc")
+    private BigDecimal decimalProp;
+
+    @Observable
+    public DetailsEntityForOneToOneDetailTypeInOneToManyAssociation setDecimalProp(final BigDecimal doubleProp) {
+	this.decimalProp = doubleProp;
+	return this;
+    }
+
+    public BigDecimal getDecimalProp() {
+	return decimalProp;
+    }
+
 
     public DetailEntityForOneToOneAssociationWithOneToManyAssociation getKey1() {
         return key1;

@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
+import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1;
@@ -435,12 +437,12 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 
     @Test
     public void test_case_34() throws RecognitionException, SemanticException {
-	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, "collectional", "MIN(intProperty - ←.intProperty)");
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationCollectional", "MIN(intProp - ←.moneyProp)");
 	final AstNode root = ev.convert();
-	assertEquals("Incorrect expression type", Integer.class, root.getType());
-	assertEquals("Incorrect expression collectional context", "collectional", root.getTag());
+	assertEquals("Incorrect expression type", Money.class, root.getType());
+	assertEquals("Incorrect expression collectional context", "one2manyAssociationCollectional", root.getTag());
 
-	final ExpressionModel minus = expr().prop("collectional.intProperty").sub().prop("intProperty").model();
+	final ExpressionModel minus = expr().prop("intProp").sub().prop("key1.moneyProp").model();
 	final ExpressionModel model = expr().minOf().expr(minus).model();
 	assertEquals("Incorrect model.", model, root.getModel());
     }
@@ -448,16 +450,16 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
     @Test
     public void test_case_35() throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter( //
-		EntityLevel1.class, // higher-order type
-		"collectional", // expression context
-		"MIN(intProperty - ←.intProperty) + MAX(selfProperty.collectional.moneyProperty)");
+		MasterEntityWithOneToManyAssociation.class, // higher-order type
+		"one2manyAssociationCollectional", // expression context
+		"MIN(intProp - ←.moneyProp) + MAX(one2manyAssociationCollectional.moneyProp)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
-	assertEquals("Incorrect expression collectional context", "collectional", root.getTag());
+	assertEquals("Incorrect expression collectional context", "one2manyAssociationCollectional", root.getTag());
 
-	final ExpressionModel minus = expr().prop("collectional.intProperty").sub().prop("intProperty").model();
+	final ExpressionModel minus = expr().prop("intProp").sub().prop("key1.moneyProp").model();
 	final ExpressionModel min = expr().minOf().expr(minus).model();
-	final ExpressionModel max = expr().maxOf().prop("collectional.selfProperty.collectional.moneyProperty").model();
+	final ExpressionModel max = expr().maxOf().prop("one2manyAssociationCollectional.moneyProp").model();
 	final ExpressionModel plus = expr().expr(min).add().expr(max).model();
 	assertEquals("Incorrect model.", plus, root.getModel());
     }
@@ -465,9 +467,9 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
     @Test
     public void test_case_36() throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter( //
-		EntityLevel1.class, // higher-order type
-		"collectional", // expression context
-		"MIN(intProperty - ←.intProperty) + selfProperty.collectional.moneyProperty");
+		MasterEntityWithOneToManyAssociation.class, // higher-order type
+		"one2manyAssociationCollectional", // expression context
+		"MIN(intProp - ←.moneyProp) + one2manyAssociationCollectional.moneyProp");
 	try {
 	    ev.convert();
 	    fail("Conversion should have failed.");
@@ -479,15 +481,15 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
     @Test
     public void test_case_37() throws RecognitionException, SemanticException {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter( //
-		EntityLevel1.class, // higher-order type
-		"selfProperty.collectional", // expression context
-		"2 * intProperty + ←.intProperty");
+		MasterEntityWithOneToOneAssociation.class, // higher-order type
+		"one2oneAssociation.one2ManyAssociation", // expression context
+		"2 * decimalProp + ←.intProp");
 	final AstNode root = ev.convert();
-	assertEquals("Incorrect expression type", Integer.class, root.getType());
-	assertEquals("Incorrect expression collectional context", "selfProperty.collectional", root.getTag());
+	assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
+	assertEquals("Incorrect expression collectional context", "one2oneAssociation.one2ManyAssociation", root.getTag());
 
-	final ExpressionModel mult = expr().val(2).mult().prop("selfProperty.collectional.intProperty").model();
-	final ExpressionModel plus = expr().expr(mult).add().prop("selfProperty.intProperty").model();
+	final ExpressionModel mult = expr().val(2).mult().prop("decimalProp").model();
+	final ExpressionModel plus = expr().expr(mult).add().prop("key1.intProp").model();
 	assertEquals("Incorrect model.", plus, root.getModel());
     }
 

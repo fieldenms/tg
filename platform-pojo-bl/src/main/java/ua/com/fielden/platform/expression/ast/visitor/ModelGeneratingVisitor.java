@@ -121,7 +121,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	final IStandAloneExprOperationAndClose exprWithOperand;
 	if (operand.getModel() == null) {
 	    final EgTokenCategory cat = EgTokenCategory.byIndex(operand.getToken().category.getIndex());
-	    exprWithOperand = cat == EgTokenCategory.NAME ? expr.prop(relative2Absolute(operand.getToken().text)) : expr.val(operand.getToken().text);
+	    exprWithOperand = cat == EgTokenCategory.NAME ? expr.prop(relative2AbsoluteInverted(operand.getToken().text)) : expr.val(operand.getToken().text);
 	    // TODO paths should become context independent
 	    //exprWithOperand = cat == EgTokenCategory.NAME ? expr.prop((operand.getToken().text)) : expr.val(operand.getToken().text);
 	} else {
@@ -141,7 +141,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	final IStandAloneExprOperationAndClose exprWithOperand;
 	if (operand.getModel() == null) {
 	    final EgTokenCategory cat = EgTokenCategory.byIndex(operand.getToken().category.getIndex());
-	    exprWithOperand = cat == EgTokenCategory.NAME ? expr.prop(relative2Absolute(operand.getToken().text)) : expr.val(operand.getToken().text);
+	    exprWithOperand = cat == EgTokenCategory.NAME ? expr.prop(relative2AbsoluteInverted(operand.getToken().text)) : expr.val(operand.getToken().text);
 	} else {
 	    exprWithOperand = expr.expr(operand.getModel());
 	}
@@ -186,7 +186,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose> exprWithOperand;
 	if (leftOperand.getModel() == null) {
 	    final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
-	    exprWithOperand = cat1 == EgTokenCategory.NAME ? expr.prop(relative2Absolute(leftOperand.getToken().text)) : expr.val(leftOperand.getToken().text);
+	    exprWithOperand = cat1 == EgTokenCategory.NAME ? expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text)) : expr.val(leftOperand.getToken().text);
 	} else {
 	    exprWithOperand = expr.expr(leftOperand.getModel());
 	}
