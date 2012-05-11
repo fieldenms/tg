@@ -8,9 +8,9 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -43,6 +43,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class DynamicQueryBuilder {
+    private final static Logger logger = Logger.getLogger(DynamicQueryBuilder.class);
 
     /**
      * This is a class which represents high-level abstraction for criterion in dynamic criteria.
@@ -105,7 +106,7 @@ public class DynamicQueryBuilder {
 		this.collectionNameInItsParentTypeContext = null;
 		this.inNestedCollections = null;
 	    }
-	    this.conditionBuildingName = isWithinCollectionalHierarchy() ? propertyNameWithinCollectionalHierarchy : (alias + "." + analyser.getCriteriaFullName());
+	    this.conditionBuildingName = isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL() ? propertyNameWithinCollectionalHierarchy : (alias + "." + analyser.getCriteriaFullName());
 
 	    final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
 	    this.critOnly = critAnnotation != null;
@@ -237,7 +238,8 @@ public class DynamicQueryBuilder {
 	 *
 	 * @return
 	 */
-	public boolean isWithinCollectionalHierarchy() {
+	public boolean isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL() {
+	    // TODO implement the logic depicted in name
 	    return getCollectionContainerType() != null;
 	}
 
@@ -333,6 +335,96 @@ public class DynamicQueryBuilder {
     }
 
     /**
+     * A bunch of properties relevant to single collection. Contains <b>collection filtering</b> properties and <b>ANY</b> / <b>ALL</b> properties.
+     *
+     * @author TG Team
+     */
+    private static class CollectionProperties {
+	private final Class<? extends AbstractEntity<?>> collectionContatinerType;
+	private String nameOfCollectionController, propertyNameOfCollectionParent;
+	private final List<QueryProperty> anyProperties, allProperties, filteringProperties;
+
+	public CollectionProperties(final Class<? extends AbstractEntity<?>> collectionContatinerType) {
+	    this.collectionContatinerType = collectionContatinerType;
+	    anyProperties = new ArrayList<QueryProperty>();
+	    allProperties = new ArrayList<QueryProperty>();
+	    filteringProperties = new ArrayList<QueryProperty>();
+	}
+
+	/**
+	 * Adds a property to a relevant sub-collection (FILTERING, ALL, ANY).
+	 *
+	 * @param all -- <code>true</code> to add to ALL properties, <code>false</code> -- to add to ANY properties, <code>null</code> to add to FILTERING properties.
+	 */
+	public void add(final QueryProperty property) {
+	    if (nameOfCollectionController == null) {
+		nameOfCollectionController = getNameOfCollectionController(property.getCollectionContainerParentType(), property.getCollectionNameInItsParentTypeContext());
+	    }
+	    if (propertyNameOfCollectionParent == null) {
+		propertyNameOfCollectionParent = property.getPropertyNameOfCollectionParent();
+	    }
+	    final Boolean all = property.getAll();
+	    if (Boolean.TRUE.equals(all)) {
+		allProperties.add(property); // ALL properties list
+	    } else if (Boolean.FALSE.equals(all)) {
+		anyProperties.add(property); // ANY properties list
+	    } else {
+		filteringProperties.add(property); // FILTERING properties list
+	    }
+	}
+
+	public Class<? extends AbstractEntity<?>> getCollectionContatinerType() {
+	    return collectionContatinerType;
+	}
+
+	public List<QueryProperty> getAnyProperties() {
+	    return anyProperties;
+	}
+
+	public List<QueryProperty> getAllProperties() {
+	    return allProperties;
+	}
+
+	public List<QueryProperty> getFilteringProperties() {
+	    return filteringProperties;
+	}
+
+	/**
+	 * Returns <code>true</code> if collection has at least one aggregated (at this stage only ANY or ALL) condition, which means that sub-model generation will be performed.
+	 * Filtering conditions will be irrelevant in case when no aggregated conditions appear.
+	 *
+	 * @return
+	 */
+	public boolean hasAggregatedCondition() {
+	    return getAnyProperties().size() + getAllProperties().size() > 0;
+	}
+
+	/**
+	 * The name of collection, which contains this query property, in context of root entity type.
+	 *
+	 * @return
+	 */
+	public String getPropertyNameOfCollectionParent() {
+	    return propertyNameOfCollectionParent;
+	}
+
+	public String getNameOfCollectionController() {
+	    return nameOfCollectionController;
+	}
+
+	/**
+	 * Returns the name of "keyMember" which defines "collectivity" for "collectionElementType".
+	 *
+	 * @param collectionOwnerType
+	 * @param collectionName
+	 * @return
+	 */
+	private static String getNameOfCollectionController(final Class<? extends AbstractEntity<?>> collectionOwnerType, final String collectionName) {
+	    return Finder.findLinkProperty(collectionOwnerType, collectionName);
+	}
+    }
+
+    /**
      * Enhances current query by property conditions (property could form part of "exists"/"not_exists" statements for collections or part of simple "where" statement).
      *
      * @return
@@ -342,33 +434,33 @@ public class DynamicQueryBuilder {
 	ICompoundCondition1 compoundConditionAtGroup1 = null;
 
 	// create empty map consisting of [collectionType => (ANY properties, ALL properties)] entries, which forms exactly one entry for one collectional hierarchy
-	final Map<Class<? extends AbstractEntity<?>>, Pair<List<QueryProperty>, List<QueryProperty>>> collectionalProperties = new LinkedHashMap<Class<? extends AbstractEntity<?>>, Pair<List<QueryProperty>, List<QueryProperty>>>();
+	final Map<Class<? extends AbstractEntity<?>>, CollectionProperties> collectionalProperties = new LinkedHashMap<Class<? extends AbstractEntity<?>>, CollectionProperties>();
 
 	// traverse all properties to enhance resulting query
 	for (final QueryProperty property : properties) {
 	    if (!property.shouldBeIgnored()) {
-		if (property.isWithinCollectionalHierarchy()) { // the property is in collection hierarchy. So, separate collection sub-model (EXISTS or NOT_EXISTS) should be enhanced by this property's criteria.
+		if (property.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL()) { // the property is in collection hierarchy. So, separate collection sub-model (EXISTS or NOT_EXISTS) should be enhanced by this property's criteria.
 		    final Class<? extends AbstractEntity<?>> ccType = property.getCollectionContainerType();
 		    if (!collectionalProperties.containsKey(ccType)) {
-			collectionalProperties.put(ccType, new Pair<List<QueryProperty>, List<QueryProperty>>(new ArrayList<QueryProperty>(), new ArrayList<QueryProperty>()));
+			collectionalProperties.put(ccType, new CollectionProperties(ccType));
 		    }
-		    if (Boolean.TRUE.equals(property.getAll())) {
-			collectionalProperties.get(ccType).getValue().add(property); // ALL properties list
-		    } else {
-			collectionalProperties.get(ccType).getKey().add(property); // ANY properties list
-		    }
+		    collectionalProperties.get(ccType).add(property);
 		} else { // main query should be enhanced in case of simple property
 		    compoundConditionAtGroup1 = buildCondition(getWhereAtGroup1(compoundConditionAtGroup1, whereAtGroup1), property, false);
 		}
 	    }
 	}
 	// enhance main model with collectional hierarchies models
-	for (final Entry<Class<? extends AbstractEntity<?>>, Pair<List<QueryProperty>, List<QueryProperty>>> entry : collectionalProperties.entrySet()) {
-	    compoundConditionAtGroup1 = buildCollection(getWhereAtGroup1(compoundConditionAtGroup1, whereAtGroup1), entry, alias);
+	for (final CollectionProperties collectionProperties : collectionalProperties.values()) {
+	    if (collectionProperties.hasAggregatedCondition()) {
+		compoundConditionAtGroup1 = buildCollection(getWhereAtGroup1(compoundConditionAtGroup1, whereAtGroup1), collectionProperties, alias);
+	    } else {
+		// TODO
+		logger.warn("There are no aggregated conditions for collection [" + collectionProperties + "] in type " + collectionProperties + ". All FILTERING conditions (if any) will be disregarded.");
+	    }
 	}
 	return compoundConditionAtGroup1 == null ? query : compoundConditionAtGroup1.end();
     }
-
 
     /**
      * Defines a logic that determines an empty value according to <code>type</code> and <code>single</code> flag.
@@ -452,7 +544,6 @@ public class DynamicQueryBuilder {
 	return EntityUtils.isEntityType(type) || EntityUtils.isString(type) || EntityUtils.isBoolean(type) || EntityUtils.isRangeType(type);
     }
 
-
     /**
      * Builds collection condition including exists / not exists inner models based on ALL/ANY properties inside collection.
      * <p>
@@ -465,32 +556,23 @@ public class DynamicQueryBuilder {
      * @param entry -- an entry consisting of [collectionType => (anyProperties, allProperties)] which forms exactly one collectional hierarchy
      * @return
      */
-    private static ICompoundCondition1 buildCollection(final IWhere1 whereAtGroup1, final Entry<Class<? extends AbstractEntity<?>>, Pair<List<QueryProperty>, List<QueryProperty>>> entry, final String alias) {
+    private static ICompoundCondition1 buildCollection(final IWhere1 whereAtGroup1, final CollectionProperties collectionProperties, final String alias) {
 	// e.g. : "WorkOrder.vehicle.statusChanges.[vehicleKey/status.active]". Then:
 	// property.getCollectionContainerType() == VehicleStatusChange.class
 	// property.getCollectionContainerParentType() == Vehicle.class
 	// property.getCollectionNameInItsParentTypeContext() == statusChanges
 	// nameOfCollectionController == "vehicleKey"
 	// property.getPropertyNameOfCollectionParent() == "vehicle"
-	final Class<? extends AbstractEntity<?>> collectionContainerType = entry.getKey();
-	final List<QueryProperty> anyProperties = entry.getValue().getKey();
-	final List<QueryProperty> allProperties = entry.getValue().getValue();
-
-	final List<QueryProperty> any_and_all_properties = new ArrayList<QueryProperty>(anyProperties);
-	any_and_all_properties.addAll(allProperties);
-	if (any_and_all_properties.isEmpty()) {
-	    throw new RuntimeException("Collection of type " + collectionContainerType + " ANY+ALL properties should not be empty.");
-	}
-	final QueryProperty p = any_and_all_properties.get(0);
-	final String nameOfCollectionController = getNameOfCollectionController(p.getCollectionContainerParentType(), p.getCollectionNameInItsParentTypeContext());
-	final String mainModelProperty = p.getPropertyNameOfCollectionParent().isEmpty() ? alias : (alias + "." + p.getPropertyNameOfCollectionParent());
+	final Class<? extends AbstractEntity<?>> collectionContainerType = collectionProperties.getCollectionContatinerType();
+	final String nameOfCollectionController = collectionProperties.getNameOfCollectionController();
+	final String mainModelProperty = collectionProperties.getPropertyNameOfCollectionParent().isEmpty() ? alias : (alias + "." + collectionProperties.getPropertyNameOfCollectionParent());
 
 	final IWhere2 collectionBegin = whereAtGroup1.begin();
 	ICompoundCondition2 compoundConditionAtGroup2 = null;
 	// enhance collection by ANY part
-	if (!anyProperties.isEmpty()) {
-	    final Iterator<QueryProperty> anyIter = anyProperties.iterator();
-	    ICompoundCondition1 anyExists_withDirectConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty).and().begin(), anyIter.next(), false);
+	if (!collectionProperties.getAnyProperties().isEmpty()) {
+	    final Iterator<QueryProperty> anyIter = collectionProperties.getAnyProperties().iterator();
+	    ICompoundCondition1 anyExists_withDirectConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), anyIter.next(), false);
 	    while (anyIter.hasNext()) { // enhance EXISTS model with appropriate condition
 		anyExists_withDirectConditions = buildCondition(anyExists_withDirectConditions.and(), anyIter.next(), false);
 	    }
@@ -500,12 +582,12 @@ public class DynamicQueryBuilder {
 		    .end();
 	}
 	// enhance collection by ALL part
-	if (!allProperties.isEmpty()) {
-	    final Iterator<QueryProperty> allIter = allProperties.iterator();
-	    final EntityResultQueryModel<?> allNotExists_withNoConditions = createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty).model();
+	if (!collectionProperties.getAllProperties().isEmpty()) {
+	    final Iterator<QueryProperty> allIter = collectionProperties.getAllProperties().iterator();
+	    final EntityResultQueryModel<?> allNotExists_withNoConditions = createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).model();
 	    final QueryProperty firstProperty = allIter.next();
-	    ICompoundCondition1 allExists_withDirectConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty).and().begin(), firstProperty, false);
-	    ICompoundCondition1 allNotExists_withNegatedConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty).and().begin(), firstProperty, true);
+	    ICompoundCondition1 allExists_withDirectConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), firstProperty, false);
+	    ICompoundCondition1 allNotExists_withNegatedConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), firstProperty, true);
 	    while (allIter.hasNext()) { // enhance EXISTS / NOT_EXISTS model with appropriate direct / negated condition
 		final QueryProperty nextProperty = allIter.next();
 		allExists_withDirectConditions = buildCondition(allExists_withDirectConditions.and(), nextProperty, false);
@@ -524,28 +606,25 @@ public class DynamicQueryBuilder {
 	return compoundConditionAtGroup2.end();
     }
 
-
     /**
-     * Creates submodel for collection.
+     * Creates sub-model for collection, enhanced with FILTERING properties.
      *
      * @param collectionContainerType
      * @param nameOfCollectionController
      * @param mainModelProperty
+     * @param filteringProperties
      * @return
      */
-    private static ICompoundCondition0 createSubmodel(final Class<? extends AbstractEntity<?>> collectionContainerType, final String nameOfCollectionController, final String mainModelProperty) {
-	return select(collectionContainerType).where().prop(nameOfCollectionController).eq().prop(mainModelProperty);
-    }
-
-    /**
-     * Returns the name of "keyMember" which defines "collectivity" for "collectionElementType".
-     *
-     * @param collectionOwnerType
-     * @param collectionName
-     * @return
-     */
-    private static String getNameOfCollectionController(final Class<? extends AbstractEntity<?>> collectionOwnerType, final String collectionName) {
-	return Finder.findLinkProperty(collectionOwnerType, collectionName);
+    private static ICompoundCondition0 createSubmodel(final Class<? extends AbstractEntity<?>> collectionContainerType, final String nameOfCollectionController, final String mainModelProperty, final List<QueryProperty> filteringProperties) {
+	final ICompoundCondition0 submodelThroghLinkProperty = select(collectionContainerType).where().prop(nameOfCollectionController).eq().prop(mainModelProperty);
+	if (filteringProperties.isEmpty()) {
+	    return submodelThroghLinkProperty;
+	}
+	ICompoundCondition1 subModel = buildCondition(submodelThroghLinkProperty.and().begin(), filteringProperties.get(0), false); // enhance sub-model with first FILTERING property
+	for (int i = 1; i < filteringProperties.size(); i++) {
+	    subModel = buildCondition(subModel.and(), filteringProperties.get(i), false); // enhance sub-model with rest FILTERING properties
+	}
+	return subModel.end();
     }
 
     /**
