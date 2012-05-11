@@ -13,6 +13,10 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
+import ua.com.fielden.platform.associations.one2one.DetailEntityForOneToOneAssociationWithOneToManyAssociation;
+import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
+import ua.com.fielden.platform.associations.test_entities.EntityWithManyToOneAssociations;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -237,6 +241,38 @@ public class ReflectorTest {
 	assertEquals("name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.driver.name"));
 	assertEquals("←.←.originator.name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "originator.name"));
 	assertEquals("←.owner.name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.owner.name"));
+    }
+
+    @Test
+    public void should_have_successfully_performed_inverted_conversion_of_relative_property_path_to_absolute_for_one_to_one_association() {
+	assertEquals("key.intProp", Reflector.relative2AbsoluteInverted(MasterEntityWithOneToOneAssociation.class, "one2oneAssociation", "←.intProp"));
+    }
+
+    @Test
+    public void should_have_successfully_performed_inverted_conversion_of_relative_property_path_to_absolute_for_one_to_one_association_with_one_to_many_special_case_association() {
+	assertEquals("key1.key.intProp", Reflector.relative2AbsoluteInverted(MasterEntityWithOneToOneAssociation.class, "one2oneAssociation.one2ManyAssociation", "←.←.intProp"));
+	assertEquals("key1.intProp", Reflector.relative2AbsoluteInverted(MasterEntityWithOneToOneAssociation.class, "one2oneAssociation.one2ManyAssociation", "←.intProp"));
+	assertEquals("key1.intProp", Reflector.relative2AbsoluteInverted(DetailEntityForOneToOneAssociationWithOneToManyAssociation.class, "one2ManyAssociation", "←.intProp"));
+    }
+
+    @Test
+    public void should_have_successfully_performed_inverted_conversion_of_relative_property_path_to_absolute_for_one_to_many_collectional_association() {
+	assertEquals("key1.intProp", Reflector.relative2AbsoluteInverted(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationCollectional", "←.intProp"));
+    }
+
+    @Test
+    public void should_have_successfully_performed_inverted_conversion_of_relative_property_path_to_absolute_for_one_to_many_collectional_association_of_nested_level_one_to_many_collectional_association() {
+	assertEquals("key1.key1.intProp", Reflector.relative2AbsoluteInverted(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationCollectional.one2manyAssociationCollectional", "←.←.intProp"));
+	assertEquals("key1.intProp", Reflector.relative2AbsoluteInverted(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationCollectional.one2manyAssociationCollectional", "←.intProp"));
+    }
+
+    @Test
+    public void should_have_failed_inverted_conversion_of_relative_property_path_to_absolute_for_many_to_one_association() {
+	try {
+	    Reflector.relative2AbsoluteInverted(EntityWithManyToOneAssociations.class, "many2oneProp", "←.intProp");
+	} catch (final Exception ex) {
+	    assertEquals("Non-collectional property many2oneProp in type ua.com.fielden.platform.associations.test_entities.EntityWithManyToOneAssociations represents a Many-to-One association.", ex.getMessage());
+	}
     }
 
     @KeyType(String.class)

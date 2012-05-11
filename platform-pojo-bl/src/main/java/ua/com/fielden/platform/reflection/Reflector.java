@@ -273,8 +273,10 @@ public final class Reflector {
     /**
      * Converts a relative property path to an absolute path with respect to the provided context.
      *
-     * @param context -- the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
-     * @param relativePropertyPath -- relative property path, which may contain ←  and dots for separating individual properties.
+     * @param context
+     *            -- the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+     * @param relativePropertyPath
+     *            -- relative property path, which may contain ← and dots for separating individual properties.
      * @return
      */
     public static String fromRelative2AbsotulePath(final String context, final String relativePropertyPath) {
@@ -322,8 +324,10 @@ public final class Reflector {
     /**
      * Converts an absolute property path to a relative one in respect to the provided context.
      *
-     * @param context the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
-     * @param absolutePropertyPath -- an absolute property path, which needs to be converted to a relative path with respect to the specified context.
+     * @param context
+     *            the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+     * @param absolutePropertyPath
+     *            -- an absolute property path, which needs to be converted to a relative path with respect to the specified context.
      * @return
      */
     public static String fromAbsotule2RelativePath(final String context, final String absolutePropertyPath) {
@@ -345,7 +349,7 @@ public final class Reflector {
 
 	// construct the relative path portion
 	final StringBuilder sb = new StringBuilder();
-	for (int index = 0; index < longestPathUp; index ++) {
+	for (int index = 0; index < longestPathUp; index++) {
 	    sb.append("←.");
 	}
 	// append the remaining property path
@@ -370,6 +374,51 @@ public final class Reflector {
 	    return 0;
 	}
 	return propertyPath.split(DOT_SPLITTER).length;
+    }
+
+    /**
+     * Converts a relative property path to an absolute path with respect to the provided context.
+     * Unlike relative2Absolute this method inverts the path making the context property to be the first node in the path.
+     *
+     * @param type
+     * @param contextProperty
+     * @param notNotaionalExp
+     * @return
+     */
+    public static String relative2AbsoluteInverted(final Class<? extends AbstractEntity<?>> type, final String contextProperty, final String notNotaionalExp) {
+	// if the context property is not specified then there should be no relative paths
+	if (StringUtils.isEmpty(contextProperty)) {
+	    return notNotaionalExp;
+	}
+	// otherwise transformation from relative to absolute path is required
+	final StringBuilder absProp = new StringBuilder();
+
+	String currProp = contextProperty;
+
+	final String[] path = notNotaionalExp.split("\\.");
+	int index = 0;
+	while ("←".equals(path[index])) {
+	    // find link property and add it to the absolute path
+	    final String linkProperty = Finder.findLinkProperty(type, currProp);
+	    absProp.append(linkProperty + ".");
+	    // prepare for the next iteration by defining running property as the current one without the last element of the path.
+	    index++;
+	    final int lastDot = currProp.lastIndexOf(".");
+	    if (lastDot >= 0) {
+		currProp = currProp.substring(0, lastDot);
+	    } else {
+		break;
+	    }
+	}
+	// append the remaining after the last ← properties in the path
+	for (final int rem = index; index < path.length; index++) {
+	    absProp.append(path[rem]);
+	    if (index < path.length - 1) {
+		absProp.append(".");
+	    }
+	}
+	// return absolute path
+	return absProp.toString();
     }
 
 }
