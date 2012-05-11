@@ -13,7 +13,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
+import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityCentreModel;
@@ -33,6 +35,11 @@ import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorM
 public class CentreConfigurationModel<T extends AbstractEntity<?>> extends AbstractCentreConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>{
 
     /**
+     * The type of menu item with which this centre configuration model is associated.
+     */
+    private final Class<? extends MiWithConfigurationSupport<T>> menuItemType;
+
+    /**
      * The associated {@link GlobalDomainTreeManager} instance.
      */
     private final IGlobalDomainTreeManager gdtm;
@@ -44,8 +51,9 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * @param gdtm - Associated {@link GlobalDomainTreeManager} instance.
      * @param entityFactory - {@link EntityFactory} needed for wizard model creation.
      */
-    public CentreConfigurationModel(final Class<T> entityType, final String name, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
-	super(entityType, name, entityFactory, masterManager, criteriaGenerator);
+    public CentreConfigurationModel(final Class<? extends MiWithConfigurationSupport<T>> menuItemType, final String name, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
+	super(getEntityTypeForMenuItemClass(menuItemType), name, entityFactory, masterManager, criteriaGenerator);
+	this.menuItemType = menuItemType;
 	this.gdtm = gdtm;
     }
 
@@ -53,28 +61,28 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * Saves this configuration.
      */
     public void save(){
-	gdtm.saveEntityCentreManager(getEntityType(), getName());
+	gdtm.saveEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * Discards changes in the entity centre.
      */
     public void discard(){
-	gdtm.discardEntityCentreManager(getEntityType(), getName());
+	gdtm.discardEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * Saves as this configuration.
      */
     public void saveAs(final String saveAsName){
-	gdtm.saveAsEntityCentreManager(getEntityType(), getName(), saveAsName);
+	gdtm.saveAsEntityCentreManager(menuItemType, getName(), saveAsName);
     }
 
     /**
      * Removes this configuration.
      */
     public void remove(){
-	gdtm.removeEntityCentreManager(getEntityType(), getName());
+	gdtm.removeEntityCentreManager(menuItemType, getName());
     }
 
     /**
@@ -83,7 +91,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     public boolean isChanged(){
-	return gdtm.isChangedEntityCentreManager(getEntityType(), getName());
+	return gdtm.isChangedEntityCentreManager(menuItemType, getName());
     }
 
     /**
@@ -92,14 +100,14 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     public boolean isFreezed(){
-	return gdtm.isFreezedEntityCentreManager(getEntityType(), getName());
+	return gdtm.isFreezedEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * Freezes the associated entity centre model.
      */
     public void freez(){
-	gdtm.freezeEntityCentreManager(getEntityType(), getName());
+	gdtm.freezeEntityCentreManager(menuItemType, getName());
     }
 
     /**
@@ -108,14 +116,14 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     public ICentreDomainTreeManagerAndEnhancer getEntityCentreManager(){
-	return gdtm.getEntityCentreManager(getEntityType(), getName());
+	return gdtm.getEntityCentreManager(menuItemType, getName());
     }
 
     /**
      * Initialises the entity centre.
      */
     public void initEntityCentreManager(){
-	gdtm.initEntityCentreManager(getEntityType(), getName());
+	gdtm.initEntityCentreManager(menuItemType, getName());
     }
 
     /**
@@ -189,4 +197,19 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 		CentrePropertyBinder.<T>createCentrePropertyBinder(getCriteriaGenerator()));
     }
 
+    /**
+     * Returns the entity type for the specified menu item type.
+     * 
+     * @param menuItemType
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private static <T extends AbstractEntity<?>> Class<T> getEntityTypeForMenuItemClass(final Class<? extends MiWithConfigurationSupport<T>> menuItemType){
+	final EntityType etAnnotation = menuItemType.getAnnotation(EntityType.class);
+	if (etAnnotation == null || etAnnotation.value() == null) {
+	    throw new IllegalArgumentException("The menu item type " + menuItemType.getSimpleName() + " has no 'EntityType' annotation, which is necessary to specify the root type of the centre.");
+	}
+	final Class<T> root = (Class<T>)etAnnotation.value();
+	return root;
+    }
 }

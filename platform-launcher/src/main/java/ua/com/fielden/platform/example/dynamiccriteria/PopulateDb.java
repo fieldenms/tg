@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.example.dynamiccriteria;
 
+import java.io.FileInputStream;
 import java.util.List;
+import java.util.Properties;
 
 import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -11,44 +13,53 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 
-public class PopulateDbForEntityCentreExample extends DomainDrivenDataPopulation {
+/**
+ * This is a convenience class for (re-)creation of the development database and its population.
+ * 
+ * It contains the <code>main</code> method and can be executed whenever the target database needs to be (re-)set.
+ * <p>
+ * 
+ * <b>IMPORTANT: </b><i>One should be careful not to run this code against the deployment or production databases, which would lead to the loss of all data.</i>
+ * 
+ * <p>
+ * 
+ * @author TG Team
+ * 
+ */
+public class PopulateDb extends DomainDrivenDataPopulation {
 
-    public PopulateDbForEntityCentreExample(final IDomainDrivenTestCaseConfiguration config) {
+    private PopulateDb(final IDomainDrivenTestCaseConfiguration config) {
 	super(config);
-	// TODO Auto-generated constructor stub
     }
 
-    //    public static void initDb(final String arg) throws Exception{
-    //	//TODO please review entity_centre_example.properties and correct appropriate properties.
-    //	final String configFileName = !StringUtils.isEmpty(arg) ? arg : "src/main/resources/entity_centre_example.properties";
-    //	final FileInputStream in = new FileInputStream(configFileName);
-    //	final Properties props = IDomainDrivenTestCaseConfiguration.hbc;
-    //	props.load(in);
-    //	in.close();
-    //
-    //	// override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
-    //	props.put("hibernate.show_sql", "false");
-    //	props.put("hibernate.format_sql", "true");
-    //	props.put("hibernate.hbm2ddl.auto", "create");
-    //
-    //
-    //	final IDomainDrivenTestCaseConfiguration config = new EntityCentreDataPopulationConfiguration();
-    //
-    //
-    //	final PopulateDbForEntityCentreExample popDb = new PopulateDbForEntityCentreExample(config);
-    //	popDb.createAndPopulate();
-    //    }
+    public static void main(final String[] args) throws Exception {
+	final String configFileName = args.length == 1 ? args[1] : "src/main/resources/entity_centre_example.properties";
+	final FileInputStream in = new FileInputStream(configFileName);
+	final Properties props = IDomainDrivenTestCaseConfiguration.hbc;
+	props.load(in);
+	in.close();
+
+	// override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
+	props.put("hibernate.show_sql", "false");
+	props.put("hibernate.format_sql", "true");
+	props.put("hibernate.hbm2ddl.auto", "create");
+
+
+	final IDomainDrivenTestCaseConfiguration config = new EntityCentreDataPopulationConfiguration();
+
+	final PopulateDb popDb = new PopulateDb(config);
+	popDb.createAndPopulate();
+    }
 
     @Override
     protected void populateDomain() {
-
 	//Configure base and non base users and save them into the database.
 	final User baseUser = save(new_(User.class, User.system_users.SU.name(), "Super user").setBase(true));
 	save(new_(User.class, "DEMO", "Non base user").setBase(false).setBasedOnUser(baseUser));
 
 	//Configure main menu.
-	save(new_(MainMenuItem.class, SimpleECEEntity.class.getName()));
-	save(new_(MainMenuItem.class, SimpleCompositeEntity.class.getName()));
+	save(new_(MainMenuItem.class, MiSimpleECEEntity.class.getName()));
+	save(new_(MainMenuItem.class, MiSimpleCompositeEntity.class.getName()));
 
 	//Configuring domain
 	//Nested entities.

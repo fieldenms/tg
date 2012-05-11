@@ -5,10 +5,14 @@ import java.util.Properties;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.ioc.CommonRestFactoryModule;
@@ -89,7 +93,7 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 
     @Override
     protected void configure() {
-        super.configure();
+	super.configure();
 	// bind application specific constants
 	bindConstant().annotatedWith(Names.named("app.home")).to(props.getProperty("app.home"));
 	bindConstant().annotatedWith(Names.named("reports.path")).to(props.getProperty("reports.path"));
@@ -121,6 +125,12 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	bind(IUserController.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
 	bind(ISecurityTokenController.class).to(SecurityTokenControllerRao.class).in(Scopes.SINGLETON);
 	bind(IAuthorisationModel.class).to(RestAuthorisationModel.class).in(Scopes.SINGLETON);
+
+	////////////////////////////////////////////////////////////////////////
+	//////////////// bind domain tree configuration manager ////////////////
+	////////////////////////////////////////////////////////////////////////
+	bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
+	bind(IGlobalDomainTreeManager.class).to(GlobalDomainTreeManager.class).in(Scopes.SINGLETON);
 
 	////////////////////////////////////////////////////////////////////////
 	//////////////// bind UI configuration controllers /////////////////////
@@ -157,7 +167,7 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
      */
     @Override
     public void setInjector(final Injector injector) {
-        super.setInjector(injector);
+	super.setInjector(injector);
 	restUtil.initSerialiser(injector.getInstance(ISerialiser.class));
 	restUtil.setUserController(injector.getInstance(IUserController.class));
     }

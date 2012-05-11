@@ -2,6 +2,7 @@ package ua.com.fielden.platform.example.dynamiccriteria;
 
 import java.awt.Dimension;
 import java.io.FileInputStream;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.xml.DOMConfigurator;
@@ -9,7 +10,9 @@ import org.jfree.ui.RefineryUtilities;
 
 import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.branding.SplashController;
+import ua.com.fielden.platform.client.config.IMainMenuBinder;
 import ua.com.fielden.platform.client.ui.DefaultApplicationMainPanel;
+import ua.com.fielden.platform.client.ui.menu.RemoteTreeMenuFactory;
 import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.master.SimpleCompositeEntityMasterFactory;
@@ -17,6 +20,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressPane;
 import ua.com.fielden.platform.swing.menu.TreeMenuItem;
 import ua.com.fielden.platform.swing.menu.UndockableTreeMenuWithTabs;
+import ua.com.fielden.platform.swing.menu.api.ITreeMenuFactory;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
 import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
@@ -24,6 +28,8 @@ import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 
 import com.google.inject.Injector;
 import com.jidesoft.plaf.LookAndFeelFactory;
@@ -51,12 +57,8 @@ public class EntityCentreExample extends AbstractUiApplication {
 	// override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
 	props.put("hibernate.show_sql", "true");
 	props.put("hibernate.format_sql", "true");
-	props.put("hibernate.hbm2ddl.auto", "create");
 
 	config = new EntityCentreDataPopulationConfiguration();
-
-	final PopulateDbForEntityCentreExample popDb = new PopulateDbForEntityCentreExample(config);
-	popDb.createAndPopulate();
 
 	configEntityMasterManager(config.getInjector());
 
@@ -64,6 +66,19 @@ public class EntityCentreExample extends AbstractUiApplication {
 	userProvider = config.getInstance(IUserProvider.class);
 
 	super.beforeUiExposure(args, splashController);
+    }
+
+    private void buildMainMenu(//
+	    final Injector injector, //
+	    final IMainMenuBinder mmBinder,//
+	    final TreeMenuItem<?> menuItems, //
+	    final UndockableTreeMenuWithTabs<?> menu) {
+	final ITreeMenuFactory menuFactory = new RemoteTreeMenuFactory(menuItems, menu, injector);
+	mmBinder.bindMainMenuItemFactories(menuFactory);
+	final IMainMenuStructureBuilder mmsBuilder = new TemplateMainMenu(config.getEntityFactory());
+	final List<MainMenuItem> itemsFromCloud = mmsBuilder.build("SU");
+	menuFactory.build(itemsFromCloud);
+	menu.getModel().getOriginModel().reload();
     }
 
     //    private void configValidation(final DomainValidationConfig dvc){
@@ -75,6 +90,7 @@ public class EntityCentreExample extends AbstractUiApplication {
 	entityMasterManager.addFactory(SimpleCompositeEntity.class, injector.getInstance(SimpleCompositeEntityMasterFactory.class));
     }
 
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     protected void exposeUi(final String[] args, final SplashController splashController) throws Throwable {
@@ -84,9 +100,10 @@ public class EntityCentreExample extends AbstractUiApplication {
 	final UndockableTreeMenuWithTabs<?> menu = new UndockableTreeMenuWithTabs(menuItems, new WordFilter(), userProvider, new BlockingIndefiniteProgressPane(mainApplicationFrame));
 
 	//Configuring menu
-	menuItems.addItem(new MiSimpleECEEntity(menu, config.getInjector(), new StubMenuItemVisibilityProvider()));
-	menuItems.addItem(new MiSimpleCompositeEntity(menu, config.getInjector(), new StubMenuItemVisibilityProvider()));
-	menu.getModel().getOriginModel().reload();
+	buildMainMenu(config.getInjector(), new EntityCentreExampleMainMenuBinder(), menuItems, menu);
+	//	menuItems.addItem(new MiSimpleECEEntity(menu, config.getInjector(), new StubMenuItemVisibilityProvider()));
+	//	menuItems.addItem(new MiSimpleCompositeEntity(menu, config.getInjector(), new StubMenuItemVisibilityProvider()));
+	//	menu.getModel().getOriginModel().reload();
 
 
 	mainApplicationFrame.setPreferredSize(new Dimension(1280, 800));

@@ -27,6 +27,7 @@ import com.google.inject.Scopes;
 public class EntityCentreExampleModule extends BasicWebServerModule{
 
 
+    @SuppressWarnings("rawtypes")
     public EntityCentreExampleModule(//
 	    final Map<Class, Class> defaultHibernateTypes, //
 	    final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes, //

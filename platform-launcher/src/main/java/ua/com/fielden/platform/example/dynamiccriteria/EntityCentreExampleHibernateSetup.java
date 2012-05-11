@@ -15,6 +15,7 @@ import ua.com.fielden.platform.types.Money;
 
 public class EntityCentreExampleHibernateSetup {
 
+    @SuppressWarnings("rawtypes")
     private static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
     static {
 	hibTypeDefaults.put(boolean.class, YesNoType.class);
@@ -25,6 +26,7 @@ public class EntityCentreExampleHibernateSetup {
     }
 
 
+    @SuppressWarnings("rawtypes")
     public static Map<Class, Class> getHibernateTypes() {
 	return Collections.unmodifiableMap(hibTypeDefaults);
     }
