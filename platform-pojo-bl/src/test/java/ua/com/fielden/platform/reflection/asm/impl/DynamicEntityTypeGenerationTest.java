@@ -295,7 +295,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_getter_signature_for_new_collectional_property() throws Exception {
 	// create
-	final IsProperty isProperty = new IsPropertyAnnotation(String.class).newInstance();
+	final IsProperty isProperty = new IsPropertyAnnotation(String.class, "--stub-for-tests-to-be-passed--").newInstance();
 
 	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description",	isProperty);
 	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
@@ -310,7 +310,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_setter_signature_for_new_collectional_property() throws Exception {
 	// create
-	final IsProperty isProperty = new IsPropertyAnnotation(String.class).newInstance();
+	final IsProperty isProperty = new IsPropertyAnnotation(String.class, "--stub-for-tests-to-be-passed--").newInstance();
 
 	final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description", isProperty);
 	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();

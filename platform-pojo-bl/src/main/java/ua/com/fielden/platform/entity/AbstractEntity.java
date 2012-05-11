@@ -58,6 +58,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
 
@@ -607,14 +608,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		}
 
 		final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) getType();
-		if (Finder.isOne2Many_or_One2One_association(entityType, field.getName())) {
-		    try {
-			Finder.findLinkProperty(entityType, field.getName());
-		    } catch (final IllegalArgumentException e) {
-			final String error = "Property " + field.getName() + " in " + getType() + " has one2many or one2one association, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation. [" + e.getMessage() + "] ";
-			logger.error(error);
-			throw new IllegalStateException(error);
-		    }
+		if (isCollectional && !Finder.hasLinkProperty(entityType, field.getName())) {
+		    final String error = "Property " + field.getName() + " in " + getType() + " is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.";
+		    logger.error(error);
+		    throw new IllegalStateException(error);
+		}
+
+		if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY)) && !Finder.isOne2One_association(entityType, field.getName())) {
+		    final String error = "Property " + field.getName() + " in " + getType() + " has AE key type, but it does not form correct one2one association due to non-parent type of property key.";
+		    logger.error(error);
+		    throw new IllegalStateException(error);
 		}
 
 		// if setter is annotated then try to instantiate specified validator

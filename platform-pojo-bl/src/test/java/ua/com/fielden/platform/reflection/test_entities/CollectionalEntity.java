@@ -9,21 +9,21 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Test class, which represent an entity derived directly from AbstractEntity with collectional properties.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 @KeyType(String.class)
 public class CollectionalEntity extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty(String.class)
+    @IsProperty(value = String.class, linkProperty = "--stub to pass tests--")
     private List<String> strCollectionalProperty1;
 
-    @IsProperty(String.class)
+    @IsProperty(value = String.class, linkProperty = "--stub to pass tests--")
     private List<String> strCollectionalProperty2;
 
-    @IsProperty(Integer.class)
+    @IsProperty(value = Integer.class, linkProperty = "--stub to pass tests--")
     private List<Integer> intCollectionalProperty;
 
     protected CollectionalEntity() {

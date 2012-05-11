@@ -50,7 +50,7 @@ public class InspectedEntity extends AbstractEntity<String> {
     @IsProperty
     @MapTo("ENTITY_PROPERTY_TWO")
     private InspectedEntity entityPropertyTwo;
-    @IsProperty(Integer.class)
+    @IsProperty(value = Integer.class, linkProperty = "--stub-link-property--")
     private List<Integer> collectionalProperty = new ArrayList<Integer>();
 
     protected InspectedEntity() {

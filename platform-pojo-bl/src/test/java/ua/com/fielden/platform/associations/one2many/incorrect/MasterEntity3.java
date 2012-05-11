@@ -22,11 +22,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 public class MasterEntity3 extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-//    @IsProperty // linkProperty="key1" is missing on purpose
-//    @MapTo
-//    @Title(value = "Property 1", desc = "Desc")
-//    private DetailsEntity1 one2manyAssociationSpecialCase;
-
     @IsProperty(value = DetailsEntity3.class)
     @MapTo
     private List<DetailsEntity3> one2manyAssociationCollectional;

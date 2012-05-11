@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 
 /**
  * The master type in One-to-Many association with a collectional and single (special case) properties representing assocaitons.
@@ -18,20 +17,18 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 @KeyType(String.class)
 @KeyTitle(value = "Key")
 @DescTitle(value = "Description")
-public class MasterEntity1 extends AbstractEntity<String> {
+public class MasterEntity6 extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty // missing value()
+    @IsProperty
     @MapTo
-    private PropertyDescriptor<DetailsEntity1> propertyDescriptorProperty;
+    private DetailsEntity6 illegalOne2oneAssociation;
 
-    @Observable
-    public MasterEntity1 setPropertyDescriptorProperty(final PropertyDescriptor<DetailsEntity1> propertyDescriptorProperty) {
-	this.propertyDescriptorProperty = propertyDescriptorProperty;
-	return this;
+    public DetailsEntity6 getIllegalOne2oneAssociation() {
+        return illegalOne2oneAssociation;
     }
-
-    public PropertyDescriptor<DetailsEntity1> getPropertyDescriptorProperty() {
-	return propertyDescriptorProperty;
+    @Observable
+    public void setIllegalOne2oneAssociation(final DetailsEntity6 illegalOne2oneAssociation) {
+        this.illegalOne2oneAssociation = illegalOne2oneAssociation;
     }
 }

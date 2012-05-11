@@ -34,7 +34,7 @@ public class DetailsEntity4 extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
-    // @CompositeKeyMember(3) -- intentionally made non-key member
+    @CompositeKeyMember(3)
     private MasterEntity4 key1;
 
     @Observable

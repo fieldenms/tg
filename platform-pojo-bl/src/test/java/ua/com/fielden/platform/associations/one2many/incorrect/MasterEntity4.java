@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 public class MasterEntity4 extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty(value = DetailsEntity4.class) // linkProperty="key1" is missing on purpose
+    @IsProperty // linkProperty="key1" is missing on purpose
     @MapTo
     private DetailsEntity4 one2manyAssociationSpecialCase;
 

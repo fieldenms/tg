@@ -58,7 +58,7 @@ public class Entity extends AbstractEntity<String> {
     @IsProperty
     @Invisible
     private Double finalProperty;
-    @IsProperty(Double.class)
+    @IsProperty(value = Double.class, linkProperty = "--stub to pass tests--")
     private List<Double> doubles = new ArrayList<Double>();
     @IsProperty(Entity.class)
     private List<Entity> entities = new ArrayList<Entity>();

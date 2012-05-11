@@ -32,11 +32,6 @@ public class DetailsEntity1 extends AbstractEntity<DynamicEntityKey> {
     @CompositeKeyMember(2)
     private Integer key3;
 
-    @IsProperty
-    @MapTo
-    // @CompositeKeyMember(3) -- intentionally made non-key member
-    private MasterEntity1 key1;
-
     @Observable
     public DetailsEntity1 setKey3(final Integer key3) {
 	this.key3 = key3;
@@ -55,15 +50,5 @@ public class DetailsEntity1 extends AbstractEntity<DynamicEntityKey> {
 
     public Integer getKey2() {
 	return key2;
-    }
-
-    @Observable
-    public DetailsEntity1 setKey1(final MasterEntity1 key1) {
-	this.key1 = key1;
-	return this;
-    }
-
-    public MasterEntity1 getKey1() {
-	return key1;
     }
 }

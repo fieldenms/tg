@@ -15,7 +15,7 @@ public class UnionEntityForReflector extends AbstractUnionEntity {
 
     @IsProperty
     @Title(value = "Second entity", desc = "Second entity description")
-    private ComplexPartEntity complexPartEntity;
+    private ComplexPartEntity1 complexPartEntity;
 
     @IsProperty
     @Title(value = "Third entity", desc = "Third entity description")
@@ -30,12 +30,12 @@ public class UnionEntityForReflector extends AbstractUnionEntity {
 	this.simplePartEntity = simplePartEntity;
     }
 
-    public ComplexPartEntity getComplexPartEntity() {
+    public ComplexPartEntity1 getComplexPartEntity() {
 	return complexPartEntity;
     }
 
     @Observable
-    public void setComplexPartEntity(final ComplexPartEntity complexPartEntity) {
+    public void setComplexPartEntity(final ComplexPartEntity1 complexPartEntity) {
 	this.complexPartEntity = complexPartEntity;
     }
 

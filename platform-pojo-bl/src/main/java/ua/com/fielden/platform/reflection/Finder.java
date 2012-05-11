@@ -26,7 +26,6 @@ import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -907,13 +906,10 @@ public class Finder {
      * @return
      */
     public static boolean isOne2Many_or_One2One_association(final Class<?> type, final String dotNotationExp) {
-	if (EntityAggregates.class.isAssignableFrom(type)) {
-	    return false;
-	}
+	return isOne2One_association(type, dotNotationExp) || hasLinkProperty(type, dotNotationExp);
+    }
 
-	if (isOne2One_association(type, dotNotationExp)) {
-	    return true;
-	}
+    public static boolean hasLinkProperty(final Class<?> type, final String dotNotationExp) {
 	// if it is not one-to-one than may be it is one-to-many
 	// for this we should try to identify linkProperty, it it is identifiable then return true, otherwise -- false
 	try {
@@ -934,9 +930,9 @@ public class Finder {
      * @return
      */
     public static boolean isOne2One_association(final Class<?> type, final String dotNotationExp) {
-	if (EntityAggregates.class.isAssignableFrom(type)) {
-	    return false;
-	}
+//	if (EntityAggregates.class.isAssignableFrom(type)) {
+//	    return false;
+//	}
 	final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
 	final Class<?> masterType = PropertyTypeDeterminator.transform(type, dotNotationExp).getKey();
 	return EntityUtils.isEntityType(propertyType) && PropertyTypeDeterminator.determinePropertyType(propertyType, AbstractEntity.KEY).equals(masterType);

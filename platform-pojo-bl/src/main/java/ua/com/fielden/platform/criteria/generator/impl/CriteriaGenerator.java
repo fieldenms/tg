@@ -161,7 +161,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
 	final List<Annotation> annotations = new ArrayList<Annotation>(){{
 	    if(isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)){
-		add(new IsPropertyAnnotation(String.class).newInstance());
+		add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
 		add(new EntityTypeAnnotation((Class<? extends AbstractEntity>) propertyType).newInstance());
 	    }
 	    add(new CriteriaPropertyAnnotation(propertyName).newInstance());

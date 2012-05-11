@@ -24,7 +24,7 @@ import ua.com.fielden.platform.reflection.Finder.IPropertyPathFilteringCondition
 import ua.com.fielden.platform.reflection.test_entities.CollectionalEntity;
 import ua.com.fielden.platform.reflection.test_entities.ComplexEntity;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
-import ua.com.fielden.platform.reflection.test_entities.ComplexPartEntity;
+import ua.com.fielden.platform.reflection.test_entities.ComplexPartEntity1;
 import ua.com.fielden.platform.reflection.test_entities.DynamicKeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.DynamicKeyPartEntity;
 import ua.com.fielden.platform.reflection.test_entities.EntityWithoutDesc;
@@ -403,7 +403,10 @@ public class FinderTest {
 	simpleProperty.setUncommonProperty("uncommon value");
 	final FirstLevelEntity firstLevelEntity = factory.newByKey(FirstLevelEntity.class, "property", "property two");
 	firstLevelEntity.setDesc("COMPLEX DESC FOR KEY");
-	final ComplexPartEntity complexEntity = factory.newEntity(ComplexPartEntity.class, 1L, firstLevelEntity);
+
+	final UnionEntityForReflector uefr = factory.newEntity(UnionEntityForReflector.class);
+	uefr.setSimplePartEntity(simpleProperty);
+	final ComplexPartEntity1 complexEntity = factory.newEntity(ComplexPartEntity1.class, 1L, /* firstLevelEntity */ uefr);
 	complexEntity.setDesc("COMPLEX DESC");
 	complexEntity.setCommonProperty("common property");
 	complexEntity.setLevelEntity(inst);
@@ -452,10 +455,10 @@ public class FinderTest {
 	assertEquals("Incorrect common property of simple part entity", "another uncommon property", Finder.findFieldValueByName(unionEntity, "complexPartEntity.anotherUncommonProperty"));
 	assertEquals("Incorrect levelEntity of simple part entity", "value", Finder.findFieldValueByName(unionEntity, "levelEntity.property"));
 
-	assertEquals("Incorrect key value of the union entity", firstLevelEntity, Finder.findFieldValueByName(unionEntity, "key"));
-	assertEquals("Incorrect key value of the union entity", "property property two", Finder.findFieldValueByName(unionEntity, "getKey()"));
+	assertEquals("Incorrect key value of the union entity", uefr, Finder.findFieldValueByName(unionEntity, "key"));
+	assertEquals("Incorrect key value of the union entity", "KEY", Finder.findFieldValueByName(unionEntity, "getKey()"));
 	assertEquals("Incorrect desc value of the union entity", "COMPLEX DESC", Finder.findFieldValueByName(unionEntity, "desc"));
-	assertEquals("Incorrect desc value of the union entity", "COMPLEX DESC FOR KEY", Finder.findFieldValueByName(unionEntity, "getDesc()"));
+	assertEquals("Incorrect desc value of the union entity", "DESC", Finder.findFieldValueByName(unionEntity, "getDesc()"));
 	try {
 	    Finder.findFieldValueByName(unionEntity, "anotherUncommonProperty");
 	    fail("There shouldn't be any uncommonProperty");

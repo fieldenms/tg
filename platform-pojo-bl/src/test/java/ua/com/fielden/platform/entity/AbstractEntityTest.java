@@ -24,6 +24,8 @@ import org.junit.Test;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity1;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity2;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity3;
+import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity4;
+import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity6;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
@@ -992,7 +994,7 @@ public class AbstractEntityTest {
     @Test
     public void test_illegal_propertyDescriptor_property_definition_without_type_definition() {
 	try {
-	    factory.newEntity(MasterEntity2.class, "key", "description");
+	    factory.newEntity(MasterEntity1.class, "key", "description");
 	    fail("Should be failed.");
 	} catch (final IllegalStateException e) {
 	}
@@ -1001,7 +1003,7 @@ public class AbstractEntityTest {
     @Test
     public void test_illegal_one2many_collectional_property_definition_without_type_definition() {
 	try {
-	    factory.newEntity(MasterEntity1.class, "key", "description");
+	    factory.newEntity(MasterEntity2.class, "key", "description");
 	    fail("Should be failed.");
 	} catch (final IllegalStateException e) {
 	}
@@ -1017,9 +1019,15 @@ public class AbstractEntityTest {
     }
 
     @Test
-    public void test_illegal_one2many_single_special_case_property_definition_without_linkProperty_definition() {
+    public void test_legal_single_property_definition_without_linkProperty_definition_which_makes_many2one_association() {
+	factory.newEntity(MasterEntity4.class, "key", "description"); // should be considered legal
+	assertFalse("Should be many2one association.", Finder.isOne2Many_or_One2One_association(MasterEntity4.class, "one2manyAssociationSpecialCase"));
+    }
+
+    @Test
+    public void test_illegal_one2one_property_definition_with_KEY_of_non_parent_type() {
 	try {
-	    factory.newEntity(MasterEntity3.class, "key", "description");
+	    factory.newEntity(MasterEntity6.class, "key", "description");
 	    fail("Should be failed.");
 	} catch (final IllegalStateException e) {
 	}

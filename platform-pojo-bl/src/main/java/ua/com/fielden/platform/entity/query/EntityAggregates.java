@@ -23,14 +23,14 @@ public class EntityAggregates extends AbstractEntity<String> {
 
     private transient final Map<String, Object> aggregates = new HashMap<String, Object>();
 
-    @IsProperty(String.class)
+    @IsProperty(value = String.class, linkProperty = "--stub-link-property--")
     private List<String> groupKeys = new ArrayList<String>();
-    @IsProperty(AbstractEntity.class)
+    @IsProperty(value = AbstractEntity.class, linkProperty = "--stub-link-property--")
     private List<AbstractEntity> groupValues = new ArrayList<AbstractEntity>();
 
-    @IsProperty(String.class)
+    @IsProperty(value = String.class, linkProperty = "--stub-link-property--")
     private List<String> aggrKeys = new ArrayList<String>();
-    @IsProperty(Object.class)
+    @IsProperty(value = Object.class, linkProperty = "--stub-link-property--")
     private List<Object> aggrValues = new ArrayList<Object>();
 
     private Map<String, Object> getAggregates() {
