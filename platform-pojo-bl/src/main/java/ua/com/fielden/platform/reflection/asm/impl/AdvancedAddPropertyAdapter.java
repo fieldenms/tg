@@ -253,15 +253,15 @@ public class AdvancedAddPropertyAdapter extends ClassAdapter implements Opcodes 
     /**
      * Changes all the occurrences of <code>owner<code> with <code>enhancedName</code>.
      */
-    private String fix(String s) {
+    private String fix(String signature) {
 
-	if (s != null) {
-	    if (s.indexOf(owner) != -1) {
-		s = s.replaceAll(Pattern.quote(owner), Matcher.quoteReplacement(enhancedName));
+	if (signature != null) {
+	    if (signature.indexOf(owner + ";") != -1) {
+		signature = signature.replaceAll(Pattern.quote(owner + ";"), Matcher.quoteReplacement(enhancedName + ";"));
 	    }
 	}
 
-	return s;
+	return signature;
     }
 
     /**

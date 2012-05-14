@@ -135,16 +135,16 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
     /**
      * Changes all the occurrences of <code>owner<code> with <code>enhancedName</code>.
      */
-    private String fix(String s) {
+    private String fix(String signiture) {
 
-	if (s != null) {
-	    // the exclusion condition for owner+"$" is required to avoid renaing of references to inner types
-	    if (s.indexOf(owner) != -1 && s.indexOf(owner + "$") < 0) {
-		s = s.replaceAll(Pattern.quote(owner), Matcher.quoteReplacement(enhancedName));
+	if (signiture != null) {
+	    // the exclusion condition for owner+"$" is required to avoid renaming of references to inner types
+	    if (signiture.indexOf(owner + ";") != -1) { // && signiture.indexOf(owner + "$") < 0
+		signiture = signiture.replaceAll(Pattern.quote(owner + ";"), Matcher.quoteReplacement(enhancedName + ";"));
 	    }
 	}
 
-	return s;
+	return signiture;
     }
 
     /**

@@ -27,11 +27,14 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingEnhanced;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingModified;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingModifiedWithInnerTypes;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingModifiedWithInnerTypes.InnerEnum;
+import ua.com.fielden.platform.reflection.asm.impl.entities.EntityName;
+import ua.com.fielden.platform.reflection.asm.impl.entities.EntityNameProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityWithCollectionalPropety;
 import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -374,4 +377,15 @@ public class DynamicEntityTypeModificationTest {
 	}
     }
 
+    @Test
+    public void test_to_ensure_that_type_modification_leads_to_correct_getter_modificaton() throws Exception {
+	// get the enhanced EntityBeingEnhanced type
+	final Class<?> enhancedType = cl.startModification(EntityName.class.getName()).addProperties(pd).endModification();
+
+	final Field prop = enhancedType.getDeclaredField("prop");
+	assertEquals("Incorrect property type", EntityNameProperty.class, prop.getType());
+
+	final Method getter = Reflector.obtainPropertyAccessor(enhancedType, "prop");
+	assertEquals("Incorrect property type", EntityNameProperty.class, getter.getReturnType());
+    }
 }
