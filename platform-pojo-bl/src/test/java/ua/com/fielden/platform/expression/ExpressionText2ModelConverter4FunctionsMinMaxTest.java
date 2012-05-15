@@ -493,4 +493,19 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	assertEquals("Incorrect model.", plus, root.getModel());
     }
 
+    @Test
+    public void conversion_of_expression_with_property_not_reachable_from_context_should_have_failed() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter( //
+		EntityLevel1.class, // higher-order type
+		"entityProperty", // expression context
+		"intProperty - ←.intProperty");
+	try {
+	    ev.convert();
+	    fail("Should have failed due to incorrect association");
+	} catch (final Exception ex) {
+	    assertEquals("Non-collectional property entityProperty in type ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1 represents a Many-to-One association.", ex.getMessage());
+	}
+    }
+
+
 }
