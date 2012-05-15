@@ -379,7 +379,6 @@ public class DynamicEntityTypeModificationTest {
 
     @Test
     public void test_to_ensure_that_type_modification_leads_to_correct_getter_modificaton() throws Exception {
-	// get the enhanced EntityBeingEnhanced type
 	final Class<?> enhancedType = cl.startModification(EntityName.class.getName()).addProperties(pd).endModification();
 
 	final Field prop = enhancedType.getDeclaredField("prop");
