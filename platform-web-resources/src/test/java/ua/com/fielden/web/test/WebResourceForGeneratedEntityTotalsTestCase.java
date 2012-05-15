@@ -44,9 +44,8 @@ import com.google.inject.Module;
  * @author TG Team
  *
  */
-public class WebResourceForEntityTotalsTestCase extends WebBasedTestCase {
+public class WebResourceForGeneratedEntityTotalsTestCase extends WebBasedTestCase {
     private final IGeneratedEntityController rao = new GeneratedEntityRao(config.restClientUtil());
-    private final IInspectedEntityDao dao = DbDrivenTestCase.injector.getInstance(IInspectedEntityDao.class);
 
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
@@ -84,7 +83,7 @@ public class WebResourceForEntityTotalsTestCase extends WebBasedTestCase {
 	super.setUp();
 
 	dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
-	final CalculatedProperty totalProperty1 = CalculatedProperty.createAndValidate(factory, InspectedEntity.class, "", "MAX(intProperty) * 2", "intProperty Sum", "desc", NO_ATTR, "intProperty", dtm.getEnhancer());
+	final CalculatedProperty totalProperty1 = CalculatedProperty.createAndValidate(factory, InspectedEntity.class, "", "SUM(intProperty) * 2", "intProperty Sum", "desc", NO_ATTR, "intProperty", dtm.getEnhancer());
 	final CalculatedProperty totalProperty2 = CalculatedProperty.createAndValidate(factory, InspectedEntity.class, "", "MAX(intProperty) - MIN(intProperty)", "minimaxDiff", "desc", NO_ATTR, "intProperty", dtm.getEnhancer());
 	dtm.getEnhancer().addCalculatedProperty(totalProperty1);
 	dtm.getEnhancer().addCalculatedProperty(totalProperty2);
@@ -114,7 +113,7 @@ public class WebResourceForEntityTotalsTestCase extends WebBasedTestCase {
 
 	assertEquals("Incorrect value of returned items.", 1, firstPage.data().size());
 	final AbstractEntity instance = (AbstractEntity) firstPage.data().get(0);
-	assertEquals("Incorrect value.", 40, instance.get("intPropertySum"));
+	assertEquals("Incorrect value.", 1020, instance.get("intPropertySum"));
 	assertEquals("Incorrect value.", 10, instance.get("minimaxDiff"));
     }
 }

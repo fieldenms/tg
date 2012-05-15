@@ -120,19 +120,12 @@ public class WebResourceForComplexGeneratedTypeQueryTestCase extends WebBasedTes
     @Ignore
     public void test_query_with_fetch_model_with_one_level_deep_calcualted_property() {
 	final Class<? extends AbstractEntity<?>> propertyType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(type, "entityPropertyOne");
-	//final EntityResultQueryModel model = select(type).where().prop("entityPropertyOne").isNotNull().model();
-	//final IPage firstPage = rao.firstPage(from(model).with(fetch(type).with("entityPropertyOne", fetchAll(propertyType))).build(), 15, binaryTypes); //
 
 	final EntityResultQueryModel model1 = select(propertyType).where().prop("id").eq().val(2).model();
 	rao.setEntityType(propertyType);
 	final IPage firstPage1 = rao.firstPage(from(model1).build(), 15, binaryTypes); //
-	//assertEquals("Incorrect value of returned items.", 1, firstPage.data().size());
-	//final AbstractEntity instance = (AbstractEntity) firstPage.data().get(0);
 	final AbstractEntity instance1 = (AbstractEntity) firstPage1.data().get(0);
-	//assertNotNull("Incorrect value.", instance.get("entityPropertyOne"));
-	//assertEquals("Incorrect value.", propertyType.getName(), ((AbstractEntity)instance.get("entityPropertyOne")).getClass().getName());
 	assertEquals("Incorrect value.", 20, instance1.get("calculatedProperty"));
-	//assertEquals("Incorrect value.", 20, ((AbstractEntity)instance.get("entityPropertyOne")).get("calculatedProperty"));
     }
 
 }
