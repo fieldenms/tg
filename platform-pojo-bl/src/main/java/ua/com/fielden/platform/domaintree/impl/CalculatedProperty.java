@@ -179,11 +179,10 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	    if (levelsToRaiseTheProperty == 0) {
 		if (isAttributed()) { // 0 level attributed
 		    this.category = CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION;
-		    this.path = above(masterPath); // the level above except for root level -- ""
 		} else { // 0 level
 		    this.category = CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION;
-		    this.path = this.getContextPath();
 		}
+		this.path = this.getContextPath();
 	    } else if (levelsToRaiseTheProperty == 1) {
 		this.category = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION;
 		this.path = above(masterPath); // the level above except for root level -- ""
@@ -489,7 +488,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	    return null;
 	}
     }
-    
+
     /**
      * A specific Kryo serialiser for {@link CalculatedProperty}.
      *
@@ -524,7 +523,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	    writeValue(buffer, cp.getDesc());
 	}
     }
-    
+
     protected CalculatedProperty copy(final ISerialiser serialiser) {
 	final CalculatedProperty copy = EntityUtils.deepCopy(this, serialiser);
 	copy.setEnhancer(enhancer);

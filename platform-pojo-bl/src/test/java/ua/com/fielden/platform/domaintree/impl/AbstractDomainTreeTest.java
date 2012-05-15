@@ -473,8 +473,8 @@ public abstract class AbstractDomainTreeTest {
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.aggrCollExprProp1");
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.aggrCollExprProp2");
 
-	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.attrCollExprProp1");
-	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.attrCollExprProp2");
+	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.collection.attrCollExprProp1");
+	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.collection.simpleEntityProp.attrCollExprProp2");
 
 	assertTrue("The calculated property [entityProp.exprProp] should be excluded. The path towards calculated property should be properly resolved.", dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "entityProp.exprProp"));
 	assertTrue("The calculated property [aggrExprProp1] should be disabled. The path towards calculated property should be properly resolved.", dtm.getRepresentation().getFirstTick().isDisabledImmutably(MasterEntity.class, "aggrExprProp1"));

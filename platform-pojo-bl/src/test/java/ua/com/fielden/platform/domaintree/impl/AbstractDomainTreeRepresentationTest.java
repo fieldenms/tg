@@ -209,7 +209,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     @Test
     public void test_that_link_properties_are_excluded() {
 	assertTrue("Link property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "entityProp.masterEntityProp"));
-	assertTrue("Link property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "collection.masterEntityProp"));	
+	assertTrue("Link property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "collection.masterEntityProp"));
 	assertTrue("Link property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "entityProp.entityProp.slaveEntityLinkProp"));
 	assertTrue("Link property should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "entityProp.collection.slaveEntityLinkProp"));
 	assertFalse("NOT Link property should NOT be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "entityProp.entityProp.slaveEntityProp"));
@@ -338,7 +338,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 
 	dtm().getEnhancer().getCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityPropCollection.prop1").setAttribute(CalculatedPropertyAttribute.ALL);
 	dtm().getEnhancer().apply();
-	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "entityPropCollection.prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
     }
 
     @Test
@@ -365,9 +365,9 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 
 	dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityPropOfSelfType", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dtm().getEnhancer().apply();
-	
+
 	assertTrue("Should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntityForIncludedPropertiesLogic.class, "entityPropOfSelfType.entityProp.keyPartProp"));
-	
+
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.desc", "entityPropOfSelfType.integerProp", "entityPropOfSelfType.entityPropOfSelfType", "entityPropOfSelfType.entityPropOfSelfType.dummy-property", "entityPropOfSelfType.entityProp", "entityPropOfSelfType.entityProp.integerProp", "entityPropOfSelfType.entityProp.moneyProp", "entityPropOfSelfType.entityPropCollection", "entityPropOfSelfType.entityPropCollection.integerProp", "entityPropOfSelfType.entityPropCollection.moneyProp", "entityPropOfSelfType.prop1", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp").toString(), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class).toString());
     }
 
@@ -772,8 +772,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
 	assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp1")));
 	assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp2")));
 	// ATTRIBUTED_COLLECTIONAL_EXPRESSION
-	assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.attrCollExprProp1")));
-	assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.attrCollExprProp2")));
+	assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.collection.attrCollExprProp1")));
+	assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.collection.simpleEntityProp.attrCollExprProp2")));
     }
 
     protected List<Function> enhanceFunctionsWithCollectionalAttributes(final List<Function> functions) {
