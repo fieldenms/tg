@@ -25,14 +25,9 @@ public abstract class AbstractSource implements ISource {
     protected final String alias;
 
     /**
-     * List of props implicitly associated with given source (e.g. dot.notation is supported)
+     * List of props that are explicitly/implicitly associated with given source (e.g. dot.notation is supported)
      */
     private final List<PropResolutionInfo> referencingProps = new ArrayList<PropResolutionInfo>();
-
-    /**
-     * List of props explicitly associated with given source (e.g. each prop should have corresponding physically achievable item (sql column) within given source).
-     */
-    //private final List<PropResolutionInfo> finalReferencingProps = new ArrayList<PropResolutionInfo>();
 
     /**
      * Sql alias for query source table/query
@@ -82,10 +77,7 @@ public abstract class AbstractSource implements ISource {
 		referencingProps.add(prop);
 		prop.entProp.setSource(this);
 	    } else {
-		//if (!prop.entProp.getName().endsWith(".id")) {
-		    throw new IllegalStateException("Prop [" + prop + "] should be first preliminary resolved to non-generated source! This source " + getAlias()
-			    + " can't be it first source");
-		//}
+		throw new IllegalStateException("Prop [" + prop + "] should be first preliminary resolved to non-generated source! This source " + getAlias() + " can't be it first source");
 	    }
 	}
 
@@ -290,28 +282,26 @@ public abstract class AbstractSource implements ISource {
     }
 
     protected SortedMap<PurePropInfo, List<EntProp>> determineGroups(final List<PropResolutionInfo> refProps) {
-        final SortedMap<PurePropInfo, List<EntProp>> result = new TreeMap<PurePropInfo, List<EntProp>>();
+	final SortedMap<PurePropInfo, List<EntProp>> result = new TreeMap<PurePropInfo, List<EntProp>>();
 
-        for (final PropResolutionInfo propResolutionInfo : refProps) {
-            if (!propResolutionInfo.entProp.isFinallyResolved()) {
-                if (!propResolutionInfo.allExplicit() && EntityUtils.isPersistedEntityType(propResolutionInfo.explicitProp.type)) {
+	for (final PropResolutionInfo propResolutionInfo : refProps) {
+	    if (!propResolutionInfo.entProp.isFinallyResolved()) {
+		if (!propResolutionInfo.allExplicit() && EntityUtils.isPersistedEntityType(propResolutionInfo.explicitProp.type)) {
+		    if (!result.containsKey(propResolutionInfo.explicitProp)) {
+			result.put(propResolutionInfo.explicitProp, new ArrayList<EntProp>());
+		    }
+		    result.get(propResolutionInfo.explicitProp).add(propResolutionInfo.entProp);
+		}
+	    }
+	}
 
-                    if (!result.containsKey(propResolutionInfo.explicitProp)) {
-                        result.put(propResolutionInfo.explicitProp, new ArrayList<EntProp>());
-                    }
-
-                    result.get(propResolutionInfo.explicitProp).add(propResolutionInfo.entProp);
-                }
-            }
-        }
-
-        return result;
+	return result;
     }
 
     protected Conditions joinCondition(final String leftProp, final String rightProp, final TypeBasedSource source) {
-	System.out.println("                      joining " + leftProp + " with " + rightProp);
-	final EntProp leftEntProp = new EntProp(leftProp, false, true);//, null, /*sourceItems.get(leftProp).getJavaType() Long.class*/ null /*,null*/);
-	final EntProp rightEntProp = new EntProp(rightProp, false, true);//, null, null /*,null*/ /*TEMP*/);
+	//System.out.println("                      joining " + leftProp + " with " + rightProp);
+	final EntProp leftEntProp = new EntProp(leftProp, false, true);
+	final EntProp rightEntProp = new EntProp(rightProp, false, true);
 	rightEntProp.setSource(source);
         return new Conditions(new ComparisonTest(leftEntProp, ComparisonOperator.EQ, rightEntProp));
     }
@@ -320,51 +310,18 @@ public abstract class AbstractSource implements ISource {
         return leftJoin ? JoinType.LJ : JoinType.IJ;
     }
 
-//    protected List<PropResolutionInfo> resolvePropsInternally(final List<EntProp> props) {
-//        final List<PropResolutionInfo> result = new ArrayList<PropResolutionInfo>();
-//        for (final EntProp prop : props) {
-//            result.add(containsProperty(prop));
-//        }
-//        return result;
-//    }
-
-//    @Override
-//    public List<CompoundSource> generateMissingSources(final List<PropResolutionInfo> refProps) {
-//        final List<CompoundSource> result = new ArrayList<CompoundSource>();
-//        //System.out.println("********source " + getAlias() + "********refPRops in generateMissingSources: " + refProps);
-//        final SortedMap<PurePropInfo, List<EntProp>> groups = determineGroups(refProps);
-//        //System.out.println("--------source " + getAlias() + "--------DETERMINED GROUPS: " + groups + " size: " + groups.size());
-//
-//        for (final Map.Entry<PurePropInfo, List<EntProp>> groupEntry : groups.entrySet()) {
-//            final TypeBasedSource qrySource = new TypeBasedSource(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, domainPersistenceMetadataAnalyser);
-//            System.out.println("                           adding new source: " + qrySource.getAlias() + " to existing source: " + getAlias());
-//
-//            qrySource.populateSourceItems(groupEntry.getKey().nullable);
-//            qrySource.assignNullability(groupEntry.getKey().nullable);
-//            result.add(new CompoundSource(qrySource, joinType(groupEntry.getKey().nullable), joinCondition(qrySource.getAlias(), qrySource.getAlias() + ".id")));
-//            //result.addAll(qrySource.generateMissingSources(qrySource.resolvePropsInternally(groupEntry.getValue())));
-//        }
-//
-//        return result;
-//    }
     @Override
     public List<CompoundSource> generateMissingSources() {
         final List<CompoundSource> result = new ArrayList<CompoundSource>();
 
-        //System.out.println("********source " + getAlias() + "********refPRops in generateMissingSources: " + refProps);
         final SortedMap<PurePropInfo, List<EntProp>> groups = determineGroups(getReferencingProps());
-        //System.out.println("--------source " + getAlias() + "--------DETERMINED GROUPS: " + groups + " size: " + groups.size());
 
         for (final Map.Entry<PurePropInfo, List<EntProp>> groupEntry : groups.entrySet()) {
             final TypeBasedSource qrySource = new TypeBasedSource(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, domainPersistenceMetadataAnalyser);
-            System.out.println("                           adding new source: " + qrySource.getAlias() + " to existing source: " + getAlias());
-
+            //System.out.println("                           adding new source: " + qrySource.getAlias() + " to existing source: " + getAlias());
             qrySource.populateSourceItems(groupEntry.getKey().nullable);
             qrySource.assignNullability(groupEntry.getKey().nullable);
-
-
             result.add(new CompoundSource(qrySource, joinType(groupEntry.getKey().nullable), joinCondition(qrySource.getAlias(), qrySource.getAlias() + ".id", qrySource)));
-            //result.addAll(qrySource.generateMissingSources(qrySource.resolvePropsInternally(groupEntry.getValue())));
         }
 
         return result;
@@ -421,11 +378,6 @@ public abstract class AbstractSource implements ISource {
         }
 
         public boolean allExplicit() {
-            if (entProp.getName().equals("vehicle.id")) {
-        	System.out.println("AAA");
-            }
-
-
             return implicitId || //
             	entProp.isExpression() || //
                     explicitProp.name.equals(prop.name) || //

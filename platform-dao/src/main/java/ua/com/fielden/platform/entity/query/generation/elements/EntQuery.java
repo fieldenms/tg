@@ -228,14 +228,13 @@ public class EntQuery implements ISingleOperand {
 	    }
 	}
 
-	for (final Entry<EntPropStage, List<EntProp>> entProp : result.entrySet()) {
-	    System.out.println("           " + entProp.getKey());
-	    for (final EntProp prop : entProp.getValue()) {
-		System.out.println("                          " + prop);
-	    }
-
-	}
-
+//	for (final Entry<EntPropStage, List<EntProp>> entProp : result.entrySet()) {
+//	    System.out.println("           " + entProp.getKey());
+//	    for (final EntProp prop : entProp.getValue()) {
+//		System.out.println("                          " + prop);
+//	    }
+//
+//	}
 
 	return result;
     }
@@ -257,24 +256,14 @@ public class EntQuery implements ISingleOperand {
 
 	int countOfUnprocessed = 1;
 
-	int loopCount = 0;
-
 	while (countOfUnprocessed > 0) {
-	    System.out.println("==================================================================================================================================");
-	    System.out.println("==================================================================================================================================");
-	    System.out.println("==================================================================================================================================");
-	    loopCount = loopCount + 1;
-	    if (loopCount == 20) {
-		throw new RuntimeException("Looping to much");
-	    }
-	    System.out.println(" &&&&&&&&&&&&&&&&& generateMissingSources for getSources().count = " + getSources().getAllSourcesAndTheirJoinType().size());
+	    //System.out.println("---------------------------generateMissingSources for getSources().count = " + getSources().getAllSourcesAndTheirJoinType().size());
 	    for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
 		final ISource source = sourceAndItsJoinType.getKey();
-		//System.out.println("                   passing this to generateMissingSource: " + source.getReferencingProps());
 		getSources().getCompounds().addAll(source.generateMissingSources()); //source.getReferencingProps()
 	    }
 
-	    System.out.println("---------------------------countOfUnprocessed = " + countOfUnprocessed);
+	    //System.out.println("---------------------------countOfUnprocessed = " + countOfUnprocessed);
 	    final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
 	    associateSubqueriesWithMasterQuery(immediateSubqueries);
 
@@ -283,7 +272,7 @@ public class EntQuery implements ISingleOperand {
 	    propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries, EntPropStage.UNPROCESSED));
 
 	    countOfUnprocessed = propsToBeResolved.size();
-	    System.out.println("================propsToBeResolved preliminary=========" + propsToBeResolved);
+	    //System.out.println("================propsToBeResolved preliminary=========" + propsToBeResolved);
 
 	    unresolvedProps.addAll(resolveProps(propsToBeResolved, generator));
 
