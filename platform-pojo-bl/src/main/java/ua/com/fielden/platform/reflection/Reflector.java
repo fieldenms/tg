@@ -395,7 +395,7 @@ public final class Reflector {
 
 	String currProp = contextProperty;
 
-	final String[] path = dotNotaionalExp.split("\\.");
+	final String[] path = dotNotaionalExp.split(DOT_SPLITTER);
 	int index = 0;
 	while ("←".equals(path[index])) {
 	    // find link property and add it to the absolute path
