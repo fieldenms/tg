@@ -170,7 +170,7 @@ public class BaseEntQueryTCase {
     protected List<List<PropResolutionInfo>> getSourcesFinalReferencingProps(final EntQuery entQry) {
 	final List<List<PropResolutionInfo>> result = new ArrayList<List<PropResolutionInfo>>();
 	for (final ISource source : entQry.getSources().getAllSources()) {
-	    result.add(source.getFinalReferencingProps());
+	    // FIXME result.add(source.getFinalReferencingProps());
 	}
 
 	return result;

@@ -499,8 +499,8 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 
 		select(VEHICLE). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		leftJoin(ORG5).as("station").on().prop("station").eq().prop("station.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		where().prop("station.key").like().val("AA%").and().prop("model.make.key").eq().val("MERC").model());
     }
 
@@ -562,8 +562,8 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		select(sourceQry). //
 		leftJoin(ORG5).as("s").on().prop("station").eq().prop("s"). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		leftJoin(ORG4).as("s.parent").on().prop("s.parent").eq().prop("s.parent.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		where().prop("s.parent.key").like().val("AA%").and().prop("model.make.key").eq().val("MERC").model());
     }
 
@@ -659,8 +659,8 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		select(VEHICLE). //
 		leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv"). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		leftJoin(MODEL).as("rv.model").on().prop("rv.model").eq().prop("rv.model.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		leftJoin(MAKE).as("rv.model.make").on().prop("rv.model.make").eq().prop("rv.model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").and().prop("rv.model.make.key").ne().val("MERC").model());
     }
@@ -678,8 +678,8 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv"). //
 		join(VEHICLE).as("rv2").on().prop("rv.replacedBy").eq().prop("rv2"). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		join(MODEL).as("rv2.model").on().prop("rv2.model").eq().prop("rv2.model.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		join(MAKE).as("rv2.model.make").on().prop("rv2.model.make").eq().prop("rv2.model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").and().prop("rv2.model.make.key").ne().val("MERC").model());
     }
@@ -697,8 +697,8 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		leftJoin(VEHICLE).as("rv").on().prop("replacedBy").eq().prop("rv.id"). //
 		join(VEHICLE).as("rv2").on().prop("rv.replacedBy").eq().prop("rv2.id"). //
 		join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		join(MODEL).as("rv2.model").on().prop("rv2.model").eq().prop("rv2.model.id"). //
+		join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
 		join(MAKE).as("rv2.model.make").on().prop("rv2.model.make").eq().prop("rv2.model.make.id"). //
 		where().prop("model.make.key").eq().val("MERC").and().prop("rv2.model.make.key").ne().val("MERC").model());
     }

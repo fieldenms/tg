@@ -10,59 +10,81 @@ public class EntProp implements ISingleOperand {
     private Class propType;
     private Object hibType;
     private boolean nullable;
-    private boolean external = false;
+    private boolean unresolved = false;
 
-    private EntQuery holder; // query, where given property resides (not to be mixed with the query, which source given property is resolved to - in case of correlated subqueries these two may be different queries (subquery and one of its master).
+    private boolean external;
+    private boolean generated;
+
     private String sql;
+
     private ISource source;
 
     private Expression expression;
 
     public boolean isExpression() {
-	return expression != null;
+        return expression != null;
+    }
+
+    public EntPropStage getStage() {
+	if (unresolved) {
+	    return EntPropStage.UNRESOLVED;
+	} else if (external) {
+	    return EntPropStage.EXTERNAL;
+	} else if (isFinallyResolved()) {
+	    return EntPropStage.FINALLY_RESOLVED;
+	} else if (isPreliminaryResolved()) {
+	    return EntPropStage.PRELIMINARY_RESOLVED;
+	} else {
+	    return EntPropStage.UNPROCESSED;
+	}
+    }
+
+    public boolean isPreliminaryResolved() {
+	return source != null;
+    }
+
+    public boolean isFinallyResolved() {
+	return sql != null;
     }
 
     @Override
     public String toString() {
-        return name + " [" + (propType != null ? propType.getSimpleName() : "") + "]";
+        return name + " [" + (propType != null ? propType.getSimpleName() : "") + ", pr = " + isPreliminaryResolved() + ", fr = " + isFinallyResolved() + ", gen = " + generated + ", " + getStage() + "] " + getSource();
     }
 
     @Override
     public String sql() {
-	return isExpression() ? expression.sql() : ((source != null ? source.getSqlAlias() : "?") +  "." + sql);
+        return isExpression() ? expression.sql() : ((source != null ? source.getSqlAlias() : "?") +  "." + sql);
+    }
+
+    public EntProp(final String name, final boolean external, final boolean generated) {
+        super();
+        this.name = name;
+        this.external = external;
+        this.generated = generated;
     }
 
     public EntProp(final String name) {
-	super();
-	this.name = name;
+        this(name, false, false);
     }
 
     public EntProp(final String name, final boolean external) {
-	super();
-	this.name = name;
-	this.external = external;
-    }
-
-    public EntProp(final String name, final Class propType, final Object hibType, final EntQuery holder) {
-	this(name);
-	this.propType = propType;
-	this.holder = holder;
-	this.hibType = hibType;
+        this(name, external, false);
     }
 
     @Override
     public List<EntProp> getLocalProps() {
-	return isExpression() ? expression.getLocalProps() : Arrays.asList(new EntProp[]{this});
+        return isExpression() ? expression.getLocalProps() : Arrays.asList(new EntProp[]{this});
     }
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-	return isExpression() ? expression.getLocalSubQueries() : Collections.<EntQuery> emptyList();
+        return isExpression() ? expression.getLocalSubQueries() : Collections.<EntQuery> emptyList();
     }
 
     @Override
     public List<EntValue> getAllValues() {
-	return isExpression() ? expression.getAllValues() : Collections.<EntValue> emptyList();
+        return isExpression() ? expression.getAllValues() : Collections.<EntValue> emptyList();
     }
 
     public Class getPropType() {
@@ -70,11 +92,11 @@ public class EntProp implements ISingleOperand {
     }
 
     public Object getHibType() {
-	return hibType;
+        return hibType;
     }
 
     public void setHibType(final Object hibType) {
-	this.hibType = hibType;
+        this.hibType = hibType;
     }
 
     public void setPropType(final Class propType) {
@@ -87,52 +109,42 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public boolean ignore() {
-	return false;
+        return false;
     }
 
     @Override
     public Class type() {
-	return propType;
-    }
-
-    public EntQuery getHolder() {
-        return holder;
-    }
-
-    public void assignHolderIfNotAssigned(final EntQuery holder) {
-        if (this.holder == null) {
-            this.holder = holder;
-        }
+        return propType;
     }
 
     @Override
     public int hashCode() {
-	final int prime = 31;
-	int result = 1;
-	result = prime * result + ((name == null) ? 0 : name.hashCode());
-	return result;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj == null) {
-	    return false;
-	}
-	if (!(obj instanceof EntProp)) {
-	    return false;
-	}
-	final EntProp other = (EntProp) obj;
-	if (name == null) {
-	    if (other.name != null) {
-		return false;
-	    }
-	} else if (!name.equals(other.name)) {
-	    return false;
-	}
-	return true;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof EntProp)) {
+            return false;
+        }
+        final EntProp other = (EntProp) obj;
+        if (name == null) {
+            if (other.name != null) {
+                return false;
+            }
+        } else if (!name.equals(other.name)) {
+            return false;
+        }
+        return true;
     }
 
     public String getSql() {
@@ -145,7 +157,7 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public Object hibType() {
-	return hibType;
+        return hibType;
     }
 
     public boolean isNullable() {
@@ -157,7 +169,7 @@ public class EntProp implements ISingleOperand {
     }
 
     public void setSource(final ISource source) {
-	this.source = source;
+        this.source = source;
     }
 
     public void setExpression(final Expression expression, final boolean needsContextPrefix) {
@@ -168,29 +180,29 @@ public class EntProp implements ISingleOperand {
     }
 
     private String getContextPrefix() {
-	final int lastDotIndex = name.lastIndexOf(".");
-	if (lastDotIndex > 0) {
-	    return name.substring(0, lastDotIndex);
-	}
-	return null;
+        final int lastDotIndex = name.lastIndexOf(".");
+        if (lastDotIndex > 0) {
+            return name.substring(0, lastDotIndex);
+        }
+        return null;
     }
 
     private void prefixExpressionProps() {
-	final String prefix = getContextPrefix();
-	if (prefix != null) {
-	    for (final EntProp prop : expression.getLocalProps()) {
-		prop.setName(prefix + "." + prop.getName());
-	    }
+        final String prefix = getContextPrefix();
+        if (prefix != null) {
+            for (final EntProp prop : expression.getLocalProps()) {
+                prop.setName(prefix + "." + prop.getName());
+            }
 
-	    final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<EntProp>();
-	    for (final EntQuery entQuery : getLocalSubQueries()) {
-		unresolvedPropsFromSubqueries.addAll(entQuery.getUnresolvedProps());
-	    }
+            final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<EntProp>();
+            for (final EntQuery entQuery : getLocalSubQueries()) {
+                unresolvedPropsFromSubqueries.addAll(entQuery.getUnresolvedProps());
+            }
 
-	    for (final EntProp prop : unresolvedPropsFromSubqueries) {
-		prop.setName(prefix + "." + prop.getName());
-	    }
-	}
+            for (final EntProp prop : unresolvedPropsFromSubqueries) {
+                prop.setName(prefix + "." + prop.getName());
+            }
+        }
     }
 
     public void setName(final String name) {
@@ -203,5 +215,21 @@ public class EntProp implements ISingleOperand {
 
     public void setExternal(final boolean external) {
         this.external = external;
+    }
+
+    public boolean isUnresolved() {
+        return unresolved;
+    }
+
+    public void setUnresolved(final boolean unresolved) {
+        this.unresolved = unresolved;
+    }
+
+    public ISource getSource() {
+        return source;
+    }
+
+    public boolean isGenerated() {
+        return generated;
     }
 }

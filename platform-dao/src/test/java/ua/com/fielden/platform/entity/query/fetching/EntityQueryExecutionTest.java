@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
@@ -162,6 +161,27 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     public void test0_8() {
 	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc6").ge().val("100").model();
 	final List<TgVehicle> models = vehicleDao.getAllEntities(from(model).build());
+	assertEquals("Incorrect key", 0, models.size());
+    }
+
+    @Test
+    public void test_111() {
+	final AggregatedResultQueryModel model = select(TgVehicle.class).where().prop("model").eq().anyOfValues(1, 2).yield().val(1).as("1").modelAsAggregate();
+	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).build());
+	assertEquals("Incorrect key", 0, models.size());
+    }
+
+    @Test
+    public void test_112() {
+	final AggregatedResultQueryModel model = select(TgVehicle.class).where().prop("model").eq().val(1).or().prop("model").eq().val(2).yield().val(1).as("1").modelAsAggregate();
+	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).build());
+	assertEquals("Incorrect key", 0, models.size());
+    }
+
+    @Test
+    public void test_113() {
+	final AggregatedResultQueryModel model = select(TgVehicle.class).where().begin().prop("model").eq().val(1).or().prop("model").eq().val(2).end().yield().val(1).as("1").modelAsAggregate();
+	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).build());
 	assertEquals("Incorrect key", 0, models.size());
     }
 
@@ -362,6 +382,19 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     	assertEquals("Incorrect value", "1", values.get(0).get("aa").toString());
     }
 
+
+    @Test
+    public void test13a() {
+	final AggregatedResultQueryModel model = select(TgVehicle.class).where().prop("model.make.key").eq().val("MERC").yield().prop("id").as("aa").modelAsAggregate();
+	final AggregatedResultQueryModel countModel = select(model). //
+		yield().countAll().as("aa"). //
+		modelAsAggregate();
+
+	final List<EntityAggregates> values = aggregateDao.getAllEntities(from(countModel).build());
+    	assertEquals("Incorrect count", 1, values.size());
+    	assertEquals("Incorrect value", "1", values.get(0).get("aa").toString());
+    }
+
     @Test
     public void test14() {
 	final PrimitiveResultQueryModel subQry = select(TgVehicle.class).where().prop("model.make.key").eq().anyOfValues("BMW", "MERC").yield().prop("key").modelAsPrimitive();
@@ -375,7 +408,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore //FIXME
     public void test15_() {
 	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("model.make").eq().prop("make").model();
 
@@ -548,7 +580,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore //FIXME
+    //@Ignore //FIXME
     public void test_calculated_entity_props_in_condition() {
 	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).model();
 	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).build());
@@ -559,7 +591,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore //FIXME
+    //@Ignore //FIXME
     public void test_calculated_entity_props_in_condition_() {
 	final AggregatedResultQueryModel qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).yield().countAll().as("aa").modelAsAggregate();
 	final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).build());
@@ -761,7 +793,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	save(new_(UserAndRoleAssociation.class, user3, fleetOperatorRole));
 	save(new_(UserAndRoleAssociation.class, user3, warehouseOperatorRole));
 
-	System.out.println("\n   DATA POPULATED SUCCESSFULLY\n\n\n");
+	System.out.println("\n   DATA POPULATED SUCCESSFULLY\n\n\n\n\n\n\n\n\n");
     }
 
     @Override

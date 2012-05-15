@@ -59,11 +59,7 @@ public interface ISource {
 
     List<PropResolutionInfo> getReferencingProps();
 
-    void addFinalReferencingProp(PropResolutionInfo prop);
-
-    List<PropResolutionInfo> getFinalReferencingProps();
-
-    List<CompoundSource> generateMissingSources(List<PropResolutionInfo> refProps);
+    List<CompoundSource> generateMissingSources();
 
     void populateSourceItems(final boolean parentLeftJoinLegacy);
 
