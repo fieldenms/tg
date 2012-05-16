@@ -6,6 +6,8 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
+import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 import ua.com.fielden.platform.expression.ExpressionLexer;
 import ua.com.fielden.platform.expression.ExpressionParser;
 import ua.com.fielden.platform.expression.Token;
@@ -66,10 +68,10 @@ public class LevelAllocatingVisitorIntegratedTest {
 
     @Test
     public void test_expression_level_calc_with_level_compatible_nodes_case_3_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("(2 + ←.entityProperty.intProperty) / (3 - entityProperty.intProperty)").tokenize();
+	final Token[] tokens = new ExpressionLexer("(2 + ←.intProp) / (3 - intProp)").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
-	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty");
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToOneAssociation.class, "one2oneAssociation");
 
 	new AstWalker(ast, visitor).walk();
 
@@ -125,15 +127,15 @@ public class LevelAllocatingVisitorIntegratedTest {
     }
 
     @Test
-    public void test_expression_level_calc_with_level_compatible_nodes_case_6_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("AVG(←.←.collectional.intProperty) + SUM(collectional.intProperty)").tokenize();
+    public void test_expression_level_calc_with_level_compatible_nodes_with_one2many_associations() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("←.moneyProp + SUM(one2manyAssociationCollectional.key2)").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
-	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty.selfProperty");
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationCollectional");
 
 	new AstWalker(ast, visitor).walk();
 
-	assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+	assertEquals("Incorrect level for expression", new Integer(2), ast.getLevel());
     }
 
     @Test
@@ -161,11 +163,11 @@ public class LevelAllocatingVisitorIntegratedTest {
     }
 
     @Test
-    public void test_expression_level_calc_with_level_compatible_nodes_case_9() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("AVG(selfProperty.selfProperty.collectional.intProperty) + SUM(selfProperty.entityProperty.intProperty)").tokenize();
+    public void test_expression_level_calc_with_level_compatible_nodes_in_one2many_associations() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("AVG(one2manyAssociationSpecialCase.one2manyAssociationCollectional.key2) + SUM(one2manyAssociationCollectional.key2)").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
-	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class);
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToManyAssociation.class);
 
 	new AstWalker(ast, visitor).walk();
 
@@ -188,10 +190,10 @@ public class LevelAllocatingVisitorIntegratedTest {
 
     @Test
     public void test_expression_level_calc_with_level_incompatible_nodes_case_1_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("←.←.collectional.intProperty + collectional.intProperty / ←.entityProperty.intProperty").tokenize();
+	final Token[] tokens = new ExpressionLexer("←.moneyProp / one2manyAssociationCollectional.key2").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();
-	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty.selfProperty");
+	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationSpecialCase");
 	try {
 	    new AstWalker(ast, visitor).walk();
 	    fail("Exception expected.");
@@ -201,45 +203,7 @@ public class LevelAllocatingVisitorIntegratedTest {
     }
 
     @Test
-    public void test_expression_level_calc_with_level_compatible_nodes_case_2_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("AVG(←.←.collectional.intProperty) + SUM(←.entityProperty.intProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty.selfProperty");
-
-	new AstWalker(ast, visitor).walk();
-
-	assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
-    }
-
-    @Test
-    public void should_be_able_to_add_calculated_property_to_collectinal_type_when_it_is_a_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("intProperty - SUM(←.←.←.collectional.intProperty)").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty.selfProperty.collectional");
-
-	new AstWalker(ast, visitor).walk();
-
-	assertEquals("Incorrect level for expression", new Integer(2), ast.getLevel());
-    }
-
-    @Test
     public void test_expression_level_calc_with_level_incompatible_nodes_case_3_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-	final Token[] tokens = new ExpressionLexer("AVG(←.←.collectional.intProperty) + collectional.intProperty").tokenize();
-	final ExpressionParser parser = new ExpressionParser(tokens);
-	final AstNode ast = parser.parse();
-	final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(EntityLevel1.class, "selfProperty.selfProperty");
-	try {
-	    new AstWalker(ast, visitor).walk();
-	    fail("Exception expected.");
-	} catch (final IncompatibleOperandException ex) {
-	    assertEquals("Incorrect message", "Incompatible operand nesting level for operands of operation '+'.", ex.getMessage());
-	}
-    }
-
-    @Test
-    public void test_expression_level_calc_with_level_incompatible_nodes_case_4_out_of_context() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
 	final Token[] tokens = new ExpressionLexer("collectional.intProperty").tokenize();
 	final ExpressionParser parser = new ExpressionParser(tokens);
 	final AstNode ast = parser.parse();

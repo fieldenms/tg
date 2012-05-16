@@ -28,8 +28,12 @@ public class BceAttributeValidation implements IBeforeChangeEventHandler<Calcula
 	if (newAttribute == null) {
 	    return new IncorrectCalcPropertyKeyException("The attribute cannot be null.");
 	}
-	if (!CalculatedPropertyAttribute.NO_ATTR.equals(newAttribute) && cp.category() != null && !CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION.equals(cp.category())) {
-	    return new IncorrectCalcPropertyKeyException("ALL / ANY attribute can not be applied to non-collectional sub-property [" + cp.getContextualExpression() + "].");
+	final boolean hasAttribute = !CalculatedPropertyAttribute.NO_ATTR.equals(newAttribute);
+	if (hasAttribute && cp.category() == null) {
+	    return new IncorrectCalcPropertyKeyException("ALL / ANY attribute cannot be applied without a category which was not defined due to invalid expression.");
+	}
+	if (hasAttribute && cp.category() != null && !CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION.equals(cp.category())) {
+	    return new IncorrectCalcPropertyKeyException("ALL / ANY attribute cannot be applied to non-collectional sub-property [" + cp.getContextualExpression() + "].");
 	}
 	return Result.successful(newAttribute);
     }

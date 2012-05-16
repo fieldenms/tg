@@ -156,7 +156,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     }
 
     /**
-     * Inferres all needed information from {@link #contextualExpression} and {@link #attribute}.
+     * Inferred all needed information from {@link #contextualExpression} and {@link #attribute}.
      */
     protected void inferMetaInformationFromExpression() {
 	if (ast == null) {
@@ -169,7 +169,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	}
 	this.resultType = ast.getType();
 
-	final int contextPathLevel = StringUtils.isEmpty(getContextPath()) ? 1 : new LevelAllocatingVisitor((Class<? extends AbstractEntity>) getRoot(), getContextPath()).determineLevelForProperty(""); // new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getRoot(), "", contextPath).convert().getLevel();
+	final int contextPathLevel = new LevelAllocatingVisitor((Class<? extends AbstractEntity>) getRoot(), getContextPath()).getContextLevel();
 	final int level = ast.getLevel() == null ? contextPathLevel : ast.getLevel();
 	final int levelsToRaiseTheProperty = contextPathLevel - level;
 

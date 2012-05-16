@@ -452,15 +452,14 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter( //
 		MasterEntityWithOneToManyAssociation.class, // higher-order type
 		"one2manyAssociationCollectional", // expression context
-		"MIN(intProp - ←.moneyProp) + MAX(one2manyAssociationCollectional.moneyProp)");
+		"intProp - ←.moneyProp + MAX(one2manyAssociationCollectional.moneyProp)");
 	final AstNode root = ev.convert();
 	assertEquals("Incorrect expression type", Money.class, root.getType());
 	assertEquals("Incorrect expression collectional context", "one2manyAssociationCollectional", root.getTag());
 
 	final ExpressionModel minus = expr().prop("intProp").sub().prop("key1.moneyProp").model();
-	final ExpressionModel min = expr().minOf().expr(minus).model();
 	final ExpressionModel max = expr().maxOf().prop("one2manyAssociationCollectional.moneyProp").model();
-	final ExpressionModel plus = expr().expr(min).add().expr(max).model();
+	final ExpressionModel plus = expr().expr(minus).add().expr(max).model();
 	assertEquals("Incorrect model.", plus, root.getModel());
     }
 
@@ -492,6 +491,27 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	final ExpressionModel plus = expr().expr(mult).add().prop("key1.intProp").model();
 	assertEquals("Incorrect model.", plus, root.getModel());
     }
+
+    @Test
+    public void test_level_calculation_integrity_1() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter( //
+		MasterEntityWithOneToOneAssociation.class, // higher-order type
+		"one2oneAssociation.one2ManyAssociation", // expression context
+		"←.intProp + 2 * decimalProp");
+	final AstNode root = ev.convert();
+	assertEquals(Integer.valueOf(2), root.getLevel());
+    }
+
+    @Test
+    public void test_level_calculation_integrity_2() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter( //
+		MasterEntityWithOneToOneAssociation.class, // higher-order type
+		"one2oneAssociation.one2ManyAssociation", // expression context
+		"2 * decimalProp + ←.intProp");
+	final AstNode root = ev.convert();
+	assertEquals(Integer.valueOf(2), root.getLevel());
+    }
+
 
     @Test
     public void conversion_of_expression_with_property_not_reachable_from_context_should_have_failed() throws RecognitionException, SemanticException {

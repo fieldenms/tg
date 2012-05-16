@@ -1052,7 +1052,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
-     * Indicates whether this entity instance can be changed. By default returns a sucessfull {@link Result} indicating editability of the entity.
+     * Indicates whether this entity instance can be changed. By default returns a successful {@link Result} indicating editability of the entity.
      * <p>
      * This method should be overridden if some custom logic needs to be provided.
      * <p>

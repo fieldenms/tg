@@ -40,7 +40,7 @@ import ua.com.fielden.platform.reflection.Reflector;
  */
 public class LevelAllocatingVisitor extends AbstractAstVisitor {
 
-    private final int contextLevel;
+    private final Integer contextLevel;
 
     /**
      * {@inheritDoc}
@@ -114,19 +114,19 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
      * @return
      */
     public final Integer determineLevelForProperty(final String text) {
-	return determineLevel(relative2Absolute(text).split(Reflector.DOT_SPLITTER));
+	return determineLevel(relative2AbsoluteInverted(text).split(Reflector.DOT_SPLITTER), getContextPropertyType());
     }
 
     private final Integer determineContextLevel(final String text) {
-	return determineLevel(text.split(Reflector.DOT_SPLITTER));
+	return determineLevel(text.split(Reflector.DOT_SPLITTER), getHigherOrderType());
     }
 
-    private int determineLevel(final String[] parts) {
-	int level = 1;
+    private int determineLevel(final String[] parts, final Class<?> type) {
+	int level = getContextLevel() == null ? 1 : getContextLevel();
 	String property = "";
 	for (int index = 0; index < parts.length; index++) {
 	    property += parts[index];
-	    final Field field = Finder.findFieldByName(getHigherOrderType(), property);
+	    final Field field = Finder.findFieldByName(type, property);
 	    if (Collection.class.isAssignableFrom(field.getType())) {
 		level++;
 	    }
@@ -150,9 +150,9 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
 	    level = child.getLevel() != null && level == null ? child.getLevel() : level; // i.e. level is assigned only if it was not assigned before
 
 	    if (child.getLevel() != null && level != null && level != child.getLevel()) {
-		if (contextLevel < level || contextLevel < child.getLevel()) {
+		//if (contextLevel < level || contextLevel < child.getLevel()) {
 		    throw new IncompatibleOperandException("Incompatible operand nesting level for operands of operation '" + node.getToken().text+ "'.", node.getToken());
-		}
+		//}
 	    }
 	}
 	return level;
@@ -168,6 +168,10 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
     public final Integer determineLevelForAggregationOperations(final AstNode node) throws SemanticException {
 	final Integer level = determineLevelBasedOnOperands(node);
 	return level != null ? level - 1 : null;
+    }
+
+    public Integer getContextLevel() {
+        return contextLevel;
     }
 
 }

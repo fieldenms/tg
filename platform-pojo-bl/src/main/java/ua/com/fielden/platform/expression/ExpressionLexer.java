@@ -3,6 +3,8 @@ package ua.com.fielden.platform.expression;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
 import ua.com.fielden.platform.expression.lexer.BaseNonDeterministicAutomata;
 import ua.com.fielden.platform.expression.lexer.comma.CommaTokenAutomata;
@@ -54,6 +56,9 @@ public class ExpressionLexer {
 	new DateConstantTokenAutomata(), new DecimalTokenAutomata(), new IntegerTokenAutomata()};
 
     public ExpressionLexer(final String input) {
+	if (StringUtils.isEmpty(input)) {
+	    throw new IllegalArgumentException("Empty string is an illegal input.");
+	}
 	this.input = input;
     }
 
