@@ -82,7 +82,9 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
     @Override
     public int compareTo(final PropertyPersistenceInfo o) {
-	return name.compareTo(o.name);
+	final int nameComp = name.compareTo(o.name);
+	final int typeComp = type.compareTo(o.type);
+	return nameComp != 0 ? nameComp : typeComp;
     }
 
     public Set<PropertyPersistenceInfo> getCompositeTypeSubprops() {
@@ -220,10 +222,105 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     }
 
     public static enum PropertyPersistenceType {
-	PROP, COLLECTIONAL, ENTITY, ID, ONE2ONE_ID, VERSION, PRIMITIVE_KEY, ENTITY_KEY, COMPOSITE_DETAILS;
+	PROP, COLLECTIONAL, ENTITY, ID, ONE2ONE_ID, VERSION, PRIMITIVE_KEY, ENTITY_KEY, ENTITY_MEMBER_OF_COMPOSITE_KEY, PRIMITIVE_MEMBER_OF_COMPOSITE_KEY, COMPOSITE_DETAILS;
     }
 
     public ExpressionModel getExpressionModel() {
         return expressionModel;
+    }
+
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + ((columns == null) ? 0 : columns.hashCode());
+	result = prime * result + ((expressionModel == null) ? 0 : expressionModel.hashCode());
+	result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
+	result = prime * result + ((javaType == null) ? 0 : javaType.hashCode());
+	result = prime * result + ((length == null) ? 0 : length.hashCode());
+	result = prime * result + ((name == null) ? 0 : name.hashCode());
+	result = prime * result + (nullable ? 1231 : 1237);
+	result = prime * result + ((precision == null) ? 0 : precision.hashCode());
+	result = prime * result + ((scale == null) ? 0 : scale.hashCode());
+	result = prime * result + ((type == null) ? 0 : type.hashCode());
+	return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	if (this == obj) {
+	    return true;
+	}
+	if (obj == null) {
+	    return false;
+	}
+	if (!(obj instanceof PropertyPersistenceInfo)) {
+	    return false;
+	}
+	final PropertyPersistenceInfo other = (PropertyPersistenceInfo) obj;
+	if (columns == null) {
+	    if (other.columns != null) {
+		return false;
+	    }
+	} else if (!columns.equals(other.columns)) {
+	    return false;
+	}
+	if (expressionModel == null) {
+	    if (other.expressionModel != null) {
+		return false;
+	    }
+	} else if (!expressionModel.equals(other.expressionModel)) {
+	    return false;
+	}
+	if (hibType == null) {
+	    if (other.hibType != null) {
+		return false;
+	    }
+	} else if (!hibType.equals(other.hibType)) {
+	    return false;
+	}
+	if (javaType == null) {
+	    if (other.javaType != null) {
+		return false;
+	    }
+	} else if (!javaType.equals(other.javaType)) {
+	    return false;
+	}
+	if (length == null) {
+	    if (other.length != null) {
+		return false;
+	    }
+	} else if (!length.equals(other.length)) {
+	    return false;
+	}
+	if (name == null) {
+	    if (other.name != null) {
+		return false;
+	    }
+	} else if (!name.equals(other.name)) {
+	    return false;
+	}
+	if (nullable != other.nullable) {
+	    return false;
+	}
+	if (precision == null) {
+	    if (other.precision != null) {
+		return false;
+	    }
+	} else if (!precision.equals(other.precision)) {
+	    return false;
+	}
+	if (scale == null) {
+	    if (other.scale != null) {
+		return false;
+	    }
+	} else if (!scale.equals(other.scale)) {
+	    return false;
+	}
+
+	if (type != other.type) {
+	    return false;
+	}
+	return true;
     }
 }

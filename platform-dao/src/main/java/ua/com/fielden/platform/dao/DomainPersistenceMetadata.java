@@ -1,17 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.utils.EntityUtils.getCalculatedProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +30,20 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Injector;
+
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.getCalculatedProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getCompositeKeyProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
 
 
 /**
@@ -137,18 +139,31 @@ public class DomainPersistenceMetadata {
 	final String keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? getMapEntityTo(entityType).keyColumn() : key;
 	if (isOneToOne(entityType)) {
 	    result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
-	} else if (!DynamicEntityKey.class.equals(getKeyType(entityType))){
+	} else if (!DynamicEntityKey.class.equals(getKeyType(entityType))) {
 	    result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PropertyPersistenceType.PRIMITIVE_KEY).build());
+	} else if (DynamicEntityKey.class.equals(getKeyType(entityType))) {
+	    for (final Field field : getCompositeKeyProperties(entityType)) {
+		result.add(getCompositeKeyPropInfo(entityType, field));
+	    }
+	}
+	final List<String> propsToBeSkipped = new ArrayList<String>();
+
+	for (final PropertyPersistenceInfo propertyPersistenceInfo : result) {
+	    propsToBeSkipped.add(propertyPersistenceInfo.getName());
 	}
 
 	for (final Field field : getPersistedProperties(entityType)) {
-	    if (!specialProps.contains(field.getName())) {
+	    if (!propsToBeSkipped.contains(field.getName())) {
 		result.add(getCommonPropHibInfo(entityType, field));
 	    }
 	}
 
 	for (final Field field : getCalculatedProperties(entityType)) {
 	    result.add(getCalculatedPropInfo(entityType, field));
+	}
+
+	for (final Field field : getCollectionalProperties(entityType)) {
+	    result.add(getCollectionalPropInfo(entityType, field));
 	}
 
 	return result;
@@ -259,6 +274,46 @@ public class DomainPersistenceMetadata {
 	final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
 	expressionModel.setContextPrefixNeeded(needsContextPrefix(entityType, calculatedPropfield));
 	return new PropertyPersistenceInfo.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).build();
+    }
+
+    private PropertyPersistenceInfo getCollectionalPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
+	final boolean isCollectional = Set.class.isAssignableFrom(field.getType());
+	final boolean isEntity = isPersistedEntityType(field.getType());
+	final String propName = field.getName();
+	final Class javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+
+	final Object hibernateType = getHibernateType(javaType, "", Void.class, isCollectional, isEntity);
+	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, false).type(PropertyPersistenceType.COLLECTIONAL);
+	builder.hibType(hibernateType);
+
+	return builder.build();
+    }
+
+    private PropertyPersistenceInfo getCompositeKeyPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
+	final boolean isEntity = isPersistedEntityType(field.getType());
+	final MapTo mapTo = getMapTo(entityType, field.getName());
+	final String propName = field.getName();
+	final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
+	final Class javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+	final long length = mapTo.length();
+	final long precision = mapTo.precision();
+	final long scale = mapTo.scale();
+	final boolean nullable = !isRequired(entityType, propName);
+
+	final Object hibernateType = getHibernateType(javaType, mapTo.typeName(), mapTo.userType(), false, isEntity);
+	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, nullable).length(length).precision(precision).scale(scale);
+	builder.type(isEntity ? PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY : PropertyPersistenceType.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
+	builder.hibType(hibernateType);
+
+	if (hibernateType instanceof ICompositeUserTypeInstantiate) {
+	    final ICompositeUserTypeInstantiate hibCompositeUSerType = (ICompositeUserTypeInstantiate) hibernateType;
+	    for (final String column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
+		builder.column(column);
+	    }
+	    return builder.build();
+	}
+
+	return builder.column(columnName).build();
     }
 
     private boolean needsContextPrefix(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) {

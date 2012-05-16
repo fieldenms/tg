@@ -1,14 +1,5 @@
 package ua.com.fielden.web.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -28,6 +19,14 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.InspectedEntity;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Provides a unit test for entity aggregates web resource.
@@ -94,7 +93,7 @@ public class WebResourceEntityAggreagatesTestCase extends WebBasedTestCase {
 		yield().beginExpr().countOf().prop("id").endExpr().as("kount").modelAsAggregate();
 
 	final OrderingModel orderBy = orderBy().prop("entityPropertyOne.intProperty").asc().model();
-	final fetch<EntityAggregates> fetch = fetch(EntityAggregates.class).with("entityPropertyOne", fetch(InspectedEntity.class));
+	final fetch<EntityAggregates> fetch = fetch(EntityAggregates.class).with("kount").with("entityPropertyOne", fetch(InspectedEntity.class));
 	try {
 	    final byte[] bytes = rao.export(from(model).with(orderBy).with(fetch).build(), new String[] { "entityPropertyOne.intProperty", "kount" }, new String[] { "Integer Property", "Count" });
 	    assertNotNull("The export result should exist.", bytes);

@@ -8,12 +8,9 @@ public final class fetchAll<T extends AbstractEntity<?>> extends fetch<T> {
      * Mainly used for serialisation.
      */
     protected fetchAll() {
-
     }
 
     fetchAll(final Class<T> entityType) {
-	super(entityType);
-	withAll();
+	super(entityType, true);
     }
-
 }

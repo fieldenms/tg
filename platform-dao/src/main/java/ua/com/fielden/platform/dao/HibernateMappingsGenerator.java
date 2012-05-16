@@ -140,7 +140,7 @@ public class HibernateMappingsGenerator {
 	}
 
 	for (final PropertyPersistenceInfo ppi : map.getProps().values()) {
-	    if (!ppi.getType().equals(PropertyPersistenceType.COMPOSITE_DETAILS) && !ppi.isCalculated() && !specialProps.contains(ppi.getName())) {
+	    if (!ppi.getType().equals(PropertyPersistenceType.COMPOSITE_DETAILS) && !ppi.isCalculated() && !ppi.isCollection() && !specialProps.contains(ppi.getName())) {
 		sb.append(getCommonPropMappingString(ppi));
 	    }
 	}
@@ -161,6 +161,7 @@ public class HibernateMappingsGenerator {
 	case COLLECTIONAL:
 	    return getSet(info.getName(), info.getColumn(), info.getJavaType());
 	case ENTITY:
+	case ENTITY_MEMBER_OF_COMPOSITE_KEY:
 	    return getManyToOneProperty(info.getName(), info.getColumn(), info.getJavaType());
 	case VERSION:
 	    return getCommonEntityVersion(info.getName(), info.getColumn(), info.getTypeString());

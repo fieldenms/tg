@@ -24,7 +24,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 
 public class EntityFetcher {
@@ -59,7 +59,7 @@ public class EntityFetcher {
 
     private <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DbVersion dbVersion, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser, final IFilter filter, final String username) {
 	final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, domainPersistenceMetadataAnalyser, filter, username);
-	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getParamValues());
+	final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem);
 	final String sql = entQuery.sql();
 	return new QueryModelResult<T>(entQuery.getResultType(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
     }
@@ -77,8 +77,8 @@ public class EntityFetcher {
 	final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser = new DomainPersistenceMetadataAnalyser(getDomainPersistenceMetadata());
 	final QueryModelResult<E> modelResult = getModelResult(queryModel, getDbVersion(), domainPersistenceMetadataAnalyser, getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
-	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetch(modelResult.getResultType());
-	return new EntityEnhancer<E>(this, domainPersistenceMetadataAnalyser).enhance(result, fetchModel);
+	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetchAll(modelResult.getResultType());
+	return new EntityEnhancer<E>(this, domainPersistenceMetadataAnalyser).enhance(result, fetchModel == null ? null : new FetchModel(fetchModel, domainPersistenceMetadataAnalyser));
     }
 
     protected Query produceHibernateQuery(final String sql, final SortedSet<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams) {

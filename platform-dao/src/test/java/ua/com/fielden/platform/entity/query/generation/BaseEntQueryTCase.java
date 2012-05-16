@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ISource;
 import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
@@ -50,6 +51,8 @@ import com.google.inject.Guice;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+
 
 public class BaseEntQueryTCase {
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
@@ -106,8 +109,8 @@ public class BaseEntQueryTCase {
 	return qb.generateEntQueryAsResultQuery(qryModel);
     }
 
-    protected static EntQuery entResultQry(final QueryModel qryModel, final OrderingModel orderModel) {
-	return qb.generateEntQueryAsResultQuery(qryModel, orderModel, new HashMap<String, Object>());
+    protected static EntQuery entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
+	return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).build());
     }
 
     protected static EntQuery entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {

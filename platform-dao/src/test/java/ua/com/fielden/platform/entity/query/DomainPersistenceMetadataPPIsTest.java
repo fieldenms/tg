@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -55,11 +56,30 @@ public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("model", MODEL, false, hibType("long"), "MODEL_", PropertyPersistenceType.ENTITY));
 	expected.add(ppi("price.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PRICE_", PropertyPersistenceType.COMPOSITE_DETAILS));
 	expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PURCHASEPRICE_", PropertyPersistenceType.COMPOSITE_DETAILS));
+	expected.add(ppi("fuelUsages", FUEL_USAGE, false, null, Collections.<String> emptyList(), PropertyPersistenceType.COLLECTIONAL));
 
 	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
 	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(VEHICLE));
 	assertTrue(actual.containsAll(expected));
     }
+
+    @Test
+    public void test5() {
+	final SortedSet<PropertyPersistenceInfo> expected = new TreeSet<PropertyPersistenceInfo>();
+	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyPersistenceType.ID));
+	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyPersistenceType.VERSION));
+	//expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyPersistenceType.PRIMITIVE_KEY));
+	//expected.add(ppi("desc", STRING, false, hibType("string"), "DESC_", PropertyPersistenceType.PROP));
+	expected.add(ppi("vehicle", VEHICLE, false, hibType("long"), "VEHICLE_", PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY));
+	expected.add(ppi("date", DATE, false, hibType("date"), "DATE_", PropertyPersistenceType.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY));
+
+	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
+	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(FUEL_USAGE));
+
+	System.out.println(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(FUEL_USAGE));
+	assertTrue(actual.containsAll(expected));
+    }
+
 
     @Test
     public void test4() {

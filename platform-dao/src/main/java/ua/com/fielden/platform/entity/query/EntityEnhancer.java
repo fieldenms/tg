@@ -30,7 +30,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	this.domainPersistenceMetadataAnalyser = domainPersistenceMetadataAnalyser;
     }
 
-    protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final fetch<E> fetchModel) throws Exception {
+    protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final FetchModel<E> fetchModel) throws Exception {
 	if (fetchModel != null) {
 	    final Map<String, fetch<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getFetchModels();
 
@@ -99,7 +99,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 	    final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
 	    getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel)
 		    : //
-		    new EntityEnhancer<T>(fetcher, domainPersistenceMetadataAnalyser).enhance(retrievedPropertyInstances, fetchModel);
+		    new EntityEnhancer<T>(fetcher, domainPersistenceMetadataAnalyser).enhance(retrievedPropertyInstances, new FetchModel(fetchModel, domainPersistenceMetadataAnalyser));
 
 	    // Replacing in entities the proxies of properties with properly enhanced property instances.
 	    for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {

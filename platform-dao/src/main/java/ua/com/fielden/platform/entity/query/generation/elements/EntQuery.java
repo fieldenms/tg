@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -13,6 +14,7 @@ import java.util.TreeSet;
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.StandAloneExpressionBuilder;
@@ -126,6 +128,17 @@ public class EntQuery implements ISingleOperand {
         }
     }
 
+    private void adjustYieldsModelAccordingToFetchModel(final FetchModel fetchModel) {
+	if (fetchModel != null) {
+	    for (final Iterator<Entry<String, Yield>> iterator = yields.getYields().entrySet().iterator(); iterator.hasNext();) {
+		final Entry<String, Yield> yieldEntry = iterator.next();
+		if (!fetchModel.containsProp(yieldEntry.getKey())) {
+		    iterator.remove();
+		}
+	    }
+	}
+    }
+
     private void assignPropertyPersistenceInfoToYields() {
         int yieldIndex = 0;
         for (final Yield yield : yields.getYields().values()) {
@@ -194,7 +207,7 @@ public class EntQuery implements ISingleOperand {
 
     public EntQuery(final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
             final Class resultType, final QueryCategory category, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser, //
-            final IFilter filter, final String username, final EntQueryGenerator generator) {
+            final IFilter filter, final String username, final EntQueryGenerator generator, final FetchModel fetchModel) {
         super();
         this.category = category;
         this.domainPersistenceMetadataAnalyser = domainPersistenceMetadataAnalyser;
@@ -205,7 +218,7 @@ public class EntQuery implements ISingleOperand {
         this.orderings = orderings;
         this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? this.sources.getMain().sourceType() : null);
 
-        enhanceToFinalState(generator);
+        enhanceToFinalState(generator, fetchModel);
 
         assignPropertyPersistenceInfoToYields();
 
@@ -245,7 +258,7 @@ public class EntQuery implements ISingleOperand {
 	return foundProps != null ? foundProps : Collections.<EntProp> emptyList();
     }
 
-    private void enhanceToFinalState(final EntQueryGenerator generator) {
+    private void enhanceToFinalState(final EntQueryGenerator generator, final FetchModel fetchModel) {
 	for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
 	    final ISource source = sourceAndItsJoinType.getKey();
 	    source.assignNullability(sourceAndItsJoinType.getValue());
@@ -253,6 +266,7 @@ public class EntQuery implements ISingleOperand {
 	}
 
 	enhanceYieldsModel(); //!! adds new properties in yield section
+	adjustYieldsModelAccordingToFetchModel(fetchModel);
 
 	int countOfUnprocessed = 1;
 

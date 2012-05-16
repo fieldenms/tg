@@ -55,7 +55,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
 	assertEquals("Incorrect number of matching values.", 2, result.size());
 	assertEquals("Incorrect wagon class.", "WA1", result.get(0).getKey());
 
-	assertEquals("Incorrect compatibles for wagon class.", 0, result.get(0).getCompatibles().size());
+	assertEquals("Incorrect compatibles for wagon class.", 1, result.get(0).getCompatibles().size());
 
 //	try {
 //	    assertEquals("Incorrect compatibles for wagon class.", 1, result.get(0).getCompatibles().size());

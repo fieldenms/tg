@@ -1,86 +1,49 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 public class fetch<T extends AbstractEntity<?>> {
     private final Class<T> entityType;
-    private final Map<String, fetch<? extends AbstractEntity<?>>> entityProps = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
-    private final Set<String> primProps = new HashSet<String>();
-
+    private final Map<String, fetch<? extends AbstractEntity<?>>> includedPropsWithModels = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
+    private final Set<String> incudedProps = new HashSet<String>();
+    private final Set<String> excludedProps = new HashSet<String>();
+    private final boolean allIncluded;
 
     /**
      * Used mainly for serialisation.
      */
     protected fetch() {
 	this.entityType = null;
+	this.allIncluded = false;
     }
 
-    protected fetch(final Class<T> entityType) {
+    public fetch(final Class<T> entityType) {
+	this(entityType, false);
+    }
+
+    protected fetch(final Class<T> entityType, final boolean allIncluded) {
 	this.entityType = entityType;
-	enhanceFetchModelWithKeyProperties();
-    }
-
-    private void enhanceFetchModelWithKeyProperties() {
-	final List<String> keyMemberNames = Finder.getFieldNames(Finder.getKeyMembers(entityType));
-	for (final String keyProperty : keyMemberNames) {
-	    with(keyProperty);
-	}
-    }
-
-    protected void withAll() {
-	final List<Field> fields = Finder.findPropertiesThatAreEntities(entityType);
-	for (final Field field : fields) {
-	    entityProps.put(field.getName(), new fetch(field.getType()));
-	}
-    }
-
-    private Class getPropType(final String propName) {
-	try {
-	    return PropertyTypeDeterminator.determinePropertyType(entityType, propName);
-	} catch (final Exception e) {
-	    throw new IllegalArgumentException("Trying fetch entity of type [" + entityType + "] with non-existing property [" + propName + "]");
-	}
+	this.allIncluded = allIncluded;
     }
 
     public fetch<T> with(final String propName) {
-	final Class propType = getPropType(propName);
-	if (AbstractEntity.class.isAssignableFrom(propType)) {
-	    entityProps.put(propName, new fetch(propType));
-	} else {
-	    primProps.add(propName);
-	}
+	incudedProps.add(propName);
+	return this;
+    }
+
+    public fetch<T> without(final String propName) {
+	excludedProps.add(propName);
 	return this;
     }
 
     public fetch<T> with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-	if (entityType != EntityAggregates.class) {
-	    final Class propType = getPropType(propName);
-
-	    if (propType != fetchModel.entityType) {
-		throw new IllegalArgumentException("Mismatch between actual type of property and its fetch model type!");
-	    }
-	}
-
-	if (AbstractEntity.class.isAssignableFrom(fetchModel.getEntityType())) {
-	    entityProps.put(propName, fetchModel);
-	} else {
-	    throw new IllegalArgumentException(propName + " has fetch model for type " + fetchModel.getEntityType().getName() + ". Fetch model with entity type is required.");
-	}
+	includedPropsWithModels.put(propName, fetchModel);
 	return this;
-    }
-
-    public Map<String, fetch<? extends AbstractEntity<?>>> getFetchModels() {
-	return entityProps;
     }
 
     public Class<T> getEntityType() {
@@ -95,7 +58,7 @@ public class fetch<T extends AbstractEntity<?>> {
     private String getString(final String offset) {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("\n");
-	for (final Map.Entry<String, fetch<?>> fetchModel : entityProps.entrySet()) {
+	for (final Map.Entry<String, fetch<?>> fetchModel : includedPropsWithModels.entrySet()) {
 	    sb.append(offset + fetchModel.getKey() + fetchModel.getValue().getString(offset + "   "));
 	}
 
@@ -107,7 +70,7 @@ public class fetch<T extends AbstractEntity<?>> {
 	final int prime = 31;
 	int result = 1;
 	result = prime * result + ((entityType == null) ? 0 : entityType.hashCode());
-	result = prime * result + ((entityProps == null) ? 0 : entityProps.hashCode());
+	result = prime * result + ((includedPropsWithModels == null) ? 0 : includedPropsWithModels.hashCode());
 	return result;
     }
 
@@ -128,13 +91,29 @@ public class fetch<T extends AbstractEntity<?>> {
 	} else if (!entityType.equals(that.entityType)) {
 	    return false;
 	}
-	if (entityProps == null) {
-	    if (that.entityProps != null) {
+	if (includedPropsWithModels == null) {
+	    if (that.includedPropsWithModels != null) {
 		return false;
 	    }
-	} else if (!entityProps.equals(that.entityProps)) {
+	} else if (!includedPropsWithModels.equals(that.includedPropsWithModels)) {
 	    return false;
 	}
 	return true;
+    }
+
+    public boolean isAllIncluded() {
+        return allIncluded;
+    }
+
+    public Map<String, fetch<? extends AbstractEntity<?>>> getIncludedPropsWithModels() {
+        return includedPropsWithModels;
+    }
+
+    public Set<String> getIncudedProps() {
+        return incudedProps;
+    }
+
+    public Set<String> getExcludedProps() {
+        return excludedProps;
     }
 }
