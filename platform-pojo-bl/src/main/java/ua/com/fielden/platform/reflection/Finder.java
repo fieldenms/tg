@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -851,7 +852,7 @@ public class Finder {
 	    return propAnnotation.linkProperty();
 	}
 	// otherwise try to determine link property dynamically based on property type and composite key
-	final Class<?> masterType = field.getDeclaringClass();
+	final Class<?> masterType =  DynamicEntityClassLoader.getOriginalType(field.getDeclaringClass());
 	final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
 	final boolean collectionalProp = PropertyTypeDeterminator.isCollectional(type, dotNotationExp);
 
@@ -887,7 +888,8 @@ public class Finder {
 	String linkProperty = null;
 	int count = 0;
 	for (final Field field : fieldsToCheck) {
-	    if (field.getType().isAssignableFrom(masterType)) {
+	    final Class<?> fieldType =  DynamicEntityClassLoader.getOriginalType(field.getType());
+	    if (fieldType.isAssignableFrom(masterType)) {
 		linkProperty = field.getName();
 		count++;
 	    }
@@ -934,7 +936,7 @@ public class Finder {
 //	    return false;
 //	}
 	final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
-	final Class<?> masterType = PropertyTypeDeterminator.transform(type, dotNotationExp).getKey();
-	return EntityUtils.isEntityType(propertyType) && PropertyTypeDeterminator.determinePropertyType(propertyType, AbstractEntity.KEY).equals(masterType);
+	final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.transform(type, dotNotationExp).getKey());
+	return EntityUtils.isEntityType(propertyType) && DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, AbstractEntity.KEY)).equals(masterType);
     }
 }

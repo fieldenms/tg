@@ -34,7 +34,7 @@ public class MasterEntityWithOneToManyAssociation extends AbstractEntity<String>
     @Title(value = "Property 1", desc = "Desc")
     private DetailsEntityForOneToManyAssociation one2manyAssociationSpecialCase;
 
-    @IsProperty(linkProperty="key1", value = DetailsEntityForOneToManyAssociation.class)  @MapTo
+    @IsProperty(value = DetailsEntityForOneToManyAssociation.class)  @MapTo
     @Title(value = "Collectional Property", desc = "Desc")
     private List<DetailsEntityForOneToManyAssociation> one2manyAssociationCollectional;
 
