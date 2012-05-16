@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,19 +21,32 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.testing.TgKryo1;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.EntityDescriptor;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.DateRangeSelectorEnum;
 import ua.com.fielden.snappy.DateUtilities;
 import ua.com.fielden.snappy.MnemonicEnum;
+
+import com.google.inject.Injector;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
@@ -41,13 +55,49 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class DynamicQueryBuilderSqlTest {
+    private final static ISerialiser serialiser = createSerialiser(createFactory());
 
-    private final String alias = "alias";
-    private final Class<MasterEntity> masterKlass = MasterEntity.class;
-    private final IJoin iJoin = select(masterKlass).as(alias);
-    private final Map<String, QueryProperty> queryProperties = new LinkedHashMap<String, QueryProperty>();
+    private static EntityFactory createFactory() {
+	final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+	final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+	return injector.getInstance(EntityFactory.class);
+    }
+
+    private static ISerialiser createSerialiser(final EntityFactory factory) {
+	return new TgKryo1(factory, new ProvidedSerialisationClassProvider());
+    }
+
+    private final String alias;
+    private final Class<? extends AbstractEntity<?>> masterKlass, slaveCollectionType, evenSlaverCollectionType;
+    private final IJoin iJoin;
+    private final Map<String, QueryProperty> queryProperties;
 
     {
+	alias = "alias";
+	// enhance domain with ALL / ANY calc properties
+	final IDomainTreeEnhancer dte = new DomainTreeEnhancer(serialiser, new HashSet<Class<?>>() {{ add(MasterEntity.class); }});
+	dte.addCalculatedProperty(MasterEntity.class, "collection", "masterEntityProp", "Any of masterEntityProp", "Desc", CalculatedPropertyAttribute.ANY, "masterEntityProp");
+	dte.addCalculatedProperty(MasterEntity.class, "collection", "bigDecimalProp", "Any of bigDecimalProp", "Desc", CalculatedPropertyAttribute.ANY, "bigDecimalProp");
+	dte.addCalculatedProperty(MasterEntity.class, "collection", "dateProp", "Any of dateProp", "Desc", CalculatedPropertyAttribute.ANY, "dateProp");
+	dte.addCalculatedProperty(MasterEntity.class, "collection", "integerProp", "Any of integerProp", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
+	dte.addCalculatedProperty(MasterEntity.class, "collection", "moneyProp", "Any of moneyProp", "Desc", CalculatedPropertyAttribute.ANY, "moneyProp");
+	dte.addCalculatedProperty(MasterEntity.class, "collection", "masterEntityProp", "All of masterEntityProp", "Desc", CalculatedPropertyAttribute.ALL, "masterEntityProp");
+	dte.addCalculatedProperty(MasterEntity.class, "collection", "bigDecimalProp", "All of bigDecimalProp", "Desc", CalculatedPropertyAttribute.ALL, "bigDecimalProp");
+	dte.addCalculatedProperty(MasterEntity.class, "collection", "dateProp", "All of dateProp", "Desc", CalculatedPropertyAttribute.ALL, "dateProp");
+	dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "slaveEntityProp", "All of slaveEntityProp", "Desc", CalculatedPropertyAttribute.ALL, "slaveEntityProp");
+	dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "bigDecimalProp", "All of bigDecimalProp", "Desc", CalculatedPropertyAttribute.ALL, "bigDecimalProp");
+	dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "dateProp", "All of dateProp", "Desc", CalculatedPropertyAttribute.ALL, "dateProp");
+	dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "integerProp", "Any of integerProp", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
+	dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "moneyProp", "Any of moneyProp", "Desc", CalculatedPropertyAttribute.ANY, "moneyProp");
+	dte.apply();
+
+	masterKlass = (Class<? extends AbstractEntity<?>>) dte.getManagedType(MasterEntity.class);
+	slaveCollectionType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "collection");
+	evenSlaverCollectionType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp.collection");
+
+	iJoin = select(masterKlass).as(alias);
+	queryProperties = new LinkedHashMap<String, QueryProperty>();
+
 	final Configuration hibConf = new Configuration();
 
 	final Map<Class, Class> hibTypeMap = new HashMap<Class, Class>();
@@ -79,24 +129,32 @@ public class DynamicQueryBuilderSqlTest {
 		"entityProp.stringProp", //
 		"collection.masterEntityProp", //
 		"collection.integerProp", //
-		//
-		// TODO "anyOfDoubleProp", //
-		//
 		"collection.doubleProp", //
 		"collection.bigDecimalProp", //
 		"collection.dateProp", //
 		"collection.stringProp", //
 		"collection.booleanProp", //
+		"collection.anyOfMasterEntityProp", //
+		"collection.anyOfBigDecimalProp", //
+		"collection.anyOfDateProp", //
+		"collection.anyOfIntegerProp", //
+		"collection.anyOfMoneyProp", //
+		"collection.allOfMasterEntityProp", //
+		"collection.allOfBigDecimalProp", //
+		"collection.allOfDateProp", //
 		"entityProp.collection.slaveEntityProp", //
 		"entityProp.collection.integerProp", //
-		//
-		// TODO "entityProp.allOfDoubleProp", //
-		//
 		"entityProp.collection.doubleProp", //
 		"entityProp.collection.bigDecimalProp", //
 		"entityProp.collection.dateProp", //
 		"entityProp.collection.stringProp", //
-		"entityProp.collection.booleanProp"//
+		"entityProp.collection.booleanProp", //
+		"entityProp.collection.allOfSlaveEntityProp", //
+		"entityProp.collection.allOfBigDecimalProp", //
+		"entityProp.collection.allOfDateProp", //
+		"entityProp.collection.anyOfIntegerProp", //
+		"entityProp.collection.anyOfMoneyProp" //
+
 	});
 	for (final String propertyName : propertyNames) {
 	    final QueryProperty qp = new QueryProperty(masterKlass, propertyName, alias);
@@ -125,7 +183,6 @@ public class DynamicQueryBuilderSqlTest {
 	    qp.setAndBefore(null);
 	    qp.setOrNull(null);
 	    qp.setNot(null);
-	    qp.setAll(null);
 	}
     }
 
@@ -135,7 +192,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/iJoin; //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -149,7 +206,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/iJoin; //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -164,7 +221,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/iJoin; //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -250,7 +307,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -281,7 +338,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -312,7 +369,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -332,7 +389,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -353,7 +410,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -374,7 +431,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -396,7 +453,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -427,7 +484,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -446,7 +503,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -477,7 +534,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -496,7 +553,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -520,7 +577,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -540,7 +597,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -563,7 +620,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -585,7 +642,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -607,7 +664,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -630,7 +687,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -661,7 +718,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -670,33 +727,26 @@ public class DynamicQueryBuilderSqlTest {
     public void test_conditions_query_composition_with_a_couple_of_collectional_conditions_that_are_irrelevant_without_ALL_or_ANY_condition() {
 	// Collection FILTERING properties
 	queryProperties.get("collection.bigDecimalProp").setOrNull(true);
-	queryProperties.get("collection.bigDecimalProp").setAll(null);
 	queryProperties.get("collection.dateProp").setOrNull(true);
-	queryProperties.get("collection.dateProp").setAll(null);
 	queryProperties.get("collection.masterEntityProp").setOrNull(true);
-	queryProperties.get("collection.masterEntityProp").setAll(null);
 	queryProperties.get("collection.stringProp").setOrNull(true);
-	queryProperties.get("collection.stringProp").setAll(null);
 
 	final ICompleted expected = //
 	/**/iJoin; //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
     @Test
     public void test_conditions_query_composition_with_a_single_ANY_condition_from_single_collection_and_a_couple_of_FILTERING_conditions() {
-	queryProperties.get("collection.bigDecimalProp").setOrNull(true);
-	queryProperties.get("collection.bigDecimalProp").setAll(false);
-	final String cbn1 = queryProperties.get("collection.bigDecimalProp").getConditionBuildingName();
+	queryProperties.get("collection.anyOfBigDecimalProp").setOrNull(true);
+	final String cbn1 = queryProperties.get("collection.anyOfBigDecimalProp").getConditionBuildingName();
 	// FILTERING
 	queryProperties.get("collection.stringProp").setOrNull(true);
-	queryProperties.get("collection.stringProp").setAll(null);
 	final String cbnFiltering1 = queryProperties.get("collection.stringProp").getConditionBuildingName();
 	queryProperties.get("collection.booleanProp").setOrNull(true);
-	queryProperties.get("collection.booleanProp").setAll(null);
 	final String cbnFiltering2 = queryProperties.get("collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted expected = //
@@ -704,7 +754,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*  */.begin() // collection begins
 	/*    */.begin() // ANY block begins
 	/*      */.exists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -718,27 +768,22 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
     @Test
     public void test_conditions_query_composition_with_a_couple_of_ANY_conditions_from_single_collection_and_a_couple_of_FILTERING_conditions() {
-	queryProperties.get("collection.bigDecimalProp").setOrNull(true);
-	queryProperties.get("collection.bigDecimalProp").setAll(false);
-	queryProperties.get("collection.dateProp").setOrNull(true);
-	queryProperties.get("collection.dateProp").setAll(false);
-	queryProperties.get("collection.masterEntityProp").setOrNull(true);
-	queryProperties.get("collection.masterEntityProp").setAll(false);
-	final String cbn1 = queryProperties.get("collection.bigDecimalProp").getConditionBuildingName();
-	final String cbn2 = queryProperties.get("collection.dateProp").getConditionBuildingName();
-	final String cbn3 = queryProperties.get("collection.masterEntityProp").getConditionBuildingName();
+	queryProperties.get("collection.anyOfMasterEntityProp").setOrNull(true);
+	final String cbn1 = queryProperties.get("collection.anyOfMasterEntityProp").getConditionBuildingName();
+	queryProperties.get("collection.anyOfBigDecimalProp").setOrNull(true);
+	final String cbn2 = queryProperties.get("collection.anyOfBigDecimalProp").getConditionBuildingName();
+	queryProperties.get("collection.anyOfDateProp").setOrNull(true);
+	final String cbn3 = queryProperties.get("collection.anyOfDateProp").getConditionBuildingName();
 	// FILTERING
 	queryProperties.get("collection.stringProp").setOrNull(true);
-	queryProperties.get("collection.stringProp").setAll(null);
 	final String cbnFiltering1 = queryProperties.get("collection.stringProp").getConditionBuildingName();
 	queryProperties.get("collection.booleanProp").setOrNull(true);
-	queryProperties.get("collection.booleanProp").setAll(null);
 	final String cbnFiltering2 = queryProperties.get("collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted expected = //
@@ -746,15 +791,15 @@ public class DynamicQueryBuilderSqlTest {
 	/*  */.begin() // collection begins
 	/*    */.begin() // ANY block begins
 	/*      */.exists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNull().end().and() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNull().end() //
+	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNull().end().and() //
+	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*    */.end() // ANY block ends
@@ -762,21 +807,18 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
     @Test
     public void test_conditions_query_composition_with_a_single_ALL_condition_from_single_collection_and_a_couple_of_FILTERING_conditions() {
-	queryProperties.get("collection.bigDecimalProp").setOrNull(true);
-	queryProperties.get("collection.bigDecimalProp").setAll(true);
-	final String cbn1 = queryProperties.get("collection.bigDecimalProp").getConditionBuildingName();
+	queryProperties.get("collection.allOfBigDecimalProp").setOrNull(true);
+	final String cbn1 = queryProperties.get("collection.allOfBigDecimalProp").getConditionBuildingName();
 	// FILTERING
 	queryProperties.get("collection.stringProp").setOrNull(true);
-	queryProperties.get("collection.stringProp").setAll(null);
 	final String cbnFiltering1 = queryProperties.get("collection.stringProp").getConditionBuildingName();
 	queryProperties.get("collection.booleanProp").setOrNull(true);
-	queryProperties.get("collection.booleanProp").setAll(null);
 	final String cbnFiltering2 = queryProperties.get("collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted expected = //
@@ -784,7 +826,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*  */.begin() // collection begins
 	/*    */.begin() // ALL block begins
 	/*      */.notExists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -792,7 +834,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */) //
 	/*      */.or() //
 	/*      */.exists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -803,7 +845,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */) //
 	/*      */.and() //
 	/*      */.notExists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -817,28 +859,23 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
     @Test
     public void test_conditions_query_composition_with_a_couple_of_ALL_conditions_from_single_collection_and_a_couple_of_FILTERING_conditions() {
 	// ALL properties
-	queryProperties.get("collection.bigDecimalProp").setOrNull(true);
-	queryProperties.get("collection.bigDecimalProp").setAll(true);
-	queryProperties.get("collection.dateProp").setOrNull(true);
-	queryProperties.get("collection.dateProp").setAll(true);
-	queryProperties.get("collection.masterEntityProp").setOrNull(true);
-	queryProperties.get("collection.masterEntityProp").setAll(true);
-	final String cbn1 = queryProperties.get("collection.bigDecimalProp").getConditionBuildingName();
-	final String cbn2 = queryProperties.get("collection.dateProp").getConditionBuildingName();
-	final String cbn3 = queryProperties.get("collection.masterEntityProp").getConditionBuildingName();
+	queryProperties.get("collection.allOfBigDecimalProp").setOrNull(true);
+	final String cbn1 = queryProperties.get("collection.allOfBigDecimalProp").getConditionBuildingName();
+	queryProperties.get("collection.allOfDateProp").setOrNull(true);
+	final String cbn2 = queryProperties.get("collection.allOfDateProp").getConditionBuildingName();
+	queryProperties.get("collection.allOfMasterEntityProp").setOrNull(true);
+	final String cbn3 = queryProperties.get("collection.allOfMasterEntityProp").getConditionBuildingName();
 	// FILTERING
 	queryProperties.get("collection.stringProp").setOrNull(true);
-	queryProperties.get("collection.stringProp").setAll(null);
 	final String cbnFiltering1 = queryProperties.get("collection.stringProp").getConditionBuildingName();
 	queryProperties.get("collection.booleanProp").setOrNull(true);
-	queryProperties.get("collection.booleanProp").setAll(null);
 	final String cbnFiltering2 = queryProperties.get("collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted expected = //
@@ -846,7 +883,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*  */.begin() // collection begins
 	/*    */.begin() // ALL block begins
 	/*      */.notExists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -854,7 +891,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */) //
 	/*      */.or() //
 	/*      */.exists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -867,7 +904,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */) //
 	/*      */.and() //
 	/*      */.notExists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -883,35 +920,28 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
     @Test
     public void test_conditions_query_composition_with_a_couple_of_ALL_and_ANY_conditions_from_single_collection_and_a_couple_of_FILTERING_conditions() {
 	// ALL properties
-	queryProperties.get("collection.bigDecimalProp").setOrNull(true);
-	queryProperties.get("collection.bigDecimalProp").setAll(true);
-	queryProperties.get("collection.dateProp").setOrNull(true);
-	queryProperties.get("collection.dateProp").setAll(true);
-	queryProperties.get("collection.masterEntityProp").setOrNull(true);
-	queryProperties.get("collection.masterEntityProp").setAll(true);
-	final String cbn1 = queryProperties.get("collection.bigDecimalProp").getConditionBuildingName();
-	final String cbn2 = queryProperties.get("collection.dateProp").getConditionBuildingName();
-	final String cbn3 = queryProperties.get("collection.masterEntityProp").getConditionBuildingName();
+	queryProperties.get("collection.allOfBigDecimalProp").setOrNull(true);
+	final String cbn1 = queryProperties.get("collection.allOfBigDecimalProp").getConditionBuildingName();
+	queryProperties.get("collection.allOfDateProp").setOrNull(true);
+	final String cbn2 = queryProperties.get("collection.allOfDateProp").getConditionBuildingName();
+	queryProperties.get("collection.allOfMasterEntityProp").setOrNull(true);
+	final String cbn3 = queryProperties.get("collection.allOfMasterEntityProp").getConditionBuildingName();
 	// ANY properties
-	queryProperties.get("collection.integerProp").setOrNull(true);
-	queryProperties.get("collection.integerProp").setAll(false);
-	queryProperties.get("collection.doubleProp").setOrNull(true);
-	queryProperties.get("collection.doubleProp").setAll(false);
-	final String cbn4 = queryProperties.get("collection.integerProp").getConditionBuildingName();
-	final String cbn5 = queryProperties.get("collection.doubleProp").getConditionBuildingName();
+	queryProperties.get("collection.anyOfIntegerProp").setOrNull(true);
+	final String cbn4 = queryProperties.get("collection.anyOfIntegerProp").getConditionBuildingName();
+	queryProperties.get("collection.anyOfMoneyProp").setOrNull(true);
+	final String cbn5 = queryProperties.get("collection.anyOfMoneyProp").getConditionBuildingName();
 	// FILTERING
 	queryProperties.get("collection.stringProp").setOrNull(true);
-	queryProperties.get("collection.stringProp").setAll(null);
 	final String cbnFiltering1 = queryProperties.get("collection.stringProp").getConditionBuildingName();
 	queryProperties.get("collection.booleanProp").setOrNull(true);
-	queryProperties.get("collection.booleanProp").setAll(null);
 	final String cbnFiltering2 = queryProperties.get("collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted expected = //
@@ -919,7 +949,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*  */.begin() // collection begins
 	/*    */.begin() // ANY block begins
 	/*      */.exists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -935,7 +965,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */
 	/*    */.begin() // ALL block begins
 	/*      */.notExists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -943,7 +973,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */) //
 	/*      */.or() //
 	/*      */.exists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -956,7 +986,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */) //
 	/*      */.and() //
 	/*      */.notExists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -972,7 +1002,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 
@@ -981,60 +1011,47 @@ public class DynamicQueryBuilderSqlTest {
 	/////// Simple properties ///////
 	queryProperties.get("bigDecimalProp").setValue(3);
 	queryProperties.get("bigDecimalProp").setValue2(7);
+	final String cbn01 = queryProperties.get("bigDecimalProp").getConditionBuildingName();
 	queryProperties.get("integerProp").setOrNull(true);
+	final String cbn02 = queryProperties.get("integerProp").getConditionBuildingName();
 	queryProperties.get("dateProp").setOrNull(true);
 	queryProperties.get("dateProp").setNot(true);
-
-	final String cbn01 = queryProperties.get("bigDecimalProp").getConditionBuildingName();
-	final String cbn02 = queryProperties.get("integerProp").getConditionBuildingName();
 	final String cbn03 = queryProperties.get("dateProp").getConditionBuildingName();
 
 	////// Collection from master entity //////
 	// ALL properties
-	queryProperties.get("collection.bigDecimalProp").setOrNull(true);
-	queryProperties.get("collection.bigDecimalProp").setAll(true);
-	queryProperties.get("collection.dateProp").setOrNull(true);
-	queryProperties.get("collection.dateProp").setAll(true);
-	queryProperties.get("collection.masterEntityProp").setOrNull(true);
-	queryProperties.get("collection.masterEntityProp").setAll(true);
-	final String cbn1 = queryProperties.get("collection.bigDecimalProp").getConditionBuildingName();
-	final String cbn2 = queryProperties.get("collection.dateProp").getConditionBuildingName();
-	final String cbn3 = queryProperties.get("collection.masterEntityProp").getConditionBuildingName();
+	queryProperties.get("collection.allOfBigDecimalProp").setOrNull(true);
+	final String cbn1 = queryProperties.get("collection.allOfBigDecimalProp").getConditionBuildingName();
+	queryProperties.get("collection.allOfDateProp").setOrNull(true);
+	final String cbn2 = queryProperties.get("collection.allOfDateProp").getConditionBuildingName();
+	queryProperties.get("collection.allOfMasterEntityProp").setOrNull(true);
+	final String cbn3 = queryProperties.get("collection.allOfMasterEntityProp").getConditionBuildingName();
 
 	// ANY properties
-	queryProperties.get("collection.integerProp").setOrNull(true);
-	queryProperties.get("collection.integerProp").setAll(false);
-	queryProperties.get("collection.doubleProp").setOrNull(true);
-	queryProperties.get("collection.doubleProp").setAll(false);
-	final String cbn4 = queryProperties.get("collection.integerProp").getConditionBuildingName();
-	final String cbn5 = queryProperties.get("collection.doubleProp").getConditionBuildingName();
+	queryProperties.get("collection.anyOfIntegerProp").setOrNull(true);
+	final String cbn4 = queryProperties.get("collection.anyOfIntegerProp").getConditionBuildingName();
+	queryProperties.get("collection.anyOfMoneyProp").setOrNull(true);
+	final String cbn5 = queryProperties.get("collection.anyOfMoneyProp").getConditionBuildingName();
 
 	////// Collection from slave entity //////
 	// ALL properties
-	queryProperties.get("entityProp.collection.bigDecimalProp").setOrNull(true);
-	queryProperties.get("entityProp.collection.bigDecimalProp").setAll(true);
-	queryProperties.get("entityProp.collection.dateProp").setOrNull(true);
-	queryProperties.get("entityProp.collection.dateProp").setAll(true);
-	queryProperties.get("entityProp.collection.slaveEntityProp").setOrNull(true);
-	queryProperties.get("entityProp.collection.slaveEntityProp").setAll(true);
-	final String cbn6 = queryProperties.get("entityProp.collection.bigDecimalProp").getConditionBuildingName();
-	final String cbn7 = queryProperties.get("entityProp.collection.dateProp").getConditionBuildingName();
-	final String cbn8 = queryProperties.get("entityProp.collection.slaveEntityProp").getConditionBuildingName();
+	queryProperties.get("entityProp.collection.allOfBigDecimalProp").setOrNull(true);
+	final String cbn6 = queryProperties.get("entityProp.collection.allOfBigDecimalProp").getConditionBuildingName();
+	queryProperties.get("entityProp.collection.allOfDateProp").setOrNull(true);
+	final String cbn7 = queryProperties.get("entityProp.collection.allOfDateProp").getConditionBuildingName();
+	queryProperties.get("entityProp.collection.allOfSlaveEntityProp").setOrNull(true);
+	final String cbn8 = queryProperties.get("entityProp.collection.allOfSlaveEntityProp").getConditionBuildingName();
 
 	// ANY properties
-	queryProperties.get("entityProp.collection.integerProp").setOrNull(true);
-	queryProperties.get("entityProp.collection.integerProp").setAll(false);
-	queryProperties.get("entityProp.collection.doubleProp").setOrNull(true);
-	queryProperties.get("entityProp.collection.doubleProp").setAll(false);
-	final String cbn9 = queryProperties.get("entityProp.collection.integerProp").getConditionBuildingName();
-	final String cbn10 = queryProperties.get("entityProp.collection.doubleProp").getConditionBuildingName();
+	queryProperties.get("entityProp.collection.anyOfIntegerProp").setOrNull(true);
+	final String cbn9 = queryProperties.get("entityProp.collection.anyOfIntegerProp").getConditionBuildingName();
+	queryProperties.get("entityProp.collection.anyOfMoneyProp").setOrNull(true);
+	final String cbn10 = queryProperties.get("entityProp.collection.anyOfMoneyProp").getConditionBuildingName();
 
 	// FILTERING
 	queryProperties.get("entityProp.collection.stringProp").setOrNull(true);
-	queryProperties.get("entityProp.collection.stringProp").setAll(null);
 	final String cbnFiltering1 = queryProperties.get("entityProp.collection.stringProp").getConditionBuildingName();
 	queryProperties.get("entityProp.collection.booleanProp").setOrNull(true);
-	queryProperties.get("entityProp.collection.booleanProp").setAll(null);
 	final String cbnFiltering2 = queryProperties.get("entityProp.collection.booleanProp").getConditionBuildingName();
 
 	final ICompleted expected = //
@@ -1055,7 +1072,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*  */.begin() // collection begins
 	/*    */.begin() // ANY block begins
 	/*      */.exists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and().begin()
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().begin()
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn4)).isNull().end().and() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn5)).isNull().end() //
 	/*          */.end().model() //
@@ -1066,11 +1083,11 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */
 	/*    */.begin() // ALL block begins
 	/*      */.notExists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).model() //
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).model() //
 	/*      */) //
 	/*      */.or() //
 	/*      */.exists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and().begin()
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().begin()
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNull().end().and() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNull().end() //
@@ -1078,7 +1095,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */) //
 	/*      */.and() //
 	/*      */.notExists( //
-	/*          */select(SlaveEntity.class).where().prop("masterEntityProp").eq().prop(alias).and().begin()
+	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().begin()
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end().or() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end().or() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNotNull().end() //
@@ -1097,7 +1114,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*  */.begin() // collection begins
 	/*    */.begin() // ANY block begins
 	/*      */.exists( //
-	/*          */select(EvenSlaverEntity.class).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
+	/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -1113,7 +1130,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */
 	/*    */.begin() // ALL block begins
 	/*      */.notExists( //
-	/*          */select(EvenSlaverEntity.class).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
+	/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -1121,7 +1138,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */) //
 	/*      */.or() //
 	/*      */.exists( //
-	/*          */select(EvenSlaverEntity.class).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
+	/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -1134,7 +1151,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */) //
 	/*      */.and() //
 	/*      */.notExists( //
-	/*          */select(EvenSlaverEntity.class).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
+	/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
 	/*          */.begin() //
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
 	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
@@ -1150,7 +1167,7 @@ public class DynamicQueryBuilderSqlTest {
 	/**/.end(); //
 	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
 
-	assertEquals("Incorrect query sql has been built.", expected.model(), actual.model());
+	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
 }

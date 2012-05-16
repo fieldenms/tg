@@ -13,7 +13,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator2;
@@ -27,6 +29,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere2;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere3;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.EntityDescriptor;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -62,8 +65,8 @@ public class DynamicQueryBuilder {
 	private Boolean andBefore = null;
 	private Boolean orNull = null;
 	private Boolean not = null;
-	private Boolean all = null;
 
+	private final Class<?> entityClass;
 	private final String propertyName, conditionBuildingName;
 	private final boolean critOnly, single;
 	private final Class<?> type;
@@ -76,6 +79,7 @@ public class DynamicQueryBuilder {
 	    if (StringUtils.isEmpty(alias)) {
 		throw new IllegalArgumentException("The alias for dynamic query should not be empty.");
 	    }
+	    this.entityClass = entityClass;
 	    final DynamicPropertyAnalyser analyser = new DynamicPropertyAnalyser(entityClass, propertyName);
 	    this.propertyName = propertyName;
 	    if (!isSupported(analyser.getPropertyType())) {
@@ -183,14 +187,6 @@ public class DynamicQueryBuilder {
 
 	public void setNot(final Boolean not) {
 	    this.not = not;
-	}
-
-	public Boolean getAll() {
-	    return all;
-	}
-
-	public void setAll(final Boolean all) {
-	    this.all = all;
 	}
 
 	/**
@@ -332,6 +328,10 @@ public class DynamicQueryBuilder {
 	public boolean isSingle() {
 	    return single;
 	}
+
+	public Class<?> getEntityClass() {
+	    return entityClass;
+	}
     }
 
     /**
@@ -363,7 +363,8 @@ public class DynamicQueryBuilder {
 	    if (propertyNameOfCollectionParent == null) {
 		propertyNameOfCollectionParent = property.getPropertyNameOfCollectionParent();
 	    }
-	    final Boolean all = property.getAll();
+	    final Calculated calcAnnotation = AnnotationReflector.getPropertyAnnotation(Calculated.class, property.getEntityClass(), property.getPropertyName());
+	    final Boolean all = calcAnnotation == null ? null : (calcAnnotation.attribute().equals(CalculatedPropertyAttribute.ALL) ? Boolean.TRUE : (calcAnnotation.attribute().equals(CalculatedPropertyAttribute.ANY) ? Boolean.FALSE : null));
 	    if (Boolean.TRUE.equals(all)) {
 		allProperties.add(property); // ALL properties list
 	    } else if (Boolean.FALSE.equals(all)) {
