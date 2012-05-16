@@ -16,6 +16,8 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import ua.com.fielden.platform.associations.one2many.DetailsEntityForOneToManyAssociation;
+import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -361,5 +363,24 @@ public class DynamicEntityTypeGenerationTest {
 	assertEquals("Incorrect parameter.", "2011-12-01 00:00:00", dateParam.value());
     }
 
+    @Test
+    public void one2Many_special_case_property_should_have_been_generated_correctly() throws Exception {
+	final IsProperty isProperty = new IsPropertyAnnotation(String.class, "key1").newInstance();
+	final NewProperty pd = new NewProperty("one2manyAssociationSpecialCase2", DetailsEntityForOneToManyAssociation.class, false, "One2Many Special Case Association Property", "One2Many Special Case Association Property Description",	isProperty);
+	final Class<? extends AbstractEntity<?>> enhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(MasterEntityWithOneToManyAssociation.class.getName()).addProperties(pd).endModification();
+
+	assertEquals("key1", Finder.findFieldByName(enhancedType, "one2manyAssociationSpecialCase2").getAnnotation(IsProperty.class).linkProperty());
+    }
+
+    @Test
+    public void one2Many_collectional_property_should_have_been_generated_correctly() throws Exception {
+	final IsProperty isProperty = new IsPropertyAnnotation(DetailsEntityForOneToManyAssociation.class, "key1").newInstance();
+
+	final NewProperty pd = new NewProperty("one2manyAssociationCollectional2", List.class, false, "One2Many Collectional Association Property", "One2Many Collectional Association Property Description", isProperty);
+	final Class<? extends AbstractEntity> enhancedType = (Class<? extends AbstractEntity>) cl.startModification(MasterEntityWithOneToManyAssociation.class.getName()).addProperties(pd).endModification();
+
+	assertEquals("key1", Finder.findFieldByName(enhancedType, "one2manyAssociationCollectional2").getAnnotation(IsProperty.class).linkProperty());
+	assertEquals(DetailsEntityForOneToManyAssociation.class, Finder.findFieldByName(enhancedType, "one2manyAssociationCollectional2").getAnnotation(IsProperty.class).value());
+    }
 
 }

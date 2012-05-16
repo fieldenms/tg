@@ -17,6 +17,9 @@ import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
 
+import ua.com.fielden.platform.associations.one2many.DetailsEntityForOneToManyAssociation;
+import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
+import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -386,5 +389,25 @@ public class DynamicEntityTypeModificationTest {
 
 	final Method getter = Reflector.obtainPropertyAccessor(enhancedType, "prop");
 	assertEquals("Incorrect property type", EntityNameProperty.class, getter.getReturnType());
+    }
+
+    @Test
+    public void one2Many_special_case_property_should_have_been_generated_correctly() throws Exception {
+	final Class<? extends AbstractEntity> one2ManyEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(DetailsEntityForOneToManyAssociation.class.getName()).addProperties(pd).endModification();
+	final NewProperty one2ManySpecialCasePropModification = NewProperty.changeType("one2manyAssociationSpecialCase", one2ManyEnhancedType);
+	final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(MasterEntityWithOneToManyAssociation.class.getName()).modifyProperties(one2ManySpecialCasePropModification).endModification();
+
+	assertEquals("key1", Finder.findFieldByName(modifiedType, "one2manyAssociationSpecialCase").getAnnotation(IsProperty.class).linkProperty());
+    }
+
+    @Test
+    public void one2Many_collectional_property_should_have_been_generated_correctly_when_isProperty_annotation_is_not_provided() throws Exception {
+	final Class<? extends AbstractEntity> one2ManyEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(DetailsEntityForOneToManyAssociation.class.getName()).addProperties(pd).endModification();
+	final NewProperty one2ManyCollectionalPropModification = NewProperty.changeTypeSignature("one2manyAssociationCollectional", one2ManyEnhancedType);
+
+	final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue.class.getName()).modifyProperties(one2ManyCollectionalPropModification).endModification();
+
+	assertEquals("key1", Finder.findFieldByName(modifiedType, "one2manyAssociationCollectional").getAnnotation(IsProperty.class).linkProperty());
+	assertEquals(one2ManyEnhancedType, Finder.findFieldByName(modifiedType, "one2manyAssociationCollectional").getAnnotation(IsProperty.class).value());
     }
 }

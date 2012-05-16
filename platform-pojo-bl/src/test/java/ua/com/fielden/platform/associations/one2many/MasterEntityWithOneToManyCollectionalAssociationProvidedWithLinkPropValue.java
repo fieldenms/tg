@@ -21,7 +21,7 @@ import ua.com.fielden.platform.types.Money;
 @KeyType(String.class)
 @KeyTitle(value = "Key")
 @DescTitle(value = "Description")
-public class MasterEntityWithOneToManyAssociation extends AbstractEntity<String> {
+public class MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
@@ -34,12 +34,12 @@ public class MasterEntityWithOneToManyAssociation extends AbstractEntity<String>
     @Title(value = "Property 1", desc = "Desc")
     private DetailsEntityForOneToManyAssociation one2manyAssociationSpecialCase;
 
-    @IsProperty(value = DetailsEntityForOneToManyAssociation.class)  @MapTo
+    @IsProperty(value = DetailsEntityForOneToManyAssociation.class, linkProperty="key1")  @MapTo
     @Title(value = "Collectional Property", desc = "Desc")
     private List<DetailsEntityForOneToManyAssociation> one2manyAssociationCollectional;
 
     @Observable
-    public MasterEntityWithOneToManyAssociation setOne2manyAssociationCollectional(final List<DetailsEntityForOneToManyAssociation> one2manyAssociationCollectional) {
+    public MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue setOne2manyAssociationCollectional(final List<DetailsEntityForOneToManyAssociation> one2manyAssociationCollectional) {
 	this.one2manyAssociationCollectional = one2manyAssociationCollectional;
 	return this;
     }
@@ -49,7 +49,7 @@ public class MasterEntityWithOneToManyAssociation extends AbstractEntity<String>
     }
 
     @Observable
-    public MasterEntityWithOneToManyAssociation setOne2manyAssociationSpecialCase(final DetailsEntityForOneToManyAssociation one2oneAssociation) {
+    public MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue setOne2manyAssociationSpecialCase(final DetailsEntityForOneToManyAssociation one2oneAssociation) {
 	this.one2manyAssociationSpecialCase = one2oneAssociation;
 	return this;
     }
@@ -59,7 +59,7 @@ public class MasterEntityWithOneToManyAssociation extends AbstractEntity<String>
     }
 
     @Observable
-    public MasterEntityWithOneToManyAssociation setMoneyProp(final Money moneyProp) {
+    public MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue setMoneyProp(final Money moneyProp) {
 	this.moneyProp = moneyProp;
 	return this;
     }

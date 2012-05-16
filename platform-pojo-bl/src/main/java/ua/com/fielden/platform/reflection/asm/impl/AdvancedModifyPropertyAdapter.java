@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 
 import com.google.inject.asm.AnnotationVisitor;
@@ -17,7 +19,6 @@ import com.google.inject.asm.MethodAdapter;
 import com.google.inject.asm.MethodVisitor;
 import com.google.inject.asm.Opcodes;
 import com.google.inject.asm.Type;
-
 
 /**
  * A class adapter designed for modification of existing fields based on the new specification.
@@ -107,8 +108,9 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
 		    }
 		} else {
 		    descMod = name.startsWith("get") ? // are we handling getter?
-			    ("()" + Type.getDescriptor(newProperty.type)) : // getter
-				"(" + Type.getDescriptor(newProperty.type) + ")" + Type.getReturnType(desc).getDescriptor(); // setter
+		    ("()" + Type.getDescriptor(newProperty.type))
+			    : // getter
+			    "(" + Type.getDescriptor(newProperty.type) + ")" + Type.getReturnType(desc).getDescriptor(); // setter
 		    signatureMod = signature;
 		}
 	    } else {
@@ -138,8 +140,7 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
     private String fix(String signiture) {
 
 	if (signiture != null) {
-	    // the exclusion condition for owner+"$" is required to avoid renaming of references to inner types
-	    if (signiture.indexOf(owner + ";") != -1) { // && signiture.indexOf(owner + "$") < 0
+	    if (signiture.indexOf(owner + ";") != -1) {
 		signiture = signiture.replaceAll(Pattern.quote(owner + ";"), Matcher.quoteReplacement(enhancedName + ";"));
 	    }
 	}
@@ -224,7 +225,8 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
     }
 
     /**
-     * Field visitor for collectional properties, which modifies value for {@link IsProperty} annotation according to the specified new property information.
+     * Field visitor for collectional properties, which modifies value for {@link IsProperty} annotation according to the specified new property information,
+     *  and assigns <code>linkProperty</code> attribute with its original value in case annotation was present originally.
      *
      */
     private class CollectionalFieldVisitor implements FieldVisitor {
@@ -249,10 +251,23 @@ public class AdvancedModifyPropertyAdapter extends ClassAdapter implements Opcod
 
 	@Override
 	public void visitEnd() {
-	    final AnnotationVisitor av = fv.visitAnnotation(Type.getDescriptor(IsProperty.class), true);
-	    av.visit("value", Type.getType(np.type));
-	    av.visitEnd();
-	    fv.visitEnd();
+	    try {
+		final Class<?> originalType = ClassLoader.getSystemClassLoader().loadClass(owner.replace('/', '.'));
+		final Field field = Finder.findFieldByName(originalType, np.name);
+
+		final AnnotationVisitor av = fv.visitAnnotation(Type.getDescriptor(IsProperty.class), true);
+		av.visit("value", Type.getType(np.type));
+
+		if (field.isAnnotationPresent(IsProperty.class)) {
+		    av.visit("linkProperty", field.getAnnotation(IsProperty.class).linkProperty());
+		}
+
+		av.visitEnd();
+		fv.visitEnd();
+
+	    } catch (final Exception ex) {
+		throw new IllegalStateException(ex);
+	    }
 	}
 
     }
