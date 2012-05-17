@@ -1,11 +1,119 @@
 \chapter{Platform Architecture}\label{ch01:01}
 
   There two main approaches to describe software architecture -- top-down and bottom-up\footnote{\url{http://en.wikipedia.org/wiki/Top-down_and_bottom-up_design}}.
+  In this and the following parts of the book we should utilise the bottom-up approach by discussing the parts of the pazzle, which will be put together in order to construct a final picture of the platform in a form a relatively complex application.
 
-\url{http://www.fielden.com.ua/trac/pnl-tg/attachment/wiki/WikiStart/architecture-overview.pdf}
+  A high-level platform overview is provided as a separate document, which can be downloaded from \url{http://www.fielden.com.ua/trac/pnl-tg/attachment/wiki/WikiStart/architecture-overview.pdf}.
 
-% \section{Domain Driven Design}
-% 
+\section{Domain Driven Design}
+ 
+\subsection{The Essentials}
+
+  \emph{AbstractEntity} is a class that serves as a common ancestor for all entity types. 
+  All entity types have a surrogate key \emph{id}, business key \emph{key} and description \emph{desc}. 
+  \emph{AbstractEntity} provides implementation for methods \emph{hashCode()}, \emph{equals(Object)}, \emph{toString()} and \emph{compareTo(AbstractEntity)}, which is based on the use of the business key and thus should be suitable in all cases.
+  The only exception could be method \emph{toString()}, which developer may want to customise.
+
+
+  \emph{AbstractEntity} provides a full support for two kinds of business keys
+  \begin{description}
+    \item[Simple Key] -- String, Integer, another entity type.
+    \item[Composite Key] -- can include two or more properties as key members with no restrictions on their type; class \emph{DynamicEntityKey} models the composite key logic.
+   \end{description}
+
+ \lstset{language=Java,
+	  escapechar=\%,
+	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
+  \begin{code}{A fragment of entity type Person.}{\label{lst:Person}}{codebgcolor}
+    \begin{lstlisting}
+@DescTitle("Comment")
+@KeyType(DynamicEntityKey.class)
+@MapTo
+public class VehicleFuelCard extends AbstractEntity<DynamicEntityKey> {
+    @IsProperty
+    @Title("Vehicle")
+    @CompositeKeyMember(1)
+    @MapTo("ID_EQDET")
+    private Vehicle vehicle;
+
+    @IsProperty
+    @UpperCase
+    @Title("Card Number")
+    @CompositeKeyMember(2)
+    @MapTo("CARDNUMBER")
+    private String cardNumber;
+
+    @IsProperty
+    @Title(value = "Exp. Date", desc = "Expiry Date")
+    @CompositeKeyMember(3)
+    @MapTo("EXPIRY_DATE")
+    private Date expiryDate;
+
+    @IsProperty
+    @Required
+    @Title(value = "Date Issued", desc = "Date Issued")
+    @MapTo
+    private Date issuedDate;
+
+   ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+
+\subsubsection{Properties}
+
+  All fields in the derived from \emph{AbstractEntity} types annotated with \emph{IsProperty} annotation are automatically recognized as entity properties. The current way of instantiating entities is by using \emph{EnttyFactory}, which relies on application configuration modules (based on Guice) for resolving dependencies used as part of entity instantiation logic.
+
+  One of the essential aspects of entity properties is their meta-state -- each property is associated with an instance of \emph{MetaProperty} type, which is created automatically when an entity is instantiated using \emph{EntityFactory}. 
+  \emph{MetaProperty} provides rich support for various property life cycle functions such as tracking property changes, validation results, title, desctiption etc.
+
+  \emph{MetaProperty} instances are created by \emph{IMetaPropertyFactory} implementation bound in the application configuration modules that is used by \emph{EntityFactory}.
+
+  \emph{MetaProperty} instantiation ensures association of the created entity instance with property \emph{Before} and \emph{After} change event handlers, which are defined as annotations on property fields. 
+  The platforms provides a set of predefined \emph{Before} event handles, which serve as validators, which are discussed further in the book. 
+  
+  Each property mutator such as setter must be annotated with \emph{Observable} annotation. 
+  Early runtime exception is thrown if the system identifies existence of properties with their mutators without this annotation.
+
+  In order for \emph{Before} and \emph{After} event handlers to be executed upon an attempt to set a property value (i.e. \emph{Before}) and after the value was set {i.e. \emph{After}}, setters should be intercepted. 
+  Interceptor \emph{ObservableMutatorInterceptor} handles property value changes including triggering execution of event handlers. 
+  Its implementation uses handlers associated with a property during meta-property instantiation. 
+  This is another reason to instantiate entities with \emph{EntityFactory}, which ensures appropriate interceptors are using Guice interceptor provided with a module configured to bind this intercepter.
+
+\subsubsection{Dependent Properties}
+
+  The platform provides an elegant way to handle validation and error recovery situations for properties dependent on each other. 
+  The dependent properties need to be annotated with annotation \emph{Dependent} that has a list of dependent property names as its argument. 
+  The word \emph{dependent} here means that properties depend on some other property. 
+  For example, \emph{WorkOrder.actualStart} depends on \emph{WorkOrder.actualFinish} and wise versa, but also \emph{WorkOrder.odometerReading} is dependent on \emph{WorkOrder.actualStart} and wise versa. 
+  Thus, property \emph{WorkOrder.actualStart} has two dependent properties that should be revalidated when it is changed -- \emph{actualFinish} and \emph{odometerReading}.
+  Listing \ref{sss} presents the described example in code.
+
+  \begin{code}{A fragment of entity type Person.}{\label{lst:Person}}{codebgcolor}
+    \begin{lstlisting}
+
+    @IsProperty
+    @Title("Actual Start")
+    @Dependent({"actualFinish", "odometerReading"})
+    @MapTo
+    private Date actualStart;
+
+    @IsProperty
+    @Title("Actual Finish")
+    @Dependent("actualStart")
+    @MapTo
+    private Date actualFinish;
+
+    @IsProperty
+    @Title(value = "Odometer", desc = "Odometer reading")
+    @Dependent("actualStart")
+    @MapTo
+    private Integer odometerReading;
+    \end{lstlisting}
+  \end{code}
+
+
 % \section{User Management}
 % 
 % \section{Configuration Management}
