@@ -44,15 +44,15 @@
 		Loggers for Hibernate.
 	 -->
 	<logger name="org.hibernate" additivity="false">
-		<level value="debug" />
+		<level value="info" />
 		<appender-ref ref="stdout" />
 	</logger>
 	<logger name="org.hibernate.SQL" additivity="false">
-		<level value="debug" />
+		<level value="info" />
 		<appender-ref ref="stdout" />
 	</logger>
 	<logger name="org.hibernate.type" additivity="false">
-		<level value="debug" />
+		<level value="info" />
 		<appender-ref ref="stdout" />
 	</logger>
 	<logger name="org.hibernate.cache" additivity="false">
@@ -60,11 +60,11 @@
 		<appender-ref ref="stdout" />
 	</logger>
 	<logger name="org.hibernate.transaction" additivity="false">
-		<level value="debug" />
+		<level value="info" />
 		<appender-ref ref="stdout" />
 	</logger>
 	<logger name="org.hibernate.jdbc" additivity="false">
-		<level value="debug" />
+		<level value="info" />
 		<appender-ref ref="stdout" />
 	</logger>
 	
