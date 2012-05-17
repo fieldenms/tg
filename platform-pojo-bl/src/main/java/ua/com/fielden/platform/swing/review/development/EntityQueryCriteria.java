@@ -289,12 +289,12 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	for (final DynamicEntityTreeNode dynamicTreeNode : treeNode.getChildren()) {
 	    final Class<?> propertyType = dynamicTreeNode.getType();
 	    if (!EntityUtils.isEntityType(propertyType)) {
-		continue;
+		fetchModel = fetchModel.with(dynamicTreeNode.getName());
+	    }else{
+		final fetch<T> fetchSubModel = buildFetchModels((Class<T>) propertyType, dynamicTreeNode);
+		fetchModel = fetchModel.with(dynamicTreeNode.getName(), fetchSubModel);
 	    }
-	    final fetch<T> fetchSubModel = buildFetchModels((Class<T>) propertyType, dynamicTreeNode);
-	    fetchModel = fetchModel.with(dynamicTreeNode.getName(), fetchSubModel);
 	}
-
 	return fetchModel;
     }
 }

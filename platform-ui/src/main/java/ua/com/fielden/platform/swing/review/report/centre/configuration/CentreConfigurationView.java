@@ -78,10 +78,10 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 	    switch(JOptionPane.showConfirmDialog(null, "Would you like to save changes"
 		    + (!StringUtils.isEmpty(title) ? " for the " + title : "") + " before closing?", "Save report", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)){
 		    case JOptionPane.YES_OPTION:
-			createCloseSaveAction().actionPerformed(null);
+			closeSaveAction();
 			return null;
 		    case JOptionPane.NO_OPTION:
-			createCloseDiscardAction().actionPerformed(null);
+			closeDiscardAction();
 			return null;
 		    case JOptionPane.CANCEL_OPTION:
 			createCloseCancelAction(wasFreezed).actionPerformed(null);
@@ -127,61 +127,30 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
     }
 
     /**
-     * This action saves the entity centre configuration when closing.
+     * Saves the entity centre configuration when closing.
      * 
      * @return
      */
-    private Action createCloseSaveAction() {
-	return new BlockingLayerCommand<Void>("Save", getProgressLayer()) {
-
-	    private static final long serialVersionUID = 3357107509506933809L;
-
-	    @Override
-	    protected boolean preAction(){
-		super.preAction();
-		if(getModel().isFreezed()){
-		    getModel().save();
-		}
-		getModel().save();
-		return true;
-	    }
-
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	    }
-
-
-	};
+    private void closeSaveAction() {
+	System.out.println("--------------------------start saved---------------------------------------");
+	if(getModel().isFreezed()){
+	    getModel().save();
+	}
+	getModel().save();
+	System.out.println("--------------------------saved---------------------------------------");
     }
 
     /**
-     * This action discards the entity centre's changes when closing.
+     * Discards the entity centre's changes when closing.
      * 
      * @return
      */
-    private Action createCloseDiscardAction(){
-	return new BlockingLayerCommand<Void>("Discard", getProgressLayer()) {
-
-	    private static final long serialVersionUID = -369408904628538278L;
-
-	    @Override
-	    protected boolean preAction() {
-		super.preAction();
-		if(getModel().isFreezed()){
-		    getModel().discard();
-		}
-		getModel().discard();
-		return true;
-	    }
-
-	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
-		return null;
-	    }
-
-	};
+    private void closeDiscardAction(){
+	if(getModel().isFreezed()){
+	    getModel().discard();
+	}
+	getModel().discard();
+	System.out.println("--------------------------discarded---------------------------------------");
     }
 
     /**
