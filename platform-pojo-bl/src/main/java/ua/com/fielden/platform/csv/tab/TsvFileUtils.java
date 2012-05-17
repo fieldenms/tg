@@ -15,13 +15,27 @@ public class TsvFileUtils implements IParserCreator<TsvParser> {
 	return createParser(createLexer(line));
     }
 
-    private TsvParser createParser(final TsvLexer lexer) throws IOException {
+    /**
+     * Creates parser for tab-separated values parser.
+     *
+     * @param testString
+     * @return
+     * @throws IOException
+     */
+    public TsvParser createParser(final TsvLexer lexer) throws IOException {
 	final CommonTokenStream tokens = new CommonTokenStream(lexer);
 	final TsvParser parser = new TsvParser(tokens);
 	return parser;
     }
 
-    private TsvLexer createLexer(final String line) throws IOException {
+    /**
+     * Creates lexer for tab-separated values parser.
+     *
+     * @param testString
+     * @return
+     * @throws IOException
+     */
+    public TsvLexer createLexer(final String line) throws IOException {
 	final CharStream stream = new ANTLRStringStream(line);
 	final TsvLexer lexer = new TsvLexer(stream);
 	return lexer;

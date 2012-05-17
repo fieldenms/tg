@@ -41,7 +41,9 @@ import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
  * 
  * @param <T>
  */
-public class EgiPanel<T extends AbstractEntity> extends JPanel {
+public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
+
+    private static final long serialVersionUID = -4362448591968371827L;
 
     /**
      * For now it's static field, however in the future it should be configured from outside
@@ -66,7 +68,7 @@ public class EgiPanel<T extends AbstractEntity> extends JPanel {
 	    fillTotalsEditors(totalsEditors, egi.getActualModel());
 
 	    add(egiScrollPane = new JScrollPane(egi, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER), //
-	    "grow, wrap");
+		    "grow, wrap");
 
 	    final JScrollPane footerPane = new JScrollPane(createFooterPanel(egi, totalsEditors), VERTICAL_SCROLLBAR_NEVER, HORIZONTAL_SCROLLBAR_NEVER);
 	    add(footerPane, "growx, wrap");

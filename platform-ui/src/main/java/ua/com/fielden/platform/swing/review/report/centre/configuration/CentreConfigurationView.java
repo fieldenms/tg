@@ -137,13 +137,22 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 	    private static final long serialVersionUID = 3357107509506933809L;
 
 	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
+	    protected boolean preAction(){
+		super.preAction();
 		if(getModel().isFreezed()){
 		    getModel().save();
 		}
 		getModel().save();
+		return true;
+	    }
+
+	    @Override
+	    protected Void action(final ActionEvent e) throws Exception {
+		// TODO Auto-generated method stub
 		return null;
 	    }
+
+
 	};
     }
 
@@ -158,11 +167,17 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 	    private static final long serialVersionUID = -369408904628538278L;
 
 	    @Override
-	    protected Void action(final ActionEvent e) throws Exception {
+	    protected boolean preAction() {
+		super.preAction();
 		if(getModel().isFreezed()){
 		    getModel().discard();
 		}
 		getModel().discard();
+		return true;
+	    }
+
+	    @Override
+	    protected Void action(final ActionEvent e) throws Exception {
 		return null;
 	    }
 

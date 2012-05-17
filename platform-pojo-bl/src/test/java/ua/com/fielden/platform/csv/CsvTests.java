@@ -41,5 +41,4 @@ public class CsvTests extends CharSeparatedValuesTest {
     public List<String> parse(final Parser parser) throws Exception {
 	return ((CsvParser) parser).line();
     }
-
 }

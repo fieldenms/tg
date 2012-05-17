@@ -61,6 +61,12 @@ public abstract class CharSeparatedValuesTest {
     }
 
     @Test
+    public void testDoubleQuoteEscaping() throws Exception {
+	final String result = parseField("\"Before\"\"After\"\"\"");
+	assertTrue("Expected <<Before\"After\">>, but found <<" + result + ">>", result.equals("Before\"After\""));
+    }
+
+    @Test
     public void testMultipleWordsWithEmbeddedCarageReturn() throws Exception {
 	// trying to parse line "Red,Green,,\"Blue\n\"\n" provided that delimiter is comma
 	final List<String> result = parseLine("Red" + delimiter + "Green" + delimiter + delimiter + "\"Blue\n\"\n");

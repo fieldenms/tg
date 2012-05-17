@@ -38,7 +38,7 @@ NEWLINE	:	'\r'? '\n';
 
 COMMA	:	( ' '* ';' ' '*);
 
-QUOTED	: ('"' ( options {greedy=false;}: . )+ '"')+
+QUOTED	: ('"' ( options {greedy=false;}: . )* '"')+
 	  {
 	  	StringBuffer txt = new StringBuffer(getText()); 
 	  	// Remove first and last double-quote

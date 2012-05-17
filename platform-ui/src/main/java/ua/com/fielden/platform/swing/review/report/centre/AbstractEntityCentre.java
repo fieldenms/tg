@@ -61,8 +61,6 @@ import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
-import com.jidesoft.grid.TableModelWrapperUtils;
-
 /**
  * Implements common functionality for all types of entity centres: entity centre with single analysis, entity locators, entity centres with multiple analysis.
  * When extending this class one must remember to layout components. It may be done using utility methods of the {@link EntityCentreLayoutUtility} class.
@@ -291,18 +289,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     public List<T> getSelectedEntities() {
 	final EntityGridInspector<T> egi = getEntityGridInspector(this);
 	final PropertyTableModel<T> tableModel = egi.getActualModel();
-	final List<T> selectedEntities = new ArrayList<T>();
-	if(tableModel.instances().size() <= 0){
-	    return selectedEntities;
-	}
-	final int selectedRows[] = egi.getSelectedRows();
-	for(final int rowNumber : selectedRows){
-	    final int selectedRow = TableModelWrapperUtils.getActualRowAt(egi.getModel(), rowNumber);
-	    if (selectedRow >= 0) {
-		selectedEntities.add(tableModel.instance(selectedRow));
-	    }
-	}
-	return selectedEntities;
+	return tableModel.getSelectedEntities();
     }
 
     /**
