@@ -78,7 +78,8 @@ public class EntityFetcher {
 	final QueryModelResult<E> modelResult = getModelResult(queryModel, getDbVersion(), domainPersistenceMetadataAnalyser, getFilter(), getUsername());
 	final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
 	final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetchAll(modelResult.getResultType());
-	return new EntityEnhancer<E>(this, domainPersistenceMetadataAnalyser).enhance(result, fetchModel == null ? null : new FetchModel(fetchModel, domainPersistenceMetadataAnalyser));
+	final FetchModel<E> entFetch = fetchModel == null ? null : new FetchModel<E>(fetchModel, domainPersistenceMetadataAnalyser);
+	return new EntityEnhancer<E>(this, domainPersistenceMetadataAnalyser).enhance(result, entFetch);
     }
 
     protected Query produceHibernateQuery(final String sql, final SortedSet<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams) {
