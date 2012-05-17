@@ -1,10 +1,5 @@
 package ua.com.fielden.platform.swing.review.development;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +12,8 @@ import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -45,6 +42,11 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(String.class)
 public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
@@ -110,7 +112,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Run the configured entity query.
-     * 
+     *
      * @param pageSize
      * @return
      */
@@ -121,7 +123,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the first result page for query model. The page size is specified with second parameter.
-     * 
+     *
      * @param queryModel - query model for which the first result page must be returned.
      * @param pageSize - the page size.
      * @return
@@ -132,23 +134,41 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Creates "fetch property" model for entity query criteria.
-     * 
+     *
      * @return
      */
     protected fetch<T> createFetchModel() {
 	try {
-	    final DynamicEntityTree<T> fetchTree = new DynamicEntityTree<T>(//
-		    getCentreDomainTreeMangerAndEnhancer().getSecondTick().checkedProperties(getEntityClass()), getEntityClass());
-	    final fetch<T> main = buildFetchModels(getEntityClass(), fetchTree.getRoot());
+	    final Class<T> managedType = (Class<T>)getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(getEntityClass());
+	    final DynamicEntityTree<T> fetchTree = new DynamicEntityTree<T>(separateTotalProperties().getKey(), managedType);
+	    final fetch<T> main = buildFetchModels(managedType, fetchTree.getRoot());
 	    return main;
 	} catch (final Exception e1) {
 	    throw new RuntimeException(e1);
 	}
     }
 
+    private Pair<List<String>, List<String>> separateTotalProperties() {
+	final List<String> fetchProperties = new ArrayList<String>();
+	final List<String> totalProperties = new ArrayList<String>();
+	final List<String> checkedProperties = cdtme.getSecondTick().checkedProperties(getEntityClass());
+	for (final String property : checkedProperties)
+	    try {
+		final ICalculatedProperty calcProperty = cdtme.getEnhancer().getCalculatedProperty(getEntityClass(), property);
+		if (calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION) {
+		    totalProperties.add(property);
+		} else {
+		    fetchProperties.add(property);
+		}
+	    } catch (final IncorrectCalcPropertyKeyException ex) {
+		fetchProperties.add(property);
+	    }
+	return new Pair<List<String>, List<String>>(fetchProperties, totalProperties);
+    }
+
     /**
      * Returns the ordering model for this query criteria.
-     * 
+     *
      * @return
      */
     protected OrderingModel createOrderingModel(){
@@ -164,17 +184,17 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the not configured query property instance for the specified property.
-     * 
+     *
      * @param propertyName
      * @return
      */
     protected QueryProperty createNotInitialisedQueryProperty(final String propertyName){
-	return new QueryProperty(getEntityClass(), propertyName, ALIAS);
+	return new QueryProperty(getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(getEntityClass()), propertyName, ALIAS);
     }
 
     /**
      * Creates the query with configured conditions.
-     * 
+     *
      * @return
      */
     protected ICompleted createQuery(){
@@ -183,7 +203,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the expression for calculated property specified with propName parameter. If the property is not calculated then returns null.
-     * 
+     *
      * @param propName - the name of the calculated property.
      * @return
      */
@@ -197,12 +217,12 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Starts query building with appropriate join condition.
-     * 
+     *
      * @return
      */
     private IJoin createJoinCondition() {
 	try {
-	    return select(getEntityClass()).as(ALIAS);
+	    return select((Class<T>)getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(getEntityClass())).as(ALIAS);
 	} catch (final Exception e) {
 	    throw new RuntimeException("Can not create join condition due to: " + e + ".");
 	}
@@ -252,7 +272,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Builds the fetch model for subtree specified with treeNode parameter.
-     * 
+     *
      * @param entityType - The type for fetch model.
      * @param treeNode - the root of subtree for which fetch model must be build.
      * @return

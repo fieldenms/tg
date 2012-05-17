@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.swing.egi;
 
-import static javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION;
-import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
-import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
-import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED;
-import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER;
-
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -62,6 +56,11 @@ import ua.com.fielden.platform.swing.verticallabel.DefaultTableHeaderCellRendere
 import ua.com.fielden.platform.swing.verticallabel.MouseDefaultHeaderHandler;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import static javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION;
+import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER;
 
 public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
@@ -134,7 +133,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Creates {@link PropertyChangeListener} that listens the column width change events.
-     * 
+     *
      * @param root
      * @param tickManager
      * @param egi
@@ -158,7 +157,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
      * Creates the mouse listener that listens the table header mouse click events.
      * @param tickManager
      * @param root
-     * 
+     *
      * @param egi
      * @return
      */
@@ -180,7 +179,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Creates {@link TableColumnModelListener} instance that listens the column moved events.
-     * 
+     *
      * @param root
      * @param tickManager
      * @return
@@ -215,7 +214,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Creates footer panel of totals for the specified entity grid inspector.
-     * 
+     *
      * @param entityGridInspector
      * @param totals
      * @return
@@ -243,7 +242,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Creates panel with totals for the specified column.
-     * 
+     *
      * @param total
      * @param rowNumber
      * @param size
@@ -269,7 +268,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
     /**
      * Returns the total editor with specified tool tip.
      * @param size
-     * 
+     *
      * @return
      */
     private static JTextField createTotalEditor(final Class<?> managedType, final String propertyName, final Integer size) {
@@ -290,7 +289,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Returns the label that is a stub of total editor.
-     * 
+     *
      * @return
      */
     private static JLabel createStubLabel(final Integer size) {
@@ -301,7 +300,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Adds resize listener to table column that handles column size changed and column moved events.
-     * 
+     *
      * @param footer
      * @param totalComponents
      */
@@ -346,7 +345,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
 	    /**
 	     * Adds components from total components list at specified index to the footer panel.
-	     * 
+	     *
 	     * @param totalComponents
 	     * @param fromIndex
 	     * @param footer
@@ -360,7 +359,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
 	    /**
 	     * Removes components specified with index in total components from footer panel.
-	     * 
+	     *
 	     * @param totalComponents
 	     * @param fromIndex
 	     * @param footer
@@ -385,7 +384,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Returns the column constraints for totals footer panel.
-     * 
+     *
      * @param entityGridInspector
      * @return
      */
@@ -399,7 +398,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Returns the row constraints for totals footer panel.
-     * 
+     *
      * @param totals
      * @return
      */
@@ -413,7 +412,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Determines the number of total rows to insert.
-     * 
+     *
      * @param totals
      * @return
      */
@@ -427,7 +426,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Returns the pair of column names and totals map. The totals map - it is a map between column names and list of total names.
-     * 
+     *
      * @param rootType
      * @param cdtme
      * @return
@@ -448,6 +447,8 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 			totals.put(originProperty, totalList);
 		    }
 		    totalList.add(property);
+		} else {
+		    columns.add(new Pair<String, Integer>(property, Integer.valueOf(cdtme.getSecondTick().getWidth(rootType, property))));
 		}
 	    } catch(final IncorrectCalcPropertyKeyException ex){
 		columns.add(new Pair<String, Integer>(property, Integer.valueOf(cdtme.getSecondTick().getWidth(rootType, property))));
@@ -459,7 +460,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
     /**
      * Creates PropertyTableModel for the specified {@link ICentreDomainTreeManagerAndEnhancer} instance.
      * @param rootType
-     * 
+     *
      * @param properties
      * @return
      */
@@ -474,7 +475,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Creates single selection {@link EntityGridInspector} for the specified {@link PropertyTableModel}.
-     * 
+     *
      * @param model
      * @return
      */
@@ -491,7 +492,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Enables total panel scrolling.
-     * 
+     *
      * @param footerPane
      * @param egiHorizScrollBar
      */
@@ -510,7 +511,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
     /**
      * Table header cell renderer that draws sorting arrows for the concrete table column.
-     * 
+     *
      * @author TG Team
      *
      */
@@ -577,7 +578,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 	 * Icon that represents ordering arrow on the table header
 	 *
 	 * @author TG Team
-	 * 
+	 *
 	 */
 	private class OrderingIcon implements Icon {
 
