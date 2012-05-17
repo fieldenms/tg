@@ -27,6 +27,7 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Injector;
@@ -374,7 +375,7 @@ public class DomainPersistenceMetadata {
 	if (!StringUtils.isEmpty(providedTableName)) {
 	    return providedTableName;
 	} else {
-	    return entityType.getSimpleName().toUpperCase() + "_";
+	    return DynamicEntityClassLoader.getOriginalType(entityType).getSimpleName().toUpperCase() + "_";
 	}
     }
 }
