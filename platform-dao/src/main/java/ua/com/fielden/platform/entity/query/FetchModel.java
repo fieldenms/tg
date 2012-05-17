@@ -45,7 +45,9 @@ public class FetchModel<T extends AbstractEntity<?>> {
 
     private void includeAllFirstLevelPrimPropsAndKey() {
 	for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(getEntityType())) {
-	    with(ppi.getName(), ppi.getType().equals(PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY) ? false : true);
+	    if (!ppi.isCalculated()) {
+		with(ppi.getName(), ppi.getType().equals(PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY) ? false : true);
+	    }
 	}
     }
 
