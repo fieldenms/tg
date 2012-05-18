@@ -80,9 +80,6 @@ public class CriteriaGeneratorTest {
 	put("topLevelEntity_critIRangeProperty_to", cdtm.getFirstTick().getValue2(TopLevelEntity.class, "critIRangeProperty"));
 	put("topLevelEntity_critSSingleProperty", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSSingleProperty"));
 	put("topLevelEntity_critSRangeProperty", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSRangeProperty"));
-	put("topLevelEntity_critBSingleProperty", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critBSingleProperty"));
-	put("topLevelEntity_critBRangeProperty_is", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critBRangeProperty"));
-	put("topLevelEntity_critBRangeProperty_not", cdtm.getFirstTick().getValue2(TopLevelEntity.class, "critBRangeProperty"));
     }};
 
     @SuppressWarnings("serial")
@@ -106,9 +103,6 @@ public class CriteriaGeneratorTest {
 	put("topLevelEntity_critIRangeProperty_to", Integer.valueOf(30));
 	put("topLevelEntity_critSSingleProperty", "string value");
 	put("topLevelEntity_critSRangeProperty", "string value, string value 1");
-	put("topLevelEntity_critBSingleProperty", Boolean.FALSE);
-	put("topLevelEntity_critBRangeProperty_is", Boolean.TRUE);
-	put("topLevelEntity_critBRangeProperty_not", Boolean.FALSE);
     }};
 
     @SuppressWarnings("serial")
@@ -132,9 +126,6 @@ public class CriteriaGeneratorTest {
 	add("topLevelEntity_critIRangeProperty_to");
 	add("topLevelEntity_critSSingleProperty");
 	add("topLevelEntity_critSRangeProperty");
-	add("topLevelEntity_critBSingleProperty");
-	add("topLevelEntity_critBRangeProperty_is");
-	add("topLevelEntity_critBRangeProperty_not");
     }};
 
     @SuppressWarnings("serial")
@@ -291,26 +282,6 @@ public class CriteriaGeneratorTest {
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "range string property"), new Pair<String, Object>("desc", "range string property description")));
 	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "critSRangeProperty")));
-	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
-	}});
-	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
-	    put(IsProperty.class, createAnnotationMap());
-	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "single boolean property"), new Pair<String, Object>("desc", "single boolean property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "critBSingleProperty")));
-	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
-	}});
-	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
-	    put(IsProperty.class, createAnnotationMap());
-	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "range boolean property"), new Pair<String, Object>("desc", "range boolean property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "critBRangeProperty")));
-	    put(FirstParam.class, createAnnotationMap(new Pair<String, Object>("secondParam", "topLevelEntity_critBRangeProperty_not")));
-	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
-	}});
-	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
-	    put(IsProperty.class, createAnnotationMap());
-	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "range boolean property"), new Pair<String, Object>("desc", "range boolean property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "critBRangeProperty")));
-	    put(SecondParam.class, createAnnotationMap(new Pair<String, Object>("firstParam", "topLevelEntity_critBRangeProperty_is")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
     }};

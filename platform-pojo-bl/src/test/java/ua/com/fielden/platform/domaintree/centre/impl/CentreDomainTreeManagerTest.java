@@ -355,11 +355,8 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     @Test
     public void test_that_values_1_and_2_for_first_tick_are_default_for_the_first_time_and_can_be_altered() {
 	checkOrSetMethodValues(null, "critOnlySingleAEProp", dtm().getFirstTick(), "getValue");
-	checkOrSetMethodValues(null, "critOnlySingleAEProp", dtm().getFirstTick(), "getValue2");
 	checkOrSetMethodValues(new ArrayList<String>(), "critOnlyAEProp", dtm().getFirstTick(), "getValue");
-	checkOrSetMethodValues(new ArrayList<String>(), "critOnlyAEProp", dtm().getFirstTick(), "getValue2");
 	checkOrSetMethodValues("", "stringProp", dtm().getFirstTick(), "getValue");
-	checkOrSetMethodValues("", "stringProp", dtm().getFirstTick(), "getValue2");
 	checkOrSetMethodValues(true, "booleanProp", dtm().getFirstTick(), "getValue");
 	checkOrSetMethodValues(true, "booleanProp", dtm().getFirstTick(), "getValue2");
 	checkOrSetMethodValues(null, "dateProp", dtm().getFirstTick(), "getValue");
@@ -370,11 +367,8 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	checkOrSetMethodValues(null, "moneyProp", dtm().getFirstTick(), "getValue2");
 
 	checkOrSetMethodValues(true, "critOnlySingleAEProp", dtm().getFirstTick(), "isValueEmpty");
-	checkOrSetMethodValues(true, "critOnlySingleAEProp", dtm().getFirstTick(), "is2ValueEmpty");
 	checkOrSetMethodValues(true, "critOnlyAEProp", dtm().getFirstTick(), "isValueEmpty");
-	checkOrSetMethodValues(true, "critOnlyAEProp", dtm().getFirstTick(), "is2ValueEmpty");
 	checkOrSetMethodValues(true, "stringProp", dtm().getFirstTick(), "isValueEmpty");
-	checkOrSetMethodValues(true, "stringProp", dtm().getFirstTick(), "is2ValueEmpty");
 	checkOrSetMethodValues(true, "booleanProp", dtm().getFirstTick(), "isValueEmpty");
 	checkOrSetMethodValues(true, "booleanProp", dtm().getFirstTick(), "is2ValueEmpty");
 	checkOrSetMethodValues(true, "dateProp", dtm().getFirstTick(), "isValueEmpty");
@@ -390,12 +384,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	checkOrSetMethodValues("a new value for single crit only", "critOnlySingleAEProp", dtm().getFirstTick(), "setValue");
 	checkOrSetMethodValues("a new value for single crit only", "critOnlySingleAEProp", dtm().getFirstTick(), "getValue");
 	checkOrSetMethodValues(false, "critOnlySingleAEProp", dtm().getFirstTick(), "isValueEmpty");
-	checkOrSetMethodValues("a value for single crit only", "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "setValue2ByDefault");
-	checkOrSetMethodValues("a value for single crit only", "critOnlySingleAEProp", dtm().getFirstTick(), "getValue2");
-	checkOrSetMethodValues(false, "critOnlySingleAEProp", dtm().getFirstTick(), "is2ValueEmpty");
-	checkOrSetMethodValues("a new value for single crit only", "critOnlySingleAEProp", dtm().getFirstTick(), "setValue2");
-	checkOrSetMethodValues("a new value for single crit only", "critOnlySingleAEProp", dtm().getFirstTick(), "getValue2");
-	checkOrSetMethodValues(false, "critOnlySingleAEProp", dtm().getFirstTick(), "is2ValueEmpty");
 
 	checkOrSetMethodValues(new ArrayList<String>() {{ add("a value for crit only"); }}, "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "setValueByDefault");
 	checkOrSetMethodValues(new ArrayList<String>() {{ add("a value for crit only"); }}, "critOnlyAEProp", dtm().getFirstTick(), "getValue");
@@ -403,12 +391,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	checkOrSetMethodValues(new ArrayList<String>() {{ add("a new value for crit only"); }}, "critOnlyAEProp", dtm().getFirstTick(), "setValue");
 	checkOrSetMethodValues(new ArrayList<String>() {{ add("a new value for crit only"); }}, "critOnlyAEProp", dtm().getFirstTick(), "getValue");
 	checkOrSetMethodValues(false, "critOnlyAEProp", dtm().getFirstTick(), "isValueEmpty");
-	checkOrSetMethodValues(new ArrayList<String>() {{ add("a value for crit only"); }}, "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "setValue2ByDefault");
-	checkOrSetMethodValues(new ArrayList<String>() {{ add("a value for crit only"); }}, "critOnlyAEProp", dtm().getFirstTick(), "getValue2");
-	checkOrSetMethodValues(false, "critOnlyAEProp", dtm().getFirstTick(), "is2ValueEmpty");
-	checkOrSetMethodValues(new ArrayList<String>() {{ add("a new value for crit only"); }}, "critOnlyAEProp", dtm().getFirstTick(), "setValue2");
-	checkOrSetMethodValues(new ArrayList<String>() {{ add("a new value for crit only"); }}, "critOnlyAEProp", dtm().getFirstTick(), "getValue2");
-	checkOrSetMethodValues(false, "critOnlyAEProp", dtm().getFirstTick(), "is2ValueEmpty");
 
 	checkOrSetMethodValues("a value for str", "stringProp", dtm().getRepresentation().getFirstTick(), "setValueByDefault");
 	checkOrSetMethodValues("a value for str", "stringProp", dtm().getFirstTick(), "getValue");
@@ -416,12 +398,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	checkOrSetMethodValues("a new value for str", "stringProp", dtm().getFirstTick(), "setValue");
 	checkOrSetMethodValues("a new value for str", "stringProp", dtm().getFirstTick(), "getValue");
 	checkOrSetMethodValues(false, "stringProp", dtm().getFirstTick(), "isValueEmpty");
-	checkOrSetMethodValues("a value for str", "stringProp", dtm().getRepresentation().getFirstTick(), "setValue2ByDefault");
-	checkOrSetMethodValues("a value for str", "stringProp", dtm().getFirstTick(), "getValue2");
-	checkOrSetMethodValues(false, "stringProp", dtm().getFirstTick(), "is2ValueEmpty");
-	checkOrSetMethodValues("a new value for str", "stringProp", dtm().getFirstTick(), "setValue2");
-	checkOrSetMethodValues("a new value for str", "stringProp", dtm().getFirstTick(), "getValue2");
-	checkOrSetMethodValues(false, "stringProp", dtm().getFirstTick(), "is2ValueEmpty");
 
 	checkOrSetMethodValues(false, "booleanProp", dtm().getRepresentation().getFirstTick(), "setValueByDefault");
 	checkOrSetMethodValues(false, "booleanProp", dtm().getFirstTick(), "getValue");

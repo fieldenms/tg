@@ -32,7 +32,6 @@ import ua.com.fielden.platform.domaintree.impl.LocatorManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
@@ -321,19 +320,25 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	@Override
 	public Object getValue2(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a 'value 2' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    // TODO unit test.
+	    AbstractDomainTree.illegalNonDoubleEditorAndNonBooleanProperties(root, property, "Could not get a 'value 2' for 'non-double (or boolean) editor' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return (propertiesValues2.containsKey(key(root, property))) ? propertiesValues2.get(key(root, property)) : tr().getValue2ByDefault(root, property);
 	}
 
 	@Override
 	public boolean is2ValueEmpty(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask whether 'value 2' is empty for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    // TODO unit test.
+	    AbstractDomainTree.illegalNonDoubleEditorAndNonBooleanProperties(root, property, "Could not ask whether 'value 2' is empty for 'non-double (or boolean) editor' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    final Object value = (propertiesValues2.containsKey(key(root, property))) ? propertiesValues2.get(key(root, property)) : tr().getValue2ByDefault(root, property);
 	    return EntityUtils.equalsEx(value, tr().get2EmptyValueFor(root, property));
 	}
 
 	@Override
 	public IAddToCriteriaTickManager setValue2(final Class<?> root, final String property, final Object value2) {
-	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'value' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'value 2' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    // TODO unit test.
+	    illegalNonDoubleEditorAndNonBooleanProperties(root, property, "Could not set a 'value 2' for 'non-double (or boolean) editor' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    final Object oldValue2 = getValue2(root, property);
 	    propertiesValues2.put(key(root, property), value2);
 	    for (final IPropertyValueListener listener : propertyValue2Listeners) {
@@ -365,14 +370,16 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	@Override
 	public Boolean getExclusive(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get an 'exclusive' flag for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    AbstractDomainTree.illegalType(root, property, "Could not get an 'exclusive' flag for 'non-range' property [" + property + "] in type [" + root.getSimpleName() + "].", Number.class, Money.class, Date.class);
+	    // TODO unit test.
+	    AbstractDomainTree.illegalNonDoubleEditorProperties(root, property, "Could not get an 'exclusive' flag for 'non-double editor' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return (propertiesExclusive1.containsKey(key(root, property))) ? propertiesExclusive1.get(key(root, property)) : null;
 	}
 
 	@Override
 	public IAddToCriteriaTickManager setExclusive(final Class<?> root, final String property, final Boolean exclusive) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set an 'exclusive' flag for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    AbstractDomainTree.illegalType(root, property, "Could not set an 'exclusive' flag for 'non-range' property [" + property + "] in type [" + root.getSimpleName() + "].", Number.class, Money.class, Date.class);
+	    // TODO unit test.
+	    AbstractDomainTree.illegalNonDoubleEditorProperties(root, property, "Could not set an 'exclusive' flag for 'non-double editor' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    propertiesExclusive1.put(key(root, property), exclusive);
 	    return this;
 	}
@@ -380,14 +387,16 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	@Override
 	public Boolean getExclusive2(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get an 'exclusive 2' flag for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    AbstractDomainTree.illegalType(root, property, "Could not get an 'exclusive 2' flag for 'non-range' property [" + property + "] in type [" + root.getSimpleName() + "].", Number.class, Money.class, Date.class);
+	    // TODO unit test.
+	    AbstractDomainTree.illegalNonDoubleEditorProperties(root, property, "Could not get an 'exclusive 2' flag for 'non-double editor' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return (propertiesExclusive2.containsKey(key(root, property))) ? propertiesExclusive2.get(key(root, property)) : null;
 	}
 
 	@Override
 	public IAddToCriteriaTickManager setExclusive2(final Class<?> root, final String property, final Boolean exclusive2) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set an 'exclusive 2' flag for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-	    AbstractDomainTree.illegalType(root, property, "Could not set an 'exclusive 2' flag for 'non-range' property [" + property + "] in type [" + root.getSimpleName() + "].", Number.class, Money.class, Date.class);
+	    // TODO unit test.
+	    AbstractDomainTree.illegalNonDoubleEditorProperties(root, property, "Could not set an 'exclusive 2' flag for 'non-double editor' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    propertiesExclusive2.put(key(root, property), exclusive2);
 	    return this;
 	}

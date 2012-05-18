@@ -75,16 +75,6 @@ public class TopLevelEntity extends AbstractEntity<String> {
     @CritOnly(Type.RANGE)
     private String critSRangeProperty;
 
-    @IsProperty
-    @Title(value = "single boolean property", desc = "single boolean property description")
-    @CritOnly(Type.SINGLE)
-    private boolean critBSingleProperty;
-
-    @IsProperty
-    @Title(value = "range boolean property", desc = "range boolean property description")
-    @CritOnly(Type.RANGE)
-    private boolean critBRangeProperty;
-
     public Integer getIntegerProp() {
 	return integerProp;
     }
@@ -183,24 +173,4 @@ public class TopLevelEntity extends AbstractEntity<String> {
     public void setCritSRangeProperty(final String critSRangeProperty) {
 	this.critSRangeProperty = critSRangeProperty;
     }
-
-    public boolean isCritBSingleProperty() {
-	return critBSingleProperty;
-    }
-
-    @Observable
-    public void setCritBSingleProperty(final boolean critBSingleProperty) {
-	this.critBSingleProperty = critBSingleProperty;
-    }
-
-    public boolean isCritBRangeProperty() {
-	return critBRangeProperty;
-    }
-
-    @Observable
-    public void setCritBRangeProperty(final boolean critBRangeProperty) {
-	this.critBRangeProperty = critBRangeProperty;
-    }
-
-
 }

@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.swing.review.development;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,17 +41,13 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(String.class)
 public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
@@ -255,18 +256,24 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private QueryProperty createQueryProperty(final String actualProperty) {
 	final IAddToCriteriaTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	final Class<T> root = getEntityClass();
-
 	final QueryProperty queryProperty = createNotInitialisedQueryProperty(actualProperty);
 
-	try{queryProperty.setValue(tickManager.getValue(root, actualProperty));}catch (final Exception e) {}
-	try{queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));}catch (final Exception e) {}
-	try{queryProperty.setValue2(tickManager.getValue2(root, actualProperty));}catch (final Exception e) {}
-	try{queryProperty.setExclusive2(tickManager.getExclusive2(root, actualProperty));}catch (final Exception e) {}
-	try{queryProperty.setDatePrefix(tickManager.getDatePrefix(root, actualProperty));}catch (final Exception e) {}
-	try{queryProperty.setDateMnemonic(tickManager.getDateMnemonic(root, actualProperty));}catch (final Exception e) {}
-	try{queryProperty.setAndBefore(tickManager.getAndBefore(root, actualProperty));}catch (final Exception e) {}
-	try{queryProperty.setOrNull(tickManager.getOrNull(root, actualProperty));}catch (final Exception e) {}
-	try{queryProperty.setNot(tickManager.getNot(root, actualProperty));}catch (final Exception e) {}
+	queryProperty.setValue(tickManager.getValue(root, actualProperty));
+	if (AbstractDomainTree.isDoubleCriterionOrBoolean(getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(root), actualProperty)) {
+	    queryProperty.setValue2(tickManager.getValue2(root, actualProperty));
+	}
+	if (AbstractDomainTree.isDoubleCriterion(getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(root), actualProperty)) {
+	    queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));
+	    queryProperty.setExclusive2(tickManager.getExclusive2(root, actualProperty));
+	}
+	final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(root, actualProperty);
+	if (EntityUtils.isDate(propertyType)) {
+	    queryProperty.setDatePrefix(tickManager.getDatePrefix(root, actualProperty));
+	    queryProperty.setDateMnemonic(tickManager.getDateMnemonic(root, actualProperty));
+	    queryProperty.setAndBefore(tickManager.getAndBefore(root, actualProperty));
+	}
+	queryProperty.setOrNull(tickManager.getOrNull(root, actualProperty));
+	queryProperty.setNot(tickManager.getNot(root, actualProperty));
 	return queryProperty;
     }
 

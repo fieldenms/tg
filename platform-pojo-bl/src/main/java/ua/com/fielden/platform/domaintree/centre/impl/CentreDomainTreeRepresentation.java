@@ -43,7 +43,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
      * A <i>representation</i> constructor for the first time instantiation. Initialises also children references on itself.
      */
     public CentreDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-	this(serialiser, rootTypes, AbstractDomainTree.createSet(), new AddToCriteriaTick(), new AddToResultSetTick(), AbstractDomainTree.<ListenedArrayList>createRootsMap());
+	this(serialiser, rootTypes, createSet(), new AddToCriteriaTick(), new AddToResultSetTick(), AbstractDomainTree.<ListenedArrayList>createRootsMap());
     }
 
     /**
@@ -137,18 +137,24 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 
 	@Override
 	public Object getValue2ByDefault(final Class<?> root, final String property) {
+	    // TODO unit test.
+	    illegalNonDoubleEditorAndNonBooleanProperties(root, property, "Could not ask a 'value 2 by default' for 'non-double (or boolean) editor' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    illegalExcludedProperties(getDtr(), root, property, "Could not ask a 'value 2 by default' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return (propertiesDefaultValues2.containsKey(key(root, property))) ? propertiesDefaultValues2.get(key(root, property)) : typeAndSingleRelatedValue(root, property);
 	}
 
 	@Override
 	public Object get2EmptyValueFor(final Class<?> root, final String property) {
-	    illegalExcludedProperties(getDtr(), root, property, "Could not ask an 'empty value' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    // TODO unit test.
+	    illegalNonDoubleEditorAndNonBooleanProperties(root, property, "Could not ask an 'empty value 2' for 'non-double (or boolean) editor' property [" + property + "] in type [" + root.getSimpleName() + "].");
+	    illegalExcludedProperties(getDtr(), root, property, "Could not ask an 'empty value 2' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    return typeAndSingleRelatedValue(root, property);
 	}
 
 	@Override
 	public IAddToCriteriaTickRepresentation setValue2ByDefault(final Class<?> root, final String property, final Object value2) {
+	    // TODO unit test.
+	    illegalNonDoubleEditorAndNonBooleanProperties(root, property, "Could not set a 'value 2 by default' for 'non-double (or boolean) editor' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    illegalExcludedProperties(getDtr(), root, property, "Could not set a 'value 2 by default' for already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    propertiesDefaultValues2.put(key(root, property), value2);
 	    return this;

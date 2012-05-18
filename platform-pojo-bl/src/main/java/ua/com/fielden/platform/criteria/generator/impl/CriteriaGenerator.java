@@ -121,23 +121,14 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @return
      */
     private static List<NewProperty> generateCriteriaProperties(final Class<?> root, final IDomainTreeEnhancer enhancer, final String propertyName) {
-	boolean isCalculated = false;
-	try{
-	    enhancer.getCalculatedProperty(root, propertyName);
-	    isCalculated = true;
-	}catch(final Exception e){
-
-	}
-	final Class<?> inspectedType = isCalculated ? enhancer.getManagedType(root) : root;
+	final Class<?> inspectedType = enhancer.getManagedType(root);
 	final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
 	final Class<?> propertyType = isEntityItself ? inspectedType : PropertyTypeDeterminator.determinePropertyType(inspectedType, propertyName);
 	final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, inspectedType, propertyName);
 	final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(inspectedType, propertyName);
-
 	final List<NewProperty> generatedProperties = new ArrayList<NewProperty>();
 
-	if((EntityUtils.isRangeType(propertyType) || isBoolean(propertyType)) //
-		&& !(critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value()))){
+	if(AbstractDomainTree.isDoubleCriterionOrBoolean(inspectedType, propertyName)){
 	    generatedProperties.addAll(generateRangeCriteriaProperties(root, propertyType, propertyName, titleAndDesc));
 	}else{
 	    generatedProperties.add(generateSingleCriteriaProperty(root, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
@@ -157,7 +148,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
 	final boolean isEntity = EntityUtils.isEntityType(propertyType);
 	final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
-	final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (isBoolean(propertyType) ? Boolean.class : propertyType);
+	final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType);
 
 	final List<Annotation> annotations = new ArrayList<Annotation>(){{
 	    if(isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)){
@@ -180,9 +171,9 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @return
      */
     private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc) {
-	final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, isBoolean(propertyType) ? _IS : _FROM);
-	final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, isBoolean(propertyType) ? _NOT : _TO);
-	final Class<?> newPropertyType = isBoolean(propertyType) ? Boolean.class : propertyType;
+	final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, EntityUtils.isBoolean(propertyType) ? _IS : _FROM);
+	final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, EntityUtils.isBoolean(propertyType) ? _NOT : _TO);
+	final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType;
 
 	final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
 		new CriteriaPropertyAnnotation(propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
@@ -206,15 +197,4 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	    entity.set(propertyField.getName(), secondParam == null ? ftm.getValue(root, critProperty.propertyName()) : ftm.getValue2(root, critProperty.propertyName()));
 	}
     }
-
-    /**
-     * Returns value that indicates whether specified type is of boolean type.
-     *
-     * @param type - the type that must be checked whether it is boolean or not.
-     * @return
-     */
-    private static boolean isBoolean(final Class<?> type){
-	return boolean.class.isAssignableFrom(type) || Boolean.class.isAssignableFrom(type);
-    }
-
 }

@@ -23,7 +23,10 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -68,7 +71,7 @@ public abstract class AbstractDomainTree {
     protected final static String PLACEHOLDER = "-placeholder-origin-";
 
     protected static Logger logger() {
-        return logger;
+	return logger;
     }
 
     protected static String getDummySuffix() {
@@ -109,10 +112,10 @@ public abstract class AbstractDomainTree {
      * @param rootTypes
      */
     public static Set<Class<?>> validateRootTypes(final Set<Class<?>> rootTypes) {
-        for (final Class<?> klass : rootTypes) {
-            validateRootType(klass);
-        }
-        return rootTypes;
+	for (final Class<?> klass : rootTypes) {
+	    validateRootType(klass);
+	}
+	return rootTypes;
     }
 
     /**
@@ -148,9 +151,9 @@ public abstract class AbstractDomainTree {
     public static boolean isCommonBranch(final String property) {
 	return property.endsWith(COMMON_SUFFIX);
     }
-    
+
     /**
-     * Returns <code>true</code> if the "property" represents a root of common properties branch.
+     * Returns <code>true</code> if the "property" represents a placeholder.
      * 
      * @param string
      * @return
@@ -199,9 +202,35 @@ public abstract class AbstractDomainTree {
      * @param message
      */
     protected static void illegalUncheckedProperties(final ITickManager tm, final Class<?> root, final String property, final String message) {
-        if (!tm.isChecked(root, property)) {
-            throw new IllegalArgumentException(message);
-        }
+	if (!tm.isChecked(root, property)) {
+	    throw new IllegalArgumentException(message);
+	}
+    }
+
+    /**
+     * Throws an {@link IllegalArgumentException} if the property can not represent a "double criterion".
+     * 
+     * @param root
+     * @param property
+     * @param message
+     */
+    protected static void illegalNonDoubleEditorProperties(final Class<?> root, final String property, final String message) {
+	if (!isDoubleCriterion(root, property)) {
+	    throw new IllegalArgumentException(message);
+	}
+    }
+
+    /**
+     * Throws an {@link IllegalArgumentException} if the property can not represent a "double criterion".
+     * 
+     * @param root
+     * @param property
+     * @param message
+     */
+    protected static void illegalNonDoubleEditorAndNonBooleanProperties(final Class<?> root, final String property, final String message) {
+	if (!isDoubleCriterionOrBoolean(root, property)) {
+	    throw new IllegalArgumentException(message);
+	}
     }
 
     /**
@@ -213,9 +242,9 @@ public abstract class AbstractDomainTree {
      * @param message
      */
     protected static void illegalUnusedProperties(final IUsageManager um, final Class<?> root, final String property, final String message) {
-        if (!um.isUsed(root, property)) {
-            throw new IllegalArgumentException(message);
-        }
+	if (!um.isUsed(root, property)) {
+	    throw new IllegalArgumentException(message);
+	}
     }
 
     /**
@@ -226,14 +255,14 @@ public abstract class AbstractDomainTree {
      * @param message
      */
     protected static void illegalType(final Class<?> root, final String property, final String message, final Class<?> ... legalTypes) {
-        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-        final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-        for (final Class<?> legalType : legalTypes) {
-            if (legalType.isAssignableFrom(propertyType)) {
-        	return;
-            }
-        }
-        throw new IllegalArgumentException(message);
+	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
+	for (final Class<?> legalType : legalTypes) {
+	    if (legalType.isAssignableFrom(propertyType)) {
+		return;
+	    }
+	}
+	throw new IllegalArgumentException(message);
     }
 
     protected static String generateKey(final Class<?> forType) {
@@ -316,5 +345,36 @@ public abstract class AbstractDomainTree {
 	protected EntityFactory factory() {
 	    return factory;
 	}
+    }
+
+    /**
+     * Returns <code>true</code> when the property can represent criterion with two editors, <code>false</code> otherwise.
+     * 
+     * TODO unit test.
+     * 
+     * @param root -- a root type that contains property.
+     * @param property -- a dot-notation expression that defines a property.
+     * @return
+     */
+    public static boolean isDoubleCriterionOrBoolean(final Class<?> root, final String property) {
+	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
+	return EntityUtils.isBoolean(propertyType) || isDoubleCriterion(root, property);
+    }
+
+    /**
+     * Returns <code>true</code> when the property can represent criterion with two editors, <code>false</code> otherwise.
+     *
+     * TODO unit test.
+     * 
+     * @param root -- a root type that contains property.
+     * @param property -- a dot-notation expression that defines a property.
+     * @return
+     */
+    public static boolean isDoubleCriterion(final Class<?> root, final String property) {
+	final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+	final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
+	final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, property);
+	return EntityUtils.isRangeType(propertyType) && !(critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value()));
     }
 }

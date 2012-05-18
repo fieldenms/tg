@@ -336,11 +336,8 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     @Test
     public void test_that_values_1_and_2_by_default_for_first_tick_are_desired_and_can_be_altered() {
 	checkOrSetMethodValues(null, "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "getValueByDefault");
-	checkOrSetMethodValues(null, "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "getValue2ByDefault");
 	checkOrSetMethodValues(new ArrayList<String>(), "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "getValueByDefault");
-	checkOrSetMethodValues(new ArrayList<String>(), "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "getValue2ByDefault");
 	checkOrSetMethodValues("", "stringProp", dtm().getRepresentation().getFirstTick(), "getValueByDefault");
-	checkOrSetMethodValues("", "stringProp", dtm().getRepresentation().getFirstTick(), "getValue2ByDefault");
 	checkOrSetMethodValues(true, "booleanProp", dtm().getRepresentation().getFirstTick(), "getValueByDefault");
 	checkOrSetMethodValues(true, "booleanProp", dtm().getRepresentation().getFirstTick(), "getValue2ByDefault");
 	checkOrSetMethodValues(null, "dateProp", dtm().getRepresentation().getFirstTick(), "getValueByDefault");
@@ -351,11 +348,8 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
 	checkOrSetMethodValues(null, "moneyProp", dtm().getRepresentation().getFirstTick(), "getValue2ByDefault");
 
 	checkOrSetMethodValues(null, "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "getEmptyValueFor");
-	checkOrSetMethodValues(null, "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "get2EmptyValueFor");
 	checkOrSetMethodValues(new ArrayList<String>(), "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "getEmptyValueFor");
-	checkOrSetMethodValues(new ArrayList<String>(), "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "get2EmptyValueFor");
 	checkOrSetMethodValues("", "stringProp", dtm().getRepresentation().getFirstTick(), "getEmptyValueFor");
-	checkOrSetMethodValues("", "stringProp", dtm().getRepresentation().getFirstTick(), "get2EmptyValueFor");
 	checkOrSetMethodValues(true, "booleanProp", dtm().getRepresentation().getFirstTick(), "getEmptyValueFor");
 	checkOrSetMethodValues(true, "booleanProp", dtm().getRepresentation().getFirstTick(), "get2EmptyValueFor");
 	checkOrSetMethodValues(null, "dateProp", dtm().getRepresentation().getFirstTick(), "getEmptyValueFor");
@@ -368,23 +362,14 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
 	checkOrSetMethodValues("a value for single crit only", "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "setValueByDefault");
 	checkOrSetMethodValues("a value for single crit only", "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "getValueByDefault");
 	checkOrSetMethodValues(null, "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "getEmptyValueFor");
-	checkOrSetMethodValues("a value for single crit only", "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "setValue2ByDefault");
-	checkOrSetMethodValues("a value for single crit only", "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "getValue2ByDefault");
-	checkOrSetMethodValues(null, "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "get2EmptyValueFor");
 
 	checkOrSetMethodValues(new ArrayList<String>() {{ add("a value for crit only"); }}, "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "setValueByDefault");
 	checkOrSetMethodValues(new ArrayList<String>() {{ add("a value for crit only"); }}, "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "getValueByDefault");
 	checkOrSetMethodValues(new ArrayList<String>(), "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "getEmptyValueFor");
-	checkOrSetMethodValues(new ArrayList<String>() {{ add("a value for crit only"); }}, "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "setValue2ByDefault");
-	checkOrSetMethodValues(new ArrayList<String>() {{ add("a value for crit only"); }}, "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "getValue2ByDefault");
-	checkOrSetMethodValues(new ArrayList<String>(), "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "get2EmptyValueFor");
 
 	checkOrSetMethodValues("a value for str", "stringProp", dtm().getRepresentation().getFirstTick(), "setValueByDefault");
 	checkOrSetMethodValues("a value for str", "stringProp", dtm().getRepresentation().getFirstTick(), "getValueByDefault");
 	checkOrSetMethodValues("", "stringProp", dtm().getRepresentation().getFirstTick(), "getEmptyValueFor");
-	checkOrSetMethodValues("a value for str", "stringProp", dtm().getRepresentation().getFirstTick(), "setValue2ByDefault");
-	checkOrSetMethodValues("a value for str", "stringProp", dtm().getRepresentation().getFirstTick(), "getValue2ByDefault");
-	checkOrSetMethodValues("", "stringProp", dtm().getRepresentation().getFirstTick(), "get2EmptyValueFor");
 
 	checkOrSetMethodValues(false, "booleanProp", dtm().getRepresentation().getFirstTick(), "setValueByDefault");
 	checkOrSetMethodValues(false, "booleanProp", dtm().getRepresentation().getFirstTick(), "getValueByDefault");

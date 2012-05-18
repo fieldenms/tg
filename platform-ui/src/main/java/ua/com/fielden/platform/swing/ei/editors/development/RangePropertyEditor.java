@@ -37,7 +37,7 @@ public class RangePropertyEditor implements IPropertyEditor {
     private boolean singleSelection;
     private final boolean bool, date;
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings("unchecked")
     public RangePropertyEditor(final IPropertyEditor fromEditor, final IPropertyEditor toEditor) {
 	final AbstractEntity<?> fe = fromEditor.getEntity(), te = toEditor.getEntity();
 	if (!fe.equals(te) || !fe.getPropertyType(fromEditor.getPropertyName()).equals(te.getPropertyType(toEditor.getPropertyName()))) {
