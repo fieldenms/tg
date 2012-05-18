@@ -67,25 +67,25 @@ public class DynamicQueryBuilderTest {
 	final Class<?> klass = EntityForQueryPropertyTesting.class;
 	QueryProperty qp;
 
-	qp = new QueryProperty(klass, "entity1", alias);
+	qp = new QueryProperty(klass, "entity1");
 	qp.setValue(new ArrayList<String>());
 	assertTrue("Non-crit-only AbstractEntity property with empty String list value should 'have empty value'.", qp.hasEmptyValue());
 	qp.setValue(new ArrayList<String>() { { add("some"); }});
 	assertFalse("Non-crit-only AbstractEntity property with non-empty String list value should not 'have empty value'.", qp.hasEmptyValue());
 
 
-	qp = new QueryProperty(klass, "entity2", alias);
+	qp = new QueryProperty(klass, "entity2");
 	qp.setValue(new ArrayList<String>());
 	assertTrue("Crit-only non-single AbstractEntity property with empty String list value should 'have empty value'.", qp.hasEmptyValue());
 	qp.setValue(new ArrayList<String>() { { add("some"); }});
 	assertFalse("Crit-only non-single AbstractEntity property with non-empty String list value should not 'have empty value'.", qp.hasEmptyValue());
 
-	qp = new QueryProperty(klass, "entity3", alias);
+	qp = new QueryProperty(klass, "entity3");
 	assertTrue("Crit-only single AbstractEntity property with null value should 'have empty value'.", qp.hasEmptyValue());
 	qp.setValue("some");
 	assertFalse("Crit-only single AbstractEntity property with non-null value should not 'have empty value'.", qp.hasEmptyValue());
 
-	qp = new QueryProperty(klass, "firstProperty", alias);
+	qp = new QueryProperty(klass, "firstProperty");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'have empty value'.", qp.hasEmptyValue());
 	qp.setValue("some");
 	assertFalse(qp.getType().getSimpleName() + " property with one non-null value should not 'have empty value'.", qp.hasEmptyValue());
@@ -96,7 +96,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2("some2");
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'have empty value'.", qp.hasEmptyValue());
 
-	qp = new QueryProperty(klass, "observableProperty", alias);
+	qp = new QueryProperty(klass, "observableProperty");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'have empty value'.", qp.hasEmptyValue());
 	qp.setValue("some");
 	assertFalse(qp.getType().getSimpleName() + " property with one non-null value should not 'have empty value'.", qp.hasEmptyValue());
@@ -107,7 +107,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2("some2");
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'have empty value'.", qp.hasEmptyValue());
 
-	qp = new QueryProperty(klass, "date", alias);
+	qp = new QueryProperty(klass, "date");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'have empty value'.", qp.hasEmptyValue());
 	qp.setValue("some");
 	assertFalse(qp.getType().getSimpleName() + " property with one non-null value should not 'have empty value'.", qp.hasEmptyValue());
@@ -118,7 +118,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2("some2");
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'have empty value'.", qp.hasEmptyValue());
 
-	qp = new QueryProperty(klass, "money", alias);
+	qp = new QueryProperty(klass, "money");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'have empty value'.", qp.hasEmptyValue());
 	qp.setAndBefore(Boolean.TRUE);
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'have empty value'.", qp.hasEmptyValue());
@@ -141,7 +141,7 @@ public class DynamicQueryBuilderTest {
 	qp.setAndBefore(null);
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'have empty value'.", qp.hasEmptyValue());
 
-	qp = new QueryProperty(klass, "bool", alias);
+	qp = new QueryProperty(klass, "bool");
 	qp.setValue(true);
 	qp.setValue2(true);
 	assertTrue(qp.getType().getSimpleName() + " property with both true values should 'have empty value'.", qp.hasEmptyValue());
@@ -155,7 +155,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2(true);
 	assertFalse(qp.getType().getSimpleName() + " property with one true value should not 'have empty value'.", qp.hasEmptyValue());
 
-	qp = new QueryProperty(klass, "strProp", alias);
+	qp = new QueryProperty(klass, "strProp");
 	qp.setValue("");
 	assertTrue(qp.getType().getSimpleName() + " property with empty String value should 'have empty value'.", qp.hasEmptyValue());
 	qp.setValue("some");
@@ -169,25 +169,25 @@ public class DynamicQueryBuilderTest {
 	final Class<?> klass = EntityForQueryPropertyTesting.class;
 	QueryProperty qp;
 
-	qp = new QueryProperty(klass, "entity1", alias);
+	qp = new QueryProperty(klass, "entity1");
 	qp.setValue(new ArrayList<String>());
 	assertTrue("Non-crit-only AbstractEntity property with empty String list value should 'be empty'.", qp.isEmpty());
 	qp.setValue(new ArrayList<String>() { { add("some"); }});
 	assertFalse("Non-crit-only AbstractEntity property with non-empty String list value should not 'be empty'.", qp.isEmpty());
 
 
-	qp = new QueryProperty(klass, "entity2", alias);
+	qp = new QueryProperty(klass, "entity2");
 	qp.setValue(new ArrayList<String>());
 	assertTrue("Crit-only non-single AbstractEntity property with empty String list value should 'be empty'.", qp.isEmpty());
 	qp.setValue(new ArrayList<String>() { { add("some"); }});
 	assertFalse("Crit-only non-single AbstractEntity property with non-empty String list value should not 'be empty'.", qp.isEmpty());
 
-	qp = new QueryProperty(klass, "entity3", alias);
+	qp = new QueryProperty(klass, "entity3");
 	assertTrue("Crit-only single AbstractEntity property with null value should 'be empty'.", qp.isEmpty());
 	qp.setValue("some");
 	assertFalse("Crit-only single AbstractEntity property with non-null value should not 'be empty'.", qp.isEmpty());
 
-	qp = new QueryProperty(klass, "firstProperty", alias);
+	qp = new QueryProperty(klass, "firstProperty");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'be empty'.", qp.isEmpty());
 	qp.setValue("some");
 	assertFalse(qp.getType().getSimpleName() + " property with one non-null value should not 'be empty'.", qp.isEmpty());
@@ -198,7 +198,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2("some2");
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'be empty'.", qp.isEmpty());
 
-	qp = new QueryProperty(klass, "observableProperty", alias);
+	qp = new QueryProperty(klass, "observableProperty");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'be empty'.", qp.isEmpty());
 	qp.setValue("some");
 	assertFalse(qp.getType().getSimpleName() + " property with one non-null value should not 'be empty'.", qp.isEmpty());
@@ -209,7 +209,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2("some2");
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'be empty'.", qp.isEmpty());
 
-	qp = new QueryProperty(klass, "date", alias);
+	qp = new QueryProperty(klass, "date");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'be empty'.", qp.isEmpty());
 
 	qp.setAndBefore(Boolean.TRUE);
@@ -238,7 +238,7 @@ public class DynamicQueryBuilderTest {
 	qp.setAndBefore(null);
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'be empty'.", qp.isEmpty());
 
-	qp = new QueryProperty(klass, "money", alias);
+	qp = new QueryProperty(klass, "money");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'be empty'.", qp.isEmpty());
 	qp.setValue("some");
 	assertFalse(qp.getType().getSimpleName() + " property with one non-null value should not 'be empty'.", qp.isEmpty());
@@ -249,7 +249,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2("some2");
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'be empty'.", qp.isEmpty());
 
-	qp = new QueryProperty(klass, "bool", alias);
+	qp = new QueryProperty(klass, "bool");
 	qp.setValue(true);
 	qp.setValue2(true);
 	assertTrue(qp.getType().getSimpleName() + " property with both true values should 'be empty'.", qp.isEmpty());
@@ -263,7 +263,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2(true);
 	assertFalse(qp.getType().getSimpleName() + " property with one true value should not 'be empty'.", qp.isEmpty());
 
-	qp = new QueryProperty(klass, "strProp", alias);
+	qp = new QueryProperty(klass, "strProp");
 	qp.setValue("");
 	assertTrue(qp.getType().getSimpleName() + " property with empty String value should 'be empty'.", qp.isEmpty());
 	qp.setValue("some");
@@ -277,7 +277,7 @@ public class DynamicQueryBuilderTest {
 	final Class<?> klass = EntityForQueryPropertyTesting.class;
 	QueryProperty qp;
 
-	qp = new QueryProperty(klass, "entity1", alias);
+	qp = new QueryProperty(klass, "entity1");
 	qp.setValue(new ArrayList<String>());
 	assertTrue("Non-crit-only AbstractEntity property with empty String list value should 'be ignored'.", qp.shouldBeIgnored());
 
@@ -290,7 +290,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue(new ArrayList<String>() { { add("some"); }});
 	assertFalse("Non-crit-only AbstractEntity property with non-empty String list value should not 'be ignored'.", qp.shouldBeIgnored());
 
-	qp = new QueryProperty(klass, "entity2", alias);
+	qp = new QueryProperty(klass, "entity2");
 	qp.setValue(new ArrayList<String>());
 	assertTrue("Crit-only property should 'be ignored'.", qp.shouldBeIgnored());
 	qp.setValue(new ArrayList<String>() { { add("some"); }});
@@ -300,7 +300,7 @@ public class DynamicQueryBuilderTest {
 	qp.setOrNull(false);
 	assertTrue("Crit-only property should 'be ignored'.", qp.shouldBeIgnored());
 
-	qp = new QueryProperty(klass, "entity3", alias);
+	qp = new QueryProperty(klass, "entity3");
 	assertTrue("Crit-only property should 'be ignored'.", qp.shouldBeIgnored());
 	qp.setValue("some");
 	assertTrue("Crit-only property should 'be ignored'.", qp.shouldBeIgnored());
@@ -309,7 +309,7 @@ public class DynamicQueryBuilderTest {
 	qp.setOrNull(false);
 	assertTrue("Crit-only property should 'be ignored'.", qp.shouldBeIgnored());
 
-	qp = new QueryProperty(klass, "firstProperty", alias);
+	qp = new QueryProperty(klass, "firstProperty");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'be ignored'.", qp.shouldBeIgnored());
 
 	qp.setOrNull(true);
@@ -327,7 +327,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2("some2");
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'be ignored'.", qp.shouldBeIgnored());
 
-	qp = new QueryProperty(klass, "observableProperty", alias);
+	qp = new QueryProperty(klass, "observableProperty");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'be ignored'.", qp.shouldBeIgnored());
 
 	qp.setOrNull(true);
@@ -345,7 +345,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2("some2");
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'be ignored'.", qp.shouldBeIgnored());
 
-	qp = new QueryProperty(klass, "date", alias);
+	qp = new QueryProperty(klass, "date");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'be ignored'.", qp.shouldBeIgnored());
 
 	qp.setOrNull(true);
@@ -366,7 +366,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2("some2");
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'be ignored'.", qp.shouldBeIgnored());
 
-	qp = new QueryProperty(klass, "money", alias);
+	qp = new QueryProperty(klass, "money");
 	assertTrue(qp.getType().getSimpleName() + " property with both null values should 'be ignored'.", qp.shouldBeIgnored());
 
 	qp.setOrNull(true);
@@ -384,7 +384,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2("some2");
 	assertFalse(qp.getType().getSimpleName() + " property with both non-null values should not 'be ignored'.", qp.shouldBeIgnored());
 
-	qp = new QueryProperty(klass, "bool", alias);
+	qp = new QueryProperty(klass, "bool");
 	qp.setValue(true);
 	qp.setValue2(true);
 	assertTrue(qp.getType().getSimpleName() + " property with both true values should 'be ignored'.", qp.shouldBeIgnored());
@@ -398,7 +398,7 @@ public class DynamicQueryBuilderTest {
 	qp.setValue2(true);
 	assertFalse(qp.getType().getSimpleName() + " property with one true value should not 'be ignored'.", qp.shouldBeIgnored());
 
-	qp = new QueryProperty(klass, "strProp", alias);
+	qp = new QueryProperty(klass, "strProp");
 	qp.setValue("");
 	assertTrue(qp.getType().getSimpleName() + " property with empty String value should 'be ignored'.", qp.shouldBeIgnored());
 
@@ -420,55 +420,43 @@ public class DynamicQueryBuilderTest {
 	QueryProperty qp = null;
 
 	try {
-	    qp = new QueryProperty(klass, "entity100", null);
-	    fail("Empty alias could not be used.");
-	} catch (final IllegalArgumentException e) {
-	}
-
-	try {
-	    qp = new QueryProperty(klass, "entity100", "");
-	    fail("Empty alias could not be used.");
-	} catch (final IllegalArgumentException e) {
-	}
-
-	try {
-	    qp = new QueryProperty(klass, "unsupportedProp1", alias);
+	    qp = new QueryProperty(klass, "unsupportedProp1");
 	    fail("The type of property should not be supported.");
 	} catch (final UnsupportedTypeException e) {
 	}
 
 	try {
-	    qp = new QueryProperty(klass, "unsupportedProp2", alias);
+	    qp = new QueryProperty(klass, "unsupportedProp2");
 	    fail("The type of property should not be supported.");
 	} catch (final UnsupportedTypeException e) {
 	}
 
-	qp = new QueryProperty(klass, "entity1", alias);
+	qp = new QueryProperty(klass, "entity1");
 	assertEquals("Incorrect type.", EntityForQueryPropertyTesting.class, qp.getType());
 	assertFalse("Incorrect 'crit-only' parameter.", qp.isCritOnly());
 	assertFalse("Incorrect 'single' parameter.", qp.isSingle());
 
-	qp = new QueryProperty(klass, "entity2", alias);
+	qp = new QueryProperty(klass, "entity2");
 	assertEquals("Incorrect type.", EntityForQueryPropertyTesting.class, qp.getType());
 	assertTrue("Incorrect 'crit-only' parameter.", qp.isCritOnly());
 	assertFalse("Incorrect 'single' parameter.", qp.isSingle());
 
-	qp = new QueryProperty(klass, "entity3", alias);
+	qp = new QueryProperty(klass, "entity3");
 	assertEquals("Incorrect type.", EntityForQueryPropertyTesting.class, qp.getType());
 	assertTrue("Incorrect 'crit-only' parameter.", qp.isCritOnly());
 	assertTrue("Incorrect 'single' parameter.", qp.isSingle());
 
-	qp = new QueryProperty(klass, "entity3.entities.entity2.entity1", alias);
+	qp = new QueryProperty(klass, "entity3.entities.entity2.entity1");
 	assertEquals("Incorrect type.", EntityForQueryPropertyTesting.class, qp.getType());
 	assertFalse("Incorrect 'crit-only' parameter.", qp.isCritOnly());
 	assertFalse("Incorrect 'single' parameter.", qp.isSingle());
 
-	qp = new QueryProperty(klass, "entity3.entities.entity1.entity2", alias);
+	qp = new QueryProperty(klass, "entity3.entities.entity1.entity2");
 	assertEquals("Incorrect type.", EntityForQueryPropertyTesting.class, qp.getType());
 	assertTrue("Incorrect 'crit-only' parameter.", qp.isCritOnly());
 	assertFalse("Incorrect 'single' parameter.", qp.isSingle());
 
-	qp = new QueryProperty(klass, "entity1.entities.entity2.entity3", alias);
+	qp = new QueryProperty(klass, "entity1.entities.entity2.entity3");
 	assertEquals("Incorrect type.", EntityForQueryPropertyTesting.class, qp.getType());
 	assertTrue("Incorrect 'crit-only' parameter.", qp.isCritOnly());
 	assertTrue("Incorrect 'single' parameter.", qp.isSingle());
@@ -480,45 +468,45 @@ public class DynamicQueryBuilderTest {
 	QueryProperty qp = null;
 
 	String propertyName = null;
-	qp = new QueryProperty(klass, propertyName = "entity1.entity3", alias);
+	qp = new QueryProperty(klass, propertyName = "entity1.entity3");
 	assertFalse("Should not be within collectional hierarchy.", qp.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL());
-	assertEquals("Incorrect condition building name.", alias + "." + propertyName + ".key", qp.getConditionBuildingName());
-	qp = new QueryProperty(klass, propertyName = "entity2.firstProperty", alias);
+	assertEquals("Incorrect condition building name.", DynamicQueryBuilder.ALIAS + "." + propertyName + ".key", qp.getConditionBuildingName());
+	qp = new QueryProperty(klass, propertyName = "entity2.firstProperty");
 	assertFalse("Should not be within collectional hierarchy.", qp.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL());
-	assertEquals("Incorrect condition building name.", alias + "." + propertyName, qp.getConditionBuildingName());
-	qp = new QueryProperty(klass, propertyName = "strProp", alias);
+	assertEquals("Incorrect condition building name.", DynamicQueryBuilder.ALIAS + "." + propertyName, qp.getConditionBuildingName());
+	qp = new QueryProperty(klass, propertyName = "strProp");
 	assertFalse("Should not be within collectional hierarchy.", qp.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL());
-	assertEquals("Incorrect condition building name.", alias + "." + propertyName, qp.getConditionBuildingName());
+	assertEquals("Incorrect condition building name.", DynamicQueryBuilder.ALIAS + "." + propertyName, qp.getConditionBuildingName());
 
 	try {
-	    qp = new QueryProperty(klass, "entity1.entity3.coll", alias);
+	    qp = new QueryProperty(klass, "entity1.entity3.coll");
 	    fail("The collection itself could not be used for quering.");
 	} catch (final Exception e) {
 	}
 	try {
-	    qp = new QueryProperty(klass, "entity1.coll.entity3.entities.entity2", alias);
+	    qp = new QueryProperty(klass, "entity1.coll.entity3.entities.entity2");
 	    fail("Properties in nested collections are not supported at this stage.");
 	} catch (final Exception e) {
 	}
 	try {
-	    qp = new QueryProperty(klass, "entity1.coll.entity3.entities", alias);
+	    qp = new QueryProperty(klass, "entity1.coll.entity3.entities");
 	    fail("Properties in nested collections are not supported at this stage.");
 	} catch (final Exception e) {
 	}
 	try {
-	    qp = new QueryProperty(klass, "entity1.coll.entity3.entities.coll", alias);
+	    qp = new QueryProperty(klass, "entity1.coll.entity3.entities.coll");
 	    fail("Properties in nested collections are not supported at this stage.");
 	} catch (final Exception e) {
 	}
 
-	qp = new QueryProperty(klass, "entity1.entity3.coll.strProp", alias);
+	qp = new QueryProperty(klass, "entity1.entity3.coll.strProp");
 	assertTrue("Should be within collectional hierarchy.", qp.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL());
 	assertEquals("Incorrect condition building name.", "strProp", qp.getConditionBuildingName());
 	assertEquals("Incorrect collection container type.", CollectionParentEntity.class, qp.getCollectionContainerType());
 	assertEquals("Incorrect collection container parent type.", EntityForQueryPropertyTesting.class, qp.getCollectionContainerParentType());
 	assertEquals("Incorrect name of collection parent.", "entity1.entity3", qp.getPropertyNameOfCollectionParent());
 
-	qp = new QueryProperty(klass, "entity2.entity1.entities.entity2.strProp", alias);
+	qp = new QueryProperty(klass, "entity2.entity1.entities.entity2.strProp");
 	assertTrue("Should be within collectional hierarchy.", qp.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL());
 	assertEquals("Incorrect condition building name.", "entity2.strProp", qp.getConditionBuildingName());
 	assertEquals("Incorrect collection container type.", EntityForQueryPropertyTesting.class, qp.getCollectionContainerType());

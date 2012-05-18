@@ -16,6 +16,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
@@ -58,7 +59,7 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
      * @return
      */
     private IWhere0 where(){
-	final ICompleted notOrderedQuery = createQuery();
+	final ICompleted notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties());
 	if(notOrderedQuery instanceof IJoin){
 	    return ((IJoin) notOrderedQuery).where();
 	} else {

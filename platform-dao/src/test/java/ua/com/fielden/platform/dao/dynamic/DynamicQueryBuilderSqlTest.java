@@ -2,7 +2,7 @@ package ua.com.fielden.platform.dao.dynamic;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.buildConditions;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.createQuery;
 import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
 
 import java.util.ArrayList;
@@ -73,7 +73,7 @@ public class DynamicQueryBuilderSqlTest {
     private final Map<String, QueryProperty> queryProperties;
 
     {
-	alias = "alias";
+	alias = "alias_for_main_criteria_type";
 	// enhance domain with ALL / ANY calc properties
 	final IDomainTreeEnhancer dte = new DomainTreeEnhancer(serialiser, new HashSet<Class<?>>() {{ add(MasterEntity.class); }});
 	dte.addCalculatedProperty(MasterEntity.class, "collection", "masterEntityProp", "Any of masterEntityProp", "Desc", CalculatedPropertyAttribute.ANY, "masterEntityProp");
@@ -157,7 +157,7 @@ public class DynamicQueryBuilderSqlTest {
 
 	});
 	for (final String propertyName : propertyNames) {
-	    final QueryProperty qp = new QueryProperty(masterKlass, propertyName, alias);
+	    final QueryProperty qp = new QueryProperty(masterKlass, propertyName);
 	    queryProperties.put(propertyName, qp);
 	    qp.setValue(getEmptyValue(qp.getType(), qp.isSingle()));
 	    qp.setValue2(getEmptyValue(qp.getType(), qp.isSingle()));
@@ -190,7 +190,7 @@ public class DynamicQueryBuilderSqlTest {
     public void test_empty_query_composition_for_empty_query_properties() {
 	final ICompleted expected = //
 	/**/iJoin; //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -204,7 +204,7 @@ public class DynamicQueryBuilderSqlTest {
 
 	final ICompleted expected = //
 	/**/iJoin; //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -219,7 +219,7 @@ public class DynamicQueryBuilderSqlTest {
 
 	final ICompleted expected = //
 	/**/iJoin; //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -305,7 +305,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).ge().iVal(from).and().prop(cbn).lt().iVal(to).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -336,7 +336,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).ge().iVal(null).and().prop(cbn).lt().iVal(to).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -367,7 +367,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).ge().iVal(from).and().prop(cbn).lt().iVal(null).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -387,7 +387,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -408,7 +408,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).gt().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -429,7 +429,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).lt().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -451,7 +451,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).gt().iVal(3).and().prop(cbn).lt().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -482,7 +482,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).eq().val(false).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -501,7 +501,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).eq().val(true).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -532,7 +532,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).like().anyOfValues(DynamicQueryBuilder.prepare((String) property.getValue())).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -551,7 +551,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).like().anyOfValues(DynamicQueryBuilder.prepare((List<String>) property.getValue())).end() //
 	/*  */.end() //s
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -575,7 +575,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNull() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -595,7 +595,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNotNull() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -618,7 +618,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -640,7 +640,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.notBegin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -662,7 +662,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -685,7 +685,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.notBegin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -716,7 +716,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*  */.end().and() //
 	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end() // dateProp
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -733,7 +733,7 @@ public class DynamicQueryBuilderSqlTest {
 
 	final ICompleted expected = //
 	/**/iJoin; //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -766,7 +766,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.end() // ANY block ends
 	/*  */.end() // collection ends
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -805,7 +805,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.end() // ANY block ends
 	/*  */.end() // collection ends
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -857,7 +857,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.end() // ALL block ends
 	/*  */.end() // collection ends
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -918,7 +918,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.end() // ALL block ends
 	/*  */.end() // collection ends
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -1000,7 +1000,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.end() // ALL block ends
 	/*  */.end() // collection ends
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -1165,7 +1165,7 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.end() // ALL block ends
 	/*  */.end() // collection ends
 	/**/.end(); //
-	final ICompleted actual = buildConditions(iJoin, new ArrayList<QueryProperty>(queryProperties.values()), alias);
+	final ICompleted actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
 	assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
 	//assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());

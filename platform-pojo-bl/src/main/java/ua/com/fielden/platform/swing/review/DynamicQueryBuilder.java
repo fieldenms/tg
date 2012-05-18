@@ -75,10 +75,7 @@ public class DynamicQueryBuilder {
 	private final String propertyNameOfCollectionParent, collectionNameInItsParentTypeContext;
 	private final Boolean inNestedCollections;
 
-	public QueryProperty(final Class<?> entityClass, final String propertyName, final String alias) {
-	    if (StringUtils.isEmpty(alias)) {
-		throw new IllegalArgumentException("The alias for dynamic query should not be empty.");
-	    }
+	public QueryProperty(final Class<?> entityClass, final String propertyName) {
 	    this.entityClass = entityClass;
 	    final DynamicPropertyAnalyser analyser = new DynamicPropertyAnalyser(entityClass, propertyName);
 	    this.propertyName = propertyName;
@@ -110,7 +107,7 @@ public class DynamicQueryBuilder {
 		this.collectionNameInItsParentTypeContext = null;
 		this.inNestedCollections = null;
 	    }
-	    this.conditionBuildingName = isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL() ? propertyNameWithinCollectionalHierarchy : (alias + "." + analyser.getCriteriaFullName());
+	    this.conditionBuildingName = isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL() ? propertyNameWithinCollectionalHierarchy : (ALIAS + "." + analyser.getCriteriaFullName());
 
 	    final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
 	    this.critOnly = critAnnotation != null;
@@ -430,7 +427,7 @@ public class DynamicQueryBuilder {
      *
      * @return
      */
-    public static ICompleted buildConditions(final IJoin query, final List<QueryProperty> properties, final String alias) {
+    private static ICompleted buildConditions(final IJoin query, final List<QueryProperty> properties) {
 	final IWhere1 whereAtGroup1 = query.where().begin();
 	ICompoundCondition1 compoundConditionAtGroup1 = null;
 
@@ -454,7 +451,7 @@ public class DynamicQueryBuilder {
 	// enhance main model with collectional hierarchies models
 	for (final CollectionProperties collectionProperties : collectionalProperties.values()) {
 	    if (collectionProperties.hasAggregatedCondition()) {
-		compoundConditionAtGroup1 = buildCollection(getWhereAtGroup1(compoundConditionAtGroup1, whereAtGroup1), collectionProperties, alias);
+		compoundConditionAtGroup1 = buildCollection(getWhereAtGroup1(compoundConditionAtGroup1, whereAtGroup1), collectionProperties, ALIAS);
 	    } else {
 		// TODO
 		logger.warn("There are no aggregated conditions for collection [" + collectionProperties + "] in type " + collectionProperties + ". All FILTERING conditions (if any) will be disregarded.");
@@ -737,5 +734,25 @@ public class DynamicQueryBuilder {
 	public UnsupportedTypeException(final Class<?> type) {
 	    super("The [" + type + "] type is not supported for dynamic criteria.");
 	}
+    }
+
+    /**
+     * Starts query building with appropriate join condition.
+     *
+     * @return
+     */
+    private static <E extends AbstractEntity<?>> IJoin createJoinCondition(final Class<E> managedType) {
+	return select(managedType).as(ALIAS);
+    }
+
+    protected static final String ALIAS = "alias_for_main_criteria_type";
+
+    /**
+     * Creates the query with configured conditions.
+     *
+     * @return
+     */
+    public static <E extends AbstractEntity<?>> ICompleted createQuery(final Class<E> managedType, final List<QueryProperty> queryProperties){
+	return buildConditions(createJoinCondition(managedType), queryProperties);
     }
 }

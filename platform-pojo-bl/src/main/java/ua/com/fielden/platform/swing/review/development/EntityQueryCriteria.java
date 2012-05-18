@@ -3,7 +3,6 @@ package ua.com.fielden.platform.swing.review.development;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -31,8 +30,6 @@ import ua.com.fielden.platform.dynamictree.DynamicEntityTreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItemCloseable;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
@@ -53,8 +50,6 @@ import com.google.inject.Inject;
 public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
 
     private static final long serialVersionUID = 9154466083364529734L;
-
-    private final String ALIAS = "alias_for_main_criteria_type";
 
     @SuppressWarnings("rawtypes")
     private final Map<String, IValueMatcher> valueMatchers = new HashMap<String, IValueMatcher>();
@@ -91,8 +86,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * 
      * @return
      */
-    public Class<?> getManagedType(){
-	return getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(getEntityClass());
+    @SuppressWarnings("unchecked")
+    public Class<T> getManagedType(){
+	return (Class<T>)getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(getEntityClass());
     }
 
     /**
@@ -132,7 +128,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     public final IPage<T> run(final int pageSize){
-	final EntityResultQueryModel<T> notOrderedQuery = createQuery().model();
+	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
 	return dao.firstPage(from(notOrderedQuery).with(createOrderingModel()).with(createFetchModel()).build(), pageSize);
     }
 
@@ -155,8 +151,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     @SuppressWarnings("unchecked")
     protected fetch<T> createFetchModel() {
 	try {
-	    final DynamicEntityTree<T> fetchTree = new DynamicEntityTree<T>(separateTotalProperties().getKey(), (Class<T>)getManagedType());
-	    final fetch<T> main = buildFetchModels((Class<T>)getManagedType(), fetchTree.getRoot());
+	    final DynamicEntityTree<T> fetchTree = new DynamicEntityTree<T>(separateTotalProperties().getKey(), getManagedType());
+	    final fetch<T> main = buildFetchModels(getManagedType(), fetchTree.getRoot());
 	    return main;
 	} catch (final Exception e1) {
 	    throw new RuntimeException(e1);
@@ -204,16 +200,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     protected QueryProperty createNotInitialisedQueryProperty(final String propertyName){
-	return new QueryProperty(getManagedType(), propertyName, ALIAS);
-    }
-
-    /**
-     * Creates the query with configured conditions.
-     *
-     * @return
-     */
-    protected ICompleted createQuery(){
-	return DynamicQueryBuilder.buildConditions(createJoinCondition(), createQueryProperties(), ALIAS);
+	return new QueryProperty(getManagedType(), propertyName);
     }
 
     /**
@@ -231,27 +218,13 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Starts query building with appropriate join condition.
-     *
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private IJoin createJoinCondition() {
-	try {
-	    return select((Class<T>)getManagedType()).as(ALIAS);
-	} catch (final Exception e) {
-	    throw new RuntimeException("Can not create join condition due to: " + e + ".");
-	}
-    }
-
-    /**
      * Converts existing properties model (which has separate properties for from/to, is/isNot and so on)
      * into new properties model (which has single abstraction for one criterion).
      *
      * @param properties
      * @return
      */
-    private List<QueryProperty> createQueryProperties() {
+    public final List<QueryProperty> createQueryProperties() {
 	final List<QueryProperty> queryProperties = new ArrayList<QueryProperty>();
 	for (final String actualProperty : getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(getEntityClass())) {
 	    if (!AbstractDomainTree.isPlaceholder(actualProperty)) {
