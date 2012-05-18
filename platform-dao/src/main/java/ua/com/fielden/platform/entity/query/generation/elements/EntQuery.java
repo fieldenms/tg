@@ -88,10 +88,6 @@ public class EntQuery implements ISingleOperand {
         return masterIndex;
     }
 
-    public Yield getYield(final String yieldName) {
-        return yields.getYields().get(yieldName);
-    }
-
     private boolean onlyOneYieldAndWithoutAlias() {
         return yields.getYields().size() == 1 && yields.getYields().values().iterator().next().getAlias().equals("");
     }

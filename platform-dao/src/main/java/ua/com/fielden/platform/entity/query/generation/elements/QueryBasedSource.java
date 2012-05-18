@@ -52,7 +52,7 @@ public class QueryBasedSource extends AbstractSource {
     }
 
     private Pair<PurePropInfo, PurePropInfo> validateCandidate(final String dotNotatedPropName, final String first, final String rest) {
-	final Yield firstLevelPropYield = model().getYield(first);
+	final Yield firstLevelPropYield = model().getYields().getYields().get(first);
 	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query yields
 	    return null;
 	} else if (firstLevelPropYield.getInfo().getJavaType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
