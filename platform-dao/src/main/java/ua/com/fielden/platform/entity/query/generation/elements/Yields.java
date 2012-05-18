@@ -42,13 +42,23 @@ public class Yields implements IPropertyCollector {
 
     public String sql() {
 	final StringBuffer sb = new StringBuffer();
-	for (final Iterator<Yield> iterator = yields.values().iterator(); iterator.hasNext();) {
+	final List<Yield> yieldsToBeIncludedIntoSql = new ArrayList<Yield>();
+
+	for (final Yield yield : yields.values()) {
+	    if (!yield.shouldBeIgnored() && !yield.getInfo().isCompositeProperty()) {
+		yieldsToBeIncludedIntoSql.add(yield);
+	    }
+	}
+
+	if (yieldsToBeIncludedIntoSql.size() == 0) {
+	    yieldsToBeIncludedIntoSql.add(new Yield(new EntValue(1), null));
+	}
+
+	for (final Iterator<Yield> iterator = yieldsToBeIncludedIntoSql.iterator(); iterator.hasNext();) {
 	    final Yield yieldModel = iterator.next();
-	    if (!yieldModel.getInfo().isCompositeProperty()) {
-		    sb.append(yieldModel.sql());
-		    if (iterator.hasNext()) {
-			sb.append(", ");
-		    }
+	    sb.append(yieldModel.sql());
+	    if (iterator.hasNext()) {
+		sb.append(", ");
 	    }
 	}
 
