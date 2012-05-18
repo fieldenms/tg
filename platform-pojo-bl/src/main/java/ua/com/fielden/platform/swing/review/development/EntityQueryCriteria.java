@@ -77,8 +77,22 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	return cdtme;
     }
 
+    /**
+     * Returns the root for which this criteria was generated.
+     * 
+     * @return
+     */
     public Class<T> getEntityClass(){
 	return dao.getEntityType();
+    }
+
+    /**
+     * Returns the enhanced type for entity class. The entity class is retrieved with {@link #getEntityClass()} method.
+     * 
+     * @return
+     */
+    public Class<?> getManagedType(){
+	return getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(getEntityClass());
     }
 
     /**
@@ -138,11 +152,11 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      *
      * @return
      */
+    @SuppressWarnings("unchecked")
     protected fetch<T> createFetchModel() {
 	try {
-	    final Class<T> managedType = (Class<T>)getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(getEntityClass());
-	    final DynamicEntityTree<T> fetchTree = new DynamicEntityTree<T>(separateTotalProperties().getKey(), managedType);
-	    final fetch<T> main = buildFetchModels(managedType, fetchTree.getRoot());
+	    final DynamicEntityTree<T> fetchTree = new DynamicEntityTree<T>(separateTotalProperties().getKey(), (Class<T>)getManagedType());
+	    final fetch<T> main = buildFetchModels((Class<T>)getManagedType(), fetchTree.getRoot());
 	    return main;
 	} catch (final Exception e1) {
 	    throw new RuntimeException(e1);
@@ -190,7 +204,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     protected QueryProperty createNotInitialisedQueryProperty(final String propertyName){
-	return new QueryProperty(getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(getEntityClass()), propertyName, ALIAS);
+	return new QueryProperty(getManagedType(), propertyName, ALIAS);
     }
 
     /**
@@ -221,9 +235,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      *
      * @return
      */
+    @SuppressWarnings("unchecked")
     private IJoin createJoinCondition() {
 	try {
-	    return select((Class<T>)getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(getEntityClass())).as(ALIAS);
+	    return select((Class<T>)getManagedType()).as(ALIAS);
 	} catch (final Exception e) {
 	    throw new RuntimeException("Can not create join condition due to: " + e + ".");
 	}
@@ -259,10 +274,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final QueryProperty queryProperty = createNotInitialisedQueryProperty(actualProperty);
 
 	queryProperty.setValue(tickManager.getValue(root, actualProperty));
-	if (AbstractDomainTree.isDoubleCriterionOrBoolean(getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(root), actualProperty)) {
+	if (AbstractDomainTree.isDoubleCriterionOrBoolean(getManagedType(), actualProperty)) {
 	    queryProperty.setValue2(tickManager.getValue2(root, actualProperty));
 	}
-	if (AbstractDomainTree.isDoubleCriterion(getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(root), actualProperty)) {
+	if (AbstractDomainTree.isDoubleCriterion(getManagedType(), actualProperty)) {
 	    queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));
 	    queryProperty.setExclusive2(tickManager.getExclusive2(root, actualProperty));
 	}

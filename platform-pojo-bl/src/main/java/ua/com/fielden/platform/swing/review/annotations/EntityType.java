@@ -11,7 +11,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 
 /**
  * Annotation to be used either on collectional properties or classes that require runtime information about their type parameters. Current it is used for annotating DAO/RAO

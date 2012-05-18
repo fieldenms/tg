@@ -254,8 +254,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
      */
     private JPanel createLocatorPanel() {
 
-	final Class<T> entityType = getModel().getCriteria().getEntityClass();
-	final Class<?> managedType = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(entityType);
+	final Class<?> managedType = getModel().getCriteria().getManagedType();
 	final ILocatorDomainTreeManager ldtm = getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer();
 
 	final boolean containDesc = AnnotationReflector.isAnnotationPresent(DescTitle.class, managedType);

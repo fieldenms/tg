@@ -57,7 +57,7 @@ public class RangePropertyEditor implements IPropertyEditor {
 	final Class<?> propertyType = fromEditor.getEntity().getPropertyType(fromEditor.getPropertyName());
 	bool = (Boolean.class == propertyType) || (boolean.class == propertyType);
 	date = (Date.class.isAssignableFrom(propertyType));
-	editor = createEditor(bool, entity.getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(entity.getEntityClass()), criteriaParameters);
+	editor = createEditor(bool, entity.getManagedType(), criteriaParameters);
     }
 
     @SuppressWarnings("unchecked")

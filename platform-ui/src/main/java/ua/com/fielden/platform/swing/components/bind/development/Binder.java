@@ -41,7 +41,7 @@ import ua.com.fielden.platform.swing.components.bind.development.ComponentFactor
 import ua.com.fielden.platform.swing.components.smart.autocompleter.development.AutocompleterTextFieldLayer;
 import ua.com.fielden.platform.swing.components.smart.datepicker.DatePickerLayer;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
-import ua.com.fielden.platform.swing.review.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ConverterFactory;
 import ua.com.fielden.platform.utils.ConverterFactory.Converter;

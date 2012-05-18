@@ -202,7 +202,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
 	final IPropertyEditor rightPropertyEditor = (this.propertyEditor instanceof RangePropertyEditor) ? ((RangePropertyEditor) this.propertyEditor).getToEditor() : null;
 	propertyName = CriteriaReflector.getCriteriaProperty(eqc.getType(), leftPropertyEditor.getPropertyName());
 	rootType = eqc.getEntityClass();
-	managedType = eqc.getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedType(rootType);
+	managedType = eqc.getManagedType();
 	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determineClass(managedType, propertyName, true, true);
 	leftValidationLayer = (BoundedValidationLayer<?>) leftPropertyEditor.getEditor();
 	rightValidationLayer = rightPropertyEditor != null ? (BoundedValidationLayer<?>) rightPropertyEditor.getEditor() : null;
