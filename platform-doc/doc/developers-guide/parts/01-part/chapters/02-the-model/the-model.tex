@@ -1,16 +1,206 @@
 \chapter{Business Domain Modeling}\label{ch01:02}
 
-\section{Abstract Entity}
+\section{Entity Associations}
 
-\section{Declarative programming}
+  This section discusses how different relationships between business entities are modelled using the platform.
 
-\section{Validation and Revalidation}
+\subsection{Kinds of Entity Relationships}
 
-\section{Entity Definers}
+  The platform supports all established in the industry entity relationships, and provides its own way to model them. Here is a list of three kinds of relationships that are supported by the platform.
+  \begin{itemize}
+   \item 
+  \end{itemize}
 
-\section{Creating Business Rules}
+Many-to-One association.
+One-to-One association.
+One-to-Many association.
+One might ask what happened to the Many-to-Many association. The answer is simple -- it is easily (and somewhat better) modelled by using One-to-Many associations as will be described later in this section.
 
-\section{User Authorisation and Data Access}
+We shall refer to these associations as path associations, which means that there is a directed path in a corresponding directed graph of entity types that allows tracing of entity relationships. There is another kind of relationship -- functional or algorithmic -- that identifies the relationship between entities as the result of some  calculations instead of following an association path. This section is not concerned with functional/algorithmic associations.
 
-\section{Model Configuration with IoC}
+Let's discuss each of the association kinds in details.
+
+\subsection{Many-to-One}
+
+  Many-to-One association states that one or more instance of some entity type may reference the same instance of some other entity type (usually other than that referencing it). This is one of the simplest associations that occurs even in the most trivial cases.
+
+  Both the referring (left side, the Many) and the referred (right side, the One) entities are independent from each other from their life-cycle point of view.
+
+  For example, there could be an entity type Vehicle and an entity type Model. The Vehicle type contains property model of type Model (this and similar cases we should denote as [property name]: [Type], such as model: Model in this case). If property model: Model is not required then both Vehicle and Model instances may exists and be used in the system (including deletion) independently.
+
+  The notion of referencing is very consistent at both Java and RDBMS levels, where in Java referred instance means a memory reference, and at the database level it means a foreign key for a referring entity table that references an ID column (primary key) of the table for a referred entity.
+
+  \subsubsection{Context Free}
+
+  We could also think of types used in such relationship as context free or context independent. The notion of context free is important when enhancing types with calculated properties, which can be done by either directly manipulating the type source or by specifying them as part of user-driven support for calculated properties as part of an end application. Specifically, it means that a formula or a model for a calculated properties should not contain any property that are not path-reachable from the type.
+
+  In our example, this means that no calculated property added to type Model should reference any of the properties from type Vehicle.
+
+\subsection{One-to-One}
+
+  This association states that the right One entity has the left One entity as an integral part of itself. We should refer to this association as master-detail (singular), where the left One is the master, and the right One -- the detail.
+
+  The master entity drives the life cycle of the details entity. Thus, if a master entity is deleted then its detail entity is also deleted. The detail entity can be dereferenced from its master, which basically means it gets deleted, while the master remains.
+
+  For example, consider types Vehicle and VehicleTechnicalDetails. Type VehicleTechnicalDetails describes technical details of a vehicle, where its properties might as well be part of the Vehicle type itself. There is no reason for an instance of VehicleTechnicalDetails to exist without a corresponding master instance of type Vehicle.
+
+  From the platform perspective, detail entity types are defined as types where key has the type of master entity. In our example, the definition of type VehicleTechnicalDetails (refer code listing below) declares key type as Vehicle.
+
+\lstset{language=Java,
+	  escapechar=\%,
+	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
+  \begin{code}{One-to-One association.}{\label{lst:One2One}}{codebgcolor}
+    \begin{lstlisting}
+
+@KeyType(Vehicle.class)
+public class VehicleTechnicalDetails extends AbstractEntity<Vehicle> {
+    ...
+}
+    \end{lstlisting}
+  \end{code}
+
+  At the RDBMS level, type VehicleTechnicalDetails is represented by a separate table with an ID column (primary key), which at the same time is a foreign key, referencing a corresponding primary key of the Vehicle type table.
+
+  An important aspect of the master-detail relationships is that the detail type should serve as details for only one designated master type. This means that, for example, VehicleTechnicalDetails should not be used as any other relationship, but only the Vehicle-to-VehicleTechnicalDetails.
+
+  If some entity type A has a property of type D with a key specified as type B (e.i. B and D are in One-to-One association) then type A is considered invalid.
+
+  \subsubsection{Context Dependent}
+
+  The detail entity always has a context, and can be thought of as context dependent, where the context is defined by its enclosing entity type. Following our example, type Vehicle is a context for type VehicleTechnicalDetails. This, for example, means that calculated properties (discussed later), added manually or programmatically, to the detail type may contain properties from its master. The master properties used as part of the detail calculated properties should be prefixed with $\leftarrow.$ (left arrow and a dot) indicating that property path resolution should start from the master type.
+
+\subsection{One-to-Many}
+
+  This kind of association can be thought of as a master-details (plural) relationship between master entities of type One and details entities of type Many. The Many part, which corresponds to the details aspect of the relationship, implies that the same master instance of type One may reference more than one instance of type Many.
+
+  Here is a more formal definition for this kind of association.
+
+  Two types are in the One-to-Many association iff both of the following conditions hold:
+
+  Type Many has a property of type One.
+  Type One has a property, which is:
+    2.1 Collection (e.g. Set or SortedSet?) and parameterised with type Many; its IsProperty annotation's argument linkProperty may or may not be specified.
+    2.2 Non-collectional property of type Many (special case, see below); its IsProperty annotation's argument linkProperty may or may not be specified.
+
+  In order for One-to-Many association to be auto-recognised, the system uses the above definition and provides a special algorithm for determining a value of the linkProperty. Specifically:
+
+  If the linkProperty value is specified at the property definition then this value is used.
+  If the linkProperty is not specified the its value needs to be determined dynamically or the kind of association is changed:
+  Collectional property: Algorithm searched for a linkProperty value by analysing members of the composite key of type Many, and if no or more than one member of that type is found then a missing linkProperty exception is thrown; otherwise, the found key member is considered to be the linkProperty.
+  Non-collectional property: if One-to-Many association is intended then linkProperty must be specified; otherwise, association is considered to be a Many-to-One kind without any master-details dependency.
+  In future the platform's type processor should produce a compilation error with relevant messages indicating invalid One-to-Many associations.
+
+  The Many type may have several composite key members of some entity types. Those "key" entity types that do not satisfy condition 2 of the above definition are not considered to be in One-to-Many association with the Many type. These are simply the aggregational parts of the Many type, which basically represent the Many-to-One associations. This means that there is a path from the Many type to properties of entity types used as aggregatinal parts, but not the other way around, and all of the involved types can be considered independent.
+
+  There must be at least one key member that defines a One-to-Many association with its type as per the above definition.
+
+  For example, consider an association between type Vehicle (the One) and type FuelUsage (the Many). In order to provide more substance to this example the following code listings provide essential aspects of these types' definitions.
+
+  \begin{code}{One-to-Many association (collectional).}{\label{lst:One2Many}}{codebgcolor}
+    \begin{lstlisting}
+
+@KeyType(DynamicEntityKey.class)
+@MapEntityTo
+public class FuelUsage extends AbstractEntity<DynamicEntityKey> {
+
+    @IsProperty
+    @CompositeKeyMember(1)
+    @MapTo
+    private Vehicle vehicle;
+    
+    @IsProperty
+    @CompositeKeyMember(2)
+    @MapTo
+    private Date purchaseDate;
+    
+    @IsProperty
+    @CompositeKeyMember(3)
+    @MapTo
+    private FuelType fuelType;
+    ...
+}
+@KeyType(String.class)
+@MapEntityTo
+public class Vehicle extends AbstractEntity<String> {
+    ...
+    @IsProperty(value = FuelUsage.class, linkProperty = "vehicle")
+    private Set<FuelUsage> fuelUsages = new HashSet<FuelUsage>();   
+    ...
+} 
+    \end{lstlisting}
+  \end{code}
+
+  As can be observed from FuelUsage definition, it has a composite key with three members: vehicle: Vehicle, purchaseDate: Date and fuelType: FuelType. Key members 1 and 3 are of entity types Vehicle and FuelType. The definition of type Vehicle has a collectional property fuelUsages: Set<FuelUsage> with its IsProperty annotation's argument linkProperty = "vehicle". This "vehicle" value corresponds to the name of composite key member 1 in type FuelUsage, which makes a One-to-Many association as per the definition.
+
+  At the same time, type FuelType does not have any property that would satisfy condition 2 of the definition, which makes composite key 3 an aggregational part of FuelUsage defining a Many-to-One association between FuelUsage (the Many) and FuelType (the One) types.
+
+  The life cycle of types used in this association kind is similar to the life cycle of One-to-One association. Instances of type Many cannot exists without an instance of type One. If an instance of type One is deleted then all related instances of type Many should also be deleted.
+
+  \subsubsection{Context Dependent}
+
+  As part of the One-to-Many association, the Many type (i.e. details) can always be viewed as having its context determined by type One (i.e. master).
+
+  Following our example, type Vehicle is a context for type FuelUsage. This, for example, means that calculated properties, added manually or programmatically, to type FuelUsage may contain properties from type Vehicle.
+
+  The master properties used as part of details calculated properties should be prefixed with $\leftarrow.$ (left arrow and a dot) indicating that property path resolution should start from the master type.
+
+\subsection{One-to-Many: Special Case}
+
+  Sometimes there is a need to model an association between entities that has all properties of the One-to-Many association, but the Many side would always contain no more than one entity instance. From the modelling perspective it is best if such association in represented at the One type as property of type Many instead of a collectional property of type Many (that would at most contain one element).
+
+  For example, as before entity Vehicle has One-to-Many association with type FuelUsage, but there is a need to quickly access the latest FuelUsage, and even use it conveniently for data filtering etc. This requirement can be implemented by adding property lastFuelUsage to entity Vehicle as demonstrated in the listing below.
+
+  \begin{code}{One-to-Many association (special case).}{\label{lst:One2ManySpecialCase}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(String.class)
+@MapEntityTo
+public class Vehicle extends AbstractEntity<String> {
+    ...
+    @IsProperty(value = FuelUsage.class, linkProperty = "vehicle") 
+    private Set<FuelUsage> fuelUsages = new HashSet<FuelUsage>();   
+    ...
+    /* Special case of One-to-Many */
+    @IsProperty(linkProperty = "vehicle")
+    @MapTo
+    private FuelUsage lastFuelUsage;   
+    ...
+} 
+    \end{lstlisting}
+  \end{code}
+
+  Here property lastFuelUsage: FuelUsage has IsProperty annotation provided with argument linkProperty = "vehicle", which links together type Vehicle and FuelUsage with special semantics of the One-to-Many association.
+
+  IMPORTANT: Non-collectional property, which represents a special case of One-to-Many, must have a composite key where the enclosing type is one of the members, which is used (either explicitly or implicitly) as a linkProperty. Otherwise, such association is considered invalid.
+
+  \subsubsection{Context Dependent}
+
+  From the concept of the context, the special case is no different to an ordinary One-to-Many case.
+
+\subsection{Many-to-Many}
+
+  The One-to-Many association kind can easily be used for modelling Many-to-Many associations, which can be thought of as master-master relationship with some additional description of the actual association.
+
+  The Many type (as per One-to-Many semantics) may contain several members of its composite key that form One-to-Many associations with several master entity types. This basically means that type Many may participate in several One-to-Many associations, which together should be viewed as one Many-to-Many association. The Many type from the One-to-Many associations in this case serves as a descriptor of the Many-to-Many association between the involved master types. In order to resolve the nomenclature collision due to the use of term Many, let's call it a Link type when used for defining Many-to-Many association. The Many should refer to either left- or right-side master entities associated by the Link type.
+
+  It is interesting to note that the same Link type may describe a Many-to-Many association between entities of the same type. For example, there could be a Link type describing association between replacing and replacedBy vehicles, that both have type Vehicle.
+
+  As for One-to-Many association, argument linkedProperty of the IsProperty annotation used for describing collectional properties in master types in the Many-to-Many association plays a critical role for identifying composite key members in the Link type corresponding to the left- and right- sides of the association.
+
+  \subsubsection{Context Dependent}
+
+  Due to the fact that Many-to-Many is really just two or more One-to-Many associations, a corresponding Link type can always be viewed as having its context determined by type either of the Many types participating in the association.
+
+  The principle difference is that unlike One-to-Many association, there are two or more One types that define Many-to-Many association. Therefore, it is required that a name of the appropriate composite key member of the Link type is specified as part of every calculated property it order to clarify its context.
+
+% \section{Declarative programming}
+% 
+% \section{Validation and Revalidation}
+% 
+% \section{Entity Definers}
+% 
+% \section{Creating Business Rules}
+% 
+% \section{User Authorisation and Data Access}
+% 
+% \section{Model Configuration with IoC}
   

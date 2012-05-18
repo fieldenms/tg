@@ -3,12 +3,30 @@
   There two main approaches to describe software architecture -- top-down and bottom-up\footnote{\url{http://en.wikipedia.org/wiki/Top-down_and_bottom-up_design}}.
   In this and the following parts of the book we should utilise the bottom-up approach by discussing the parts of the pazzle, which will be put together in order to construct a final picture of the platform in a form a relatively complex application.
 
-  A high-level platform overview is provided as a separate document, which can be downloaded from \url{http://www.fielden.com.ua/trac/pnl-tg/attachment/wiki/WikiStart/architecture-overview.pdf}.
+  A high-level platform overview is provided as a separate document, which can be downloaded \href{http://www.fielden.com.ua/trac/pnl-tg/attachment/wiki/WikiStart/architecture-overview.pdf}{separately}.
 
 \section{Domain Driven Design}
- 
+
+  At the heart of the platform's domain orientation is the concept of an \emph{entity type} -- a way to decribe that a business domain entity is.
+  In Object-Oriented languages such as Java types are most frequently\footnote{Pribimitives in Java are represented as instances of int, double, float etc., which are also types} represented as classes.
+  For exemple, class \texttt{java.lang.String} is a type representing a sequence of characters.
+  
+  Each type has its definition, which can be thought of as meta-data.
+  For example, type \texttt{java.lang.String} has its definition, which allows specification of the actual sequence of characters with their encoding information (e.g. UTF-8).
+  Instances of some type represent the actual data (i.e. not meta-data) that has the strucutre defined by their type.
+  
+  In affect, types define what data can be described.
+  The reacher meta-data is the more pricise data definition is possible to obtain.
+  Types can also be thought of as sets in a mathematical sense\footnote{Types are also methematical concepts studies by Type Theory, which is less wide spread than Set Theory.}.
+  From this point of view, we can say that any type is a set containing all possible instances of a specific data structure.
+
+  Type instances can be considered immutalbe and there are functions that can map instances of some types (or tuple of instances of some, possible different, types) into instances of the same or different types (tuple of types).
+  Consider the function for concatenating two strings, which we often simply write as ``Hello '' $+$ ``World'', obraining a new instanse of the string type ``Hello World''.
+  Its formal defition is $+:String\times String \rightarrow String$.
+
 \subsection{The Essentials}
 
+  Every \emph{entity type} is implemented in as a Java class that has \emph{AbstractEntity} class as is ancestor.
   \emph{AbstractEntity} is a class that serves as a common ancestor for all entity types. 
   All entity types have a surrogate key \emph{id}, business key \emph{key} and description \emph{desc}. 
   \emph{AbstractEntity} provides implementation for methods \emph{hashCode()}, \emph{equals(Object)}, \emph{toString()} and \emph{compareTo(AbstractEntity)}, which is based on the use of the business key and thus should be suitable in all cases.
@@ -24,7 +42,7 @@
  \lstset{language=Java,
 	  escapechar=\%,
 	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
-  \begin{code}{A fragment of entity type Person.}{\label{lst:Person}}{codebgcolor}
+  \begin{code}{Composite key.}{\label{lst:CompositeKey}}{codebgcolor}
     \begin{lstlisting}
 @DescTitle("Comment")
 @KeyType(DynamicEntityKey.class)
@@ -90,7 +108,7 @@ public class VehicleFuelCard extends AbstractEntity<DynamicEntityKey> {
   Thus, property \emph{WorkOrder.actualStart} has two dependent properties that should be revalidated when it is changed -- \emph{actualFinish} and \emph{odometerReading}.
   Listing \ref{sss} presents the described example in code.
 
-  \begin{code}{A fragment of entity type Person.}{\label{lst:Person}}{codebgcolor}
+  \begin{code}{Dependent properties.}{\label{lst:DependentProperties}}{codebgcolor}
     \begin{lstlisting}
 
     @IsProperty
