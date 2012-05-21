@@ -334,6 +334,31 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     }
 
     @Test
+    public void test_that_non_DoubleEditor_and_non_Boolean_properties_Value2_action_for_first_tick_cause_exceptions() {
+	final String message = "Non Double Editor (and non boolean) property should cause IllegalArgument exception.";
+	allLevels(new IAction() {
+	    public void action(final String name) {
+		// get/set for value2 by default
+		try {
+		    dtm().getRepresentation().getFirstTick().getValue2ByDefault(MasterEntity.class, name);
+		    fail(message);
+		} catch (final IllegalArgumentException e) {
+		}
+		try {
+		    dtm().getRepresentation().getFirstTick().get2EmptyValueFor(MasterEntity.class, name);
+		    fail(message);
+		} catch (final IllegalArgumentException e) {
+		}
+		try {
+		    dtm().getRepresentation().getFirstTick().setValue2ByDefault(MasterEntity.class, name, "a value");
+		    fail(message);
+		} catch (final IllegalArgumentException e) {
+		}
+	    }
+	}, "mutablyCheckedProp", "stringProp", "entityProp");
+    }
+
+    @Test
     public void test_that_values_1_and_2_by_default_for_first_tick_are_desired_and_can_be_altered() {
 	checkOrSetMethodValues(null, "critOnlySingleAEProp", dtm().getRepresentation().getFirstTick(), "getValueByDefault");
 	checkOrSetMethodValues(new ArrayList<String>(), "critOnlyAEProp", dtm().getRepresentation().getFirstTick(), "getValueByDefault");

@@ -365,7 +365,8 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	/**
 	 * Returns value that indicates whether <i>secondary</i> value of a criteria property is empty or not. <br><br>
 	 *
-	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+	 * It is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an {@link IllegalArgumentException}.
 	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
@@ -376,7 +377,8 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	/**
 	 * Gets a <i>secondary</i> value of a criteria property. <br><br>
 	 *
-	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+	 * It is is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an {@link IllegalArgumentException}.
 	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
@@ -387,7 +389,8 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	/**
 	 * Sets a <i>secondary</i> value of a criteria property. <br><br>
 	 *
-	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+	 * It is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an {@link IllegalArgumentException}.
 	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
@@ -399,8 +402,8 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	/**
 	 * Gets an <b>exclusive</b> flag for <i>main</i> value of a criteria property. <br><br>
 	 *
-	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-	 * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+	 * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an {@link IllegalArgumentException}.
 	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
@@ -411,8 +414,8 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	/**
 	 * Sets an <b>exclusive</b> flag for <i>main</i> value of a criteria property. <br><br>
 	 *
-	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-	 * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+	 * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an {@link IllegalArgumentException}.
 	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
@@ -424,8 +427,8 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	/**
 	 * Gets an <b>exclusive</b> flag for <i>secondary</i> value of a criteria property. <br><br>
 	 *
-	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-	 * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+	 * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an {@link IllegalArgumentException}.
 	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.
@@ -436,8 +439,8 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	/**
 	 * Sets an <b>exclusive</b> flag for <i>secondary</i> value of a criteria property. <br><br>
 	 *
-	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-	 * Throws {@link IllegalArgumentException} when the property is not of range type (Money, Number, Date etc.).
+	 * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
+	 * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an {@link IllegalArgumentException}.
 	 *
 	 * @param root -- a root type that contains property.
 	 * @param property -- a dot-notation expression that defines a property.

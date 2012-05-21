@@ -281,7 +281,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     @Test
-    public void test_that_Exclusive_actions_cause_exceptions_for_NON_RANGE_types_of_properties() {
+    public void test_that_Exclusive_actions_cause_exceptions_for_non_DoubleEditor_types_of_properties() {
 	final String message = "Non-RANGE property should cause IllegalArgument exception for Exclusive-related logic.";
 	allLevels(new IAction() {
 	    public void action(final String name) {
@@ -308,7 +308,32 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 		} catch (final IllegalArgumentException e) {
 		}
 	    }
-	}, "booleanProp", "stringProp", "simpleEntityProp");
+	}, "booleanProp", "mutablyCheckedProp", "stringProp", "entityProp", "simpleEntityProp");
+    }
+
+    @Test
+    public void test_that_non_DoubleEditor_and_non_Boolean_properties_Value2_action_for_first_tick_cause_exceptions() {
+	final String message = "Non Double Editor (and non boolean) property should cause IllegalArgument exception.";
+	allLevels(new IAction() {
+	    public void action(final String name) {
+		// get/set for value2 by default
+		try {
+		    dtm().getFirstTick().getValue2(MasterEntity.class, name);
+		    fail(message);
+		} catch (final IllegalArgumentException e) {
+		}
+		try {
+		    dtm().getFirstTick().is2ValueEmpty(MasterEntity.class, name);
+		    fail(message);
+		} catch (final IllegalArgumentException e) {
+		}
+		try {
+		    dtm().getFirstTick().setValue2(MasterEntity.class, name, "a value");
+		    fail(message);
+		} catch (final IllegalArgumentException e) {
+		}
+	    }
+	}, "mutablyCheckedProp", "stringProp", "entityProp", "simpleEntityProp");
     }
 
     @Test
