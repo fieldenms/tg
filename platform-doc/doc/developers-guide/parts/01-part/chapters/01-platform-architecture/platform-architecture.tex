@@ -7,99 +7,169 @@
 
 \section{Domain Driven Design}
 
-  At the heart of the platform's domain orientation is the concept of an \emph{entity type} -- a way to decribe that a business domain entity is.
-  In Object-Oriented languages such as Java types are most frequently\footnote{Pribimitives in Java are represented as instances of int, double, float etc., which are also types} represented as classes.
+  At the heart of the platform's domain orientation is the concept of an \emph{entity type} -- a way to decribe what a business domain entity is.
+  In Object-Oriented languages such as Java types are most frequently\footnote{Pribimitives in Java are represented as instances of int, double, float etc., which are not classes, but are types.} represented as classes.
   For exemple, class \texttt{java.lang.String} is a type representing a sequence of characters.
   
   Each type has its definition, which can be thought of as meta-data.
   For example, type \texttt{java.lang.String} has its definition, which allows specification of the actual sequence of characters with their encoding information (e.g. UTF-8).
   Instances of some type represent the actual data (i.e. not meta-data) that has the strucutre defined by their type.
   
-  In affect, types define what data can be described.
-  The reacher meta-data is the more pricise data definition is possible to obtain.
-  Types can also be thought of as sets in a mathematical sense\footnote{Types are also methematical concepts studies by Type Theory, which is less wide spread than Set Theory.}.
-  From this point of view, we can say that any type is a set containing all possible instances of a specific data structure.
+  In affect, types define what and how data can be described.
+  The richer meta-data is the more precise data definition is possible to obtain, which provides a way to capture business domain specialisation more accuretely.
+  From the mathematical perspective, types can be thought of as sets\footnote{Types are also methematical concepts studies by Type Theory, which is less wide spread than Set Theory.}.
+  It can be said that any type is a set containing all possible instances of a specific data structure.
 
-  Type instances can be considered immutalbe and there are functions that can map instances of some types (or tuple of instances of some, possible different, types) into instances of the same or different types (tuple of types).
-  Consider the function for concatenating two strings, which we often simply write as ``Hello '' $+$ ``World'', obraining a new instanse of the string type ``Hello World''.
-  Its formal defition is $+:String\times String \rightarrow String$.
+  Type instances can be considered immutalbe and there are various functions that can map instances of some types (or tuple of instances of some, possible different, types) into instances of the same or different types (tuple of types).
+  Consider the function for concatenating two strings, which we often simply write as \texttt{``Hello '' + ``World''}\footnote{This is so called \emph{operator notation} of otherwise normal function call.}, obtaining a new instanse of the string type ``Hello World'', while the orignal input strings remain unchanged.
+  Its formal defition is $+:String\times String \rightarrow String$, where any pair of strings gets mapped (or transformed) into a single string by means of putting together two sequences of characters representing the two input strings.
+  A more common way to write function calls in programming languges is \texttt{function\_name (list\_of\_arguments)}.
+  This way, a call to the string concatenation function could be writen as \texttt{+(``Hello '', ``World'')}, where \texttt{+} is a function name.
 
-\subsection{The Essentials}
+  From a business domain perspective, functions represent business actions that transform instances of business domain entity types into instances of the same or different types.
+  Therefore, the process of \emph{domain driven design} consists of two distinct, but at the same time intertwined steps of describing business entities with meta-data and indentifying business processes that transform business entities by applying one or more business actions, which are implemented as functions.
+  
+  The platform's role is to streamline this process by reducing low-level technical aspects allowing developers to concentrate on business tasks at hand by providing and reusing rich meta-data capabilities to automate otherwise routine and tedious programming tasks.
 
-  Every \emph{entity type} is implemented in as a Java class that has \emph{AbstractEntity} class as is ancestor.
-  \emph{AbstractEntity} is a class that serves as a common ancestor for all entity types. 
-  All entity types have a surrogate key \emph{id}, business key \emph{key} and description \emph{desc}. 
-  \emph{AbstractEntity} provides implementation for methods \emph{hashCode()}, \emph{equals(Object)}, \emph{toString()} and \emph{compareTo(AbstractEntity)}, which is based on the use of the business key and thus should be suitable in all cases.
-  The only exception could be method \emph{toString()}, which developer may want to customise.
+\subsection{The Meta-Data}
 
-
-  \emph{AbstractEntity} provides a full support for two kinds of business keys
-  \begin{description}
-    \item[Simple Key] -- String, Integer, another entity type.
-    \item[Composite Key] -- can include two or more properties as key members with no restrictions on their type; class \emph{DynamicEntityKey} models the composite key logic.
-   \end{description}
-
+  Every business domain \emph{entity type} in TG is implemented as a Java class that extends \emph{AbstractEntity} -- a specially designed class that serves as a common ancestor for all entity types.
+  Listing~\ref{lst:AbstractEntity} provides a fragment of \emph{AbstractEntity} class definition.
+  It has one generic parameter \texttt{K extends Comparable}, which captures the type of entity key (see below), and fulfils the \emph{Comparable} contract that makes all entities of the same type comparable and sortable.
+  
  \lstset{language=Java,
 	  escapechar=\%,
 	  numbers=left, numberstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
-  \begin{code}{Composite key.}{\label{lst:CompositeKey}}{codebgcolor}
+  \begin{code}{AbstractEntity definition.}{\label{lst:AbstractEntity}}{codebgcolor}
     \begin{lstlisting}
-@DescTitle("Comment")
-@KeyType(DynamicEntityKey.class)
-@MapTo
-public class VehicleFuelCard extends AbstractEntity<DynamicEntityKey> {
-    @IsProperty
-    @Title("Vehicle")
-    @CompositeKeyMember(1)
-    @MapTo("ID_EQDET")
-    private Vehicle vehicle;
 
-    @IsProperty
-    @UpperCase
-    @Title("Card Number")
-    @CompositeKeyMember(2)
-    @MapTo("CARDNUMBER")
-    private String cardNumber;
-
-    @IsProperty
-    @Title(value = "Exp. Date", desc = "Expiry Date")
-    @CompositeKeyMember(3)
-    @MapTo("EXPIRY_DATE")
-    private Date expiryDate;
-
-    @IsProperty
-    @Required
-    @Title(value = "Date Issued", desc = "Date Issued")
-    @MapTo
-    private Date issuedDate;
-
+public abstract class AbstractEntity<K extends Comparable> 
+                implements Comparable<AbstractEntity<K>> {
    ....................................
 }
     \end{lstlisting}
   \end{code}
 
 
-\subsubsection{Properties}
+  Any descendent from \emph{AbstractEntity} type provides compile (design) time and runtime (execution time) meta-data required for modelling business domain entities:
+  \begin{description}
+   \item[\textbf{Compile time meta-data}] -- data that forms part of entity type desctiption, which is present in the entity type definition at the class srouce level.
+      \begin{itemize}
+	\item Business Key definitions.
+	\item Property definitions.
+	\item Pre- and post- conditions for property value change.
+      \end{itemize}
 
-  All fields in the derived from \emph{AbstractEntity} types annotated with \emph{IsProperty} annotation are automatically recognized as entity properties. The current way of instantiating entities is by using \emph{EnttyFactory}, which relies on application configuration modules (based on Guice) for resolving dependencies used as part of entity instantiation logic.
+   \item[\textbf{Runtime meta-data}] -- data that gets associated with an instance of an entity type during program execution.
+      \begin{itemize}
+	\item Entity identity and meta-state (version, editable, persisted, dirty etc.).
+	\item Property validation results.
+	\item Property value change informaton.
+	\item Property state (editable, visible etc.).	
+      \end{itemize}
+   \end{description}
 
-  One of the essential aspects of entity properties is their meta-state -- each property is associated with an instance of \emph{MetaProperty} type, which is created automatically when an entity is instantiated using \emph{EntityFactory}. 
-  \emph{MetaProperty} provides rich support for various property life cycle functions such as tracking property changes, validation results, title, desctiption etc.
+  Let's discuss entity meta-data in greater detail.
 
-  \emph{MetaProperty} instances are created by \emph{IMetaPropertyFactory} implementation bound in the application configuration modules that is used by \emph{EntityFactory}.
-
-  \emph{MetaProperty} instantiation ensures association of the created entity instance with property \emph{Before} and \emph{After} change event handlers, which are defined as annotations on property fields. 
-  The platforms provides a set of predefined \emph{Before} event handles, which serve as validators, which are discussed further in the book. 
+\subsubsection{Compile Time Meta-Data}
   
-  Each property mutator such as setter must be annotated with \emph{Observable} annotation. 
-  Early runtime exception is thrown if the system identifies existence of properties with their mutators without this annotation.
+  \paragraph*{Business Key Definitions.}
+  Each entity has a notion of a \emph{business key} that consists of one or several entity properties\footnote{The concept of \emph{property} is will be defined further in text. Therefore, at this stage it should be thought of as a field with some additional informaton about it.}, which together uniquely idenfity an instance of a given entity type.
+  For example, instances of type \emph{Person}, which was introdcued in previous chapter, are uniquely identified by their \emph{person code}.
+  Entity type \emph{Person} has its key defined to be of type \texttt{java.lang.String}, which indicates that it consists of one property of the specified type -- property \emph{key} in this case.
+  \emph{AbstractEntity} provides full support for two kinds of business keys:
+  \begin{description}
+    \item[\textbf{Simple Key}] -- is represented by a single property \emph{key} of type String, Integer or any entity type.
+    \item[\textbf{Composite Key}] -- can include two or more properties as \emph{key members} with no restrictions on their type. Class \emph{DynamicEntityKey} models the composite key.
+   \end{description}
 
-  In order for \emph{Before} and \emph{After} event handlers to be executed upon an attempt to set a property value (i.e. \emph{Before}) and after the value was set {i.e. \emph{After}}, setters should be intercepted. 
-  Interceptor \emph{ObservableMutatorInterceptor} handles property value changes including triggering execution of event handlers. 
-  Its implementation uses handlers associated with a property during meta-property instantiation. 
-  This is another reason to instantiate entities with \emph{EntityFactory}, which ensures appropriate interceptors are using Guice interceptor provided with a module configured to bind this intercepter.
+  In order to provide more substance to this discussion, let's extend our demo applicaton, which was generated in part~\ref{part-I}, with new entity types.
+  For this, is proposed to use the Rail industry domain as an application business domain that needs to be modelled.
+  
+  The first domain entity to be added is \emph{Wagon}.
+  It is uniquely identified by its number that may contain alphanumeric characters, and therefore its key can be naturally modelled as a simple key of type \emph{String}.
+  Listing \ref{lst:WagonSimpleKey} contains a code that provides a basic definitin for type \emph{Wagon}.
+  Two things are important here.
+  First, class \emph{Wagon} extends class \emph{AbstractEntity}, which is parameterised with type \emph{String} that is used as a key type.
+  Second, annotation \emph{KeyType} is used to annotate class \emph{Wagon} and has one argument \emph{String.class} that matches the key type.
+  This is required to overcome Java's reification limitation, which does not preserve generic parameterisation information at runtime\footnote{This might change in future versions of Java, which would naturally remove the need to use annotation \emph{KeyType}.}.
 
-\subsubsection{Dependent Properties}
+  \begin{code}{Simple key of type String for entity Wagon.}{\label{lst:WagonSimpleKey}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(String.class)
+public class Wagon extends AbstractEntity<String> {
+   ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+  In order to demonstrates entity with a composite key, let's consider that our application already has entity types \emph{WagonClass} and \emph{BogieClass} that have their keys defined exactly as for entity type \emph{Wagon}.
+  These enities are responsible for modelling wagon and bogie classification.
+  Wagons have bogies as part of their physical structure, but not all bogies are compatible with any wagon.
+  The system should implement a business rule that would govern what bogies can be placed onto a wagon. 
+  One possible way to implement such a rule is to provide an entity that would model the relationship between wagon and bogie classifiction information, which requires the use of a composite key.
+  
+  Listing~\ref{lst:WagonBogieClassificationCompatibilityCompositeKey} contains a code that provides a basic definitin for such compatibility entity type.
+  The principle difference to previously discussed entity types, is the use of a composite key implemented by type \emph{DynamicEntityKey}, which is specified as entity's key type.
+  This composite key consists of two members -- properties designated with annotation \emph{CompositeKeyMember}, which takes one argument responsible for identifying member's sequential order in the key.
+  Annotation \emph{IsProperty} placed above each key memeber designates that each member a property (see section below).
+
+
+  \begin{code}{Composite key of an entity modelling wagon/bogie classifiction compatibility.}{\label{lst:WagonBogieClassificationCompatibilityCompositeKey}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(DynamicEntityKey.class)
+public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKey> {
+
+    @IsProperty
+    @CompositeKeyMember(1)
+    private WagonClass wagonClass;
+
+    @IsProperty
+    @CompositeKeyMember(2)
+    private BogieClass bogieClass;
+
+    ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+  Business entity key is used in \emph{AbstractEntity} for implementing methods \emph{hashCode()}, \emph{equals(Object)}, \emph{toString()} and \emph{compareTo(AbstractEntity)}, which removes the need  need to code these methods as part of specific domain entity types~\cite{Bloch2008}.
+  If requried, method \emph{toString()} can be overridden by descendent entity types in order to provide more appropriate entity specific standard output.
+
+  \paragraph*{Property definitions.}
+  
+  For a field, which is declated as part of an \emph{AbstractEntity} descendent type, to become a property, it needs to be annotated with annotation \emph{IsProperty}, and its \emph{setter} must be annotated with annotation \emph{Observable}.
+  Early runtime exception is thrown if the system identifies inconsistencies in property declarations upon entity instantiation.
+  Additional meta-data that can be added to property definition, is its \emph{title} and \emph{description}, which is used in various situations such as UI or logging.
+
+  As an example of a property defined entity property, let's consider entity type \emph{Wagon} that is provided with property \emph{wagonClass: WagonClass} as illustrated in listing~\ref{lst:WagonWagonClassProperty}.
+
+  \begin{code}{Property \emph{wagonClass} in Wagon.}{\label{lst:WagonWagonClassProperty}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(String.class)
+public class Wagon extends AbstractEntity<String> {
+
+   @IsProperty
+   @Title(value = "WA Class", desc = "Wagon classification.")
+   private WagonClass wagonClass;
+
+   @Observable
+   public Wagon setWagonClass(final WagonClass wagonClass) {
+      this.wagonClass = wagonClass;
+      return this;
+   }
+  
+   public WagonClass getWagonClass() {
+      return wagonClass;
+   }
+   ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+  An interesting aspect of the code in listing~\ref{lst:WagonWagonClassProperty} is the use of return type in setter \emph{setWagonClass}, which provides a convenient way to chain setter calls when setting more than one entity property.
+
+  \subparagraph*{Dependent Properties}
 
   The platform provides an elegant way to handle validation and error recovery situations for properties dependent on each other. 
   The dependent properties need to be annotated with annotation \emph{Dependent} that has a list of dependent property names as its argument. 
@@ -110,26 +180,58 @@ public class VehicleFuelCard extends AbstractEntity<DynamicEntityKey> {
 
   \begin{code}{Dependent properties.}{\label{lst:DependentProperties}}{codebgcolor}
     \begin{lstlisting}
+@IsProperty
+@Title("Actual Start")
+@Dependent({"actualFinish", "odometerReading"})
+@MapTo
+private Date actualStart;
 
-    @IsProperty
-    @Title("Actual Start")
-    @Dependent({"actualFinish", "odometerReading"})
-    @MapTo
-    private Date actualStart;
+@IsProperty
+@Title("Actual Finish")
+@Dependent("actualStart")
+@MapTo
+private Date actualFinish;
 
-    @IsProperty
-    @Title("Actual Finish")
-    @Dependent("actualStart")
-    @MapTo
-    private Date actualFinish;
-
-    @IsProperty
-    @Title(value = "Odometer", desc = "Odometer reading")
-    @Dependent("actualStart")
-    @MapTo
-    private Integer odometerReading;
+@IsProperty
+@Title(value = "Odometer", desc = "Odometer reading")
+@Dependent("actualStart")
+@MapTo
+private Integer odometerReading;
     \end{lstlisting}
   \end{code}
+
+
+
+  \paragraph*{Pre- and post- conditions for property value change.}
+  
+  In order for \emph{Before} and \emph{After} event handlers to be executed upon an attempt to set a property value (i.e. \emph{Before}) and after the value was set {i.e. \emph{After}}, setters should be intercepted. 
+  Interceptor \emph{ObservableMutatorInterceptor} handles property value changes including triggering execution of event handlers. 
+  Its implementation uses handlers associated with a property during meta-property instantiation. 
+  This is another reason to instantiate entities with \emph{EntityFactory}, which ensures appropriate interceptors are using Guice interceptor provided with a module configured to bind this intercepter.
+  
+
+\subsubsection{Runtime Meta-Data}
+  One of the most critical runtime requirements for platform-based applications is the instantiation of entities by using an instance of \emph{EntityFactory}.
+  So, there should never be direct entity type instantiation by means in using \texttt{new} on the entity type constructor.
+  An appropriate instance of \emph{EntityFactory} is provided to the application at runtime, and represents a thread-safe singleton object ready to be used anywhere in the system.
+  Any discussion about entity type instances should assume that these instances are crated using \emph{EntityFactory}.
+
+  \paragraph*{Entity identity and meta-state (version, editable, persisted, dirty etc.).}
+
+  The current way of instantiating entities is by using \emph{EnttyFactory}, which relies on application configuration modules (based on Guice) for resolving dependencies used as part of entity instantiation logic.
+
+  One of the essential aspects of entity properties is their meta-state -- each property is associated with an instance of \emph{MetaProperty} type, which is created automatically when an entity is instantiated using \emph{EntityFactory}. 
+  \emph{MetaProperty} provides rich support for various property life cycle functions such as tracking property changes, validation results, title, desctiption etc.
+
+  \emph{MetaProperty} instances are created by \emph{IMetaPropertyFactory} implementation bound in the application configuration modules that is used by \emph{EntityFactory}.
+
+  \emph{MetaProperty} instantiation ensures association of the created entity instance with property \emph{Before} and \emph{After} change event handlers, which are defined as annotations on property fields. 
+  The platforms provides a set of predefined \emph{Before} event handles, which serve as validators, which are discussed further in the book. 
+  
+
+  \paragraph*{Property validation results.}
+  \paragraph*{Property value change informaton.}
+  \paragraph*{Property state (editable, visible etc.).}
 
 
 % \section{User Management}
