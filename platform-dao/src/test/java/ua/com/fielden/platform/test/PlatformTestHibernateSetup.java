@@ -15,6 +15,7 @@ import ua.com.fielden.platform.types.Money;
 
 public class PlatformTestHibernateSetup {
     private static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
+
     static {
 	hibTypeDefaults.put(boolean.class, YesNoType.class);
 	hibTypeDefaults.put(Boolean.class, YesNoType.class);
@@ -23,10 +24,7 @@ public class PlatformTestHibernateSetup {
 	hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
     }
 
-
     public static Map<Class, Class> getHibernateTypes() {
 	return Collections.unmodifiableMap(hibTypeDefaults);
     }
-
-
 }

@@ -31,6 +31,7 @@ import ua.com.fielden.platform.sample.domain.TgWagonClass;
 import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibility;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntityKey;
@@ -56,6 +57,7 @@ public class PlatformTestDomainTypes {
 	add(TgWagonSlot.class);
 	add(TgWagonClass.class);
 	add(TgWagonClassCompatibility.class);
+	add(TgWorkshop.class);
 	add(TgTimesheet.class);
 	add(TgVehicle.class);
 	add(TgVehicleFinDetails.class);

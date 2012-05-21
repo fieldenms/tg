@@ -58,7 +58,6 @@ public class DomainPersistenceMetadata {
     private final static String id = "_ID";
     private final static String version = "_VERSION";
     private final static String key = "KEY_";
-    private final static String desc = "DESC_";
 
     private final Map<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata> hibTypeInfosMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata>();
     /**
