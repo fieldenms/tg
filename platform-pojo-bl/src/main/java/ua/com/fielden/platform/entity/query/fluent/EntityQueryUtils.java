@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
+import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
@@ -48,10 +49,14 @@ public class EntityQueryUtils {
     }
 
     public static <T extends AbstractEntity<?>> fetch<T> fetch(final Class<T> entityType) {
-	return new fetch<T>(entityType);
+	return new fetch<T>(entityType, FetchCategory.MINIMAL);
     }
 
-    public static <T extends AbstractEntity<?>> fetchAll<T> fetchAll(final Class<T> entityType) {
-	return new fetchAll<T>(entityType);
+    public static <T extends AbstractEntity<?>> fetch<T> fetchAll(final Class<T> entityType) {
+	return new fetch<T>(entityType, FetchCategory.ALL);
+    }
+
+    public static <T extends AbstractEntity<?>> fetch<T> fetchOnly(final Class<T> entityType) {
+	return new fetch<T>(entityType, FetchCategory.NONE);
     }
 }

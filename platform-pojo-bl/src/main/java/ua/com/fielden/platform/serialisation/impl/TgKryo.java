@@ -86,7 +86,6 @@ import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.fluent.fetchAll;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -302,7 +301,6 @@ public class TgKryo extends Kryo implements ISerialiser {
 	register(PrimitiveResultQueryModel.class);
 	register(QueryExecutionModel.class);
 	register(fetch.class);
-	register(fetchAll.class);
 	register(OrderingModel.class);
 	register(TokenCategory.class);
 	register(QueryTokens.class);

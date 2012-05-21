@@ -11,6 +11,7 @@ import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 
 public class FetchModel<T extends AbstractEntity<?>> {
     private final fetch<T> originalFetch;
@@ -23,10 +24,22 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	this.domainPersistenceMetadataAnalyser = domainPersistenceMetadataAnalyser;
 
 	if (!EntityAggregates.class.equals(getEntityType())) {
-	    if (originalFetch.isAllIncluded()) {
-		withAll();
-	    } else {
+	    switch (originalFetch.getFetchCategory()) {
+	    case ALL:
+		includeAllFirstLevelProps();
+		break;
+	    case MINIMAL:
 		includeAllFirstLevelPrimPropsAndKey();
+		break;
+	    case NONE:
+		includeIdAndVersionOnly();
+		break;
+	    default:
+		throw new IllegalStateException("Unknown fetch category [" + originalFetch.getFetchCategory() + "]");
+	    }
+
+	    for (final String propName : originalFetch.getExcludedProps()) {
+		without(propName);
 	    }
 	}
 
@@ -39,22 +52,27 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	}
     }
 
-    public boolean containsProp(final String propName) {
-	return primProps.contains(propName) || entityProps.containsKey(propName);
-    }
-
     private void includeAllFirstLevelPrimPropsAndKey() {
 	for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(getEntityType())) {
 	    if (!ppi.isCalculated()) {
-		with(ppi.getName(), ppi.getType().equals(PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY) ? false : true);
+		with(ppi.getName(), (ppi.getType().equals(PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY) || ppi.getType().equals(PropertyPersistenceType.ENTITY_KEY)) ? false : true);
 	    }
 	}
     }
 
-    protected void withAll() {
+    private void includeAllFirstLevelProps() {
 	for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(getEntityType())) {
 	    with(ppi.getName(), false);
 	}
+    }
+
+    private void includeIdAndVersionOnly() {
+	with(AbstractEntity.ID, true);
+	with(AbstractEntity.VERSION, true);
+    }
+
+    public boolean containsProp(final String propName) {
+	return primProps.contains(propName) || entityProps.containsKey(propName);
     }
 
     private Class getPropType(final String propName) {
@@ -66,7 +84,26 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	}
     }
 
-    private FetchModel<T> with(final String propName, final boolean skipEntities) {
+    private void without(final String propName) {
+	final Class propType = getPropType(propName);
+	if (propType == null) {
+	    throw new IllegalStateException("Couldn't determine type of property " + propName + " of entity type " + getEntityType());
+	}
+
+	if (AbstractEntity.class.isAssignableFrom(propType)) {
+	    final Object removalResult = entityProps.remove(propName);
+	    if (removalResult == null) {
+		throw new IllegalStateException("Couldn't find property [" + propName + "] to be excluded from fetched entity properties of entity type " + getEntityType());
+	    }
+	} else {
+	    final boolean removalResult = primProps.remove(propName);
+	    if (!removalResult) {
+		throw new IllegalStateException("Couldn't find property [" + propName + "] to be excluded from fetched primitive properties of entity type " + getEntityType());
+	    }
+	}
+    }
+
+    private void with(final String propName, final boolean skipEntities) {
 	if (EntityAggregates.class.equals(getEntityType())) {
 	    primProps.add(propName);
 	} else {
@@ -77,17 +114,15 @@ public class FetchModel<T extends AbstractEntity<?>> {
 
 	    if (AbstractEntity.class.isAssignableFrom(propType)) {
 		if (!skipEntities) {
-		    entityProps.put(propName, new fetch(propType));
+		    entityProps.put(propName, new fetch(propType, FetchCategory.MINIMAL));
 		}
 	    } else {
 		primProps.add(propName);
 	    }
 	}
-
-	return this;
     }
 
-    private FetchModel<T> with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
+    private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
 	if (getEntityType() != EntityAggregates.class) {
 	    final Class propType = getPropType(propName);
 
@@ -101,7 +136,6 @@ public class FetchModel<T extends AbstractEntity<?>> {
 	} else {
 	    throw new IllegalArgumentException(propName + " has fetch model for type " + fetchModel.getEntityType().getName() + ". Fetch model with entity type is required.");
 	}
-	return this;
     }
 
     public Map<String, fetch<? extends AbstractEntity<?>>> getFetchModels() {
@@ -111,19 +145,4 @@ public class FetchModel<T extends AbstractEntity<?>> {
     public Class<T> getEntityType() {
 	return originalFetch.getEntityType();
     }
-
-//    @Override
-//    public String toString() {
-//	return getString("     ");
-//    }
-//
-//    private String getString(final String offset) {
-//	final StringBuffer sb = new StringBuffer();
-//	sb.append("\n");
-//	for (final Map.Entry<String, fetch<?>> fetchModel : entityProps.entrySet()) {
-//	    sb.append(offset + fetchModel.getKey() + fetchModel.getValue().getString(offset + "   "));
-//	}
-//
-//	return sb.toString();
-//    }
 }
