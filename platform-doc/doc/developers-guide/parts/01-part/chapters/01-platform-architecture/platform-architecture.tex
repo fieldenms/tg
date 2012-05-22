@@ -1,37 +1,39 @@
-\chapter{Platform Architecture}\label{ch01:01}
+\chapter{Platform Architecture Step-by-Step}\label{ch01:01}
+
+\myepigraph{In our profession, precision and perfection are not a dispensable luxury, but a simple necessity.}{Niklaus Wirth}
 
   There two main approaches to describe software architecture -- top-down and bottom-up\footnote{\url{http://en.wikipedia.org/wiki/Top-down_and_bottom-up_design}}.
-  In this and the following parts of the book we should utilise the bottom-up approach by discussing the parts of the pazzle, which will be put together in order to construct a final picture of the platform in a form a relatively complex application.
+  In this and the following parts of the book we should utilise the bottom-up approach by discussing the parts of the puzzle, which will be put together in order to construct a final picture of the platform in a form a relatively complex application.
 
   A high-level platform overview is provided as a separate document, which can be downloaded \href{http://www.fielden.com.ua/trac/pnl-tg/attachment/wiki/WikiStart/architecture-overview.pdf}{separately}.
 
 \section{Domain Driven Design}
 
-  At the heart of the platform's domain orientation is the concept of an \emph{entity type} -- a way to decribe what a business domain entity is.
-  In Object-Oriented languages such as Java types are most frequently\footnote{Pribimitives in Java are represented as instances of int, double, float etc., which are not classes, but are types.} represented as classes.
-  For exemple, class \texttt{java.lang.String} is a type representing a sequence of characters.
+  At the heart of the platform's domain orientation is the concept of an \emph{entity type} -- a way to describe what a business domain entity is.
+  In Object-Oriented languages such as Java types are most frequently\footnote{Primitives in Java are represented as instances of int, double, float etc., which are not classes, but are types.} represented as classes.
+  For example, class \texttt{java.lang.String} is a type representing a sequence of characters.
   
   Each type has its definition, which can be thought of as meta-data.
   For example, type \texttt{java.lang.String} has its definition, which allows specification of the actual sequence of characters with their encoding information (e.g. UTF-8).
-  Instances of some type represent the actual data (i.e. not meta-data) that has the strucutre defined by their type.
+  Instances of some type represent the actual data (i.e. not meta-data) that has the structure defined by their type.
   
   In affect, types define what and how data can be described.
-  The richer meta-data is the more precise data definition is possible to obtain, which provides a way to capture business domain specialisation more accuretely.
-  From the mathematical perspective, types can be thought of as sets\footnote{Types are also methematical concepts studies by Type Theory, which is less wide spread than Set Theory.}.
+  The richer meta-data is the more precise data definition is possible to obtain, which provides a way to capture business domain specialisation more accurately.
+  From the mathematical perspective, types can be thought of as sets\footnote{Types are also mathematical concepts studies by Type Theory, which is less wide spread than Set Theory.}.
   It can be said that any type is a set containing all possible instances of a specific data structure.
 
-  Type instances can be considered immutalbe and there are various functions that can map instances of some types (or tuple of instances of some, possible different, types) into instances of the same or different types (tuple of types).
-  Consider the function for concatenating two strings, which we often simply write as \texttt{``Hello '' + ``World''}\footnote{This is so called \emph{operator notation} of otherwise normal function call.}, obtaining a new instanse of the string type ``Hello World'', while the orignal input strings remain unchanged.
-  Its formal defition is $+:String\times String \rightarrow String$, where any pair of strings gets mapped (or transformed) into a single string by means of putting together two sequences of characters representing the two input strings.
-  A more common way to write function calls in programming languges is \texttt{function\_name (list\_of\_arguments)}.
-  This way, a call to the string concatenation function could be writen as \texttt{+(``Hello '', ``World'')}, where \texttt{+} is a function name.
+  Type instances can be considered immutable and there are various functions that can map instances of some types (or tuple of instances of some, possible different, types) into instances of the same or different types (tuple of types).
+  Consider the function for concatenating two strings, which we often simply write as \texttt{``Hello '' + ``World''}\footnote{This is so called \emph{operator notation} of otherwise normal function call.}, obtaining a new instance of the string type ``Hello World'', while the original input strings remain unchanged.
+  Its formal definition is $+:String\times String \rightarrow String$, where any pair of strings gets mapped (or transformed) into a single string by means of putting together two sequences of characters representing the two input strings.
+  A more common way to write function calls in programming languages is \texttt{function\_name (list\_of\_arguments)}.
+  This way, a call to the string concatenation function could be written as \texttt{+(``Hello '', ``World'')}, where \texttt{+} is a function name.
 
   From a business domain perspective, functions represent business actions that transform instances of business domain entity types into instances of the same or different types.
-  Therefore, the process of \emph{domain driven design} consists of two distinct, but at the same time intertwined steps of describing business entities with meta-data and indentifying business processes that transform business entities by applying one or more business actions, which are implemented as functions.
+  Therefore, the process of \emph{domain driven design} consists of two distinct, but at the same time intertwined steps of describing business entities with meta-data and identifying business processes that transform business entities by applying one or more business actions, which are implemented as functions.
   
   The platform's role is to streamline this process by reducing low-level technical aspects allowing developers to concentrate on business tasks at hand by providing and reusing rich meta-data capabilities to automate otherwise routine and tedious programming tasks.
 
-\subsection{The Meta-Data}
+\subsection{Entity Types and Meta-Data}
 
   Every business domain \emph{entity type} in TG is implemented as a Java class that extends \emph{AbstractEntity} -- a specially designed class that serves as a common ancestor for all entity types.
   Listing~\ref{lst:AbstractEntity} provides a fragment of \emph{AbstractEntity} class definition.
@@ -53,7 +55,7 @@ public abstract class AbstractEntity<K extends Comparable>
 
   Any descendent from \emph{AbstractEntity} type provides compile (design) time and runtime (execution time) meta-data required for modelling business domain entities:
   \begin{description}
-   \item[\textbf{Compile time meta-data}] -- data that forms part of entity type desctiption, which is present in the entity type definition at the class srouce level.
+   \item[\textbf{Compile time meta-data}] -- data that forms part of entity type description, which is present in the entity type definition at the class source level.
       \begin{itemize}
 	\item Business Key definitions.
 	\item Property definitions.
@@ -64,7 +66,7 @@ public abstract class AbstractEntity<K extends Comparable>
       \begin{itemize}
 	\item Entity identity and meta-state (version, editable, persisted, dirty etc.).
 	\item Property validation results.
-	\item Property value change informaton.
+	\item Property value change information.
 	\item Property state (editable, visible etc.).	
       \end{itemize}
    \end{description}
@@ -74,8 +76,8 @@ public abstract class AbstractEntity<K extends Comparable>
 \subsubsection{Compile Time Meta-Data}
   
   \paragraph*{Business Key Definitions.}
-  Each entity has a notion of a \emph{business key} that consists of one or several entity properties\footnote{The concept of \emph{property} is will be defined further in text. Therefore, at this stage it should be thought of as a field with some additional informaton about it.}, which together uniquely idenfity an instance of a given entity type.
-  For example, instances of type \emph{Person}, which was introdcued in previous chapter, are uniquely identified by their \emph{person code}.
+  Each entity has a notion of a \emph{business key} that consists of one or several entity properties\footnote{The concept of \emph{property} is will be defined further in text. Therefore, at this stage it should be thought of as a field with some additional information about it.}, which together uniquely identify an instance of a given entity type.
+  For example, instances of type \emph{Person}, which was introduced in previous chapter, are uniquely identified by their \emph{person code}.
   Entity type \emph{Person} has its key defined to be of type \texttt{java.lang.String}, which indicates that it consists of one property of the specified type -- property \emph{key} in this case.
   \emph{AbstractEntity} provides full support for two kinds of business keys:
   \begin{description}
@@ -83,12 +85,12 @@ public abstract class AbstractEntity<K extends Comparable>
     \item[\textbf{Composite Key}] -- can include two or more properties as \emph{key members} with no restrictions on their type. Class \emph{DynamicEntityKey} models the composite key.
    \end{description}
 
-  In order to provide more substance to this discussion, let's extend our demo applicaton, which was generated in part~\ref{part-I}, with new entity types.
+  In order to provide more substance to this discussion, let's extend our demo application, which was generated in part~\ref{part-I}, with new entity types.
   For this, is proposed to use the Rail industry domain as an application business domain that needs to be modelled.
   
   The first domain entity to be added is \emph{Wagon}.
   It is uniquely identified by its number that may contain alphanumeric characters, and therefore its key can be naturally modelled as a simple key of type \emph{String}.
-  Listing \ref{lst:WagonSimpleKey} contains a code that provides a basic definitin for type \emph{Wagon}.
+  Listing \ref{lst:WagonSimpleKey} contains a code that provides a basic definition for type \emph{Wagon}.
   Two things are important here.
   First, class \emph{Wagon} extends class \emph{AbstractEntity}, which is parameterised with type \emph{String} that is used as a key type.
   Second, annotation \emph{KeyType} is used to annotate class \emph{Wagon} and has one argument \emph{String.class} that matches the key type.
@@ -104,18 +106,18 @@ public class Wagon extends AbstractEntity<String> {
   \end{code}
 
   In order to demonstrates entity with a composite key, let's consider that our application already has entity types \emph{WagonClass} and \emph{BogieClass} that have their keys defined exactly as for entity type \emph{Wagon}.
-  These enities are responsible for modelling wagon and bogie classification.
+  These entities are responsible for modelling wagon and bogie classification.
   Wagons have bogies as part of their physical structure, but not all bogies are compatible with any wagon.
   The system should implement a business rule that would govern what bogies can be placed onto a wagon. 
-  One possible way to implement such a rule is to provide an entity that would model the relationship between wagon and bogie classifiction information, which requires the use of a composite key.
+  One possible way to implement such a rule is to provide an entity that would model the relationship between wagon and bogie classification information, which requires the use of a composite key.
   
-  Listing~\ref{lst:WagonBogieClassificationCompatibilityCompositeKey} contains a code that provides a basic definitin for such compatibility entity type.
+  Listing~\ref{lst:WagonBogieClassificationCompatibilityCompositeKey} contains a code that provides a basic definition for such compatibility entity type.
   The principle difference to previously discussed entity types, is the use of a composite key implemented by type \emph{DynamicEntityKey}, which is specified as entity's key type.
   This composite key consists of two members -- properties designated with annotation \emph{CompositeKeyMember}, which takes one argument responsible for identifying member's sequential order in the key.
-  Annotation \emph{IsProperty} placed above each key memeber designates that each member a property (see section below).
+  Annotation \emph{IsProperty} placed above each key member designates that each member a property (see section below).
 
 
-  \begin{code}{Composite key of an entity modelling wagon/bogie classifiction compatibility.}{\label{lst:WagonBogieClassificationCompatibilityCompositeKey}}{codebgcolor}
+  \begin{code}{Composite key of an entity modelling wagon/bogie classification compatibility.}{\label{lst:WagonBogieClassificationCompatibilityCompositeKey}}{codebgcolor}
     \begin{lstlisting}
 @KeyType(DynamicEntityKey.class)
 public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKey> {
@@ -134,15 +136,28 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
   \end{code}
 
   Business entity key is used in \emph{AbstractEntity} for implementing methods \emph{hashCode()}, \emph{equals(Object)}, \emph{toString()} and \emph{compareTo(AbstractEntity)}, which removes the need  need to code these methods as part of specific domain entity types~\cite{Bloch2008}.
-  If requried, method \emph{toString()} can be overridden by descendent entity types in order to provide more appropriate entity specific standard output.
+  If required, method \emph{toString()} can be overridden by descendent entity types in order to provide more appropriate entity specific standard output.
+
+  \begin{notebox}{Composite key template.}{\label{nb:EclipseTemplatesForCompositeKey}}
+    Typing \texttt{tgp} in the body of the class and pressing \texttt{Ctrl + Space} key combination will present a dialog with an option \texttt{tgpcompositekey} for generating a property that is a member of the composite key.
+  \end{notebox}
 
   \paragraph*{Property definitions.}
   
-  For a field, which is declated as part of an \emph{AbstractEntity} descendent type, to become a property, it needs to be annotated with annotation \emph{IsProperty}, and its \emph{setter} must be annotated with annotation \emph{Observable}.
+  For a field, which is declared as part of an \emph{AbstractEntity} descendent type, to become a property, it needs to be annotated with annotation \emph{IsProperty}, and its \emph{setter} must be annotated with annotation \emph{Observable}.
   Early runtime exception is thrown if the system identifies inconsistencies in property declarations upon entity instantiation.
-  Additional meta-data that can be added to property definition, is its \emph{title} and \emph{description}, which is used in various situations such as UI or logging.
-
-  As an example of a property defined entity property, let's consider entity type \emph{Wagon} that is provided with property \emph{wagonClass: WagonClass} as illustrated in listing~\ref{lst:WagonWagonClassProperty}.
+  Properties can be provided with \emph{title} and \emph{description}, which is used in various situations such as UI or logging.
+  
+  As an example of a defined entity property, let's consider entity type \emph{Wagon} that is provided with property \emph{wagonClass: WagonClass} as illustrated in listing~\ref{lst:WagonWagonClassProperty}.
+  Here an ordinary private field \emph{wagonClass: WagonClass} is provided with annotation \emph{IsProperty} and an optional, but recommended, annotation \emph{Title}.
+  Property's setter (often referred as \emph{mutator}) \emph{setWagonClass} has its name specified in accordance with JavaBean specification, and is provided with a mandatory annotation \emph{Observable}.
+  According to the JavaBean specification, the return type for setters should be \emph{void}.
+  The platform supports an extended setter specification by allowing the return type to match the type of the declaring class.
+  In this case, setter \emph{setWagonClass} has return type \emph{Wagon}.
+  Such specification enhancement provides a convenient way to chain many setter calls when initialising an entity instance.
+  
+  Although, getter must also be provided, there is no special requirements in addition to those stated in the JavaBean specification.
+  Specifically, getter's name must begin with word \texttt{get} followed by a corresponding field name starting with a capitalised first character, and the return type must match that of the property.
 
   \begin{code}{Property \emph{wagonClass} in Wagon.}{\label{lst:WagonWagonClassProperty}}{codebgcolor}
     \begin{lstlisting}
@@ -167,47 +182,159 @@ public class Wagon extends AbstractEntity<String> {
     \end{lstlisting}
   \end{code}
 
-  An interesting aspect of the code in listing~\ref{lst:WagonWagonClassProperty} is the use of return type in setter \emph{setWagonClass}, which provides a convenient way to chain setter calls when setting more than one entity property.
 
-  \subparagraph*{Dependent Properties}
+  \begin{notebox}{Property template.}{\label{nb:EclipseTemplatesForProperty}}
+    Typing \texttt{tgp} in the body of the class and pressing \texttt{Ctrl + Space} key combination will present a dialog with an option \texttt{tgprop} for generating a property template.
+  \end{notebox}
 
-  The platform provides an elegant way to handle validation and error recovery situations for properties dependent on each other. 
-  The dependent properties need to be annotated with annotation \emph{Dependent} that has a list of dependent property names as its argument. 
-  The word \emph{dependent} here means that properties depend on some other property. 
-  For example, \emph{WorkOrder.actualStart} depends on \emph{WorkOrder.actualFinish} and wise versa, but also \emph{WorkOrder.odometerReading} is dependent on \emph{WorkOrder.actualStart} and wise versa. 
-  Thus, property \emph{WorkOrder.actualStart} has two dependent properties that should be revalidated when it is changed -- \emph{actualFinish} and \emph{odometerReading}.
-  Listing \ref{sss} presents the described example in code.
+  \paragraph*{Pre- and post- conditions for property value change.}
+  
+  In order to control correctness of property values at runtime and take necessary actions as the result of property value change, the platform supports the notion of property pre- and post- conditions.
+  The platform provides a predefined list of pre- and post- conditions (fully discussed in \ref{part-III}) in a form of specialised annotations that cover common cases of frequently used conditions.
+  
+  The original intention for pre-conditions (either predefined or custom) was to perform property value validation before it is assigned to the property.
+  From this perspective pre-conditions can be though of as value validators.
+  The original intention for post-conditions was to modify the runtime meta-data of entities (their properties) after a new value was successfully validated and assigned to a property.
+  Such modification can be manifested in making certain properties in the same entity instance required or readonly.
+  From this perspective post-conditions can be thought of as definers that define or change the runtime meta-data of an entity instance.
+  
+  Listing~\ref{lst:PreConditionWagonWagonClassProperty} illustrates the use of two special pre-conditions -- \emph{EntityExists}, which ensures that only persisted instances of \emph{WagonClass} can be assigned to \emph{Wagon}'s property \emph{wagonClass}, and \emph{Required}, which indicates that property \emph{wagonClass} must have a value.
+  Predefined condition handlers have their order of execution, where \emph{Required} has an execution precedence above \emph{EntityExists}, and thus \emph{EntityExists} handler does not need to deal with \texttt{null} property values.
 
-  \begin{code}{Dependent properties.}{\label{lst:DependentProperties}}{codebgcolor}
+  \begin{code}{Pre-condition for property \emph{wagonClass} in Wagon.}{\label{lst:PreConditionWagonWagonClassProperty}}{codebgcolor}
     \begin{lstlisting}
-@IsProperty
-@Title("Actual Start")
-@Dependent({"actualFinish", "odometerReading"})
-@MapTo
-private Date actualStart;
+@KeyType(String.class)
+public class Wagon extends AbstractEntity<String> {  
+   ....................................
+   @IsProperty
+   @Required
+   @Title(value = "WA Class", desc = "Wagon classification.")
+   private WagonClass wagonClass;
 
-@IsProperty
-@Title("Actual Finish")
-@Dependent("actualStart")
-@MapTo
-private Date actualFinish;
+   @Observable
+   @EntityExists(WagonClass.class)
+   public Wagon setWagonClass(final WagonClass wagonClass) {
+      this.wagonClass = wagonClass;
+      return this;
+   }
+   ....................................
+}
+    \end{lstlisting}
+  \end{code}
 
-@IsProperty
-@Title(value = "Odometer", desc = "Odometer reading")
-@Dependent("actualStart")
-@MapTo
-private Integer odometerReading;
+  Predefined pre-condition handlers are great when they as intended, but they cannot be customised to behave differently.
+  The most generic way to implement pre-and post- conditions is to provide \emph{Before Change} and \emph{After Change} event handlers associated with a property as part of its declaration.
+  Custom pre- and post- conditions have lower execution precedence than predefined ones.  
+  Thus, it is always safe to rely, for example, on the fact that pre-condition \emph{Required} is executed before any custom handlers.
+
+  In order to illustrate the use of custom pre-conditions, let's enhance entity type \emph{WagonClass} with a new property \emph{tonnage: Integer}, which should describe wagon's tonnage.
+  A business rule states that tonnage is required and there are only three possible values -- 50, 75 and 100.
+  This rule can be conveniently implemented as a combination of predefined and custom pre- conditions.
+  
+  Listing~\ref{lst:PreConditionWagonClassTonnageProperty} illustrates declaration of property \emph{tonnage}, which has predefined pre-condition \emph{Required} and a custom \emph{Before Change} event handler \emph{TonnageValidator}.
+  The actual implementation of the \emph{TonnageValidator} handler is provided and analysed as part of runtime property validation discussion.
+  
+  \begin{code}{Pre-conditions for property \emph{tonnage} in WagonClass.}{\label{lst:PreConditionWagonClassTonnageProperty}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(String.class)
+public class WagonClass extends AbstractEntity<String> {  
+   ....................................
+   @IsProperty
+   @Required   
+   @BeforeChange(@Handler(TonnageValidator.class))   
+   private Integer tonnage;
+
+   @Observable   
+   public WagonClass setTonnage(final Integer tonnage) {
+      this.tonnage = tonnage;
+      return this;
+   }
+
+   @Observable   
+   public Integer getTonnage() {      
+      return tonnage;
+   }
+   ....................................
+}
+    \end{lstlisting}
+  \end{code}
+ 
+  Annotation \emph{BeforeChange} can accepts one or many handlers, and each handler is declared with annotation \emph{Handler} that takes at least one argument \emph{value} equal to the type implementing the handling logic.
+  \emph{Handler} supports other arguments, which provide a way to initialise handler properties upon its instantiation.
+  In order to demonstrate this capability, consider the following enhancement to our domain model.
+  
+  In the Rail domain, wagon classification indicates the number of slots on a wagon designated to mounting bogies.
+  In order to capture this information, entity type \emph{WagonClass} needs to be provided with a new property \emph{numOfSlots: Integer}.
+  The value for this property should be in the range from 2 to 10, which can be enforced by a custom pre-condition handler.
+  Such pre-condition handler could be made configurable by supporting specification of the minimum and maximum values for the range.
+  Listing~\ref{lst:PreConditionWagonClassNumOfSlotsProperty} illustrates declaration of property \emph{numOfSlots}, which is specified as \emph{Required} and has one custom pre-condition \emph{NumOfSlotsValidator} with properties \emph{minNumOfSlots: Integer} and \emph{maxNumOfSlots: Integer} initialised with values 2 and 10 respectively.
+  The actual code for \emph{NumOfSlotsValidator} is discussed as part of the section on runtime meta-data.
+
+  \begin{code}{Pre-conditions for property \emph{numOfSlots} in WagonClass.}{\label{lst:PreConditionWagonClassNumOfSlotsProperty}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(String.class)
+public class WagonClass extends AbstractEntity<String> {  
+   ....................................
+    @IsProperty
+    @Required
+    @BeforeChange (@Handler(
+		      value = NumOfSlotsValidator.class, 
+		      integer = {
+			@IntParam(name = "minNumOfSlots", value = 2), 
+			@IntParam(name = "maxNumOfSlots", value = 10)}))
+    @Title(value = "BO Slots", desc = "Number of bogie slots")
+    private Integer numOfSlots;
+   ....................................
+}
     \end{lstlisting}
   \end{code}
 
 
 
-  \paragraph*{Pre- and post- conditions for property value change.}
+  \subparagraph*{Dependent Properties.}
+
+  One of the common situations when modelling business domains, is the existence of entities where some of their properties depend on each other.
+  The most trivial example of such situation is an entity with two date properties that represent a single date period.
+  In this case when there is an attempt to set the \emph{start} property value later than the current value of the \emph{finish} property, such value should fail validation ensuring that date period is not inverted.
+  However, if the \emph{finish} property is subsequently changed by setting its value into the future comparing the invalid \emph{start} value, then this invalid value needs to be revalidated and assigned to the \emph{start} property if valid.
   
-  In order for \emph{Before} and \emph{After} event handlers to be executed upon an attempt to set a property value (i.e. \emph{Before}) and after the value was set {i.e. \emph{After}}, setters should be intercepted. 
-  Interceptor \emph{ObservableMutatorInterceptor} handles property value changes including triggering execution of event handlers. 
-  Its implementation uses handlers associated with a property during meta-property instantiation. 
-  This is another reason to instantiate entities with \emph{EntityFactory}, which ensures appropriate interceptors are using Guice interceptor provided with a module configured to bind this intercepter.
+  The platform provides an elegant way to handle validation error recovery situations for properties that dependent on each other. 
+  The dependent properties need to be declared with annotation \emph{Dependent} that takes a list of dependent property names as its argument. 
+  The word \emph{dependent} here means that properties depend on some other property. 
+  
+  In order to provide a more elaborate usecase for dependent properties, consider domain entity \emph{WorkOrder}, which captures the work associated with fixing a locomotive.
+  There are three values that need to be captured by every work order -- \emph{actualStart: Date}, \emph{actualFinish: Date} and \emph{odometerReading: Integer}.
+  Properties \emph{actualStart} and \emph{actualFinish} represent a date period during which work order took place, and they should have the validation logic as in the above scenario.
+  In addition, the value for property \emph{odometerReading}, which is considered to be taken at the moment in time captured by property \emph{actualStart}, should be validated against a history of odometer readings for a corresponding locomotive.
+
+  Thus, property \emph{actualStart} has two dependent properties that should be validated when it is changed.
+  Specifically, properties \emph{actualFinish} and \emph{odometerReading} should be validated (or revalidated and attempted values assigned if revalidation succeeds) when the value of property \emph{actualStart} is change.
+  For clear differentiation, let's call property \emph{actualStart} a master property, and properties declared as part of its \emph{Dependent} annotation -- dependent properties.
+  Listing~\ref{lst:DependentProperties} illustrates dependency definition for the described scenario\footnote{Pre-conditions are deliberately not included into the listing in order to highlight dependency related declarations.}.
+
+  \begin{code}{Declaration of dependent properties.}{\label{lst:DependentProperties}}{codebgcolor}
+    \begin{lstlisting}
+@IsProperty
+@Dependent({"actualFinish", "odometerReading"})
+private Date actualStart;
+
+@IsProperty
+@Dependent("actualStart")
+private Date actualFinish;
+
+@IsProperty
+@Dependent("actualStart")
+private Integer odometerReading;
+    \end{lstlisting}
+  \end{code}
+
+  The property dependency mechanism distinguishes between \texttt{validation} and \texttt{revalidation}.
+  \texttt{Validation} means that a dependent property was valid when a corresponding master property was changed, and needs to be validated.
+  If validation fails, the value of that dependent property does not change as it was legitimately assigned before -- only the validation meta-data changes to indicate the validation error.
+  \texttt{Revalidation} means that a dependent property was invalid when a corresponding master property was changed, needs to be validated and in case of successful validation, the attempted value should be assigned to that dependent property.
+  
+  The dependency mechanism gracefully handles circular dependencies -- both direct and transitive.
+  Listing~\ref{lst:DependentProperties} contains a direct circular dependency where property \emph{actualStart} depends on property \emph{odometerReading} that in turn depends on \emph{actualStart}.
   
 
 \subsubsection{Runtime Meta-Data}
@@ -221,7 +348,7 @@ private Integer odometerReading;
   The current way of instantiating entities is by using \emph{EnttyFactory}, which relies on application configuration modules (based on Guice) for resolving dependencies used as part of entity instantiation logic.
 
   One of the essential aspects of entity properties is their meta-state -- each property is associated with an instance of \emph{MetaProperty} type, which is created automatically when an entity is instantiated using \emph{EntityFactory}. 
-  \emph{MetaProperty} provides rich support for various property life cycle functions such as tracking property changes, validation results, title, desctiption etc.
+  \emph{MetaProperty} provides rich support for various property life cycle functions such as tracking property changes, validation results, title, description etc.
 
   \emph{MetaProperty} instances are created by \emph{IMetaPropertyFactory} implementation bound in the application configuration modules that is used by \emph{EntityFactory}.
 
@@ -230,9 +357,47 @@ private Integer odometerReading;
   
 
   \paragraph*{Property validation results.}
-  \paragraph*{Property value change informaton.}
-  \paragraph*{Property state (editable, visible etc.).}
 
+  Pre-condition handlers are executed at the time when a new property value (i.e. different to the one already set) is being assigned.
+  If one of property pre-conditions fails, the new value is not assigned and a
+
+  The implementation of \emph{TonnageValidator} is provided in listing~\ref{lst:TonnageValidator}.
+  It implements contract \emph{IBeforeChangeEventHandler} parameterised by the type of the property is its assigned to -- \emph{Integer} is the type of property \emph{tonnage}.
+  The only method required by the contract is \emph{handle}, which accepts three arguments and return an instance of \emph{Result} indicating validation success or failure.
+  Three arguments
+
+  \begin{code}{Custom pre-conditions TonnageValidator.}{\label{lst:TonnageValidator}}{codebgcolor}
+    \begin{lstlisting}
+public class TonnageValidator 
+    implements IBeforeChangeEventHandler<Integer> {
+
+    @Override
+    public Result handle(
+	final MetaProperty property, 
+	final Integer newValue, 
+	final Integer oldValue, 
+	final Set<Annotation> mutatorAnnotations) {
+	
+	if ((newValue != 50) && (newValue != 75) && (newValue != 100)) {
+	    return new Result(
+		      newValue, 
+		      new IllegalArgumentException("Valid tonnage values are " +
+	    		                           "50, 75 and 100.")
+	    );
+	}
+	return Result.successful(newValue);
+    }
+
+}
+    \end{lstlisting}
+  \end{code}
+
+
+
+  \paragraph*{Property value change information.}
+  \paragraph*{Property meta-state (editable, visible etc.).}
+
+\section{Business Logic and Controllers}
 
 % \section{User Management}
 % 
