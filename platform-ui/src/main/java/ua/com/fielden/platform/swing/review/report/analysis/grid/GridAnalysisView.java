@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.review.report.analysis.grid;
 
-import java.util.ArrayList;
-
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
@@ -28,10 +26,10 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	this.egiPanel = new EgiPanel1<T>(getModel().getCriteria().getEntityClass(), getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer());
 	getModel().getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
-	    @SuppressWarnings({ "unchecked", "rawtypes" })
+	    @SuppressWarnings("unchecked")
 	    @Override
 	    public void pageChanged(final PageChangedEvent e) {
-		egiPanel.getEgi().getActualModel().setInstances(e.getNewPage() == null ? new ArrayList() : ((IPage)e.getNewPage()).data());
+		egiPanel.setData((IPage<T>)e.getNewPage());
 	    }
 	});
 	getModel().getPageHolder().newPage(null);
@@ -82,9 +80,9 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      * @return
      */
     final int getPageSize() {
-	double pageSize = egiPanel.getEgiScrollPane().getSize().getHeight() / egiPanel.getEgi().getRowHeight();
+	double pageSize = egiPanel.getSize().getHeight() / EgiPanel1.ROW_HEIGHT;
 	if (getOwner().getOwner().getCriteriaPanel() != null) {
-	    pageSize += getOwner().getOwner().getCriteriaPanel().getSize().getHeight() / egiPanel.getEgi().getRowHeight();
+	    pageSize += getOwner().getOwner().getCriteriaPanel().getSize().getHeight() / EgiPanel1.ROW_HEIGHT;
 	}
 	final int pageCapacity = (int) Math.floor(pageSize);
 	return pageCapacity > 1 ? pageCapacity : 1;
@@ -107,7 +105,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     /**
      * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
-     * 
+     *
      * @return
      */
     private ISelectionEventListener createGridAnalysisSelectionListener() {

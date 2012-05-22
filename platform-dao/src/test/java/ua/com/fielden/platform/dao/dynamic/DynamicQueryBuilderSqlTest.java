@@ -32,8 +32,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
-import ua.com.fielden.platform.reflection.EntityDescriptor;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;

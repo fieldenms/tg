@@ -14,6 +14,7 @@ import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -58,10 +59,14 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     private final IDaoFactory daoFactory;
 
+    private final IGeneratedEntityController<? extends AbstractEntity<?>> generatedEntityController;
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Inject
-    public CriteriaGenerator(final EntityFactory entityFactory, final IDaoFactory daoFactory){
+    public CriteriaGenerator(final EntityFactory entityFactory, final IDaoFactory daoFactory, final IGeneratedEntityController generatedEntityController){
 	this.entityFactory = entityFactory;
 	this.daoFactory = daoFactory;
+	this.generatedEntityController = generatedEntityController;
     }
 
     @Override
@@ -89,17 +94,24 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
 	    //Set dao for generated entity query criteria.
 	    final Field daoField = Finder.findFieldByName(EntityQueryCriteria.class, "dao");
-	    final boolean isDaoAccessible = daoField.isAccessible();
+	    final boolean isDaoAccessable = daoField.isAccessible();
 	    daoField.setAccessible(true);
 	    daoField.set(entity, daoFactory.newDao(root));
-	    daoField.setAccessible(isDaoAccessible);
+	    daoField.setAccessible(isDaoAccessable);
+
+	    //Set generated entity controller.
+	    final Field generatedEntityControllerField = Finder.findFieldByName(EntityQueryCriteria.class, "generatedEntityController");
+	    final boolean isControllerAccessable = generatedEntityControllerField.isAccessible();
+	    generatedEntityControllerField.setAccessible(true);
+	    generatedEntityControllerField.set(entity, generatedEntityController);
+	    daoField.setAccessible(isControllerAccessable);
 
 	    //Set domain tree manager for entity query criteria.
 	    final Field dtmField = Finder.findFieldByName(EntityQueryCriteria.class, "cdtme");
-	    final boolean isCdtmeAccessible = dtmField.isAccessible();
+	    final boolean isCdtmeAccessable = dtmField.isAccessible();
 	    dtmField.setAccessible(true);
 	    dtmField.set(entity, cdtme);
-	    dtmField.setAccessible(isCdtmeAccessible);
+	    dtmField.setAccessible(isCdtmeAccessable);
 
 	    //Add change support to the entity query criteria instance
 	    //in order to synchronise entity query criteria values with model values
@@ -185,7 +197,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     /**
      *Synchronises entity query criteria property values with domain tree model.
-     * 
+     *
      * @param entity
      */
     private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity){

@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.swing.egi;
 
+import static javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION;
+import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER;
+
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -19,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.Icon;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -47,6 +51,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
@@ -54,13 +59,9 @@ import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuild
 import ua.com.fielden.platform.swing.review.OrderingArrow;
 import ua.com.fielden.platform.swing.verticallabel.DefaultTableHeaderCellRenderer;
 import ua.com.fielden.platform.swing.verticallabel.MouseDefaultHeaderHandler;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import static javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION;
-import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
-import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
-import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED;
-import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER;
 
 public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 
@@ -69,7 +70,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
     /**
      * For now it's static field, however in the future it should be configured from outside
      */
-    private static final int ROW_HEIGHT = 26;
+    public static final int ROW_HEIGHT = 26;
 
     private final EntityGridInspector<T> egi;
 
@@ -105,13 +106,33 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 	}
     }
 
-    public JScrollPane getEgiScrollPane() {
-	return egiScrollPane;
-    }
-
-    @SuppressWarnings("unchecked")
+    /**
+     * Returns the {@link EntityGridInspector} associated with this panel.
+     *
+     * @return
+     */
     public EntityGridInspector<T> getEgi() {
 	return egi;
+    }
+
+    /**
+     * Set passed data to the grid inspector and updates totals.
+     *
+     * @param page
+     */
+    public void setData(final IPage<T> page) {
+	egi.getActualModel().setInstances(page == null ? new ArrayList<T>() : page.data());
+	for (final Map.Entry<String, JTextField> totalEntry : totalEditors.entrySet()) {
+	    final Object value = page.summary().get(totalEntry.getKey());
+	    final Class<?> valueClass = value.getClass();
+	    final String totalsStrValue = EntityUtils.toString(value, valueClass);
+	    final JTextField editor = totalEntry.getValue();
+	    editor.setText(totalsStrValue);
+	    editor.setCaretPosition(0);
+	    if (Number.class.isAssignableFrom(valueClass) || Money.class.isAssignableFrom(valueClass) || valueClass == int.class || valueClass == double.class) {
+		editor.setHorizontalAlignment(JTextField.RIGHT);
+	    }
+	}
     }
 
     /**
@@ -288,17 +309,6 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
     }
 
     /**
-     * Returns the label that is a stub of total editor.
-     *
-     * @return
-     */
-    private static JLabel createStubLabel(final Integer size) {
-	final JLabel stubLabel = new JLabel();
-	stubLabel.setPreferredSize(new Dimension(size, ROW_HEIGHT));
-	return stubLabel;
-    }
-
-    /**
      * Adds resize listener to table column that handles column size changed and column moved events.
      *
      * @param footer
@@ -343,35 +353,6 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 		}
 	    }
 
-	    /**
-	     * Adds components from total components list at specified index to the footer panel.
-	     *
-	     * @param totalComponents
-	     * @param fromIndex
-	     * @param footer
-	     */
-	    private void addComponentsAt(final List<List<JComponent>> totalComponents, final int index, final JPanel footer) {
-		final List<JComponent> components = totalComponents.get(index);
-		for(int rowIndex = 0; rowIndex < components.size(); rowIndex++){
-		    footer.add(components.get(rowIndex), "cell " + index + " " + rowIndex);
-		}
-	    }
-
-	    /**
-	     * Removes components specified with index in total components from footer panel.
-	     *
-	     * @param totalComponents
-	     * @param fromIndex
-	     * @param footer
-	     */
-	    private void removeComponentsAt(final List<List<JComponent>> totalComponents, final int index, final JPanel footer) {
-		for(final JComponent component : totalComponents.get(index)){
-		    footer.remove(component);
-		}
-	    }
-
-
-
 	    @Override
 	    public void columnRemoved(final TableColumnModelEvent e) {
 	    }
@@ -382,33 +363,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 	});
     }
 
-    /**
-     * Returns the column constraints for totals footer panel.
-     *
-     * @param entityGridInspector
-     * @return
-     */
-    private String createColumnConstraints(final EntityGridInspector<?> entityGridInspector) {
-	String colConstraints = "";
-	for (final AbstractPropertyColumnMapping<?> columnMapping : entityGridInspector.getActualModel().getPropertyColumnMappings()){
-	    colConstraints += "[:" + columnMapping.getSize() + ":]";
-	}
-	return colConstraints + "[:50:]";
-    }
 
-    /**
-     * Returns the row constraints for totals footer panel.
-     *
-     * @param totals
-     * @return
-     */
-    private String createRowConstraints(final int rowNumber) {
-	String rowConstraints = "";
-	for(int rowIndex = 0; rowIndex < rowNumber; rowIndex++){
-	    rowConstraints += "[:" + ROW_HEIGHT + ":]";
-	}
-	return rowConstraints;
-    }
 
     /**
      * Determines the number of total rows to insert.

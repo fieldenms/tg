@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -110,6 +112,31 @@ public class EntityDescriptor {
 
     public Map<String, Pair<String, String>> getTitlesAndDescs() {
 	return mapByNames;
+    }
+
+    /**
+     * Removes ".key" part from propertyName.
+     *
+     * @param propertyName
+     * @return
+     */
+    public static String getPropertyNameWithoutKeyPart(final String propertyName) {
+	return replaceLast(propertyName, ".key", "");
+    }
+
+    /**
+     * Returns value that indicates whether the passed entity class has description or not.
+     *
+     * @param klass
+     * @return
+     */
+    public static boolean hasDesc(final Class<?> klass){
+	return AnnotationReflector.isAnnotationPresent(DescTitle.class, klass);
+    }
+
+    public static String replaceLast(final String s, final String what, final String byWhat) {
+	final int i = s.lastIndexOf(what);
+	return i >= 0 ? s.substring(0, i) : s;
     }
 
     //    /**

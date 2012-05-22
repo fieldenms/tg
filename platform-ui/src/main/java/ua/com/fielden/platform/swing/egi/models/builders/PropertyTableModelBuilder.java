@@ -3,6 +3,13 @@
  */
 package ua.com.fielden.platform.swing.egi.models.builders;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.UPPER_CASE;
+import static ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder.EditingPolicy.ALWAYS_EDITABLE;
+import static ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder.EditingPolicy.BY_META_PROPERTY;
+import static ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder.NavigationPolicy.ALWAYS_NAVIGABLE;
+import static ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals.NO_TOTALS;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.Field;
@@ -24,9 +31,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.reflection.EntityDescriptor;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase;
 import ua.com.fielden.platform.swing.components.textfield.UpperCaseTextField;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
@@ -48,12 +55,6 @@ import ua.com.fielden.platform.swing.egi.models.mappings.simplified.IOnCommitAct
 import ua.com.fielden.platform.swing.egi.models.mappings.simplified.ITooltipGetter;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.UPPER_CASE;
-import static ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder.EditingPolicy.ALWAYS_EDITABLE;
-import static ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder.EditingPolicy.BY_META_PROPERTY;
-import static ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder.NavigationPolicy.ALWAYS_NAVIGABLE;
-import static ua.com.fielden.platform.swing.egi.models.mappings.ColumnTotals.NO_TOTALS;
 
 /**
  * {@link PropertyTableModel} builder with convenience methods for creating editable mappings for {@link AbstractEntity} <br>

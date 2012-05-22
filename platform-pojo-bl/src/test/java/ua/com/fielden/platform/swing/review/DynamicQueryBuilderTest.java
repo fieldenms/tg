@@ -29,7 +29,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 public class DynamicQueryBuilderTest {
 
-    private final String alias = "alias";
+    private final String alias = "alias_for_main_criteria_type";
 
     @Test
     public void test_empty_value_concept() {
@@ -470,13 +470,13 @@ public class DynamicQueryBuilderTest {
 	String propertyName = null;
 	qp = new QueryProperty(klass, propertyName = "entity1.entity3");
 	assertFalse("Should not be within collectional hierarchy.", qp.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL());
-	assertEquals("Incorrect condition building name.", DynamicQueryBuilder.ALIAS + "." + propertyName + ".key", qp.getConditionBuildingName());
+	assertEquals("Incorrect condition building name.", alias + "." + propertyName + ".key", qp.getConditionBuildingName());
 	qp = new QueryProperty(klass, propertyName = "entity2.firstProperty");
 	assertFalse("Should not be within collectional hierarchy.", qp.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL());
-	assertEquals("Incorrect condition building name.", DynamicQueryBuilder.ALIAS + "." + propertyName, qp.getConditionBuildingName());
+	assertEquals("Incorrect condition building name.", alias + "." + propertyName, qp.getConditionBuildingName());
 	qp = new QueryProperty(klass, propertyName = "strProp");
 	assertFalse("Should not be within collectional hierarchy.", qp.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL());
-	assertEquals("Incorrect condition building name.", DynamicQueryBuilder.ALIAS + "." + propertyName, qp.getConditionBuildingName());
+	assertEquals("Incorrect condition building name.", alias + "." + propertyName, qp.getConditionBuildingName());
 
 	try {
 	    qp = new QueryProperty(klass, "entity1.entity3.coll");

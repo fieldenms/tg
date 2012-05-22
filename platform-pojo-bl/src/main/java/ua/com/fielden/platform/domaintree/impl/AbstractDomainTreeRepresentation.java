@@ -24,7 +24,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -34,6 +33,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -131,13 +131,13 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(rootType, reflectionProperty, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
 
 		     final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
-		    
+
 //		    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
 //		    final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(rootType, property);
 //		    final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
 //		    final String lastPropertyName = transformed.getValue();
 //		    final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(rootType, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) rootType, penultPropertyName)); // exclude link properties in one2many and one2one associations
-			
+
 		    // TODO
 		    if (propertyTypeWasInHierarchyBefore && /* !isLinkProperty */ !isKeyPart) {
 			newIncludedProps.add(createDummyMarker(property));
@@ -289,7 +289,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresent(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
 		!isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType) || // exclude "key" -- "key" is not of entity type
-		!isEntityItself && AbstractEntity.DESC.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresent(DescTitle.class, penultType) || // exclude "desc" -- no DescTitle annotation exists in direct owner of "desc"
+		!isEntityItself && AbstractEntity.DESC.equals(lastPropertyName) && !EntityDescriptor.hasDesc(penultType) || // exclude "desc" -- no DescTitle annotation exists in direct owner of "desc"
 		!isEntityItself && !Finder.findFieldByName(root, property).isAnnotationPresent(IsProperty.class) || // exclude non-TG properties (not annotated by @IsProperty)
 		isEntityItself && !rootTypes().contains(propertyType) || // exclude entities of non-"root types"
 		EntityUtils.isEnum(propertyType) || // exclude enumeration properties / entities

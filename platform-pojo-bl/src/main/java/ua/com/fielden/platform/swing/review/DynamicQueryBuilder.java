@@ -30,8 +30,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere3;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.EntityDescriptor;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
@@ -745,7 +745,7 @@ public class DynamicQueryBuilder {
 	return select(managedType).as(ALIAS);
     }
 
-    protected static final String ALIAS = "alias_for_main_criteria_type";
+    private static final String ALIAS = "alias_for_main_criteria_type";
 
     /**
      * Creates the query with configured conditions.

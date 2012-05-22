@@ -26,13 +26,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.jdesktop.swingx.JXDatePicker;
 
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IBindingEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.EntityDescriptor;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction;
@@ -455,7 +455,8 @@ public final class Binder {
 	} else {
 	    final AbstractEntity eeeentity = (AbstractEntity) Rebinder.getActualEntity(entity);
 	    final Class<AbstractEntity> actualEntityType = (eeeentity instanceof EntityQueryCriteria ? ((Class<AbstractEntity>) ((EntityQueryCriteria) eeeentity).getEntityClass()) : eeeentity.getType());
-	    final String actualPropertyName = EntityDescriptor.getPropertyNameWithoutKeyPart(EntityDescriptor.enhanceDynamicCriteriaPropertyEditorKey(propertyName, actualEntityType));
+	    //final String actualPropertyName = EntityDescriptor.getPropertyNameWithoutKeyPart(EntityDescriptor.enhanceDynamicCriteriaPropertyEditorKey(propertyName, actualEntityType));
+	    final String actualPropertyName = eeeentity instanceof EntityQueryCriteria ? CriteriaReflector.getCriteriaProperty(eeeentity.getType(), propertyName) : propertyName;
 	    final IsProperty isProperty = AnnotationReflector.getPropertyAnnotation(IsProperty.class, actualEntityType, actualPropertyName);
 	    final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(actualEntityType, actualPropertyName);
 	    final Class<?> collectionalElementType = isProperty == null ? null : isProperty.value();
