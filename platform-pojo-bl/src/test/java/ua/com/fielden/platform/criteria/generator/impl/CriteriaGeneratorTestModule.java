@@ -15,7 +15,7 @@ public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory
     protected void configure() {
 	super.configure();
 	bind(IDaoFactory.class).to(StubDaoFactory.class).in(Scopes.SINGLETON);
-	bind(IGeneratedEntityController.class).to(GeneratedEntityController.class).in(Scopes.SINGLETON);
+	bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class).in(Scopes.SINGLETON);
 	bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
 	bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
     }

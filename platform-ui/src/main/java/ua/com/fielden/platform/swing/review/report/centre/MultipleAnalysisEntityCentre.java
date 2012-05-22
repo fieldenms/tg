@@ -159,7 +159,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Creates new or opens the existing analysis specified with name and type.
-     * 
+     *
      * @param name
      * @param analysisType
      */
@@ -180,7 +180,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Hides the analysis specified with name.
-     * 
+     *
      * @param name
      */
     private void hideAnalysis(final String name) {
@@ -194,7 +194,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     /**
      * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined.
      * Also if analysis components were also loaded then it fires the load event.
-     * 
+     *
      * @return
      */
     private ComponentListener createComponentWasResized() {
@@ -232,7 +232,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Creates the after analysis load select listener. This listener fires the load event after the analysis were loaded and the active one was selected.
-     * 
+     *
      * @return
      */
     private PropertyChangeListener createAfterLoadSelectListenre() {
@@ -263,7 +263,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Returns the analysis type for the specified instance of {@link IAbstractAnalysisDomainTreeManager}.
-     * 
+     *
      * @param analysisManager
      * @return
      */
@@ -278,7 +278,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Returns the panel that wraps the tab panel with analysis.
-     * 
+     *
      * @param tabPanel
      * @return
      */
@@ -298,7 +298,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Creates the view with grid analysis. Also loads other analysis.
-     * 
+     *
      * @return
      */
     private JideTabbedPane createReview() {
@@ -324,7 +324,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     /**
      * Adds {@link ILoadListener} to the specified analysis configuration view and loads next visible analysis.
      * @param tabPanel
-     * 
+     *
      * @param configView
      * @param analysisKeys
      * @param analysisIndex
@@ -355,7 +355,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     /**
      * Loads the analysis specified with analysis index in the analysisKeys list.
      * @param tabPane
-     * 
+     *
      * @param analysisKeys
      * @param analysisIndex
      */
@@ -386,7 +386,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Returns an index of the first visible analysis.
-     * 
+     *
      * @param analysisKeys
      * @param analysisIndex
      * @return
@@ -405,7 +405,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Creates the analysis configuration view for the specified name and type.
-     * 
+     *
      * @param name - the analysis name.
      * @param type - the analysis type.
      * @return
@@ -422,7 +422,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Returns the close tab action.
-     * 
+     *
      * @return
      */
     private Action createCloseTabAction() {
@@ -443,7 +443,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Creates and returns the action that removes currently selected analysis.
-     * 
+     *
      * @return
      */
     private Action createRemoveAnalysisAction() {
@@ -480,7 +480,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Determines whether analysis specified with tab sheet index can be removed.
-     * 
+     *
      * @param index
      * @return
      */
@@ -507,7 +507,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Returns the removed analysis.
-     * 
+     *
      * @param index
      * @return
      */
@@ -524,7 +524,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * Creates the {@link SingleSelectionModel} for the specified tab panel.
-     * 
+     *
      * @param tabPane
      * @return
      */
@@ -601,7 +601,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 
     /**
      * The action that is responsible for creating or opening analysis.
-     * 
+     *
      * @author TG Team
      *
      */

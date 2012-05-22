@@ -46,7 +46,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
     /**
      * Returns value that indicates whether this locator was changed or not.
-     * 
+     *
      * @return
      */
     public boolean isChanged(){
@@ -55,7 +55,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
     /**
      * Returns value that indicates whether locator is in usage phase or not.
-     * 
+     *
      * @return
      */
     public boolean isInUsagePhase(){
@@ -64,7 +64,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
     /**
      * Returns value that indicates whether locator is in editing phase or not.
-     * 
+     *
      * @return
      */
     public boolean isInEdititngPhase(){
@@ -73,7 +73,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
     /**
      * Returns value that indicates whether locator is in freeze phase or not.
-     * 
+     *
      * @return
      */
     public boolean isInFreezedPhase(){
@@ -82,7 +82,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
     /**
      * Returns the type of the locator: LOCAL or GLOBAL.
-     * 
+     *
      * @return
      */
     public Type getType(){
@@ -133,7 +133,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
     /**
      * Returns the {@link ILocatorDomainTreeManagerAndEnhancer} associated with this locator configuration model.
-     * 
+     *
      * @return
      */
     public ILocatorDomainTreeManagerAndEnhancer getLocator(){
@@ -142,7 +142,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
     /**
      * Returns the {@link ILocatorManager} instance. That is used for managing this locator.
-     * 
+     *
      * @return
      */
     public ILocatorManager getLocatorManager() {
@@ -151,7 +151,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
 
     /**
      * Returns entity type with which this type is associated.
-     * 
+     *
      * @return
      */
     public Class<R> getRootType() {
@@ -176,7 +176,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
     }
 
     @Override
-    protected EntityLocatorModel<T> createEntityCentreModel() {
+    public final EntityLocatorModel<T> createEntityCentreModel() {
 	if(isInUsagePhase()){
 	    throw new IllegalStateException("The locator must be refreshed!");
 	}
@@ -188,7 +188,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
     }
 
     @Override
-    protected DomainTreeEditorModel<T> createDomainTreeEditorModel() {
+    public final DomainTreeEditorModel<T> createDomainTreeEditorModel() {
 	if(isInUsagePhase()){
 	    throw new IllegalStateException("locator must be refreshed!");
 	}

@@ -87,7 +87,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Returns the value that indicates whether this entity centre has changed or not.
-     * 
+     *
      * @return
      */
     public boolean isChanged(){
@@ -96,7 +96,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Returns value that indicates whether this entity centre is freezed or not.
-     * 
+     *
      * @return
      */
     public boolean isFreezed(){
@@ -112,7 +112,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Returns the entity centre manager for this centre configuration model.
-     * 
+     *
      * @return
      */
     public ICentreDomainTreeManagerAndEnhancer getEntityCentreManager(){
@@ -147,7 +147,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Returns the list of non principle entity centre list.
-     * 
+     *
      * @return
      */
     public List<String> getNonPrincipleEntityCentreList(){
@@ -155,7 +155,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
-    protected EntityCentreModel<T> createEntityCentreModel() {
+    public final EntityCentreModel<T> createEntityCentreModel() {
 	final ICentreDomainTreeManagerAndEnhancer cdtme = getEntityCentreManager();
 	if(cdtme == null || cdtme.getSecondTick().checkedProperties(getEntityType()).isEmpty()){
 	    throw new IllegalStateException("The centre manager is not specified");
@@ -164,7 +164,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
-    protected DomainTreeEditorModel<T> createDomainTreeEditorModel() {
+    public final DomainTreeEditorModel<T> createDomainTreeEditorModel() {
 	final ICentreDomainTreeManagerAndEnhancer cdtm = getEntityCentreManager();
 	if(cdtm == null){
 	    throw new IllegalStateException("The centre manager is not specified");
@@ -199,7 +199,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 
     /**
      * Returns the entity type for the specified menu item type.
-     * 
+     *
      * @param menuItemType
      * @return
      */

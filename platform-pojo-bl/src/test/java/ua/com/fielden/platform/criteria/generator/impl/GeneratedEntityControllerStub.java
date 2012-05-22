@@ -8,7 +8,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
 
-public class GeneratedEntityController<T extends AbstractEntity<?>> implements IGeneratedEntityController<T> {
+public class GeneratedEntityControllerStub<T extends AbstractEntity<?>> implements IGeneratedEntityController<T> {
 
     @Override
     public Class<T> getEntityType() {

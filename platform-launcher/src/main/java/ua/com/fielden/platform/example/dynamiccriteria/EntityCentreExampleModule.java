@@ -6,6 +6,7 @@ import java.util.Properties;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
+import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -45,6 +46,7 @@ public class EntityCentreExampleModule extends BasicWebServerModule{
 	bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
 	bind(IGlobalDomainTreeManager.class).to(GlobalDomainTreeManager.class).in(Scopes.SINGLETON);
 	bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
+	bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class).in(Scopes.SINGLETON);
 	bind(ISimpleECEEntityDao.class).to(SimpleECEEntityDao.class);
 	bind(INestedEntityDao.class).to(NestedEntityDao.class);
 	//bind(IMasterConfigurationController.class).to(RemoteMasterConfigurationController.class).in(Scopes.SINGLETON);

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.swing.review.development;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -143,6 +144,20 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	    return firstPage(resultQuery, totalQuery, pageSize);
 	} else {
 	    return firstPage(resultQuery, pageSize);
+	}
+    }
+
+    /**
+     * Removes the passed entity. If the entity is not of the entity type or managed type of this criteria.
+     *
+     * @param entity
+     */
+    public void delete(final T entity){
+	if(entity.getType().equals(getEntityClass()) || entity.getType().equals(getManagedType())){
+	    final EntityResultQueryModel<T> deleteQuery = select(getEntityClass()).where().prop("id").eq().val(entity.getId()).model();
+	    dao.delete(deleteQuery);
+	}else{
+	    throw new IllegalArgumentException("It's impossible to delete entity that isn't of the entity type or managed type of this criteria!");
 	}
     }
 

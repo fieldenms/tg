@@ -18,6 +18,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
@@ -462,6 +463,67 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	return action;
     }
 
+    /**
+     * A command that removes the selected in the EGI entity.
+     *
+     * @return
+     */
+    protected Command<T> createDeleteCommand() {
+	final Command<T> action = new BlockingLayerCommand<T>("Delete", getReviewProgressLayer()) {
+	    private static final long serialVersionUID = 1L;
+
+	    @Override
+	    protected boolean preAction() {
+		final boolean superRes = super.preAction();
+		if(!superRes){
+		    return false;
+		}
+		final List<T> selectedEntities = getSelectedEntities();
+		if(selectedEntities.size() != 1){//There are no selected entities or there are more then one are selected.
+		    return false;
+		}
+		final T entity = selectedEntities.get(0);
+		if (JOptionPane.showConfirmDialog(AbstractEntityCentre.this, "Entity " + entity + " will be deleted. Proceed?", "Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
+		    return false;
+		}
+		setMessage("Deleting...");
+		return true;
+	    }
+
+	    @Override
+	    protected T action(final ActionEvent event) throws Exception {
+		final List<T> selectedEntities = getSelectedEntities();
+		final T entity = selectedEntities.get(0);
+		getModel().getCriteria().delete(entity);
+		return entity;
+	    }
+
+	    @SuppressWarnings("unchecked")
+	    @Override
+	    protected void postAction(final T entity) {
+		final PropertyTableModel<T> tableModel = getEntityGridInspector(AbstractEntityCentre.this).getActualModel();
+		tableModel.removeInstances(entity);
+		tableModel.fireTableDataChanged();
+		super.postAction(entity);
+	    }
+
+	};
+	action.setEnabled(true);
+	action.putValue(Action.SHORT_DESCRIPTION, "Delete");
+	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_3);
+	action.putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/document-delete.png"));
+	action.putValue(Action.SMALL_ICON, ResourceLoader.getIcon("images/document-delete.png"));
+	return action;
+    }
+
+    /**
+     * Adds the component to the list of passed components if it is not null and returns component's constraints.
+     *
+     * @param components
+     * @param constraint
+     * @param component
+     * @return
+     */
     protected static String addToComponents(final List<JComponent> components, final String constraint, final JComponent component) {
 	if(component != null){
 	    components.add(component);
