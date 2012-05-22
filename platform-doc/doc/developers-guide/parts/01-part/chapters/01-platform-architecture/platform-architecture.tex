@@ -338,10 +338,18 @@ private Integer odometerReading;
   
 
 \subsubsection{Runtime Meta-Data}
-  One of the most critical runtime requirements for platform-based applications is the instantiation of entities by using an instance of \emph{EntityFactory}.
-  So, there should never be direct entity type instantiation by means in using \texttt{new} on the entity type constructor.
-  An appropriate instance of \emph{EntityFactory} is provided to the application at runtime, and represents a thread-safe singleton object ready to be used anywhere in the system.
-  Any discussion about entity type instances should assume that these instances are crated using \emph{EntityFactory}.
+
+  The runtime meta-data is created from the compile time meta-data and associated with each instance of every entity type, and has a localised nature.
+  This means that changing meta-data in one instance of some entity type does not make any impact on any other instance of the same or different type.
+  Entity runtime meta-data is a collection of runtime meta-data associated with each entity property and entity instance specific states such as version.
+  
+  All entities should always be instantiated using an instance of \emph{EntityFactory}.  
+  No entities should be created using \texttt{new} keyword applied to an entity type constructor.
+  An appropriate instance of \emph{EntityFactory} is provided to the application at runtime, and represents a thread-safe singleton object ready to be used anywhere in the system\footnote{The mechanism for \emph{EntityFactory} configuration and instantiation is discussed in a separate section later in the text.}.
+  
+  One of the key runtime meta-data concepts is represented by class \emph{MetaProperty}, which is designed to capture runtime meta-data for a single property.
+  Each entity property is provided with a corresponding instance of \emph{MetaProperty} at the instantiation time.
+  Meta-properties can be obtained from an entity instance by invoking method \emph{getProperty(propertyName)}, where \emph{propertyName} is the name of the actual entity property.
 
   \paragraph*{Entity identity and meta-state (version, editable, persisted, dirty etc.).}
 
