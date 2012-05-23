@@ -205,6 +205,21 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 	assertFalse("Should have become not-dirty after restoration to original.", entity.isDirty());
     }
 
+    @Test
+    public void setting_original_property_value_after_change_should_make_entity_not_dirty() {
+	EntityWithMoney entity = dao.findByKey("key1");
+	entity.setMoney(new Money("23.25"));
+	assertTrue(entity.isDirty());
+
+	entity = dao.save(entity);
+	entity.setMoney(new Money("26.25"));
+	assertTrue(entity.isDirty());
+	entity.setMoney(new Money("23.25"));
+	assertFalse(entity.isDirty());
+    }
+
+
+
 
     public void test_date_time_support() {
 	EntityWithMoney entity = dao.findByKey("key1");
