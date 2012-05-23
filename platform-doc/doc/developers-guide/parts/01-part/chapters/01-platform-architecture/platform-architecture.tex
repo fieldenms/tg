@@ -339,32 +339,48 @@ private Integer odometerReading;
 
 \subsubsection{Runtime Meta-Data}
 
-  The runtime meta-data is created from the compile time meta-data and associated with each instance of every entity type, and has a localised nature.
-  This means that changing meta-data in one instance of some entity type does not make any impact on any other instance of the same or different type.
+  The runtime meta-data is created from the compile time meta-data and associated with each instance of every entity type.
+  It has a localised nature, which means that changing meta-data in one instance of some entity type does not make any impact on any other instance of the same or different type.
   Entity runtime meta-data is a collection of runtime meta-data associated with each entity property and entity instance specific states such as version.
   
-  All entities should always be instantiated using an instance of \emph{EntityFactory}.  
-  No entities should be created using \texttt{new} keyword applied to an entity type constructor.
-  An appropriate instance of \emph{EntityFactory} is provided to the application at runtime, and represents a thread-safe singleton object ready to be used anywhere in the system\footnote{The mechanism for \emph{EntityFactory} configuration and instantiation is discussed in a separate section later in the text.}.
+  All entities should always be instantiated using an instance of \emph{EntityFactory} -- a special factory class designed to associated entity instances with runtime meta-date at the creation time.  
+  No entities should be created using \texttt{new} keyword applied to their type constructor.
+  An appropriate instance of \emph{EntityFactory} is provided to the application at runtime as part of the \emph{Injection of Control} (IoC) mechanism, and represents a thread-safe singleton object ready to be used anywhere in the system\footnote{The mechanism for \emph{EntityFactory} configuration and instantiation is discussed in a separate section on IoC later in the text.}.
   
-  One of the key runtime meta-data concepts is represented by class \emph{MetaProperty}, which is designed to capture runtime meta-data for a single property.
-  Each entity property is provided with a corresponding instance of \emph{MetaProperty} at the instantiation time.
-  Meta-properties can be obtained from an entity instance by invoking method \emph{getProperty(propertyName)}, where \emph{propertyName} is the name of the actual entity property.
-
   \paragraph*{Entity identity and meta-state (version, editable, persisted, dirty etc.).}
 
-  The current way of instantiating entities is by using \emph{EnttyFactory}, which relies on application configuration modules (based on Guice) for resolving dependencies used as part of entity instantiation logic.
+  The notion of \emph{entity identifier} is used to allocate some unique, but irrelevant from the business perspective, number for each persisted instance of any entity type.
+  It should be though of as a reference (or pointer) to an entity instance, but in the database instead of RAM.
+  At the database level, entity identifiere are used to making primary and foreign keys.
+  Once its value is assigned it neve changes.
+  The current platform policy for identity generation enforces uniqueness throughout all entity types.
+  At the \emph{AbstractEntity} level, identifier is represented by property \emph{id}, and can be accessed by using accessor \emph{getId()}.
+  When a new entity instance is created, its identifier is initialised with value \texttt{null}, and should never be set manually from an application code.
+  Although, entity identity is persisted, it is still considered to be a part of entity meta-data rather than data as it has more of a servising connotation.
 
-  One of the essential aspects of entity properties is their meta-state -- each property is associated with an instance of \emph{MetaProperty} type, which is created automatically when an entity is instantiated using \emph{EntityFactory}. 
-  \emph{MetaProperty} provides rich support for various property life cycle functions such as tracking property changes, validation results, title, description etc.
+  Here is a short list of entity specific meta-data methods:
 
-  \emph{MetaProperty} instances are created by \emph{IMetaPropertyFactory} implementation bound in the application configuration modules that is used by \emph{EntityFactory}.
+  \begin{description}
+    \item[\textbf{isPersisted()}] -- returns \texttt{true} if an entity instance was persisted, which is derived from the fact of having identifier assigned to a non-null value; otherwiser, returns \texttt{false}
+    \item[\textbf{isDirty()}] -- indicates whether an entity instance is different from its persisted counterpart; all new entity instances (that onse that have not been persisted) are considered dirty; any change to entity instance property values makes that instance dirty; if one of properties in a previously persisted entity instance is change and then changed again back to its original property, that entity remains non-dirty.
+    \item[\textbf{getVersion()}] -- return the number of how many times an entity instance was modified and persisted; version is updated upon save and only if an enity instance is dirty; simply changing one of entity's property does not change its version.
+    \item[\textbf{isEditable()}] -- by default return a successful instance of type \emph{Result}\footnote{\emph{Result} is a special class used as a generic way to provide information about correctness or incorrectness of something such as type instance, action etc. It consists of two main fields -- \emph{exception: Exception} and \emph{instance: Object}. Its method \emph{isSuccessful()} returns \emph{true} if property \emph{exception} is \emph{null}.}; can be overridden to provide application specific logic when an entity instance should be editable; if an entity instance is not editable then changing any of its properties does not have any effect.
+    \item[\textbf{restoreToOriginal()}] -- restores all entity properties to their original values and resets property validaton information.
+    \item[\textbf{isValid()}] -- returns an instance of type \emph{Result} indicating success or the first validation error; the default behaviour is to check all properties for validity; if some custom validation logic needs to be provided at the entity level in addition to checking properties, method \emph{validate()} should be overridden (a call to super.validate() is highly recommended); when invoked, method \emph{isValid()} employes a locking mechanism to ensure that entity validation takes place only after all running at the time individual property validations complete.
+  \end{description}
+  
+  
 
-  \emph{MetaProperty} instantiation ensures association of the created entity instance with property \emph{Before} and \emph{After} change event handlers, which are defined as annotations on property fields. 
-  The platforms provides a set of predefined \emph{Before} event handles, which serve as validators, which are discussed further in the book. 
   
 
   \paragraph*{Property validation results.}
+
+  A runtime meta-data that is associted with an individual entity property is represented by class \emph{MetaProperty}, which is designed to capture runtime meta-data for a single property.
+  Each entity property is provided with a corresponding instance of \emph{MetaProperty} at the instantiation time.
+  Meta-properties can be obtained from an entity instance by invoking method \emph{getProperty(propertyName)}, where \emph{propertyName} is the name of any entity property.
+
+  \emph{MetaProperty} instantiation ensures association of the created entity instance with property \emph{Before} and \emph{After} change event handlers, which are defined as annotations on property fields. 
+  
 
   Pre-condition handlers are executed at the time when a new property value (i.e. different to the one already set) is being assigned.
   If one of property pre-conditions fails, the new value is not assigned and a
