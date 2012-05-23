@@ -112,8 +112,10 @@ public class EntQuery implements ISingleOperand {
             yields.getYields().put(idModel.getAlias(), idModel);
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+
             for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(type())) {
-                if (/*!ppi.isCompositeProperty() && */!ppi.isCollection()/* && !ppi.isCalculated()*/) {
+        	final boolean skipProperty = ppi.isCollection() || ppi.isAggregatedExpression(); //|| ppi.isCompositeProperty()
+      		if (!skipProperty) {
                     final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), ppi.getColumn());
                     yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
                 }

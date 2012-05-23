@@ -18,6 +18,7 @@ import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -26,8 +27,11 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
+import ua.com.fielden.platform.persistence.types.UnionEntityType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Injector;
@@ -152,6 +156,16 @@ public class DomainPersistenceMetadata {
 	    propsToBeSkipped.add(propertyPersistenceInfo.getName());
 	}
 
+//	if (entityType.equals(TgBogie.class)) {
+//		propsToBeSkipped.add("location");
+//
+//		final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder("location", TgBogieLocation.class, false).hibType(new UnionEntityType());
+//		builder.column("LOCATION_PROP");
+//		builder.column("LOCATION_VALUE");
+//		//builder.type(PropertyPersistenceType.COMPOSITE_DETAILS);
+//		result.add(builder.build());
+//	}
+
 	for (final Field field : getPersistedProperties(entityType)) {
 	    if (!propsToBeSkipped.contains(field.getName())) {
 		result.add(getCommonPropHibInfo(entityType, field));
@@ -268,12 +282,14 @@ public class DomainPersistenceMetadata {
     }
 
     private PropertyPersistenceInfo getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
+	final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(calculatedPropfield.getAnnotation(Calculated.class).category());
+
 	final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	final Object hibernateType = getHibernateType(javaType, "", Void.class, false, false);
 
 	final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
 	expressionModel.setContextPrefixNeeded(needsContextPrefix(entityType, calculatedPropfield));
-	return new PropertyPersistenceInfo.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).build();
+	return new PropertyPersistenceInfo.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).aggregatedExpression(aggregatedExpression).build();
     }
 
     private PropertyPersistenceInfo getCollectionalPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {

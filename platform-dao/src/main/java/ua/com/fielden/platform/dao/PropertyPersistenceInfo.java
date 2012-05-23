@@ -25,6 +25,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     private final Long scale;
     private final boolean nullable;
     private final ExpressionModel expressionModel;
+    private final boolean aggregatedExpression;
 
     public boolean isCalculated() {
 	return expressionModel != null;
@@ -114,6 +115,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	columns = builder.columns;
 	nullable = builder.nullable;
 	expressionModel = builder.expressionModel;
+	aggregatedExpression = builder.aggregatedExpression;
     }
 
     public Long getLength() {
@@ -164,6 +166,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	private long precision = -1;
 	private long scale = -1;
 	private ExpressionModel expressionModel;
+	private boolean aggregatedExpression = false;
 
 	public PropertyPersistenceInfo build() {
 	    return new PropertyPersistenceInfo(this);
@@ -208,6 +211,11 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
 	public Builder column(final String column) {
 	    columns.add(column);
+	    return this;
+	}
+
+	public Builder aggregatedExpression(final boolean val) {
+	    aggregatedExpression = val;
 	    return this;
 	}
 
@@ -322,5 +330,9 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    return false;
 	}
 	return true;
+    }
+
+    public boolean isAggregatedExpression() {
+        return aggregatedExpression;
     }
 }
