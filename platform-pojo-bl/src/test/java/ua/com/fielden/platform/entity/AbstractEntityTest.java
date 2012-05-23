@@ -899,7 +899,8 @@ public class AbstractEntityTest {
 
     @Test
     public void test_copy_for_entities_with_dynamic_key() {
-	final CorrectEntityWithDynamicEntityKey one = factory.newEntity(CorrectEntityWithDynamicEntityKey.class, 1L);;
+	final CorrectEntityWithDynamicEntityKey one = factory.newEntity(CorrectEntityWithDynamicEntityKey.class, 1L);
+	;
 	one.property1 = 38L;
 	one.property2 = 98L;
 	final DynamicEntityKey keyOne = new DynamicEntityKey(one);
@@ -1031,5 +1032,46 @@ public class AbstractEntityTest {
 	    fail("Should be failed.");
 	} catch (final IllegalStateException e) {
 	}
+    }
+
+    @Test
+    public void test_entity_locking_during_validation() throws Exception {
+	final LockedEntity entity = factory.newEntity(LockedEntity.class);
+
+	// changing property happens on a separate thread
+	final Thread changingThread = new Thread(new Runnable() {
+	    @Override
+	    public void run() {
+		// this call should put setting into a long running mode until property validation is unlocked
+		entity.setLockPropertyValidation(true);
+		entity.setMoney(Money.zero);
+	    }
+	});
+	changingThread.start();
+	Thread.sleep(500); // to allow for changing thread to kick in properly
+
+	// validation happens on a separate thread
+	final Thread validationThread = new Thread(new Runnable() {
+	    @Override
+	    public void run() {
+		entity.isValid();
+	    }
+	});
+	validationThread.start();
+	Thread.sleep(500); // to allow for validation thread to kick in properly
+
+	// both threads should be alive
+	assertTrue(changingThread.isAlive());
+	assertTrue(validationThread.isAlive());
+
+	assertNull(entity.getMoney()); // property should not have been changed yet
+
+	entity.setLockPropertyValidation(false); // release property validation lock
+
+	Thread.sleep(500); // to allow for changing and validation threads to complete
+
+
+	assertNotNull(entity.getMoney()); // property should have been changed already
+	assertNotNull(entity.isValid().isSuccessful());
     }
 }
