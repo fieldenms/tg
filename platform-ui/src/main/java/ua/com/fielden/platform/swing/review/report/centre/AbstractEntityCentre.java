@@ -539,7 +539,8 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      */
     @SuppressWarnings( "unchecked")
     protected static <E extends AbstractEntity<?>, MAE extends ICentreDomainTreeManagerAndEnhancer> EntityGridInspector<E> getEntityGridInspector(final AbstractEntityCentre<E, MAE> entityCentre){
-	for(final AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?> analysis : entityCentre.getVisibleAnalysisList()){
+	final List<AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?>> visibleAnalysis = entityCentre.getVisibleAnalysisList();
+	for(final AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?> analysis : visibleAnalysis){
 	    if(analysis instanceof GridConfigurationView){
 		final GridConfigurationView<E, MAE> gridConfigPanel = (GridConfigurationView<E, MAE>)analysis;
 		return gridConfigPanel.getPreviousView().getEgiPanel().getEgi();

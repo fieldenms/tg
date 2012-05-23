@@ -122,15 +122,17 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
      */
     public void setData(final IPage<T> page) {
 	egi.getActualModel().setInstances(page == null ? new ArrayList<T>() : page.data());
-	for (final Map.Entry<String, JTextField> totalEntry : totalEditors.entrySet()) {
-	    final Object value = page.summary().get(totalEntry.getKey());
-	    final Class<?> valueClass = value.getClass();
-	    final String totalsStrValue = EntityUtils.toString(value, valueClass);
-	    final JTextField editor = totalEntry.getValue();
-	    editor.setText(totalsStrValue);
-	    editor.setCaretPosition(0);
-	    if (Number.class.isAssignableFrom(valueClass) || Money.class.isAssignableFrom(valueClass) || valueClass == int.class || valueClass == double.class) {
-		editor.setHorizontalAlignment(JTextField.RIGHT);
+	if (page != null && page.summary() != null) {
+	    for (final Map.Entry<String, JTextField> totalEntry : totalEditors.entrySet()) {
+		final Object value = page.summary().get(totalEntry.getKey());
+		final Class<?> valueClass = value.getClass();
+		final String totalsStrValue = EntityUtils.toString(value, valueClass);
+		final JTextField editor = totalEntry.getValue();
+		editor.setText(totalsStrValue);
+		editor.setCaretPosition(0);
+		if (Number.class.isAssignableFrom(valueClass) || Money.class.isAssignableFrom(valueClass) || valueClass == int.class || valueClass == double.class) {
+		    editor.setHorizontalAlignment(JTextField.RIGHT);
+		}
 	    }
 	}
     }

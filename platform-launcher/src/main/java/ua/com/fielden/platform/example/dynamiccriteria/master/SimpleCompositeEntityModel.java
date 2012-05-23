@@ -70,10 +70,8 @@ public class SimpleCompositeEntityModel extends UmMasterWithCrudAndUpdater<Simpl
 	super.notifyActionStageChange(actionState);
 
 	// add focusing different editors depending on the action stage
-	if (actionState == ActionStage.NEW_POST_ACTION) {
-	    getEditors().get("key").getEditor().requestFocusInWindow();
-	} else if (actionState == ActionStage.EDIT_POST_ACTION) {
-	    getEditors().get("desc").getEditor().requestFocusInWindow();
+	if (actionState == ActionStage.NEW_POST_ACTION || actionState == ActionStage.EDIT_POST_ACTION) {
+	    getEditors().get("simpleEntity").getEditor().requestFocusInWindow();
 	}
     }
 }

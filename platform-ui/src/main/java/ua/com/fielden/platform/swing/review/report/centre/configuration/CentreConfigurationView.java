@@ -36,7 +36,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
     /**
      * Initialises this {@link CentreConfigurationView} instance with specified model and progress layer.
-     * 
+     *
      * @param model
      * @param progressLayer
      */
@@ -96,7 +96,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
     /**
      * Returns the save action.
-     * 
+     *
      * @return
      */
     public Action getSave() {
@@ -105,7 +105,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
     /**
      * Returns the save as action.
-     * 
+     *
      * @return
      */
     public Action getSaveAs() {
@@ -114,7 +114,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
     /**
      * Returns the remove action.
-     * 
+     *
      * @return
      */
     public Action getRemove() {
@@ -128,21 +128,19 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
     /**
      * Saves the entity centre configuration when closing.
-     * 
+     *
      * @return
      */
     private void closeSaveAction() {
-	System.out.println("--------------------------start saved---------------------------------------");
 	if(getModel().isFreezed()){
 	    getModel().save();
 	}
 	getModel().save();
-	System.out.println("--------------------------saved---------------------------------------");
     }
 
     /**
      * Discards the entity centre's changes when closing.
-     * 
+     *
      * @return
      */
     private void closeDiscardAction(){
@@ -150,12 +148,11 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 	    getModel().discard();
 	}
 	getModel().discard();
-	System.out.println("--------------------------discarded---------------------------------------");
     }
 
     /**
      * This action cancels the closing operation.
-     * 
+     *
      * @param shouldFreez
      * @return
      */
@@ -303,7 +300,7 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 
     /**
      * Creates the open event listener that determines whether centre can be opened in report mode or not
-     * 
+     *
      * @return
      */
     private IAbstractConfigurationViewEventListener createCentreOpenEventListener() {

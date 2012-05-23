@@ -319,6 +319,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	register(EntityCentreConfig.class);
 	register(EntityMasterConfig.class);
 	register(EntityLocatorConfig.class);
+	register(CalculatedProperty.class);
 
 	// register classes provided by the provider
 	for (final Class<?> type : provider.classes()) {

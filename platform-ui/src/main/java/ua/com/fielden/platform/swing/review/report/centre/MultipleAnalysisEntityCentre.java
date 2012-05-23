@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.centre;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -100,8 +99,8 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     @Override
     public List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> getVisibleAnalysisList() {
 	final List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> analysisList = new ArrayList<AbstractAnalysisConfigurationView<T,ICentreDomainTreeManagerAndEnhancer,?,?,?>>();
-	for(final Component component : tabPanel.getComponents()){
-	    analysisList.add((AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)component);
+	for(int tabIndex = 0; tabIndex < tabPanel.getTabCount(); tabIndex++){
+	    analysisList.add((AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)tabPanel.getComponentAt(tabIndex));
 	}
 	return analysisList;
     }
