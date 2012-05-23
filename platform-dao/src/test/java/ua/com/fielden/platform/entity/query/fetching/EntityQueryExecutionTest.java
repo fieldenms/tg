@@ -40,6 +40,7 @@ import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.controller.ITgWagon;
+import ua.com.fielden.platform.sample.domain.controller.ITgWagonSlot;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -52,6 +53,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -59,6 +61,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     private final ITgWagon wagonDao = getInstance(ITgWagon.class);
+    private final ITgWagonSlot wagonSlotDao = getInstance(ITgWagonSlot.class);
     private final ITgVehicleModel vehicleModelDao = getInstance(ITgVehicleModel.class);
     private final ITgVehicleMake vehicleMakeDao = getInstance(ITgVehicleMake.class);
     private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
@@ -69,6 +72,14 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final IEntityAggregatesDao aggregateDao = getInstance(IEntityAggregatesDao.class);
     private final EntityWithMoneyDao entityWithMoneyDao = getInstance(EntityWithMoneyDao.class);
     private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
+
+
+    @Test
+    public void test_query_with_virtual_property() {
+	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().prop("key").eq().val("WAGON2").model();
+	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).build());
+	assertEquals("Incorrect key", 3, models.size());
+    }
 
     @Test
     public void test_fetch_with_sorted_collection() {

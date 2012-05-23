@@ -12,6 +12,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.Hibernate;
 import org.hibernate.type.BooleanType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.TypeFactory;
@@ -37,6 +38,7 @@ import com.google.inject.Injector;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
@@ -48,6 +50,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
+
 
 
 /**
@@ -140,14 +143,17 @@ public class DomainPersistenceMetadata {
 	result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.VERSION).build());
 
 	final String keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? getMapEntityTo(entityType).keyColumn() : key;
+
 	if (isOneToOne(entityType)) {
 	    result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
 	} else if (!DynamicEntityKey.class.equals(getKeyType(entityType))) {
 	    result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PropertyPersistenceType.PRIMITIVE_KEY).build());
 	} else if (DynamicEntityKey.class.equals(getKeyType(entityType))) {
-	    for (final Field field : getCompositeKeyProperties(entityType)) {
+	    final List<Field> compositeKeyProperties = getCompositeKeyProperties(entityType);
+	    for (final Field field : compositeKeyProperties) {
 		result.add(getCompositeKeyPropInfo(entityType, field));
 	    }
+	    result.add(getVirtualPropInfoForDynamicEntityKey(compositeKeyProperties));
 	}
 	final List<String> propsToBeSkipped = new ArrayList<String>();
 
@@ -278,6 +284,11 @@ public class DomainPersistenceMetadata {
 	}
 
 	return builder.column(columnName).build();
+    }
+
+    private PropertyPersistenceInfo getVirtualPropInfoForDynamicEntityKey(final List<Field> keyMembers) throws Exception {
+	final ExpressionModel expressionModel = expr().prop(keyMembers.get(0).getName() + ".key").model();
+	return new PropertyPersistenceInfo.Builder("key", String.class, true).expression(expressionModel).hibType(Hibernate.STRING).virtual(true).build();
     }
 
     private PropertyPersistenceInfo getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {

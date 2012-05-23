@@ -26,6 +26,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     private final boolean nullable;
     private final ExpressionModel expressionModel;
     private final boolean aggregatedExpression;
+    private final boolean virtual;
 
     public boolean isCalculated() {
 	return expressionModel != null;
@@ -116,6 +117,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	nullable = builder.nullable;
 	expressionModel = builder.expressionModel;
 	aggregatedExpression = builder.aggregatedExpression;
+	virtual = builder.virtual;
     }
 
     public Long getLength() {
@@ -167,6 +169,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	private long scale = -1;
 	private ExpressionModel expressionModel;
 	private boolean aggregatedExpression = false;
+	private boolean virtual = false;
 
 	public PropertyPersistenceInfo build() {
 	    return new PropertyPersistenceInfo(this);
@@ -216,6 +219,11 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
 	public Builder aggregatedExpression(final boolean val) {
 	    aggregatedExpression = val;
+	    return this;
+	}
+
+	public Builder virtual(final boolean val) {
+	    virtual = val;
 	    return this;
 	}
 
@@ -334,5 +342,9 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
     public boolean isAggregatedExpression() {
         return aggregatedExpression;
+    }
+
+    public boolean isVirtual() {
+        return virtual;
     }
 }

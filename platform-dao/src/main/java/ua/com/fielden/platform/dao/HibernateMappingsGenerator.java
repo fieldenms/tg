@@ -135,8 +135,9 @@ public class HibernateMappingsGenerator {
 
 	sb.append(getCommonPropMappingString(map.getProps().get(AbstractEntity.ID)));
 	sb.append(getCommonPropMappingString(map.getProps().get(AbstractEntity.VERSION)));
-	if (map.getProps().get(AbstractEntity.KEY) != null) {
-	    sb.append(getCommonPropMappingString(map.getProps().get(AbstractEntity.KEY)));
+	final PropertyPersistenceInfo keyProp = map.getProps().get(AbstractEntity.KEY);
+	if (keyProp != null && !keyProp.isVirtual()) {
+	    sb.append(getCommonPropMappingString(keyProp));
 	}
 
 	for (final PropertyPersistenceInfo ppi : map.getProps().values()) {
