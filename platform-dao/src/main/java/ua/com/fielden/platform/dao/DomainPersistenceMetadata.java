@@ -18,7 +18,6 @@ import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -156,15 +155,15 @@ public class DomainPersistenceMetadata {
 	    propsToBeSkipped.add(propertyPersistenceInfo.getName());
 	}
 
-//	if (entityType.equals(TgBogie.class)) {
-//		propsToBeSkipped.add("location");
-//
-//		final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder("location", TgBogieLocation.class, false).hibType(new UnionEntityType());
-//		builder.column("LOCATION_PROP");
-//		builder.column("LOCATION_VALUE");
-//		//builder.type(PropertyPersistenceType.COMPOSITE_DETAILS);
-//		result.add(builder.build());
-//	}
+	if (entityType.equals(TgBogie.class)) {
+		propsToBeSkipped.add("location");
+
+		final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder("location", TgBogieLocation.class, false).hibType(new UnionEntityType());
+		builder.column("LOCATION_PROP");
+		builder.column("LOCATION_VALUE");
+		//builder.type(PropertyPersistenceType.COMPOSITE_DETAILS);
+		result.add(builder.build());
+	}
 
 	for (final Field field : getPersistedProperties(entityType)) {
 	    if (!propsToBeSkipped.contains(field.getName())) {
@@ -282,7 +281,7 @@ public class DomainPersistenceMetadata {
     }
 
     private PropertyPersistenceInfo getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
-	final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(calculatedPropfield.getAnnotation(Calculated.class).category());
+	final boolean aggregatedExpression = false;//CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(calculatedPropfield.getAnnotation(Calculated.class).category());
 
 	final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	final Object hibernateType = getHibernateType(javaType, "", Void.class, false, false);

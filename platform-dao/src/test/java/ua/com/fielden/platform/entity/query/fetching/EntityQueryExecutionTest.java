@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
@@ -17,7 +18,9 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
@@ -64,7 +67,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final IUserRoleDao userRoleDao = getInstance(IUserRoleDao.class);
     private final IUserAndRoleAssociationDao userAndRoleAssociationDao = getInstance(IUserAndRoleAssociationDao.class);
     private final IEntityAggregatesDao aggregateDao = getInstance(IEntityAggregatesDao.class);
-
+    private final EntityWithMoneyDao entityWithMoneyDao = getInstance(EntityWithMoneyDao.class);
     private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
 
     @Test
@@ -330,12 +333,33 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    public void test8a() {
+	final EntityResultQueryModel<EntityWithMoney> model = select(EntityWithMoney.class).where().prop("money").isNotNull().model();
+	final List<EntityWithMoney> values = entityWithMoneyDao.getAllEntities(from(model).build());
+    	assertEquals("Incorrect count", 0, values.size());
+    }
+
+    @Test
     public void test9() {
 	final AggregatedResultQueryModel model = select(TgVehicle.class).yield(). //
 		avgOf().beginExpr().prop("price.amount").add().prop("purchasePrice.amount").endExpr().as("aa").modelAsAggregate();
 	final List<EntityAggregates> values = aggregateDao.getAllEntities(from(model).build());
     	assertEquals("Incorrect count", 1, values.size());
     	assertEquals("Incorrect value", new BigDecimal("165"), values.get(0).get("aa"));
+    }
+
+    @Test
+    public void test_all_quantified_condition() {
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().val(100).lt().all(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").yield().prop("qty").modelAsPrimitive()).model();
+	final List<TgVehicle> values = vehicleDao.getAllEntities(from(model).build());
+    	assertEquals("Incorrect count", 0, values.size());
+    }
+
+    @Test
+    public void test_any_quantified_condition() {
+	final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().val(100).lt().any(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").yield().prop("qty").modelAsPrimitive()).model();
+	final List<TgVehicle> values = vehicleDao.getAllEntities(from(model).build());
+    	assertEquals("Incorrect count", 1, values.size());
     }
 
     @Test
@@ -717,8 +741,9 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final TgWorkshop workshop1 = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
 	final TgWorkshop workshop2 = save(new_(TgWorkshop.class, "WSHOP2", "Workshop 2"));
 
-
-	final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1"));
+	final TgBogieLocation location = new TgBogieLocation().setWorkshop(workshop1);
+	location.ensureUnion("workshop", null);
+	final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
 	final TgBogie bogie2 = save(new_(TgBogie.class, "BOGIE2", "Bogie 2"));
 	final TgBogie bogie3 = save(new_(TgBogie.class, "BOGIE3", "Bogie 3"));
 	final TgBogie bogie4 = save(new_(TgBogie.class, "BOGIE4", "Bogie 4"));
