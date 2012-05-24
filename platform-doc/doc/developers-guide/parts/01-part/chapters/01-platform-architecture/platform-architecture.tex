@@ -358,7 +358,7 @@ private Integer odometerReading;
   When a new entity instance is created, its identifier is initialised with value \texttt{null}, and should never be set manually from an application code.
   Although, entity identity is persisted, it is still considered to be a part of entity meta-data rather than data as it has more of a servising connotation.
 
-  Here is a short list of entity specific meta-data methods:
+  Here is a list of entity specific meta-data methods:
 
   \begin{description}
     \item[\textbf{isPersisted()}] -- returns \texttt{true} if an entity instance was persisted, which is derived from the fact of having identifier assigned to a non-null value; otherwiser, returns \texttt{false}
@@ -366,31 +366,46 @@ private Integer odometerReading;
     \item[\textbf{getVersion()}] -- return the number of how many times an entity instance was modified and persisted; version is updated upon save and only if an enity instance is dirty; simply changing one of entity's property does not change its version.
     \item[\textbf{isEditable()}] -- by default return a successful instance of type \emph{Result}\footnote{\emph{Result} is a special class used as a generic way to provide information about correctness or incorrectness of something such as type instance, action etc. It consists of two main fields -- \emph{exception: Exception} and \emph{instance: Object}. Its method \emph{isSuccessful()} returns \emph{true} if property \emph{exception} is \emph{null}.}; can be overridden to provide application specific logic when an entity instance should be editable; if an entity instance is not editable then changing any of its properties does not have any effect.
     \item[\textbf{restoreToOriginal()}] -- restores all entity properties to their original values and resets property validaton information.
-    \item[\textbf{isValid()}] -- returns an instance of type \emph{Result} indicating success or the first validation error; the default behaviour is to check all properties for validity; if some custom validation logic needs to be provided at the entity level in addition to checking properties, method \emph{validate()} should be overridden (a call to super.validate() is highly recommended); when invoked, method \emph{isValid()} employes a locking mechanism to ensure that entity validation takes place only after all running at the time individual property validations complete.
+    \item[\textbf{isValid()}] -- returns an instance of type \emph{Result} indicating success or the first validation error; the default behaviour is to check all properties for validity; if some custom validation logic needs to be provided at the entity level in addition to checking properties then method \emph{validate()} should be overridden\footnote{A call to super.validate() is highly recommended as it performs checking of property validity.}; when invoked, method \emph{isValid()} employes a locking mechanism to ensure that entity validation takes place only after all running at the time individual property validations complete, and that no property change can take place until entity validation completes.
   \end{description}
-  
-  
-
   
 
   \paragraph*{Property validation results.}
 
   A runtime meta-data that is associted with an individual entity property is represented by class \emph{MetaProperty}, which is designed to capture runtime meta-data for a single property.
   Each entity property is provided with a corresponding instance of \emph{MetaProperty} at the instantiation time.
-  Meta-properties can be obtained from an entity instance by invoking method \emph{getProperty(propertyName)}, where \emph{propertyName} is the name of any entity property.
+  Meta-properties can be obtained from an entity instance by invoking method \emph{getProperty(propertyName)}, where \emph{propertyName} is the name of any entity property, or method \emph{getProperties()} returning a list of meta-properties.
 
-  \emph{MetaProperty} instantiation ensures association of the created entity instance with property \emph{Before} and \emph{After} change event handlers, which are defined as annotations on property fields. 
+  Amongst property meta-data such as title, description, type, meta-property maintains information about property pre- and post- conditions and results of property validation (i.e. results of executioning pre-conditions).
+  Custom, or what might be referred as domain specific, pre- and post- conditions are represented by \emph{Before Change Event} (BCE) and \emph{After Change Event} (ACE) handlers respectively.
+  Every instance of meta-property contains actual instances of classes handling pre- and post- conditions, which includes BCE and ACE handlers.
+  A special mechanism kicks in upon an attempt to set a new value for some property, which resues pre-condition handler instances to process the new value before assigning it to the property and post-condition instances after the value has been assigned.
+
+  \subparagraph*{BCE Handlers.}
+  As was mentioned before, the primary objection of BCE handlers is to validate the value being set for the property.
+  Any class that implements contract \emph{IBeforeChangeEventHandler<T>} can be used as a BCE handler for a property of type \emph{T}.
+  This contract requries implementation of a single method \emph{handle(final MetaProperty property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations)}, which returns an instance of \emph{Result} indicating success or failure, and takes four arguments:
+
+  \begin{description}
+    \item[\textbf{property: MetaProperty}] -- is an instance of the meta-property associated with a property that a handler instance is associated with; it can be used for various purposes, including access to the actual entity instance holding the property and other properties that might need to be used as part of the handler logic.
+    \item[\textbf{newValue: T}] -- this is a new property value of type \emph{T}, which is being set; it is no yet assigned to the underpinning property field.
+    \item[\textbf{oldValue: T}] -- the current value of the property, which is going to be replaced with a new value of it passes all validation.
+    \item[\textbf{mutatorAnnotations: Set<Annotation>}] -- a set of annotations associated with property mutator (i.e. setter), which is passed for convenience in case the handler logic needs to obtain some addition infromation from them.
+   \end{description}
   
+  There is nothing in the BCE handler type declaration that would associate it with a particular entity type -- only the property type.
+  However, the actual implementation of method \emph{handle} may rely on the fact the an entity associated with a property being processed is of a certain type.
+  Therefore, one should be mindful of the intended semantics for BCE handlers when declaring them as part of property definitions.
 
-  Pre-condition handlers are executed at the time when a new property value (i.e. different to the one already set) is being assigned.
-  If one of property pre-conditions fails, the new value is not assigned and a
+  Let's discuss implementation of the \emph{TonnageValidator} handler associated with property \emph{WagonClass.tonnage} (listing~\ref{lst:PreConditionWagonClassTonnageProperty}), which is provided in listing~\ref{lst:TonnageValidator}.
+  It implements contract \emph{IBeforeChangeEventHandler} parameterised by the type of the property it is associated with.
+  Specifically, type \emph{Integer} that is the type of property \emph{tonnage}.
+  
+  The \emph{handle} method checks whether a new value is one of the three acceptable values 50, 70 or 100.
+  If the value is different than unsuccessful \emph{Result} is created, which accepts an appropriate exception as its second argument exmplaining the reason for regecting the new value.
+  Otherwise, a successful \emph{Result} is return.
 
-  The implementation of \emph{TonnageValidator} is provided in listing~\ref{lst:TonnageValidator}.
-  It implements contract \emph{IBeforeChangeEventHandler} parameterised by the type of the property is its assigned to -- \emph{Integer} is the type of property \emph{tonnage}.
-  The only method required by the contract is \emph{handle}, which accepts three arguments and return an instance of \emph{Result} indicating validation success or failure.
-  Three arguments
-
-  \begin{code}{Custom pre-conditions TonnageValidator.}{\label{lst:TonnageValidator}}{codebgcolor}
+  \begin{code}{Custom pre-condition TonnageValidator.}{\label{lst:TonnageValidator}}{codebgcolor}
     \begin{lstlisting}
 public class TonnageValidator 
     implements IBeforeChangeEventHandler<Integer> {
@@ -411,12 +426,70 @@ public class TonnageValidator
 	}
 	return Result.successful(newValue);
     }
-
 }
     \end{lstlisting}
   \end{code}
 
+  As can be observed, the provided implementation is not entity type dependent and thus can be associated with any property of type \emph{Integer} in any entity type is appropriate\footnote{Obviously, the actual handler implementation has its specific meaning regardles of whether it is entity type specific or not, and may not be applicalbe to any arbitrary \emph{Integer} property.}.
+  Another important remark about the presented implementation is that argument \emph{newValue} is not changed for \emph{null} before being used in the \emph{if} statement.
+  In this case it is safe due to the fact that property \emph{WagonClass.tonnage} has another pre-conditon -- \emph{Required}, with a higher precedence.
+  This means that \emph{null} value would never get past this pre-condition, and as the result of this, pre-condition \emph{TonnageValidator} would never get invoked.
 
+  \begin{notebox}{Defensive or not.}{\label{nb:DefensiveOrNot}}
+    There was an interesting discussion during one of the training sessions with respect to defensive programming, which sparked as the result of an intuition that argument \emph{newValue} in method \emph{TonnageValidator.handle} should be checked for \emph{null} before being used for validation as it would seem to be a good defensive programming practice.    
+    Althoug, it might be a good idea in general, our past experience and analyses suggests that the meaning of \emph{defensive} should always be treated within a specific semantic context.\\
+    
+    If the intention for \emph{TonnageValidator} is to be used only in cases where the property is \emph{required} then having a \emph{null} check with no \emph{newValue} validation against the three possible values and a successful \emph{Result} returned, could lead to unintentional BCE handler usages by being associated with properties that are not declared as \emph{required}, and would inflict a false certainty that only the three permitted tonnage values are acceptalbe.
+    In fact, value \emph{null} would also be acceptable.
+    In this case, it would be better if the handler fails with NPE rather than accept the \emph{null} value.\\
+    
+    Alternatively, there could be a check that fails validation if \emph{newValue} is \emph{null}, which has only one benefit over no check at all -- it could provide a more meanigful error message stating that property value is required.
+    The downside of this approach is that it is not clear from an entity type declaration that a property value is requried unless the code of \emph{TonnageValidator} is inspected.
+  \end{notebox}
+
+
+  Another pre-condition, which is declared for property \emph{WagonClacc.numOfSlots: Integer}, is interesting from initialisation point of view.
+  This BCE handler is declared in listing~\ref{lst:PreConditionWagonClassNumOfSlotsProperty}, and specifies two integer values for handler fields \emph{minNumOfSlots} and \emph{maxNumOfSlots}.
+  Listing~\ref{lst:NumOfSlotsValidator} provides a complete implementation for this BCE handler.
+  Fields \emph{minNumOfSlots} and \emph{maxNumOfSlots} do not require to have getters and setters.
+
+  \begin{code}{Custom pre-condition NumOfSlotsValidator.}{\label{lst:NumOfSlotsValidator}}{codebgcolor}
+    \begin{lstlisting}
+public class NumOfSlotsValidator implements IBeforeChangeEventHandler<Integer> {
+    private int minNumOfSlots;
+    private int maxNumOfSlots;
+
+    @Override
+    public Result handle(
+	final MetaProperty property, 
+	final Integer newValue, 
+	final Integer oldValue, 	
+	final Set<Annotation> mutatorAnnotations) {
+
+	if ((newValue < minNumOfSlots) || (newValue > maxNumOfSlots)) {
+	    return new Result(
+		newValue, 
+		new IllegalArgumentException("Number of slots should be between " + 
+				  minNumOfSlots + " and " + maxNumOfSlots + "."));
+	}
+	return Result.successful(newValue);
+    }
+}
+    \end{lstlisting}
+  \end{code}
+
+  The most powerful approach for implementing BCE and ACE handlers is by declaring them as interfaces where the actual implementation is bound as part of IoC module configuration.
+  This approach is discussed separately in section~\ref{ch01:01:IoC}, which is dedicated to the topic of application configuration by means of \emph{injection of control}.
+
+  \begin{notebox}{Error or Warning?}{\label{nb:ErrorOrWarning}}    
+    Sometimes a property value can be recognised as valid, but it is approaching (in some sense) a condition where it would become invalid.
+    For example, wagons with 10 bogies could be considered uncommon, and so if 10 is specified as the value for property \emph{WagonClass.numOfSlots} then it should be recongnised as valid, but some mechanism is desired to indicate that it could potentially be entered by mistake.
+
+    In such cases, an instance of type \emph{Warning} should be returned instead of successful \emph{Result}.
+    Type \emph{Warning} is a \emph{Result}, which has a special treatment at the platform level (UI specifically), and can have custom handling as part of some business logic if requried.
+  \end{notebox}
+
+  \subparagraph*{ACE Handlers.}
 
   \paragraph*{Property value change information.}
   \paragraph*{Property meta-state (editable, visible etc.).}
@@ -431,4 +504,4 @@ public class TonnageValidator
 % 
 % \section{Security}
 % 
-% \section{Injection of Control (IoC)}  
+\section{Injection of Control (IoC)}\label{ch01:01:IoC}
