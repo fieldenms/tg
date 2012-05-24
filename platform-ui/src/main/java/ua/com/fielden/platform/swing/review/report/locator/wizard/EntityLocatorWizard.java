@@ -66,6 +66,13 @@ public class EntityLocatorWizard<T extends AbstractEntity<?>, R extends Abstract
 		}
 		return null;
 	    }
+
+	    @Override
+	    protected void restoreAfterError() {
+		if(!getOwner().getModel().isInFreezedPhase()){
+		    getOwner().getModel().freeze();
+		}
+	    }
 	};
     }
 
@@ -98,6 +105,13 @@ public class EntityLocatorWizard<T extends AbstractEntity<?>, R extends Abstract
 		    getOwner().getModel().discard();
 		}
 		return null;
+	    }
+
+	    @Override
+	    protected void restoreAfterError() {
+		if(!getOwner().getModel().isInFreezedPhase()){
+		    getOwner().getModel().freeze();
+		}
 	    }
 	};
     }

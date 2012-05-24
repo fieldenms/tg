@@ -65,6 +65,13 @@ public class SingleAnalysisEntityCentre<T extends AbstractEntity<?>> extends Abs
 		getOwner().getModel().freez();
 		return null;
 	    }
+
+	    @Override
+	    protected void restoreAfterError() {
+		if(getOwner().getModel().isFreezed()){
+		    getOwner().getModel().discard();
+		}
+	    }
 	};
     }
 }

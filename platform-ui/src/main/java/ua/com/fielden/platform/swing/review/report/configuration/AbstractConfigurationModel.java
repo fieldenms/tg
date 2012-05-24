@@ -31,7 +31,7 @@ public abstract class AbstractConfigurationModel {
 
     /**
      * Returns
-     * 
+     *
      * @return
      */
     public final ReportMode getMode() {
@@ -40,7 +40,7 @@ public abstract class AbstractConfigurationModel {
 
     /**
      * Set the specified mode for this {@link AbstractConfigurationModel}. Use {@link #canSetMode(ReportMode)} to determine whether specific mode can be set.
-     * 
+     *
      * @param mode
      */
     public final void setMode(final ReportMode mode){
@@ -54,7 +54,7 @@ public abstract class AbstractConfigurationModel {
 
     /**
      * See {@link EventListenerList#add(Class, java.util.EventListener)}.
-     * 
+     *
      * @param l
      */
     public void addPropertyChangeListener(final PropertyChangeListener l){
@@ -63,7 +63,7 @@ public abstract class AbstractConfigurationModel {
 
     /**
      * See {@link EventListenerList#remove(Class, java.util.EventListener)}.
-     * 
+     *
      * @param l
      */
     public void removePropertyChangeListener(final PropertyChangeListener l){
@@ -72,7 +72,7 @@ public abstract class AbstractConfigurationModel {
 
     /**
      * Notifies all {@link PropertyChangeListener}s that specific property has changed it's value.
-     * 
+     *
      * @param event
      */
     private void firePropertyChangeEvent(final PropertyChangeEvent event) {
@@ -83,7 +83,7 @@ public abstract class AbstractConfigurationModel {
 
     /**
      * Return the {@link Result} that indicates whether specified mode can be set or not.
-     * 
+     *
      * @param mode
      * @return
      */
@@ -104,7 +104,7 @@ public abstract class AbstractConfigurationModel {
 
 	/**
 	 * Initiates this {@link UndefinedFormatException} instance with specific message.
-	 * 
+	 *
 	 * @param message
 	 */
 	public UndefinedFormatException(final String message){
@@ -114,7 +114,7 @@ public abstract class AbstractConfigurationModel {
 
     /**
      * {@link RuntimeException} that indicates that specific {@link ReportMode} can not be set.
-     * 
+     *
      * @author TG Team
      *
      */
@@ -130,7 +130,7 @@ public abstract class AbstractConfigurationModel {
 
 	/**
 	 * Initiates this {@link CanNotSetModeException} instance with specific message.
-	 * 
+	 *
 	 * @param message
 	 */
 	public CanNotSetModeException(final String message){

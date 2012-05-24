@@ -67,6 +67,13 @@ public class EntityCentreWizard<T extends AbstractEntity<?>, C extends AbstractE
 		}
 		return null;
 	    }
+
+	    @Override
+	    protected void restoreAfterError() {
+		if(!getOwner().getModel().isFreezed()){
+		    getOwner().getModel().freez();
+		}
+	    }
 	};
     }
 
@@ -99,6 +106,13 @@ public class EntityCentreWizard<T extends AbstractEntity<?>, C extends AbstractE
 		    getOwner().getModel().discard();
 		}
 		return null;
+	    }
+
+	    @Override
+	    protected void restoreAfterError() {
+		if(!getOwner().getModel().isFreezed()){
+		    getOwner().getModel().freez();
+		}
 	    }
 	};
     }

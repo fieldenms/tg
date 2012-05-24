@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -20,7 +19,6 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityCentreModel;
 import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder;
-import ua.com.fielden.platform.swing.review.report.interfaces.ICentreConfigurationEventListener;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
 /**
@@ -127,31 +125,12 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * Registers the {@link ICentreConfigurationEventListener} to listen the centre configuration event.
-     *
-     * @param l
-     */
-    public void addCentreConfigurationEventListener(final ICentreConfigurationEventListener l){
-	listenerList.add(ICentreConfigurationEventListener.class, l);
-    }
-
-    /**
-     * Removes the specified {@link ICentreConfigurationEventListener} from the list of registered listeners.
-     *
-     * @param l
-     */
-    public void removeCentreConfigurationEventListener(final ICentreConfigurationEventListener l){
-	listenerList.remove(ICentreConfigurationEventListener.class, l);
-    }
-
-
-    /**
      * Returns the list of non principle entity centre list.
      *
      * @return
      */
-    public List<String> getNonPrincipleEntityCentreList(){
-	return new ArrayList<String>();
+    public Set<String> getNonPrincipleEntityCentreList(){
+	return gdtm.entityCentreNames(menuItemType);
     }
 
     @Override

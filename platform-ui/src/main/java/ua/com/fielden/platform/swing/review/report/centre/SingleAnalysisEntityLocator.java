@@ -127,6 +127,13 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 		getOwner().getModel().freeze();
 		return null;
 	    }
+
+	    @Override
+	    protected void restoreAfterError() {
+		if(getOwner().getModel().isInFreezedPhase()){
+		    getOwner().getModel().discard();
+		}
+	    }
 	};
     }
 
@@ -249,7 +256,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 
     /**
      * Creates locator specific panel with next controls: "use for autocompleter" check box, "filter by description" and "filter by key or description" , close and select buttons.
-     * 
+     *
      * @return
      */
     private JPanel createLocatorPanel() {
@@ -279,7 +286,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
     /**
      * Creates the "use for autocompleter" check box.
      * @param ldtm
-     * 
+     *
      * @param descTitle
      * @return
      */
@@ -298,7 +305,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 
     /**
      * Creates pair of checkbox : first - is "filter by description", and the second one - "filter by key or description".
-     * 
+     *
      * @param ldtm
      * @param managedType
      * @return

@@ -30,7 +30,7 @@ import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
 /**
  * The holder for wizard and view panels. Provides functionality that allows one to switch view between report and wizard modes.
- * 
+ *
  * @author TG Team
  *
  * @param <VT>
@@ -59,7 +59,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Initiates this {@link AbstractConfigurationView} with associated {@link AbstractConfigurationModel}.
-     * 
+     *
      * @param model
      */
     public AbstractConfigurationView(final AbstractConfigurationModel model, final BlockingIndefiniteProgressLayer progressLayer){
@@ -84,7 +84,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Registers the specified {@link IAbstractConfigurationViewEventListener}.
-     * 
+     *
      * @param l
      */
     public void addOpenEventListener(final IAbstractConfigurationViewEventListener l){
@@ -93,7 +93,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Unregisters the specified {@link IAbstractConfigurationViewEventListener}.
-     * 
+     *
      * @param l
      */
     public void removeOpenEventListener(final IAbstractConfigurationViewEventListener l){
@@ -102,7 +102,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Returns the previous configurable review. If this configuration panel is in the report mode then this method returns currently visible entity review.
-     * 
+     *
      * @return
      */
     public VT getPreviousView() {
@@ -111,7 +111,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Returns the previous wizard view. If this configuration panel is in the wizard mode then this method returns currently visible wizard.
-     * 
+     *
      * @return
      */
     public WT getPreviousWizard() {
@@ -120,7 +120,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Returns the associated {@link AbstractConfigurationModel}.
-     * 
+     *
      * @return
      */
     public AbstractConfigurationModel getModel() {
@@ -134,7 +134,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Returns the progress layer for the associated {@link AbstractConfigurationView}.
-     * 
+     *
      * @return
      */
     public final BlockingIndefiniteProgressLayer getProgressLayer() {
@@ -150,7 +150,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Override this to provide custom report view.
-     * 
+     *
      * @param configurableView - view to configure.
      * @return
      */
@@ -158,7 +158,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Override this to provide custom wizard to configure report.
-     * 
+     *
      * @param wizardView - wizard view to configure
      * @return
      */
@@ -167,7 +167,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     /**
      * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined.
      * Also if child component was also loaded then it fires the load event.
-     * 
+     *
      * @return
      */
     private ComponentListener createComponentWasResized() {
@@ -232,7 +232,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Creates the open action see {@link #openAction} for more details.
-     * 
+     *
      * @return
      */
     private Action createOpenAction() {
@@ -282,7 +282,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Creates listener that listens mode changed event.
-     * 
+     *
      * @return
      */
     private PropertyChangeListener createModeChangeListener(){
@@ -314,7 +314,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Set the current view for this panel: wizard or configurable review.
-     * 
+     *
      * @param component
      */
     private void setView(final SelectableAndLoadBasePanel component){
@@ -346,7 +346,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
     /**
      * Adds the {@link ILoadListener} to the specified component. That load listener determines when the specified component was loaded.
      * Also if this component wasn't loaded yet it fires load event for this {@link AbstractConfigurationView} instance.
-     * 
+     *
      * @param component
      */
     private void addLoadListenerTo(final SelectableAndLoadBasePanel component) {
@@ -383,7 +383,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * Fires the specified open event.
-     * 
+     *
      * @param event
      */
     private List<Result> fireOpenEvent(final AbstractConfigurationViewEvent event){
@@ -396,7 +396,7 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
     /**
      * The action that changes current configuration view's mode to the {@link ReportMode#WIZARD} mode.
-     * 
+     *
      * @author TG Team
      *
      * @param <VT>
@@ -408,17 +408,17 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	/**
 	 * Initialises this {@link ConfigureAction} with the specified {@link AbstractConfigurationView}.
-	 * 
+	 *
 	 * @param configurationView
 	 */
 	public ConfigureAction(final AbstractConfigurationView<?, ?> configurationView) {
-	    super(configurationView, ReportMode.WIZARD);
+	    super(configurationView, ReportMode.WIZARD, ReportMode.REPORT);
 	}
     }
 
     /**
      * The action that accepts modification and changes current configuration view's mode to the {@link ReportMode#REPORT} mode.
-     * 
+     *
      * @author TG Team
      *
      * @param <VT>
@@ -430,17 +430,17 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	/**
 	 * Initialises this {@link BuildAction} with the specified {@link AbstractConfigurationView}.
-	 * 
+	 *
 	 * @param configurationView
 	 */
 	public BuildAction(final AbstractConfigurationView<?, ?> configurationView) {
-	    super(configurationView, ReportMode.REPORT);
+	    super(configurationView, ReportMode.REPORT, ReportMode.WIZARD);
 	}
     }
 
     /**
      * The action that discards modification and changes current configuration view's mode to the {@link ReportMode#REPORT} mode.
-     * 
+     *
      * @author TG Team
      *
      * @param <VT>
@@ -452,17 +452,17 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	/**
 	 * Initialises this {@link CancelAction} with the specified {@link AbstractConfigurationView}.
-	 * 
+	 *
 	 * @param configurationView
 	 */
 	public CancelAction(final AbstractConfigurationView<?, ?> configurationView) {
-	    super(configurationView, ReportMode.REPORT);
+	    super(configurationView, ReportMode.REPORT, ReportMode.WIZARD);
 	}
     }
 
     /**
      * The {@link BlockingLayerCommand} action that changes the report mode to the specified one.
-     * 
+     *
      * @author TG Team
      *
      * @param <VT>
@@ -474,22 +474,25 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	private final AbstractConfigurationView<?, ?> configurationView;
 	private final ReportMode reportMode;
+	//The report mode that is used when during the action processing the exception wsa thrown.
+	private final ReportMode restorationMode;
 
 	/**
 	 * Initialises this {@link ChangeModeAction} {@link AbstractConfigurationView} instance and specified report mode to which configuration view must be changed.
-	 * 
+	 *
 	 * @param configurationView
 	 * @param reportMode
 	 */
-	public ChangeModeAction(final AbstractConfigurationView<?, ?> configurationView, final ReportMode reportMode) {
+	public ChangeModeAction(final AbstractConfigurationView<?, ?> configurationView, final ReportMode reportMode, final ReportMode restorationMode) {
 	    super("", configurationView.getProgressLayer());
 	    this.configurationView = configurationView;
 	    this.reportMode = reportMode;
+	    this.restorationMode = restorationMode;
 	}
 
 	/**
 	 * Returns the {@link AbstractConfigurationView} instance associated with this action.
-	 * 
+	 *
 	 * @return
 	 */
 	public AbstractConfigurationView<?, ?> getConfigurationView() {
@@ -515,5 +518,30 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 	    getConfigurationView().getModel().setMode(reportMode);
 	}
 
+	/**
+	 * Restore after exception
+	 */
+	abstract protected void restoreAfterError();
+
+	@Override
+	protected final void handlePreAndPostActionException(final Throwable ex) {
+	    new BlockingLayerCommand<Void>("", getConfigurationView().getProgressLayer()) {
+
+		private static final long serialVersionUID = 6591522199014576781L;
+
+		@Override
+		protected Void action(final ActionEvent e) throws Exception {
+		    restoreAfterError();
+		    return null;
+		}
+
+		@Override
+		protected void postAction(final Void value) {
+		    super.postAction(value);
+		    getConfigurationView().getModel().setMode(restorationMode);
+		}
+	    }.actionPerformed(null);
+	    super.handlePreAndPostActionException(ex);
+	}
     }
 }

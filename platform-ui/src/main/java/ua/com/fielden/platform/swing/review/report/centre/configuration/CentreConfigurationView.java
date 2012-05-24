@@ -121,6 +121,24 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 	return remove;
     }
 
+    /**
+     * Registers the {@link ICentreConfigurationEventListener} to listen the centre configuration event.
+     *
+     * @param l
+     */
+    public void addCentreConfigurationEventListener(final ICentreConfigurationEventListener l){
+	listenerList.add(ICentreConfigurationEventListener.class, l);
+    }
+
+    /**
+     * Removes the specified {@link ICentreConfigurationEventListener} from the list of registered listeners.
+     *
+     * @param l
+     */
+    public void removeCentreConfigurationEventListener(final ICentreConfigurationEventListener l){
+	listenerList.remove(ICentreConfigurationEventListener.class, l);
+    }
+
     @Override
     protected EntityCentreWizard<T, C> createWizardView() {
 	return new EntityCentreWizard<T, C>(this, getModel().createDomainTreeEditorModel());

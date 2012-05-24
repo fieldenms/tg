@@ -52,6 +52,13 @@ public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICent
 		}
 		return null;
 	    }
+
+	    @Override
+	    protected void restoreAfterError() {
+		if(!getOwner().getModel().isFreeze()){
+		    getOwner().getModel().freeze();
+		}
+	    }
 	};
     }
 
@@ -85,6 +92,13 @@ public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICent
 		}
 		return null;
 	    }
+
+	    @Override
+	    protected void restoreAfterError() {
+		if(!getOwner().getModel().isFreeze()){
+		    getOwner().getModel().freeze();
+		}
+	    }
 	};
     }
 
@@ -114,7 +128,7 @@ public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICent
 
     /**
      * Returns the {@link AbstractEntityCentre} that owns this analysis wizard view.
-     * 
+     *
      * @return
      */
     private AbstractEntityCentre<T, CDTME> getCentre() {

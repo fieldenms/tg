@@ -18,9 +18,9 @@ import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 
 /**
  * Ad hoc report wrapper. See {@link BaseNotifPanel} for more information.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotifPanel<DefaultUiModel> {
 
@@ -39,10 +39,11 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
     private final ICriteriaGenerator criteriaGenerator;
     private final ICentreConfigurationFactory<T> centreFactory;
     private final CentreConfigurationView<T, ?> entityCentreConfigurationView;
+    private final Class<? extends MiWithConfigurationSupport<T>> menuItemClass;
 
     /**
      * Creates new {@link DynamicReportWrapper} for the given {@link DynamicCriteriaModelBuilder} and with specified title and information about the wrapped report.
-     * 
+     *
      * @param caption
      * @param description
      * @param modelBuilder
@@ -68,11 +69,12 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	this.masterManager = masterManager;
 	this.criteriaGenerator = criteriaGenerator;
 	this.centreFactory = centreFactory;
+	this.menuItemClass = menuItemClass;
 	//Create and configure entity centre;
 	//final CentreConfigurationModel<T> configModel = new CentreConfigurationModel<T>(entityType, name, gdtm, entityFactory, masterManager, criteriaGenerator);
 	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "");
 	this.entityCentreConfigurationView = centreFactory.createCentreConfigurationView(menuItemClass, name, gdtm, entityFactory, masterManager, criteriaGenerator, progressLayer);
-	this.entityCentreConfigurationView.getModel().addCentreConfigurationEventListener(createContreConfigurationListener());
+	this.entityCentreConfigurationView.addCentreConfigurationEventListener(createContreConfigurationListener());
 	//new MultipleAnalysisEntityCentreConfigurationView<T>(configModel, progressLayer);
 	progressLayer.setView(entityCentreConfigurationView);
 	add(progressLayer);
@@ -135,8 +137,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
     }
 
     public final Class<? extends MiWithConfigurationSupport<T>> getMenuItemClass() {
-	//TODO must finish the implementation. This method must return the menu item type, for which the entity centre was created.
-	return null;
+	return menuItemClass;
     }
 
     public final IGlobalDomainTreeManager getGlobalDomainTreeManager(){
@@ -188,9 +189,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 			    event.getSaveAsName());
 		    principleEntityCentreMenuItem.addItem(newTreeMenuItem);
 		    treeMenu.getModel().getOriginModel().reload(principleEntityCentreMenuItem);
-		    //		    if (!isClosing) {
-		    //			treeMenu.activateOrOpenItem(newTreeMenuItem);
-		    //		    }
+		    treeMenu.activateOrOpenItem(newTreeMenuItem);
 		    break;
 		case POST_REMOVE:
 		    if (event.getSource().getModel().getName() != null) {

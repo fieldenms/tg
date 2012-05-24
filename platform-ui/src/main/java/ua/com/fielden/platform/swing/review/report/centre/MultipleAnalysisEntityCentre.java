@@ -126,6 +126,13 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 		getOwner().getModel().freez();
 		return null;
 	    }
+
+	    @Override
+	    protected void restoreAfterError() {
+		if(getOwner().getModel().isFreezed()){
+		    getOwner().getModel().discard();
+		}
+	    }
 	};
     }
 

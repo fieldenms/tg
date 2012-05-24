@@ -267,9 +267,11 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             try {
         	final ICalculatedProperty calcProperty = cdtme.getEnhancer().getCalculatedProperty(getEntityClass(), property);
         	final String originProperty = Reflector.fromRelative2AbsotulePath(calcProperty.getContextPath(), calcProperty.getOriginationProperty());
-		if(calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION && checkedProperties.contains(originProperty)){
-        	    totalProperties.add(property);
-        	} else {
+		if(calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION){
+		    if(checkedProperties.contains(originProperty)){
+			totalProperties.add(property);
+		    }
+		} else {
         	    fetchProperties.add(property);
         	}
             } catch (final IncorrectCalcPropertyKeyException ex) {

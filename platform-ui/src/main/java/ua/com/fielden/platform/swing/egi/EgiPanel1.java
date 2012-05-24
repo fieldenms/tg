@@ -397,14 +397,16 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 	    try {
 		final ICalculatedProperty calcProperty = enhancer.getCalculatedProperty(rootType, property);
 		final String originProperty = Reflector.fromRelative2AbsotulePath(calcProperty.getContextPath(), calcProperty.getOriginationProperty());
-		if(calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION && checkedProperties.contains(originProperty)){
-		    List<String> totalList = totals.get(originProperty);
-		    if(totalList == null){
-			totalList = new ArrayList<String>();
-			totals.put(originProperty, totalList);
+		if(calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION){
+		    if(checkedProperties.contains(originProperty)){
+			List<String> totalList = totals.get(originProperty);
+			    if(totalList == null){
+				totalList = new ArrayList<String>();
+				totals.put(originProperty, totalList);
+			    }
+			    totalList.add(property);
 		    }
-		    totalList.add(property);
-		} else {
+		}else{
 		    columns.add(new Pair<String, Integer>(property, Integer.valueOf(cdtme.getSecondTick().getWidth(rootType, property))));
 		}
 	    } catch(final IncorrectCalcPropertyKeyException ex){

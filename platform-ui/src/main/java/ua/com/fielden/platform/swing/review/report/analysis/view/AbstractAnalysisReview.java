@@ -61,7 +61,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
     }
 
     public void exportData(){
-	exportAction.actionPerformed(null);
+	//exportAction.actionPerformed(null);
     }
 
     @Override
@@ -80,6 +80,13 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 	    protected Result action(final ActionEvent e) throws Exception {
 		getOwner().getModel().freeze();
 		return null;
+	    }
+
+	    @Override
+	    protected void restoreAfterError() {
+		if(getOwner().getModel().isFreeze()){
+		    getOwner().getModel().discard();
+		}
 	    }
 	};
     }
@@ -108,13 +115,13 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 		//getProgressLayer().enableIncrementalLocking();
 		setMessage("Loading...");
 		final boolean result = super.preAction();
+		enableRelatedActions(false, false);
 		if (!result) {
 		    return result;
 		}
 		if (getOwner().getOwner().getCriteriaPanel() != null) {
 		    getOwner().getOwner().getCriteriaPanel().updateModel();
 		}
-		enableRelatedActions(false, false);
 		return true;
 	    }
 
@@ -151,9 +158,67 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 
     }
 
+    /**
+     * Creates action that exports data in to external file.
+     *
+     * @return
+     */
     private Action createExportAction() {
-	// TODO Auto-generated method stub
 	return null;
+//	return new BlockingLayerCommand<Result>("Export", getOwner().getProgressLayer()) {
+//	    private static final long serialVersionUID = 1L;
+//
+//	    {
+//		putValue(Action.MNEMONIC_KEY, KeyEvent.VK_E);
+//		putValue(Action.SHORT_DESCRIPTION, "Execute query");
+//		setEnabled(true);
+//	    }
+//
+//	    @Override
+//	    protected boolean preAction() {
+//		//getProgressLayer().enableIncrementalLocking();
+//		setMessage("Loading...");
+//		final boolean result = super.preAction();
+//		enableRelatedActions(false, false);
+//		if (!result) {
+//		    return result;
+//		}
+//		if (getOwner().getOwner().getCriteriaPanel() != null) {
+//		    getOwner().getOwner().getCriteriaPanel().updateModel();
+//		}
+//		return true;
+//	    }
+//
+//	    @Override
+//	    protected Result action(final ActionEvent e) throws Exception {
+//		final Result result = getModel().canLoadData();
+//		if(result.isSuccessful()){
+//		    return new Pair<Result, LDT>(result, getModel().executeAnalysisQuery());
+//		}
+//		return new Pair<Result, LDT>(result, null);
+//	    }
+//
+//	    @Override
+//	    protected void postAction(final Result result) {
+//		if (!result.getKey().isSuccessful()) {
+//		    JOptionPane.showMessageDialog(AbstractAnalysisReview.this, result.getKey().getMessage());
+//		}
+//		//		else {
+//		//		    setDataToView(result.getValue()); // note that currently setting data to view and updating buttons state etc. perform in this single IReviewContract implementor method.
+//		//		}
+//		enableRelatedActions(true, false);
+//		super.postAction(result);
+//	    }
+//
+//	    /**
+//	     * After default exception handling executed, post-actions should be performed to enable all necessary buttons, unlock layer etc.
+//	     */
+//	    @Override
+//	    protected void handlePreAndPostActionException(final Throwable ex) {
+//		super.handlePreAndPostActionException(ex);
+//		enableRelatedActions(true, false);
+//	    }
+//	};
     }
 
 
@@ -163,7 +228,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 
     /**
      * Creates the page navigation listener that enables or disable buttons according to the page navigation phase.
-     * 
+     *
      * @return
      */
     private IPageNavigationListener createPageNavigationListener() {
@@ -185,7 +250,7 @@ public abstract class AbstractAnalysisReview<T extends AbstractEntity<?>, CDTME 
 
     /**
      * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined.
-     * 
+     *
      * @return
      */
     private ComponentListener createComponentWasResized() {
