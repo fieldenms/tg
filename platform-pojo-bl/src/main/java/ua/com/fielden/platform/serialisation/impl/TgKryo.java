@@ -64,7 +64,6 @@ import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAn
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer.LocatorDomainTreeManagerAndEnhancerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation.LocatorDomainTreeRepresentationSerialiser;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty.CalculatedPropertySerialiser;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
@@ -311,15 +310,12 @@ public class TgKryo extends Kryo implements ISerialiser {
 	register(DynamicallyTypedQueryContainer.class);
 
 	register(Class.class);
-	// "domain tree" serialisers
-	registerDomainTreeTypes();
 	// register menu and configuration related
 	register(MainMenuItem.class);
 	register(MainMenuItemInvisibility.class);
 	register(EntityCentreConfig.class);
 	register(EntityMasterConfig.class);
 	register(EntityLocatorConfig.class);
-	register(CalculatedProperty.class);
 
 	// register classes provided by the provider
 	for (final Class<?> type : provider.classes()) {
@@ -329,19 +325,6 @@ public class TgKryo extends Kryo implements ISerialiser {
 		e.printStackTrace();
 		throw new IllegalArgumentException("The type [" + type + "] can not be registered. Cause = [" + e.getMessage() + "]");
 	    }
-	}
-    }
-
-    /**
-     * Registers all necessary "domain tree" types, including inner classes, enums etc.
-     */
-    protected void registerDomainTreeTypes() {
-	// should be registered before other types, that reference on LocatorManager type
-	register(LocatorManager.class);
-	final List<Class<?>> types = typesForRegistration("../platform-pojo-bl/target/classes", "ua.com.fielden.platform.domaintree", AbstractDomainTree.DOMAIN_TREE_TYPES);
-	types.removeAll(typesForRegistration("../platform-pojo-bl/target/classes", "ua.com.fielden.platform.domaintree.testing", AbstractDomainTree.DOMAIN_TREE_TYPES));
-	for (final Class<?> type : types) {
-	    register(type);
 	}
     }
 
@@ -631,19 +614,6 @@ public class TgKryo extends Kryo implements ISerialiser {
 		entity.setInitialising(false);
 	    }
 	}
-    }
-
-    public static void main(final String[] args) throws ClassNotFoundException {
-	System.out.println(Class.forName("com.esotericsoftware.kryo.util.IntHashMap$Entry"));
-
-	// final String path = "../platform-pojo-bl/target/classes", packageName = "ua.com.fielden.platform.domaintree";
-	// try {
-	// 	System.out.println(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ITickManager.class));
-	// } catch (final Exception e) {
-	// 	e.printStackTrace();
-	// 	throw new IllegalStateException("Retrieval of the [" + ITickManager.class.getSimpleName() + "] descendants from [" + path + "; " + packageName
-	//	+ "] has been failed.");
-	// }
     }
 
     @Override

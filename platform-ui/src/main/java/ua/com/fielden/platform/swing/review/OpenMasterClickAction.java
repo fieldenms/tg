@@ -1,17 +1,19 @@
 package ua.com.fielden.platform.swing.review;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+
 import java.awt.event.ActionEvent;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
+import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
-import ua.com.fielden.platform.swing.model.IUmViewOwner;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.GridAnalysisView;
 
 /**
  * Click action for {@link EntityGridInspector} that attempts to open master frame for the clicked cell if one represents an entity or entity's key.
@@ -29,7 +31,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
 
     private final IEntityMasterManager entityMasterFactory;
 
-    private final IUmViewOwner ownerView;
+    private final GridAnalysisView<?, ?> ownerView;
 
     /**
      * Principle constructor.
@@ -39,7 +41,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      * @param ownerView
      * @param provider
      */
-    private OpenMasterClickAction(final IEntityMasterManager entityMasterFactory, final String propertyName, final IUmViewOwner ownerView, final IBlockingLayerProvider provider) {
+    private OpenMasterClickAction(final IEntityMasterManager entityMasterFactory, final String propertyName, final GridAnalysisView<?, ?> ownerView, final IBlockingLayerProvider provider) {
 	super("Double-click facility", provider);
 	this.propertyName = propertyName;
 	this.entityMasterFactory = entityMasterFactory;
@@ -57,7 +59,22 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
 	}
     }
 
+    /**
+     * Convenient constructor.
+     *
+     * @param entityMasterFactory
+     * @param propertyName
+     * @param ownerView
+     */
+    private OpenMasterClickAction(final IEntityMasterManager entityMasterFactory, final String propertyName, final GridAnalysisView<?, ?> ownerView) {
+	this(entityMasterFactory, propertyName, ownerView, new IBlockingLayerProvider() {
+	    @Override
+	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
+		return ownerView != null ? ownerView.getBlockingLayer() : null;
+	    }
 
+	});
+    }
 
     /**
      * Convenient constructor.
@@ -80,24 +97,24 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
     }
 
     @Override
-    protected AbstractEntity action(final ActionEvent e) throws Exception {
+    protected AbstractEntity<?> action(final ActionEvent e) throws Exception {
 	if (!(e.getSource() instanceof AbstractEntity)) {
 	    // it will always be not-null instance of AbstractEntity, but just to be sure
 	    return null;
 	}
-	final Object clickedObject = getPropertyValue((AbstractEntity) e.getSource());
-	return clickedObject instanceof AbstractEntity ? (AbstractEntity) clickedObject : null;
+	final Object clickedObject = getPropertyValue((AbstractEntity<?>) e.getSource());
+	return clickedObject instanceof AbstractEntity ? (AbstractEntity<?>) clickedObject : null;
     }
 
     @Override
-    protected void postAction(final AbstractEntity clickedEntity) {
+    protected void postAction(final AbstractEntity<?> clickedEntity) {
 	super.postAction(clickedEntity);
 	if (clickedEntity != null) {
 	    entityMasterFactory.<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> showMaster(clickedEntity, ownerView);
 	}
     }
 
-    private Object getPropertyValue(final AbstractEntity entity) {
+    private Object getPropertyValue(final AbstractEntity<?> entity) {
 	return isEmpty(getTrimmedPropertyName()) ? entity : entity.get(getTrimmedPropertyName());
     }
 
@@ -117,8 +134,16 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      * @param entityMasterFactory
      * @param ownerView
      */
-    public static void enhanceWithBlockingLayer(final Iterable<? extends AbstractPropertyColumnMapping> mappings, final Class entityClass, final IEntityMasterManager entityMasterFactory, final IBlockingLayerProvider provider) {
-	for (final AbstractPropertyColumnMapping mapping : mappings) {
+    public static void enhanceWithClickAction(final Iterable<? extends AbstractPropertyColumnMapping<?>> mappings, final Class<?> entityClass, final IEntityMasterManager entityMasterFactory, final GridAnalysisView<?, ?> ownerView) {
+	for (final AbstractPropertyColumnMapping<?> mapping : mappings) {
+	    if (propertyIsOfAbstractEntityType(entityClass, mapping.getPropertyName())) {
+		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, mapping.getPropertyName(), ownerView));
+	    }
+	}
+    }
+
+    public static void enhanceWithBlockingLayer(final Iterable<? extends AbstractPropertyColumnMapping<?>> mappings, final Class<?> entityClass, final IEntityMasterManager entityMasterFactory, final IBlockingLayerProvider provider) {
+	for (final AbstractPropertyColumnMapping<?> mapping : mappings) {
 	    if (propertyIsOfAbstractEntityType(entityClass, mapping.getPropertyName())) {
 		mapping.setClickAction(new OpenMasterClickAction(entityMasterFactory, mapping.getPropertyName(), provider));
 	    }
@@ -132,7 +157,7 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
      * @param propertyName
      * @return
      */
-    private static boolean propertyIsOfAbstractEntityType(final Class entityClass, String propertyName) {
+    private static boolean propertyIsOfAbstractEntityType(final Class<?> entityClass, String propertyName) {
 	if (isEmpty(propertyName) || KEY.equals(propertyName)) {
 	    // this means we should use containing entity
 	    return true;

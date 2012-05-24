@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.domaintree.testing;
 
-import java.util.List;
-
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManager1.AbstractAnalysisDomainTreeManager1Serialiser;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManagerAndEnhancer1.AbstractAnalysisDomainTreeManagerAndEnhancer1Serialiser;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeRepresentation1.AbstractAnalysisDomainTreeRepresentation1Serialiser;
@@ -19,19 +16,6 @@ public class TgKryo1 extends TgKryo {
 
     public TgKryo1(final EntityFactory factory, final ISerialisationClassProvider provider) {
 	super(factory, provider);
-    }
-
-    @Override
-    protected void registerDomainTreeTypes() {
-        super.registerDomainTreeTypes();
-
-	final List<Class<?>> types = TgKryo.typesForRegistration("../platform-pojo-bl/target/test-classes", "ua.com.fielden.platform.domaintree", AbstractDomainTree.DOMAIN_TREE_TYPES);
-	types.addAll(TgKryo.typesForRegistration("../platform-pojo-bl/target/classes", "ua.com.fielden.platform.domaintree.testing", AbstractDomainTree.DOMAIN_TREE_TYPES));
-	types.remove(EntityWithoutKeyType.class);
-
-	for (final Class<?> type : types) {
-	    register(type);
-	}
     }
 
     @Override
@@ -52,4 +36,27 @@ public class TgKryo1 extends TgKryo {
 	    return super.newSerializer(type);
 	}
     }
+
+//    public static void main(final String[] args) throws ClassNotFoundException {
+//   	final List<Class<?>> types = TgKryo.typesForRegistration("../platform-pojo-bl/target/test-classes", "ua.com.fielden.platform.domaintree", AbstractDomainTree.DOMAIN_TREE_TYPES);
+//	types.addAll(TgKryo.typesForRegistration("../platform-pojo-bl/target/classes", "ua.com.fielden.platform.domaintree.testing", AbstractDomainTree.DOMAIN_TREE_TYPES));
+//	types.remove(EntityWithoutKeyType.class);
+//   	final List<Class<?>> distinctTypes = new ArrayList<Class<?>>();
+//   	for(final Class<?> type : types){
+//   	    if(!distinctTypes.contains(type)){
+//   		distinctTypes.add(type);
+//   	    }
+//   	}
+//   	for (final Class<?> type : distinctTypes) {
+//   	    System.out.println("testTypes.add(findClass(\"" + type.getName() + "\"));");
+//   	}
+//   	// final String path = "../platform-pojo-bl/target/classes", packageName = "ua.com.fielden.platform.domaintree";
+//   	// try {
+//   	// 	System.out.println(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ITickManager.class));
+//   	// } catch (final Exception e) {
+//   	// 	e.printStackTrace();
+//   	// 	throw new IllegalStateException("Retrieval of the [" + ITickManager.class.getSimpleName() + "] descendants from [" + path + "; " + packageName
+//   	//	+ "] has been failed.");
+//   	// }
+//       }
 }

@@ -24,6 +24,7 @@ import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.TgKryo1;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -35,7 +36,6 @@ import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -64,7 +64,7 @@ public class DynamicQueryBuilderSqlTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-	return new TgKryo1(factory, new ProvidedSerialisationClassProvider());
+	return new TgKryo1(factory, new ClassProviderForTestingPurposes());
     }
 
     private final String alias;

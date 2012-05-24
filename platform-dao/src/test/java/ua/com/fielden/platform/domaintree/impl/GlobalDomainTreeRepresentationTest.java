@@ -16,6 +16,7 @@ import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 import ua.com.fielden.platform.domaintree.testing.TgKryo1;
@@ -25,7 +26,6 @@ import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
@@ -41,7 +41,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
  */
 public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTestCase {
     private final EntityFactory entityFactory = getInstance(EntityFactory.class);
-    private final ISerialiser serialiser = new TgKryo1(entityFactory, new ProvidedSerialisationClassProvider());
+    private final ISerialiser serialiser = new TgKryo1(entityFactory, new ClassProviderForTestingPurposes());
     private final IUserDao userDao = getInstance(IUserDao.class);
 
     protected GlobalDomainTreeManager createManagerForNonBaseUser2() {

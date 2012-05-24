@@ -17,8 +17,27 @@ public class DynamicFetchBuilder {
      *
      * @return
      */
-    public static <T extends AbstractEntity<?>>fetch<T> createFetchModel(final Class<T> managedType, final List<String> fetchProperties) {
-        try {
+    public static <T extends AbstractEntity<?>> fetch<T> createFetchModel(final Class<T> managedType, final List<String> fetchProperties) {
+       return fetch(managedType, fetchProperties);
+    }
+
+    /**
+     * Creates "fetch property" model for entity query criteria totals.
+     *
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> fetch<T> createTotalFetchModel(final Class<T> managedType, final List<String> fetchProperties) {
+	return fetch(managedType, fetchProperties).without("id").without("version");
+    }
+
+    /**
+     * Creates general fetch model for passed properties and type.
+     *
+     * @param managedType
+     * @param fetchProperties
+     */
+    private static <T extends AbstractEntity<?>> fetch<T> fetch(final Class<T> managedType, final List<String> fetchProperties){
+	try {
             final DynamicEntityTree<T> fetchTree = new DynamicEntityTree<T>(fetchProperties, managedType);
             final fetch<T> main = buildFetchModels(managedType, fetchTree.getRoot());
             return main;

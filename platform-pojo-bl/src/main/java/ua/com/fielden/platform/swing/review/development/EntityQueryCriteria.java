@@ -140,7 +140,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey())).build();
 	if (!separatedFetch.getValue().isEmpty()) {
 	    final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = from(notOrderedQuery)//
-		    .with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getValue())).build();
+		    .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue())).build();
 	    return firstPage(resultQuery, totalQuery, pageSize);
 	} else {
 	    return firstPage(resultQuery, pageSize);

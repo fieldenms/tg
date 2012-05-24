@@ -10,29 +10,43 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import ua.com.fielden.platform.domaintree.Function;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
+import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
+import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
+import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.TgKryo1;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -46,6 +60,29 @@ import com.google.inject.Injector;
  *
  */
 public abstract class AbstractDomainTreeTest {
+    /** A base types to be checked for its non-emptiness and non-emptiness of their children. */
+    public static final List<Class<?>> DOMAIN_TREE_TYPES = new ArrayList<Class<?>>() {{
+	add(AbstractEntity.class); //
+	add(SearchBy.class);
+	add(ListenedArrayList.class);
+	add(LinkedHashMap.class); //
+	add(EnhancementSet.class); //
+	add(EnhancementLinkedRootsSet.class); //
+	add(EnhancementRootsMap.class); //
+	add(EnhancementPropertiesMap.class); //
+	add(ByteArray.class); //
+	add(Ordering.class); //
+	add(Function.class); //
+	add(CalculatedPropertyCategory.class); //
+	add(CalculatedPropertyAttribute.class); //
+	add(ICalculatedProperty.class); //
+	add(IMasterDomainTreeManager.class); //
+	add(IDomainTreeEnhancer.class); //
+	add(IDomainTreeRepresentation.class); //
+	add(IDomainTreeManager.class); //
+	add(ITickRepresentation.class); //
+	add(ITickManager.class); //
+    }};
     private final static ISerialiser serialiser = createSerialiser(createFactory());
     protected static byte[] managerArray = null;
     private IDomainTreeManagerAndEnhancer dtm = null;
@@ -101,7 +138,7 @@ public abstract class AbstractDomainTreeTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-	return new TgKryo1(factory, new ProvidedSerialisationClassProvider());
+	return new TgKryo1(factory, new ClassProviderForTestingPurposes());
     }
 
     /**
@@ -336,7 +373,7 @@ public abstract class AbstractDomainTreeTest {
 			assertFalse("The references of corresponding fields should be distinct. Field = [" + field + "]; value original = [" + originalFieldValue + "]; value new = [" + fieldValue + "].", fieldValue == originalFieldValue);
 		    }
 		    // all non-transient domain-tree-typed fields should have children initialised!
-		    if (!Modifier.isTransient(field.getModifiers()) && Finder.isAssignableFrom(fieldValueType, AbstractDomainTree.DOMAIN_TREE_TYPES) && !EntityUtils.isEnum(fieldValueType) && !allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(fieldValue, originalInstance != null ? Finder.getFieldValue(field, originalInstance) : null)) {
+		    if (!Modifier.isTransient(field.getModifiers()) && Finder.isAssignableFrom(fieldValueType, DOMAIN_TREE_TYPES) && !EntityUtils.isEnum(fieldValueType) && !allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(fieldValue, originalInstance != null ? Finder.getFieldValue(field, originalInstance) : null)) {
 			return false;
 		    }
 		}
@@ -350,7 +387,7 @@ public abstract class AbstractDomainTreeTest {
 
     protected static List<Field> getDomainTreeFields(final Class<?> type) {
 	// A base types to be checked for its non-emptiness and non-emptiness of their children.
-	final List<Class<?>> types = new ArrayList<Class<?>>(AbstractDomainTree.DOMAIN_TREE_TYPES);
+	final List<Class<?>> types = new ArrayList<Class<?>>(DOMAIN_TREE_TYPES);
 	// A base types to be checked for its non-emptiness.
 	// TODO covered by EnhancementSetAndMaps? types.add(Set.class);
 	// TODO covered by EnhancementSetAndMaps? types.add(Map.class);

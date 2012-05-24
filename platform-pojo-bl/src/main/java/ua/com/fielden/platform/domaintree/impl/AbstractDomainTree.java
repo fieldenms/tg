@@ -1,27 +1,11 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.domaintree.Function;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
-import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -42,29 +26,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTree {
-    /** A base types to be checked for its non-emptiness and non-emptiness of their children. */
-    public static final List<Class<?>> DOMAIN_TREE_TYPES = new ArrayList<Class<?>>() {{
-	add(AbstractEntity.class); //
-	add(SearchBy.class);
-	add(ListenedArrayList.class);
-	add(LinkedHashMap.class); //
-	add(EnhancementSet.class); //
-	add(EnhancementLinkedRootsSet.class); //
-	add(EnhancementRootsMap.class); //
-	add(EnhancementPropertiesMap.class); //
-	add(ByteArray.class); //
-	add(Ordering.class); //
-	add(Function.class); //
-	add(CalculatedPropertyCategory.class); //
-	add(CalculatedPropertyAttribute.class); //
-	add(ICalculatedProperty.class); //
-	add(IMasterDomainTreeManager.class); //
-	add(IDomainTreeEnhancer.class); //
-	add(IDomainTreeRepresentation.class); //
-	add(IDomainTreeManager.class); //
-	add(ITickRepresentation.class); //
-	add(ITickManager.class); //
-    }};
     private final transient ISerialiser serialiser;
     private final static transient Logger logger = Logger.getLogger(AbstractDomainTree.class);
     private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
@@ -154,7 +115,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Returns <code>true</code> if the "property" represents a placeholder.
-     * 
+     *
      * @param string
      * @return
      */
@@ -209,7 +170,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Throws an {@link IllegalArgumentException} if the property can not represent a "double criterion".
-     * 
+     *
      * @param root
      * @param property
      * @param message
@@ -222,7 +183,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Throws an {@link IllegalArgumentException} if the property can not represent a "double criterion".
-     * 
+     *
      * @param root
      * @param property
      * @param message
@@ -349,9 +310,9 @@ public abstract class AbstractDomainTree {
 
     /**
      * Returns <code>true</code> when the property can represent criterion with two editors, <code>false</code> otherwise.
-     * 
+     *
      * TODO unit test.
-     * 
+     *
      * @param root -- a root type that contains property.
      * @param property -- a dot-notation expression that defines a property.
      * @return
@@ -366,7 +327,7 @@ public abstract class AbstractDomainTree {
      * Returns <code>true</code> when the property can represent criterion with two editors, <code>false</code> otherwise.
      *
      * TODO unit test.
-     * 
+     *
      * @param root -- a root type that contains property.
      * @param property -- a dot-notation expression that defines a property.
      * @return

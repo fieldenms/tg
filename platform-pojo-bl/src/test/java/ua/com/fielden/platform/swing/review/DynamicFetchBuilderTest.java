@@ -12,6 +12,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.TgKryo1;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -20,7 +21,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
@@ -37,7 +37,7 @@ public class DynamicFetchBuilderTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-	return new TgKryo1(factory, new ProvidedSerialisationClassProvider());
+	return new TgKryo1(factory, new ClassProviderForTestingPurposes());
     }
 
     private static final Class<? extends AbstractEntity<?>> masterKlass, slaveKlass, evenSlaveKlass, stringKeyKlass, mutableKeyType;
@@ -145,7 +145,7 @@ public class DynamicFetchBuilderTest {
 		"propIntMin", //
 	});
 	final fetch<? extends AbstractEntity<?>> masterEntityFetch = fetchOnly(masterKlass).with("sumInt").with("avgInt").with("mutIntSum")//
-		.with("propIntSum").with("propIntAvg").with("propIntMin");
-	assertEquals("The fetch for total proerties doesn't work", masterEntityFetch, DynamicFetchBuilder.createFetchModel(masterKlass, fetchProperties));
+		.with("propIntSum").with("propIntAvg").with("propIntMin").without("id").without("version");
+	assertEquals("The fetch for total proerties doesn't work", masterEntityFetch, DynamicFetchBuilder.createTotalFetchModel(masterKlass, fetchProperties));
     }
 }

@@ -1,5 +1,20 @@
 package ua.com.fielden.platform.dao;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.getCalculatedProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getCompositeKeyProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +34,7 @@ import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -35,21 +51,6 @@ import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Injector;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.utils.EntityUtils.getCalculatedProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.getCompositeKeyProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
 
 
 
@@ -292,7 +293,7 @@ public class DomainPersistenceMetadata {
     }
 
     private PropertyPersistenceInfo getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
-	final boolean aggregatedExpression = false;//CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(calculatedPropfield.getAnnotation(Calculated.class).category());
+	final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(calculatedPropfield.getAnnotation(Calculated.class).category());
 
 	final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	final Object hibernateType = getHibernateType(javaType, "", Void.class, false, false);

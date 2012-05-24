@@ -5,17 +5,22 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.egi.EgiPanel1;
+import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedListener;
 import ua.com.fielden.platform.swing.pagination.model.development.PageChangedEvent;
+import ua.com.fielden.platform.swing.review.OpenMasterClickAction;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
+import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
-public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManagerAndEnhancer, IPage<T>> {
+public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManagerAndEnhancer, IPage<T>> implements IUmViewOwner, IBlockingLayerProvider{
 
     private static final long serialVersionUID = 8538099803371092525L;
 
@@ -24,6 +29,12 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final GridConfigurationView<T, CDTME> owner) {
 	super(model, owner);
 	this.egiPanel = new EgiPanel1<T>(getModel().getCriteria().getEntityClass(), getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer());
+	if (getOwner().getOwner().getModel().getMasterManager() != null) {
+	    OpenMasterClickAction.enhanceWithClickAction(egiPanel.getEgi().getActualModel().getPropertyColumnMappings(),//
+		    model.getCriteria().getEntityClass(), //
+		    getOwner().getOwner().getModel().getMasterManager(), //
+		    this);
+	}
 	getModel().getPageHolder().addPageChangedListener(new IPageChangedListener() {
 
 	    @SuppressWarnings("unchecked")
@@ -132,5 +143,25 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     private AbstractEntityCentre<T, CDTME> getCentre(){
 	return getOwner().getOwner();
+    }
+
+    @Override
+    public BlockingIndefiniteProgressLayer getBlockingLayer() {
+	return getOwner().getProgressLayer();
+    }
+
+    @Override
+    public <E extends AbstractEntity<?>> void notifyEntityChange(final E entity) {
+	if (entity.isPersisted()) {
+	    SwingUtilitiesEx.invokeLater(new Runnable() {
+		@SuppressWarnings("unchecked")
+		@Override
+		public void run() {
+		    getEgiPanel().getEgi().getActualModel().refresh((T) entity);
+		    //getProgressLayer().setLocked(false);
+		}
+	    });
+	}
+
     }
 }

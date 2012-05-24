@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.reflection.test_entities.ForFindClass;
+import ua.com.fielden.platform.reflection.test_entities.ForFindClass.InnerForFindClass;
 import ua.com.fielden.platform.reflection.test_entities.ISomeInterface;
 import ua.com.fielden.platform.reflection.testannotation.BaseClassAnnotation;
 import ua.com.fielden.platform.reflection.testannotation.DerivedClassAnnotation;
@@ -99,6 +101,12 @@ public class ClassesRetrieverTest {
 	} catch (final Exception e) {
 	    fail("There suppose to be no exception.");
 	}
+    }
+
+    @Test
+    public void test_that_find_class_method_works(){
+	assertEquals("Couldn't find ForFindClassTesting class", ClassesRetriever.findClass(ForFindClass.class.getName()), ForFindClass.class);
+	assertEquals("Couldn't find innner class of ForFindClassTesting", ClassesRetriever.findClass(InnerForFindClass.class.getName()), InnerForFindClass.class);
     }
 
 }
