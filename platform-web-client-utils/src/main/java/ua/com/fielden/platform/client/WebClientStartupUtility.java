@@ -315,7 +315,7 @@ public class WebClientStartupUtility {
 
 	message("Building user configurations...", splash, loginScreen);
 	// get menu items using "remote" IMainMenuStructureBuilder (from database)
-	final IMainMenuStructureBuilder persistedMainMenuStructureBuilder = new PersistedMainMenuStructureBuilder(mmiController, eccController, mmiiController, factory);
+	final IMainMenuStructureBuilder persistedMainMenuStructureBuilder = new PersistedMainMenuStructureBuilder(mmiController, eccController, mmiiController, factory, restUtil.getUser());
 	final List<MainMenuItem> itemsFromCloud = persistedMainMenuStructureBuilder.build();
 	final ITreeMenuFactory menuFactory = new TreeMenuFactory(rootMenuItem, menu, injector);
 	mmBinder.bindMainMenuItemFactories(menuFactory);
