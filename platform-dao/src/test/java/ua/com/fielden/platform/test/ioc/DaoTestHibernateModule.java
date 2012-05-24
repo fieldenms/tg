@@ -53,11 +53,13 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigControllerDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigControllerDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigControllerDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
+import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityControllerDao;
 import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
 
 import com.google.inject.Scopes;
@@ -106,6 +108,8 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
 	bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
 	bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
+
+	bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerDao.class);
 
 	bind(ITgTimesheet.class).to(TgTimesheetDao.class);
 	bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.menu;
+package ua.com.fielden.platform.ui.config.controller.mixin;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,16 +52,14 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public final class LocalMainMenuStructureBuilder {
-
-    private long id = 0;
+public final class MainMenuStructureFactory {
     private int order = 0;
     private final EntityFactory factory;
     private List<MainMenuItem> menuItems = new ArrayList<MainMenuItem>();
     private MainMenuItem currentItem = null;
 
     @Inject
-    public LocalMainMenuStructureBuilder(final EntityFactory factory) {
+    public MainMenuStructureFactory(final EntityFactory factory) {
 	this.factory = factory;
     }
 
@@ -72,8 +70,8 @@ public final class LocalMainMenuStructureBuilder {
      * @param miType
      * @return
      */
-    public LocalMainMenuStructureBuilder push(final Class<? extends TreeMenuItem> miType) {
-	final MainMenuItem item = factory.newEntity(MainMenuItem.class, ++id, miType.getName());
+    public MainMenuStructureFactory push(final String miTypeName) {
+	final MainMenuItem item = factory.newByKey(MainMenuItem.class, miTypeName);
 	if (currentItem == null) { // first level item is being added (i.e. under the root)
 	    // instantiate item
 	    item.setParent(null);
@@ -96,7 +94,7 @@ public final class LocalMainMenuStructureBuilder {
      *
      * @return
      */
-    public LocalMainMenuStructureBuilder pop() {
+    public MainMenuStructureFactory pop() {
 	if (currentItem == null) {
 	    throw new IllegalStateException("The current menu level is the highest. No where to pop.");
 	}

@@ -12,7 +12,7 @@ import ua.com.fielden.platform.application.AbstractUiApplication;
 import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.client.config.IMainMenuBinder;
 import ua.com.fielden.platform.client.ui.DefaultApplicationMainPanel;
-import ua.com.fielden.platform.client.ui.menu.RemoteTreeMenuFactory;
+import ua.com.fielden.platform.client.ui.menu.TreeMenuFactory;
 import ua.com.fielden.platform.equery.Rdbms;
 import ua.com.fielden.platform.example.dynamiccriteria.entities.SimpleCompositeEntity;
 import ua.com.fielden.platform.example.dynamiccriteria.master.SimpleCompositeEntityMasterFactory;
@@ -73,10 +73,10 @@ public class EntityCentreExample extends AbstractUiApplication {
 	    final IMainMenuBinder mmBinder,//
 	    final TreeMenuItem<?> menuItems, //
 	    final UndockableTreeMenuWithTabs<?> menu) {
-	final ITreeMenuFactory menuFactory = new RemoteTreeMenuFactory(menuItems, menu, injector);
+	final ITreeMenuFactory menuFactory = new TreeMenuFactory(menuItems, menu, injector);
 	mmBinder.bindMainMenuItemFactories(menuFactory);
 	final IMainMenuStructureBuilder mmsBuilder = new TemplateMainMenu(config.getEntityFactory());
-	final List<MainMenuItem> itemsFromCloud = mmsBuilder.build("SU");
+	final List<MainMenuItem> itemsFromCloud = mmsBuilder.build();
 	menuFactory.build(itemsFromCloud);
 	menu.getModel().getOriginModel().reload();
     }

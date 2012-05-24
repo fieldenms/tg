@@ -4,7 +4,6 @@ import java.util.Properties;
 
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
-import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.IDaoFactory;
@@ -32,13 +31,8 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.impl.TgKryo;
-import ua.com.fielden.platform.swing.menu.ITreeMenuItemVisibilityProvider;
-import ua.com.fielden.platform.swing.menu.LocalTreeMenuItemVisibilityProvider;
 import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
-import ua.com.fielden.platform.swing.review.configuration.LocalCenterConfigurationController;
-import ua.com.fielden.platform.swing.review.configuration.LocalLocatorConfigurationController;
-import ua.com.fielden.platform.swing.review.configuration.LocalMasterConfigurationController;
 import ua.com.fielden.platform.ui.config.api.EntityCentreConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityLocatorConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityMasterConfigControllerRao;
@@ -50,12 +44,6 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.ui.config.api.MainMenuItemControllerRao;
 import ua.com.fielden.platform.ui.config.api.MainMenuItemInvisibilityControllerRao;
-import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
-import ua.com.fielden.platform.ui.config.api.interaction.ILocatorConfigurationController;
-import ua.com.fielden.platform.ui.config.api.interaction.IMasterConfigurationController;
-import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
-import ua.com.fielden.platform.ui.config.impl.interaction.RemoteLocatorConfigurationController;
-import ua.com.fielden.platform.ui.config.impl.interaction.RemoteMasterConfigurationController;
 import ua.com.fielden.platform.update.IReferenceDependancyController;
 import ua.com.fielden.platform.update.ReferenceDependancyController;
 
@@ -82,7 +70,6 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
     protected final Properties props;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
     private final Class<? extends IMainMenuStructureBuilder> mainMenuStructureBuilderType;
-
 
     public BasicWebClientModule(final RestClientUtil restUtil, final Class<? extends IMainMenuStructureBuilder> mainMenuStructureBuilderType, final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, final Properties props) {
 	super(restUtil);
@@ -139,23 +126,8 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerRao.class).in(Scopes.SINGLETON);
 	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
 	bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
-
-	if (Workflows.valueOf(props.getProperty("workflow")).equals(Workflows.deployment)) {
-	    bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON);
-	    bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
-
-	    bind(ILocatorConfigurationController.class).to(RemoteLocatorConfigurationController.class).in(Scopes.SINGLETON);
-	    bind(IMasterConfigurationController.class).to(RemoteMasterConfigurationController.class).in(Scopes.SINGLETON);
-	} else {
-	    ///////////////////////////// local
-	    bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
-	    bind(ITreeMenuItemVisibilityProvider.class).to(LocalTreeMenuItemVisibilityProvider.class).in(Scopes.SINGLETON);
-	    bind(IMainMenuStructureBuilder.class).to(mainMenuStructureBuilderType);
-
-	    bind(ICenterConfigurationController.class).to(LocalCenterConfigurationController.class).in(Scopes.SINGLETON);
-	    bind(ILocatorConfigurationController.class).to(LocalLocatorConfigurationController.class).in(Scopes.SINGLETON);
-	    bind(IMasterConfigurationController.class).to(LocalMasterConfigurationController.class).in(Scopes.SINGLETON);
-	}
+	bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
+	bind(IMainMenuStructureBuilder.class).to(mainMenuStructureBuilderType); // bind IMainMenuStructureBuilder.class to a custom MainMenuStructureBuilder, which is pure "development" builder
 	//////////////////////////////////////////////////////////////////////////////
 	bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
     }
@@ -171,5 +143,4 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	restUtil.initSerialiser(injector.getInstance(ISerialiser.class));
 	restUtil.setUserController(injector.getInstance(IUserController.class));
     }
-
 }

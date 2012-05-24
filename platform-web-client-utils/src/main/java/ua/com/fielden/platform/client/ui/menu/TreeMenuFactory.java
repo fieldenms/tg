@@ -17,13 +17,12 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
 import com.google.inject.Injector;
 
 /**
- * A factory for instantiation of the whole main menu tree, which is persisted in the cloud.
+ * A factory for instantiation of the whole main menu tree.
  *
  * @author TG Team
  *
  */
-public class RemoteTreeMenuFactory implements ITreeMenuFactory {
-
+public class TreeMenuFactory implements ITreeMenuFactory {
     private final Map<Class<?>, ITreeMenuItemFactory> bindings = new HashMap<Class<?>, ITreeMenuItemFactory>();
     private final TreeMenuItem<?> root;
     private final TreeMenuWithTabs<?> menu;
@@ -32,7 +31,7 @@ public class RemoteTreeMenuFactory implements ITreeMenuFactory {
     private final IUserProvider userProvider;
     private final IMainMenuItemInvisibilityController mmiController;
 
-    public RemoteTreeMenuFactory(final TreeMenuItem<?> root, final TreeMenuWithTabs<?> menu, final Injector injector) {
+    public TreeMenuFactory(final TreeMenuItem<?> root, final TreeMenuWithTabs<?> menu, final Injector injector) {
 	this.root = root;
 	this.menu = menu;
 	this.injector = injector;
@@ -42,8 +41,8 @@ public class RemoteTreeMenuFactory implements ITreeMenuFactory {
     }
 
     @Override
-    public void build(final List<MainMenuItem> itemsFromCloud) {
-	for (final MainMenuItem rootItem : itemsFromCloud) {
+    public void build(final List<MainMenuItem> mainMenuItems) {
+	for (final MainMenuItem rootItem : mainMenuItems) {
 	    traceTree(rootItem, root);
 	}
     }

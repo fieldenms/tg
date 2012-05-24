@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.menu;
+package ua.com.fielden.platform.ui.config.controller.mixin;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,25 +14,26 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 /**
- * Test correct construction of the main menu structure using {@link LocalMainMenuStructureBuilder}.
+ * Test correct construction of the main menu structure using {@link MainMenuStructureFactory}.
  *
  * @author TG Team
  *
  */
-public class MainMenuStructureBuilderTest {
+public class MainMenuStructureFactoryTest {
 
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
 
     @Test
     public void test_menu_construction() {
-	final LocalMainMenuStructureBuilder builder = injector.getInstance(LocalMainMenuStructureBuilder.class)
-	.push(TreeMenuItem.class)
-	     .push(TreeMenuItem.class).pop()
+	final String menuItemName = "ua.com.fielden.platform.swing.menu.TreeMenuItem";
+	final MainMenuStructureFactory builder = injector.getInstance(MainMenuStructureFactory.class)
+	.push(menuItemName)
+	     .push(menuItemName).pop()
 	.pop()
-	.push(TreeMenuItem.class)
-	     .push(TreeMenuItem.class).pop()
-	     .push(TreeMenuItem.class).pop()
+	.push(menuItemName)
+	     .push(menuItemName).pop()
+	     .push(menuItemName).pop()
 	.pop();
 
 	final List<MainMenuItem> menu = builder.build();

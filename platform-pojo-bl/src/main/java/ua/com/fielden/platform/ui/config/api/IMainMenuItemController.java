@@ -10,5 +10,4 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
  *
  */
 public interface IMainMenuItemController extends IEntityDao<MainMenuItem> {
-
 }

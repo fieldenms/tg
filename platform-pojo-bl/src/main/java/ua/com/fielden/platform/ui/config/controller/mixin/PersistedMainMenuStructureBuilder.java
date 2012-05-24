@@ -2,9 +2,11 @@ package ua.com.fielden.platform.ui.config.controller.mixin;
 
 import java.util.List;
 
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 
 import com.google.inject.Inject;
@@ -17,21 +19,15 @@ import com.google.inject.Inject;
  *
  */
 public final class PersistedMainMenuStructureBuilder implements IMainMenuStructureBuilder {
-
     private final MainMenuItemMixin mixin;
-    private final IMainMenuItemController mmiController;
 
     @Inject
-    public PersistedMainMenuStructureBuilder(final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController) {
-	mixin = new MainMenuItemMixin(mmiController, eccController);
-	this.mmiController = mmiController;
+    public PersistedMainMenuStructureBuilder(final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController, final IMainMenuItemInvisibilityController mmiiController, final EntityFactory factory) {
+	mixin = new MainMenuItemMixin(mmiController, eccController, mmiiController, factory);
     }
 
     @Override
-    public List<MainMenuItem> build(final String username) {
-	mmiController.setUsername(username);
-	mixin.setUser(mmiController.getUser());
+    public List<MainMenuItem> build() {
 	return mixin.loadMenuSkeletonStructure();
     }
-
 }

@@ -16,5 +16,5 @@ public interface IMainMenuStructureBuilder {
      *
      * @return
      */
-    List<MainMenuItem> build(final String username);
+    List<MainMenuItem> build();
 }

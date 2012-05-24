@@ -10,14 +10,13 @@ import ua.com.fielden.platform.swing.menu.MiGroupItem;
 import ua.com.fielden.platform.swing.menu.MiWithVisibilityProvider;
 import ua.com.fielden.platform.swing.menu.TreeMenuWithTabs;
 import ua.com.fielden.platform.swing.menu.api.ITreeMenuItemFactory;
-import ua.com.fielden.platform.ui.config.api.interaction.ICenterConfigurationController;
 
 import com.google.inject.Injector;
 
 /**
  * The default implementation of the {@link ITreeMenuItemFactory}, used in case if there is no custom implementation associated with a particular main menu class.
  * <p>
- * This implementation assumes that non-group menu item type has a constructor with four parameters ({@link TreeMenuWithTabs}, {@link Injector}, {@link ICenterConfigurationController}, {@link ITreeMenuItemVisibilityProvider})
+ * This implementation assumes that non-group menu item type has a constructor with four parameters ({@link TreeMenuWithTabs}, {@link Injector}, {@link ITreeMenuItemVisibilityProvider})
  * and the group menu items (i.e. derived from {@link MiGroupItem}) have the constructor with a single parameter of type {@link ITreeMenuItemVisibilityProvider}.
  *
  * @author TG Team

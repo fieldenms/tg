@@ -23,8 +23,8 @@ import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.client.config.IMainMenuBinder;
 import ua.com.fielden.platform.client.session.AppSessionController;
 import ua.com.fielden.platform.client.ui.DefaultApplicationMainPanel;
-import ua.com.fielden.platform.client.ui.menu.LocalTreeMenuFactory;
-import ua.com.fielden.platform.client.ui.menu.RemoteTreeMenuFactory;
+import ua.com.fielden.platform.client.ui.menu.TreeMenuFactory;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.security.ClientAuthenticationModel;
@@ -42,7 +42,12 @@ import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
+import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuItemMixin;
+import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
 import ua.com.fielden.platform.update.IClientApplicationRestarter;
 import ua.com.fielden.platform.update.ReferenceDependancyController;
 import ua.com.fielden.platform.update.Updater;
@@ -230,16 +235,16 @@ public class WebClientStartupUtility {
 	// Define all menu items for the main application frame menu
 	// compose all menu items into one vector
 	@SuppressWarnings("rawtypes")
-	final TreeMenuItem<?> menuItems = new TreeMenuItem("root", "root panel");
+	final TreeMenuItem<?> rootMenuItem = new TreeMenuItem("root", "root panel");
 	final BaseFrame mainApplicationFrame = new BaseFrame(caption, emm.getEntityMasterCache());
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	final UndockableTreeMenuWithTabs<?> menu = new UndockableTreeMenuWithTabs(menuItems, new WordFilter(), injector.getInstance(IUserProvider.class), new BlockingIndefiniteProgressPane(mainApplicationFrame));
+	final UndockableTreeMenuWithTabs<?> menu = new UndockableTreeMenuWithTabs(rootMenuItem, new WordFilter(), injector.getInstance(IUserProvider.class), new BlockingIndefiniteProgressPane(mainApplicationFrame));
 
 	final Thread thread = new Thread(new Runnable() {
 	    @Override
 	    public void run() {
 		try {
-		    buildMainMenu(restUtil, splash, loginScreen, injector, mmBuilder, menuItems, menu);
+		    buildMainMenu(restUtil, splash, loginScreen, injector, mmBuilder, rootMenuItem, menu);
 
 		    SwingUtilitiesEx.invokeLater(new Runnable() {
 			@Override
@@ -281,7 +286,7 @@ public class WebClientStartupUtility {
      * @param loginScreen
      * @param injector
      * @param mmBinder
-     * @param menuItems
+     * @param rootMenuItem
      * @param menu
      */
     private static void buildMainMenu(//
@@ -290,23 +295,33 @@ public class WebClientStartupUtility {
 	    final StyledLoginScreen loginScreen,//
 	    final Injector injector, //
 	    final IMainMenuBinder mmBinder,//
-	    final TreeMenuItem<?> menuItems, //
+	    final TreeMenuItem<?> rootMenuItem, //
 	    final UndockableTreeMenuWithTabs<?> menu) {
+
 	final IApplicationSettings settings = injector.getInstance(IApplicationSettings.class);
-	final ITreeMenuFactory menuFactory = Workflows.development.equals(Workflows.valueOf(settings.workflow()))
-		? new LocalTreeMenuFactory(menuItems, menu, injector)
-		: new RemoteTreeMenuFactory(menuItems, menu, injector);
-	mmBinder.bindMainMenuItemFactories(menuFactory);
-	final IMainMenuStructureBuilder mmsBuilder = injector.getInstance(IMainMenuStructureBuilder.class);
-	final List<MainMenuItem> itemsFromCloud = mmsBuilder.build(restUtil.getUsername());
+	final IMainMenuItemController mmiController = injector.getInstance(IMainMenuItemController.class);
+	final IEntityCentreConfigController eccController = injector.getInstance(IEntityCentreConfigController.class);
+	final IMainMenuItemInvisibilityController mmiiController = injector.getInstance(IMainMenuItemInvisibilityController.class);
+	final EntityFactory factory = injector.getInstance(EntityFactory.class);
+
+	if (Workflows.development.equals(Workflows.valueOf(settings.workflow()))) {
+	    message("Updating user configurations (development mode)...", splash, loginScreen);
+	    // persist NEW / UPDATED menu items (delete OBSOLETE items) into database
+	    final IMainMenuStructureBuilder developmentMainMenuStructureBuilder = injector.getInstance(IMainMenuStructureBuilder.class);
+	    final MainMenuItemMixin mixin = new MainMenuItemMixin(mmiController, eccController, mmiiController, factory);
+	    mixin.setUser(restUtil.getUser());
+	    mixin.updateMenuItemsWithDevelopmentOnes(developmentMainMenuStructureBuilder);
+	}
 
 	message("Building user configurations...", splash, loginScreen);
-
+	// get menu items using "remote" IMainMenuStructureBuilder (from database)
+	final IMainMenuStructureBuilder persistedMainMenuStructureBuilder = new PersistedMainMenuStructureBuilder(mmiController, eccController, mmiiController, factory);
+	final List<MainMenuItem> itemsFromCloud = persistedMainMenuStructureBuilder.build();
+	final ITreeMenuFactory menuFactory = new TreeMenuFactory(rootMenuItem, menu, injector);
+	mmBinder.bindMainMenuItemFactories(menuFactory);
 	menuFactory.build(itemsFromCloud);
 	menu.getModel().getOriginModel().reload();
     }
-
-
 
     /**
      * Make a HTTP request to the application server in order to check its availability.

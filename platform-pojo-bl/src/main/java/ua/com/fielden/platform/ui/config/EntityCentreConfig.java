@@ -78,8 +78,9 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
 
     @Observable
     @EntityExists(MainMenuItem.class)
-    public void setMenuItem(final MainMenuItem menuItem) {
+    public EntityCentreConfig setMenuItem(final MainMenuItem menuItem) {
 	this.menuItem = menuItem;
+	return this;
     }
 
     public boolean isPrincipal() {
@@ -87,8 +88,9 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     }
 
     @Observable
-    public void setPrincipal(final boolean flag) {
+    public EntityCentreConfig setPrincipal(final boolean flag) {
 	this.principal = flag;
+	return this;
     }
 
     public User getOwner() {
@@ -98,8 +100,9 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @Observable
     @NotNull
     @EntityExists(User.class)
-    public void setOwner(final User owner) {
+    public EntityCentreConfig setOwner(final User owner) {
 	this.owner = owner;
+	return this;
     }
 
     public String getTitle() {
@@ -108,8 +111,9 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
 
     @Observable
     @NotNull
-    public void setTitle(final String title) {
+    public EntityCentreConfig setTitle(final String title) {
 	this.title = title;
+	return this;
     }
 
 }
