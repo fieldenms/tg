@@ -538,7 +538,8 @@ public class BoundedJXDatePicker extends JXDatePicker implements IOnCommitAction
 	SwingUtilitiesEx.invokeLater(new Runnable() {
 	    @Override
 	    public void run() {
-		boundedMetaProperty().getChangeSupport().firePropertyChange("validationResults", null, new Result(entity, "here the result updates to goodd!!!!"));
+		// fire change for property "validationResults"
+		boundedMetaProperty().getChangeSupport().firePropertyChange(MetaProperty.VALIDATION_RESULTS_PROPERTY_NAME, null, new Result(entity, "here the result updates to goodd!!!!"));
 	    }
 	});
     }
