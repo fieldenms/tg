@@ -81,8 +81,8 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     private Object lastInvalidValue;
     private int valueChangeCount = 0;
     /**
-     * Indicates whether this property has an assigned value. This flag is requited due to the fact that the value of null could be assigned making it impossible to identify the
-     * fact of value assignment.
+     * Indicates whether this property has an assigned value.
+     * This flag is requited due to the fact that the value of null could be assigned making it impossible to identify the fact of value assignment.
      */
     private boolean assigned = false;
     ///////////////////////////////////////////////////////
@@ -360,31 +360,6 @@ public final class MetaProperty implements Comparable<MetaProperty> {
 	} else {
 	    changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, validationResult);
 	}
-    }
-
-    /**
-     * Fires (if result is not null) the changing of the "validationResults" property. It can be used as a trick, not to set directly validationResult() to unknown
-     * ValidationAnnotation, but only fire the changing result! It should not be used with Null ValidationResults
-     *
-     * @param validationResult
-     */
-    private void fireImaginaryValidationResultNoSynch(final Result validationResult) {
-	System.out.println("fireImaginaryValidationResultNoSynch : successful == " + validationResult.isSuccessful());
-	changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, null, validationResult);
-    }
-
-    /**
-     * Same as {@link #fireImaginaryValidationResultNoSynch(Result)}, but with synchronization block.
-     *
-     * @param key
-     * @param validationResult
-     */
-    public synchronized final void fireImaginaryValidationResult(final Result validationResult) {
-	if (validationResult == null) {
-	    // FIXME: No actual excepting throwing is actually happening. This most likely needs to be fixed.
-	    new IllegalArgumentException("Cannot fire imaginary validation result when this result is NULL. ").printStackTrace();
-	}
-	fireImaginaryValidationResultNoSynch(validationResult);
     }
 
     /**
@@ -897,7 +872,6 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      *
      * @param valAnnotation
      */
-    @SuppressWarnings("unchecked")
     private void putValidator(final ValidationAnnotation valAnnotation) {
 	final Map<IBeforeChangeEventHandler, Result> map = new HashMap<IBeforeChangeEventHandler, Result>();
 	map.put(StubValidator.singleton, null);
