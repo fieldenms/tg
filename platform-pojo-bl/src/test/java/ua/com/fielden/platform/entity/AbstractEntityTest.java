@@ -1035,8 +1035,8 @@ public class AbstractEntityTest {
     }
 
     @Test
-    public void test_entity_locking_during_validation() throws Exception {
-	final LockedEntity entity = factory.newEntity(LockedEntity.class);
+    public void test_entity_locking_during_validation_of_its_property() throws Exception {
+	final EntityWithLocableProperty entity = factory.newEntity(EntityWithLocableProperty.class);
 
 	// changing property happens on a separate thread
 	final Thread changingThread = new Thread(new Runnable() {
@@ -1044,7 +1044,7 @@ public class AbstractEntityTest {
 	    public void run() {
 		// this call should put setting into a long running mode until property validation is unlocked
 		entity.setLockPropertyValidation(true);
-		entity.setMoney(Money.zero);
+		entity.setLockableProperty(Money.zero);
 	    }
 	});
 	changingThread.start();
@@ -1064,9 +1064,52 @@ public class AbstractEntityTest {
 	assertTrue(changingThread.isAlive());
 	assertTrue(validationThread.isAlive());
 
-	assertNull(entity.getMoney()); // property should not have been changed yet
+	assertNull(entity.getLockableProperty()); // property should not have been changed yet
 
 	entity.setLockPropertyValidation(false); // release property validation lock
+
+	Thread.sleep(500); // to allow for changing and validation threads to complete
+
+
+	assertNotNull(entity.getLockableProperty()); // property should have been changed already
+	assertNotNull(entity.isValid().isSuccessful());
+    }
+
+    @Test
+    public void test_entity_locking_during_its_validation() throws Exception {
+	final EntityWithLocableValidation entity = factory.newEntity(EntityWithLocableValidation.class);
+
+	// validation happens on a separate thread
+	final Thread validationThread = new Thread(new Runnable() {
+	    @Override
+	    public void run() {
+		// this call should put entity validation into a long running mode until validation is unlocked explicitly
+		entity.setLockEntityValidation(true);
+		entity.isValid();
+	    }
+	});
+	validationThread.start();
+	Thread.sleep(500); // to allow for validation thread to kick in properly
+
+	// changing property happens on a separate thread
+	final Thread changingThread = new Thread(new Runnable() {
+	    @Override
+	    public void run() {
+		// this should lock due to a running entity validation process
+		entity.setMoney(Money.zero);
+	    }
+	});
+	changingThread.start();
+	Thread.sleep(500); // to allow for changing thread to kick in properly
+
+
+	// both threads should be alive
+	assertTrue(changingThread.isAlive());
+	assertTrue(validationThread.isAlive());
+
+	assertNull(entity.getMoney()); // property should not have been changed yet
+
+	entity.setLockEntityValidation(false); // release validation lock
 
 	Thread.sleep(500); // to allow for changing and validation threads to complete
 
@@ -1074,4 +1117,5 @@ public class AbstractEntityTest {
 	assertNotNull(entity.getMoney()); // property should have been changed already
 	assertNotNull(entity.isValid().isSuccessful());
     }
+
 }

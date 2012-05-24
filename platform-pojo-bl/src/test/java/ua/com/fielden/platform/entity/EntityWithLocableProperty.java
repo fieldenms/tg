@@ -12,7 +12,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
 
 /**
- * Entity with arbitrarily long validation process, which makes its instance locked as long as desired.
+ * Entity with arbitrarily long validation process for the lockable property, which makes its instance locked as long as desired.
  *
  * @author TG Team
  *
@@ -21,7 +21,7 @@ import ua.com.fielden.platform.types.Money;
 @KeyTitle(value = "Entity No", desc = "Key Property")
 @DescTitle(value = "Description", desc = "Description Property")
 @DescRequired
-public class LockedEntity extends AbstractEntity<String> {
+public class EntityWithLocableProperty extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     private boolean lockPropertyValidation = true;
@@ -35,7 +35,7 @@ public class LockedEntity extends AbstractEntity<String> {
     private Double observableProperty = 0.0;
 
     @IsProperty
-    private Money money;
+    private Money lockableProperty;
 
 
     public Integer getFirstProperty() {
@@ -44,7 +44,7 @@ public class LockedEntity extends AbstractEntity<String> {
 
     @NotNull
     @Observable
-    public LockedEntity setFirstProperty(final Integer property) {
+    public EntityWithLocableProperty setFirstProperty(final Integer property) {
 	this.firstProperty = property;
 	return this;
     }
@@ -54,24 +54,24 @@ public class LockedEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public LockedEntity setObservableProperty(final Double observableProperty) {
+    public EntityWithLocableProperty setObservableProperty(final Double observableProperty) {
 	this.observableProperty = observableProperty;
 	return this;
     }
 
-    public Money getMoney() {
-	return money;
+    public Money getLockableProperty() {
+	return lockableProperty;
     }
 
     @Observable
-    public void setMoney(final Money money) {
+    public void setLockableProperty(final Money money) {
 	while (lockPropertyValidation) {
             try {
 		Thread.sleep(10);
 	    } catch (final InterruptedException e) {
 	    }
         }
-	this.money = money;
+	this.lockableProperty = money;
     }
 
     @Override
