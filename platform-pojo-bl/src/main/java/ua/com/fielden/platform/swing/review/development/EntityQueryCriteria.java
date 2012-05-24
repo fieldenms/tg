@@ -314,7 +314,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	    queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));
 	    queryProperty.setExclusive2(tickManager.getExclusive2(root, actualProperty));
 	}
-	final Class<?> propertyType = StringUtils.isEmpty(actualProperty) ? getManagedType() : PropertyTypeDeterminator.determinePropertyType(root, actualProperty);
+	final Class<?> propertyType = StringUtils.isEmpty(actualProperty) ? getManagedType() : PropertyTypeDeterminator.determinePropertyType(getManagedType(), actualProperty);
 	if (EntityUtils.isDate(propertyType)) {
 	    queryProperty.setDatePrefix(tickManager.getDatePrefix(root, actualProperty));
 	    queryProperty.setDateMnemonic(tickManager.getDateMnemonic(root, actualProperty));
