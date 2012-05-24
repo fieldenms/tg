@@ -437,13 +437,13 @@ public class TonnageValidator
 
   \begin{notebox}{Defensive or not.}{\label{nb:DefensiveOrNot}}
     There was an interesting discussion during one of the training sessions with respect to defensive programming, which sparked as the result of an intuition that argument \emph{newValue} in method \emph{TonnageValidator.handle} should be checked for \emph{null} before being used for validation as it would seem to be a good defensive programming practice.    
-    Althoug, it might be a good idea in general, our past experience and analyses suggests that the meaning of \emph{defensive} should always be treated within a specific semantic context.\\
+    Although, it might be a good idea in general, our past experience and analysis suggests that the meaning of \emph{defensive} should always be treated within a specific semantic context.\\
     
     If the intention for \emph{TonnageValidator} is to be used only in cases where the property is \emph{required} then having a \emph{null} check with no \emph{newValue} validation against the three possible values and a successful \emph{Result} returned, could lead to unintentional BCE handler usages by being associated with properties that are not declared as \emph{required}, and would inflict a false certainty that only the three permitted tonnage values are acceptalbe.
     In fact, value \emph{null} would also be acceptable.
     In this case, it would be better if the handler fails with NPE rather than accept the \emph{null} value.\\
     
-    Alternatively, there could be a check that fails validation if \emph{newValue} is \emph{null}, which has only one benefit over no check at all -- it could provide a more meanigful error message stating that property value is required.
+    Alternatively, there could be a check that fails validation if \emph{newValue} is \emph{null}, which has only one benefit over no check at all -- it could provide a more meaningful error message stating that property value is required.
     The downside of this approach is that it is not clear from an entity type declaration that a property value is requried unless the code of \emph{TonnageValidator} is inspected.
   \end{notebox}
 
@@ -466,7 +466,7 @@ public class NumOfSlotsValidator implements IBeforeChangeEventHandler<Integer> {
 	final Integer oldValue, 	
 	final Set<Annotation> mutatorAnnotations) {
 
-	if ((newValue < minNumOfSlots) || (newValue > maxNumOfSlots)) {
+	if (newValue < minNumOfSlots || newValue > maxNumOfSlots) {
 	    return new Result(
 		newValue, 
 		new IllegalArgumentException("Number of slots should be between " + 
@@ -490,6 +490,12 @@ public class NumOfSlotsValidator implements IBeforeChangeEventHandler<Integer> {
   \end{notebox}
 
   \subparagraph*{ACE Handlers.}
+
+  Post-condition handlers are executed only after a new property value is assigend, which means it passed all pre-conditons.
+  The only predefined in the platfrom post-conditon is \emph{Dependent} that, as has been discussed earlier, is dedicated to handle revalidation of dependent properties.
+  
+  In order to provide custom post-condition business logic, the platfrom provides support for \emph{After Change Event} (ACE) handlers.
+  Unlike BCE, where multiple handlers can be associated with a single property, there can be only one ACE handler associated with any particular property\footnote{This API decision was based on the platfrom usecases that suggested the benefit of having multiple BCE handlers, which can be independent from each other and applicable in different combinations to different properties in diverse entity types, while ACE handlers are pretty much relevant for a specific propety in a specific entity type only, and thus, are best to be represented by one logical unit such as handler class.}.
 
   \paragraph*{Property value change information.}
   \paragraph*{Property meta-state (editable, visible etc.).}
