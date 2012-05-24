@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunction;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere0;
@@ -69,6 +70,11 @@ abstract class AbstractSingleOperand<T> extends AbstractQueryLink implements ISi
     @Override
     public IIfNullFunctionArgument<T> ifNull() {
 	return new IfNullFunctionArgument<T>(getTokens().ifNull(), getParent());
+    }
+
+    @Override
+    public IConcatFunctionArgument<T> concat() {
+	return new ConcatFunctionArgument<T>(getTokens().concat(), getParent());
     }
 
     @Override

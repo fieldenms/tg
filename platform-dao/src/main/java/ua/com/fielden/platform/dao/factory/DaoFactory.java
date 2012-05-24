@@ -20,6 +20,7 @@ public class DaoFactory implements IDaoFactory {
     }
 
     public IEntityDao<?> newDao(final Class<? extends AbstractEntity<?>> entityType) {
+	// TODO if default controller annotation is present on entity then take it instead of DynamicEntityDao
 	final DynamicEntityDao dao = injector.getInstance(DynamicEntityDao.class);
 	dao.setEntityType(entityType);
 	return dao;

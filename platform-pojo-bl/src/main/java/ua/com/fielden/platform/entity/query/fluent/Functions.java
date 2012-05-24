@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 public enum Functions {
 	COUNT_DAYS,
+	CONCAT,
 	CASE_WHEN,
 	ROUND,
 	IF_NULL,

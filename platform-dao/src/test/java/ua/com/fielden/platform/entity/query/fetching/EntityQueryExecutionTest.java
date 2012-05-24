@@ -76,7 +76,24 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_query_with_virtual_property() {
-	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().prop("key").eq().val("WAGON2").model();
+	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().prop("key").like().val("WAGON%1").model();
+	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).with(orderBy().prop("key").desc().model()).build());
+	assertEquals("Incorrect key", 2, models.size());
+	assertEquals("Incorrect key 1", "WAGON2", models.get(0).getWagon().getKey());
+	assertEquals("Incorrect key 2", "1", models.get(0).getPosition().toString());
+	assertEquals("Incorrect key 2", "WAGON2 1", models.get(0).getKey().toString());
+    }
+
+    @Test
+    public void test_query_with_concat_function() {
+	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().concat().prop("wagon.key").with().val("-").with().prop("wagon.desc").end().eq().val("WAGON2-Wagon 2").model();
+	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).build());
+	assertEquals("Incorrect key", 3, models.size());
+    }
+
+    @Test
+    public void test_query_with_concat_function_with_non_string_argument() {
+	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().concat().prop("wagon.key").with().val(2).end().eq().val("WAGON22").model();
 	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).build());
 	assertEquals("Incorrect key", 3, models.size());
     }

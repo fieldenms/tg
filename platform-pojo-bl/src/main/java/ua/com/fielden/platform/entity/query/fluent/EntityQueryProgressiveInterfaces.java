@@ -102,6 +102,7 @@ public interface EntityQueryProgressiveInterfaces {
         IIfNullFunctionArgument<T> ifNull();
         IFunctionWhere0<T> caseWhen();
         IRoundFunctionArgument<T> round();
+        IConcatFunctionArgument<T> concat();
     }
 
     interface IMultipleOperand<T> extends ISingleOperand<T> {
@@ -181,6 +182,11 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IIfNullFunctionThen<T> {
         IFunctionLastArgument<T> then();
+    }
+
+    interface IConcatFunctionWith<T> {
+	IConcatFunctionArgument<T> with();
+	T end();
     }
 
     interface IRoundFunctionTo<T> {
@@ -473,6 +479,8 @@ public interface EntityQueryProgressiveInterfaces {
     interface IFunctionYieldedLastArgument<T> extends IYieldExprOperand<T, IYieldExprItem0<T>> {
     }
 
+    interface IConcatFunctionArgument<T> extends IExprOperand<IConcatFunctionWith<T>, IExprOperand0<IConcatFunctionWith<T>>> {
+    }
 
     //----------------------------------------------------------------------------------------------------------------------------------------------
     interface IStandAloneExprOperationAndClose extends IArithmeticalOperator<IStandAloneExprOperand>, IStandAloneExprCompleted {

@@ -100,6 +100,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 	case ROUND:
 	    setChild(new RoundToBuilder(this, queryBuilder, getParamValues()));
 	    break;
+	case CONCAT:
+	    setChild(new ConcatFunctionBuilder(this, queryBuilder, getParamValues()));
+	    break;
 	default:
 	    throw new RuntimeException("Unrecognised function token: " + function);
 	}

@@ -1,25 +1,11 @@
 package ua.com.fielden.platform.dao;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.utils.EntityUtils.getCalculatedProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.getCompositeKeyProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +27,8 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.persistence.types.UnionEntityType;
@@ -51,6 +39,21 @@ import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Injector;
+
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.getCalculatedProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getCompositeKeyProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
 
 
 
@@ -287,9 +290,22 @@ public class DomainPersistenceMetadata {
 	return builder.column(columnName).build();
     }
 
+    private String getKeyMemberConcatenationExpression(final Field keyMember) {
+	if (EntityUtils.isEntityType(keyMember.getType())) {
+	    return keyMember.getName() + ".key";
+	} else {
+	    return keyMember.getName();
+	}
+    }
+
     private PropertyPersistenceInfo getVirtualPropInfoForDynamicEntityKey(final List<Field> keyMembers) throws Exception {
-	final ExpressionModel expressionModel = expr().prop(keyMembers.get(0).getName() + ".key").model();
-	return new PropertyPersistenceInfo.Builder("key", String.class, true).expression(expressionModel).hibType(Hibernate.STRING).virtual(true).build();
+	final Iterator<Field> iterator = keyMembers.iterator();
+	IConcatFunctionWith<IStandAloneExprOperationAndClose> expressionModel = expr().concat().prop(getKeyMemberConcatenationExpression(iterator.next()));
+	for (; iterator.hasNext();) {
+	    expressionModel = expressionModel.with().val(DynamicEntityKey.KEY_MEMBERS_SEPARATOR);
+	    expressionModel = expressionModel.with().prop(getKeyMemberConcatenationExpression(iterator.next()));
+	}
+	return new PropertyPersistenceInfo.Builder("key", String.class, true).expression(expressionModel.end().model()).hibType(Hibernate.STRING).virtual(true).build();
     }
 
     private PropertyPersistenceInfo getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {

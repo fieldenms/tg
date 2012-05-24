@@ -41,6 +41,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     private transient final List<Expression> propertyExpressions = new ArrayList<Expression>();
     private transient final JexlContext jc = JexlHelper.createContext();
     private static final String ENTITY = "entity";
+    public static final String KEY_MEMBERS_SEPARATOR = " ";
     /** There case where key members do not implement Comparable. In such cases a comparator class should be provided. */
     private transient final Map<Integer, Comparator<?>> keyMemberComparables = new HashMap<Integer, Comparator<?>>();
 
@@ -181,7 +182,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
 	for (int index = 0; index < propertyExpressions.size(); index++) {
 	    final Object value = value(index);
 	    if (value != null) {
-		buffer.append(value.toString() + (index+1 <  propertyExpressions.size() ? " " : ""));
+		buffer.append(value.toString() + (index+1 <  propertyExpressions.size() ? KEY_MEMBERS_SEPARATOR : ""));
 	    }
 	}
 	return buffer.toString();

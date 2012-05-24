@@ -263,6 +263,10 @@ final class Tokens {
 	return add(TokenCategory.FUNCTION, Functions.CASE_WHEN);
     }
 
+    public Tokens concat() {
+	return add(TokenCategory.FUNCTION, Functions.CONCAT);
+    }
+
     public Tokens round() {
 	return add(TokenCategory.FUNCTION, Functions.ROUND);
     }
@@ -373,6 +377,10 @@ final class Tokens {
 
     public Tokens on() {
 	return add(TokenCategory.ON, QueryTokens.ON);
+    }
+
+    public Tokens endOfFunction() {
+	return add(TokenCategory.END_FUNCTION, null);
     }
 
     public Tokens where() {
