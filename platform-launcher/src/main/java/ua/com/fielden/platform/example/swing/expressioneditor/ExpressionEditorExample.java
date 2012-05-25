@@ -9,7 +9,7 @@ import ua.com.fielden.platform.branding.SplashController;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-import ua.com.fielden.platform.domaintree.testing.TgKryo1;
+import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
@@ -44,7 +44,7 @@ public class ExpressionEditorExample extends AbstractUiApplication {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
 	// rootTypes.add(Vehicle.class);
 	rootTypes.add(MasterEntity.class);
-	final CentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(new TgKryo1(entityFactory, new ClassProviderForTestingPurposes()), rootTypes);
+	final CentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(new TgKryoForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes()), rootTypes);
 	// final DomainTreeEditorView<Vehicle> wizard = new DomainTreeEditorView<Vehicle>(new DomainTreeEditorModel<Vehicle>(entityFactory, cdtme, Vehicle.class));
 	final DomainTreeEditorView<MasterEntity> wizard = new DomainTreeEditorView<MasterEntity>(new DomainTreeEditorModel<MasterEntity>(entityFactory, cdtme, MasterEntity.class));
 	wizard.setPreferredSize(new Dimension(640,800));

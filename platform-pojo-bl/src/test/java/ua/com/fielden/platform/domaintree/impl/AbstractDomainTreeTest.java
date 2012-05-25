@@ -40,7 +40,7 @@ import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-import ua.com.fielden.platform.domaintree.testing.TgKryo1;
+import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -138,7 +138,7 @@ public abstract class AbstractDomainTreeTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-	return new TgKryo1(factory, new ClassProviderForTestingPurposes());
+	return new TgKryoForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
     }
 
     /**

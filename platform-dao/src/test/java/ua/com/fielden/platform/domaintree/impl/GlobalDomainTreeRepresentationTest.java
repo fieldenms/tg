@@ -19,7 +19,7 @@ import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAn
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
-import ua.com.fielden.platform.domaintree.testing.TgKryo1;
+import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.user.IUserDao;
@@ -41,7 +41,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
  */
 public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTestCase {
     private final EntityFactory entityFactory = getInstance(EntityFactory.class);
-    private final ISerialiser serialiser = new TgKryo1(entityFactory, new ClassProviderForTestingPurposes());
+    private final ISerialiser serialiser = new TgKryoForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
     private final IUserDao userDao = getInstance(IUserDao.class);
 
     protected GlobalDomainTreeManager createManagerForNonBaseUser2() {

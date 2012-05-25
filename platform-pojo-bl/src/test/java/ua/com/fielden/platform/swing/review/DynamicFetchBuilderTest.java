@@ -14,7 +14,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-import ua.com.fielden.platform.domaintree.testing.TgKryo1;
+import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -37,7 +37,7 @@ public class DynamicFetchBuilderTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-	return new TgKryo1(factory, new ClassProviderForTestingPurposes());
+	return new TgKryoForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
     }
 
     private static final Class<? extends AbstractEntity<?>> masterKlass, slaveKlass, evenSlaveKlass, stringKeyKlass, mutableKeyType;

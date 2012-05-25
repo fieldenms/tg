@@ -12,9 +12,15 @@ import ua.com.fielden.platform.serialisation.impl.TgKryo;
 
 import com.esotericsoftware.kryo.Serializer;
 
-public class TgKryo1 extends TgKryo {
+/**
+ * {@link TgKryo} descendant for Domain Tree testing.
+ *
+ * @author TG Team
+ *
+ */
+public class TgKryoForDomainTreesTestingPurposes extends TgKryo {
 
-    public TgKryo1(final EntityFactory factory, final ISerialisationClassProvider provider) {
+    public TgKryoForDomainTreesTestingPurposes(final EntityFactory factory, final ISerialisationClassProvider provider) {
 	super(factory, provider);
     }
 
