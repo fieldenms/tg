@@ -6,11 +6,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 import java.util.HashSet;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -20,6 +23,9 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForGlobalDomainTree;
 import ua.com.fielden.platform.domaintree.testing.MiMasterEntityForGlobalDomainTree;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
@@ -209,7 +215,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
 	nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT");
 	nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT", "NON-BASE SAVE AS REPORT");
-	assertEquals("Incorrect names of entity-centres.", new HashSet<String>() {{ add("BASE SAVE AS REPORT"); add("NON-BASE SAVE AS REPORT"); }}, nonBaseMgr.entityCentreNames(MENU_ITEM_TYPE));
+	assertEquals("Incorrect names of entity-centres.", new HashSet<String>() {{ add(null); add("BASE SAVE AS REPORT"); add("NON-BASE SAVE AS REPORT"); }}, nonBaseMgr.entityCentreNames(MENU_ITEM_TYPE));
 
 	// check init methods for another instance of application for user USER2
 	final IGlobalDomainTreeManager newNonBaseMgr = createManagerForNonBaseUser();
@@ -219,6 +225,46 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT"));
 	newNonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "NON-BASE SAVE AS REPORT");
 	assertNotNull("Should be initialised.", newNonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "NON-BASE SAVE AS REPORT"));
+	assertEquals("Incorrect names of entity-centres.", new HashSet<String>() {{ add(null); add("BASE SAVE AS REPORT"); add("NON-BASE SAVE AS REPORT"); }}, newNonBaseMgr.entityCentreNames(MENU_ITEM_TYPE));
+    }
+
+    @Test
+    public void test_that_principal_CENTRE_automatic_saving_works_for_BASE_user() {
+	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
+	baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
+
+	final QueryExecutionModel<EntityCentreConfig, EntityResultQueryModel<EntityCentreConfig>> model = from(GlobalDomainTreeManager.modelForCurrentAndBaseUsers(MENU_ITEM_TYPE.getName(), GlobalDomainTreeManager.title(MENU_ITEM_TYPE, null), baseMgr.getUserProvider().getUser())).with(fetchOnly(EntityCentreConfig.class).with("principal")).build();
+	final EntityCentreConfig centre = getInstance(IEntityCentreConfigController.class).getEntity(model);
+	assertTrue("Initialised automatically entity centre should be principle (even for non-base user that invoked).", centre.isPrincipal());
+    }
+
+    @Test
+    public void test_that_principal_CENTRE_automatic_saving_works_for_NON_BASE_user() {
+	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
+	nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
+
+	final QueryExecutionModel<EntityCentreConfig, EntityResultQueryModel<EntityCentreConfig>> model = from(GlobalDomainTreeManager.modelForCurrentAndBaseUsers(MENU_ITEM_TYPE.getName(), GlobalDomainTreeManager.title(MENU_ITEM_TYPE, null), nonBaseMgr.getUserProvider().getUser())).with(fetchOnly(EntityCentreConfig.class).with("principal")).build();
+	final EntityCentreConfig centre = getInstance(IEntityCentreConfigController.class).getEntity(model);
+	assertTrue("Initialised automatically entity centre should be principle (even for non-base user that invoked).", centre.isPrincipal());
+    }
+
+    @Test
+    public void test_that_entityCentreNames_works_for_not_initialised_centres() {
+	// create PRINCIPLE and BASE/NON-BASE SAVE AS REPORTS for user USER2
+	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
+	baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
+	baseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, "BASE SAVE AS REPORT");
+	assertEquals("Incorrect names of entity-centres.", new HashSet<String>() {{ add(null); add("BASE SAVE AS REPORT"); }}, baseMgr.entityCentreNames(MENU_ITEM_TYPE));
+	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
+	nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT");
+	nonBaseMgr.saveAsEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT", "NON-BASE SAVE AS REPORT");
+	assertEquals("Incorrect names of entity-centres.", new HashSet<String>() {{ add(null); add("BASE SAVE AS REPORT"); add("NON-BASE SAVE AS REPORT"); }}, nonBaseMgr.entityCentreNames(MENU_ITEM_TYPE));
+
+	// check init methods for another instance of application for user USER2
+	final IGlobalDomainTreeManager newNonBaseMgr = createManagerForNonBaseUser();
+	assertNull("Should be not initialised.", newNonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null));
+	assertNull("Should be not initialised.", newNonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "BASE SAVE AS REPORT"));
+	assertNull("Should be initialised.", newNonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "NON-BASE SAVE AS REPORT"));
 	assertEquals("Incorrect names of entity-centres.", new HashSet<String>() {{ add(null); add("BASE SAVE AS REPORT"); add("NON-BASE SAVE AS REPORT"); }}, newNonBaseMgr.entityCentreNames(MENU_ITEM_TYPE));
     }
 

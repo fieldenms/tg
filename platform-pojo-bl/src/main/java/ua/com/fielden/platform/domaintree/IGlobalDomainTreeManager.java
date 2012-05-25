@@ -208,8 +208,7 @@ public interface IGlobalDomainTreeManager {
     void removeEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
-     * Returns unordered names of current versions of <b>entity-centre managers</b> for menu item type <b>menuItemType</b> .
-     * The <b>name</b> could represent a non-empty name of non-principle entity-centre or <code>null</code> for principle entity-centre. <br><br>
+     * Returns unordered names of persisted in the cloud <b>entity-centre managers</b> for menu item type <b>menuItemType</b>.<br><br>
      *
      * <b>User-driven constraints</b>: Base or non-base users can do nothing with non-visible (or non-existent) reports (throws {@link IllegalArgumentException}).
      * Non-base users can init, access, modify, saveAs, ask for the changes etc. for all reports that are visible to him (its own reports + its base user's reports including principle), but cannot save/remove base user's reports (throws {@link IllegalArgumentException}).

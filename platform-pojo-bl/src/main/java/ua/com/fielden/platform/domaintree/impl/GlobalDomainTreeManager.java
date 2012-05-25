@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHASE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -109,7 +111,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	}
     }
 
-    private Class<?> validateMenuItemTypeRootType(final Class<?> menuItemType) {
+    private static Class<?> validateMenuItemTypeRootType(final Class<?> menuItemType) {
 	final EntityType etAnnotation = menuItemType.getAnnotation(EntityType.class);
 	if (etAnnotation == null || etAnnotation.value() == null) {
 	    error("The menu item type " + menuItemType.getSimpleName() + " has no 'EntityType' annotation, which is necessary to specify the root type of the centre.");
@@ -131,7 +133,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     private User baseOfTheCurrentUser() {
-	return currentUser().isBase() ? currentUser() : currentUser().getBasedOnUser();
+	return baseOfTheCurrentUser(currentUser());
+    }
+
+    private static User baseOfTheCurrentUser(final User currentUser) {
+	return currentUser.isBase() ? currentUser : currentUser.getBasedOnUser();
     }
 
     /**
@@ -142,8 +148,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param name
      * @return
      */
-    private String title(final Class<?> menuItemType, final String name) {
-	validateMenuItemType(menuItemType);
+    protected static String title(final Class<?> menuItemType, final String name) {
+	// validateMenuItemType(menuItemType);
 	validateMenuItemTypeRootType(menuItemType);
 	return name == null ? menuItemType.getName() : name;
     }
@@ -170,6 +176,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 		init(menuItemType, name, new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {{ add(root); }}), owning);
 		// save a new instance of EntityCentreConfig
 		final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, baseOfTheCurrentUser(), title, mainMenuItemController.findByKey(menuItemTypeName));
+		ecc.setPrincipal(true);
 		ecc.setConfigBody(getSerialiser().serialise(getEntityCentreManager(menuItemType, null)));
 		entityCentreConfigController.save(ecc);
 		return;
@@ -197,13 +204,24 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param title
      * @return
      */
-    private EntityResultQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsers(final String menuItemTypeName, final String title) {
+    protected static EntityResultQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsers(final String menuItemTypeName, final String title, final User currentUser) {
 	final EntityResultQueryModel<EntityCentreConfig> model =
 	    /*    */select(EntityCentreConfig.class).where().//
-	    /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
+	    /*    */begin().prop("owner").eq().val(currentUser).or().prop("owner").eq().val(baseOfTheCurrentUser(currentUser)).end().and().// look for entity-centres for both users (current and its base)
 	    /*    */prop("title").eq().val(title).and().//
 	    /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
 	return model;
+    }
+
+    /**
+     * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user with a <code>title</code> and <code>menuItemTypeName</code> specified.
+     *
+     * @param menuItemTypeName
+     * @param title
+     * @return
+     */
+    protected final EntityResultQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsers(final String menuItemTypeName, final String title) {
+	return modelForCurrentAndBaseUsers(menuItemTypeName, title, currentUser());
     }
 
     /**
@@ -220,6 +238,21 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    /*    */prop("title").eq().val(title).and().//
 	    /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
 	return model1;
+    }
+
+    /**
+     * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user and its base user with a <code>title</code> and <code>menuItemTypeName</code> specified.
+     *
+     * @param menuItemTypeName
+     * @param title
+     * @return
+     */
+    private EntityResultQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsers(final String menuItemTypeName) {
+	final EntityResultQueryModel<EntityCentreConfig> model =
+	    /*    */select(EntityCentreConfig.class).where().//
+	    /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
+	    /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
+	return model;
     }
 
     /**
@@ -610,11 +643,21 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	validateMenuItemTypeRootType(menuItemType);
 
 	final Set<String> names = new HashSet<String>();
-	for (final Pair<Class<?>, String> key : currentCentres.keySet()) {
-	    if (menuItemType.equals(key.getKey())) {
-		names.add(key.getValue());
+
+	final List<EntityCentreConfig> centresFromTheCloud = entityCentreConfigController.getAllEntities(from(modelForCurrentAndBaseUsers(menuItemType.getName())).with(fetchOnly(EntityCentreConfig.class).with("title").with("principal")).build());
+	for (final EntityCentreConfig ecc : centresFromTheCloud) {
+	    if (ecc.isPrincipal()) {
+		names.add(null);
+	    } else {
+		names.add(ecc.getTitle());
 	    }
 	}
+//	for (final Pair<Class<?>, String> key : currentCentres.keySet()) {
+//	    if (menuItemType.equals(key.getKey())) {
+//		names.add(key.getValue());
+//	    }
+//	}
+
 	return Collections.unmodifiableSet(names);
     }
 

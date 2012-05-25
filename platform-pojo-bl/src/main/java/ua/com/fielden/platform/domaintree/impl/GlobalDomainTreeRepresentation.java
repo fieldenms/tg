@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+
 import java.util.HashSet;
 
 import org.apache.log4j.Logger;
@@ -68,9 +70,8 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
 	final byte[] body = getSerialiser().serialise(locatorManager);
 	final EntityLocatorConfig elc;
 
-	// TODO when eQuery2 will be migrated, findByKey should return lightweight instance of EntityLocatorConfig (without byte[] body).
 	if (elcController.entityWithKeyExists(baseOfTheCurrentUser, propertyTypeName)) { // the persistence layer contains a default locator for "propertyType"
-	    elc = elcController.findByKey(baseOfTheCurrentUser, propertyTypeName);
+	    elc = elcController.findByKeyAndFetch(fetchOnly(EntityLocatorConfig.class), baseOfTheCurrentUser, propertyTypeName);
 	} else { // there is no default locator for "propertyType" -- save a brand new instance
 	    elc = factory.newByKey(EntityLocatorConfig.class, baseOfTheCurrentUser, propertyTypeName);
 	}
