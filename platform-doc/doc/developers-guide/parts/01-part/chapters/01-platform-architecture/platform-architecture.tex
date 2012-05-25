@@ -150,13 +150,13 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
   
   As an example of a defined entity property, let's consider entity type \emph{Wagon} that is provided with property \emph{wagonClass: WagonClass} as illustrated in listing~\ref{lst:WagonWagonClassProperty}.
   Here an ordinary private field \emph{wagonClass: WagonClass} is provided with annotation \emph{IsProperty} and an optional, but recommended, annotation \emph{Title}.
-  Property's setter (often referred as \emph{mutator}) \emph{setWagonClass} has its name specified in accordance with JavaBean specification, and is provided with a mandatory annotation \emph{Observable}.
-  According to the JavaBean specification, the return type for setters should be \emph{void}.
+  Property's setter (often referred as \emph{mutator}) \emph{setWagonClass} has its name specified in accordance with JavaBeans specification, and is provided with a mandatory annotation \emph{Observable}.
+  According to the JavaBeans specification, the return type for setters should be \emph{void}.
   The platform supports an extended setter specification by allowing the return type to match the type of the declaring class.
   In this case, setter \emph{setWagonClass} has return type \emph{Wagon}.
   Such specification enhancement provides a convenient way to chain many setter calls when initialising an entity instance.
   
-  Although, getter must also be provided, there is no special requirements in addition to those stated in the JavaBean specification.
+  Although, getter must also be provided, there is no special requirements in addition to those stated in the JavaBeans specification.
   Specifically, getter's name must begin with word \texttt{get} followed by a corresponding field name starting with a capitalised first character, and the return type must match that of the property.
 
   \begin{code}{Property \emph{wagonClass} in Wagon.}{\label{lst:WagonWagonClassProperty}}{codebgcolor}
@@ -302,7 +302,7 @@ public class WagonClass extends AbstractEntity<String> {
   The dependent properties need to be declared with annotation \emph{Dependent} that takes a list of dependent property names as its argument. 
   The word \emph{dependent} here means that properties depend on some other property. 
   
-  In order to provide a more elaborate usecase for dependent properties, consider domain entity \emph{WorkOrder}, which captures the work associated with fixing a locomotive.
+  In order to provide a more elaborate usecase for dependent properties, consider domain entity \emph{WorkOrder}, which captures the work associated with fixing a wagon.
   There are three values that need to be captured by every work order -- \emph{actualStart: Date}, \emph{actualFinish: Date} and \emph{odometerReading: Integer}.
   Properties \emph{actualStart} and \emph{actualFinish} represent a date period during which work order took place, and they should have the validation logic as in the above scenario.
   In addition, the value for property \emph{odometerReading}, which is considered to be taken at the moment in time captured by property \emph{actualStart}, should be validated against a history of odometer readings for a corresponding locomotive.
@@ -374,7 +374,7 @@ private Integer odometerReading;
 
   A runtime meta-data that is associated with an individual entity property is represented by class \emph{MetaProperty}, which is designed to capture runtime meta-data for a single property.
   Each entity property is provided with a corresponding instance of \emph{MetaProperty} at the instantiation time.
-  Meta-properties can be obtained from an entity instance by invoking method \emph{getProperty(propertyName)}, where \emph{propertyName} is the name of any entity property, or method \emph{getProperties()} returning a list of meta-properties.
+  Meta-properties can be obtained from an entity instance by invoking method \emph{getProperty(propertyName)}, where \emph{propertyName} is the name of any entity property, or method \emph{getProperties()} returning a map of meta-properties where keys are the name of properties and corresponding values are instances of type \emph{MetaProperty}.
 
   Amongst property meta-data such as title, description, type, meta-property maintains information about property pre- and post- conditions and results of property validation (i.e. results of executing pre-conditions).
   Custom, or what might be referred as domain specific, pre- and post- conditions are represented by \emph{Before Change Event} (BCE) and \emph{After Change Event} (ACE) handlers respectively.
@@ -383,14 +383,14 @@ private Integer odometerReading;
 
   \subparagraph*{BCE Handlers.}
   As was mentioned before, the primary objection of BCE handlers is to validate the value being set for the property.
-  Any class that implements contract \emph{IBeforeChangeEventHandler<T>} can be used as a BCE handler for a property of type \emph{T}.
+  Any class that implements contract \emph{IBeforeChangeEventHandler$<$T$>$} can be used as a BCE handler for a property of type \emph{T}.
   This contract requires implementation of a single method \emph{handle(final MetaProperty property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations)}, which returns an instance of \emph{Result} indicating success or failure, and takes four arguments:
 
   \begin{description}
     \item[\textbf{property: MetaProperty}] -- is an instance of the meta-property associated with a property that a handler instance is associated with; it can be used for various purposes, including access to the actual entity instance holding the property and other properties that might need to be used as part of the handler logic.
     \item[\textbf{newValue: T}] -- this is a new property value of type \emph{T}, which is being set; it is no yet assigned to the underpinning property field.
     \item[\textbf{oldValue: T}] -- the current value of the property, which is going to be replaced with a new value of it passes all validation.
-    \item[\textbf{mutatorAnnotations: Set$\langle$Annotation$\rangle$}] -- a set of annotations associated with property mutator (i.e. setter), which is passed for convenience in case the handler logic needs to obtain some addition information from them.
+    \item[\textbf{mutatorAnnotations: Set$<$Annotation$>$}] -- a set of annotations associated with property mutator (i.e. setter), which is passed for convenience in case the handler logic needs to obtain some addition information from them.
    \end{description}
   
   There is nothing in the BCE handler type declaration that would associate it with a particular entity type -- only the property type.
@@ -417,7 +417,7 @@ public class TonnageValidator
 	final Integer oldValue, 
 	final Set<Annotation> mutatorAnnotations) {
 	
-	if ((newValue != 50) && (newValue != 75) && (newValue != 100)) {
+	if (newValue != 50 && newValue != 75 && newValue != 100) {
 	    return new Result(
 		      newValue, 
 		      new IllegalArgumentException("Valid tonnage values are " +
@@ -491,11 +491,65 @@ public class NumOfSlotsValidator implements IBeforeChangeEventHandler<Integer> {
 
   \subparagraph*{ACE Handlers.}
 
-  Post-condition handlers are executed only after a new property value is assigned, which means it passed all pre-conditons.
+  Post-condition handlers are executed only after a new property value is assigned, which means it passed all pre-conditions.
   The only predefined in the platform post-condition is \emph{Dependent} that, as has been discussed earlier, is dedicated to handle revalidation of dependent properties.
   
   In order to provide custom post-condition business logic, the platform provides support for \emph{After Change Event} (ACE) handlers.
-  Unlike BCE, where multiple handlers can be associated with a single property, there can be only one ACE handler associated with any particular property\footnote{This API decision was based on the platform usecases that suggested the benefit of having multiple BCE handlers, which can be independent from each other and applicable in different combinations to different properties in diverse entity types, while ACE handlers are pretty much relevant for a specific property in a specific entity type only, and thus, are best to be represented by one logical unit such as handler class.}.
+  Unlike BCE, where multiple handlers can be associated with a single property, there can only be one ACE handler associated with any particular property\footnote{This API decision was based on the platform usecases that suggested the benefit of having multiple BCE handlers, which can be independent from each other and applicable in different combinations to different properties in diverse entity types, while ACE handlers are pretty much relevant for a specific property in a specific entity type only, and thus, are best to be represented by one logical unit such as handler class.}.
+  Although, ACE handlers might change values for entity properties, it is highly discouraged.
+  Instead, they should be used primarily for modifying property meta-data.
+  
+  For example, earlier introduced entity type \emph{WagonBogieClassCompatibility} has property \emph{active}, which indicates whether a given compatibility is in effect (value \emph{true}) or is an inactive instance kept for historical reasons (value \emph{false}).
+  It would sensible if application users could not change properties for inactive compatibility instances except property \emph{active} itself.
+  If property \emph{active} is changed from \emph{false} to \emph{true} then all properties should become editable again.
+  
+  Listing~\ref{lst:WagonBogieClassificationCompatibilityAce} illustrates declaration for ACE handler \emph{MakeOtherPropertiesReadonlyWhenInactive} as part of the definition for property \emph{active}.
+
+  \begin{code}{ACE handler declaration for property active.}{\label{lst:WagonBogieClassificationCompatibilityAce}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(DynamicEntityKey.class)
+public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKey> {
+    ....................................
+    @IsProperty
+    @AfterChange(MakeOtherPropertiesReadonlyWhenInactive.class)
+    private boolean active;
+    ....................................
+}
+    \end{lstlisting}
+  \end{code}
+
+  Listing~\ref{lst:WagonBogieClassificationCompatibilityAce} illustrates declaration for ACE handler \emph{MakeOtherPropertiesReadonlyWhenInactive} as part of the definition for property \emph{active}.
+
+  \begin{code}{ACE handler implementation for property active.}{\label{lst:MakeOtherPropertiesReadonlyWhenInactive}}{codebgcolor}
+    \begin{lstlisting}
+public class MakeOtherPropertiesReadonlyWhenInactive 
+	implements IAfterChangeEventHandler<Boolean> {
+
+    @Override
+    public void handle(final MetaProperty property, final Boolean active) {
+	final WagonBogieClassCompatibility entity = 
+		    (WagonBogieClassCompatibility) property.getEntity();
+	for (final MetaProperty mp : entity.getProperties().values()) {
+	    if (!mp.getName().equals(property.getName())) {
+		mp.setEditable(active);
+	    }
+	}
+    }
+}
+    \end{lstlisting}
+  \end{code}
+
+  Similarly to BCE handler, any class implementing contract \emph{IAfterChangeEventHandler$<$T$>$} can be used as an ACE handler for a property of type $<$T$>$.
+  Method \emph{handle(final MetaProperty property, final T value)} for ACE is much simple having only two arguments:
+  \begin{description}
+    \item[\textbf{property: MetaProperty}] -- is an instance of the meta-property associated with a property that a handler instance is intended for; it can be used for various purposes, including access to the actual entity instance holding the property and other properties that might need to be used as part of the handler logic.
+    \item[\textbf{value: T}] -- this is a newly assigned to property value of type \emph{T}.
+  \end{description}
+  The actual handler implementation, which is provided in listing~\ref{lst:MakeOtherPropertiesReadonlyWhenInactive}, obtains an entity instance (lines~6-7) and then iterates over all its meta-properties (line~8) to set their editability to the property value \emph{active}~(line~10).
+  A meta-property for property \emph{active} itself is not changed, which is achieved by using name comparison~(line~9).
+
+  ACE handlers initialisation mechanism is exactly the same as for BCE handerls can be used.
+  Also, as for BCE handlers there is no declarative association of ACE handlers with a particular entity type -- only semantic association.
 
   \paragraph*{Property value change information.}
   \paragraph*{Property meta-state (editable, visible etc.).}
