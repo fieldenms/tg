@@ -47,7 +47,7 @@ public class DefaultTreeMenuItemFactory implements ITreeMenuItemFactory {
 	    return (MiWithVisibilityProvider<?>) constructor.newInstance(visibilityProvider);
 	} catch (final Exception ex) {
 	    logger.error(ex);
-	    throw new IllegalArgumentException("Most likely this is an incorrect factory for this type of menu item.", ex);
+	    throw new IllegalArgumentException("Most likely this is an incorrect factory for type [" + clazz.getSimpleName() + "] of menu item.", ex);
 	}
     }
 }

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.centre.configuration;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -130,7 +131,9 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     public Set<String> getNonPrincipleEntityCentreList(){
-	return gdtm.entityCentreNames(menuItemType);
+	final Set<String> names = new HashSet<String>(gdtm.entityCentreNames(menuItemType));
+	names.remove(null); // remove principle centre key (null), which is returned in case when principle entity centre is persisted
+	return names;
     }
 
     @Override

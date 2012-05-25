@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.swing.menu;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -50,7 +53,9 @@ public class MiWithConfigurationSupport<T extends AbstractEntity<?>> extends MiW
      * Generates children ad hoc reports.
      */
     private void scanForNonPrincipleReports() {
-	for(final String centreName : getView().getGlobalDomainTreeManager().entityCentreNames(this.getClass())){
+	final Set<String> names = new HashSet<String>(getView().getGlobalDomainTreeManager().entityCentreNames(this.getClass()));
+	names.remove(null); // remove principle centre key (null), which is returned in case when principle entity centre is persisted
+	for(final String centreName : names){
 	    final MiSaveAsConfiguration<T> newMenuItem = new MiSaveAsConfiguration<T>(this, centreName);
 	    addItem(newMenuItem);
 	}
