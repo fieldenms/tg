@@ -41,7 +41,6 @@ import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.ui.config.api.MainMenuItemControllerRao;
 import ua.com.fielden.platform.ui.config.api.MainMenuItemInvisibilityControllerRao;
 import ua.com.fielden.platform.update.IReferenceDependancyController;
@@ -66,16 +65,13 @@ import com.google.inject.name.Names;
  *
  */
 public class BasicWebClientModule extends CommonRestFactoryModule {
-
     protected final Properties props;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
-    private final Class<? extends IMainMenuStructureBuilder> mainMenuStructureBuilderType;
 
-    public BasicWebClientModule(final RestClientUtil restUtil, final Class<? extends IMainMenuStructureBuilder> mainMenuStructureBuilderType, final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, final Properties props) {
+    public BasicWebClientModule(final RestClientUtil restUtil, final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, final Properties props) {
 	super(restUtil);
 	this.serialisationClassProviderType = serialisationClassProviderType;
 	this.props = props;
-	this.mainMenuStructureBuilderType = mainMenuStructureBuilderType;
     }
 
     @Override
@@ -127,7 +123,6 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 	bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
 	bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
 	bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
-	bind(IMainMenuStructureBuilder.class).to(mainMenuStructureBuilderType); // bind IMainMenuStructureBuilder.class to a custom MainMenuStructureBuilder, which is pure "development" builder
 	//////////////////////////////////////////////////////////////////////////////
 	bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
     }

@@ -183,10 +183,11 @@ public class WebClientStartupUtility {
 	    final RestClientUtil restUtil, //
 	    final Injector injector, //
 	    final EntityMasterManager emm, //
-	    final IMainMenuBinder mmBinder,
-	    final String caption,//
-	    final Dimension dim,//
-	    final Image icon,//
+	    final IMainMenuBinder mmBinder, //
+	    final IMainMenuStructureBuilder developmentMainMenuStructureBuilder, //
+	    final String caption, //
+	    final Dimension dim, //
+	    final Image icon, //
 	    final Logger logger) {
 	logger.info("Showing main window...");
 	SwingUtilitiesEx.invokeLater(new Runnable() {
@@ -198,7 +199,7 @@ public class WebClientStartupUtility {
 		SwingUtilitiesEx.installNimbusLnFifPossible();
 
 		if (restUtil.isUserConfigured()) {
-		    createAndRunMainApplicationFrame(restUtil, splash, loginScreen, injector, emm, mmBinder, caption, dim, icon);
+		    createAndRunMainApplicationFrame(restUtil, splash, loginScreen, injector, emm, mmBinder, developmentMainMenuStructureBuilder, caption, dim, icon);
 		}
 	    }// run
 	});
@@ -232,6 +233,7 @@ public class WebClientStartupUtility {
 	    final Injector injector,//
 	    final EntityMasterManager emm,//
 	    final IMainMenuBinder mmBuilder,//
+	    final IMainMenuStructureBuilder developmentMainMenuStructureBuilder, //
 	    final String caption,//
 	    final Dimension dim,//
 	    final Image icon) {
@@ -248,7 +250,7 @@ public class WebClientStartupUtility {
 	    @Override
 	    public void run() {
 		try {
-		    buildMainMenu(restUtil, splash, loginScreen, injector, mmBuilder, rootMenuItem, menu);
+		    buildMainMenu(restUtil, splash, loginScreen, injector, mmBuilder, developmentMainMenuStructureBuilder, rootMenuItem, menu);
 
 		    SwingUtilitiesEx.invokeLater(new Runnable() {
 			@Override
@@ -299,6 +301,7 @@ public class WebClientStartupUtility {
 	    final StyledLoginScreen loginScreen,//
 	    final Injector injector, //
 	    final IMainMenuBinder mmBinder,//
+	    final IMainMenuStructureBuilder developmentMainMenuStructureBuilder, //
 	    final TreeMenuItem<?> rootMenuItem, //
 	    final UndockableTreeMenuWithTabs<?> menu) {
 
@@ -311,7 +314,6 @@ public class WebClientStartupUtility {
 	if (Workflows.development.equals(Workflows.valueOf(settings.workflow()))) {
 	    message("Updating user configurations (development mode)...", splash, loginScreen);
 	    // persist NEW / UPDATED menu items (delete OBSOLETE items) into database
-	    final IMainMenuStructureBuilder developmentMainMenuStructureBuilder = injector.getInstance(IMainMenuStructureBuilder.class);
 	    final MainMenuItemMixin mixin = new MainMenuItemMixin(mmiController, eccController, mmiiController, factory);
 	    mixin.setUser(restUtil.getUser());
 	    mixin.updateMenuItemsWithDevelopmentOnes(developmentMainMenuStructureBuilder);
