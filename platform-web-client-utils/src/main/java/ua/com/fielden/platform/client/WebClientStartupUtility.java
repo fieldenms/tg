@@ -100,6 +100,10 @@ public class WebClientStartupUtility {
 			@Override
 			protected void authenticationPassed(final StyledLoginScreen loginScreen, final Result result) {
 			    final User user = (User) result.getInstance();
+			    final IApplicationSettings settings = injector.getInstance(IApplicationSettings.class);
+			    if (Workflows.development.equals(Workflows.valueOf(settings.workflow())) && !user.isBase()) {
+				throw new IllegalArgumentException("Development mode of the client application startup is not permitted for non-base user. Please start the client application in deployment mode. Current user [" + user + "] is not base user.");
+			    }
 			    try {
 				sessionController.persist(user.getKey(), restUtil.getPrivateKey());
 				launcher.launch(null, loginScreen, restUtil, injector, autoudate, sessionController, logger);

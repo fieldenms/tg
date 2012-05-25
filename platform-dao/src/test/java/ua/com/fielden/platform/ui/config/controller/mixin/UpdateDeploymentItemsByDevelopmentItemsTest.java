@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.ui.config.controller.mixin;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 import java.util.List;
@@ -37,10 +38,9 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
 	return userDao.findByKeyAndFetch(fetchAll(User.class), "B-USER");
     }
 
-//    TODO provide tests for "descendant" user
-//    private User getDescendantUser() {
-//	return userDao.findByKeyAndFetch(fetchAll(User.class), "D-USER");
-//    }
+    private User getDescendantUser() {
+	return userDao.findByKeyAndFetch(fetchAll(User.class), "D-USER");
+    }
 
     /**
      * Base class for testing structure builders.
@@ -111,6 +111,33 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
 	    }
 	}
 	return true;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    ////////////////////////// NON_BASE USER IS NOT PERMITTED ////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
+
+    private static class UpdatingBuilder0 extends MainMenu {
+	protected UpdatingBuilder0(final EntityFactory factory) {
+	    super(factory);
+	}
+
+	@Override
+	public List<MainMenuItem> build() {
+	    structureFactory()
+		.push("type1").pop();
+		return super.build();
+	}
+    }
+
+    @Test
+    public void test_update_is_not_permitted_for_non_base_user() {
+	mixin.setUser(getDescendantUser());
+	try {
+	    mixin.updateMenuItemsWithDevelopmentOnes(new UpdatingBuilder0(factory));
+	    fail("Should be failed.");
+	} catch (final IllegalArgumentException e) {
+	}
     }
 
     //////////////////////////////////////////////////////////////////////////////

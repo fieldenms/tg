@@ -271,7 +271,7 @@ public final class MainMenuItemMixin {
     }
 
     /**
-     * Updates existing persisted menu items with new "development" ones.
+     * Updates existing persisted menu items with new "development" ones. This method is only applicable for base user, which is capable for menu items modification.
      * <p>
      * It covers correct handling of menu items tree structure including: <br>
      *  1. adding new items; <br>
@@ -284,6 +284,9 @@ public final class MainMenuItemMixin {
      * @return
      */
     public final List<MainMenuItem> updateMenuItemsWithDevelopmentOnes(final IMainMenuStructureBuilder developmentMainMenuStructureBuilder) {
+	if (!user.isBase()) {
+	    throw new IllegalArgumentException("Updating of menu items is not permitted for non-base user. Current user [" + user + "] is not base user.");
+	}
 	final List<MainMenuItem> developmentMainMenuItems = developmentMainMenuStructureBuilder.build();
 	final List<MainMenuItem> updatedMainMenuItems = new ArrayList<MainMenuItem>();
 
