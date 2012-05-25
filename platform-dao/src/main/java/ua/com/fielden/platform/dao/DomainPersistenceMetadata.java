@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -73,12 +74,18 @@ public class DomainPersistenceMetadata {
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
-    private final Map<Class, Class> hibTypesDefaults = new HashMap<Class, Class>();
+    private final Map<Class, Object> hibTypesDefaults = new HashMap<Class, Object>();
     private Injector hibTypesInjector;
 
     public DomainPersistenceMetadata(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity<?>>> entityTypes) {
 	if (hibTypesDefaults != null) {
-	    this.hibTypesDefaults.putAll(hibTypesDefaults);
+	    for (final Entry<Class, Class> entry : hibTypesDefaults.entrySet()) {
+		try {
+		    this.hibTypesDefaults.put(entry.getKey(), entry.getValue().newInstance());
+		} catch (final Exception e) {
+		    e.printStackTrace();
+		}
+	    }
 	}
 	this.hibTypesInjector = hibTypesInjector;
 	for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
@@ -109,14 +116,14 @@ public class DomainPersistenceMetadata {
     }
 
     public Object getBooleanValue(final boolean value) {
-	final Class booleanHibClass = hibTypesDefaults.get(boolean.class);
-	if (booleanHibClass.equals(YesNoType.class)) {
+	final Object booleanHibClass = hibTypesDefaults.get(boolean.class);
+	if (booleanHibClass instanceof YesNoType) {
 	    return value ? "Y" : "N";
 	}
-	if (booleanHibClass.equals(TrueFalseType.class)) {
+	if (booleanHibClass instanceof TrueFalseType) {
 	    return value ? "T" : "F";
 	}
-	if (booleanHibClass.equals(BooleanType.class)) {
+	if (booleanHibClass instanceof BooleanType) {
 	    return value ? 1 : 0;
 	}
 
@@ -219,7 +226,7 @@ public class DomainPersistenceMetadata {
      * @throws Exception
      * @throws
      */
-    private Object getHibernateType(final Class javaType, final String hibernateTypeName, final Class hibernateUserTypeImplementor, final boolean collectional, final boolean entity) throws Exception {
+    private Object getHibernateType(final Class javaType, final String hibernateTypeName, final Class hibernateUserTypeImplementor, final boolean collectional, final boolean entity) {
 	if (collectional) {
 	    return null;
 	}
@@ -235,9 +242,9 @@ public class DomainPersistenceMetadata {
 	if (hibTypesInjector != null && !Void.class.equals(hibernateUserTypeImplementor)) { // Hibernate type is definitely either IUserTypeInstantiate or ICompositeUserTypeInstantiate
 	    return hibTypesInjector.getInstance(hibernateUserTypeImplementor);
 	} else {
-	    final Class defaultHibType = hibTypesDefaults.get(javaType);
+	    final Object defaultHibType = hibTypesDefaults.get(javaType);
 	    if (defaultHibType != null) { // default is provided for given property java type
-		return defaultHibType.newInstance();
+		return defaultHibType;
 	    } else { // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults
 		return TypeFactory.basic(javaType.getName());
 	    }
@@ -419,5 +426,9 @@ public class DomainPersistenceMetadata {
 	} else {
 	    return DynamicEntityClassLoader.getOriginalType(entityType).getSimpleName().toUpperCase() + "_";
 	}
+    }
+
+    public Map<Class, Object> getHibTypesDefaults() {
+        return hibTypesDefaults;
     }
 }

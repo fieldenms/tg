@@ -25,8 +25,8 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     private final Long scale;
     private final boolean nullable;
     private final ExpressionModel expressionModel;
-    private final boolean aggregatedExpression;
-    private final boolean virtual;
+    private final boolean aggregatedExpression; // contains aggregation function on the root level (i.e. Totals in entity centre tree)
+    private final boolean virtual; // this property is limited to eQuery only - it has no real property on entity (the case with virtual generation of composite entity key by concatenation of all members.
 
     public boolean isCalculated() {
 	return expressionModel != null;
@@ -46,8 +46,8 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
     @Override
     public String toString() {
-	return "\nname = " + name + "\njavaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + "\nhibType = "
-		+ (hibType != null ? hibType.getClass().getSimpleName() : hibType) + "\ntype = " + type + "\ncolumn(s) = " + columns;
+	return "\nname = " + name + " javaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + " hibType = "
+		+ (hibType != null ? hibType/*.getClass().getSimpleName()*/ : hibType) + " type = " + type + "\ncolumn(s) = " + columns + " nullable = " + nullable;
     }
 
     public boolean isCompositeProperty() {
@@ -84,9 +84,9 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
     @Override
     public int compareTo(final PropertyPersistenceInfo o) {
+	final boolean areEqual = this.equals(o);
 	final int nameComp = name.compareTo(o.name);
-	final int typeComp = type.compareTo(o.type);
-	return nameComp != 0 ? nameComp : typeComp;
+	return nameComp != 0 ? nameComp : (areEqual ? 0 : 1);
     }
 
     public Set<PropertyPersistenceInfo> getCompositeTypeSubprops() {
