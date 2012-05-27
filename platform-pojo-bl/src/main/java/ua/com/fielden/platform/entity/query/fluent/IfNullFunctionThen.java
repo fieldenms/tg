@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IIfNullFunctionThen;
 
-final class IfNullFunctionThen<T> extends AbstractQueryLink implements IIfNullFunctionThen<T> {
+final class IfNullFunctionThen<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements IIfNullFunctionThen<T, ET> {
     T parent;
 
     IfNullFunctionThen(final Tokens queryTokens, final T parent) {
@@ -12,7 +13,7 @@ final class IfNullFunctionThen<T> extends AbstractQueryLink implements IIfNullFu
     }
 
     @Override
-    public IFunctionLastArgument<T> then() {
-	return new FunctionLastArgument<T>(this.getTokens(), parent);
+    public IFunctionLastArgument<T, ET> then() {
+	return new FunctionLastArgument<T, ET>(this.getTokens(), parent);
     }
 }

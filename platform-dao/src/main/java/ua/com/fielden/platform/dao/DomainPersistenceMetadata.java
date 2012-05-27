@@ -307,7 +307,7 @@ public class DomainPersistenceMetadata {
 
     private PropertyPersistenceInfo getVirtualPropInfoForDynamicEntityKey(final List<Field> keyMembers) throws Exception {
 	final Iterator<Field> iterator = keyMembers.iterator();
-	IConcatFunctionWith<IStandAloneExprOperationAndClose> expressionModel = expr().concat().prop(getKeyMemberConcatenationExpression(iterator.next()));
+	IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModel = expr().concat().prop(getKeyMemberConcatenationExpression(iterator.next()));
 	for (; iterator.hasNext();) {
 	    expressionModel = expressionModel.with().val(DynamicEntityKey.KEY_MEMBERS_SEPARATOR);
 	    expressionModel = expressionModel.with().prop(getKeyMemberConcatenationExpression(iterator.next()));

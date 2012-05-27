@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IMultipleOperand;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 
-abstract class AbstractMultipleOperand<T> extends AbstractSingleOperand<T> implements IMultipleOperand<T> {
+abstract class AbstractMultipleOperand<T, ET extends AbstractEntity<?>> extends AbstractSingleOperand<T, ET> implements IMultipleOperand<T, ET> {
 
     protected AbstractMultipleOperand(final Tokens queryTokens) {
 	super(queryTokens);

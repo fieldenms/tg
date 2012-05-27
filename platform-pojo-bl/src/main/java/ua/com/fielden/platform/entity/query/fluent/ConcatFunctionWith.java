@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 
-final class ConcatFunctionWith<T> extends AbstractQueryLink implements IConcatFunctionWith<T> {
+final class ConcatFunctionWith<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements IConcatFunctionWith<T, ET> {
     T parent;
 
     ConcatFunctionWith(final Tokens queryTokens, final T parent) {
@@ -17,7 +18,7 @@ final class ConcatFunctionWith<T> extends AbstractQueryLink implements IConcatFu
     }
 
     @Override
-    public IConcatFunctionArgument<T> with() {
-	return new ConcatFunctionArgument<T>(this.getTokens(), parent);
+    public IConcatFunctionArgument<T, ET> with() {
+	return new ConcatFunctionArgument<T, ET>(this.getTokens(), parent);
     }
 }

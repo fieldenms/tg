@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentYieldedItemAlias;
 
-public class SubsequentYieldedItemAlias<T> extends AbstractQueryLink implements ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded> {
+public class SubsequentYieldedItemAlias<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>> {
     T parent;
 
     SubsequentYieldedItemAlias(final Tokens queryTokens, final T parent) {
@@ -12,7 +13,7 @@ public class SubsequentYieldedItemAlias<T> extends AbstractQueryLink implements 
     }
 
     @Override
-    public ISubsequentCompletedAndYielded as(final String alias) {
-	return new SubsequentCompletedAndYielded(getTokens().as(alias));
+    public ISubsequentCompletedAndYielded<ET> as(final String alias) {
+	return new SubsequentCompletedAndYielded<ET>(getTokens().as(alias));
     }
 }

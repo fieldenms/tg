@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.swing.review;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -39,6 +37,7 @@ import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.DateRangeSelectorEnum;
 import ua.com.fielden.snappy.DateUtilities;
 import ua.com.fielden.snappy.MnemonicEnum;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 /**
  * An utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
  *
@@ -427,9 +426,9 @@ public class DynamicQueryBuilder {
      *
      * @return
      */
-    private static ICompleted buildConditions(final IJoin query, final List<QueryProperty> properties) {
-	final IWhere1 whereAtGroup1 = query.where().begin();
-	ICompoundCondition1 compoundConditionAtGroup1 = null;
+    private static <ET extends AbstractEntity<?>> ICompleted<ET> buildConditions(final IJoin<ET> query, final List<QueryProperty> properties) {
+	final IWhere1<ET> whereAtGroup1 = query.where().begin();
+	ICompoundCondition1<ET> compoundConditionAtGroup1 = null;
 
 	// create empty map consisting of [collectionType => (ANY properties, ALL properties)] entries, which forms exactly one entry for one collectional hierarchy
 	final Map<Class<? extends AbstractEntity<?>>, CollectionProperties> collectionalProperties = new LinkedHashMap<Class<? extends AbstractEntity<?>>, CollectionProperties>();
@@ -554,7 +553,7 @@ public class DynamicQueryBuilder {
      * @param entry -- an entry consisting of [collectionType => (anyProperties, allProperties)] which forms exactly one collectional hierarchy
      * @return
      */
-    private static ICompoundCondition1 buildCollection(final IWhere1 whereAtGroup1, final CollectionProperties collectionProperties, final String alias) {
+    private static <ET extends AbstractEntity<?>> ICompoundCondition1<ET> buildCollection(final IWhere1<ET> whereAtGroup1, final CollectionProperties collectionProperties, final String alias) {
 	// e.g. : "WorkOrder.vehicle.statusChanges.[vehicleKey/status.active]". Then:
 	// property.getCollectionContainerType() == VehicleStatusChange.class
 	// property.getCollectionContainerParentType() == Vehicle.class
@@ -565,12 +564,12 @@ public class DynamicQueryBuilder {
 	final String nameOfCollectionController = collectionProperties.getNameOfCollectionController();
 	final String mainModelProperty = collectionProperties.getPropertyNameOfCollectionParent().isEmpty() ? alias : (alias + "." + collectionProperties.getPropertyNameOfCollectionParent());
 
-	final IWhere2 collectionBegin = whereAtGroup1.begin();
-	ICompoundCondition2 compoundConditionAtGroup2 = null;
+	final IWhere2<ET> collectionBegin = whereAtGroup1.begin();
+	ICompoundCondition2<ET> compoundConditionAtGroup2 = null;
 	// enhance collection by ANY part
 	if (!collectionProperties.getAnyProperties().isEmpty()) {
 	    final Iterator<QueryProperty> anyIter = collectionProperties.getAnyProperties().iterator();
-	    ICompoundCondition1 anyExists_withDirectConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), anyIter.next(), false);
+	    ICompoundCondition1<? extends AbstractEntity<?>> anyExists_withDirectConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), anyIter.next(), false);
 	    while (anyIter.hasNext()) { // enhance EXISTS model with appropriate condition
 		anyExists_withDirectConditions = buildCondition(anyExists_withDirectConditions.and(), anyIter.next(), false);
 	    }
@@ -584,8 +583,8 @@ public class DynamicQueryBuilder {
 	    final Iterator<QueryProperty> allIter = collectionProperties.getAllProperties().iterator();
 	    final EntityResultQueryModel<?> allNotExists_withNoConditions = createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).model();
 	    final QueryProperty firstProperty = allIter.next();
-	    ICompoundCondition1 allExists_withDirectConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), firstProperty, false);
-	    ICompoundCondition1 allNotExists_withNegatedConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), firstProperty, true);
+	    ICompoundCondition1<? extends AbstractEntity<?>> allExists_withDirectConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), firstProperty, false);
+	    ICompoundCondition1<? extends AbstractEntity<?>> allNotExists_withNegatedConditions = buildCondition(createSubmodel(collectionContainerType, nameOfCollectionController, mainModelProperty, collectionProperties.getFilteringProperties()).and().begin(), firstProperty, true);
 	    while (allIter.hasNext()) { // enhance EXISTS / NOT_EXISTS model with appropriate direct / negated condition
 		final QueryProperty nextProperty = allIter.next();
 		allExists_withDirectConditions = buildCondition(allExists_withDirectConditions.and(), nextProperty, false);
@@ -613,12 +612,12 @@ public class DynamicQueryBuilder {
      * @param filteringProperties
      * @return
      */
-    private static ICompoundCondition0 createSubmodel(final Class<? extends AbstractEntity<?>> collectionContainerType, final String nameOfCollectionController, final String mainModelProperty, final List<QueryProperty> filteringProperties) {
-	final ICompoundCondition0 submodelThroghLinkProperty = select(collectionContainerType).where().prop(nameOfCollectionController).eq().prop(mainModelProperty);
+    private static <ET extends AbstractEntity<?>> ICompoundCondition0<ET> createSubmodel(final Class<ET> collectionContainerType, final String nameOfCollectionController, final String mainModelProperty, final List<QueryProperty> filteringProperties) {
+	final ICompoundCondition0<ET> submodelThroghLinkProperty = select(collectionContainerType).where().prop(nameOfCollectionController).eq().prop(mainModelProperty);
 	if (filteringProperties.isEmpty()) {
 	    return submodelThroghLinkProperty;
 	}
-	ICompoundCondition1 subModel = buildCondition(submodelThroghLinkProperty.and().begin(), filteringProperties.get(0), false); // enhance sub-model with first FILTERING property
+	ICompoundCondition1<ET> subModel = buildCondition(submodelThroghLinkProperty.and().begin(), filteringProperties.get(0), false); // enhance sub-model with first FILTERING property
 	for (int i = 1; i < filteringProperties.size(); i++) {
 	    subModel = buildCondition(subModel.and(), filteringProperties.get(i), false); // enhance sub-model with rest FILTERING properties
 	}
@@ -632,7 +631,7 @@ public class DynamicQueryBuilder {
      * @param Equery
      * @return
      */
-    private static IWhere1 getWhereAtGroup1(final ICompoundCondition1 compoundConditionAtGroup1, final IWhere1 whereAtGroup1) {
+    private static <ET extends AbstractEntity<?>> IWhere1<ET> getWhereAtGroup1(final ICompoundCondition1<ET> compoundConditionAtGroup1, final IWhere1<ET> whereAtGroup1) {
 	return compoundConditionAtGroup1 == null ? whereAtGroup1 : compoundConditionAtGroup1.and();
     }
 
@@ -643,7 +642,7 @@ public class DynamicQueryBuilder {
      * @param Equery
      * @return
      */
-    private static IWhere2 getWhereAtGroup2(final ICompoundCondition2 compoundConditionAtGroup2, final IWhere2 whereAtGroup2) {
+    private static <ET extends AbstractEntity<?>> IWhere2<ET> getWhereAtGroup2(final ICompoundCondition2<ET> compoundConditionAtGroup2, final IWhere2<ET> whereAtGroup2) {
 	return compoundConditionAtGroup2 == null ? whereAtGroup2 : compoundConditionAtGroup2.and();
     }
 
@@ -655,13 +654,13 @@ public class DynamicQueryBuilder {
      * @param isNegated -- indicates whether appropriate condition should be negated
      * @return
      */
-    private static ICompoundCondition1 buildCondition(final IWhere1 where, final QueryProperty property, final boolean isNegated) {
+    private static <ET extends AbstractEntity<?>> ICompoundCondition1<ET> buildCondition(final IWhere1<ET> where, final QueryProperty property, final boolean isNegated) {
 	final boolean orNull = Boolean.TRUE.equals(property.getOrNull());
 	final boolean not = Boolean.TRUE.equals(property.getNot());
 	final String propertyName = property.getConditionBuildingName();
 	// IMPORTANT : in order not to make extra joins properties like "alias.key", "alias.property1.key" and so on will be enhanced by
 	// conditions like "alias is [not] null", "alias.property1 is [not] null" and so on (respectively).
-	final IComparisonOperator2 sc = where.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(propertyName));
+	final IComparisonOperator2<ET> sc = where.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(propertyName));
 	// indicates whether a condition should be negated
 	final boolean negate = not ^ isNegated;
 	if (property.isEmpty()) {
@@ -672,7 +671,7 @@ public class DynamicQueryBuilder {
 	} else {
 	    // indicates whether nulls should be considered in a query
 	    final boolean considerNulls = negate ^ orNull;
-	    final IWhere2 whereAtGroup2 = considerNulls ? sc.isNull().or() : sc.isNotNull().and();
+	    final IWhere2<ET> whereAtGroup2 = considerNulls ? sc.isNull().or() : sc.isNotNull().and();
 	    return buildAtomicCondition(property, negate ? whereAtGroup2.notBegin() : whereAtGroup2.begin()).end();
 	}
     }
@@ -686,7 +685,7 @@ public class DynamicQueryBuilder {
      * @param propertyName
      * @return
      */
-    private static ICompoundCondition2 buildAtomicCondition(final QueryProperty property, final IWhere3 conditionGroup) {
+    private static <ET extends AbstractEntity<?>> ICompoundCondition2<ET> buildAtomicCondition(final QueryProperty property, final IWhere3<ET> conditionGroup) {
 	final String propertyName = property.getConditionBuildingName();
 
 	if (EntityUtils.isRangeType(property.getType())) {
@@ -695,8 +694,8 @@ public class DynamicQueryBuilder {
 		final Pair<Date, Date> fromAndTo = getDateValuesFrom(property.getDatePrefix(), property.getDateMnemonic(), property.getAndBefore());
 		return conditionGroup.prop(propertyName).ge().iVal(fromAndTo.getKey()).and().prop(propertyName).lt().iVal(fromAndTo.getValue()).end();
 	    } else {
-		final IComparisonOperator3 scag = conditionGroup.prop(propertyName);
-		final IComparisonOperator3 scag2 = (Boolean.TRUE.equals(property.getExclusive())) ? //
+		final IComparisonOperator3<ET> scag = conditionGroup.prop(propertyName);
+		final IComparisonOperator3<ET> scag2 = (Boolean.TRUE.equals(property.getExclusive())) ? //
 			/*      */scag.gt().iVal(property.getValue()).and().prop(propertyName) // exclusive
 			: scag.ge().iVal(property.getValue()).and().prop(propertyName); // inclusive
 			return (Boolean.TRUE.equals(property.getExclusive2())) ? //
@@ -741,7 +740,7 @@ public class DynamicQueryBuilder {
      *
      * @return
      */
-    private static <E extends AbstractEntity<?>> IJoin createJoinCondition(final Class<E> managedType) {
+    private static <E extends AbstractEntity<?>> IJoin<E> createJoinCondition(final Class<E> managedType) {
 	return select(managedType).as(ALIAS);
     }
 
@@ -752,7 +751,7 @@ public class DynamicQueryBuilder {
      *
      * @return
      */
-    public static <E extends AbstractEntity<?>> ICompleted createQuery(final Class<E> managedType, final List<QueryProperty> queryProperties){
+    public static <E extends AbstractEntity<?>> ICompleted<E> createQuery(final Class<E> managedType, final List<QueryProperty> queryProperties){
 	return buildConditions(createJoinCondition(managedType), queryProperties);
     }
 }

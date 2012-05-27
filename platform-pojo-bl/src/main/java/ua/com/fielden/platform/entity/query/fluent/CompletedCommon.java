@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-class CompletedCommon extends AbstractQueryLink implements ICompletedCommon {
+class CompletedCommon<ET extends AbstractEntity<?>> extends AbstractQueryLink implements ICompletedCommon<ET> {
 
     CompletedCommon(final Tokens queryTokens) {
 	super(queryTokens);

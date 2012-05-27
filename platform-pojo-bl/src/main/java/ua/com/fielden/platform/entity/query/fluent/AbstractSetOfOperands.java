@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonSetOperand;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
-abstract class AbstractSetOfOperands<T> extends AbstractSingleOperand<T> implements IComparisonSetOperand<T> {
+abstract class AbstractSetOfOperands<T, ET extends AbstractEntity<?>> extends AbstractSingleOperand<T, ET> implements IComparisonSetOperand<T> {
     protected AbstractSetOfOperands(final Tokens queryTokens) {
 	super(queryTokens);
     }

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.expression.ast.visitor;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionBetween;
@@ -13,6 +12,7 @@ import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 /**
  * A visitor, which generates a computational model for AST.
@@ -137,7 +137,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
      * @param operand
      * @return
      */
-    private IStandAloneExprOperationAndClose unoOperandModel(final IFunctionLastArgument<IStandAloneExprOperationAndClose> expr, final AstNode operand) {
+    private IStandAloneExprOperationAndClose unoOperandModel(final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr, final AstNode operand) {
 	final IStandAloneExprOperationAndClose exprWithOperand;
 	if (operand.getModel() == null) {
 	    final EgTokenCategory cat = EgTokenCategory.byIndex(operand.getToken().category.getIndex());
@@ -150,7 +150,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
     private ExpressionModel createDateFunctionModel(final AstNode node) throws TypeCompatibilityException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
-	final IFunctionLastArgument<IStandAloneExprOperationAndClose> expr;
+	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr;
 	switch (cat) {
 	case DAY:
 	    expr = expr().dayOf();
@@ -169,7 +169,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
     private ExpressionModel createStringFunctionModel(final AstNode node) {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
-	final IFunctionLastArgument<IStandAloneExprOperationAndClose> expr = cat == EgTokenCategory.UPPER ? expr().upperCase() : expr().lowerCase();
+	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = cat == EgTokenCategory.UPPER ? expr().upperCase() : expr().lowerCase();
 	return unoOperandModel(expr, node.getChildren().get(0)).model();
     }
 
@@ -179,11 +179,11 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
 	}
 
-	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose> expr = expr().countDays().between();
+	final IDateDiffFunctionArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().countDays().between();
 
 	// identify left operand expression model
 	final AstNode leftOperand = node.getChildren().get(0);
-	final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose> exprWithOperand;
+	final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose, AbstractEntity<?>> exprWithOperand;
 	if (leftOperand.getModel() == null) {
 	    final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
 	    exprWithOperand = cat1 == EgTokenCategory.NAME ? expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text)) : expr.val(leftOperand.getToken().text);
@@ -192,7 +192,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	}
 
 
-	final IFunctionLastArgument<IStandAloneExprOperationAndClose> andExpr = exprWithOperand.and();
+	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> andExpr = exprWithOperand.and();
 
 	// identify right operand expression model
 	final AstNode rightOperand = node.getChildren().get(1);
@@ -210,7 +210,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 
     private ExpressionModel createAggregateFunctionModel(final AstNode node) throws TypeCompatibilityException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
-	final IFunctionLastArgument<IStandAloneExprOperationAndClose> expr;
+	final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr;
 
 	switch (cat) {
 	case SUM:

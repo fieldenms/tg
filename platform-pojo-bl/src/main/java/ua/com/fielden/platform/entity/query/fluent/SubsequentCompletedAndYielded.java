@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-class SubsequentCompletedAndYielded extends CompletedCommon implements ISubsequentCompletedAndYielded {
+class SubsequentCompletedAndYielded<ET extends AbstractEntity<?>> extends CompletedCommon<ET> implements ISubsequentCompletedAndYielded<ET> {
 
     SubsequentCompletedAndYielded(final Tokens queryTokens) {
 	super(queryTokens);
@@ -19,8 +19,8 @@ class SubsequentCompletedAndYielded extends CompletedCommon implements ISubseque
     }
 
     @Override
-    public IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded>> yield() {
-	return new FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded>>(getTokens().yield(), new SubsequentYieldedItemAlias<ISubsequentCompletedAndYielded>(getTokens(), this));
+    public IFunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
+	return new FunctionYieldedLastArgument<ISubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(getTokens().yield(), new SubsequentYieldedItemAlias<ISubsequentCompletedAndYielded<ET>, ET>(getTokens(), this));
     }
 
     @Override

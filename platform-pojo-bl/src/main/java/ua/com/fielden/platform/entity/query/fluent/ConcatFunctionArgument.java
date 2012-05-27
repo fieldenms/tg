@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
-final class ConcatFunctionArgument<T> extends AbstractExprOperand<IConcatFunctionWith<T>, IExprOperand0<IConcatFunctionWith<T>>> implements IConcatFunctionArgument<T> {
+final class ConcatFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<IConcatFunctionWith<T, ET>, IExprOperand0<IConcatFunctionWith<T, ET>, ET>, ET> implements IConcatFunctionArgument<T, ET> {
     T parent;
     ConcatFunctionArgument(final Tokens queryTokens, final T parent) {
 	super(queryTokens);
@@ -12,12 +13,12 @@ final class ConcatFunctionArgument<T> extends AbstractExprOperand<IConcatFunctio
     }
 
     @Override
-    IExprOperand0<IConcatFunctionWith<T>> getParent2() {
-	return new ExprOperand0<IConcatFunctionWith<T>>(getTokens(), new ConcatFunctionWith<T>(getTokens(), parent));
+    IExprOperand0<IConcatFunctionWith<T, ET>, ET> getParent2() {
+	return new ExprOperand0<IConcatFunctionWith<T, ET>, ET>(getTokens(), new ConcatFunctionWith<T, ET>(getTokens(), parent));
     }
 
     @Override
-    IConcatFunctionWith<T> getParent() {
-	return new ConcatFunctionWith<T>(getTokens(), parent);
+    IConcatFunctionWith<T, ET> getParent() {
+	return new ConcatFunctionWith<T, ET>(getTokens(), parent);
     }
 }

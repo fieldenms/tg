@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.dao.filtering;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -16,6 +14,8 @@ import ua.com.fielden.platform.test.domain.entities.Workshop;
 import ua.com.fielden.platform.test.domain.entities.daos.IWorkshopDao;
 
 import com.google.inject.Inject;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * This is a filter providing a mock implementation to be used for testing purposes.
@@ -67,7 +67,7 @@ public class DataFilter implements IFilter {
 		    return null;
 		}
 
-		ICompoundCondition0 cc = select(entityType).where().prop(properties.get(0)).eq().val(wc);
+		ICompoundCondition0<T> cc = select(entityType).where().prop(properties.get(0)).eq().val(wc);
 
 		for (int index = 1; index < properties.size(); index++) {
 		    cc = cc.and().prop(properties.get(index)).eq().val(wc); // all conditions are linked with AND by default

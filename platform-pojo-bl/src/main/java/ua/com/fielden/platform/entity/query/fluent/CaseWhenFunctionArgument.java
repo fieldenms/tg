@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionEnd;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 
-final class CaseWhenFunctionArgument<T> extends AbstractExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>>> implements ICaseWhenFunctionArgument<T> {
+final class CaseWhenFunctionArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<ICaseWhenFunctionEnd<T>, IExprOperand0<ICaseWhenFunctionEnd<T>, ET>, ET> implements ICaseWhenFunctionArgument<T, ET> {
     T parent;
     CaseWhenFunctionArgument(final Tokens queryTokens, final T parent) {
 	super(queryTokens);
@@ -12,8 +13,8 @@ final class CaseWhenFunctionArgument<T> extends AbstractExprOperand<ICaseWhenFun
     }
 
     @Override
-    IExprOperand0<ICaseWhenFunctionEnd<T>> getParent2() {
-	return new ExprOperand0<ICaseWhenFunctionEnd<T>>(getTokens(), new CaseWhenFunctionEnd<T>(getTokens(), parent));
+    IExprOperand0<ICaseWhenFunctionEnd<T>, ET> getParent2() {
+	return new ExprOperand0<ICaseWhenFunctionEnd<T>, ET>(getTokens(), new CaseWhenFunctionEnd<T>(getTokens(), parent));
     }
 
     @Override

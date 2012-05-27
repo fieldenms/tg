@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-class Join extends PlainJoin implements IJoin {
+class Join<ET extends AbstractEntity<?>> extends PlainJoin<ET> implements IJoin<ET> {
 
     Join(final Tokens queryTokens) {
 	super(queryTokens);

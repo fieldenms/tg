@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 
-final class FunctionLastArgument<T> extends AbstractExprOperand<T, IExprOperand0<T>> implements IFunctionLastArgument<T> {
+final class FunctionLastArgument<T, ET extends AbstractEntity<?>> extends AbstractExprOperand<T, IExprOperand0<T, ET>, ET> implements IFunctionLastArgument<T, ET> {
     T parent;
     FunctionLastArgument(final Tokens queryTokens, final T parent) {
 	super(queryTokens);
@@ -11,8 +12,8 @@ final class FunctionLastArgument<T> extends AbstractExprOperand<T, IExprOperand0
     }
 
     @Override
-    IExprOperand0<T> getParent2() {
-	return new ExprOperand0<T>(getTokens(), parent);
+    IExprOperand0<T, ET> getParent2() {
+	return new ExprOperand0<T, ET>(getTokens(), parent);
     }
 
     @Override

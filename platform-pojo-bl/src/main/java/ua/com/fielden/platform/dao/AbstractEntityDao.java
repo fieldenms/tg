@@ -128,7 +128,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
      * @return
      */
     protected EntityResultQueryModel<T> createQueryByKey(final Object... keyValues) {
-	final IPlainJoin qry = select(getEntityType());
+	final IPlainJoin<T> qry = select(getEntityType());
 
 	if (getKeyType() == DynamicEntityKey.class) {
 	    final List<Field> list = Finder.getKeyMembers(getEntityType());
@@ -142,7 +142,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 			+ ") does not match the number of properties in the entity composite key (" + list.size() + ").");
 	    }
 
-	    ICompoundCondition0 cc = qry//
+	    ICompoundCondition0<T> cc = qry//
 	    .where().prop(list.get(0).getName())//
 	    .eq().val(realKeyValues[0]);
 

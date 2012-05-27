@@ -1,51 +1,52 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldOperand;
 
-abstract class AbstractYieldedItem<T> extends AbstractSingleOperand<T> implements IYieldOperand<T> {
+abstract class AbstractYieldedItem<T, ET extends AbstractEntity<?>> extends AbstractSingleOperand<T, ET> implements IYieldOperand<T, ET> {
     protected AbstractYieldedItem(final Tokens queryTokens) {
 	super(queryTokens);
     }
 
     @Override
-    public IFunctionLastArgument<T> maxOf() {
-	return new FunctionLastArgument<T>(getTokens().maxOf(), getParent());
+    public IFunctionLastArgument<T, ET> maxOf() {
+	return new FunctionLastArgument<T, ET>(getTokens().maxOf(), getParent());
     }
 
     @Override
-    public IFunctionLastArgument<T> minOf() {
-	return new FunctionLastArgument<T>(getTokens().minOf(), getParent());
+    public IFunctionLastArgument<T, ET> minOf() {
+	return new FunctionLastArgument<T, ET>(getTokens().minOf(), getParent());
     }
 
     @Override
-    public IFunctionLastArgument<T> sumOf() {
-	return new FunctionLastArgument<T>(getTokens().sumOf(), getParent());
+    public IFunctionLastArgument<T, ET> sumOf() {
+	return new FunctionLastArgument<T, ET>(getTokens().sumOf(), getParent());
     }
 
     @Override
-    public IFunctionLastArgument<T> countOf() {
-	return new FunctionLastArgument<T>(getTokens().countOf(), getParent());
+    public IFunctionLastArgument<T, ET> countOf() {
+	return new FunctionLastArgument<T, ET>(getTokens().countOf(), getParent());
     }
 
     @Override
-    public IFunctionLastArgument<T> avgOf() {
-	return new FunctionLastArgument<T>(getTokens().averageOf(), getParent());
+    public IFunctionLastArgument<T, ET> avgOf() {
+	return new FunctionLastArgument<T, ET>(getTokens().averageOf(), getParent());
     }
 
     @Override
-    public IFunctionLastArgument<T> sumOfDistinct() {
-	return new FunctionLastArgument<T>(getTokens().sumOfDistinct(), getParent());
+    public IFunctionLastArgument<T, ET> sumOfDistinct() {
+	return new FunctionLastArgument<T, ET>(getTokens().sumOfDistinct(), getParent());
     }
 
     @Override
-    public IFunctionLastArgument<T> countOfDistinct() {
-	return new FunctionLastArgument<T>(getTokens().countOfDistinct(), getParent());
+    public IFunctionLastArgument<T, ET> countOfDistinct() {
+	return new FunctionLastArgument<T, ET>(getTokens().countOfDistinct(), getParent());
     }
 
     @Override
-    public IFunctionLastArgument<T> avgOfDistinct() {
-	return new FunctionLastArgument<T>(getTokens().averageOfDistinct(), getParent());
+    public IFunctionLastArgument<T, ET> avgOfDistinct() {
+	return new FunctionLastArgument<T, ET>(getTokens().averageOfDistinct(), getParent());
     }
 
     @Override

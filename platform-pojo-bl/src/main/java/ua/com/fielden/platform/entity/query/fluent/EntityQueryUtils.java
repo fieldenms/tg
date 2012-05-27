@@ -12,20 +12,20 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class EntityQueryUtils {
-    public static <T extends AbstractEntity<?>> IFromAlias select(final Class<T> entityType) {
-	return new FromAlias((new Tokens()).from(entityType));
+    public static <T extends AbstractEntity<?>> IFromAlias<T> select(final Class<T> entityType) {
+	return new FromAlias<T>((new Tokens()).from(entityType));
     }
 
-    public static <T extends AbstractEntity<?>> IFromAlias select(final EntityResultQueryModel<T> sourceQueryModel) {
-	return new FromAlias((new Tokens()).from(sourceQueryModel));
+    public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T> sourceQueryModel) {
+	return new FromAlias<T>((new Tokens()).from(sourceQueryModel));
     }
 
-    public static <T extends AbstractEntity<?>> IFromAlias select(final EntityResultQueryModel<T>... sourceQueryModels) {
-	return new FromAlias((new Tokens()).from(sourceQueryModels));
+    public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T>... sourceQueryModels) {
+	return new FromAlias<T>((new Tokens()).from(sourceQueryModels));
     }
 
-    public static <T extends AbstractEntity<?>> IFromAlias select(final AggregatedResultQueryModel... sourceQueryModels) {
-	return new FromAlias((new Tokens()).from(sourceQueryModels));
+    public static <T extends AbstractEntity<?>> IFromAlias<T> select(final AggregatedResultQueryModel... sourceQueryModels) {
+	return new FromAlias<T>((new Tokens()).from(sourceQueryModels));
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

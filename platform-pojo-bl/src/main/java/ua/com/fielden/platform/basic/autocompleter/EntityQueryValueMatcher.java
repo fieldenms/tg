@@ -8,8 +8,8 @@ import java.util.List;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -57,7 +57,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
      * @param propertyName
      *            -- should contain alias
      */
-    public EntityQueryValueMatcher(final IEntityDao<T> dao, final ICompoundCondition0 condition, final String propertyName) {
+    public EntityQueryValueMatcher(final IEntityDao<T> dao, final ICompoundCondition0<T> condition, final String propertyName) {
 	this.dao = dao;
 	this.propertyParamName = "paramNameFor" + propertyName.replaceAll("\\.", "_");
 	this.propertyName = propertyName;

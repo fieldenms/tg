@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere0;
 
-final class FunctionCompoundCondition0<T> extends AbstractQueryLink implements IFunctionCompoundCondition0<T> {
+final class FunctionCompoundCondition0<T, ET extends AbstractEntity<?>> extends AbstractQueryLink implements IFunctionCompoundCondition0<T, ET> {
     T parent;
 
     FunctionCompoundCondition0(final Tokens queryTokens,  final T parent) {
@@ -13,27 +14,27 @@ final class FunctionCompoundCondition0<T> extends AbstractQueryLink implements I
     }
 
     @Override
-    public ICaseWhenFunctionArgument<T> then() {
-	return new CaseWhenFunctionArgument<T>(getTokens(), parent);
+    public ICaseWhenFunctionArgument<T, ET> then() {
+	return new CaseWhenFunctionArgument<T, ET>(getTokens(), parent);
     }
 
-    private AbstractLogicalCondition<IFunctionWhere0<T>> getLogicalCondition() {
-	return new AbstractLogicalCondition<IFunctionWhere0<T>>(getTokens()) {
+    private AbstractLogicalCondition<IFunctionWhere0<T, ET>> getLogicalCondition() {
+	return new AbstractLogicalCondition<IFunctionWhere0<T, ET>>(getTokens()) {
 
 	    @Override
-	    IFunctionWhere0<T> getParent() {
-		return new FunctionWhere0<T>(getTokens(), parent);
+	    IFunctionWhere0<T, ET> getParent() {
+		return new FunctionWhere0<T, ET>(getTokens(), parent);
 	    }
 	};
     }
 
     @Override
-    public IFunctionWhere0<T> and() {
+    public IFunctionWhere0<T, ET> and() {
 	return getLogicalCondition().and();
     }
 
     @Override
-    public IFunctionWhere0<T> or() {
+    public IFunctionWhere0<T, ET> or() {
 	return getLogicalCondition().or();
     }
 }

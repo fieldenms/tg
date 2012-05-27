@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition1;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere1;
 
-final class FunctionCompoundCondition1<T> extends AbstractCompoundCondition<IFunctionWhere1<T>, IFunctionCompoundCondition0<T>> implements IFunctionCompoundCondition1<T> {
+final class FunctionCompoundCondition1<T, ET extends AbstractEntity<?>> extends AbstractCompoundCondition<IFunctionWhere1<T, ET>, IFunctionCompoundCondition0<T, ET>> implements IFunctionCompoundCondition1<T, ET> {
     T parent;
     FunctionCompoundCondition1(final Tokens queryTokens,  final T parent) {
 	super(queryTokens);
@@ -12,12 +13,12 @@ final class FunctionCompoundCondition1<T> extends AbstractCompoundCondition<IFun
     }
 
     @Override
-    IFunctionWhere1<T> getParent() {
-	return new FunctionWhere1<T>(getTokens(), parent);
+    IFunctionWhere1<T, ET> getParent() {
+	return new FunctionWhere1<T, ET>(getTokens(), parent);
     }
 
     @Override
-    IFunctionCompoundCondition0<T> getParent2() {
-	return new FunctionCompoundCondition0<T>(getTokens(), parent);
+    IFunctionCompoundCondition0<T, ET> getParent2() {
+	return new FunctionCompoundCondition0<T, ET>(getTokens(), parent);
     }
 }

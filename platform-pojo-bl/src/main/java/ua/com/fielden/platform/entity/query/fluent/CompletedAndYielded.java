@@ -7,15 +7,15 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-class CompletedAndYielded extends CompletedCommon implements ICompletedAndYielded {
+class CompletedAndYielded<ET extends AbstractEntity<?>> extends CompletedCommon<ET> implements ICompletedAndYielded<ET> {
 
     CompletedAndYielded(final Tokens queryTokens) {
 	super(queryTokens);
     }
 
     @Override
-    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> model() {
-	return new EntityResultQueryModel<T>(getTokens().getValues(), (Class<T>) getTokens().getMainSourceType());
+    public /*<T extends AbstractEntity<?>>*/ EntityResultQueryModel<ET> model() {
+	return new EntityResultQueryModel<ET>(getTokens().getValues(), (Class<ET>) getTokens().getMainSourceType());
     }
 
     @Override
@@ -24,7 +24,7 @@ class CompletedAndYielded extends CompletedCommon implements ICompletedAndYielde
     }
 
     @Override
-    public IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded>> yield() {
-	return new FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded>>(getTokens().yield(), new FirstYieldedItemAlias<ISubsequentCompletedAndYielded>(getTokens(), new SubsequentCompletedAndYielded(getTokens())));
+    public IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
+	return new FunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET>(getTokens().yield(), new FirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>(getTokens(), new SubsequentCompletedAndYielded<ET>(getTokens())));
     }
 }

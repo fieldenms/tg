@@ -4,9 +4,9 @@ import java.util.List;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
@@ -109,10 +109,10 @@ public final class Validators {
 
 	/////////////// start query composition ///////////////////
 	// add matching conditions
-	final IWhere0 where = select((Class<T>) entity.getType()).where();
+	final IWhere0<T> where = select((Class<T>) entity.getType()).where();
 	// if the entity being checked for overlapping has already been persisted it would most likely overlap itself
 	// thus, need to exclude entity itself
-	ICompoundCondition0 cc = where.prop("id").ne().iVal(entity.getId()); // should be ignore if id is null
+	ICompoundCondition0<T> cc = where.prop("id").ne().iVal(entity.getId()); // should be ignore if id is null
 	// now the matching properties
 	for (final String matchProperty : matchProperties) {
 	    final Object value = entity.get(matchProperty);

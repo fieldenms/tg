@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
 
-class OrderingItem extends AbstractExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable>> implements IOrderingItem {
+class OrderingItem extends AbstractExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> implements IOrderingItem {
 
     OrderingItem(final Tokens queryTokens) {
 	super(queryTokens);
@@ -16,7 +17,7 @@ class OrderingItem extends AbstractExprOperand<ISingleOperandOrderable, IExprOpe
     }
 
     @Override
-    IExprOperand0<ISingleOperandOrderable> getParent2() {
-	return new ExprOperand0<ISingleOperandOrderable>(getTokens(), getParent());
+    IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> getParent2() {
+	return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>(getTokens(), getParent());
     }
 }

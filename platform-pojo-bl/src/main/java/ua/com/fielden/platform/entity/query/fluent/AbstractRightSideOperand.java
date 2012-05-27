@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IQuantifiedOperand;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
-abstract class AbstractRightSideOperand<T> extends AbstractMultipleOperand<T> implements IQuantifiedOperand<T> {
+abstract class AbstractRightSideOperand<T, ET extends AbstractEntity<?>> extends AbstractMultipleOperand<T, ET> implements IQuantifiedOperand<T, ET> {
 
     protected AbstractRightSideOperand(final Tokens queryTokens) {
 	super(queryTokens);
