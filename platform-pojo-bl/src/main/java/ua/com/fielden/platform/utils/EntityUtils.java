@@ -708,6 +708,22 @@ public class EntityUtils {
     }
 
     /**
+     * Returns true if the provided <code>dotNotationProp</code> is a valid property in the specified entity type.
+     *
+     * @param type
+     * @param dotNotationProp
+     * @return
+     */
+    public static boolean isProperty(final Class<?> type, final String dotNotationProp) {
+	try {
+	    return Finder.findFieldByName(type, dotNotationProp).isAnnotationPresent(IsProperty.class);
+	} catch (final Exception ex) {
+	    return false;
+	}
+    }
+
+
+    /**
      * Checks whether given entity type has composite key
      * @param entityType
      * @return
