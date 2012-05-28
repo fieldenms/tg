@@ -255,7 +255,6 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 
 	    @Override
 	    protected boolean preAction() {
-		expressionEditor.setText("", false, 0);
 		notifyActionStageChange(ActionStage.CANCEL_PRE_ACTION);
 		setState(UmState.UNDEFINED);
 		getSaveAction().setEnabled(false);
