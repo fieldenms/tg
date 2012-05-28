@@ -66,8 +66,8 @@ public abstract class AbstractEntity<K extends Comparable>
       \begin{itemize}
 	\item Entity identity and meta-state (version, editable, persisted, dirty etc.).
 	\item Property validation results.
-	\item Property value change information.
 	\item Property state (editable, visible etc.).	
+	\item Property value change information.	
       \end{itemize}
    \end{description}
 
@@ -527,6 +527,13 @@ public class NumOfSlotsValidator implements IBeforeChangeEventHandler<Integer> {
     Type \emph{Warning} is a \emph{Result}, which has a special treatment at the platform level (UI specifically), and can have custom handling as part of some business logic if required.
   \end{notebox}
 
+  \emph{MetaProperty} provides the following methods for accessing validation results:
+  \begin{description}
+    \item[\textbf{getFirstFailure()}] -- returns an instance of \emph{Result} that indicates the first failure that ocurred during the last attempt to chage  property value, or \emph{null} if there was no error.
+    \item[\textbf{getFirstWarning()}] --  returns an instance of \emph{Warning} associated with the last attempt to chage  property value, or \emph{null} if there was no warning.
+  \end{description}
+
+
   \subparagraph*{ACE Handlers.}
 
   Post-condition handlers are executed only after a new property value is assigned, which means it passed all pre-conditions.
@@ -590,8 +597,38 @@ public class MakeOtherPropertiesReadonlyWhenInactive
   Also, as for BCE handlers there is no declarative association of ACE handlers with a particular entity type -- only semantic association.
   However, ACE handlers have a natural tendency to be applicable to a single entity type.
 
+  \paragraph*{Property state (editable, visible etc.).}
+  The most obvious part of any property's state is its value.
+  It can always be obtained from an entity instance by either by using property getter \texttt{entity.getPropertyName()} or method \emph{get} such as \texttt{entity.get(``propertyName'')}.
+  Property value can also be obtained from a corresponding meta-property instance by using its method \emph{getValue()} -- \texttt{metaProperty.getValue()}.
+  It makes sense to use this way only of there is already an instance of meta-property.
+  In any case, all these possible ways to obtain a property value result in a direct getter invocation, and mainly exist as a convenience when either entity type is unknown at design time or there is only an instance of a meta-property.
+  
+  Setting property values is, as expected, achieved by using corresponding setters.
+  The use of enhanced setter definition, which return an instance of an entity itself is convenient when there is a need to set more than one property.
+  Listing~\ref{lst:ChainedSetters} illustrates setter chaining as part of \emph{WagonBogieClassCompatibility} instantiation and initialisation.
+
+  \begin{code}{Chained setter calls.}{\label{lst:ChainedSetters}}{codebgcolor}
+    \begin{lstlisting}
+    final WagonBogieClassCompatibility entity = entityFactory.
+		  newEntity(WagonBogieClassCompatibility.class).
+		  setWagonClass(wagonClass).
+		  setBogieClass(bogieClass);
+    \end{lstlisting}
+  \end{code}
+
+
+  Additionally, \emph{MetaProperty} provides runtime access to property meta-data.
+  The following method of \emph{MetaProperty} are most useful:
+  \begin{description}
+    \item[\textbf{getValue()}] -- 
+   \end{description}
+  
+
+
   \paragraph*{Property value change information.}
-  \paragraph*{Property meta-state (editable, visible etc.).}
+  
+  
 
 \section{Business Logic and Controllers}
 
