@@ -295,7 +295,7 @@ public class WagonClass extends AbstractEntity<String> {
 
   One of the common situations when modelling business domains, is the existence of entities where some of their properties depend on each other.
   The most trivial example of such situation is an entity with two date properties that represent a single date period.
-  In this case when there is an attempt to set the \emph{start} property value later than the current value of the \emph{finish} property, such value should fail validation ensuring that date period is not inverted.
+  In this case when there is an attempt to set the \emph{start} property value lager than the current value of the \emph{finish} property, such value should fail validation ensuring that date period is not inverted.
   However, if the \emph{finish} property is subsequently changed by setting its value into the future comparing the invalid \emph{start} value, then this invalid value needs to be revalidated and assigned to the \emph{start} property if valid.
   
   The platform provides an elegant way to handle validation error recovery situations for properties that dependent on each other. 
@@ -335,6 +335,44 @@ private Integer odometerReading;
   
   The dependency mechanism gracefully handles circular dependencies -- both direct and transitive.
   Listing~\ref{lst:DependentProperties} contains a direct circular dependency where property \emph{actualStart} depends on property \emph{odometerReading} that in turn depends on \emph{actualStart}.
+
+  Another good example of dependency usage is in the earlier introduced \emph{WagonBogieClassCompatibility} type.
+  The basic validation rule for this entity should ensure that only bogie classes with a higher or equal tonnage than a corresponding wagon class tonnage should be used.
+  In order to demonstrate the need for dependency between properties \emph{wagonClass} and \emph{bogieClass}, consider the following scenario.
+  A new compatibility is in the processes of creation.
+  User enters wagon class with tonnage of 100 ton and then tries to enter a bogie class with tonnage of 50 ton.
+  The system reports an error, stating that such bogies class cannot be compatible with a given wagon class due its unfit tonnage.
+  User realises that the actual error is due to mistakenly entered 100 ton wagon class, and that there should be a 50 ton wagon class.
+  S/he changes the wagon class to a relevant 50 ton wagon class, and naturally expects the attempted value of 50 ton bogie class to become valid and assigned to the property.
+  This requires revalidation of that attempted bogie class value, which is exactly what the dependency mechanism is designed to handle.
+  
+  Listing~\ref{lst:WagonBogieClassificationCompatibilityDependency} provides an updated declaration for entity type \emph{WagonBogieClassCompatibility}.
+  The definition for property \emph{wagonClass} now includes a BCE handler declaration, specifying the class implementing it, and the dependency information, specifying dependent property \emph{bogieClass}.
+  The same definition change has been applied to property \emph{bogieClass}, but with different values~-- it has its own BCE handler, and the dependency is on property \emph{wagonClass}.
+  The specified BCE handlers validate tonnages for both classes, whereas the dependency declarations ensure revalidation of properties whenever any of them change.
+  
+
+  \begin{code}{Declaration of dependency for bogie and wagon classes.}{\label{lst:WagonBogieClassificationCompatibilityDependency}}{codebgcolor}
+    \begin{lstlisting}
+@KeyType(DynamicEntityKey.class)
+public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKey> {
+
+    @IsProperty
+    @CompositeKeyMember(1)
+    @BeforeChange(@Handler(WbccWagonTonnageValidator.class))
+    @Dependent("bogieClass")
+    private WagonClass wagonClass;
+
+    @IsProperty
+    @CompositeKeyMember(2)
+    @BeforeChange(@Handler(WbccBogieTonnageValidator.class))
+    @Dependent("wagonClass")
+    private BogieClass bogieClass;
+
+    ....................................
+}
+    \end{lstlisting}
+  \end{code}
   
 
 \subsubsection{Runtime Meta-Data}
@@ -523,7 +561,7 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
   \begin{code}{ACE handler implementation for property active.}{\label{lst:MakeOtherPropertiesReadonlyWhenInactive}}{codebgcolor}
     \begin{lstlisting}
 public class MakeOtherPropertiesReadonlyWhenInactive 
-	implements IAfterChangeEventHandler<Boolean> {
+	implements IAfterChangeEventHandler<Boolean> {											
 
     @Override
     public void handle(final MetaProperty property, final Boolean active) {
@@ -550,6 +588,7 @@ public class MakeOtherPropertiesReadonlyWhenInactive
 
   ACE handlers initialisation mechanism is exactly the same as for BCE handerls can be used.
   Also, as for BCE handlers there is no declarative association of ACE handlers with a particular entity type -- only semantic association.
+  However, ACE handlers have a natural tendency to be applicable to a single entity type.
 
   \paragraph*{Property value change information.}
   \paragraph*{Property meta-state (editable, visible etc.).}
