@@ -76,11 +76,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_query_with_virtual_property() {
-	final EntityResultQueryModel<TgWagonSlot> qryA = select(TgWagonSlot.class).where().prop("a").isNull().model();
-
-	final AggregatedResultQueryModel qryB = select(TgWagon.class).yield().prop("a").as("A").modelAsAggregate();
-
-
 	final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().prop("key").like().val("WAGON%1").model();
 	final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).with(orderBy().prop("key").desc().model()).build());
 	assertEquals("Incorrect key", 2, models.size());
