@@ -252,7 +252,7 @@ public class PropertyTypeDeterminator {
 
     public static Pair<String, String> penultAndLast(final String dotNotationExp) {
 	if (!isDotNotation(dotNotationExp)) {
-	    throw new RuntimeException("Should be dot-notation.");
+	    throw new IllegalArgumentException("Should be dot-notation.");
 	}
 	final int indexOfLastDot = dotNotationExp.lastIndexOf(PROPERTY_SPLITTER);
 	final String penultPart = dotNotationExp.substring(0, indexOfLastDot);

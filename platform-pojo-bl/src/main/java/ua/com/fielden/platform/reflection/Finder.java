@@ -932,11 +932,9 @@ public class Finder {
      * @return
      */
     public static boolean isOne2One_association(final Class<?> type, final String dotNotationExp) {
-//	if (EntityAggregates.class.isAssignableFrom(type)) {
-//	    return false;
-//	}
 	final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
 	final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.transform(type, dotNotationExp).getKey());
 	return EntityUtils.isEntityType(propertyType) && DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, AbstractEntity.KEY)).equals(masterType);
     }
+
 }
