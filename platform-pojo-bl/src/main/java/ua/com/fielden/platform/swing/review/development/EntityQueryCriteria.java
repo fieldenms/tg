@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.swing.review.development;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.io.FileOutputStream;
@@ -21,29 +20,22 @@ import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItemCloseable;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
+import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -135,10 +127,14 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     public final IPage<T> run(final int pageSize) {
+	final Class<?> root = getEntityClass();
+	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
+	final Pair<List<String>, List<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
+	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, tickManager, enhancer);
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
-	final Pair<List<String>, List<String>> separatedFetch = separateTotalProperties();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
-		.with(createOrderingModel())//
+		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), orderingPairs))//
 		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey())).build();
 	if (!separatedFetch.getValue().isEmpty()) {
 	    final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = from(notOrderedQuery)//
@@ -157,10 +153,14 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @param propertyTitles
      */
     public void export(final String fileName, final String[] propertyNames, final String[] propertyTitles) throws IOException {
+	final Class<?> root = getEntityClass();
+	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
+	final Pair<List<String>, List<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
+	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, tickManager, enhancer);
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
-	final Pair<List<String>, List<String>> separatedFetch = separateTotalProperties();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
-		.with(createOrderingModel())//
+		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), orderingPairs))//
 		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey())).build();
 	final byte[] content;
 	if(getManagedType().equals(getEntityClass())){
@@ -188,24 +188,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	    throw new IllegalArgumentException("It's impossible to delete entity that isn't of the entity type or managed type of this criteria!");
 	}
     }
-
-//    /**
-//     * Returns the fetch properties for this query criteria.
-//     *
-//     * @return
-//     */
-//    final List<String> getFetchProperties(){
-//	return separateTotalProperties().getKey();
-//    }
-//
-//    /**
-//     * Returns the total properties for this query criteria.
-//     *
-//     * @return
-//     */
-//    public final List<String> getTotalProperties(){
-//	return separateTotalProperties().getValue();
-//    }
 
     /**
      * Converts existing properties model (which has separate properties for from/to, is/isNot and so on)
@@ -257,72 +239,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns the ordering model for this query criteria.
-     *
-     * @return
-     */
-    protected OrderingModel createOrderingModel(){
-	IOrderingItemCloseable closeOrderable = null;
-	for(final Pair<String, Ordering> orderPair : getCentreDomainTreeMangerAndEnhancer().getSecondTick().orderedProperties(getEntityClass())){
-	    final IOrderingItem orderingItem = closeOrderable == null ? orderBy() : closeOrderable;
-	    final ExpressionModel expression = getExpressionForProp(orderPair.getKey());
-	    final ISingleOperandOrderable part = expression == null ? orderingItem.prop(createNotInitialisedQueryProperty(orderPair.getKey()).getConditionBuildingName()) : orderingItem.expr(expression);
-	    closeOrderable = orderPair.getValue().equals(Ordering.ASCENDING) ? part.asc() : part.desc();
-	}
-	return closeOrderable == null ? null : closeOrderable.model();
-    }
-
-    /**
-     * Returns the not configured query property instance for the specified property.
-     *
-     * @param propertyName
-     * @return
-     */
-    protected QueryProperty createNotInitialisedQueryProperty(final String propertyName){
-	return new QueryProperty(getManagedType(), propertyName);
-    }
-
-    /**
-     * Separates total properties from fetch properties.
-     *
-     * @return
-     */
-    private Pair<List<String>, List<String>> separateTotalProperties() {
-        final List<String> fetchProperties = new ArrayList<String>();
-        final List<String> totalProperties = new ArrayList<String>();
-        final List<String> checkedProperties = cdtme.getSecondTick().checkedProperties(getEntityClass());
-        for (final String property : checkedProperties)
-            try {
-        	final ICalculatedProperty calcProperty = cdtme.getEnhancer().getCalculatedProperty(getEntityClass(), property);
-        	final String originProperty = Reflector.fromRelative2AbsotulePath(calcProperty.getContextPath(), calcProperty.getOriginationProperty());
-		if(calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION){
-		    if(checkedProperties.contains(originProperty)){
-			totalProperties.add(property);
-		    }
-		} else {
-        	    fetchProperties.add(property);
-        	}
-            } catch (final IncorrectCalcPropertyKeyException ex) {
-        	fetchProperties.add(property);
-            }
-        return new Pair<List<String>, List<String>>(fetchProperties, totalProperties);
-    }
-
-    /**
-     * Returns the expression for calculated property specified with propName parameter. If the property is not calculated then returns null.
-     *
-     * @param propName - the name of the calculated property.
-     * @return
-     */
-    private ExpressionModel getExpressionForProp(final String propName) {
-	try {
-	    return ((CalculatedProperty) getCentreDomainTreeMangerAndEnhancer().getEnhancer().getCalculatedProperty(getEntityClass(), propName)).getAst().getModel();
-	} catch (final IncorrectCalcPropertyKeyException e) {
-	    return null;
-	}
-    }
-
-    /**
      * Converts existing properties model (which has separate properties for from/to, is/isNot and so on)
      * into new properties model (which has single abstraction for one criterion).
      *
@@ -332,7 +248,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private QueryProperty createQueryProperty(final String actualProperty) {
 	final IAddToCriteriaTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	final Class<T> root = getEntityClass();
-	final QueryProperty queryProperty = createNotInitialisedQueryProperty(actualProperty);
+	final QueryProperty queryProperty = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), actualProperty);
 
 	queryProperty.setValue(tickManager.getValue(root, actualProperty));
 	if (AbstractDomainTree.isDoubleCriterionOrBoolean(getManagedType(), actualProperty)) {

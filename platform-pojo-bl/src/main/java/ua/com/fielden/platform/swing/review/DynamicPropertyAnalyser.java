@@ -48,6 +48,7 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
      *
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Pair<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> getCollectionContainerAndItsParentType() {
 	if (propertyFields == null) {
 	    return null;

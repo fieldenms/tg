@@ -14,9 +14,9 @@ import ua.com.fielden.platform.reflection.Reflector;
 
 /**
  * This class provides convenient API to determine whether property is available to add to the criteria or fetch model.
- * 
+ *
  * @author oleh
- * 
+ *
  */
 public class DynamicCriteriaPropertyAnalyser {
 
@@ -26,7 +26,7 @@ public class DynamicCriteriaPropertyAnalyser {
 
     /**
      * Creates new {@link DynamicCriteriaPropertyAnalyser} instance for the specified dot notation property and it's declaring class.
-     * 
+     *
      * @param declaringType
      * @param dotNotationExp
      */
@@ -45,7 +45,7 @@ public class DynamicCriteriaPropertyAnalyser {
 
     /**
      * Set the property to analyse. The analysing property must be specified with property name path split with dot, also class, where property is declared, must be specified.
-     * 
+     *
      * @param declaringType
      * @param dotNotationExp
      */
@@ -79,7 +79,7 @@ public class DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the analysing property.
-     * 
+     *
      * @return
      */
     public String getAnalysingProperty() {
@@ -98,7 +98,7 @@ public class DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the class where analysing property is declared.
-     * 
+     *
      * @return
      */
     public Class<?> getDeclaredClass() {
@@ -110,7 +110,7 @@ public class DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns value that indicates whether specified {@code propertyName} is among list of {@code unionProperties} fields.
-     * 
+     *
      * @param propertyName
      * @param unionProperties
      * @return
@@ -126,7 +126,7 @@ public class DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns value that indicates whether this property was marked with specified annotation.
-     * 
+     *
      * @param annotationClass
      * @return
      */
@@ -144,7 +144,7 @@ public class DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the type of the analysing property.
-     * 
+     *
      * @return
      */
     public Class<?> getPropertyType() {
@@ -156,10 +156,11 @@ public class DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the declaring class for the property name specified with {@code propertyNameIndex}.
-     * 
+     *
      * @param propertyNameIndex
      * @return
      */
+    @SuppressWarnings("unchecked")
     protected List<Class<?>> getDeclaringClasses(final int propertyNameIndex) {
 	final List<Class<?>> declaringClasses = new ArrayList<Class<?>>();
 	if (propertyNames == null || propertyNameIndex > propertyNames.length - 1) {
@@ -182,7 +183,7 @@ public class DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the property name that stands on the index position of the analysing property.
-     * 
+     *
      * @param index
      * @return
      */
@@ -192,7 +193,7 @@ public class DynamicCriteriaPropertyAnalyser {
 
     /**
      * Returns the length of the property name path length. (Property name path - that is a list of separate strings split by dot).
-     * 
+     *
      * @return
      */
     public int getProertyNamePathLength() {
