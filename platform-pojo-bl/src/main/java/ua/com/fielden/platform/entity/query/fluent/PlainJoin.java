@@ -11,7 +11,7 @@ class PlainJoin<ET extends AbstractEntity<?>> extends Completed<ET> implements I
     }
 
     @Override
-    public IWhere0 where() {
-	return new Where0(getTokens().where());
+    public IWhere0<ET> where() {
+	return new Where0<ET>(getTokens().where());
     }
 }

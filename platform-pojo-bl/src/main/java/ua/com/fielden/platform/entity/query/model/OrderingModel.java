@@ -56,5 +56,4 @@ public class OrderingModel {
     public String toString() {
         return tokens.toString();
     }
-
 }

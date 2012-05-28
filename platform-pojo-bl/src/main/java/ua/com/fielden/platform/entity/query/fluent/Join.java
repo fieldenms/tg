@@ -13,33 +13,32 @@ class Join<ET extends AbstractEntity<?>> extends PlainJoin<ET> implements IJoin<
     }
 
     @Override
-    public <T extends AbstractEntity<?>> IJoinAlias join(final Class<T> entityType) {
-	return new JoinAlias(getTokens().innerJoin(entityType));
+    public <T extends AbstractEntity<?>> IJoinAlias<ET> join(final Class<T> entityType) {
+	return new JoinAlias<ET>(getTokens().innerJoin(entityType));
     }
 
     @Override
-    public <T extends AbstractEntity<?>> IJoinAlias leftJoin(final Class<T> entityType) {
-	return new JoinAlias(getTokens().leftJoin(entityType));
+    public <T extends AbstractEntity<?>> IJoinAlias<ET> leftJoin(final Class<T> entityType) {
+	return new JoinAlias<ET>(getTokens().leftJoin(entityType));
     }
 
     @Override
-    public IJoinAlias join(final AggregatedResultQueryModel model) {
-	return new JoinAlias(getTokens().innerJoin(model));
+    public IJoinAlias<ET> join(final AggregatedResultQueryModel model) {
+	return new JoinAlias<ET>(getTokens().innerJoin(model));
     }
 
     @Override
-    public <T extends AbstractEntity<?>> IJoinAlias join(final EntityResultQueryModel<T> model) {
-	return new JoinAlias(getTokens().innerJoin(model));
+    public <T extends AbstractEntity<?>> IJoinAlias<ET> join(final EntityResultQueryModel<T> model) {
+	return new JoinAlias<ET>(getTokens().innerJoin(model));
     }
 
     @Override
-    public IJoinAlias leftJoin(final AggregatedResultQueryModel model) {
-	return new JoinAlias(getTokens().leftJoin(model));
+    public IJoinAlias<ET> leftJoin(final AggregatedResultQueryModel model) {
+	return new JoinAlias<ET>(getTokens().leftJoin(model));
     }
 
     @Override
-    public <T extends AbstractEntity<?>> IJoinAlias leftJoin(final EntityResultQueryModel<T> model) {
-	return new JoinAlias(getTokens().leftJoin(model));
+    public <T extends AbstractEntity<?>> IJoinAlias<ET> leftJoin(final EntityResultQueryModel<T> model) {
+	return new JoinAlias<ET>(getTokens().leftJoin(model));
     }
-
 }

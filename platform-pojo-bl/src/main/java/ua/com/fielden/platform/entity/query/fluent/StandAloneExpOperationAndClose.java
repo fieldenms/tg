@@ -19,5 +19,4 @@ public class StandAloneExpOperationAndClose extends AbstractArithmeticalOperator
     IStandAloneExprOperand getParent() {
 	return new StandAloneExpOperand(getTokens());
     }
-
 }

@@ -12,6 +12,6 @@ class JoinComparisonOperator0<ET extends AbstractEntity<?>> extends AbstractComp
 
     @Override
     IJoinCompoundCondition0<ET> getParent1() {
-	return new JoinCompoundCondition0(getTokens());
+	return new JoinCompoundCondition0<ET>(getTokens());
     }
 }

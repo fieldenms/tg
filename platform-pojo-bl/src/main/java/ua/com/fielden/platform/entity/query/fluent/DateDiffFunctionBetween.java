@@ -17,5 +17,4 @@ public class DateDiffFunctionBetween<T, ET extends AbstractEntity<?>> extends Ab
     public IFunctionLastArgument<T, ET> and() {
 	return new FunctionLastArgument<T, ET>(getTokens(), parent);
     }
-
 }

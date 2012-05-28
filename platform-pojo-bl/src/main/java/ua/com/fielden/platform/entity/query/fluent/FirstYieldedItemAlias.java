@@ -26,5 +26,4 @@ public class FirstYieldedItemAlias<T> extends AbstractQueryLink implements IFirs
     public PrimitiveResultQueryModel modelAsPrimitive() {
 	return new PrimitiveResultQueryModel(getTokens().getValues());
     }
-
 }
