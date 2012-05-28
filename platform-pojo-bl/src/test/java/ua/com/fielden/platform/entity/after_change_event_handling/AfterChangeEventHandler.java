@@ -15,7 +15,7 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  *
  */
-public class AfterChangeEventHandler implements IAfterChangeEventHandler {
+public class AfterChangeEventHandler implements IAfterChangeEventHandler<Object> {
 
     private String strParam;
     private int intParam1;

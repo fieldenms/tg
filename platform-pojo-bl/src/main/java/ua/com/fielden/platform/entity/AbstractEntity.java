@@ -1131,11 +1131,26 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	return getEntityFactory().newEntity(type, getId());
     }
 
+    /**
+     * Returns a property, which is some sense is preferred.
+     * <p>
+     * For example, it is used as part of the UI logic to determine what property should be focused when entity is being switched into the edit mode.
+     *
+     * @return
+     */
     public String getPreferredProperty() {
 	return preferredProperty;
     }
 
+    /**
+     * Sets the preferred property.
+     *
+     * @param preferredProperty
+     */
     public void setPreferredProperty(final String preferredProperty) {
+	if (!EntityUtils.isProperty(getType(), preferredProperty)) {
+	    throw new IllegalArgumentException("Value \"" + preferredProperty + "\" is not a valid property for type " + getType().getName() + ".");
+	}
 	this.preferredProperty = preferredProperty;
     }
 }

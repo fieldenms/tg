@@ -77,7 +77,7 @@ public class AbstractEntityTest {
 		return super.handle(property, newValue, oldValue, mutatorAnnotations);
 	    }
 	});
-	module.getDomainMetaPropertyConfig().setDefiner(Entity.class, "firstProperty", new IAfterChangeEventHandler() {
+	module.getDomainMetaPropertyConfig().setDefiner(Entity.class, "firstProperty", new IAfterChangeEventHandler<Object>() {
 	    @Override
 	    public void handle(final MetaProperty property, final Object entityPropertyValue) {
 		property.setRequired(!property.isRequired());

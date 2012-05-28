@@ -76,6 +76,23 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     ///////////////////////////////////////////////////////
     /// Holds an original value of the property.
     ///////////////////////////////////////////////////////
+    /**
+     * Original value is always the value retrieved from a data storage.
+     * This means that new entities, which have not been persisted yet, have original values of their properties equal to <code>null</code>
+     * <p>
+     * In case of properties with default values such definition might be unintuitive at first.
+     * However, the whole notion of default property values specified as an assignment during property field definition does not fit naturally into
+     * the proposed modelling paradigm.
+     * Any property value should be validated before being assigned.
+     * This requires setter invocation, and should be a deliberate act enforced as part of the application logic.
+     * Enforcing validation for default values is not technically difficult, but would introduce a maintenance hurdle for application developers,
+     * where during an evolution of the system the validation logic might change, but default values not updated accordingly.
+     * This would lead to entity instantiation failure.
+     *
+     * A much preferred approach is to provide a custom entity constructor or instantiation factories in case default property values support is required,
+     * where property values should be set via setters.
+     * The use of factories would provide additional flexibility, where default values could be governed by business logic and a place of entity instantiation.
+     */
     private Object originalValue;
     private Object prevValue;
     private Object lastInvalidValue;
@@ -764,12 +781,16 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     }
 
     /**
-     * Convenient method that returns either property value (if property validation passed successfully) or {@link #getLastInvalidValue()} (if property validation idn't pass)
+     * Convenient method that returns either property value (if property validation passed successfully) or
+     * {@link #getLastInvalidValue()} (if property validation idn't pass).
+     * <p>
+     * A special care is taken for properties with default values assigned at the field level.
+     * This method returns <code>original value</code> for properties that are valid and not assigned.
      *
      * @return
      */
     public final Object getLastAttemptValue() {
-	return isValid() ? getEntity().get(getName()) : getLastInvalidValue();
+	return isValid() ? (isAssigned() ? getValue() : getOriginalValue()) : getLastInvalidValue();
     }
 
     public final String getTitle() {
