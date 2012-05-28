@@ -1,12 +1,19 @@
 package ua.com.fielden.platform.swing.review.report.analysis.grid;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
+import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
+import ua.com.fielden.platform.swing.review.DynamicPropertyAnalyser;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 
@@ -24,7 +31,7 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
      * Set the analysis view for this model.
      * Please note that one can set analysis view only once.
      * Otherwise The {@link IllegalStateException} will be thrown.
-     * 
+     *
      * @param analysisView
      */
     final void setAnalysisView(final GridAnalysisView<T, CDTME> analysisView){
@@ -44,5 +51,28 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
     @Override
     protected Result canLoadData() {
 	return getCriteria().isValid();
+    }
+
+    @Override
+    protected void exportData(final String fileName) throws IOException {
+	final PropertyTableModel<T> tableModel = analysisView.getEgiPanel().getEgi().getActualModel();
+	final List<String> propertyNames = new ArrayList<String>(tableModel.getPropertyColumnMappings().size());
+	final List<String> propertyTitles = new ArrayList<String>(tableModel.getPropertyColumnMappings().size());
+	for (final AbstractPropertyColumnMapping<T> mapping : tableModel.getPropertyColumnMappings()) {
+	    final DynamicPropertyAnalyser propertyAnalyser = new DynamicPropertyAnalyser(getCriteria().getManagedType(), mapping.getPropertyName());
+	    propertyNames.add(propertyAnalyser.getCriteriaFullName());
+	    propertyTitles.add(mapping.getPropertyTitle());
+	}
+	getCriteria().export(fileName, propertyNames.toArray(new String[] {}), propertyTitles.toArray(new String[] {}));
+    }
+
+    @Override
+    protected String[] getExportFileExtensions() {
+	return new String[] {getDefaultExportFileExtension()};
+    }
+
+    @Override
+    protected String getDefaultExportFileExtension() {
+	return "xls";
     }
 }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.analysis.view;
 
+import java.io.IOException;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
@@ -63,9 +65,28 @@ public abstract class AbstractAnalysisReviewModel<T extends AbstractEntity<?>, C
     abstract protected LDT executeAnalysisQuery();
 
     /**
+     * Exports data in to external file.
+     */
+    abstract protected void exportData(String fileName) throws IOException;
+
+    /**
      * Determines whether this analysis can load data, and returns {@link Result} instance with exception, warning, or successful result.
      *
      * @return
      */
     abstract protected Result canLoadData();
+
+    /**
+     * Returns the array of available file extensions to export.
+     *
+     * @return
+     */
+    abstract protected String[] getExportFileExtensions();
+
+    /**
+     * Returns default export file extension if user didn't specified one.
+     *
+     * @return
+     */
+    abstract protected String getDefaultExportFileExtension();
 }

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.analysis.pivot;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -308,5 +309,23 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    }
 
 	}
+    }
+
+    @Override
+    protected void exportData(final String fileName) throws IOException {
+	// TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected String[] getExportFileExtensions() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    protected String getDefaultExportFileExtension() {
+	// TODO Auto-generated method stub
+	return null;
     }
 }

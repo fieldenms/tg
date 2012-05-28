@@ -4,6 +4,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -145,6 +147,32 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	} else {
 	    return firstPage(resultQuery, pageSize);
 	}
+    }
+
+    /**
+     * Exports data in to the specified external file.
+     *
+     * @param fileName
+     * @param propertyNames
+     * @param propertyTitles
+     */
+    public void export(final String fileName, final String[] propertyNames, final String[] propertyTitles) throws IOException {
+	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
+	final Pair<List<String>, List<String>> separatedFetch = separateTotalProperties();
+	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
+		.with(createOrderingModel())//
+		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey())).build();
+	final byte[] content;
+	if(getManagedType().equals(getEntityClass())){
+	    content = dao.export(resultQuery, propertyNames, propertyTitles);
+	}else{
+	    generatedEntityController.setEntityType(getManagedType());
+	    content = generatedEntityController.export(resultQuery, propertyNames, propertyTitles, getByteArrayForManagedType());
+	}
+	final FileOutputStream fo = new FileOutputStream(fileName);
+	fo.write(content);
+	fo.flush();
+	fo.close();
     }
 
     /**

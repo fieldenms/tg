@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review.report.analysis.chart;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -130,5 +131,23 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	public List<String> categoryProperties() {
 	    return Collections.unmodifiableList(new ArrayList<String>(categoryAliasMap.keySet()));
 	}
+    }
+
+    @Override
+    protected void exportData(final String fileName) throws IOException {
+	// TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected String[] getExportFileExtensions() {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    protected String getDefaultExportFileExtension() {
+	// TODO Auto-generated method stub
+	return null;
     }
 }
