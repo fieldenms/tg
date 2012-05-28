@@ -389,8 +389,8 @@ public abstract class AbstractDomainTreeTest {
 	// A base types to be checked for its non-emptiness and non-emptiness of their children.
 	final List<Class<?>> types = new ArrayList<Class<?>>(DOMAIN_TREE_TYPES);
 	// A base types to be checked for its non-emptiness.
-	// TODO covered by EnhancementSetAndMaps? types.add(Set.class);
-	// TODO covered by EnhancementSetAndMaps? types.add(Map.class);
+	// covered by EnhancementSetAndMaps? types.add(Set.class);
+	// covered by EnhancementSetAndMaps? types.add(Map.class);
 	types.add(Enum.class); // CalculatedProperty implementation
 	types.add(String.class); // CalculatedProperty implementation
 	types.add(Class.class); // CalculatedProperty implementation
@@ -482,9 +482,9 @@ public abstract class AbstractDomainTreeTest {
 	// COLLECTIONAL_EXPRESSION
 	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Coll Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Coll Expr Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	// AGGREGATED_COLLECTIONAL_EXPRESSION
-	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "SUM(integerProp)", "Aggr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "SUM(integerProp)", "Aggr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	// 				TODO AGGREGATED_COLLECTIONAL_EXPRESSION
+	// 				TODO dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "SUM(integerProp)", "Aggr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	// 				TODO dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "SUM(integerProp)", "Aggr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	// ATTRIBUTED_COLLECTIONAL_EXPRESSION
 	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "2 * integerProp", "Attr Coll Expr Prop1", "desc", CalculatedPropertyAttribute.ALL, "integerProp");
 	dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.simpleEntityProp", "2 * integerProp", "Attr Coll Expr Prop2", "desc", CalculatedPropertyAttribute.ANY, "integerProp");
@@ -507,8 +507,8 @@ public abstract class AbstractDomainTreeTest {
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.collection.collExprProp");
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.collection.simpleEntityProp.collExprProp");
 
-	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.aggrCollExprProp1");
-	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.aggrCollExprProp2");
+	// 				TODO checkAccessabilityOfCalculatedProperty(dtm, "entityProp.aggrCollExprProp1");
+	// 				TODO checkAccessabilityOfCalculatedProperty(dtm, "entityProp.aggrCollExprProp2");
 
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.collection.attrCollExprProp1");
 	checkAccessabilityOfCalculatedProperty(dtm, "entityProp.collection.simpleEntityProp.attrCollExprProp2");

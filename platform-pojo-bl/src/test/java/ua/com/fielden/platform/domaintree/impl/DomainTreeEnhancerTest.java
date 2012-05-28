@@ -14,6 +14,7 @@ import java.util.Set;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
@@ -616,7 +617,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	assertEquals("Incorrect count of enhanced types byte arrays.", 10, copy.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
 
-    @Test
+    @Test @Ignore
     public void test_that_collectional_hierarchies_can_be_enhanced_by_AGGREGATED_COLLECTIONAL_EXPRESSIONs() {
 	// clear domain
 	dm.removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");

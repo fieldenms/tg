@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isCollectionOrInCollectionHierarchy;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
@@ -35,12 +37,11 @@ public class BceContextualExpressionValidation implements IBeforeChangeEventHand
 	    return new Result(ex);
 	}
 
-	// TODO uncomment
-//	if (TaggingVisitor.ABOVE.equals(cp.getAst().getTag())) {
-//	    if (AbstractDomainTreeRepresentation.isCollectionOrInCollectionHierarchy(cp.getRoot(), cp.getContextPath())) {
-//		return new Result(new IllegalStateException("Aggregated collections are currently unsupported. Please try to use simple expressions under collections (or with ALL / ANY attributes)."));
-//	    }
-//	}
+	if (isCollectionOrInCollectionHierarchy(cp.getRoot(), cp.getContextPath())) { // collectional hierarchy
+	    if (cp.levelsToRaiseTheProperty() == 1) {
+		return new Result(new IllegalStateException("Aggregated collections are currently unsupported. Please try to use simple expressions under collections (or with ALL / ANY attributes)."));
+	    }
+	}
 	return Result.successful(cp.getAst());
     }
 }

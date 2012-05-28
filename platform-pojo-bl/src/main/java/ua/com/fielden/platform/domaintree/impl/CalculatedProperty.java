@@ -169,9 +169,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	}
 	this.resultType = ast.getType();
 
-	final int contextPathLevel = new LevelAllocatingVisitor((Class<? extends AbstractEntity>) getRoot(), getContextPath()).getContextLevel();
-	final int level = ast.getLevel() == null ? contextPathLevel : ast.getLevel();
-	final int levelsToRaiseTheProperty = contextPathLevel - level;
+	final int levelsToRaiseTheProperty = levelsToRaiseTheProperty();
 
 	final boolean collectionOrInCollectionHierarchy = isCollectionOrInCollectionHierarchy(this.root, this.getContextPath());
 	final String masterPath = collectionOrInCollectionHierarchy ? parentCollection(this.root, this.getContextPath()) : "";
@@ -188,7 +186,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 		this.path = above(masterPath); // the level above except for root level -- ""
 	    } else {
 		// TODO
-		throw new Result(new Exception("Currently raising to level > 1 not supported!!! levelsToRaiseTheProperty == " + levelsToRaiseTheProperty + " level == " + level + " contextPathLevel == " + contextPathLevel));
+		throw new Result(new Exception("Currently raising to level > 1 not supported!!! levelsToRaiseTheProperty == " + levelsToRaiseTheProperty)); // + " level == " + level + " contextPathLevel == " + contextPathLevel));
 	    }
 	} else { // simple hierarchy
 	    if (levelsToRaiseTheProperty == 0) {
@@ -199,7 +197,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 		this.path = above(masterPath); // the level above except for root level -- ""
 	    } else {
 		// TODO
-		throw new Result(new Exception("The level above root does not exist!!! levelsToRaiseTheProperty == " + levelsToRaiseTheProperty + " level == " + level + " contextPathLevel == " + contextPathLevel));
+		throw new Result(new Exception("The level above root does not exist!!! levelsToRaiseTheProperty == " + levelsToRaiseTheProperty)); // + " level == " + level + " contextPathLevel == " + contextPathLevel));
 	    }
 	}
 	this.parentType = determineType(this.path);
@@ -214,6 +212,12 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 
 	// make originationProperty required for AGGREGATION_EXPRESSIONs
 	getProperty("originationProperty").setRequired(CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(this.category));
+    }
+
+    protected int levelsToRaiseTheProperty() {
+	final int contextPathLevel = new LevelAllocatingVisitor((Class<? extends AbstractEntity>) getRoot(), getContextPath()).getContextLevel();
+	final int level = ast.getLevel() == null ? contextPathLevel : ast.getLevel();
+	return contextPathLevel - level;
     }
 
     protected boolean isAttributed() {
