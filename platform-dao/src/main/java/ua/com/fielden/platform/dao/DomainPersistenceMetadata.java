@@ -149,26 +149,26 @@ public class DomainPersistenceMetadata {
      * @throws Exception
      */
     private Set<PropertyPersistenceInfo> generateEntityPersistenceInfo(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
-	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
-	result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(isOneToOne(entityType) ? PropertyPersistenceType.ONE2ONE_ID : PropertyPersistenceType.ID).build());
-	result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.VERSION).build());
+	final Map<String, PropertyPersistenceInfo> result = new HashMap<String, PropertyPersistenceInfo>();
+	safeMapAdd(result, new PropertyPersistenceInfo.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(isOneToOne(entityType) ? PropertyPersistenceType.ONE2ONE_ID : PropertyPersistenceType.ID).build());
+	safeMapAdd(result, new PropertyPersistenceInfo.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.VERSION).build());
 
 	final String keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? getMapEntityTo(entityType).keyColumn() : key;
 
 	if (isOneToOne(entityType)) {
-	    result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
+	    safeMapAdd(result, new PropertyPersistenceInfo.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
 	} else if (!DynamicEntityKey.class.equals(getKeyType(entityType))) {
-	    result.add(new PropertyPersistenceInfo.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PropertyPersistenceType.PRIMITIVE_KEY).build());
+	    safeMapAdd(result, new PropertyPersistenceInfo.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PropertyPersistenceType.PRIMITIVE_KEY).build());
 	} else if (DynamicEntityKey.class.equals(getKeyType(entityType))) {
 	    final List<Field> compositeKeyProperties = getCompositeKeyProperties(entityType);
 	    for (final Field field : compositeKeyProperties) {
-		result.add(getCompositeKeyPropInfo(entityType, field));
+		safeMapAdd(result, getCompositeKeyPropInfo(entityType, field));
 	    }
-	    result.add(getVirtualPropInfoForDynamicEntityKey(compositeKeyProperties));
+	    safeMapAdd(result, getVirtualPropInfoForDynamicEntityKey(compositeKeyProperties));
 	}
 	final List<String> propsToBeSkipped = new ArrayList<String>();
 
-	for (final PropertyPersistenceInfo propertyPersistenceInfo : result) {
+	for (final PropertyPersistenceInfo propertyPersistenceInfo : result.values()) {
 	    propsToBeSkipped.add(propertyPersistenceInfo.getName());
 	}
 
@@ -179,25 +179,34 @@ public class DomainPersistenceMetadata {
 		builder.column("LOCATION_PROP");
 		builder.column("LOCATION_VALUE");
 		//builder.type(PropertyPersistenceType.COMPOSITE_DETAILS);
-		result.add(builder.build());
+		safeMapAdd(result, builder.build());
 	}
 
 	for (final Field field : getPersistedProperties(entityType)) {
 	    if (!propsToBeSkipped.contains(field.getName())) {
-		result.add(getCommonPropHibInfo(entityType, field));
+		safeMapAdd(result, getCommonPropHibInfo(entityType, field));
 	    }
 	}
 
 	for (final Field field : getCalculatedProperties(entityType)) {
-	    result.add(getCalculatedPropInfo(entityType, field));
+	    safeMapAdd(result, getCalculatedPropInfo(entityType, field));
 	}
 
 	for (final Field field : getCollectionalProperties(entityType)) {
-	    result.add(getCollectionalPropInfo(entityType, field));
+	    safeMapAdd(result, getCollectionalPropInfo(entityType, field));
 	}
 
-	return result;
+	return new HashSet<PropertyPersistenceInfo>(result.values());
     }
+
+    private void safeMapAdd(final Map<String, PropertyPersistenceInfo> map, final PropertyPersistenceInfo addedItem) {
+	if (!map.containsKey(addedItem.getName())) {
+	    map.put(addedItem.getName(), addedItem);
+	} else {
+	    throw new IllegalStateException("Trying to generate duplicate PropertyPersistenceInfo " + addedItem + " for already existing " + map.get(addedItem.getName()));
+	}
+    }
+
 
     /**
      * Generates list of column names for mapping of CompositeUserType implementors.
