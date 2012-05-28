@@ -26,7 +26,7 @@ public class BceContextualExpressionValidation implements IBeforeChangeEventHand
 	if (cp.validateRootAndContext() != null) {
 	    return cp.validateRootAndContext();
 	}
-	
+
 	if (StringUtils.isEmpty(newContextualExpression)) {
 	    throw new IncorrectCalcPropertyKeyException("The expression cannot be empty.");
 	}
@@ -37,9 +37,14 @@ public class BceContextualExpressionValidation implements IBeforeChangeEventHand
 	    return new Result(ex);
 	}
 
+	final int levelsToRaiseTheProperty = cp.levelsToRaiseTheProperty();
 	if (isCollectionOrInCollectionHierarchy(cp.getRoot(), cp.getContextPath())) { // collectional hierarchy
-	    if (cp.levelsToRaiseTheProperty() == 1) {
+	    if (levelsToRaiseTheProperty >= 1) {
 		return new Result(new IllegalStateException("Aggregated collections are currently unsupported. Please try to use simple expressions under collections (or with ALL / ANY attributes)."));
+	    }
+	} else {
+	    if (levelsToRaiseTheProperty > 1) {
+		return new Result(new IllegalStateException("The aggregation cannot be applied twice or more for simple non-collectional entity hirerarchy (\"Total\" values cannot be aggregated)."));
 	    }
 	}
 	return Result.successful(cp.getAst());
