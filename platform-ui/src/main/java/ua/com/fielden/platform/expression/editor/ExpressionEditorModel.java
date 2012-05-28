@@ -374,7 +374,8 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		    if(expressionEditor.isChecked()){
 			expressionEditor.insertText(textToInsert, TextInsertionType.REPLACE, true, 0, textToInsert.length(), textToInsert.length());
 		    }else if (originationEditor.isChecked()){
-			originationEditor.setText(textToInsert, true, textToInsert.length());
+			// TODO originationEditor.setText(textToInsert, true, textToInsert.length());
+			originationEditor.getEntity().setOriginationProperty(textToInsert);
 		    }
 		}
 	    }

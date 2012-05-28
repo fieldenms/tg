@@ -721,7 +721,7 @@ public class CriteriaModificationLayer extends JXLayer<JComponent> implements It
      * Updates a {@link IAddToCriteriaTickManager} model with corresponding emptiness/negation/exclusiveness/dateValue.
      */
     private void updateDynamicPropertiesState() {
-	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determineClass(managedType, propertyName, true, true);
+	final Class<?> propertyType = StringUtils.isEmpty(propertyName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
 	// update an initial state of criteria modification layer:
 	final IAddToCriteriaTickManager ftm = eqc.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
 	ftm.setNot(rootType, propertyName, not); // update Not state
