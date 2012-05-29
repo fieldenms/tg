@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -18,7 +19,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.EntityPersistenceMetadata;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -44,6 +45,8 @@ public abstract class AbstractDomainDrivenTestCase {
     private final IDefaultControllerProvider provider = config.getInstance(IDefaultControllerProvider.class);
     private final EntityFactory factory = config.getEntityFactory();
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+
+    private final Collection<EntityPersistenceMetadata> entityPersistenceMetadatas = config.getDomainPersistenceMetadata().getHibTypeInfosMap().values();
 
     private static boolean domainPopulated = false;
 
@@ -124,9 +127,10 @@ public abstract class AbstractDomainDrivenTestCase {
 	    st.close();
 
 	    // create truncate statements
-	    for (final Class<? extends AbstractEntity<?>> entityType : domainEntityTypes()) {
-		final String tableName = DomainPersistenceMetadata.getTableClause(entityType);
-		truncateScript.add(format("TRUNCATE TABLE %s;", tableName));
+	    for (final EntityPersistenceMetadata entry : entityPersistenceMetadatas) {
+		if (entry.isPersisted()) {
+		    truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
+		}
 	    }
 
 	    domainPopulated = true;

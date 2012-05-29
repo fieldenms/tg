@@ -30,6 +30,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.persistence.types.UnionEntityType;
@@ -92,17 +93,26 @@ public class DomainPersistenceMetadata {
 	    try {
 		hibTypeInfosMap.put(entityType, generateEntityPersistenceMetadata(entityType));
 	    } catch (final Exception e) {
-		e.printStackTrace();
+		throw new IllegalStateException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
 	    }
 	}
     }
 
-    public EntityPersistenceMetadata generateEntityPersistenceMetadata(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
+    public <ET extends AbstractEntity<?>> EntityPersistenceMetadata generateEntityPersistenceMetadata(final Class<ET> entityType) throws Exception {
+	System.out.println(entityType);
 	final Set<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
 	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
 	result.addAll(ppis);
 	result.addAll(generatePPIsForCompositeTypeProps(ppis));
-	return new EntityPersistenceMetadata(getTableClause(entityType), entityType, getMap(result));
+	final String tableClase = getTableClause(entityType);
+	if (tableClase != null) {
+	    return new EntityPersistenceMetadata(tableClase, entityType, getMap(result));
+	}
+	final EntityResultQueryModel<ET> entityModel = getEntityModel(entityType);
+	if (entityModel != null) {
+	    return new EntityPersistenceMetadata(entityModel, entityType, getMap(result));
+	}
+	throw new IllegalStateException("Couldn't detemine data source for entity type: " + entityType);
     }
 
     private Set<PropertyPersistenceInfo> generatePPIsForCompositeTypeProps(final Set<PropertyPersistenceInfo> ppis) {
@@ -425,15 +435,26 @@ public class DomainPersistenceMetadata {
         return hibTypeInfosMap;
     }
 
-    public static String getTableClause(final Class<? extends AbstractEntity<?>> entityType) {
+    private <ET extends AbstractEntity<?>> EntityResultQueryModel<ET> getEntityModel(final Class<ET> entityType) {
+	return null;
+    }
+
+    private String getTableClause(final Class<? extends AbstractEntity<?>> entityType) {
 	if (!EntityUtils.isPersistedEntityType(entityType)) {
 	    throw new IllegalArgumentException("Trying to determine table name for not-persisted entity type [" + entityType + "]");
 	}
-	final String providedTableName = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType).value();
-	if (!StringUtils.isEmpty(providedTableName)) {
-	    return providedTableName;
+
+	final MapEntityTo mapEntityToAnnotation = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType);
+
+	if (mapEntityToAnnotation == null) {
+	    return null;
 	} else {
-	    return DynamicEntityClassLoader.getOriginalType(entityType).getSimpleName().toUpperCase() + "_";
+	    final String providedTableName = mapEntityToAnnotation.value();
+	    if (!StringUtils.isEmpty(providedTableName)) {
+		return providedTableName;
+	    } else {
+		return DynamicEntityClassLoader.getOriginalType(entityType).getSimpleName().toUpperCase() + "_";
+	    }
 	}
     }
 

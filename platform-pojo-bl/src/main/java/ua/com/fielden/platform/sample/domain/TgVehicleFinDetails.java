@@ -27,10 +27,7 @@ import ua.com.fielden.platform.sample.domain.controller.ITgVehicleFinDetails;
 public class TgVehicleFinDetails extends AbstractEntity<TgVehicle> {
     private static final long serialVersionUID = 1L;
 
-    ////////////////// Group1 -- Ordering //////////////////////////////
-    @IsProperty @UpperCase
-    @Title(value = "Cap. Works No", desc = "Capital Works No")
-    @MapTo("CAPITAL_WORKS_NO")
+    @IsProperty @MapTo @UpperCase @Title(value = "Cap. Works No", desc = "Capital Works No")
     private String capitalWorksNo;
 
     /**

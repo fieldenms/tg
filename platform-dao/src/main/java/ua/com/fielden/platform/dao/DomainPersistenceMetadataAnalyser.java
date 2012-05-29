@@ -98,6 +98,13 @@ public class DomainPersistenceMetadataAnalyser {
 	return epm.getProps().values();
     }
 
+    public EntityPersistenceMetadata getEntityPersistenceMetadate(final Class<? extends AbstractEntity<?>> entityType) {
+	final EntityPersistenceMetadata epm = getEntityPersistenceMetadata(entityType);
+	if (epm == null) {
+	    throw new IllegalStateException("Missing entity persistence metadata for entity type: " + entityType);
+	}
+	return epm;
+    }
 
     public DomainPersistenceMetadata getDomainPersistenceMetadata() {
         return domainPersistenceMetadata;

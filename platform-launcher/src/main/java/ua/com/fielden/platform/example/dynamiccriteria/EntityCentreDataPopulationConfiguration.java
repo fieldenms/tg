@@ -2,6 +2,7 @@ package ua.com.fielden.platform.example.dynamiccriteria;
 
 import java.util.Properties;
 
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
@@ -62,4 +63,8 @@ public class EntityCentreDataPopulationConfiguration implements IDomainDrivenTes
 	return module.getDomainMetaPropertyConfig();
     }
 
+    @Override
+    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
+	return module.getDomainPersistenceMetadata();
+    }
 }

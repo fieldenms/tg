@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import org.apache.log4j.xml.DOMConfigurator;
 
+import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.DefaultFilter;
@@ -106,4 +107,8 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
 	return injector.getInstance(type);
     }
 
+    @Override
+    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
+	return hibernateModule.getDomainPersistenceMetadata();
+    }
 }

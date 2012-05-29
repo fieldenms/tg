@@ -110,22 +110,16 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
     @Test
     public void test_whether_the_created_user_were_correctly_saved() {
 	// creating new person and user roles for it. Saving person
-	final UserRole userRole1 = new_(UserRole.class, "nrole1", "nrole desc 1");
-	userRoleDao.save(userRole1);
-	final UserRole userRole2 = new_(UserRole.class, "nrole2", "nrole desc 2");
-	userRoleDao.save(userRole2);
-	final UserRole userRole3 = new_(UserRole.class, "nrole3", "nrole desc 3");
-	userRoleDao.save(userRole3);
+	final UserRole userRole1 = save(new_(UserRole.class, "nrole1", "nrole desc 1"));
+	final UserRole userRole2 = save(new_(UserRole.class, "nrole2", "nrole desc 2"));
+	final UserRole userRole3 = save(new_(UserRole.class, "nrole3", "nrole desc 3"));
 
-	User user = new_(User.class, "new user", "new user desc");
-	user.setPassword("new user password");
-	userDao.save(user);
+	User user = save(new_(User.class, "new user", "new user desc").setPassword("new user password"));
 
 	Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<UserAndRoleAssociation>();
 	userRolesAssociation.add(new_(UserAndRoleAssociation.class, user, userRole1));
 	userRolesAssociation.add(new_(UserAndRoleAssociation.class, user, userRole2));
 	userRolesAssociation.add(new_(UserAndRoleAssociation.class, user, userRole3));
-	user.setRoles(userRolesAssociation);
 
 	for (final UserAndRoleAssociation association : userRolesAssociation) {
 	    userAssociationDao.save(association);
@@ -153,18 +147,16 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
 	assertEquals("incorrect number of security token - role associations", 12, associations.size());
 	final List<SecurityRoleAssociation> roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
 	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());
-	UserRole role = config.getEntityFactory().newByKey(UserRole.class, "role1");
+	UserRole role = new_(UserRole.class, "role1");
 	assertEquals("incorrect first role of the association", role, roles.get(0).getRole());
-	role = config.getEntityFactory().newByKey(UserRole.class, "role2");
+	role = new_(UserRole.class, "role2");
 	assertEquals("incorrect second role of the association", role, roles.get(1).getRole());
     }
 
     @Test
     public void test_that_new_security_role_association_can_be_saved() {
-	final UserRole role = config.getEntityFactory().newEntity(UserRole.class, "role56", "role56 desc");
-	final SecurityRoleAssociation association = config.getEntityFactory().newByKey(SecurityRoleAssociation.class, FirstLevelSecurityToken1.class, role);
-	userRoleDao.save(role);
-	securityDao.save(association);
+	final UserRole role = save(new_(UserRole.class, "role56", "role56 desc"));
+	final SecurityRoleAssociation association = save(new_(SecurityRoleAssociation.class, FirstLevelSecurityToken1.class, role));
 	final List<SecurityRoleAssociation> roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
 	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 3, roles.size());
 	assertTrue("The " + FirstLevelSecurityToken1.class.getName() + " security token doesn't have a role56 user role", roles.contains(association));

@@ -3,8 +3,8 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import java.util.Collections;
 import java.util.List;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
+import ua.com.fielden.platform.dao.EntityPersistenceMetadata;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -13,6 +13,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class TypeBasedSource extends AbstractSource {
     private final Class<? extends AbstractEntity<?>> entityType;
     private final boolean generated;
+    private EntityPersistenceMetadata entityPersistenceMetadata;
 
     public TypeBasedSource(final Class<? extends AbstractEntity<?>> entityType, final String alias, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser) {
 	this(entityType, alias, false, domainPersistenceMetadataAnalyser);
@@ -29,7 +30,9 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public void populateSourceItems(final boolean parentLeftJoinLegacy) {
-	for (final PropertyPersistenceInfo ppi : getDomainPersistenceMetadataAnalyser().getEntityPPIs(sourceType())) {
+	entityPersistenceMetadata = getDomainPersistenceMetadataAnalyser().getEntityPersistenceMetadate(sourceType());
+
+	for (final PropertyPersistenceInfo ppi : entityPersistenceMetadata.getProps().values()) {
 		// if parent nullability = false then take the one from ppi, else true
 	    sourceItems.put(ppi.getName(), new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), ppi.getColumn(), ppi.isNullable() || parentLeftJoinLegacy));
 	}
@@ -73,7 +76,7 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public String sql() {
-	return DomainPersistenceMetadata.getTableClause(sourceType()) + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
+	return entityPersistenceMetadata.getTable() + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
     }
 
     @Override
