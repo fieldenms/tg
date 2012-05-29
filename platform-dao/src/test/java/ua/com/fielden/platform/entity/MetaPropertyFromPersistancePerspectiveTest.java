@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -57,6 +58,18 @@ public class MetaPropertyFromPersistancePerspectiveTest extends AbstractDomainDr
 	final EntityWithMoney entity = ao(EntityWithMoney.class).findByKey("key1");
 	assertEquals(new Money("20.00"), entity.getProperty("money").getLastAttemptValue());
 	assertEquals(new Money("20.00"), entity.getProperty("money").getOriginalValue());
+    }
+
+    @Test
+    public void resetting_invalid_property_changes_should_null_out_last_invalid_value_information() {
+	final EntityWithMoney entity = ao(EntityWithMoney.class).findByKey("key1");
+	entity.setMoney(null);
+	assertNull(entity.getProperty("money").getLastAttemptValue());
+	assertNull(entity.getProperty("money").getLastInvalidValue());
+
+	entity.setMoney(new Money("30.00"));
+	assertEquals(new Money("30.00"), entity.getProperty("money").getLastAttemptValue());
+	assertNull(entity.getProperty("money").getLastInvalidValue());
     }
 
     @Override

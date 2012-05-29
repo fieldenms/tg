@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyUserType;
 
@@ -60,7 +61,7 @@ public class EntityWithMoney extends AbstractEntity<String> {
     @Observable
     public EntityWithMoney setMoney(final Money money) {
 	if (money == null) {
-	    throw new IllegalArgumentException("money should not be null");
+	    throw new Result(this, new IllegalArgumentException("money should not be null"));
 	}
 	this.money = money;
 	return this;

@@ -89,4 +89,16 @@ public class MetaPropertyTest {
 	assertEquals(entity.getProperty("propWithBce").getLastAttemptValue(), entity.getProperty("propWithBce").getLastInvalidValue());
     }
 
+    @Test
+    public void resetting_invalid_property_changes_should_null_out_last_invalid_value_information() {
+	assertNull(entity.getProperty("propWithBce").getOriginalValue());
+	entity.setPropWithBce("failure");
+	assertNotNull(entity.getProperty("propWithBce").getLastAttemptValue());
+	assertNotNull(entity.getProperty("propWithBce").getLastInvalidValue());
+
+	entity.setPropWithBce("good value");
+	assertEquals("good value", entity.getProperty("propWithBce").getLastAttemptValue());
+	assertNull(entity.getProperty("propWithBce").getLastInvalidValue());
+    }
+
 }
