@@ -652,20 +652,26 @@ public class MakeOtherPropertiesReadonlyWhenInactive
   Additionally, \emph{MetaProperty} provides runtime access to property meta-data.
   The following method of \emph{MetaProperty} are of most interest:
   \begin{description}
-    \item[\textbf{isEditable()}] -- .
-    \item[\textbf{isRequired()}] -- .
-    \item[\textbf{isVisible()}] -- .	
-  \end{description}
-  
+    \item[\textbf{isEditable()}] -- indicates whether property is editable; this information is only idicative and should be explicitly reused if to make any impact -- the actual property value can be changed by using its setter regardless\footnote{A remainder, if an entity instance returns an unsuccessful result from its method \emph{isEditable} then the entity sate cannot be changed.}; for example, this meta-data is used by UI logic to make property editors operate in readonly mode; the default property meta-state can be specified as part of its definition by declaring annotation \emph{Readonly}.
+    \item[\textbf{isRequired()}] -- indicates whether property is required for an entity instance to be valid, which means that property must have a non-null value assigned to it; the default property meta-state can be specified as part of its definition by declaring annotation \emph{Required}; it can be changed at runtime as part of some logic such as ACE handlers.
+    \item[\textbf{isVisible()}] -- indicates whether property should be visible as part of UI; this information is only idicative and should be explicitly reused if to make any impact (e.g. as part of UI logic one should check if property is visible before constructing a UI element that represents it\footnote{Making a property invisible at runtime after a corresponding UI element has been explicitly added to application UI has no effect.}); the default property meta-state can be specified as part of its definition by declaring annotation \emph{Invisible}; it can be changed at runtime as part of some logic such as ACE handlers.
+  \end{description}  
 
 
   \paragraph*{Property value change information.}
   
+  \emph{MetaProperty} provides a way to trac property changes changes.
+  The tracking lifecycle starts from either the moment of entity instantiation or its retrieval from a data storage, and complets at the moment when it gets persisted or dicarded.
+
+  The following \emph{MetaProperty} methods are of interest here:
   \begin{description}
     \item[\textbf{getValue()}] -- returns the current value of the property.
     \item[\textbf{getOriginalValue()}] -- .
     \item[\textbf{getLastAttemptValue()}] -- .
     \item[\textbf{getLastInvalidValue()}] -- .
+    \item[\textbf{isDirty()}] -- .
+    \item[\textbf{isChangedFromOriginal()}] -- .
+    \item[\textbf{isChangedFromPrevious()}] -- .
   \end{description}
   
 
