@@ -533,33 +533,83 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     @Test
-    public void test_that_orderings_for_second_tick_are_default_and_can_be_altered(){
-	// THE FIRST TIME -- returns DEFAULT VALUES //
-	// entities with simple key should have ASC ordering on that key
-	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
-	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("", Ordering.ASCENDING)), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(MasterEntity.class));
-	// entities with composite and other complicated key should have no ordering applied
+    public void test_that_orderings_for_second_tick_are_default_and_can_be_altered() {
+	// entities with composite and other complicated key should have no ordering applied (default first time)
 	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(EntityWithCompositeKey.class));
 	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(EntityWithKeyTitleAndWithAEKeyType.class));
 
+	final Class<?> root = MasterEntity.class;
+	final String keyProp = "", prop2 = "integerProp", prop3 = "moneyProp";
+
+	// THE FIRST TIME -- returns DEFAULT VALUES -- for ALL APPROPRIATELY CHECKED PROPERTIES //
+	assertTrue("At first the property should be checked.", dtm().getSecondTick().isChecked(root, keyProp));
+	// entities with simple key should have ASC ordering on that key
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(root));
+
+	// THE FIRST TIME -- returns DEFAULT VALUES -- for SOME NOT CHECKED PROPERTIES //
+	dtm().getSecondTick().check(root, keyProp, false);
+	assertFalse("The property should be not checked.", dtm().getSecondTick().isChecked(root, keyProp));
+	// entities with simple key should have ASC ordering on that key, but only if the key is checked
+	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(root));
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(root));
+
+	// THE FIRST TIME -- returns DEFAULT VALUES -- for ALL APPROPRIATELY CHECKED PROPERTIES //
+	dtm().getSecondTick().check(root, keyProp, true);
+	assertTrue("The property should be checked.", dtm().getSecondTick().isChecked(root, keyProp));
+	// entities with simple key should have ASC ordering on that key
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(root));
+
 	// Alter and check //
-	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "");
-	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("", Ordering.ASCENDING)), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(MasterEntity.class));
-	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
-	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "");
-	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
-	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "integerProp");
-	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("integerProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
-	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "moneyProp");
-	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("integerProp", Ordering.ASCENDING), new Pair<String, Ordering>("moneyProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
-	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "moneyProp");
-	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("integerProp", Ordering.ASCENDING), new Pair<String, Ordering>("moneyProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
-	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "integerProp");
-	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("integerProp", Ordering.DESCENDING), new Pair<String, Ordering>("moneyProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
-	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "integerProp");
-	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("moneyProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
-	dtm().getSecondTick().toggleOrdering(MasterEntity.class, "moneyProp");
-	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+	dtm().getSecondTick().toggleOrdering(root, keyProp);
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
+	dtm().getSecondTick().toggleOrdering(root, keyProp);
+	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(root));
+	dtm().getSecondTick().toggleOrdering(root, prop2);
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(prop2, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+	dtm().getSecondTick().toggleOrdering(root, prop3);
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(prop2, Ordering.ASCENDING), new Pair<String, Ordering>(prop3, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+	dtm().getSecondTick().toggleOrdering(root, prop3);
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(prop2, Ordering.ASCENDING), new Pair<String, Ordering>(prop3, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
+	dtm().getSecondTick().toggleOrdering(root, prop2);
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(prop2, Ordering.DESCENDING), new Pair<String, Ordering>(prop3, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
+	dtm().getSecondTick().toggleOrdering(root, prop2);
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(prop3, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
+	dtm().getSecondTick().toggleOrdering(root, prop3);
+	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(root));
+    }
+
+    @Test
+    public void test_that_Orderings_for_second_tick_can_be_changed_based_on_Checking_changes() {
+	final Class<?> root = MasterEntity.class;
+	final String keyProp = "", prop2 = "integerProp", prop3 = "moneyProp";
+
+	assertTrue("The property should be checked.", dtm().getSecondTick().isChecked(root, keyProp));
+	assertTrue("The property should be checked.", dtm().getSecondTick().isChecked(root, prop2));
+	assertTrue("The property should be checked.", dtm().getSecondTick().isChecked(root, prop3));
+
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+	dtm().getSecondTick().check(root, keyProp, false);
+	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(root));
+	dtm().getSecondTick().check(root, keyProp, true);
+
+	dtm().getSecondTick().toggleOrdering(root, prop2);
+	dtm().getSecondTick().toggleOrdering(root, prop2);
+	dtm().getSecondTick().toggleOrdering(root, prop3);
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING), new Pair<String, Ordering>(prop2, Ordering.DESCENDING), new Pair<String, Ordering>(prop3, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+
+	// un-check middle property
+	dtm().getSecondTick().check(root, prop2, false);
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING), new Pair<String, Ordering>(prop3, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+
+	// un-check right property
+	dtm().getSecondTick().check(root, prop3, false);
+	assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+
+	// un-check last property
+	dtm().getSecondTick().check(root, keyProp, false);
+	assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(root));
     }
 
     @Test

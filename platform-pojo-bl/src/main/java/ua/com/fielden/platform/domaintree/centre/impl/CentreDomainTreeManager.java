@@ -703,7 +703,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      *
      */
     protected static class AddToResultTickManager extends TickManager implements IAddToResultTickManager {
-	private static final long serialVersionUID = -5840622913992787411L;
 	private final EnhancementPropertiesMap<Integer> propertiesWidths;
 	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
 
@@ -726,7 +725,14 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    if (rootsListsOfOrderings.containsKey(root)) {
 		return rootsListsOfOrderings.get(root);
 	    } else {
-		return tr().orderedPropertiesByDefault(root);
+		final List<Pair<String, Ordering>> orderedPropertiesByDefault = new ArrayList<Pair<String, Ordering>>(tr().orderedPropertiesByDefault(root));
+		final List<Pair<String, Ordering>> orderedPropertiesByDefaultWithoutUnchecked = new ArrayList<Pair<String, Ordering>>(orderedPropertiesByDefault);
+		for (final Pair<String, Ordering> propAndOrdering : orderedPropertiesByDefault) {
+		    if (!isChecked(root, propAndOrdering.getKey())) {
+			orderedPropertiesByDefaultWithoutUnchecked.remove(propAndOrdering);
+		    }
+		}
+		return orderedPropertiesByDefaultWithoutUnchecked;
 	    }
 	}
 
@@ -734,7 +740,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	public void toggleOrdering(final Class<?> root, final String property) {
 	    AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not toggle 'ordering' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
 	    if (!rootsListsOfOrderings.containsKey(root)) {
-		rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(tr().orderedPropertiesByDefault(root)));
+		rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(orderedProperties(root)));
 	    }
 	    final List<Pair<String, Ordering>> list = new ArrayList<Pair<String, Ordering>>(rootsListsOfOrderings.get(root));
 	    for (final Pair<String, Ordering> pair : list) {
@@ -749,6 +755,22 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 		}
 	    } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
 	    rootsListsOfOrderings.get(root).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
+	}
+
+	@Override
+	protected void removeCheckedProperty(final Class<?> root, final String property) {
+	    super.removeCheckedProperty(root, property);
+
+	    if (rootsListsOfOrderings.containsKey(root)) {
+		final List<Pair<String, Ordering>> list = new ArrayList<Pair<String, Ordering>>(rootsListsOfOrderings.get(root));
+		for (final Pair<String, Ordering> pair : list) {
+		    if (pair.getKey().equals(property)) {
+			final int index = rootsListsOfOrderings.get(root).indexOf(pair);
+			rootsListsOfOrderings.get(root).remove(index); // removes an ordering associated with just unchecked property
+			return;
+		    }
+		}
+	    }
 	}
 
 	@Override
