@@ -2,7 +2,7 @@ package ua.com.fielden.platform.swing.review;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 
-import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.dynamictree.DynamicEntityTree;
 import ua.com.fielden.platform.dynamictree.DynamicEntityTreeNode;
@@ -17,7 +17,7 @@ public class DynamicFetchBuilder {
      *
      * @return
      */
-    public static <T extends AbstractEntity<?>> fetch<T> createFetchModel(final Class<T> managedType, final List<String> fetchProperties) {
+    public static <T extends AbstractEntity<?>> fetch<T> createFetchModel(final Class<T> managedType, final Set<String> fetchProperties) {
        return fetch(managedType, fetchProperties);
     }
 
@@ -26,7 +26,7 @@ public class DynamicFetchBuilder {
      *
      * @return
      */
-    public static <T extends AbstractEntity<?>> fetch<T> createTotalFetchModel(final Class<T> managedType, final List<String> fetchProperties) {
+    public static <T extends AbstractEntity<?>> fetch<T> createTotalFetchModel(final Class<T> managedType, final Set<String> fetchProperties) {
 	return fetch(managedType, fetchProperties).without("id").without("version");
     }
 
@@ -36,7 +36,7 @@ public class DynamicFetchBuilder {
      * @param managedType
      * @param fetchProperties
      */
-    private static <T extends AbstractEntity<?>> fetch<T> fetch(final Class<T> managedType, final List<String> fetchProperties){
+    private static <T extends AbstractEntity<?>> fetch<T> fetch(final Class<T> managedType, final Set<String> fetchProperties){
 	try {
             final DynamicEntityTree<T> fetchTree = new DynamicEntityTree<T>(fetchProperties, managedType);
             final fetch<T> main = buildFetchModels(managedType, fetchTree.getRoot());

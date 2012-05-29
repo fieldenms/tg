@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.swing.review.development;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
@@ -49,9 +51,9 @@ public class EntityQueryCriteriaUtils {
      * @param enhancer
      * @return
      */
-    public static Pair<List<String>, List<String>> separateFetchAndTotalProperties(final Class<?> root, final ITickManager tickManager, final IDomainTreeEnhancer enhancer) {
-        final List<String> fetchProperties = new ArrayList<String>();
-        final List<String> totalProperties = new ArrayList<String>();
+    public static Pair<Set<String>, Set<String>> separateFetchAndTotalProperties(final Class<?> root, final ITickManager tickManager, final IDomainTreeEnhancer enhancer) {
+        final Set<String> fetchProperties = new HashSet<String>();
+        final Set<String> totalProperties = new HashSet<String>();
         final List<String> checkedProperties = tickManager.checkedProperties(root);
         for (final String property : checkedProperties)
             try {
@@ -67,7 +69,7 @@ public class EntityQueryCriteriaUtils {
             } catch (final IncorrectCalcPropertyKeyException ex) {
         	fetchProperties.add(property);
             }
-        return new Pair<List<String>, List<String>>(fetchProperties, totalProperties);
+        return new Pair<Set<String>, Set<String>>(fetchProperties, totalProperties);
     }
 
     /**

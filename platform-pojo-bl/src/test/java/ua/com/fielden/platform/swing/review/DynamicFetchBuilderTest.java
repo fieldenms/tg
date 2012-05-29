@@ -5,7 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -26,6 +26,7 @@ import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
 import com.google.inject.Injector;
 
+@SuppressWarnings({ "unchecked", "serial" })
 public class DynamicFetchBuilderTest {
 
     private final static ISerialiser serialiser = createSerialiser(createFactory());
@@ -64,7 +65,7 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_fetch_first_level_properties_works(){
-	final List<String> fetchProperties = Arrays.asList(new String[] {
+	final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] {
  		"integerProp", //
  		"doubleProp", //
  		"bigDecimalProp", //
@@ -72,7 +73,7 @@ public class DynamicFetchBuilderTest {
  		"dateProp", //
  		"booleanProp", //
  		"stringProp"//
-	});
+	}));
 	final fetch<? extends AbstractEntity<?>> fetchModel = fetchOnly(masterKlass).with("integerProp").with("doubleProp")//
 		.with("bigDecimalProp").with("moneyProp").with("dateProp").with("booleanProp").with("stringProp");
 	assertEquals("The fetch for first level property is incorrect", fetchModel, DynamicFetchBuilder.createFetchModel(masterKlass, fetchProperties));
@@ -80,11 +81,11 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_entity_propertie_fetch_works(){
-	final List<String> fetchProperties = Arrays.asList(new String[] {
+	final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] {
 		"", //
 		"stringProp", //
 		"entityProp"//
-	});
+	}));
 	final fetch<? extends AbstractEntity<?>> slaveEntityFetch = fetchOnly(slaveKlass).with("key").with("desc");
 	final fetch<? extends AbstractEntity<?>> masterEntityFetch = fetchOnly(masterKlass).with("key").with("stringProp").//
 		with("entityProp", slaveEntityFetch);
@@ -93,14 +94,14 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_second_and_higher_level_fetch_works(){
-	final List<String> fetchProperties = Arrays.asList(new String[] {
+	final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] {
 		"", //
 		"stringProp", //
 		"entityProp.mutablyCheckedProp", //
 		"entityProp.mutablyCheckedProp.integerProp",//
 		"entityProp.entityProp.simpleEntityProp",//
 		"entityProp.entityProp.simpleEntityProp.integerProp"//
-	});
+	}));
 	final fetch<? extends AbstractEntity<?>> slaveSimpleFetch = fetchOnly(mutableKeyType).with("key").with("desc").with("integerProp");
 	final fetch<? extends AbstractEntity<?>> stringKeyfetch = fetchOnly(stringKeyKlass).with("key").with("desc").with("integerProp");
 	final fetch<? extends AbstractEntity<?>> evenSlaveEntityFetch = fetchOnly(evenSlaveKlass).with("simpleEntityProp", stringKeyfetch);
@@ -113,7 +114,7 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_calculated_properties_fetch_works(){
-	final List<String> fetchProperties = Arrays.asList(new String[] {
+	final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] {
 		"", //
 		"stringProp", //
 		"firstCalc", //
@@ -123,7 +124,7 @@ public class DynamicFetchBuilderTest {
 		"entityProp.entityProp.simpleEntityProp", //
 		"entityProp.entityProp.simpleEntityProp.integerProp", //
 		"entityProp.entityProp.simpleEntityProp.thirdCalc",//
-	});
+	}));
 	final fetch<? extends AbstractEntity<?>> slaveSimpleFetch = fetchOnly(mutableKeyType).with("key").with("desc").with("integerProp").with("secondCalc");
 	final fetch<? extends AbstractEntity<?>> stringKeyfetch = fetchOnly(stringKeyKlass).with("key").with("desc").with("integerProp").with("thirdCalc");
 	final fetch<? extends AbstractEntity<?>> evenSlaveEntityFetch = fetchOnly(evenSlaveKlass).with("simpleEntityProp", stringKeyfetch);
@@ -136,14 +137,14 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_total_properties_were_fetch_correctly(){
-	final List<String> fetchProperties = Arrays.asList(new String[] {
+	final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] {
 		"sumInt", //
 		"avgInt", //
 		"mutIntSum", //
 		"propIntSum", //
 		"propIntAvg", //
 		"propIntMin", //
-	});
+	}));
 	final fetch<? extends AbstractEntity<?>> masterEntityFetch = fetchOnly(masterKlass).with("sumInt").with("avgInt").with("mutIntSum")//
 		.with("propIntSum").with("propIntAvg").with("propIntMin").without("id").without("version");
 	assertEquals("The fetch for total proerties doesn't work", masterEntityFetch, DynamicFetchBuilder.createTotalFetchModel(masterKlass, fetchProperties));

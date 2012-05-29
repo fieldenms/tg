@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.dynamictree;
 
-import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -21,7 +21,7 @@ public class DynamicEntityTree<T extends AbstractEntity> {
 
     private final DynamicEntityTreeNode root;
 
-    public DynamicEntityTree(final List<String> fetchProperties, final Class<T> rootType) {
+    public DynamicEntityTree(final Set<String> fetchProperties, final Class<T> rootType) {
 	root = new DynamicEntityTreeNode(rootType.getSimpleName(), rootType);
 	for (final String property : fetchProperties) {
 	    final String[] splited = property.split(Reflector.DOT_SPLITTER);

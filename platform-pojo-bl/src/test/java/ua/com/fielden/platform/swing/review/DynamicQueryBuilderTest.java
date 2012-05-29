@@ -62,6 +62,7 @@ public class DynamicQueryBuilderTest {
 	assertEquals("Empty value for property of Money type should be null.", null, getEmptyValue(Money.class, true));
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void test_QueryProperty_hasEmptyValue_concept() {
 	final Class<?> klass = EntityForQueryPropertyTesting.class;
@@ -164,6 +165,7 @@ public class DynamicQueryBuilderTest {
 	assertFalse(qp.getType().getSimpleName() + " property with null value should not 'have empty value'.", qp.hasEmptyValue());
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void test_QueryProperty_isEmpty_concept() {
 	final Class<?> klass = EntityForQueryPropertyTesting.class;
@@ -272,6 +274,7 @@ public class DynamicQueryBuilderTest {
 	assertFalse(qp.getType().getSimpleName() + " property with null value should not 'be empty'.", qp.isEmpty());
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void test_QueryProperty_shouldBeIgnored_concept() {
 	final Class<?> klass = EntityForQueryPropertyTesting.class;
