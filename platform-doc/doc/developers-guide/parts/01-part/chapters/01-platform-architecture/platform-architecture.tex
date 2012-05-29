@@ -328,8 +328,11 @@ private Integer odometerReading;
     \end{lstlisting}
   \end{code}
 
-  The property dependency mechanism distinguishes between \texttt{validation} and \texttt{revalidation}.
-  \texttt{Validation} means that a dependent property was valid when a corresponding master property was changed, and needs to be validated.
+  The dependent properties get \texttt{validated} or \texttt{revalidated} only if the current property is changed successfully.
+  This means, for example, that if \emph{actualStart} is being set, but its value is not recognised as valid, and thus not assigned, then there is no need to act on dependent properties as there was no changes to the state of an entity instance itself.
+  
+  The property dependency mechanism distinguishes between \texttt{validation} and \texttt{revalidation}.  
+  \texttt{Validation} means that if a dependent property was valid when a corresponding master property was changed, and needs to be validated.
   If validation fails, the value of that dependent property does not change as it was legitimately assigned before -- only the validation meta-data changes to indicate the validation error.
   \texttt{Revalidation} means that a dependent property was invalid when a corresponding master property was changed, needs to be validated and in case of successful validation, the attempted value should be assigned to that dependent property.
   
