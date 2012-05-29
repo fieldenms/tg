@@ -27,6 +27,9 @@ public class DynamicOrderingBuilder {
      * @return
      */
     public static OrderingModel createOrderingModel(final Class<?> root, final List<Pair<Object, Ordering>> orderedPairs){
+	if(root == null || orderedPairs == null){
+	    throw new NullPointerException("The root or orderedPirs parameters can not be null");
+	}
 	IOrderingItemCloseable closeOrderable = null;
 	for(final Pair<Object, Ordering> orderPair : orderedPairs){
 	    final IOrderingItem orderingItem = closeOrderable == null ? orderBy() : closeOrderable;
