@@ -62,6 +62,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	// this instance should be initialised using Reflection when GlobalDomainTreeManager creates/deserialises the instance of LocatorManager
 	this.globalRepresentation = null;
 	this.rootTypes = createLinkedRootsSet();
+	this.rootTypes.addAll(rootTypes);
 
 	this.persistentLocators = createPropertiesMap();
 	this.persistentLocators.putAll(persistentLocators);

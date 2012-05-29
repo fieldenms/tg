@@ -274,8 +274,8 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 	int getColumnsNumber();
 
 	/**
-	 * Sets a <i>columnsNumber</i> for criteria editors. <br>
-	 * <br>
+	 * Sets a <i>columnsNumber</i> for criteria editors. Should be >= 1, as it represents a columns number in entity criteria
+	 * (throws {@link IllegalArgumentException} if trying to set <code>columnsNumber</code> <= 0).
 	 *
 	 * @param columnsNumber -- a value to set
 	 * @return -- a criteria manager

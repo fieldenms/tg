@@ -105,34 +105,4 @@ public class LocatorDomainTreeManagerTest extends CentreDomainTreeManagerTest {
 	assertTrue("The first tick reference should be the same.",dtm().getFirstTick() == dtm().getFirstTick().setColumnsNumber(3));
 	assertEquals("The number of columns should be 3", dtm().getFirstTick().getColumnsNumber(), 3);
     }
-
-    @Override
-    public void test_that_serialisation_works() throws Exception {
-	super.test_that_serialisation_works();
-    }
-
-    @Override
-    public void test_that_equality_and_copying_works() {
-	super.test_that_equality_and_copying_works();
-    }
-
-    @Override
-    public void test_that_CHECKed_properties_order_is_correct() throws Exception {
-    }
-
-    @Override
-    public void test_that_CHECKed_properties_order_is_correct_and_can_be_altered() throws Exception {
-    }
-
-    @Override
-    public void test_that_CHECKed_properties_Move_Swap_operations_work() throws Exception {
-    }
-
-    @Override
-    public void test_that_CHECKed_properties_Move_Swap_operations_doesnot_work_for_non_checked_properties() {
-    }
-
-    @Override
-    public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
-    }
 }

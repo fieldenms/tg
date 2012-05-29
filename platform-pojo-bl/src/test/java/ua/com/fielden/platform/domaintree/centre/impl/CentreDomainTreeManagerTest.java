@@ -630,10 +630,21 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     public void test_that_column_number_for_first_tick_can_be_set_and_altered() {
 	// THE FIRST TIME -- returns DEFAULT VALUE //
 	// default value should be 2
-	assertEquals("The default column number should be 2", dtm().getFirstTick().getColumnsNumber(), 2);
+	assertEquals("The default column number should be 2.", dtm().getFirstTick().getColumnsNumber(), 2);
+
+	try {
+	    dtm().getFirstTick().setColumnsNumber(0);
+	    fail("Should be failed.");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    dtm().getFirstTick().setColumnsNumber(-1);
+	    fail("Should be failed.");
+	} catch (final IllegalArgumentException e) {
+	}
 
 	// Alter and check //
-	assertTrue("The first tick reference should be the same",dtm().getFirstTick() == dtm().getFirstTick().setColumnsNumber(3));
+	assertTrue("The first tick reference should be the same", dtm().getFirstTick() == dtm().getFirstTick().setColumnsNumber(3));
 	assertEquals("The number of columns should be 3", dtm().getFirstTick().getColumnsNumber(), 3);
     }
 
@@ -1036,6 +1047,70 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 	final byte[] array = getSerialiser().serialise(dtm());
 	final IDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, IDomainTreeManagerAndEnhancer.class);
 	assertEquals("The checked properties are incorrect.", Arrays.asList("bigDecimalProp", "0-placeholder-origin-1-1", "1-placeholder-origin-1-2"), copy.getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+    }
+
+    @Test
+    public void test_that_CHECKed_properties_and_placeholders_are_dependent_on_ColumnsNumber() throws Exception {
+	assertEquals("The checked properties are incorrect.", Arrays.asList(), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(3);
+	assertEquals("The checked properties are incorrect.", Arrays.asList(), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+	assertEquals("Columns number is incorrect.", 3, dtm().getFirstTick().getColumnsNumber());
+
+	// check first property and change "columns number" to reflect the change in "checked properties"
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "integerProp", true);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "0-placeholder-origin-0-1", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(2);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "0-placeholder-origin-0-1"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(1);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(2);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "0-placeholder-origin-0-1"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(3);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "0-placeholder-origin-0-1", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	// check next (second) property and change "columns number" to reflect the change in "checked properties"
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "moneyProp", true);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(2);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(1);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(4);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "0-placeholder-origin-0-2", "1-placeholder-origin-0-3"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	// check next (third) property and change "columns number" to reflect the change in "checked properties"
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "booleanProp", true);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "booleanProp", "1-placeholder-origin-0-3"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(2);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "booleanProp", "1-placeholder-origin-0-3"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(3);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "booleanProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(2);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "booleanProp", "0-placeholder-origin-1-1"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(1);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "moneyProp", "booleanProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	// misc
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "moneyProp", false);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "booleanProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().setColumnsNumber(2);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "booleanProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
+
+	dtm().getFirstTick().check(rootForCheckedPropsTesting, "integerProp", false);
+	assertEquals("The checked properties are incorrect.", Arrays.asList("0-placeholder-origin-0-0", "booleanProp"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
     }
 
     @Override

@@ -53,6 +53,7 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
     private LocatorManager createLocatorManager() {
 	final GlobalDomainTreeManager mgr = createManagerForNonBaseUser();
 	final LocatorManager lm = new LocatorManager(mgr.getSerialiser(), new HashSet<Class<?>>() {{ add(root); }});
+	assertEquals("Incorrect root types.", new HashSet<Class<?>>() {{ add(root); }}, lm.rootTypes());
 	GlobalDomainTreeManager.initLocatorManagerCrossReferences(lm, mgr.getGlobalRepresentation());
 	return lm;
     }

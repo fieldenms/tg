@@ -289,7 +289,18 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
 	@Override
 	public IAddToCriteriaTickManager setColumnsNumber(final int columnsNumber) {
+	    if (columnsNumber <= 0) {
+		throw new IllegalArgumentException("Columns number cannot be <= 0. Please change columns number [" + columnsNumber + "] to some more appropriate value.");
+	    }
 	    this.columnsNumber = Integer.valueOf(columnsNumber);
+
+	    for (final Class<?> root : rootTypes()) { //
+		if (checkedProperties().get(root) != null) { // not yet loaded
+		    supplementTheMatrixWithPlaceholders(root);
+		    cropEmptyRows(root);
+		}
+	    }
+
 	    return this;
 	}
 
@@ -470,7 +481,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	public void swap(final Class<?> root, final String property1, final String property2) {
 	    super.swap(root, property1, property2);
 
-	    cropEmptyRows(root, checkedPropertiesMutable(root).size() - 1);
+	    cropEmptyRows(root);
 	}
 
 	@Override
@@ -489,10 +500,19 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 	    super.removeCheckedProperty(root, property);
 	    super.insertCheckedProperty(root, generatePlaceholderName(root, removalIndex), removalIndex);
 
+	    cropEmptyRows(root);
+	}
+
+	/**
+	 * Removes the rows of placeholders in the matrix of checked properties to form a matrix without empty rows.
+	 *
+	 * @param root
+	 */
+	protected final void cropEmptyRows(final Class<?> root) {
 	    cropEmptyRows(root, checkedPropertiesMutable(root).size() - 1);
 	}
 
-	private void cropEmptyRows(final Class<?> root, final int index) {
+	private final void cropEmptyRows(final Class<?> root, final int index) {
 	    if (index < 0) {
 		return;
 	    }
@@ -519,10 +539,19 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 		super.insertCheckedProperty(root, property, firstPlaceholderIndex);
 	    } else {
 		super.insertCheckedProperty(root, property, checkedPropertiesMutable(root).size());
-		while (checkedPropertiesMutable(root).size() % getColumnsNumber() != 0) {
-		    final int newPlaceholderIndex = checkedPropertiesMutable(root).size();
-		    super.insertCheckedProperty(root, generatePlaceholderName(root, newPlaceholderIndex), newPlaceholderIndex);
-		}
+		supplementTheMatrixWithPlaceholders(root);
+	    }
+	}
+
+	/**
+	 * Adds the placeholders to the end of the checked properties list to form a full matrix with a columns number defined in {@link #getColumnsNumber()}.
+	 *
+	 * @param root
+	 */
+	protected final void supplementTheMatrixWithPlaceholders(final Class<?> root) {
+	    while (checkedPropertiesMutable(root).size() % getColumnsNumber() != 0) {
+	        final int newPlaceholderIndex = checkedPropertiesMutable(root).size();
+	        super.insertCheckedProperty(root, generatePlaceholderName(root, newPlaceholderIndex), newPlaceholderIndex);
 	    }
 	}
 
