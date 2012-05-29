@@ -332,9 +332,11 @@ private Integer odometerReading;
   This means, for example, that if \emph{actualStart} is being set, but its value is not recognised as valid, and thus not assigned, then there is no need to act on dependent properties as there was no changes to the state of an entity instance itself.
   
   The property dependency mechanism distinguishes between \texttt{validation} and \texttt{revalidation}.  
-  \texttt{Validation} means that if a dependent property was valid when a corresponding master property was changed, and needs to be validated.
+  \texttt{Validation} means that if a dependent property is valid at the time when a corresponding master property was changed, then it needs to be validated again.
   If validation fails, the value of that dependent property does not change as it was legitimately assigned before -- only the validation meta-data changes to indicate the validation error.
-  \texttt{Revalidation} means that a dependent property was invalid when a corresponding master property was changed, needs to be validated and in case of successful validation, the attempted value should be assigned to that dependent property.
+  \texttt{Revalidation} means that a dependent property was invalid when a corresponding master property was changed, and needs to be revalidated.
+  In case of successful revalidation, the attempted value should be assigned to that dependent property.
+  If revalidation resulted in error, the cause of that error could be different to the original validation error due to the change in the entity state.
   
   The dependency mechanism gracefully handles circular dependencies -- both direct and transitive.
   Listing~\ref{lst:DependentProperties} contains a direct circular dependency where property \emph{actualStart} depends on property \emph{odometerReading} that in turn depends on \emph{actualStart}.
@@ -342,19 +344,18 @@ private Integer odometerReading;
   Another good example of dependency usage is in the earlier introduced \emph{WagonBogieClassCompatibility} type.
   The basic validation rule for this entity should ensure that only bogie classes with a higher or equal tonnage than a corresponding wagon class tonnage should be used.
   In order to demonstrate the need for dependency between properties \emph{wagonClass} and \emph{bogieClass}, consider the following scenario.
-  A new compatibility is in the processes of creation.
+  A new compatibility is in the process of creation.
   User enters wagon class with tonnage of 100 ton and then tries to enter a bogie class with tonnage of 50 ton.
-  The system reports an error, stating that such bogies class cannot be compatible with a given wagon class due its unfit tonnage.
-  User realises that the actual error is due to mistakenly entered 100 ton wagon class, and that there should be a 50 ton wagon class.
-  S/he changes the wagon class to a relevant 50 ton wagon class, and naturally expects the attempted value of 50 ton bogie class to become valid and assigned to the property.
+  The system reports an error, stating that such bogie class cannot be compatible with a given wagon class due to its unfit tonnage.
+  User realises that the actual error is due to mistakenly entered 100 ton wagon class, and that there should be a 50 ton wagon class instead.
+  S/he changes the wagon class to a relevant 50 ton value, and naturally expects the attempted value of 50 ton bogie class to become valid and assigned to the property.
   This requires revalidation of that attempted bogie class value, which is exactly what the dependency mechanism is designed to handle.
   
   Listing~\ref{lst:WagonBogieClassificationCompatibilityDependency} provides an updated declaration for entity type \emph{WagonBogieClassCompatibility}.
-  The definition for property \emph{wagonClass} now includes a BCE handler declaration, specifying the class implementing it, and the dependency information, specifying dependent property \emph{bogieClass}.
+  The definition for property \emph{wagonClass} now includes a \emph{Before Change Event} (BCE)\footnote{Discussed in details in the next subsection.} handler declaration, specifying the class implementing it, and the dependency information, specifying dependent property \emph{bogieClass}.
   The same definition change has been applied to property \emph{bogieClass}, but with different values~-- it has its own BCE handler, and the dependency is on property \emph{wagonClass}.
   The specified BCE handlers validate tonnages for both classes, whereas the dependency declarations ensure revalidation of properties whenever any of them change.
   
-
   \begin{code}{Declaration of dependency for bogie and wagon classes.}{\label{lst:WagonBogieClassificationCompatibilityDependency}}{codebgcolor}
     \begin{lstlisting}
 @KeyType(DynamicEntityKey.class)
@@ -376,6 +377,33 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
 }
     \end{lstlisting}
   \end{code}
+  
+  In order to better understand the dependency mechanism and the difference between \emph{validation} and \emph{revalidation}, let's elaborate more on the \emph{WagonBogieClassCompatibility} example.
+  
+  \subparagraph*{Revalidation.}
+  Consider that there is a brand new entity instance, which did not have any attempts made to set values for properties \emph{wagonClass} and \emph{bogieClass}.
+  First, we try to set 50 ton bogie class as a value for property \emph{bogieClass}.
+  This value passes the validation as there is nothing to validate against -- property \emph{wagonClass} has no value yet.
+  Then we attempt to set property \emph{wagonClass} as a 100 ton wagon class, which would fail validation due to a greater tonnage value than that of an already assigned bogie class.
+  In this case, property \emph{wagonClass} becomes \emph{invalid} and its value remains \emph{null}.
+  At the same time, due to the fact that property \emph{wagonClass} was not assigned any value, its dependent property \emph{bogieClass} does not get revalidated and remains in its previous state -- valid.
+ 
+  While the entity instance is in the described state, an attempt is made to change property \emph{bogieClass} to a new value of 100 ton bogie class.
+  This new value gets accepted due to the fact that property \emph{wagonClass} still has no value, which means that there is nothing to violate.
+  However, the dependency mechanism reacts to this successful change, and tries to revalidate a previously attempted for property \emph{wagonClass} value.
+  This attempted value passes revalidation (both bogie and wagon classes have equal tonnages), which results in the assignment of a 100 ton wagon class value to property \emph{wagonClass}, and the recovery of its validation state.
+  All this happens automatically, without the need to make an explicit attempt to reset \emph{wagonClass} value.
+  In case of the end-user, this would mean manually changing the value.
+
+  \subparagraph*{Validation.}
+  A different situation would be observed if only property \emph{bogieClass} would have a BCE handler preventing the acceptance of bogie classes that conflict with a \emph{wagonClass} value.
+  This means that any wagon class value can be set as the value for property \emph{wagonClass} without any validation.
+  
+  Let's consider that a 50 ton bogie class has been specified for a brand new compatibility entity instance.
+  Then an attempt to set a 100 ton wagon class is made.
+  This attempt would be successful since there is no validation of property \emph{wagonClass}.
+  However, the dependency mechanism would recognise a successful property assignment and would trigger validation of the dependent property \emph{bogieClass}.
+  As the result, property \emph{bogieClass} would be marked as invalid, but its value, which was assigned previously, would not change.
   
 
 \subsubsection{Runtime Meta-Data}
@@ -622,15 +650,23 @@ public class MakeOtherPropertiesReadonlyWhenInactive
 
 
   Additionally, \emph{MetaProperty} provides runtime access to property meta-data.
-  The following method of \emph{MetaProperty} are most useful:
+  The following method of \emph{MetaProperty} are of most interest:
   \begin{description}
-    \item[\textbf{getValue()}] -- 
-   \end{description}
+    \item[\textbf{isEditable()}] -- .
+    \item[\textbf{isRequired()}] -- .
+    \item[\textbf{isVisible()}] -- .	
+  \end{description}
   
 
 
   \paragraph*{Property value change information.}
   
+  \begin{description}
+    \item[\textbf{getValue()}] -- returns the current value of the property.
+    \item[\textbf{getOriginalValue()}] -- .
+    \item[\textbf{getLastAttemptValue()}] -- .
+    \item[\textbf{getLastInvalidValue()}] -- .
+  \end{description}
   
 
 \section{Business Logic and Controllers}
