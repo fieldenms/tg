@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.expression.ast.visitor;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffFunctionBetween;
@@ -12,7 +13,6 @@ import ua.com.fielden.platform.expression.ast.AbstractAstVisitor;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.TypeCompatibilityException;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 /**
  * A visitor, which generates a computational model for AST.
@@ -41,6 +41,7 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	    break;
 	// property types
 	case NAME:
+	    node.setModel(createPropertyModel(node));
 	    break;
 	// bi-operand operation types
 	case PLUS:
@@ -75,6 +76,14 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	default:
 	    throw new TypeCompatibilityException("Unexpected token " + node.getToken() + " in AST node.", node.getToken());
 	}
+    }
+
+    private ExpressionModel createPropertyModel(final AstNode node) {
+	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
+	if (cat != EgTokenCategory.NAME) {
+	    throw new IllegalArgumentException("Only property nodes are permitted.");
+	}
+	return expr().prop(relative2AbsoluteInverted(node.getToken().text)).model();
     }
 
     private ExpressionModel createOperationModel(final AstNode node) {
@@ -118,16 +127,8 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
      * @return
      */
     private IStandAloneExprOperationAndClose operandOperationModel(final IStandAloneExprOperand expr, final AstNode operand) {
-	final IStandAloneExprOperationAndClose exprWithOperand;
-	if (operand.getModel() == null) {
-	    final EgTokenCategory cat = EgTokenCategory.byIndex(operand.getToken().category.getIndex());
-	    exprWithOperand = cat == EgTokenCategory.NAME ? expr.prop(relative2AbsoluteInverted(operand.getToken().text)) : expr.val(operand.getToken().text);
-	    // TODO paths should become context independent
-	    //exprWithOperand = cat == EgTokenCategory.NAME ? expr.prop((operand.getToken().text)) : expr.val(operand.getToken().text);
-	} else {
-	    exprWithOperand = expr.expr(operand.getModel());
-	}
-	return exprWithOperand;
+	final EgTokenCategory cat = EgTokenCategory.byIndex(operand.getToken().category.getIndex());
+	return determineModel(expr, operand, cat);
     }
 
     /**
@@ -138,15 +139,42 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
      * @return
      */
     private IStandAloneExprOperationAndClose unoOperandModel(final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr, final AstNode operand) {
-	final IStandAloneExprOperationAndClose exprWithOperand;
-	if (operand.getModel() == null) {
-	    final EgTokenCategory cat = EgTokenCategory.byIndex(operand.getToken().category.getIndex());
-	    exprWithOperand = cat == EgTokenCategory.NAME ? expr.prop(relative2AbsoluteInverted(operand.getToken().text)) : expr.val(operand.getToken().text);
-	} else {
-	    exprWithOperand = expr.expr(operand.getModel());
-	}
-	return exprWithOperand;
+	final EgTokenCategory cat = EgTokenCategory.byIndex(operand.getToken().category.getIndex());
+	return determineModel(expr, operand, cat);
     }
+
+    /**
+     * Helper method to obtain correct model for expression operand nodes.
+     *
+     * @param expr
+     * @param operand
+     * @param cat
+     * @return
+     */
+    private IStandAloneExprOperationAndClose determineModel(final IFunctionLastArgument<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr, final AstNode operand, final EgTokenCategory cat) {
+	if (cat == EgTokenCategory.NAME) {
+	    return expr.prop(relative2AbsoluteInverted(operand.getToken().text));
+	} else {
+	    return (operand.getModel() != null) ? expr.expr(operand.getModel()) : expr.val(operand.getToken().text);
+	}
+    }
+
+    /**
+     * Helper method to obtain correct model for expression operand nodes. Similar to the above, but with different arguments
+     *
+     * @param expr
+     * @param operand
+     * @param cat
+     * @return
+     */
+    private IStandAloneExprOperationAndClose determineModel(final IStandAloneExprOperand expr, final AstNode operand, final EgTokenCategory cat) {
+	if (cat == EgTokenCategory.NAME) {
+	    return expr.prop(relative2AbsoluteInverted(operand.getToken().text));
+	} else {
+	    return (operand.getModel() != null) ? expr.expr(operand.getModel()) : expr.val(operand.getToken().text);
+	}
+    }
+
 
     private ExpressionModel createDateFunctionModel(final AstNode node) throws TypeCompatibilityException {
 	final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
@@ -184,11 +212,12 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	// identify left operand expression model
 	final AstNode leftOperand = node.getChildren().get(0);
 	final IDateDiffFunctionBetween<IStandAloneExprOperationAndClose, AbstractEntity<?>> exprWithOperand;
-	if (leftOperand.getModel() == null) {
-	    final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
-	    exprWithOperand = cat1 == EgTokenCategory.NAME ? expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text)) : expr.val(leftOperand.getToken().text);
+
+	final EgTokenCategory cat1 = EgTokenCategory.byIndex(leftOperand.getToken().category.getIndex());
+	if (cat1 == EgTokenCategory.NAME) {
+	    exprWithOperand =  expr.prop(relative2AbsoluteInverted(leftOperand.getToken().text));
 	} else {
-	    exprWithOperand = expr.expr(leftOperand.getModel());
+	    exprWithOperand = (leftOperand.getModel() != null) ? expr.expr(leftOperand.getModel()) : expr.val(leftOperand.getToken().text);
 	}
 
 
@@ -197,12 +226,14 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
 	// identify right operand expression model
 	final AstNode rightOperand = node.getChildren().get(1);
 	final IStandAloneExprOperationAndClose exprWithOperand1;
-	if (rightOperand.getModel() == null) {
-	    final EgTokenCategory cat1 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
-	    exprWithOperand1 = cat1 == EgTokenCategory.NAME ? andExpr.prop(rightOperand.getToken().text) : andExpr.val(rightOperand.getToken().text);
+
+	final EgTokenCategory cat2 = EgTokenCategory.byIndex(rightOperand.getToken().category.getIndex());
+	if (cat2 == EgTokenCategory.NAME) {
+	    exprWithOperand1 =  andExpr.prop(relative2AbsoluteInverted(rightOperand.getToken().text));
 	} else {
-	    exprWithOperand1 = andExpr.expr(rightOperand.getModel());
+	    exprWithOperand1 = (leftOperand.getModel() != null) ? andExpr.expr(rightOperand.getModel()) : andExpr.val(rightOperand.getToken().text);
 	}
+
 
 
 	return exprWithOperand1.model();

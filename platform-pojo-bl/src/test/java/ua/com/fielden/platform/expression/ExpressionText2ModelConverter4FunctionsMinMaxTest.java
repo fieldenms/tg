@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.associations.one2many.DetailsEntityForOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -526,6 +527,27 @@ public class ExpressionText2ModelConverter4FunctionsMinMaxTest {
 	    assertEquals("Non-collectional property entityProperty in type ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1 represents a Many-to-One association.", ex.getMessage());
 	}
     }
+
+    @Test
+    public void calculated_property_should_be_able_to_contain_just_some_property_of_ordinary_type_only() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(MasterEntityWithOneToManyAssociation.class, "", "moneyProp");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", Money.class, root.getType());
+
+	final ExpressionModel model = expr().prop("moneyProp").model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void calculated_property_should_be_able_to_contain_just_some_property__of_non_ordinary_type_only() throws RecognitionException, SemanticException {
+	final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(MasterEntityWithOneToManyAssociation.class, "", "one2manyAssociationSpecialCase");
+	final AstNode root = ev.convert();
+	assertEquals("Incorrect expression type", DetailsEntityForOneToManyAssociation.class, root.getType());
+
+	final ExpressionModel model = expr().prop("one2manyAssociationSpecialCase").model();
+	assertEquals("Incorrect model.", model, root.getModel());
+    }
+
 
 
 }
