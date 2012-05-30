@@ -1,4 +1,4 @@
-package ua.com.fielden.actionpanelmodel;
+package ua.com.fielden.platform.actionpanelmodel;
 
 import javax.swing.JToolBar;
 

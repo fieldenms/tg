@@ -29,7 +29,7 @@ import net.miginfocom.swing.MigLayout;
 import org.jvnet.flamingo.common.ElementState;
 import org.jvnet.flamingo.common.icon.EmptyResizableIcon;
 
-import ua.com.fielden.actionpanelmodel.ActionPanelBuilder;
+import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;

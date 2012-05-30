@@ -1,4 +1,4 @@
-package ua.com.fielden.actionpanelmodel;
+package ua.com.fielden.platform.actionpanelmodel;
 
 import java.awt.Dimension;
 import java.util.ArrayList;
@@ -12,10 +12,10 @@ import ua.com.fielden.platform.swing.actions.ActionChanger;
 import ua.com.fielden.platform.swing.components.ActionChangeButton;
 
 /**
- * Builder class. Builds the tool bar from the list of {@link IActionItem} instances
- * 
- * @author oleh
- * 
+ * Builder class for composing tool bar from a list of {@link IActionItem} instances.
+ *
+ * @author TG Team
+ *
  */
 public class ActionPanelBuilder {
 
@@ -30,7 +30,7 @@ public class ActionPanelBuilder {
 
     /**
      * builds the tool bar from the list of {@link IActionItem} items
-     * 
+     *
      * @return the builded tool bar
      */
     public JToolBar buildActionPanel() {
@@ -43,7 +43,7 @@ public class ActionPanelBuilder {
 
     /**
      * Adds new sub tool bar to the list of {@link IActionItem}. The specified sub tool bar must be null
-     * 
+     *
      * @param toolBar - specified sub tool bar to be added.
      * @return
      */
@@ -56,7 +56,7 @@ public class ActionPanelBuilder {
 
     /**
      * adds new {@link DefaultButtonItem} instance to the list {@link IActionItem}
-     * 
+     *
      * @param action
      *            - specified action, is needed for creating button for tool bar
      * @return instance of {@link ActionPanelBuilder}
@@ -68,7 +68,7 @@ public class ActionPanelBuilder {
 
     /**
      * adds new {@link ChangeActionButtonItem} instance to the list of {@link IActionItem}
-     * 
+     *
      * @param actionList
      *            - the list of action for the {@link ActionChangeButton}
      * @return instance of {@link ActionPanelBuilder}
@@ -80,7 +80,7 @@ public class ActionPanelBuilder {
 
     /**
      * adds the {@link SeparatorItem} instance, that represents the tool bar separator, to the list list of {@link IActionItem}
-     * 
+     *
      * @param size
      *            - the size of the separator
      * @return instance of {@link ActionChangeButton}
@@ -92,7 +92,7 @@ public class ActionPanelBuilder {
 
     /**
      * Adds all {@link IActionItem}s from the specified {@link ActionPanelBuilder} to this one.
-     * 
+     *
      * @param panelBuilder
      * @return
      */
@@ -105,7 +105,7 @@ public class ActionPanelBuilder {
 
     /**
      * see {{@link #addSeparator(Dimension)} for more information
-     * 
+     *
      * @return
      */
     public ActionPanelBuilder addSeparator() {
@@ -115,7 +115,7 @@ public class ActionPanelBuilder {
 
     /**
      * removes the {@link IActionItem} from the list. This operation must be done before {@link #buildActionPanel()} method invoking
-     * 
+     *
      * @param index
      *            - the index of {@link IActionItem} instance in the list, that must be removed
      * @return the removed {@link IActionItem} instance
@@ -126,7 +126,7 @@ public class ActionPanelBuilder {
 
     /**
      * Retrieves the {@link IActionItem} instance, but doesn't remove it from the list
-     * 
+     *
      * @param index
      *            - the index of {@link IActionItem} instance, that must be retrieved
      * @return the retrieved {@link IActionItem} instance
@@ -137,7 +137,7 @@ public class ActionPanelBuilder {
 
     /**
      * returns the list of {@link IActionItem}
-     * 
+     *
      * @return
      */
     public List<IActionItem> getItemList() {
