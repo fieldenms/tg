@@ -305,7 +305,7 @@ public class WagonClass extends AbstractEntity<String> {
   In order to provide a more elaborate usecase for dependent properties, consider domain entity \emph{WorkOrder}, which captures the work associated with fixing a wagon.
   There are three values that need to be captured by every work order -- \emph{actualStart: Date}, \emph{actualFinish: Date} and \emph{odometerReading: Integer}.
   Properties \emph{actualStart} and \emph{actualFinish} represent a date period during which work order took place, and they should have the validation logic as in the above scenario.
-  In addition, the value for property \emph{odometerReading}, which is considered to be taken at the moment in time captured by property \emph{actualStart}, should be validated against a history of odometer readings for a corresponding locomotive.
+  In addition, the value for property \emph{odometerReading}, which is considered to be taken at the moment in time captured by property \emph{actualStart}, should be validated against a history of odometer readings for a corresponding wagon.
 
   Thus, property \emph{actualStart} has two dependent properties that should be validated when it is changed.
   Specifically, properties \emph{actualFinish} and \emph{odometerReading} should be validated (or revalidated and attempted values assigned if revalidation succeeds) when the value of property \emph{actualStart} is change.
