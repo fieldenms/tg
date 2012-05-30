@@ -18,12 +18,10 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     private final String name;
     private final Class javaType;
     private final Object hibType;
-    private final List<String> columns;
     private final PropertyPersistenceType type;
-    private final Long length;
-    private final Long precision;
-    private final Long scale;
     private final boolean nullable;
+
+    private final List<PropertyColumn> columns;
     private final ExpressionModel expressionModel;
     private final boolean aggregatedExpression; // contains aggregation function on the root level (i.e. Totals in entity centre tree)
     private final boolean virtual; // this property is limited to eQuery only - it has no real property on entity (the case with virtual generation of composite entity key by concatenation of all members.
@@ -96,7 +94,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
 	    int index = 0;
 	    for (final String subpropName : subprops) {
-		final String column = columns.get(index);
+		final PropertyColumn column = columns.get(index);
 		final Object hibType = subpropsTypes.get(index);
 		result.add(new PropertyPersistenceInfo.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(PropertyPersistenceType.COMPOSITE_DETAILS).hibType(hibType).build());
 		index = index + 1;
@@ -107,9 +105,6 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
     private PropertyPersistenceInfo(final Builder builder) {
 	type = builder.type;
-	length = builder.length > 0 ? new Long(builder.length) : null;
-	precision = builder.precision >= 0 ? new Long(builder.precision) : null;
-	scale = builder.scale >= 0 ? new Long(builder.scale) : null;
 	name = builder.name;
 	javaType = builder.javaType;
 	hibType = builder.hibType;
@@ -118,18 +113,6 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	expressionModel = builder.expressionModel;
 	aggregatedExpression = builder.aggregatedExpression;
 	virtual = builder.virtual;
-    }
-
-    public Long getLength() {
-	return length;
-    }
-
-    public Long getPrecision() {
-	return precision;
-    }
-
-    public Long getScale() {
-	return scale;
     }
 
     public String getName() {
@@ -148,11 +131,11 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	return type;
     }
 
-    public List<String> getColumns() {
+    public List<PropertyColumn> getColumns() {
 	return columns;
     }
 
-    public String getColumn() {
+    public PropertyColumn getColumn() {
 	return columns.size() > 0 ? columns.get(0) : null;
     }
 
@@ -162,11 +145,8 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	private final boolean nullable;
 
 	private Object hibType;
-	private List<String> columns = new ArrayList<String>();
+	private List<PropertyColumn> columns = new ArrayList<PropertyColumn>();
 	private PropertyPersistenceType type = PropertyPersistenceType.PROP;
-	private long length = 0;
-	private long precision = -1;
-	private long scale = -1;
 	private ExpressionModel expressionModel;
 	private boolean aggregatedExpression = false;
 	private boolean virtual = false;
@@ -180,21 +160,6 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    this.name = name;
 	    this.javaType = javaType;
 	    this.nullable = nullable;
-	}
-
-	public Builder length(final long val) {
-	    length = val;
-	    return this;
-	}
-
-	public Builder precision(final long val) {
-	    precision = val;
-	    return this;
-	}
-
-	public Builder scale(final long val) {
-	    scale = val;
-	    return this;
 	}
 
 	public Builder hibType(final Object val) {
@@ -212,7 +177,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    return this;
 	}
 
-	public Builder column(final String column) {
+	public Builder column(final PropertyColumn column) {
 	    columns.add(column);
 	    return this;
 	}
@@ -245,20 +210,27 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
         return expressionModel;
     }
 
+    public boolean isAggregatedExpression() {
+        return aggregatedExpression;
+    }
+
+    public boolean isVirtual() {
+        return virtual;
+    }
+
     @Override
     public int hashCode() {
 	final int prime = 31;
 	int result = 1;
+	result = prime * result + (aggregatedExpression ? 1231 : 1237);
 	result = prime * result + ((columns == null) ? 0 : columns.hashCode());
 	result = prime * result + ((expressionModel == null) ? 0 : expressionModel.hashCode());
 	result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
 	result = prime * result + ((javaType == null) ? 0 : javaType.hashCode());
-	result = prime * result + ((length == null) ? 0 : length.hashCode());
 	result = prime * result + ((name == null) ? 0 : name.hashCode());
 	result = prime * result + (nullable ? 1231 : 1237);
-	result = prime * result + ((precision == null) ? 0 : precision.hashCode());
-	result = prime * result + ((scale == null) ? 0 : scale.hashCode());
 	result = prime * result + ((type == null) ? 0 : type.hashCode());
+	result = prime * result + (virtual ? 1231 : 1237);
 	return result;
     }
 
@@ -274,6 +246,9 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    return false;
 	}
 	final PropertyPersistenceInfo other = (PropertyPersistenceInfo) obj;
+	if (aggregatedExpression != other.aggregatedExpression) {
+	    return false;
+	}
 	if (columns == null) {
 	    if (other.columns != null) {
 		return false;
@@ -302,13 +277,6 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	} else if (!javaType.equals(other.javaType)) {
 	    return false;
 	}
-	if (length == null) {
-	    if (other.length != null) {
-		return false;
-	    }
-	} else if (!length.equals(other.length)) {
-	    return false;
-	}
 	if (name == null) {
 	    if (other.name != null) {
 		return false;
@@ -319,32 +287,13 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	if (nullable != other.nullable) {
 	    return false;
 	}
-	if (precision == null) {
-	    if (other.precision != null) {
-		return false;
-	    }
-	} else if (!precision.equals(other.precision)) {
-	    return false;
-	}
-	if (scale == null) {
-	    if (other.scale != null) {
-		return false;
-	    }
-	} else if (!scale.equals(other.scale)) {
-	    return false;
-	}
-
 	if (type != other.type) {
+	    return false;
+	}
+	if (virtual != other.virtual) {
 	    return false;
 	}
 	return true;
     }
 
-    public boolean isAggregatedExpression() {
-        return aggregatedExpression;
-    }
-
-    public boolean isVirtual() {
-        return virtual;
-    }
 }

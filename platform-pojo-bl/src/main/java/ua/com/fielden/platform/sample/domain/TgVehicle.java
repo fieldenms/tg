@@ -34,6 +34,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 public class TgVehicle extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
+    private static final ExpressionModel calcModel_ = expr().prop("model").model();
     private static final ExpressionModel constValueProp_ = expr().val(10).add().val(20).model();
     private static final ExpressionModel sumOfPrices_ = expr().prop("price.amount").add().prop("purchasePrice.amount").model();
     private static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
@@ -110,6 +111,8 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty @Calculated @Title("Calc6")
     private BigDecimal calc6;
 
+    @IsProperty @Calculated @Title("Calc Model")
+    private TgVehicleModel calcModel;
 
     /**
      * Constructor for (@link EntityFactory}.
@@ -155,6 +158,16 @@ public class TgVehicle extends AbstractEntity<String> {
 
     public BigDecimal getLastFuelUsageQty() {
 	return lastFuelUsageQty;
+    }
+
+    @Observable
+    public TgVehicle setCalcModel(final TgVehicleModel calcModel) {
+	this.calcModel = calcModel;
+	return this;
+    }
+
+    public TgVehicleModel getCalcModel() {
+	return calcModel;
     }
 
     @Observable

@@ -45,9 +45,9 @@ public class HibernateMappingsGenerator {
 	return result;
     }
 
-    private String getCommonEntityId(final String name, final String column, final String hibTypeName) {
+    private String getCommonEntityId(final String name, final PropertyColumn column, final String hibTypeName) {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("\t<id name=\"" + name + "\" column=\"" + column + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
+	sb.append("\t<id name=\"" + name + "\" column=\"" + column.getName() + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
 	sb.append("\t\t<generator class=\"hilo\">\n");
 	sb.append("\t\t\t<param name=\"table\">UNIQUE_ID</param>\n");
 	sb.append("\t\t\t<param name=\"column\">NEXT_VALUE</param>\n");
@@ -57,9 +57,9 @@ public class HibernateMappingsGenerator {
 	return sb.toString();
     }
 
-    private String getOneToOneEntityId(final String name, final String column, final String hibTypeName) {
+    private String getOneToOneEntityId(final String name, final PropertyColumn column, final String hibTypeName) {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("\t<id name=\"" + name + "\" column=\"" + column + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
+	sb.append("\t<id name=\"" + name + "\" column=\"" + column.getName() + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
 	sb.append("\t\t<generator class=\"foreign\">\n");
 	sb.append("\t\t\t<param name=\"property\">key</param>\n");
 	sb.append("\t\t</generator>\n");
@@ -68,26 +68,17 @@ public class HibernateMappingsGenerator {
 	return sb.toString();
     }
 
-    private String getSet(final String propName, final String propColumn, final Class entityType) {
-	final StringBuffer sb = new StringBuffer();
-	sb.append("\t<set name=\"" + propName + "\">\n");
-	sb.append("\t\t<key column=\"" + propColumn + "\"/>\n");
-	sb.append("\t\t<one-to-many  class=\"" + entityType.getName() + "\"/>\n");
-	sb.append("\t</set>\n");
-	return sb.toString();
-    }
-
-    private String getCommonEntityVersion(final String name, final String column, final String hibTypeName) {
+    private String getCommonEntityVersion(final String name, final PropertyColumn column, final String hibTypeName) {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("\t<version name=\"" + name + "\" type=\"" + hibTypeName + "\" access=\"field\" insert=\"false\">\n");
-	sb.append("\t\t<column name=\"" + column + "\" default=\"0\" />\n");
+	sb.append("\t\t<column name=\"" + column.getName() + "\" default=\"0\" />\n");
 	sb.append("\t</version>\n");
 	return sb.toString();
     }
 
-    private String getManyToOneProperty(final String propName, final String propColumn, final Class entityType) {
+    private String getManyToOneProperty(final String propName, final PropertyColumn propColumn, final Class entityType) {
 	final StringBuffer sb = new StringBuffer();
-	sb.append("\t<many-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" column=\"" + propColumn + "\"");
+	sb.append("\t<many-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" column=\"" + propColumn.getName() + "\"");
 	sb.append(isOneToOne(entityType) ? " unique=\"true\" insert=\"false\" update=\"false\"" : "");
 	sb.append("/>\n");
 	return sb.toString();
@@ -97,21 +88,22 @@ public class HibernateMappingsGenerator {
 	return "\t<one-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" constrained=\"true\"/>\n";
     }
 
-    private String getPropMappingString(final String propName, final List<String> propColumns, final String hibTypeName, final Long length, final Long precision, final Long scale) {
+    private String getPropMappingString(final String propName, final List<PropertyColumn> propColumns, final String hibTypeName) {
 	final String propNameClause = "\t<property name=\"" + propName + "\"";
 	final String typeClause = hibTypeName == null ? "" : " type=\"" + hibTypeName + "\"";
-	final String lengthClause = length == null ? "" : " length=\"" + length + "\"";
-	final String precisionClause = precision == null ? "" : " precision=\"" + precision + "\"";
-	final String scaleClause = scale == null ? "" : " scale=\"" + scale + "\"";
 	final String endClause = "/>\n";
 	if (propColumns.size() == 1) {
-	    final String columnClause = " column=\"" + propColumns.get(0) + "\"";
+	    final PropertyColumn column = propColumns.get(0);
+	    final String columnClause = " column=\"" + column.getName() + "\"";
+	    final String lengthClause = column.getLength() == null ? "" : " length=\"" + column.getLength() + "\"";
+	    final String precisionClause = column.getPrecision() == null ? "" : " precision=\"" + column.getPrecision() + "\"";
+	    final String scaleClause = column.getScale() == null ? "" : " scale=\"" + column.getScale() + "\"";
 	    return propNameClause + columnClause + typeClause + lengthClause + precisionClause + scaleClause + endClause;
 	} else {
 	    final StringBuffer sb = new StringBuffer();
 	    sb.append(propNameClause + typeClause + ">\n");
-	    for (final String column : propColumns) {
-		sb.append("\t\t<column name=\"" + column + "\"" + endClause);
+	    for (final PropertyColumn column : propColumns) {
+		sb.append("\t\t<column name=\"" + column.getName() + "\"" + endClause);
 	    }
 	    sb.append("\t</property>\n");
 	    return sb.toString();
@@ -159,8 +151,6 @@ public class HibernateMappingsGenerator {
 	switch (info.getType()) {
 	case ENTITY_KEY:
 	    return getOneToOneProperty(info.getName(), info.getJavaType());
-	case COLLECTIONAL:
-	    return getSet(info.getName(), info.getColumn(), info.getJavaType());
 	case ENTITY:
 	case ENTITY_MEMBER_OF_COMPOSITE_KEY:
 	    return getManyToOneProperty(info.getName(), info.getColumn(), info.getJavaType());
@@ -171,7 +161,7 @@ public class HibernateMappingsGenerator {
 	case ONE2ONE_ID:
 	    return getOneToOneEntityId(info.getName(), info.getColumn(), info.getTypeString());
 	default:
-	    return getPropMappingString(info.getName(), info.getColumns(), info.getTypeString(), info.getLength(), info.getPrecision(), info.getScale());
+	    return getPropMappingString(info.getName(), info.getColumns(), info.getTypeString());
 	}
     }
 }

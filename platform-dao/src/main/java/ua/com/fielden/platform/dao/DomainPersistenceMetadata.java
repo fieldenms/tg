@@ -38,6 +38,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Injector;
@@ -67,10 +68,12 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
  */
 public class DomainPersistenceMetadata {
     public final static List<String> specialProps = Arrays.asList(new String[] { AbstractEntity.ID, AbstractEntity.KEY, AbstractEntity.VERSION });
-    private final static String id = "_ID";
-    private final static String version = "_VERSION";
-    private final static String key = "KEY_";
-
+    private final static PropertyColumn id = new PropertyColumn("_ID");
+    private final static PropertyColumn version = new PropertyColumn("_VERSION");
+    private final static PropertyColumn key = new PropertyColumn("KEY_");
+    private final static PropertyPersistenceInfo idProperty = new PropertyPersistenceInfo.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ID).build();
+    private final static PropertyPersistenceInfo idPropertyInOne2One = new PropertyPersistenceInfo.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ONE2ONE_ID).build();
+    private final static PropertyPersistenceInfo versionProperty = new PropertyPersistenceInfo.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.VERSION).build();
     private final Map<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata> hibTypeInfosMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata>();
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
@@ -99,7 +102,6 @@ public class DomainPersistenceMetadata {
     }
 
     public <ET extends AbstractEntity<?>> EntityPersistenceMetadata generateEntityPersistenceMetadata(final Class<ET> entityType) throws Exception {
-	System.out.println(entityType);
 	final Set<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
 	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
 	result.addAll(ppis);
@@ -160,10 +162,10 @@ public class DomainPersistenceMetadata {
      */
     private Set<PropertyPersistenceInfo> generateEntityPersistenceInfo(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
 	final Map<String, PropertyPersistenceInfo> result = new HashMap<String, PropertyPersistenceInfo>();
-	safeMapAdd(result, new PropertyPersistenceInfo.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(isOneToOne(entityType) ? PropertyPersistenceType.ONE2ONE_ID : PropertyPersistenceType.ID).build());
-	safeMapAdd(result, new PropertyPersistenceInfo.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.VERSION).build());
+	safeMapAdd(result, isOneToOne(entityType) ? idPropertyInOne2One : idProperty);
+	safeMapAdd(result, versionProperty);
 
-	final String keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? getMapEntityTo(entityType).keyColumn() : key;
+	final PropertyColumn keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? new PropertyColumn(getMapEntityTo(entityType).keyColumn()) : key;
 
 	if (isOneToOne(entityType)) {
 	    safeMapAdd(result, new PropertyPersistenceInfo.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(PropertyPersistenceType.ENTITY_KEY).build());
@@ -186,8 +188,8 @@ public class DomainPersistenceMetadata {
 		propsToBeSkipped.add("location");
 
 		final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder("location", TgBogieLocation.class, false).hibType(new UnionEntityType());
-		builder.column("LOCATION_PROP");
-		builder.column("LOCATION_VALUE");
+		builder.column(new PropertyColumn("LOCATION_PROP"));
+		builder.column(new PropertyColumn("LOCATION_VALUE"));
 		//builder.type(PropertyPersistenceType.COMPOSITE_DETAILS);
 		safeMapAdd(result, builder.build());
 	}
@@ -225,14 +227,18 @@ public class DomainPersistenceMetadata {
      * @return
      * @throws Exception
      */
-    private List<String> getCompositeUserTypeColumns(final ICompositeUserTypeInstantiate hibType, final String parentColumn) throws Exception {
+    private List<PropertyColumn> getCompositeUserTypeColumns(final ICompositeUserTypeInstantiate hibType, final String parentColumn) throws Exception {
 	final String[] propNames = hibType.getPropertyNames();
-	final List<String> result = new ArrayList<String>();
+	final List<PropertyColumn> result = new ArrayList<PropertyColumn>();
 	for (final String propName : propNames) {
-	    final String mapToColumn = getMapTo(hibType.returnedClass(), propName).value();
+	    	final MapTo mapTo = getMapTo(hibType.returnedClass(), propName);
+	    	final String mapToColumn = mapTo.value();
+		final Long length = mapTo.length() > 0 ? new Long(mapTo.length()) : null;
+		final Long precision = mapTo.precision() >= 0 ? new Long(mapTo.precision()) : null;
+		final Long scale = mapTo.scale() >= 0 ? new Long(mapTo.scale()) : null;
 	    final String columnName = propNames.length == 1 ? parentColumn
 		    : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn));
-	    result.add(columnName);
+	    result.add(new PropertyColumn(columnName, length, precision, scale));
 	}
 	return result;
     }
@@ -274,30 +280,19 @@ public class DomainPersistenceMetadata {
 	return isPropertyPartOfKey(entityType, propName) || isPropertyRequired(entityType, propName);
     }
 
-    /**
-     * Generates persistence info for entity property.
-     * @param entityType
-     * @param field
-     * @return
-     * @throws Exception
-     */
     private PropertyPersistenceInfo getCommonPropHibInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
-	final boolean isCollectional = Set.class.isAssignableFrom(field.getType());
 	final boolean isEntity = isPersistedEntityType(field.getType());
 	final MapTo mapTo = getMapTo(entityType, field.getName());
 	final String propName = field.getName();
 	final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
 	final Class javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-	final long length = mapTo.length();
-	final long precision = mapTo.precision();
-	final long scale = mapTo.scale();
+	final Long length = mapTo.length() > 0 ? new Long(mapTo.length()) : null;
+	final Long precision = mapTo.precision() >= 0 ? new Long(mapTo.precision()) : null;
+	final Long scale = mapTo.scale() >= 0 ? new Long(mapTo.scale()) : null;
 	final boolean nullable = !isRequired(entityType, propName);
 
-	final Object hibernateType = getHibernateType(javaType, mapTo.typeName(), mapTo.userType(), isCollectional, isEntity);
-	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, nullable).length(length).precision(precision).scale(scale);
-	if (isCollectional) {
-	    builder.type(PropertyPersistenceType.COLLECTIONAL);
-	}
+	final Object hibernateType = getHibernateType(javaType, mapTo.typeName(), mapTo.userType(), false, isEntity);
+	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, nullable);
 
 	if (isEntity) {
 	    builder.type(PropertyPersistenceType.ENTITY);
@@ -307,13 +302,13 @@ public class DomainPersistenceMetadata {
 
 	if (hibernateType instanceof ICompositeUserTypeInstantiate) {
 	    final ICompositeUserTypeInstantiate hibCompositeUSerType = (ICompositeUserTypeInstantiate) hibernateType;
-	    for (final String column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
+	    for (final PropertyColumn column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
 		builder.column(column);
 	    }
 	    return builder.build();
 	}
 
-	return builder.column(columnName).build();
+	return builder.column(new PropertyColumn(columnName, length, precision, scale)).build();
     }
 
     private String getKeyMemberConcatenationExpression(final Field keyMember) {
@@ -364,25 +359,25 @@ public class DomainPersistenceMetadata {
 	final String propName = field.getName();
 	final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
 	final Class javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-	final long length = mapTo.length();
-	final long precision = mapTo.precision();
-	final long scale = mapTo.scale();
+	final Long length = mapTo.length() > 0 ? new Long(mapTo.length()) : null;
+	final Long precision = mapTo.precision() >= 0 ? new Long(mapTo.precision()) : null;
+	final Long scale = mapTo.scale() >= 0 ? new Long(mapTo.scale()) : null;
 	final boolean nullable = !isRequired(entityType, propName);
 
 	final Object hibernateType = getHibernateType(javaType, mapTo.typeName(), mapTo.userType(), false, isEntity);
-	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, nullable).length(length).precision(precision).scale(scale);
+	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, nullable);
 	builder.type(isEntity ? PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY : PropertyPersistenceType.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
 	builder.hibType(hibernateType);
 
 	if (hibernateType instanceof ICompositeUserTypeInstantiate) {
 	    final ICompositeUserTypeInstantiate hibCompositeUSerType = (ICompositeUserTypeInstantiate) hibernateType;
-	    for (final String column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
+	    for (final PropertyColumn column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
 		builder.column(column);
 	    }
 	    return builder.build();
 	}
 
-	return builder.column(columnName).build();
+	return builder.column(new PropertyColumn(columnName, length, precision, scale)).build();
     }
 
     private boolean needsContextPrefix(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) {

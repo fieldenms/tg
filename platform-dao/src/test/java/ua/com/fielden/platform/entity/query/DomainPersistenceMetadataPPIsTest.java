@@ -10,6 +10,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
@@ -26,7 +27,7 @@ public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
     }
 
     private static PropertyPersistenceInfo ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyPersistenceType type) {
-	return new PropertyPersistenceInfo.Builder(name, javaType, nullable).column(column).hibType(hibType).type(type).build();
+	return new PropertyPersistenceInfo.Builder(name, javaType, nullable).column(new PropertyColumn(column)).hibType(hibType).type(type).build();
     }
 
     private static PropertyPersistenceInfo ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<String> columns, final PropertyPersistenceType type) {

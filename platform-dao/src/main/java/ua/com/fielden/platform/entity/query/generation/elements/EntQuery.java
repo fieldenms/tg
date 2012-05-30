@@ -115,7 +115,7 @@ public class EntQuery implements ISingleOperand {
             for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(type())) {
         	final boolean skipProperty = ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery()); //|| ppi.isCompositeProperty()
       		if (!skipProperty) {
-                    final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), ppi.getColumn());
+                    final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn().getName() : null));
                     yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
                 }
             }

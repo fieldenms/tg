@@ -33,6 +33,14 @@ public class EntityPersistenceMetadata {
 	return !StringUtils.isEmpty(table);
     }
 
+    public boolean isSynthetic() {
+	return model != null;
+    }
+
+    public boolean isDefinitionOnly() {
+	return !isPersisted() && !isSynthetic();
+    }
+
     public String getTable() {
         return table;
     }
@@ -41,5 +49,9 @@ public class EntityPersistenceMetadata {
     }
     public SortedMap<String, PropertyPersistenceInfo> getProps() {
         return props;
+    }
+
+    public EntityResultQueryModel<? extends AbstractEntity<?>> getModel() {
+        return model;
     }
 }
