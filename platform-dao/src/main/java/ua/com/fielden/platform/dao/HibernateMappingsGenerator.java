@@ -6,7 +6,6 @@ import java.util.Map;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import static ua.com.fielden.platform.dao.DomainPersistenceMetadata.specialProps;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.
@@ -79,7 +78,7 @@ public class HibernateMappingsGenerator {
     private String getManyToOneProperty(final String propName, final PropertyColumn propColumn, final Class entityType) {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("\t<many-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" column=\"" + propColumn.getName() + "\"");
-	sb.append(isOneToOne(entityType) ? " unique=\"true\" insert=\"false\" update=\"false\"" : "");
+//	sb.append(isOneToOne(entityType) ? " unique=\"true\" insert=\"false\" update=\"false\"" : "");
 	sb.append("/>\n");
 	return sb.toString();
     }
@@ -110,9 +109,9 @@ public class HibernateMappingsGenerator {
 	}
     }
 
-    private boolean isOneToOne(final Class entityType) {
-	return AbstractEntity.class.isAssignableFrom(getKeyType(entityType));
-    }
+//    private boolean isOneToOne(final Class entityType) {
+//	return AbstractEntity.class.isAssignableFrom(getKeyType(entityType));
+//    }
 
     /**
      * Generates mapping for entity type.

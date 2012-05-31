@@ -14,7 +14,6 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceInfo> {
-    // TODO: when collectional - no information about hib types is provided
     private final String name;
     private final Class javaType;
     private final Object hibType;

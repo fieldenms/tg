@@ -3,6 +3,7 @@ package ua.com.fielden.platform.dao;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,12 +34,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
-import ua.com.fielden.platform.persistence.types.UnionEntityType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.sample.domain.TgBogieLocation;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Injector;
@@ -87,7 +84,7 @@ public class DomainPersistenceMetadata {
 		try {
 		    this.hibTypesDefaults.put(entry.getKey(), entry.getValue().newInstance());
 		} catch (final Exception e) {
-		    e.printStackTrace();
+		    throw new IllegalStateException("Couldn't generate instantiate hibernate type [" + entry.getValue() + "] due to: " + e);
 		}
 	    }
 	}
@@ -102,18 +99,22 @@ public class DomainPersistenceMetadata {
     }
 
     public <ET extends AbstractEntity<?>> EntityPersistenceMetadata generateEntityPersistenceMetadata(final Class<ET> entityType) throws Exception {
-	final Set<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
-	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
-	result.addAll(ppis);
-	result.addAll(generatePPIsForCompositeTypeProps(ppis));
+
 	final String tableClase = getTableClause(entityType);
 	if (tableClase != null) {
+		final Set<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
+		final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
+		result.addAll(ppis);
+		result.addAll(generatePPIsForCompositeTypeProps(ppis));
+
 	    return new EntityPersistenceMetadata(tableClase, entityType, getMap(result));
 	}
+
 	final EntityResultQueryModel<ET> entityModel = getEntityModel(entityType);
 	if (entityModel != null) {
-	    return new EntityPersistenceMetadata(entityModel, entityType, getMap(result));
+	    return new EntityPersistenceMetadata(entityModel, entityType, getMap(Collections.<PropertyPersistenceInfo> emptySet()));
 	}
+
 	throw new IllegalStateException("Couldn't detemine data source for entity type: " + entityType);
     }
 
@@ -178,20 +179,11 @@ public class DomainPersistenceMetadata {
 	    }
 	    safeMapAdd(result, getVirtualPropInfoForDynamicEntityKey(compositeKeyProperties));
 	}
+
 	final List<String> propsToBeSkipped = new ArrayList<String>();
 
 	for (final PropertyPersistenceInfo propertyPersistenceInfo : result.values()) {
 	    propsToBeSkipped.add(propertyPersistenceInfo.getName());
-	}
-
-	if (entityType.equals(TgBogie.class)) {
-		propsToBeSkipped.add("location");
-
-		final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder("location", TgBogieLocation.class, false).hibType(new UnionEntityType());
-		builder.column(new PropertyColumn("LOCATION_PROP"));
-		builder.column(new PropertyColumn("LOCATION_VALUE"));
-		//builder.type(PropertyPersistenceType.COMPOSITE_DETAILS);
-		safeMapAdd(result, builder.build());
 	}
 
 	for (final Field field : getPersistedProperties(entityType)) {
@@ -341,12 +333,11 @@ public class DomainPersistenceMetadata {
     }
 
     private PropertyPersistenceInfo getCollectionalPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
-	final boolean isCollectional = Set.class.isAssignableFrom(field.getType());
 	final boolean isEntity = isPersistedEntityType(field.getType());
 	final String propName = field.getName();
 	final Class javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 
-	final Object hibernateType = getHibernateType(javaType, "", Void.class, isCollectional, isEntity);
+	final Object hibernateType = getHibernateType(javaType, "", Void.class, true, isEntity);
 	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, false).type(PropertyPersistenceType.COLLECTIONAL);
 	builder.hibType(hibernateType);
 
