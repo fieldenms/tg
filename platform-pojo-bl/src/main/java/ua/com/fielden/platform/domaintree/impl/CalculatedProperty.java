@@ -27,6 +27,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.expression.ast.AstNode;
@@ -440,13 +441,21 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
         return calc;
     }
 
-    private static CalculatedProperty setImportantStuff(final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final CalculatedProperty calc) {
+    protected static CalculatedProperty setImportantStuff(final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final CalculatedProperty calc) {
 	calc.setContextualExpression(contextualExpression);
         calc.setTitle(title);
         calc.setDesc(desc);
         calc.setAttribute(attribute);
         calc.setOriginationProperty(originationProperty);
         return calc;
+    }
+
+    protected static CalculatedProperty repeatSettingOfImportantStuff(final CalculatedProperty cp) {
+	return setImportantStuff((String) cp.getProperty("contextualExpression").getLastAttemptValue(), //
+		(String) cp.getProperty("title").getLastAttemptValue(), //
+		(String) cp.getProperty("desc").getLastAttemptValue(), //
+		(CalculatedPropertyAttribute) cp.getProperty("attribute").getLastAttemptValue(), //
+		(String) cp.getProperty("originationProperty").getLastAttemptValue(), cp);
     }
 
     public IDomainTreeEnhancer getEnhancer() {
@@ -473,7 +482,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     }
 
     public void initAst(final String newContextualExpression) throws RecognitionException, SemanticException {
-	final ExpressionText2ModelConverter et2mc = new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getRoot(), getContextPath(), newContextualExpression);
+	final ExpressionText2ModelConverter et2mc = new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getEnhancer().getManagedType(getRoot()), getContextPath(), newContextualExpression);
 	this.ast = et2mc.convert();
     }
 
@@ -531,6 +540,31 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     protected CalculatedProperty copy(final ISerialiser serialiser) {
 	final CalculatedProperty copy = EntityUtils.deepCopy(this, serialiser);
 	copy.setEnhancer(enhancer);
+
+	// copy meta-information to be "identical" copy
+	for (final MetaProperty thisProperty : this.getProperties().values()) {
+	    final MetaProperty copyProperty = copy.getProperty(thisProperty.getName());
+//	    for (final Entry<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> entry : thisProperty.getValidators().entrySet()) {
+//		for (final Entry<IBeforeChangeEventHandler, Result> entryInner : entry.getValue().entrySet()) {
+//		    final Result resultCopy = entryInner.getValue() == null ? null : new Result(copy, entryInner.getValue().getMessage(), entryInner.getValue().getEx());
+//		    copyProperty.setValidationResult(entry.getKey(), entryInner.getKey(), resultCopy);
+//		}
+//	    }
+	    copyProperty.setAssigned(thisProperty.isAssigned());
+	    copyProperty.setDesc(thisProperty.getDesc());
+	    copyProperty.setDirty(thisProperty.isDirty());
+	    copyProperty.setEditable(thisProperty.isEditable());
+	    copyProperty.setEnforceMutator(thisProperty.isEnforceMutator());
+	    // copyProperty.setLastInvalidValue(thisProperty.getLastInvalidValue());
+	    copyProperty.setOriginalValue(thisProperty.getOriginalValue());
+	    copyProperty.setPrevValue(thisProperty.getPrevValue());
+	    copyProperty.setRequired(thisProperty.isRequired());
+	    copyProperty.setTitle(thisProperty.getTitle());
+	    copyProperty.setType(thisProperty.getType());
+	    copyProperty.setVisible(thisProperty.isVisible());
+	}
+
+	CalculatedProperty.repeatSettingOfImportantStuff(copy);
 	copy.isValid();
 	return copy;
     }

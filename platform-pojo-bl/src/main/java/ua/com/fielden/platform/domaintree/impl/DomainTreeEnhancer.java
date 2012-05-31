@@ -157,6 +157,15 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
 	this.calculatedProperties = new HashMap<Class<?>, List<ICalculatedProperty>>();
 	this.calculatedProperties.putAll(calculatedProperties == null ? extractAll(this) : calculatedProperties);
+
+	for (final List<ICalculatedProperty> calcProps : this.calculatedProperties.values()) {
+	    for (final ICalculatedProperty calcProp : calcProps) {
+		final CalculatedProperty cp = (CalculatedProperty) calcProp;
+		cp.setEnhancer(this);
+		CalculatedProperty.repeatSettingOfImportantStuff(cp);
+	    }
+	}
+
     }
 
     private static Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> createOriginalAndEnhancedRootTypesFromRootTypes(final Set<Class<?>> rootTypes) {

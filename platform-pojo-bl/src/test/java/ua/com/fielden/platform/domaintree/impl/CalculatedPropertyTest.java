@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.ALL;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.ANY;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
@@ -15,6 +16,8 @@ import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedP
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -37,6 +40,7 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropert
 import ua.com.fielden.platform.domaintree.testing.MasterEntityWithUnionForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.error.Result;
 
 /**
  * A test for {@link CalculatedProperty}.
@@ -111,43 +115,81 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     }
 
     @Test
-    public void test_serialisation() {
-	// copy incorrect calc property
-	CalculatedProperty calc = CalculatedProperty.createEmpty(factory(), MasterEntity.class, "", dtm().getEnhancer());
-	calc.isValid();
+    public void test_copying_of_empty_calculated_property() {
+	final CalculatedProperty calc = CalculatedProperty.createEmpty(factory(), MasterEntity.class, "", dtm().getEnhancer());
+	final Result valid = calc.isValid();
+	if (valid.isSuccessful()) {
+	    fail("Should be not successful.");
+	}
 	checkTrivialParams(calc, MasterEntity.class, "", null, null, null, NO_ATTR, "", dtm().getEnhancer());
 	assertCalculatedProperty(calc, null, null, null, null, MasterEntity.class, null, null);
 
-	CalculatedProperty copy = calc.copy(getSerialiser());
+	final CalculatedProperty copy = calc.copy(getSerialiser());
+	final Result copyValid = copy.isValid();
+	if (copyValid.isSuccessful()) {
+	    fail("Should be not successful.");
+	}
 
-	checkTrivialParams(calc, MasterEntity.class, "", null, null, null, NO_ATTR, "", dtm().getEnhancer());
-	assertCalculatedProperty(calc, null, null, null, null, MasterEntity.class, null, null);
+	checkTrivialParams(copy, MasterEntity.class, "", null, null, null, NO_ATTR, "", dtm().getEnhancer());
+	assertCalculatedProperty(copy, null, null, null, null, MasterEntity.class, null, null);
 
-	assertValidationResultsEquals(calc, copy);
+	assertMetaInfoIdentical(calc, copy);
+    }
 
-	// ============================================
-
-	calc = CalculatedProperty.createAndValidate(factory(), MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
+    @Test
+    public void test_copying_of_correct_full_calculated_property() {
+	final CalculatedProperty calc = CalculatedProperty.createAndValidate(factory(), MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
+	final Result valid = calc.isValid();
+	if (!valid.isSuccessful()) {
+	    fail("Should be successful.");
+	}
 	checkTrivialParams(calc, MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
 	assertCalculatedProperty(calc, EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
 
 	dtm().getEnhancer().addCalculatedProperty(calc);
 	dtm().getEnhancer().apply();
-
-	copy = (CalculatedProperty) dtm().getEnhancer().copyCalculatedProperty(MasterEntity.class, "calculatedProperty");
-	if (!copy.isValid().isSuccessful()) { // Should be successful
-	    throw copy.isValid();
+	final CalculatedProperty copy = (CalculatedProperty) dtm().getEnhancer().copyCalculatedProperty(MasterEntity.class, "calculatedProperty");
+	final Result copyValid = copy.isValid();
+	if (copyValid.isSuccessful()) {
+	    fail("Should be not successful.");
 	}
+	assertNotNull("Should be not null.", copy.getProperty("title").getFirstFailure());
+
 	checkTrivialParams(copy, MasterEntity.class, "", "2 * integerProp", "Calculated property", "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
 	assertCalculatedProperty(copy, EXPRESSION, "calculatedProperty", "", "calculatedProperty", MasterEntity.class, MasterEntity.class, Integer.class);
+
+	assertMetaInfoIdentical(calc, copy, "title");
     }
 
-    private void assertValidationResultsEquals(final CalculatedProperty calc1, final CalculatedProperty calc2) {
+    private void assertMetaInfoIdentical(final CalculatedProperty calc1, final CalculatedProperty calc2, final String ... except) {
+	final List<String> excepts = Arrays.asList(except);
 	for (final MetaProperty property1 : calc1.getProperties().values()) {
-	    final MetaProperty property2 = calc2.getProperty(property1.getName());
-	    if (property1.getFirstFailure() != null) {
-		assertEquals("Validation results should be equal.", property1.getFirstFailure().getMessage(), property2.getFirstFailure().getMessage());
+	    if (excepts.contains(property1.getName())) {
+		continue;
 	    }
+	    final MetaProperty property2 = calc2.getProperty(property1.getName());
+
+	    if (property1.getFirstFailure() != null) {
+		assertNotNull("Should be not null.", property2.getFirstFailure());
+		assertEquals("Validation results should be equal.", property1.getFirstFailure().getMessage(), property2.getFirstFailure().getMessage());
+		assertEquals("Validation results should be equal.", property1.getFirstFailure().getEx().getMessage(), property2.getFirstFailure().getEx().getMessage());
+	    } else {
+		if (property2.getFirstFailure() != null) {
+		    System.err.println("Property [" + property1.getName() + "] validation result should be null. But = [" + property2.getFirstFailure() + "].");
+		}
+		assertNull("Property [" + property1.getName() + "] validation result should be null.", property2.getFirstFailure());
+	    }
+	    if (property1.getFirstWarning() != null) {
+		assertNotNull("Should be not null.", property2.getFirstWarning());
+		assertEquals("Warning results should be equal.", property1.getFirstWarning().getMessage(), property2.getFirstWarning().getMessage());
+	    } else {
+		if (property2.getFirstWarning() != null) {
+		    System.err.println("Property [" + property1.getName() + "] warning result should be null. But = [" + property2.getFirstWarning() + "].");
+		}
+		assertNull("Property [" + property1.getName() + "] warning result should be null.", property2.getFirstWarning());
+	    }
+	    assertEquals("Requiredness should be identical.", property1.isRequired(), property2.isRequired());
+	    assertEquals("Editability should be identical.", property1.isEditable(), property2.isEditable());
 	}
     }
 
