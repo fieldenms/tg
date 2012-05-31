@@ -191,8 +191,8 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    return this;
 	}
 
-	public Builder columns(final List<String> columns) {
-	    columns.addAll(columns);
+	public Builder columns(final List<PropertyColumn> columns) {
+	    this.columns.addAll(columns);
 	    return this;
 	}
     }

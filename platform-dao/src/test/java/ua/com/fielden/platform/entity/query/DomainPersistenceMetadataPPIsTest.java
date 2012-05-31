@@ -30,7 +30,7 @@ public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
 	return new PropertyPersistenceInfo.Builder(name, javaType, nullable).column(new PropertyColumn(column)).hibType(hibType).type(type).build();
     }
 
-    private static PropertyPersistenceInfo ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<String> columns, final PropertyPersistenceType type) {
+    private static PropertyPersistenceInfo ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyPersistenceType type) {
 	return new PropertyPersistenceInfo.Builder(name, javaType, nullable).columns(columns).hibType(hibType).type(type).build();
     }
 
@@ -58,7 +58,7 @@ public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("model", MODEL, false, hibType("long"), "MODEL_", PropertyPersistenceType.ENTITY));
 	expected.add(ppi("price.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PRICE_", PropertyPersistenceType.COMPOSITE_DETAILS));
 	expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PURCHASEPRICE_", PropertyPersistenceType.COMPOSITE_DETAILS));
-	expected.add(ppi("fuelUsages", FUEL_USAGE, false, null, Collections.<String> emptyList(), PropertyPersistenceType.COLLECTIONAL));
+	expected.add(ppi("fuelUsages", FUEL_USAGE, false, null, Collections.<PropertyColumn> emptyList(), PropertyPersistenceType.COLLECTIONAL));
 
 	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
 	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(VEHICLE));
@@ -88,7 +88,7 @@ public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyPersistenceType.ID));
 	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyPersistenceType.VERSION));
 	expected.add(ppi("key", STRING, false, hibType("string"), "USER_NAME", PropertyPersistenceType.PRIMITIVE_KEY));
-	expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<String> emptyList(), PropertyPersistenceType.COLLECTIONAL));
+	expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<PropertyColumn> emptyList(), PropertyPersistenceType.COLLECTIONAL));
 
 	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
 	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(User.class));

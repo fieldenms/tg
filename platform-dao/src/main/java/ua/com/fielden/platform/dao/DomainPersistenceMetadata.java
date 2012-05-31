@@ -93,6 +93,7 @@ public class DomainPersistenceMetadata {
 	    try {
 		hibTypeInfosMap.put(entityType, generateEntityPersistenceMetadata(entityType));
 	    } catch (final Exception e) {
+		e.printStackTrace();
 		throw new IllegalStateException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
 	    }
 	}
@@ -272,15 +273,29 @@ public class DomainPersistenceMetadata {
 	return isPropertyPartOfKey(entityType, propName) || isPropertyRequired(entityType, propName);
     }
 
+    private List<PropertyColumn> getPropColumns(final Field field, final MapTo mapTo, final Object hibernateType) throws Exception {
+	final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
+	final Long length = mapTo.length() > 0 ? new Long(mapTo.length()) : null;
+	final Long precision = mapTo.precision() >= 0 ? new Long(mapTo.precision()) : null;
+	final Long scale = mapTo.scale() >= 0 ? new Long(mapTo.scale()) : null;
+
+	final List<PropertyColumn> result = new ArrayList<PropertyColumn>();
+	if (hibernateType instanceof ICompositeUserTypeInstantiate) {
+	    final ICompositeUserTypeInstantiate hibCompositeUSerType = (ICompositeUserTypeInstantiate) hibernateType;
+	    for (final PropertyColumn column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
+		result.add(column);
+	    }
+	} else {
+	    result.add(new PropertyColumn(columnName, length, precision, scale));
+	}
+	return result;
+    }
+
     private PropertyPersistenceInfo getCommonPropHibInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
 	final boolean isEntity = isPersistedEntityType(field.getType());
 	final MapTo mapTo = getMapTo(entityType, field.getName());
 	final String propName = field.getName();
-	final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
 	final Class javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-	final Long length = mapTo.length() > 0 ? new Long(mapTo.length()) : null;
-	final Long precision = mapTo.precision() >= 0 ? new Long(mapTo.precision()) : null;
-	final Long scale = mapTo.scale() >= 0 ? new Long(mapTo.scale()) : null;
 	final boolean nullable = !isRequired(entityType, propName);
 
 	final Object hibernateType = getHibernateType(javaType, mapTo.typeName(), mapTo.userType(), false, isEntity);
@@ -292,15 +307,7 @@ public class DomainPersistenceMetadata {
 
 	builder.hibType(hibernateType);
 
-	if (hibernateType instanceof ICompositeUserTypeInstantiate) {
-	    final ICompositeUserTypeInstantiate hibCompositeUSerType = (ICompositeUserTypeInstantiate) hibernateType;
-	    for (final PropertyColumn column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
-		builder.column(column);
-	    }
-	    return builder.build();
-	}
-
-	return builder.column(new PropertyColumn(columnName, length, precision, scale)).build();
+	return builder.columns(getPropColumns(field, mapTo, hibernateType)).build();
     }
 
     private String getKeyMemberConcatenationExpression(final Field keyMember) {
