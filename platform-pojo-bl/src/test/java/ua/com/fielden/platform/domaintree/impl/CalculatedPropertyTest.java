@@ -590,8 +590,10 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	return calc;
     }
 
+    private static int i = 0;
+
     protected CalculatedProperty correctCalculatedPropertyCreationWithOriginationProperty(final String originationProperty, final String contextualExpression) {
-	return correctCalculatedPropertyCreation(MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, originationProperty);
+	return correctCalculatedPropertyCreation(MasterEntity.class, "entityProp", contextualExpression, "Calculated property" + (++i), "desc", NO_ATTR, originationProperty);
     }
 
     protected void incorrectCalculatedPropertyCreationWithOriginationProperty(final String originationProperty, final String contextualExpression) {
@@ -607,7 +609,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	}
     }
 
-    protected void correctCalculatedPropertyCreationWithOriginationPropertyWithWarning(final String originationProperty, final String contextualExpression) {
+    protected CalculatedProperty correctCalculatedPropertyCreationWithOriginationPropertyWithWarning(final String originationProperty, final String contextualExpression) {
 	final CalculatedProperty cp = assertCalculatedPropertyOrigination(correctCalculatedPropertyCreationWithOriginationProperty(originationProperty, contextualExpression), originationProperty);
 
 	final String message = "The creation of calc prop with originationProperty [" + originationProperty + "] should be warned.";
@@ -617,6 +619,18 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertNotNull(message, cp.getProperty("originationProperty").getFirstWarning());
 	assertTrue(message, cp.getProperty("originationProperty").getFirstWarning().isSuccessful());
 	assertTrue(message, cp.getProperty("originationProperty").getFirstWarning() instanceof CalcPropertyKeyWarning);
+	return cp;
+    }
+
+    protected CalculatedProperty correctCalculatedPropertyCreationWithOriginationPropertyWithoutWarning(final String originationProperty, final String contextualExpression) {
+	final CalculatedProperty cp = assertCalculatedPropertyOrigination(correctCalculatedPropertyCreationWithOriginationProperty(originationProperty, contextualExpression), originationProperty);
+
+	final String message = "The creation of calc prop with originationProperty [" + originationProperty + "] should be without warning.";
+	assertNotNull(message, cp.isValid());
+	assertTrue(message, cp.isValid().isSuccessful());
+	assertNull(message, cp.getProperty("originationProperty").getFirstFailure());
+	assertNull(message, cp.getProperty("originationProperty").getFirstWarning());
+	return cp;
     }
 
     @Test
@@ -633,6 +647,31 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("entityProp.integerProp", "MAX(2 * integerProp * entityProp.moneyProp)");
 	incorrectCalculatedPropertyCreationWithOriginationProperty(null, "2 * integerProp * entityProp.moneyProp");
 	correctCalculatedPropertyCreationWithOriginationProperty("", "2 * integerProp * entityProp.moneyProp");
+    }
+
+    @Test
+    public void test_calculated_origination_property_application() {
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "1 * integerProp", "Single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "2 * integerProp", "Double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().getEnhancer().apply();
+
+	final CalculatedProperty cp1 = correctCalculatedPropertyCreationWithOriginationPropertyWithWarning("single", "MAX(2 * integerProp)");
+	dtm().getEnhancer().addCalculatedProperty(cp1);
+	dtm().getEnhancer().apply();
+	final CalculatedProperty cp2 = correctCalculatedPropertyCreationWithOriginationPropertyWithoutWarning("double", "MAX(2 * integerProp)");
+	dtm().getEnhancer().addCalculatedProperty(cp2);
+	dtm().getEnhancer().apply();
+
+	try {
+	    dtm().getEnhancer().removeCalculatedProperty(MasterEntity.class, "entityProp.single");
+	    fail("Should be failed.");
+	} catch (final IllegalArgumentException e) {
+	}
+	try {
+	    dtm().getEnhancer().removeCalculatedProperty(MasterEntity.class, "entityProp.double");
+	    fail("Should be failed.");
+	} catch (final IllegalArgumentException e) {
+	}
     }
 
     @Test

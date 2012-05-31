@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
@@ -564,6 +565,23 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     @Override
     public void removeCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
 	final ICalculatedProperty calculatedProperty = validateCalculatedPropertyKey2(rootType, calculatedPropertyName, calculatedProperties, originalAndEnhancedRootTypes);
+
+	/////////////////
+	final List<ICalculatedProperty> calcs = calculatedProperties.get(rootType);
+	boolean existsInOtherExpressionsAsOriginationProperty = false;
+	String containingExpression = null;
+	for (final ICalculatedProperty calc : calcs) {
+	    if (calc.getOriginationProperty().equals(Reflector.fromAbsotule2RelativePath(calc.getContextPath(), calculatedPropertyName))) {
+		existsInOtherExpressionsAsOriginationProperty = true;
+		containingExpression = calc.pathAndName();
+		break;
+	    }
+	}
+	if (existsInOtherExpressionsAsOriginationProperty) {
+	    throw new IllegalArgumentException("Cannot remove a property that exists in other expressions as 'origination' property. See property [" + containingExpression + "].");
+	}
+	/////////////////
+
 	final boolean removed = calculatedProperties.get(rootType).remove(calculatedProperty);
 
 	if (!removed) {
