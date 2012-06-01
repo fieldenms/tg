@@ -78,7 +78,6 @@ public class HibernateMappingsGenerator {
     private String getManyToOneProperty(final String propName, final PropertyColumn propColumn, final Class entityType) {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("\t<many-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" column=\"" + propColumn.getName() + "\"");
-//	sb.append(isOneToOne(entityType) ? " unique=\"true\" insert=\"false\" update=\"false\"" : "");
 	sb.append("/>\n");
 	return sb.toString();
     }
@@ -109,10 +108,6 @@ public class HibernateMappingsGenerator {
 	}
     }
 
-//    private boolean isOneToOne(final Class entityType) {
-//	return AbstractEntity.class.isAssignableFrom(getKeyType(entityType));
-//    }
-
     /**
      * Generates mapping for entity type.
      *
@@ -126,8 +121,9 @@ public class HibernateMappingsGenerator {
 
 	sb.append(getCommonPropMappingString(map.getProps().get(AbstractEntity.ID)));
 	sb.append(getCommonPropMappingString(map.getProps().get(AbstractEntity.VERSION)));
+
 	final PropertyPersistenceInfo keyProp = map.getProps().get(AbstractEntity.KEY);
-	if (keyProp != null && !keyProp.isVirtual()) {
+	if (!keyProp.isVirtual()) {
 	    sb.append(getCommonPropMappingString(keyProp));
 	}
 

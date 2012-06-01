@@ -25,8 +25,25 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     private final boolean aggregatedExpression; // contains aggregation function on the root level (i.e. Totals in entity centre tree)
     private final boolean virtual; // this property is limited to eQuery only - it has no real property on entity (the case with virtual generation of composite entity key by concatenation of all members.
 
+    private final static Set<PropertyPersistenceType> typesThatAffectsMapping = new HashSet<PropertyPersistenceType>();
+    static {
+	typesThatAffectsMapping.add(PropertyPersistenceType.ENTITY);
+	typesThatAffectsMapping.add(PropertyPersistenceType.ENTITY_KEY);
+	typesThatAffectsMapping.add(PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY);
+	typesThatAffectsMapping.add(PropertyPersistenceType.ID);
+	typesThatAffectsMapping.add(PropertyPersistenceType.ONE2ONE_ID);
+	typesThatAffectsMapping.add(PropertyPersistenceType.PRIMITIVE_KEY);
+	typesThatAffectsMapping.add(PropertyPersistenceType.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
+	typesThatAffectsMapping.add(PropertyPersistenceType.PROP);
+	typesThatAffectsMapping.add(PropertyPersistenceType.VERSION);
+    }
+
     public boolean isCalculated() {
 	return expressionModel != null;
+    }
+
+    public boolean affectsMapping() {
+	return typesThatAffectsMapping.contains(type);
     }
 
     public Type getHibTypeAsType() {
@@ -294,5 +311,4 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	}
 	return true;
     }
-
 }
