@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.dao.dynamic;
 
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.createQuery;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -29,7 +34,6 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
@@ -42,11 +46,6 @@ import ua.com.fielden.snappy.DateUtilities;
 import ua.com.fielden.snappy.MnemonicEnum;
 
 import com.google.inject.Injector;
-
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.createQuery;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
@@ -65,6 +64,15 @@ public class DynamicQueryBuilderSqlTest {
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
 	return new TgKryoForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
+    }
+
+    private static String getPropertyNameWithoutKeyPart(final String propertyName) {
+	return replaceLast(propertyName, ".key", "");
+    }
+
+    private static String replaceLast(final String s, final String what, final String byWhat) {
+        final int i = s.lastIndexOf(what);
+        return i >= 0 ? s.substring(0, i) : s;
     }
 
     private final String alias;
@@ -547,7 +555,7 @@ public class DynamicQueryBuilderSqlTest {
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
 	/**/iJoin.where().begin() //
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
 	/*    */.begin().prop(cbn).like().anyOfValues(DynamicQueryBuilder.prepare((List<String>) property.getValue())).end() //
 	/*  */.end() //s
 	/**/.end(); //
@@ -572,7 +580,7 @@ public class DynamicQueryBuilderSqlTest {
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
 	/**/iJoin.where().begin() //
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNull() //
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNull() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
@@ -592,7 +600,7 @@ public class DynamicQueryBuilderSqlTest {
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
 	/**/iJoin.where().begin() //
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNotNull() //
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull() //
 	/*  */.end() //
 	/**/.end(); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
@@ -614,7 +622,7 @@ public class DynamicQueryBuilderSqlTest {
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
 	/**/iJoin.where().begin() //
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
 	/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
@@ -636,7 +644,7 @@ public class DynamicQueryBuilderSqlTest {
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
 	/**/iJoin.where().begin() //
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNull().or() //
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNull().or() //
 	/*    */.notBegin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
@@ -658,7 +666,7 @@ public class DynamicQueryBuilderSqlTest {
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
 	/**/iJoin.where().begin() //
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNull().or() //
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNull().or() //
 	/*    */.begin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
@@ -681,7 +689,7 @@ public class DynamicQueryBuilderSqlTest {
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
 	/**/iJoin.where().begin() //
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
 	/*    */.notBegin().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).end() //
 	/*  */.end() //
 	/**/.end(); //
@@ -710,11 +718,11 @@ public class DynamicQueryBuilderSqlTest {
 
 	final ICompleted<? extends AbstractEntity<?>> expected = //
 	/**/iJoin.where().begin() //
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNull().end().and() // integerProp
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNotNull().and() // bigDecimalProp
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().end().and() // integerProp
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().and() // bigDecimalProp
 	/*    */.begin().prop(cbn1).ge().iVal(3).and().prop(cbn1).le().iVal(7).end() //
 	/*  */.end().and() //
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end() // dateProp
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end() // dateProp
 	/**/.end(); //
 	final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
 
@@ -756,11 +764,11 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */.exists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*    */.end() // ANY block ends
@@ -793,13 +801,13 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */.exists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*    */.end() // ANY block ends
@@ -828,30 +836,30 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */.notExists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().model() //
 	/*      */) //
 	/*      */.or() //
 	/*      */.exists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*      */.and() //
 	/*      */.notExists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*    */.end() // ALL block ends
@@ -885,34 +893,34 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */.notExists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().model() //
 	/*      */) //
 	/*      */.or() //
 	/*      */.exists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*      */.and() //
 	/*      */.notExists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end().or() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end().or() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNotNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end().or() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end().or() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNotNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*    */.end() // ALL block ends
@@ -951,12 +959,12 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */.exists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn4)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn5)).isNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn4)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn5)).isNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*    */.end() // ANY block ends
@@ -967,34 +975,34 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */.notExists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().model() //
 	/*      */) //
 	/*      */.or() //
 	/*      */.exists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*      */.and() //
 	/*      */.notExists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end().or() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end().or() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNotNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end().or() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end().or() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNotNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*    */.end() // ALL block ends
@@ -1059,11 +1067,11 @@ public class DynamicQueryBuilderSqlTest {
 	/*                          simple properties below                             */
 	/*                          simple properties below                             */
 	/*                          simple properties below                             */
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn02)).isNull().end().and() // integerProp
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn01)).isNotNull().and() // bigDecimalProp
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn02)).isNull().end().and() // integerProp
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn01)).isNotNull().and() // bigDecimalProp
 	/*    */.begin().prop(cbn01).ge().iVal(3).and().prop(cbn01).le().iVal(7).end() //
 	/*  */.end().and() //
-	/*  */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn03)).isNotNull().end().and() // dateProp
+	/*  */.begin().prop(getPropertyNameWithoutKeyPart(cbn03)).isNotNull().end().and() // dateProp
 	/*  */
 	/*                          master collection below                             */
 	/*                          master collection below                             */
@@ -1073,8 +1081,8 @@ public class DynamicQueryBuilderSqlTest {
 	/*    */.begin() // ANY block begins
 	/*      */.exists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().begin()
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn4)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn5)).isNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn4)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn5)).isNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*    */.end() // ANY block ends
@@ -1088,17 +1096,17 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */.or() //
 	/*      */.exists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().begin()
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*      */.and() //
 	/*      */.notExists( //
 	/*          */select(slaveCollectionType).where().prop("masterEntityProp").eq().prop(alias).and().begin()
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end().or() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end().or() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn2)).isNotNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().end().or() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn1)).isNotNull().end().or() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn2)).isNotNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*    */.end() // ALL block ends
@@ -1116,12 +1124,12 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */.exists( //
 	/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn9)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn10)).isNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn9)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn10)).isNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*    */.end() // ANY block ends
@@ -1132,34 +1140,34 @@ public class DynamicQueryBuilderSqlTest {
 	/*      */.notExists( //
 	/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().model() //
 	/*      */) //
 	/*      */.or() //
 	/*      */.exists( //
 	/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn8)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn6)).isNull().end().and() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn7)).isNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn8)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn6)).isNull().end().and() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn7)).isNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*      */.and() //
 	/*      */.notExists( //
 	/*          */select(evenSlaverCollectionType).where().prop("slaveEntityProp").eq().prop(alias + ".entityProp").and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering1)).isNull().end().and() // FILTERING
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbnFiltering2)).isNull().end() // FILTERING
 	/*          */.end().and() //
 	/*          */.begin() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn8)).isNotNull().end().or() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn6)).isNotNull().end().or() //
-	/*            */.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(cbn7)).isNotNull().end() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn8)).isNotNull().end().or() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn6)).isNotNull().end().or() //
+	/*            */.begin().prop(getPropertyNameWithoutKeyPart(cbn7)).isNotNull().end() //
 	/*          */.end().model() //
 	/*      */) //
 	/*    */.end() // ALL block ends

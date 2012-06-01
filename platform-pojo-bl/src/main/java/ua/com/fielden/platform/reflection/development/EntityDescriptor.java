@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -37,8 +38,9 @@ public class EntityDescriptor {
 	// create map in which entry's key should be "property title":
 	for (final String name : properties) {
 	    Pair<String, String> ftad;
+	    //final Pair<Class<?>, String> realRootAndPropertyName = getPropertyRootAndName(rootType, name);
 	    try {
-		ftad = TitlesDescsGetter.getFullTitleAndDesc(name, rootType);
+		ftad = TitlesDescsGetter.getFullTitleAndDesc(name, rootType/*realRootAndPropertyName.getValue(), realRootAndPropertyName.getKey()*/);
 	    } catch (final Exception e) {
 		ftad = null;
 	    }
@@ -46,13 +48,14 @@ public class EntityDescriptor {
 	    if (name.contains("()") || ftad == null) { //
 		mapByNames.put(name, null);
 	    } else {
-		final String shortTitle = TitlesDescsGetter.getTitleAndDesc(name, rootType).getKey();
+		final String shortTitle = TitlesDescsGetter.getTitleAndDesc(name, rootType/*realRootAndPropertyName.getValue(), realRootAndPropertyName.getKey()*/).getKey();
 		final Pair<String, String> neww = new Pair<String, String>(name, ftad.getValue());
 
 		if (mapByTitles.containsKey(shortTitle)) { // this short titled property already exists!
 		    final Pair<String, String> old = mapByTitles.get(shortTitle);
 		    final String fullTitleNew = ftad.getKey();
-		    final String fullTitleOld = TitlesDescsGetter.getFullTitleAndDesc(old.getKey(), rootType).getKey();
+		    //final Pair<Class<?>, String> oldRelaRootAndPropertyName = getPropertyRootAndName(rootType, old.getKey());
+		    final String fullTitleOld = TitlesDescsGetter.getFullTitleAndDesc(old.getKey(), rootType/*oldRelaRootAndPropertyName.getValue(), oldRelaRootAndPropertyName.getKey()*/).getKey();
 		    if (fullTitleNew.length() > fullTitleOld.length()) {
 			mapByTitles.put(fullTitleNew, neww);
 		    } else if (fullTitleNew.length() < fullTitleOld.length()) {
@@ -115,16 +118,6 @@ public class EntityDescriptor {
     }
 
     /**
-     * Removes ".key" part from propertyName.
-     *
-     * @param propertyName
-     * @return
-     */
-    public static String getPropertyNameWithoutKeyPart(final String propertyName) {
-	return replaceLast(propertyName, ".key", "");
-    }
-
-    /**
      * Returns value that indicates whether the passed entity class has description or not.
      *
      * @param klass
@@ -134,64 +127,20 @@ public class EntityDescriptor {
 	return AnnotationReflector.isAnnotationPresent(DescTitle.class, klass);
     }
 
-    public static String replaceLast(final String s, final String what, final String byWhat) {
-	final int i = s.lastIndexOf(what);
-	return i >= 0 ? s.substring(0, i) : s;
+    /**
+     * Returns the real root and property for specified root and property name. (It is needed when the passed root and property name are related to criteria property).
+     *
+     * @param root
+     * @param propertyName
+     * @return
+     */
+    private static Pair<Class<?>, String> getPropertyRootAndName(final Class<?> root, final String propertyName){
+	final CriteriaProperty criteriaProperty = AnnotationReflector.getPropertyAnnotation(CriteriaProperty.class, root, propertyName);
+	if(criteriaProperty == null){
+	    return new Pair<Class<?>, String>(root, propertyName);
+	} else {
+	    return new Pair<Class<?>, String>(criteriaProperty.rootType(), criteriaProperty.propertyName());
+	}
     }
-
-    //    /**
-    //     * Returns normal representation of range property without "_from" or "_to".
-    //     *
-    //     * @param dynamicCriteriaKey
-    //     * @param klass
-    //     * @return
-    //     */
-    //    public static String enhanceDynamicCriteriaPropertyEditorKey(final String dynamicCriteriaKey, final Class klass) {
-    //	return removeSuffixes(dynamicCriteriaKey.replaceFirst(klass.getSimpleName() + ".", ""));
-    //    }
-    //
-    //    /**
-    //     * Removes "_from", "_to", "_is", "_not" suffixes from "propertyName".
-    //     *
-    //     * @param propertyName
-    //     * @return
-    //     */
-    //    public static String removeSuffixes(final String propertyName) {
-    //	String s = propertyName;
-    //	s = replaceLast(s, DynamicEntityQueryCriteria._FROM, "");
-    //	s = replaceLast(s, DynamicEntityQueryCriteria._TO, "");
-    //	s = replaceLast(s, DynamicEntityQueryCriteria._IS, "");
-    //	s = replaceLast(s, DynamicEntityQueryCriteria._NOT, "");
-    //	return s;
-    //    }
-
-    //    /**
-    //     * Removes ".key" parts from propertyNames.
-    //     *
-    //     * @param propertyNames
-    //     * @return
-    //     */
-    //    public static List<String> getPropertyNamesWithoutKeyParts(final List<String> propertyNames) {
-    //	final List<String> propertyNamesWithoutKeyParts = new ArrayList<String>();
-    //	for (final String propertyName : propertyNames) {
-    //	    propertyNamesWithoutKeyParts.add(getPropertyNameWithoutKeyPart(propertyName));
-    //	}
-    //	return propertyNamesWithoutKeyParts;
-    //    }
-
-    //    /**
-    //     * Removes ".key" part from propertyName.
-    //     *
-    //     * @param propertyName
-    //     * @return
-    //     */
-    //    public static String getPropertyNameWithoutKeyPart(final String propertyName) {
-    //	return replaceLast(propertyName, ".key", "");
-    //    }
-
-    //    public static String replaceLast(final String s, final String what, final String byWhat) {
-    //	final int i = s.lastIndexOf(what);
-    //	return i >= 0 ? s.substring(0, i) : s;
-    //    }
 
 }

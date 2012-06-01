@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.model.DefaultEntityProducer;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
@@ -102,20 +103,21 @@ public class EntityMasterManager implements IEntityMasterManager {
 	}
 	// searching in cache first ...
 
-	final IEntityMasterCache cache = getEntityMasterCache((Class<T>) entity.getType());
+	final Class<T> entityType = (Class<T>)DynamicEntityClassLoader.getOriginalType(entity.getType());
+	final IEntityMasterCache cache = getEntityMasterCache(entityType);
 	BaseFrame frame = cache.get(entity.getId());
 	if (frame == null) {
 	    // if not found in cache, then creating new master frame and putting it to the cache
-	    final IEntityMasterFactory<T, DAO> factory = factories.get(entity.getType());
+	    final IEntityMasterFactory<T, DAO> factory = factories.get(entityType);
 	    if (factory == null) {
-		throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " domain entity.");
+		throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey() + " domain entity.");
 	    }
-	    IMasterDomainTreeManager masterManager = gdtm.getEntityMasterManager(entity.getType());
+	    IMasterDomainTreeManager masterManager = gdtm.getEntityMasterManager(entityType);
 	    if (masterManager == null) {
-		gdtm.initEntityMasterManager(entity.getType());
-		masterManager = gdtm.getEntityMasterManager(entity.getType());
+		gdtm.initEntityMasterManager(entityType);
+		masterManager = gdtm.getEntityMasterManager(entityType);
 	    }
-	    frame = factory.createMasterFrame(getEntityProducer((Class<T>) entity.getType()), //
+	    frame = factory.createMasterFrame(getEntityProducer(entityType), //
 		    cache, //
 		    entity, //
 		    vmf, //

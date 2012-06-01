@@ -31,7 +31,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
@@ -661,7 +660,7 @@ public class DynamicQueryBuilder {
 	final String propertyName = property.getConditionBuildingName();
 	// IMPORTANT : in order not to make extra joins properties like "alias.key", "alias.property1.key" and so on will be enhanced by
 	// conditions like "alias is [not] null", "alias.property1 is [not] null" and so on (respectively).
-	final IComparisonOperator2<ET> sc = where.begin().prop(EntityDescriptor.getPropertyNameWithoutKeyPart(propertyName));
+	final IComparisonOperator2<ET> sc = where.begin().prop(getPropertyNameWithoutKeyPart(propertyName));
 	// indicates whether a condition should be negated
 	final boolean negate = not ^ isNegated;
 	if (property.isEmpty()) {
@@ -754,5 +753,20 @@ public class DynamicQueryBuilder {
      */
     public static <E extends AbstractEntity<?>> ICompleted<E> createQuery(final Class<E> managedType, final List<QueryProperty> queryProperties){
 	return buildConditions(createJoinCondition(managedType), queryProperties);
+    }
+
+    /**
+     * Removes ".key" part from propertyName.
+     *
+     * @param propertyName
+     * @return
+     */
+    private static String getPropertyNameWithoutKeyPart(final String propertyName) {
+	return replaceLast(propertyName, ".key", "");
+    }
+
+    private static String replaceLast(final String s, final String what, final String byWhat) {
+        final int i = s.lastIndexOf(what);
+        return i >= 0 ? s.substring(0, i) : s;
     }
 }

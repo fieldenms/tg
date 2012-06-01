@@ -159,76 +159,76 @@ public class CriteriaGeneratorTest {
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "integer property"), new Pair<String, Object>("desc", "integer property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "integerProp")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "integerProp")));
 	    put(FirstParam.class, createAnnotationMap(new Pair<String, Object>("secondParam", "topLevelEntity_integerProp_to")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "integer property"), new Pair<String, Object>("desc", "integer property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "integerProp")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "integerProp")));
 	    put(SecondParam.class, createAnnotationMap(new Pair<String, Object>("firstParam", "topLevelEntity_integerProp_from")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "money property"), new Pair<String, Object>("desc", "money property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "moneyProp")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "moneyProp")));
 	    put(FirstParam.class, createAnnotationMap(new Pair<String, Object>("secondParam", "topLevelEntity_moneyProp_to")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "money property"), new Pair<String, Object>("desc", "money property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "moneyProp")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "moneyProp")));
 	    put(SecondParam.class, createAnnotationMap(new Pair<String, Object>("firstParam", "topLevelEntity_moneyProp_from")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "boolean property"), new Pair<String, Object>("desc", "boolean property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "booleanProp")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "booleanProp")));
 	    put(FirstParam.class, createAnnotationMap(new Pair<String, Object>("secondParam", "topLevelEntity_booleanProp_not")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "boolean property"), new Pair<String, Object>("desc", "boolean property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "booleanProp")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "booleanProp")));
 	    put(SecondParam.class, createAnnotationMap(new Pair<String, Object>("firstParam", "topLevelEntity_booleanProp_is")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "string property"), new Pair<String, Object>("desc", "string property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "stringProp")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "stringProp")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap(new Pair<String, Object>("value", String.class)));
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "key"), new Pair<String, Object>("desc", "key")));
 	    put(EntityType.class, createAnnotationMap(new Pair<String, Object>("value", TopLevelEntity.class)));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap(new Pair<String, Object>("value", String.class)));
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "entity property"), new Pair<String, Object>("desc", "entity property description")));
 	    put(EntityType.class, createAnnotationMap(new Pair<String, Object>("value", SecondLevelEntity.class)));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "entityProp")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "entityProp")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "date property"), new Pair<String, Object>("desc", "date property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "entityProp.entityProp.dateProp")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "entityProp.entityProp.dateProp")));
 	    put(FirstParam.class, createAnnotationMap(new Pair<String, Object>("secondParam", "topLevelEntity_entityProp_entityProp_dateProp_to")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "date property"), new Pair<String, Object>("desc", "date property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "entityProp.entityProp.dateProp")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "entityProp.entityProp.dateProp")));
 	    put(SecondParam.class, createAnnotationMap(new Pair<String, Object>("firstParam", "topLevelEntity_entityProp_entityProp_dateProp_from")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
@@ -236,52 +236,52 @@ public class CriteriaGeneratorTest {
 	    put(IsProperty.class, createAnnotationMap(new Pair<String, Object>("value", String.class)));
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "entity property"), new Pair<String, Object>("desc", "entity property description")));
 	    put(EntityType.class, createAnnotationMap(new Pair<String, Object>("value", LastLevelEntity.class)));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "entityProp.entityProp.simpleEntityProp")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "entityProp.entityProp.simpleEntityProp")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "single entity property"), new Pair<String, Object>("desc", "single entity property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "critSingleEntity")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "critSingleEntity")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap(new Pair<String, Object>("value", String.class)));
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "range entity property"), new Pair<String, Object>("desc", "range entity property description")));
 	    put(EntityType.class, createAnnotationMap(new Pair<String, Object>("value", LastLevelEntity.class)));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "critRangeEntity")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "critRangeEntity")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "single integer property"), new Pair<String, Object>("desc", "single integer property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "critISingleProperty")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "critISingleProperty")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "range integer property"), new Pair<String, Object>("desc", "range integer property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "critIRangeProperty")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "critIRangeProperty")));
 	    put(FirstParam.class, createAnnotationMap(new Pair<String, Object>("secondParam", "topLevelEntity_critIRangeProperty_to")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "range integer property"), new Pair<String, Object>("desc", "range integer property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "critIRangeProperty")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "critIRangeProperty")));
 	    put(SecondParam.class, createAnnotationMap(new Pair<String, Object>("firstParam", "topLevelEntity_critIRangeProperty_from")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "single string property"), new Pair<String, Object>("desc", "single string property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "critSSingleProperty")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "critSSingleProperty")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
 	add(new HashMap<Class<? extends Annotation>, Map<String, Object>>(){{
 	    put(IsProperty.class, createAnnotationMap());
 	    put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "range string property"), new Pair<String, Object>("desc", "range string property description")));
-	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("propertyName", "critSRangeProperty")));
+	    put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", TopLevelEntity.class), new Pair<String, Object>("propertyName", "critSRangeProperty")));
 	    put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
 	}});
     }};

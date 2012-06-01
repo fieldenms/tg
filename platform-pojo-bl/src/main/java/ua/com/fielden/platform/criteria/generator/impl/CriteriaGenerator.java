@@ -79,6 +79,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 	return (EnhancedLocatorEntityQueryCriteria<T, IEntityDao<T>>)generateQueryCriteria(root, ldtme, LocatorEntityQueryCriteriaToEnhance.class);
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> EntityQueryCriteria<CDTME, T, IEntityDao<T>> generateQueryCriteria(final Class<T> root, final CDTME cdtme, final Class<? extends EntityQueryCriteria> entityClass) {
 	final List<NewProperty> newProperties = new ArrayList<NewProperty>();
 	for(final String propertyName : cdtme.getFirstTick().checkedProperties(root)){
@@ -157,6 +158,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param critOnlyAnnotation
      * @return
      */
+    @SuppressWarnings({ "unchecked", "serial", "rawtypes" })
     private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
 	final boolean isEntity = EntityUtils.isEntityType(propertyType);
 	final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
@@ -167,7 +169,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 		add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
 		add(new EntityTypeAnnotation((Class<? extends AbstractEntity>) propertyType).newInstance());
 	    }
-	    add(new CriteriaPropertyAnnotation(propertyName).newInstance());
+	    add(new CriteriaPropertyAnnotation(root, propertyName).newInstance());
 	    add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 	}};
 
@@ -182,15 +184,16 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param propertyName
      * @return
      */
+    @SuppressWarnings("serial")
     private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc) {
 	final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, EntityUtils.isBoolean(propertyType) ? _IS : _FROM);
 	final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, EntityUtils.isBoolean(propertyType) ? _NOT : _TO);
 	final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType;
 
 	final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		new CriteriaPropertyAnnotation(propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
+		new CriteriaPropertyAnnotation(root, propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 	final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		new CriteriaPropertyAnnotation(propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
+		new CriteriaPropertyAnnotation(root, propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 
 	return new ArrayList<NewProperty>() {{ add(firstProperty); add(secondProperty); }};
     }

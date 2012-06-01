@@ -121,7 +121,7 @@ public class Paginator {
 	    @Override
 	    protected void postAction(final List<? extends AbstractEntity> data) {
 		super.postAction(data);
-		//enableActions();//TODO consider whether enabling actions is needed?
+		setEnableActions(true, false);
 		paginatorModel.pageNavigationPhases(PageNavigationPhases.POST_NAVIGATE);
 	    }
 

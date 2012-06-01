@@ -65,6 +65,9 @@ public abstract class CentreConfigurationView<T extends AbstractEntity<?>, C ext
 	if(closeGuard != null){
 	    return closeGuard;
 	}
+	if(getModel().getEntityCentreManager() == null){
+	    return null;
+	}
 	final String title = StringUtils.isEmpty(getModel().getName()) ? TitlesDescsGetter.getEntityTitleAndDesc(getModel().getEntityType()).getKey() : getModel().getName();
 	boolean isChanged = getModel().isChanged();
 	final boolean wasFreezed = getModel().isFreezed();

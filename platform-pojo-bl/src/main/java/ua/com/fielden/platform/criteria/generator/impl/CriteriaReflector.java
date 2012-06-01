@@ -17,7 +17,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Implements basic reflection functionality for query criteria class (i.e. retrieving title and description for specified property, generating property names etc.)
- * 
+ *
  * @author TG Team
  *
  */
@@ -36,7 +36,7 @@ public class CriteriaReflector {
      * Generates the criteria property name. The generated property name must be unique.
      * New generated criteria property name consists of three parts: root type name, property name and suffix.
      * For example: if root = EntityType.class, property = property.anotherProperty.nestedProperty and suffix = _from, then generated property name will be - EntityType_poperty_anotherProperty_nestedProperty_from.
-     * 
+     *
      * @param root - the type from which the property was taken.
      * @param propertyName - the name of the property for which criteria property name must be generated.
      * @param suffix - the additional suffix if the generated property has a pair.
@@ -49,7 +49,7 @@ public class CriteriaReflector {
 
     /**
      * Returns the list of criteria properties for specified {@link EntityQueryCriteria} class.
-     * 
+     *
      * @param criteriaClass
      * @return
      */
@@ -60,7 +60,7 @@ public class CriteriaReflector {
 
     /**
      * Returns true if the specified criteria property is annotated with {@link SecondParam}.
-     * 
+     *
      * @param criteriaClass
      * @param propertyName
      * @return
@@ -71,7 +71,7 @@ public class CriteriaReflector {
 
     /**
      * Returns true if the specified criteria property is annotated with {@link FirstParam}.
-     * 
+     *
      * @param criteriaClass
      * @param propertyName
      * @return
@@ -82,7 +82,7 @@ public class CriteriaReflector {
 
     /**
      * Returns the name of the second property related to the specified one.
-     * 
+     *
      * @param criteriaClass
      * @param propertyName
      * @return
@@ -97,7 +97,7 @@ public class CriteriaReflector {
 
     /**
      * Returns the name of the first property related to the specified one.
-     * 
+     *
      * @param criteriaClass
      * @param propertyName
      * @return
@@ -112,7 +112,7 @@ public class CriteriaReflector {
 
     /**
      * Returns the parameters of the {@link CriteriaProperty} annotation for the specified property of the {@link EntityQueryCriteria} class.
-     * 
+     *
      * @param criteriaClass
      * @param propertyName
      * @return
