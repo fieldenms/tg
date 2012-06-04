@@ -193,8 +193,11 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	final Command<Result> action = new Command<Result>("Apply") {
 	    private static final long serialVersionUID = 1L;
 
+	    private UmState restoreState;
+
 	    @Override
 	    protected boolean preAction() {
+		this.restoreState = getState();
 		expressionEditor.commitEditorValue();
 		notifyActionStageChange(ActionStage.SAVE_PRE_ACTION);
 		setState(UmState.UNDEFINED);
@@ -241,6 +244,12 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		}
 	    }
 
+	    @Override
+	    protected void handlePreAndPostActionException(final Throwable ex) {
+		super.handlePreAndPostActionException(ex);
+		setState(restoreState);
+	    }
+
 	};
 	action.setEnabled(true);
 	action.putValue(Action.SHORT_DESCRIPTION, "Creates new calculated property");
@@ -253,8 +262,11 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	final Command<Void> action = new Command<Void>("Discard") {
 	    private static final long serialVersionUID = 1L;
 
+	    private UmState restoreState;
+
 	    @Override
 	    protected boolean preAction() {
+		this.restoreState = getState();
 		notifyActionStageChange(ActionStage.CANCEL_PRE_ACTION);
 		setState(UmState.UNDEFINED);
 		getSaveAction().setEnabled(false);
@@ -275,6 +287,12 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		setState(UmState.VIEW);
 		notifyActionStageChange(ActionStage.CANCEL_POST_ACTION);
 		super.postAction(entity);
+	    }
+
+	    @Override
+	    protected void handlePreAndPostActionException(final Throwable ex) {
+		super.handlePreAndPostActionException(ex);
+		setState(restoreState);
 	    }
 	};
 	action.setEnabled(true);

@@ -247,6 +247,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 		if (isNew) {
 		    dtme.getEnhancer().addCalculatedProperty(getEntity());
 		}
+		dtme.getEnhancer().apply();
 		firePropertyProcessAction(new IPropertyProcessingAction(){
 
 		    @Override
@@ -254,9 +255,9 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 			listener.finishEdit();
 		    }
 		});
-		dtme.getEnhancer().apply();
 		break;
 	    case CANCEL_POST_ACTION:
+		dtme.getEnhancer().discard();
 		firePropertyProcessAction(new IPropertyProcessingAction(){
 
 		    @Override
@@ -264,7 +265,6 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 			listener.finishEdit();
 		    }
 		});
-		dtme.getEnhancer().discard();
 		break;
 	    }
 	}
