@@ -134,17 +134,17 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @return
      */
     private static List<NewProperty> generateCriteriaProperties(final Class<?> root, final IDomainTreeEnhancer enhancer, final String propertyName) {
-	final Class<?> inspectedType = enhancer.getManagedType(root);
+	final Class<?> managedType = enhancer.getManagedType(root);
 	final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
-	final Class<?> propertyType = isEntityItself ? inspectedType : PropertyTypeDeterminator.determinePropertyType(inspectedType, propertyName);
-	final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, inspectedType, propertyName);
-	final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(inspectedType, propertyName);
+	final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
+	final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, propertyName);
+	final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
 	final List<NewProperty> generatedProperties = new ArrayList<NewProperty>();
 
-	if(AbstractDomainTree.isDoubleCriterionOrBoolean(inspectedType, propertyName)){
-	    generatedProperties.addAll(generateRangeCriteriaProperties(root, propertyType, propertyName, titleAndDesc));
+	if(AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)){
+	    generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc));
 	}else{
-	    generatedProperties.add(generateSingleCriteriaProperty(root, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
+	    generatedProperties.add(generateSingleCriteriaProperty(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
 	}
 	return generatedProperties;
     }
@@ -153,13 +153,14 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * Generates criteria property with appropriate annotations.
      *
      * @param root
+     * @param managedType
      * @param propertyType
      * @param propertyName
      * @param critOnlyAnnotation
      * @return
      */
     @SuppressWarnings({ "unchecked", "serial", "rawtypes" })
-    private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
+    private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
 	final boolean isEntity = EntityUtils.isEntityType(propertyType);
 	final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
 	final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType);
@@ -169,7 +170,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 		add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
 		add(new EntityTypeAnnotation((Class<? extends AbstractEntity>) propertyType).newInstance());
 	    }
-	    add(new CriteriaPropertyAnnotation(root, propertyName).newInstance());
+	    add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
 	    add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 	}};
 
@@ -180,20 +181,21 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * Generates two criteria properties for range properties (i. e. number, money, date or boolean properties).
      *
      * @param root
+     * @param managedType
      * @param propertyType
      * @param propertyName
      * @return
      */
     @SuppressWarnings("serial")
-    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc) {
+    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc) {
 	final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, EntityUtils.isBoolean(propertyType) ? _IS : _FROM);
 	final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName, EntityUtils.isBoolean(propertyType) ? _NOT : _TO);
 	final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType;
 
 	final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		new CriteriaPropertyAnnotation(root, propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
+		new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 	final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-		new CriteriaPropertyAnnotation(root, propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
+		new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 
 	return new ArrayList<NewProperty>() {{ add(firstProperty); add(secondProperty); }};
     }

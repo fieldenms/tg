@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -38,9 +37,8 @@ public class EntityDescriptor {
 	// create map in which entry's key should be "property title":
 	for (final String name : properties) {
 	    Pair<String, String> ftad;
-	    //final Pair<Class<?>, String> realRootAndPropertyName = getPropertyRootAndName(rootType, name);
 	    try {
-		ftad = TitlesDescsGetter.getFullTitleAndDesc(name, rootType/*realRootAndPropertyName.getValue(), realRootAndPropertyName.getKey()*/);
+		ftad = TitlesDescsGetter.getFullTitleAndDesc(name, rootType);
 	    } catch (final Exception e) {
 		ftad = null;
 	    }
@@ -48,14 +46,13 @@ public class EntityDescriptor {
 	    if (name.contains("()") || ftad == null) { //
 		mapByNames.put(name, null);
 	    } else {
-		final String shortTitle = TitlesDescsGetter.getTitleAndDesc(name, rootType/*realRootAndPropertyName.getValue(), realRootAndPropertyName.getKey()*/).getKey();
+		final String shortTitle = TitlesDescsGetter.getTitleAndDesc(name, rootType).getKey();
 		final Pair<String, String> neww = new Pair<String, String>(name, ftad.getValue());
 
 		if (mapByTitles.containsKey(shortTitle)) { // this short titled property already exists!
 		    final Pair<String, String> old = mapByTitles.get(shortTitle);
 		    final String fullTitleNew = ftad.getKey();
-		    //final Pair<Class<?>, String> oldRelaRootAndPropertyName = getPropertyRootAndName(rootType, old.getKey());
-		    final String fullTitleOld = TitlesDescsGetter.getFullTitleAndDesc(old.getKey(), rootType/*oldRelaRootAndPropertyName.getValue(), oldRelaRootAndPropertyName.getKey()*/).getKey();
+		    final String fullTitleOld = TitlesDescsGetter.getFullTitleAndDesc(old.getKey(), rootType).getKey();
 		    if (fullTitleNew.length() > fullTitleOld.length()) {
 			mapByTitles.put(fullTitleNew, neww);
 		    } else if (fullTitleNew.length() < fullTitleOld.length()) {
@@ -125,22 +122,6 @@ public class EntityDescriptor {
      */
     public static boolean hasDesc(final Class<?> klass){
 	return AnnotationReflector.isAnnotationPresent(DescTitle.class, klass);
-    }
-
-    /**
-     * Returns the real root and property for specified root and property name. (It is needed when the passed root and property name are related to criteria property).
-     *
-     * @param root
-     * @param propertyName
-     * @return
-     */
-    private static Pair<Class<?>, String> getPropertyRootAndName(final Class<?> root, final String propertyName){
-	final CriteriaProperty criteriaProperty = AnnotationReflector.getPropertyAnnotation(CriteriaProperty.class, root, propertyName);
-	if(criteriaProperty == null){
-	    return new Pair<Class<?>, String>(root, propertyName);
-	} else {
-	    return new Pair<Class<?>, String>(criteriaProperty.rootType(), criteriaProperty.propertyName());
-	}
     }
 
 }
