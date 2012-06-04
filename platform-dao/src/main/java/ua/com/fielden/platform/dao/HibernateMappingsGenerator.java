@@ -3,7 +3,6 @@ package ua.com.fielden.platform.dao;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import static ua.com.fielden.platform.dao.DomainPersistenceMetadata.specialProps;
 
@@ -128,7 +127,8 @@ public class HibernateMappingsGenerator {
 	}
 
 	for (final PropertyPersistenceInfo ppi : map.getProps().values()) {
-	    if (!ppi.getType().equals(PropertyPersistenceType.COMPOSITE_DETAILS) && !ppi.isCalculated() && !ppi.isCollection() && !specialProps.contains(ppi.getName())) {
+//	    if (!ppi.getType().equals(PropertyPersistenceType.COMPOSITE_DETAILS) && !ppi.isCalculated() && !ppi.isCollection() && !specialProps.contains(ppi.getName())) {
+	    if (ppi.affectsMapping() && !specialProps.contains(ppi.getName())) {
 		sb.append(getCommonPropMappingString(ppi));
 	    }
 	}
