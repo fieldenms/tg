@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -39,7 +40,7 @@ public class InspectedEntity extends AbstractEntity<String> {
     @MapTo("MONEY_PROPERTY")
     private Money moneyProperty;
     @IsProperty
-    @MapTo(value = "DATE_PROPERTY", typeName = "timestamp")
+    @MapTo("DATE_PROPERTY") @PersistedType("timestamp")
     private Date dateProperty;
     @IsProperty
     @MapTo("BOOLEAN_PROPERTY")

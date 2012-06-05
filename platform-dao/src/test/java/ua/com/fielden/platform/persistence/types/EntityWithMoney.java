@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.persistence.types;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -9,6 +7,7 @@ import ua.com.fielden.platform.basic.autocompleter.HibernateValueMatcher;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -21,6 +20,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyUserType;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 /**
  * This is a test entity, which is currently used for testing of classes {@link Money} and {@link HibernateValueMatcher}.
@@ -36,7 +36,7 @@ public class EntityWithMoney extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @MapTo(value = "MONEY", userType = IMoneyUserType.class)
+    @MapTo("MONEY") @PersistedType(userType = IMoneyUserType.class)
     private Money money;
     @IsProperty
     @MapTo("DATE_TIME")

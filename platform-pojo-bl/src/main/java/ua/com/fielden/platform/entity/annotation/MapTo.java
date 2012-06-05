@@ -22,17 +22,17 @@ public @interface MapTo {
      */
     String value() default "";
 
-    /**
-     * Represents result of getName() method on instances of hibernate Type interface implementing classes (e.g. LongType - "long", YesNoType - "yes_no", BigDecimalType - "big_decimal"
-     * @return
-     */
-    String typeName() default ""; //
-
-    /**
-     * Returns implementers of IUserTypeInstantiate or ICompositeUserTypeInstantiate (e.g. ISimpleMoneyType.class, ISimplyMoneyWithTaxAmountType.class). Class.class means that nothing has been specified (i.e. Null).
-     * @return
-     */
-    Class userType() default Void.class; // represents hibernate type class
+//    /**
+//     * Represents result of getName() method on instances of hibernate Type interface implementing classes (e.g. LongType - "long", YesNoType - "yes_no", BigDecimalType - "big_decimal"
+//     * @return
+//     */
+//    String typeName() default ""; //
+//
+//    /**
+//     * Returns implementers of IUserTypeInstantiate or ICompositeUserTypeInstantiate (e.g. ISimpleMoneyType.class, ISimplyMoneyWithTaxAmountType.class). Class.class means that nothing has been specified (i.e. Null).
+//     * @return
+//     */
+//    Class userType() default Void.class; // represents hibernate type class
 
     long length() default 0;
 

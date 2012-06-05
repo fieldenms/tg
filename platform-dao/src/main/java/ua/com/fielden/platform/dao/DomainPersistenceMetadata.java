@@ -26,6 +26,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
@@ -244,7 +245,10 @@ public class DomainPersistenceMetadata {
      * @throws Exception
      * @throws
      */
-    private Object getHibernateType(final Class javaType, final String hibernateTypeName, final Class hibernateUserTypeImplementor, final boolean entity) {
+    private Object getHibernateType(final Class javaType, final PersistedType persistedType, final boolean entity) {
+	final String hibernateTypeName = persistedType != null ? persistedType.value() : null;
+	final Class hibernateUserTypeImplementor = persistedType != null ? persistedType.userType() : Void.class;
+
 	if (entity) {
 	    return TypeFactory.basic("long");
 	}
@@ -290,11 +294,12 @@ public class DomainPersistenceMetadata {
     private PropertyPersistenceInfo getCommonPropHibInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
 	final boolean isEntity = isPersistedEntityType(field.getType());
 	final MapTo mapTo = getMapTo(entityType, field.getName());
+	final PersistedType persistedType = getPersistedType(entityType, field.getName());
 	final String propName = field.getName();
 	final Class javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	final boolean nullable = !isRequired(entityType, propName);
 
-	final Object hibernateType = getHibernateType(javaType, mapTo.typeName(), mapTo.userType(), isEntity);
+	final Object hibernateType = getHibernateType(javaType, persistedType, isEntity);
 	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, nullable);
 
 	if (isEntity) {
@@ -328,7 +333,8 @@ public class DomainPersistenceMetadata {
 	final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(calculatedPropfield.getAnnotation(Calculated.class).category());
 
 	final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-	final Object hibernateType = getHibernateType(javaType, "", Void.class, false);
+	final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+	final Object hibernateType = getHibernateType(javaType, persistedType, false);
 
 	final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
 	expressionModel.setContextPrefixNeeded(needsContextPrefix(entityType, calculatedPropfield));
@@ -348,11 +354,12 @@ public class DomainPersistenceMetadata {
     private PropertyPersistenceInfo getCompositeKeyPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
 	final boolean isEntity = isPersistedEntityType(field.getType());
 	final MapTo mapTo = getMapTo(entityType, field.getName());
+	final PersistedType persistedType = getPersistedType(entityType, field.getName());
 	final String propName = field.getName();
 	final Class javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 	final boolean nullable = !isRequired(entityType, propName);
 
-	final Object hibernateType = getHibernateType(javaType, mapTo.typeName(), mapTo.userType(),isEntity);
+	final Object hibernateType = getHibernateType(javaType, persistedType, isEntity);
 	final PropertyPersistenceInfo.Builder builder = new PropertyPersistenceInfo.Builder(propName, javaType, nullable);
 	builder.type(isEntity ? PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY : PropertyPersistenceType.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
 	builder.hibType(hibernateType);
@@ -400,6 +407,10 @@ public class DomainPersistenceMetadata {
 
     private MapTo getMapTo(final Class entityType, final String propName) {
 	return getPropertyAnnotation(MapTo.class, entityType, propName);
+    }
+
+    private PersistedType getPersistedType(final Class entityType, final String propName) {
+	return getPropertyAnnotation(PersistedType.class, entityType, propName);
     }
 
     private Calculated getCalculatedPropExpression(final Class entityType, final String propName) {

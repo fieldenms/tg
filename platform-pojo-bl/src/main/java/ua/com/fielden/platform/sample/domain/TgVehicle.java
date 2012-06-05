@@ -9,6 +9,7 @@ import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -66,7 +67,7 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty @MapTo @Title("Price")
     private Money price;
 
-    @IsProperty @MapTo(userType = ISimpleMoneyType.class)
+    @IsProperty @MapTo @PersistedType(userType = ISimpleMoneyType.class)
     private Money purchasePrice;
 
     @IsProperty @MapTo @Title("Active")
