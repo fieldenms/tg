@@ -1,10 +1,6 @@
-\chapter{Business Domain Modeling}\label{ch01:02}
-
-\section{Entity Associations}
+\chapter{Associations between Domain Entities}\label{ch01:02}
 
   This section discusses how different relationships between business entities are modelled using the platform.
-
-\subsection{Kinds of Entity Relationships}
 
   The platform supports all established in the industry entity relationships, and provides its own way to model them. Here is a list of three kinds of relationships that are supported by the platform.
   \begin{itemize}
@@ -20,7 +16,7 @@ We shall refer to these associations as path associations, which means that ther
 
 Let's discuss each of the association kinds in details.
 
-\subsection{Many-to-One}
+\section{Many-to-One}
 
   Many-to-One association states that one or more instance of some entity type may reference the same instance of some other entity type (usually other than that referencing it). This is one of the simplest associations that occurs even in the most trivial cases.
 
@@ -30,13 +26,13 @@ Let's discuss each of the association kinds in details.
 
   The notion of referencing is very consistent at both Java and RDBMS levels, where in Java referred instance means a memory reference, and at the database level it means a foreign key for a referring entity table that references an ID column (primary key) of the table for a referred entity.
 
-  \subsubsection{Context Free}
+  \subsection{Context Free}
 
   We could also think of types used in such relationship as context free or context independent. The notion of context free is important when enhancing types with calculated properties, which can be done by either directly manipulating the type source or by specifying them as part of user-driven support for calculated properties as part of an end application. Specifically, it means that a formula or a model for a calculated properties should not contain any property that are not path-reachable from the type.
 
   In our example, this means that no calculated property added to type Model should reference any of the properties from type Vehicle.
 
-\subsection{One-to-One}
+\section{One-to-One}
 
   This association states that the right One entity has the left One entity as an integral part of itself. We should refer to this association as master-detail (singular), where the left One is the master, and the right One -- the detail.
 
@@ -65,11 +61,11 @@ public class VehicleTechnicalDetails extends AbstractEntity<Vehicle> {
 
   If some entity type A has a property of type D with a key specified as type B (e.i. B and D are in One-to-One association) then type A is considered invalid.
 
-  \subsubsection{Context Dependent}
+  \subsection{Context Dependent}
 
   The detail entity always has a context, and can be thought of as context dependent, where the context is defined by its enclosing entity type. Following our example, type Vehicle is a context for type VehicleTechnicalDetails. This, for example, means that calculated properties (discussed later), added manually or programmatically, to the detail type may contain properties from its master. The master properties used as part of the detail calculated properties should be prefixed with $\leftarrow.$ (left arrow and a dot) indicating that property path resolution should start from the master type.
 
-\subsection{One-to-Many}
+\section{One-to-Many}
 
   This kind of association can be thought of as a master-details (plural) relationship between master entities of type One and details entities of type Many. The Many part, which corresponds to the details aspect of the relationship, implies that the same master instance of type One may reference more than one instance of type Many.
 
@@ -136,7 +132,7 @@ public class Vehicle extends AbstractEntity<String> {
 
   The life cycle of types used in this association kind is similar to the life cycle of One-to-One association. Instances of type Many cannot exists without an instance of type One. If an instance of type One is deleted then all related instances of type Many should also be deleted.
 
-  \subsubsection{Context Dependent}
+  \subsection{Context Dependent}
 
   As part of the One-to-Many association, the Many type (i.e. details) can always be viewed as having its context determined by type One (i.e. master).
 
@@ -144,7 +140,7 @@ public class Vehicle extends AbstractEntity<String> {
 
   The master properties used as part of details calculated properties should be prefixed with $\leftarrow.$ (left arrow and a dot) indicating that property path resolution should start from the master type.
 
-\subsection{One-to-Many: Special Case}
+\section{One-to-Many: Special Case}
 
   Sometimes there is a need to model an association between entities that has all properties of the One-to-Many association, but the Many side would always contain no more than one entity instance. From the modelling perspective it is best if such association in represented at the One type as property of type Many instead of a collectional property of type Many (that would at most contain one element).
 
@@ -172,11 +168,11 @@ public class Vehicle extends AbstractEntity<String> {
 
   IMPORTANT: Non-collectional property, which represents a special case of One-to-Many, must have a composite key where the enclosing type is one of the members, which is used (either explicitly or implicitly) as a linkProperty. Otherwise, such association is considered invalid.
 
-  \subsubsection{Context Dependent}
+  \subsection{Context Dependent}
 
   From the concept of the context, the special case is no different to an ordinary One-to-Many case.
 
-\subsection{Many-to-Many}
+\section{Many-to-Many}
 
   The One-to-Many association kind can easily be used for modelling Many-to-Many associations, which can be thought of as master-master relationship with some additional description of the actual association.
 
@@ -186,7 +182,7 @@ public class Vehicle extends AbstractEntity<String> {
 
   As for One-to-Many association, argument linkedProperty of the IsProperty annotation used for describing collectional properties in master types in the Many-to-Many association plays a critical role for identifying composite key members in the Link type corresponding to the left- and right- sides of the association.
 
-  \subsubsection{Context Dependent}
+  \subsection{Context Dependent}
 
   Due to the fact that Many-to-Many is really just two or more One-to-Many associations, a corresponding Link type can always be viewed as having its context determined by type either of the Many types participating in the association.
 

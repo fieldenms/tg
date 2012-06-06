@@ -1,13 +1,6 @@
-\chapter{Platform Architecture Step-by-Step}\label{ch01:01}
+\chapter{Business Entities and Processes}\label{ch01:01}
 
 \myepigraph{In our profession, precision and perfection are not a dispensable luxury, but a simple necessity.}{Niklaus Wirth}
-
-  There two main approaches to describe software architecture -- top-down and bottom-up\footnote{\url{http://en.wikipedia.org/wiki/Top-down_and_bottom-up_design}}.
-  In this and the following parts of the book we should utilise the bottom-up approach by discussing the parts of the puzzle, which will be put together in order to construct a final picture of the platform in a form a relatively complex application.
-
-  A high-level platform overview is provided as a separate document, which can be downloaded \href{http://www.fielden.com.ua/trac/pnl-tg/attachment/wiki/WikiStart/architecture-overview.pdf}{separately}.
-
-\section{Domain Driven Design}
 
   At the heart of the platform's domain orientation is the concept of an \emph{entity type} -- a way to describe what a business domain entity is.
   In Object-Oriented languages such as Java types are most frequently\footnote{Primitives in Java are represented as instances of int, double, float etc., which are not classes, but are types.} represented as classes.
@@ -33,7 +26,7 @@
   
   The platform's role is to streamline this process by reducing low-level technical aspects allowing developers to concentrate on business tasks at hand by providing and reusing rich meta-data capabilities to automate otherwise routine and tedious programming tasks.
 
-\subsection{Entity Types and Meta-Data}
+\section{Entity Types and Meta-Data}
 
   Every business domain \emph{entity type} in TG is implemented as a Java class that extends \emph{AbstractEntity} -- a specially designed class that serves as a common ancestor for all entity types.
   Listing~\ref{lst:AbstractEntity} provides a fragment of \emph{AbstractEntity} class definition.
@@ -73,9 +66,9 @@ public abstract class AbstractEntity<K extends Comparable>
 
   Let's discuss entity meta-data in greater detail.
 
-\subsubsection{Compile Time Meta-Data}
+\subsection{Compile Time Meta-Data}
   
-  \paragraph*{Business Key Definitions.}
+  \subsubsection*{Business Key Definitions.}
   Each entity has a notion of a \emph{business key} that consists of one or several entity properties\footnote{The concept of \emph{property} is will be defined further in text. Therefore, at this stage it should be thought of as a field with some additional information about it.}, which together uniquely identify an instance of a given entity type.
   For example, instances of type \emph{Person}, which was introduced in previous chapter, are uniquely identified by their \emph{person code}.
   Entity type \emph{Person} has its key defined to be of type \texttt{java.lang.String}, which indicates that it consists of one property of the specified type -- property \emph{key} in this case.
@@ -142,7 +135,7 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
     Typing \texttt{tgp} in the body of the class and pressing \texttt{Ctrl + Space} key combination will present a dialog with an option \texttt{tgpcompositekey} for generating a property that is a member of the composite key.
   \end{notebox}
 
-  \paragraph*{Property definitions.}
+  \subsubsection*{Property definitions.}
   
   For a field, which is declared as part of an \emph{AbstractEntity} descendent type, to become a property, it needs to be annotated with annotation \emph{IsProperty}, and its \emph{setter} must be annotated with annotation \emph{Observable}.
   Early runtime exception is thrown if the system identifies inconsistencies in property declarations upon entity instantiation.
@@ -187,7 +180,7 @@ public class Wagon extends AbstractEntity<String> {
     Typing \texttt{tgp} in the body of the class and pressing \texttt{Ctrl + Space} key combination will present a dialog with an option \texttt{tgprop} for generating a property template.
   \end{notebox}
 
-  \paragraph*{Pre- and post- conditions for property value change.}
+  \subsubsection*{Pre- and post- conditions for property value change.}
   
   In order to control correctness of property values at runtime and take necessary actions as the result of property value change, the platform supports the notion of property pre- and post- conditions.
   The platform provides a predefined list of pre- and post- conditions (fully discussed in \ref{part-III}) in a form of specialised annotations that cover common cases of frequently used conditions.
@@ -291,7 +284,7 @@ public class WagonClass extends AbstractEntity<String> {
 
 
 
-  \subparagraph*{Dependent Properties.}
+  \paragraph*{Dependent Properties.}
 
   One of the common situations when modelling business domains, is the existence of entities where some of their properties depend on each other.
   The most trivial example of such situation is an entity with two date properties that represent a single date period.
@@ -380,7 +373,7 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
   
   In order to better understand the dependency mechanism and the difference between \emph{validation} and \emph{revalidation}, let's elaborate more on the \emph{WagonBogieClassCompatibility} example.
   
-  \subparagraph*{Revalidation.}
+  \paragraph*{Revalidation.}
   Consider that there is a brand new entity instance, which did not have any attempts made to set values for properties \emph{wagonClass} and \emph{bogieClass}.
   First, we try to set 50 ton bogie class as a value for property \emph{bogieClass}.
   This value passes the validation as there is nothing to validate against -- property \emph{wagonClass} has no value yet.
@@ -395,7 +388,7 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
   All this happens automatically, without the need to make an explicit attempt to reset \emph{wagonClass} value.
   In case of the end-user, this would mean manually changing the value.
 
-  \subparagraph*{Validation.}
+  \paragraph*{Validation.}
   A different situation would be observed if only property \emph{bogieClass} would have a BCE handler preventing the acceptance of bogie classes that conflict with a \emph{wagonClass} value.
   This means that any wagon class value can be set as the value for property \emph{wagonClass} without any validation.
   
@@ -405,8 +398,33 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
   However, the dependency mechanism would recognise a successful property assignment and would trigger validation of the dependent property \emph{bogieClass}.
   As the result, property \emph{bogieClass} would be marked as invalid, but its value, which was assigned previously, would not change.
   
+  \begin{notebox}{Mutual and one-way dependencies.}{\label{nb:MutialDependencyOrNot}}
+    All provided dependency example show properties that are mutually dependent on each other.
+    However, this is not required.
+    Consider the last example where we discussed the difference between validation and revalidation.
+    In case of validation discussion, we considered the model where property \emph{wagonClass} did not have any validation -- only property \emph{bogieClass} did.
+    This means that no bogie class should be accepted if it conflicts with a \emph{wagonClass} property value, but any wagon class, including values that could make property \emph{bogieClass} invalid, is acceptable.
+    Such model, basically, makes property \emph{wagonClass} dominate over property \emph{bogieClass}, and there is a need to state that property \emph{bogieClass} is dependent on property \emph{wagonClass}.
+    At the same time, there is no need to state that property \emph{wagonClass} is dependent on property \emph{bogieClass}.    
+    This means that these properties have \emph{one-way} dependency.\\
 
-\subsubsection{Runtime Meta-Data}
+    A code snippet below illustrates property definitions for this one-way dependency case.
+    The \emph{wagonClass} property definition specifies that property \emph{bogieClass} is dependent on it, and thus needs to be validated/revalidated when \emph{wagonClass} value changes.
+    The \emph{bogieClass} definition does not specify any properties that depend on it, but has a BCE handler to ensure that no bogie class conflicting a wagon class value is accepted.
+
+    \begin{lstlisting}
+    @IsProperty
+    @Dependent("bogieClass")
+    private WagonClass wagonClass;
+
+    @IsProperty
+    @BeforeChange(@Handler(WbccBogieTonnageValidator.class))
+    private BogieClass bogieClass;
+    \end{lstlisting}
+  
+  \end{notebox}
+
+\subsection{Runtime Meta-Data}
 
   The runtime meta-data is created from the compile time meta-data and associated with each instance of every entity type.
   It has a localised nature, which means that changing meta-data in one instance of some entity type does not make any impact on any other instance of the same or different type.
@@ -416,7 +434,7 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
   No entities should be created using \texttt{new} keyword applied to their type constructor.
   An appropriate instance of \emph{EntityFactory} is provided to the application at runtime as part of the \emph{Injection of Control} (IoC) mechanism, and represents a thread-safe singleton object ready to be used anywhere in the system\footnote{The mechanism for \emph{EntityFactory} configuration and instantiation is discussed in a separate section on IoC later in the text.}.
   
-  \paragraph*{Entity identity and meta-state (version, editable, persisted, dirty etc.).}
+  \subsubsection*{Entity identity and meta-state (version, editable, persisted, dirty etc.).}
 
   The notion of \emph{entity identifier} is used to allocate some unique, but irrelevant from the business perspective, number for each persisted instance of any entity type.
   It should be though of as a reference (or pointer) to an entity instance, but in the database instead of RAM.
@@ -439,7 +457,7 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
   \end{description}
   
 
-  \paragraph*{Property validation results.}
+  \subsubsection*{Property validation results.}
 
   A runtime meta-data that is associated with an individual entity property is represented by class \emph{MetaProperty}, which is designed to capture runtime meta-data for a single property.
   Each entity property is provided with a corresponding instance of \emph{MetaProperty} at the instantiation time.
@@ -450,7 +468,7 @@ public class WagonBogieClassCompatibility extends AbstractEntity<DynamicEntityKe
   Every instance of meta-property contains actual instances of classes handling pre- and post- conditions, which includes BCE and ACE handlers.
   A special mechanism kicks in upon an attempt to set a new value for some property, which reuses pre-condition handler instances to process the new value before assigning it to the property and post-condition instances after the value has been assigned.
 
-  \subparagraph*{BCE Handlers.}
+  \paragraph*{BCE Handlers.}
   As was mentioned before, the primary objection of BCE handlers is to validate the value being set for the property.
   Any class that implements contract \emph{IBeforeChangeEventHandler$<$T$>$} can be used as a BCE handler for a property of type \emph{T}.
   This contract requires implementation of a single method \emph{handle(final MetaProperty property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations)}, which returns an instance of \emph{Result} indicating success or failure, and takes four arguments:
@@ -565,7 +583,7 @@ public class NumOfSlotsValidator implements IBeforeChangeEventHandler<Integer> {
   \end{description}
 
 
-  \subparagraph*{ACE Handlers.}
+  \paragraph*{ACE Handlers.}
 
   Post-condition handlers are executed only after a new property value is assigned, which means it passed all pre-conditions.
   The only predefined in the platform post-condition is \emph{Dependent} that, as has been discussed earlier, is dedicated to handle revalidation of dependent properties.
@@ -628,7 +646,7 @@ public class MakeOtherPropertiesReadonlyWhenInactive
   Also, as for BCE handlers there is no declarative association of ACE handlers with a particular entity type -- only semantic association.
   However, ACE handlers have a natural tendency to be applicable to a single entity type.
 
-  \paragraph*{Property state (editable, visible etc.).}
+  \subsubsection*{Property state (editable, visible etc.).}
   The most obvious part of any property's state is its value.
   It can always be obtained from an entity instance by either by using property getter \texttt{entity.getPropertyName()} or method \emph{get} such as \texttt{entity.get(``propertyName'')}.
   Property value can also be obtained from a corresponding meta-property instance by using its method \emph{getValue()} -- \texttt{metaProperty.getValue()}.
@@ -658,7 +676,7 @@ public class MakeOtherPropertiesReadonlyWhenInactive
   \end{description}  
 
 
-  \paragraph*{Property value change information.}
+  \subsubsection*{Property value change information.}
   
   \emph{MetaProperty} provides a way to trac property changes changes.
   The tracking lifecycle starts from either the moment of entity instantiation or its retrieval from a data storage, and complets at the moment when it gets persisted or dicarded.
