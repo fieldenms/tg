@@ -678,19 +678,19 @@ public class MakeOtherPropertiesReadonlyWhenInactive
 
   \subsubsection*{Property value change information.}
   
-  \emph{MetaProperty} provides a way to trac property changes changes.
-  The tracking lifecycle starts from either the moment of entity instantiation or its retrieval from a data storage, and complets at the moment when it gets persisted or dicarded.
-
-  The following \emph{MetaProperty} methods are of interest here:
+  \emph{MetaProperty} provides a way to track property value changes at various stages during its entity lifecycle.
+  The tracking is initiated automatically at the moment of either entity instantiation or its retrieval from a data storage, and completes at the moment when entity gets persisted or discarded.
+  The following \emph{MetaProperty} methods are of the most interest.
   \begin{description}
     \item[\textbf{getValue()}] -- returns the current value of the property.
-    \item[\textbf{getOriginalValue()}] -- .
-    \item[\textbf{getLastAttemptValue()}] -- .
-    \item[\textbf{getLastInvalidValue()}] -- .
-    \item[\textbf{isDirty()}] -- .
-    \item[\textbf{isChangedFromOriginal()}] -- .
-    \item[\textbf{isChangedFromPrevious()}] -- .
-  \end{description}
+    \item[\textbf{getOriginalValue()}] -- returns the original value of the property; for newly created entities, the original property value is always \emph{null}; for a modified property of previously persisted entities, the original value is the one retrieved from a data storage; newly assigned property value becomes original when entity is persisted.
+    \item[\textbf{getPrevValue()}] -- if property was changed, this method returns a previous property value; it should not be confused with the original value -- if property of some persisted entity is changed several times (without persisting that entity in between) then the original value would match the one in the data store, while the previous value would be modified each time property changes to match its previously assigned value (i.e. original value after the first changes, the first assigned value after the second change and so on).
+    \item[\textbf{getLastAttemptedValue()}] -- returns a value that was (successfully or otherwise) attempted to be set as a new property value; it may be a successfully assigned or an invalid value that did not pass property validation; if no value was attempted to be set them \emph{null} is returned.
+    \item[\textbf{getLastInvalidValue()}] -- if an attempt to set property value was not successful (usually due to some validation failure), this method returns that invalid value; otherwise, \emph{null} is returned; setting a valid value after a failed attempted reset the invalid value resulting in \emph{null} value returned for subsequent method calls.
+    \item[\textbf{isDirty()}] -- returns \emph{true} for all properties of new entity instance, and successfully modified properties of the previously persisted entities.
+    \item[\textbf{isChangedFromOriginal()}] -- indicates whether the current property value is different to its original; does not take into account the dirty state of the property -- works directly with the current and original values.
+    \item[\textbf{isChangedFromPrevious()}] -- indicates whether the current and previous property values are different.
+  \end{description}  
   
 
 \section{Business Logic and Controllers}
