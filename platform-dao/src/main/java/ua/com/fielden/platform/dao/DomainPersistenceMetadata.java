@@ -24,11 +24,12 @@ import org.hibernate.type.YesNoType;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
@@ -125,6 +126,7 @@ public class DomainPersistenceMetadata {
 	for (final PropertyPersistenceInfo ppi : ppis) {
 	    if (!ppi.isCalculated()) {
 		result.addAll(ppi.getCompositeTypeSubprops());
+		result.addAll(ppi.getComponentTypeSubprops());
 	    }
 	}
 	return result;
@@ -293,6 +295,7 @@ public class DomainPersistenceMetadata {
 
     private PropertyPersistenceInfo getCommonPropHibInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
 	final boolean isEntity = isPersistedEntityType(field.getType());
+	final boolean isUnionEntity = AbstractUnionEntity.class.isAssignableFrom(field.getType());
 	final MapTo mapTo = getMapTo(entityType, field.getName());
 	final PersistedType persistedType = getPersistedType(entityType, field.getName());
 	final String propName = field.getName();
@@ -304,6 +307,10 @@ public class DomainPersistenceMetadata {
 
 	if (isEntity) {
 	    builder.type(PropertyPersistenceType.ENTITY);
+	}
+
+	if (isUnionEntity) {
+	    builder.type(PropertyPersistenceType.UNION_ENTITY);
 	}
 
 	builder.hibType(hibernateType);

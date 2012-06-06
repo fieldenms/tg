@@ -8,7 +8,7 @@ public class PropertyColumn {
 
     public PropertyColumn(final String name, final Long length, final Long precision, final Long scale) {
 	super();
-	this.name = name;
+	this.name = name.toUpperCase();
 	this.length = length;
 	this.precision = precision;
 	this.scale = scale;
@@ -32,6 +32,11 @@ public class PropertyColumn {
 
     public Long getScale() {
         return scale;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 
     @Override

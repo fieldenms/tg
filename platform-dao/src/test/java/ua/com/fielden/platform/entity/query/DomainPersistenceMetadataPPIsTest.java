@@ -2,12 +2,9 @@ package ua.com.fielden.platform.entity.query;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.PropertyColumn;
@@ -22,18 +19,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
-    private static Type hibType(final String name) {
-	return TypeFactory.basic(name);
-    }
-
-    private static PropertyPersistenceInfo ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyPersistenceType type) {
-	return new PropertyPersistenceInfo.Builder(name, javaType, nullable).column(new PropertyColumn(column)).hibType(hibType).type(type).build();
-    }
-
-    private static PropertyPersistenceInfo ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyPersistenceType type) {
-	return new PropertyPersistenceInfo.Builder(name, javaType, nullable).columns(columns).hibType(hibType).type(type).build();
-    }
-
     @Test
     public void test1() {
 	final SortedSet<PropertyPersistenceInfo> expected = new TreeSet<PropertyPersistenceInfo>();

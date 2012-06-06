@@ -16,6 +16,9 @@ import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
+import ua.com.fielden.platform.dao.PropertyColumn;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PurePropInfo;
@@ -42,7 +45,9 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
 
@@ -66,6 +71,8 @@ public class BaseEntQueryTCase {
     protected static final Class<TgOrgUnit3> ORG3 = TgOrgUnit3.class;
     protected static final Class<TgOrgUnit2> ORG2 = TgOrgUnit2.class;
     protected static final Class<TgOrgUnit1> ORG1 = TgOrgUnit1.class;
+    protected static final Class<TgWagonSlot> WAGON_SLOT = TgWagonSlot.class;
+    protected static final Class<TgWorkshop> WORKSHOP = TgWorkshop.class;
     protected static final Class<String> STRING = String.class;
     protected static final Class<Date> DATE = Date.class;
     protected static final Class<Long> LONG = Long.class;
@@ -217,4 +224,15 @@ public class BaseEntQueryTCase {
 	assertFalse(("Prop resolution infos are equal! exp: " + propResInfo.toString() + " act: " + act.toString()), propResInfo.equals(act));
     }
 
+    public static Type hibType(final String name) {
+	return TypeFactory.basic(name);
+    }
+
+    public static PropertyPersistenceInfo ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyPersistenceType type) {
+	return new PropertyPersistenceInfo.Builder(name, javaType, nullable).column(new PropertyColumn(column)).hibType(hibType).type(type).build();
+    }
+
+    public static PropertyPersistenceInfo ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyPersistenceType type) {
+	return new PropertyPersistenceInfo.Builder(name, javaType, nullable).columns(columns).hibType(hibType).type(type).build();
+    }
 }

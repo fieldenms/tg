@@ -1,9 +1,14 @@
-package ua.com.fielden.platform.dao;
+	package ua.com.fielden.platform.dao;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import static ua.com.fielden.platform.dao.DomainPersistenceMetadata.specialProps;
 
 /**
@@ -85,6 +90,23 @@ public class HibernateMappingsGenerator {
 	return "\t<one-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" constrained=\"true\"/>\n";
     }
 
+
+    private String getUnionEntityProperty(final PropertyPersistenceInfo info) {
+	    final StringBuffer sb = new StringBuffer();
+	    sb.append("\t<component name=\"" + info.getName() + "\" class=\"" + info.getJavaType().getName() + "\">\n");
+	    final List<Field> propsFields = AbstractUnionEntity.unionProperties(info.getJavaType());
+	    for (final Field subpropField : propsFields) {
+		final MapTo mapTo = subpropField.getAnnotation(MapTo.class);
+		if (mapTo == null) {
+		    throw new IllegalStateException("Property [" + subpropField.getName() + "] in union entity type [" + info.getJavaType() + "] is not annotated  no MapTo ");
+		}
+		final String column = info.getColumn().getName() + "_" + (StringUtils.isEmpty(mapTo.value()) ? subpropField.getName() : mapTo.value());
+		sb.append("\t\t<many-to-one name=\"" + subpropField.getName() +  "\" class=\"" + subpropField.getType().getName() + "\" column = \"" + column.toUpperCase() + "\"/>\n");
+	    }
+	    sb.append("\t</component>\n");
+	    return sb.toString();
+    }
+
     private String getPropMappingString(final String propName, final List<PropertyColumn> propColumns, final String hibTypeName) {
 	final String propNameClause = "\t<property name=\"" + propName + "\"";
 	final String typeClause = hibTypeName == null ? "" : " type=\"" + hibTypeName + "\"";
@@ -127,14 +149,14 @@ public class HibernateMappingsGenerator {
 	}
 
 	for (final PropertyPersistenceInfo ppi : map.getProps().values()) {
-//	    if (!ppi.getType().equals(PropertyPersistenceType.COMPOSITE_DETAILS) && !ppi.isCalculated() && !ppi.isCollection() && !specialProps.contains(ppi.getName())) {
 	    if (ppi.affectsMapping() && !specialProps.contains(ppi.getName())) {
-		sb.append(getCommonPropMappingString(ppi));
+		    sb.append(getCommonPropMappingString(ppi));
 	    }
 	}
 	sb.append("</class>\n");
 	return sb.toString();
     }
+
 
     /**
      * Generates mapping string for common property based on it persistence info.
@@ -144,6 +166,8 @@ public class HibernateMappingsGenerator {
      */
     private String getCommonPropMappingString(final PropertyPersistenceInfo info) throws Exception {
 	switch (info.getType()) {
+	case UNION_ENTITY:
+	    return getUnionEntityProperty(info);
 	case ENTITY_KEY:
 	    return getOneToOneProperty(info.getName(), info.getJavaType());
 	case ENTITY:

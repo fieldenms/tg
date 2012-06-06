@@ -1,13 +1,18 @@
 package ua.com.fielden.platform.dao;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
+import org.hibernate.Hibernate;
 import org.hibernate.type.Type;
 
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -36,6 +41,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	typesThatAffectsMapping.add(PropertyPersistenceType.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
 	typesThatAffectsMapping.add(PropertyPersistenceType.PROP);
 	typesThatAffectsMapping.add(PropertyPersistenceType.VERSION);
+	typesThatAffectsMapping.add(PropertyPersistenceType.UNION_ENTITY);
     }
 
     public boolean isCalculated() {
@@ -88,6 +94,14 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	return type.equals(PropertyPersistenceType.VERSION);
     }
 
+    public boolean isUnionEntity() {
+	return type.equals(PropertyPersistenceType.UNION_ENTITY);
+    }
+
+    public boolean isUnionEntityDetails() {
+	return type.equals(PropertyPersistenceType.UNION_DETAILS);
+    }
+
     public String getTypeString() {
 	if (hibType != null) {
 	    return hibType.getClass().getName();
@@ -114,6 +128,22 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 		final Object hibType = subpropsTypes.get(index);
 		result.add(new PropertyPersistenceInfo.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(PropertyPersistenceType.COMPOSITE_DETAILS).hibType(hibType).build());
 		index = index + 1;
+	    }
+	}
+	return result;
+    }
+
+    public Set<PropertyPersistenceInfo> getComponentTypeSubprops() {
+	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
+	if (PropertyPersistenceType.UNION_ENTITY.equals(type)) {
+	    final List<Field> propsFields = AbstractUnionEntity.unionProperties(javaType);
+	    for (final Field subpropField : propsFields) {
+		final MapTo mapTo = subpropField.getAnnotation(MapTo.class);
+		if (mapTo == null) {
+		    throw new IllegalStateException("Property [" + subpropField.getName() + "] in union entity type [" + javaType + "] is not annotated  no MapTo ");
+		}
+		final PropertyColumn column = new PropertyColumn(getColumn() + "_" + (StringUtils.isEmpty(mapTo.value()) ? subpropField.getName() : mapTo.value()));
+		result.add(new PropertyPersistenceInfo.Builder(name + "." + subpropField.getName(), subpropField.getType(), true).column(column).type(PropertyPersistenceType.UNION_DETAILS).hibType(Hibernate.LONG).build());
 	    }
 	}
 	return result;
@@ -219,7 +249,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     }
 
     public static enum PropertyPersistenceType {
-	PROP, COLLECTIONAL, ENTITY, ID, ONE2ONE_ID, VERSION, PRIMITIVE_KEY, ENTITY_KEY, ENTITY_MEMBER_OF_COMPOSITE_KEY, PRIMITIVE_MEMBER_OF_COMPOSITE_KEY, COMPOSITE_DETAILS, CALCULATED;
+	PROP, COLLECTIONAL, ENTITY, ID, ONE2ONE_ID, VERSION, PRIMITIVE_KEY, ENTITY_KEY, ENTITY_MEMBER_OF_COMPOSITE_KEY, PRIMITIVE_MEMBER_OF_COMPOSITE_KEY, COMPOSITE_DETAILS, CALCULATED, UNION_ENTITY, UNION_DETAILS;
     }
 
     public ExpressionModel getExpressionModel() {

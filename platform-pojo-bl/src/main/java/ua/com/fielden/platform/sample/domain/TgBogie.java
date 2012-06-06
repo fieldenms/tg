@@ -4,8 +4,12 @@ import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogie;
 
@@ -20,18 +24,18 @@ public class TgBogie extends AbstractEntity<String> {
     protected TgBogie() {
     }
 
-//    @IsProperty
-//    @MapTo
-//    @Title(value = "Location", desc = "Location")
-//    private TgBogieLocation location;
-//
-//    @Observable
-//    public TgBogie setLocation(final TgBogieLocation location) {
-//	this.location = location;
-//	return this;
-//    }
-//
-//    public TgBogieLocation getLocation() {
-//	return location;
-//    }
+    @IsProperty
+    @MapTo
+    @Title(value = "Location", desc = "Location")
+    private TgBogieLocation location;
+
+    @Observable
+    public TgBogie setLocation(final TgBogieLocation location) {
+	this.location = location;
+	return this;
+    }
+
+    public TgBogieLocation getLocation() {
+	return location;
+    }
 }
