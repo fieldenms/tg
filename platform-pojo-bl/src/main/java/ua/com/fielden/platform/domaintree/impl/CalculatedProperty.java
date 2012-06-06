@@ -451,11 +451,11 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     }
 
     protected static CalculatedProperty repeatSettingOfImportantStuff(final CalculatedProperty cp) {
-	return setImportantStuff((String) cp.getProperty("contextualExpression").getLastAttemptValue(), //
-		(String) cp.getProperty("title").getLastAttemptValue(), //
-		(String) cp.getProperty("desc").getLastAttemptValue(), //
-		(CalculatedPropertyAttribute) cp.getProperty("attribute").getLastAttemptValue(), //
-		(String) cp.getProperty("originationProperty").getLastAttemptValue(), cp);
+	return setImportantStuff((String) cp.getProperty("contextualExpression").getLastAttemptedValue(), //
+		(String) cp.getProperty("title").getLastAttemptedValue(), //
+		(String) cp.getProperty("desc").getLastAttemptedValue(), //
+		(CalculatedPropertyAttribute) cp.getProperty("attribute").getLastAttemptedValue(), //
+		(String) cp.getProperty("originationProperty").getLastAttemptedValue(), cp);
     }
 
     public IDomainTreeEnhancer getEnhancer() {

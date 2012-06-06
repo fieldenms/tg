@@ -210,7 +210,7 @@ public class EntityUtils {
     public static String getLabelText(final MetaProperty metaProperty, final boolean returnEmptyStringIfInvalid, final Converter converter) {
 	if (metaProperty != null) {
 	    // hierarchy is valid, only the last property could be invalid
-	    final Object value = metaProperty.getLastAttemptValue();
+	    final Object value = metaProperty.getLastAttemptedValue();
 	    if (!metaProperty.isValid() && returnEmptyStringIfInvalid) {
 		return "";
 	    }

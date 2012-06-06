@@ -56,7 +56,7 @@ public class MetaPropertyFromPersistancePerspectiveTest extends AbstractDomainDr
     @Test
     public void last_attempted_value_should_match_original() {
 	final EntityWithMoney entity = ao(EntityWithMoney.class).findByKey("key1");
-	assertEquals(new Money("20.00"), entity.getProperty("money").getLastAttemptValue());
+	assertEquals(new Money("20.00"), entity.getProperty("money").getLastAttemptedValue());
 	assertEquals(new Money("20.00"), entity.getProperty("money").getOriginalValue());
     }
 
@@ -64,11 +64,11 @@ public class MetaPropertyFromPersistancePerspectiveTest extends AbstractDomainDr
     public void resetting_invalid_property_changes_should_null_out_last_invalid_value_information() {
 	final EntityWithMoney entity = ao(EntityWithMoney.class).findByKey("key1");
 	entity.setMoney(null);
-	assertNull(entity.getProperty("money").getLastAttemptValue());
+	assertNull(entity.getProperty("money").getLastAttemptedValue());
 	assertNull(entity.getProperty("money").getLastInvalidValue());
 
 	entity.setMoney(new Money("30.00"));
-	assertEquals(new Money("30.00"), entity.getProperty("money").getLastAttemptValue());
+	assertEquals(new Money("30.00"), entity.getProperty("money").getLastAttemptedValue());
 	assertNull(entity.getProperty("money").getLastInvalidValue());
     }
 

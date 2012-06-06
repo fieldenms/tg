@@ -800,19 +800,19 @@ public class AbstractEntityTest {
     public void test_get_last_attempt_value() {
 	final Entity entity = factory.newEntity(Entity.class, "key", "description");
 	entity.setNumber(5);
-	assertEquals(5, entity.getProperty("number").getLastAttemptValue());
+	assertEquals(5, entity.getProperty("number").getLastAttemptedValue());
 
 	// setting invalid value
 	entity.setNumber(35);
-	assertEquals(35, entity.getProperty("number").getLastAttemptValue());
+	assertEquals(35, entity.getProperty("number").getLastAttemptedValue());
 
 	// setting once again incorrect value
 	entity.setNumber(100);
-	assertEquals(100, entity.getProperty("number").getLastAttemptValue());
+	assertEquals(100, entity.getProperty("number").getLastAttemptedValue());
 
 	// setting correct value
 	entity.setNumber(25);
-	assertEquals(25, entity.getProperty("number").getLastAttemptValue());
+	assertEquals(25, entity.getProperty("number").getLastAttemptedValue());
     }
 
     @Test

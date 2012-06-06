@@ -66,9 +66,9 @@ public class MetaPropertyTest {
 
     @Test
     public void valid_property_assignment_should_update_last_attempted_value() {
-	assertNull(entity.getProperty("propWithBce").getLastAttemptValue());
+	assertNull(entity.getProperty("propWithBce").getLastAttemptedValue());
 	entity.setPropWithBce("some other value");
-	assertNotNull(entity.getProperty("propWithBce").getLastAttemptValue());
+	assertNotNull(entity.getProperty("propWithBce").getLastAttemptedValue());
 	assertNull(entity.getProperty("propWithBce").getLastInvalidValue());
     }
 
@@ -84,21 +84,41 @@ public class MetaPropertyTest {
 	assertNull(entity.getProperty("propWithBce").getOriginalValue());
 	entity.setPropWithBce("failure");
 	assertEquals("default value", entity.getProperty("propWithBce").getValue());
-	assertNotNull(entity.getProperty("propWithBce").getLastAttemptValue());
+	assertNotNull(entity.getProperty("propWithBce").getLastAttemptedValue());
 	assertNotNull(entity.getProperty("propWithBce").getLastInvalidValue());
-	assertEquals(entity.getProperty("propWithBce").getLastAttemptValue(), entity.getProperty("propWithBce").getLastInvalidValue());
+	assertEquals(entity.getProperty("propWithBce").getLastAttemptedValue(), entity.getProperty("propWithBce").getLastInvalidValue());
     }
 
     @Test
     public void resetting_invalid_property_changes_should_null_out_last_invalid_value_information() {
 	assertNull(entity.getProperty("propWithBce").getOriginalValue());
 	entity.setPropWithBce("failure");
-	assertNotNull(entity.getProperty("propWithBce").getLastAttemptValue());
+	assertNotNull(entity.getProperty("propWithBce").getLastAttemptedValue());
 	assertNotNull(entity.getProperty("propWithBce").getLastInvalidValue());
 
 	entity.setPropWithBce("good value");
-	assertEquals("good value", entity.getProperty("propWithBce").getLastAttemptValue());
+	assertEquals("good value", entity.getProperty("propWithBce").getLastAttemptedValue());
 	assertNull(entity.getProperty("propWithBce").getLastInvalidValue());
     }
+
+    @Test
+    public void is_changed_from_original_shoud_be_true_for_props_with_default_value_in_new_entities() {
+	assertTrue(entity.getProperty("propWithBce").isChangedFromOriginal());
+    }
+
+    @Test
+    public void is_changed_from_original_shoud_be_false_for_props_without_default_value_in_new_entities() {
+	assertFalse(entity.getProperty("property2").isChangedFromOriginal());
+    }
+
+
+    @Test
+    public void is_changed_from_original_shoud_be_true_after_prop_changes_in_new_entities2() {
+	entity.setProperty2("new value");
+	assertTrue(entity.getProperty("property2").isChangedFromOriginal());
+    }
+
+
+
 
 }

@@ -374,7 +374,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
 			if (!dependentMetaProperty.isValid()) { // is this an error recovery situation?
 			    dependentMetaProperty.setEnforceMutator(true);
 			    try {
-				entity.set(dependentPropertyName, dependentMetaProperty.getLastAttemptValue());
+				entity.set(dependentPropertyName, dependentMetaProperty.getLastAttemptedValue());
 			    } finally {
 				dependentMetaProperty.setEnforceMutator(false);
 			    }

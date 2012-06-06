@@ -193,7 +193,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     }
 
     /**
-     * Revalidates this property using {@link #getLastAttemptValue()} value as the input for the property. Revalidation occurs only if this property has an assigned value (null
+     * Revalidates this property using {@link #getLastAttemptedValue()} value as the input for the property. Revalidation occurs only if this property has an assigned value (null
      * could also be an assigned value).
      *
      * @param ignoreRequiredness
@@ -204,7 +204,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
     public synchronized final Result revalidate(final boolean ignoreRequiredness) {
 	// revalidation is required only is there is an assigned value
 	if (assigned) {
-	    return validate(getLastAttemptValue(), null, validationAnnotations, ignoreRequiredness);
+	    return validate(getLastAttemptedValue(), null, validationAnnotations, ignoreRequiredness);
 	}
 	return Result.successful(this);
     }
@@ -789,7 +789,7 @@ public final class MetaProperty implements Comparable<MetaProperty> {
      *
      * @return
      */
-    public final Object getLastAttemptValue() {
+    public final Object getLastAttemptedValue() {
 	return isValid() ? (isAssigned() ? getValue() : getOriginalValue()) : getLastInvalidValue();
     }
 
