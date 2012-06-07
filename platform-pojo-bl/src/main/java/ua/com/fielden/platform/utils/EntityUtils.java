@@ -764,8 +764,7 @@ public class EntityUtils {
 	final List<Field> result = new ArrayList<Field>();
 
 	for (final Field propField : Finder.findRealProperties(entityType)) {
-	    final IsProperty propAnnotation = propField.getAnnotation(IsProperty.class);
-	    if (!IsProperty.stubForLinkProperty.equals(propAnnotation.linkProperty())) {
+	    if (Finder.hasLinkProperty(entityType, propField.getName())) {
 		result.add(propField);
 	    }
 	}

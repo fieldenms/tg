@@ -14,9 +14,9 @@ import java.util.TreeSet;
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -43,8 +43,9 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 			final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
 			for (final Field field : collProps) {
 			    if (field.getName().equals(propName)) {
-				// TODO need to use getLinkProperty method instead of invoking linkProperty on IsProperty annotation.
-				enhanceCollectional(entities, propName, field.getType(), field.getAnnotation(IsProperty.class).linkProperty(), propFetchModel);
+				//final String linkPropName = field.getAnnotation(IsProperty.class).linkProperty();
+				final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
+				enhanceCollectional(entities, propName, field.getType(), linkPropName, propFetchModel);
 			    }
 			}
 		    } else if (ppi.isEntity() || ppi.isOne2OneId()) {
