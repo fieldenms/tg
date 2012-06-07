@@ -608,11 +608,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 		}
 
 		final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) getType();
-		if (isCollectional && !Finder.hasLinkProperty(entityType, field.getName())) {
-		    final String error = "Property " + field.getName() + " in " + getType() + " is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.";
-		    logger.error(error);
-		    throw new IllegalStateException(error);
-		}
+//		if (isCollectional && !Finder.hasLinkProperty(entityType, field.getName())) {
+//		    final String error = "Property " + field.getName() + " in " + getType() + " is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.";
+//		    logger.error(error);
+//		    throw new IllegalStateException(error);
+//		}
 
 		if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY)) && !Finder.isOne2One_association(entityType, field.getName())) {
 		    final String error = "Property " + field.getName() + " in " + getType() + " has AE key type, but it does not form correct one2one association due to non-parent type of property key.";
