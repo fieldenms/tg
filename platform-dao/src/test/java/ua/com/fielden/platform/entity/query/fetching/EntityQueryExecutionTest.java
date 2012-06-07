@@ -771,7 +771,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
 	final TgBogieLocation location = new TgBogieLocation().setWorkshop(workshop1);
 	location.ensureUnion("workshop", null);
-	final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1"));//.setLocation(location));
+	final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
 	final TgBogie bogie2 = save(new_(TgBogie.class, "BOGIE2", "Bogie 2"));
 	final TgBogie bogie3 = save(new_(TgBogie.class, "BOGIE3", "Bogie 3"));
 	final TgBogie bogie4 = save(new_(TgBogie.class, "BOGIE4", "Bogie 4"));
