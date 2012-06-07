@@ -171,7 +171,10 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     public final int hashCode() {
 	int result = 29;
 	for (int index = 0; index < propertyExpressions.size(); index++) {
-	    result += value(index).hashCode() * 13;
+	    final Object keyMemberValue = value(index);
+	    if (keyMemberValue != null) {
+		result += value(index).hashCode() * 13;
+	    }
 	}
 	return result;
     }
