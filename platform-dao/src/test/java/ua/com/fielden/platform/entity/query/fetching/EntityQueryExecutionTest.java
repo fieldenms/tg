@@ -35,12 +35,14 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagon;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
+import ua.com.fielden.platform.sample.domain.controller.ITgBogie;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.controller.ITgWagon;
 import ua.com.fielden.platform.sample.domain.controller.ITgWagonSlot;
+import ua.com.fielden.platform.sample.domain.controller.ITgWorkshop;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -60,7 +62,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
+    private final ITgBogie bogieDao = getInstance(ITgBogie.class);
     private final ITgWagon wagonDao = getInstance(ITgWagon.class);
+    private final ITgWorkshop workshopDao = getInstance(ITgWorkshop.class);
     private final ITgWagonSlot wagonSlotDao = getInstance(ITgWagonSlot.class);
     private final ITgVehicleModel vehicleModelDao = getInstance(ITgVehicleModel.class);
     private final ITgVehicleMake vehicleMakeDao = getInstance(ITgVehicleMake.class);
@@ -73,6 +77,13 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final EntityWithMoneyDao entityWithMoneyDao = getInstance(EntityWithMoneyDao.class);
     private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
 
+
+    @Test
+    public void test_query_with_union_property() {
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.workshop").eq().val(workshopDao.findByKey("WSHOP1")).model();
+	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).build());
+	assertEquals("Incorrect key 1", "BOGIE1", models.get(0).getKey());
+    }
 
     @Test
     public void test_query_with_virtual_property() {

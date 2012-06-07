@@ -15,8 +15,8 @@ import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYield
 public class EntityTree<E extends AbstractEntity<?>> {
     private Class<E> resultType; // e.g. Vehicle
     private SortedMap<ResultQueryYieldDetails, Integer/*position in raw result array*/> singles = new TreeMap<ResultQueryYieldDetails, Integer>();
-    private SortedMap<String /*composite value property name*/, ValueTree> compositeValues = new TreeMap<String, ValueTree>();
     private SortedMap<String /*composite property name*/, EntityTree<? extends AbstractEntity<?>>> composites = new TreeMap<String, EntityTree<? extends AbstractEntity<?>>>();
+    private SortedMap<String /*composite value property name*/, ValueTree> compositeValues = new TreeMap<String, ValueTree>();
 
     protected EntityTree(final Class<E> resultType) {
 	this.resultType = resultType;

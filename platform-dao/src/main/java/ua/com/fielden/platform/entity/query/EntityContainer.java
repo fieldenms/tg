@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -85,7 +86,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
     private void setPropertyValue(final R entity, final String propName, final Object propValue, final boolean userViewOnly) {
 	try {
-	    if (!userViewOnly || EntityAggregates.class.equals(resultType)) {
+	    if (/*!userViewOnly || */EntityAggregates.class.equals(resultType) || propValue instanceof Set) {
 		entity.set(propName, propValue);
 	    } else {
 		setPropertyToField(entity, propName, propValue);

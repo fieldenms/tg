@@ -21,6 +21,10 @@ public class EntityPersistenceMetadata {
 	this(null, model, type, props);
     }
 
+    public EntityPersistenceMetadata(final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyPersistenceInfo> props) {
+	this(null, null, type, props);
+    }
+
     private EntityPersistenceMetadata(final String table, final EntityResultQueryModel<? extends AbstractEntity<?>> model, final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyPersistenceInfo> props) {
 	super();
 	this.table = table;

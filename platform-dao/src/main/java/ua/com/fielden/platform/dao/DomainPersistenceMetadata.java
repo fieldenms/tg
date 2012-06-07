@@ -118,7 +118,15 @@ public class DomainPersistenceMetadata {
 	    return new EntityPersistenceMetadata(entityModel, entityType, getMap(Collections.<PropertyPersistenceInfo> emptySet()));
 	}
 
-	throw new IllegalStateException("Couldn't detemine data source for entity type: " + entityType);
+
+	final Set<PropertyPersistenceInfo> ppis = new HashSet<PropertyPersistenceInfo>();
+	for (final Field field : getPersistedProperties(entityType)) {
+		ppis.add(getCommonPropHibInfo(entityType, field));
+	}
+
+	return new EntityPersistenceMetadata(tableClase, entityType, getMap(ppis));
+
+	//throw new IllegalStateException("Couldn't detemine data source for entity type: " + entityType);
     }
 
     private Set<PropertyPersistenceInfo> generatePPIsForCompositeTypeProps(final Set<PropertyPersistenceInfo> ppis) {
@@ -434,21 +442,22 @@ public class DomainPersistenceMetadata {
 
     private String getTableClause(final Class<? extends AbstractEntity<?>> entityType) {
 	if (!EntityUtils.isPersistedEntityType(entityType)) {
-	    throw new IllegalArgumentException("Trying to determine table name for not-persisted entity type [" + entityType + "]");
+	    return null;
+	    //throw new IllegalArgumentException("Trying to determine table name for not-persisted entity type [" + entityType + "]");
 	}
 
 	final MapEntityTo mapEntityToAnnotation = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType);
 
-	if (mapEntityToAnnotation == null) {
-	    return null;
-	} else {
+//	if (mapEntityToAnnotation == null) {
+//	    return null;
+//	} else {
 	    final String providedTableName = mapEntityToAnnotation.value();
 	    if (!StringUtils.isEmpty(providedTableName)) {
 		return providedTableName;
 	    } else {
 		return DynamicEntityClassLoader.getOriginalType(entityType).getSimpleName().toUpperCase() + "_";
 	    }
-	}
+//	}
     }
 
     public Map<Class, Object> getHibTypesDefaults() {

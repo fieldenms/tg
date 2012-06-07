@@ -30,6 +30,7 @@ final class EntityResultTreeBuilder {
 	    this.items = items;
 	    this.hibType = null;
 	}
+
 	public MetaP(final String name, final ICompositeUserTypeInstantiate hibType, final SortedSet<ResultQueryYieldDetails> items) {
 	    super();
 	    this.name = name;
