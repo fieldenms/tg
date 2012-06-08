@@ -45,7 +45,7 @@ public class Yields implements IPropertyCollector {
 	final List<Yield> yieldsToBeIncludedIntoSql = new ArrayList<Yield>();
 
 	for (final Yield yield : yields.values()) {
-	    if (!yield.shouldBeIgnored() && !yield.getInfo().isCompositeProperty()) {
+	    if (!yield.shouldBeIgnored() && !yield.getInfo().isCompositeProperty() && !yield.getInfo().isUnionEntity()) {
 		yieldsToBeIncludedIntoSql.add(yield);
 	    }
 	}

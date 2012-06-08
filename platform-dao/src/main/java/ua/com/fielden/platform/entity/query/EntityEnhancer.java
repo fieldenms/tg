@@ -48,10 +48,10 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 				enhanceCollectional(entities, propName, field.getType(), linkPropName, propFetchModel);
 			    }
 			}
-		    } else if (ppi.isEntity() || ppi.isOne2OneId()) {
+		    } else if (ppi.isEntity() || ppi.isOne2OneId() || ppi.isUnionEntity()) {
 			enhanceProperty(entities, propName, propFetchModel);
 		    } else {
-			// do nothing
+			// do notshing
 		    }
 		} else {
 		    enhanceProperty(entities, propName, propFetchModel);

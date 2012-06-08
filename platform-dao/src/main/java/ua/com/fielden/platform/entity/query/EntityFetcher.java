@@ -67,7 +67,7 @@ public class EntityFetcher {
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
 	final SortedSet<ResultQueryYieldDetails> result = new TreeSet<ResultQueryYieldDetails>();
 	for (final Yield yield : model.getYields().values()) {
-	    result.add(new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn()));
+	    result.add(new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), yield.getInfo().getYieldDetailsType()));
 	}
 	return result;
     }

@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
+import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -113,10 +114,10 @@ public class EntQuery implements ISingleOperand {
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
             for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(type())) {
-        	//ppi.isUnionEntity() || ppi.isUnionEntityDetails() ||
-        	final boolean skipProperty = ppi.isUnionEntity() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
+        	//ppi.isUnionEntity() || ppi.isUnionEntityDetails() || ppi.isUnionEntity() ||
+        	final boolean skipProperty =  ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
       		if (!skipProperty) {
-                    final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn().getName() : null));
+                    final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn().getName() : null), ppi.getYieldDetailType());
                     yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
                 }
             }
@@ -141,7 +142,7 @@ public class EntQuery implements ISingleOperand {
         int yieldIndex = 0;
         for (final Yield yield : yields.getYields().values()) {
             yieldIndex = yieldIndex + 1;
-            final ResultQueryYieldDetails ppi = new ResultQueryYieldDetails(yield.getAlias(), determineYieldJavaType(yield), determineYieldHibType(yield), "C" + yieldIndex, determineYieldNullability(yield));
+            final ResultQueryYieldDetails ppi = new ResultQueryYieldDetails(yield.getAlias(), determineYieldJavaType(yield), determineYieldHibType(yield), "C" + yieldIndex, determineYieldNullability(yield), determineYieldDetailsType(yield));
             yield.setInfo(ppi);
         }
     }
@@ -152,6 +153,15 @@ public class EntQuery implements ISingleOperand {
             return finalPropInfo.getHibType();
         } else {
             return yield.getOperand().hibType();
+        }
+    }
+
+    private YieldDetailsType determineYieldDetailsType(final Yield yield) {
+        final PropertyPersistenceInfo finalPropInfo = domainPersistenceMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
+        if (finalPropInfo != null) {
+            return finalPropInfo.getYieldDetailType();
+        } else {
+            return YieldDetailsType.USUAL_PROP /*TEMP*/;
         }
     }
 

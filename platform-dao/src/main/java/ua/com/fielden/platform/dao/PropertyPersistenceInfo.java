@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
+import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -42,6 +43,10 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	typesThatAffectsMapping.add(PropertyPersistenceType.PROP);
 	typesThatAffectsMapping.add(PropertyPersistenceType.VERSION);
 	typesThatAffectsMapping.add(PropertyPersistenceType.UNION_ENTITY);
+    }
+
+    public YieldDetailsType getYieldDetailType() {
+	return isCompositeProperty() ? YieldDetailsType.COMPOSITE_TYPE_HEADER : (isUnionEntity() ? YieldDetailsType.UNION_ENTITY_HEADER : YieldDetailsType.USUAL_PROP);
     }
 
     public boolean isCalculated() {

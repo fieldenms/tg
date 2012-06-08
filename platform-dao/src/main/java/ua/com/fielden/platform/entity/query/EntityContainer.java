@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -47,22 +48,26 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     public R instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
 	entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
 	entity.setInitialising(true);
+	final boolean unionEntity = AbstractUnionEntity.class.isAssignableFrom(resultType);
 
 	for (final Map.Entry<String, Object> primPropEntry : primitives.entrySet()) {
-	    setPropertyValue(entity, primPropEntry.getKey(), primPropEntry.getValue(), userViewOnly);
+	    setPropertyValue(entity, primPropEntry.getKey(), primPropEntry.getValue());
 	}
 
 	for (final Map.Entry<String, ValueContainer> compositePropEntry : composites.entrySet()) {
-	    setPropertyValue(entity, compositePropEntry.getKey(), compositePropEntry.getValue().instantiate(), userViewOnly);
+	    setPropertyValue(entity, compositePropEntry.getKey(), compositePropEntry.getValue().instantiate());
 	}
 
 	for (final Map.Entry<String, EntityContainer<? extends AbstractEntity<?>>> entityEntry : entities.entrySet()) {
 	    final Object propValue = determinePropValue(entityEntry.getValue(), entFactory, userViewOnly);
-	    setPropertyValue(entity, entityEntry.getKey(), propValue, userViewOnly);
+	    setPropertyValue(entity, entityEntry.getKey(), propValue);
+	    if (unionEntity && propValue != null) {
+		((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey(), (AbstractEntity) propValue);
+	    }
 	}
 
 	for (final Map.Entry<String, CollectionContainer<? extends AbstractEntity<?>>> entityEntry : collections.entrySet()) {
-	    setPropertyValue(entity, entityEntry.getKey(), entityEntry.getValue().instantiate(entFactory, userViewOnly), userViewOnly);
+	    setPropertyValue(entity, entityEntry.getKey(), entityEntry.getValue().instantiate(entFactory, userViewOnly));
 	}
 
 	if (!userViewOnly) {
@@ -84,9 +89,9 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 	}
     }
 
-    private void setPropertyValue(final R entity, final String propName, final Object propValue, final boolean userViewOnly) {
+    private void setPropertyValue(final R entity, final String propName, final Object propValue) {
 	try {
-	    if (/*!userViewOnly || */EntityAggregates.class.equals(resultType) || propValue instanceof Set) {
+	    if (EntityAggregates.class.equals(resultType) || propValue instanceof Set) {
 		entity.set(propName, propValue);
 	    } else {
 		setPropertyToField(entity, propName, propValue);
