@@ -53,7 +53,19 @@ public class TypeBasedSource extends AbstractSource {
 		return null;
 	    } else {
 		final boolean propNullability = getDomainPersistenceMetadataAnalyser().isNullable(entityType, dotNotatedPropName);
-		final PropertyPersistenceInfo explicitPartPropInfo = getDomainPersistenceMetadataAnalyser().getPropPersistenceInfoExplicitly(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
+		final String onePartProp = EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey();
+		final PropertyPersistenceInfo explicitPartPropInfo = getDomainPersistenceMetadataAnalyser().getPropPersistenceInfoExplicitly(entityType, onePartProp);
+		final String twoPartProp = onePartProp + "." + EntityUtils.splitPropByFirstDot(EntityUtils.splitPropByFirstDot(dotNotatedPropName).getValue()).getKey();
+		final PropertyPersistenceInfo explicitPartPropInfo2 = getDomainPersistenceMetadataAnalyser().getPropPersistenceInfoExplicitly(entityType, twoPartProp);
+		if (explicitPartPropInfo2 != null) {
+			final boolean explicitPropNullability = true;
+			final PurePropInfo ppi = new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable());
+			ppi.setExpressionModel(propInfo.getExpressionModel());
+			return new Pair<PurePropInfo, PurePropInfo>( //
+			new PurePropInfo(explicitPartPropInfo2.getName(), explicitPartPropInfo2.getJavaType(), explicitPartPropInfo2.getHibType(), explicitPropNullability || isNullable()), //
+			ppi);
+		}
+
 		final boolean explicitPropNullability = getDomainPersistenceMetadataAnalyser().isNullable(entityType, EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey());
 		final PurePropInfo ppi = new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable());
 		ppi.setExpressionModel(propInfo.getExpressionModel());

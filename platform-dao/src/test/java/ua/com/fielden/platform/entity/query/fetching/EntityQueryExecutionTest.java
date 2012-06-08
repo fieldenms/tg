@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
@@ -80,9 +81,25 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_query_with_union_property() {
-	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.workshop").eq().val(workshopDao.findByKey("WSHOP1")).model();
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.workshop.key").eq().val("WSHOP1").or().prop("location.wagonSlot.wagon.key").eq().val("WAGON1").model();
 	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).build());
 	assertEquals("Incorrect key 1", "BOGIE1", models.get(0).getKey());
+    }
+
+    @Test
+    public void test_query_with_union_property1() {
+	final EntityResultQueryModel<TgBogie> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").or().prop("location.wagonSlot.wagon.key").eq().val("WAGON1").model();
+	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).build());
+	assertEquals("Incorrect key 1", "BOGIE1", models.get(0).getKey());
+    }
+
+    @Test
+    @Ignore
+    public void test_query_with_union_property2() {
+	final EntityResultQueryModel<TgWorkshop> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").yield().prop("location.workshop").modelAsEntity(TgWorkshop.class);
+	final List<TgWorkshop> models = workshopDao.getAllEntities(from(qry).with(fetch(TgWorkshop.class)).build());
+	System.out.println(models.get(0));
+	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
     }
 
     @Test
@@ -582,6 +599,14 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final EntityResultQueryModel<TgVehicle> qry2 = select(TgVehicle.class).where().prop("model.make").eq().model(qry).model();
 	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry2).build());
 	assertEquals("Incorrect key", "CAR2", models.get(0).getKey());
+    }
+
+    @Test
+    @Ignore
+    public void test22a() {
+	final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR2").yield().prop("model.make").modelAsEntity(TgVehicleMake.class);
+	final List<TgVehicleMake> models = vehicleMakeDao.getAllEntities(from(qry).with(fetch(TgVehicleMake.class)).build());
+	assertEquals("Incorrect key", "AUDI", models.get(0).getKey());
     }
 
     @Test
