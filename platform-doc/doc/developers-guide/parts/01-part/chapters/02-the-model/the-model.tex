@@ -1,30 +1,33 @@
 \chapter{Associations between Domain Entities}\label{ch01:02}
 
-  This section discusses how different relationships between business entities are modelled using the platform.
-
-  The platform supports all established in the industry entity relationships, and provides its own way to model them. Here is a list of three kinds of relationships that are supported by the platform.
+  This chapter discusses how different relationships between business entities are modelled using the platform.
+  The platform supports all established in the industry entity relationships, and provides its own way to model them. 
+  Here is a list of three basic kinds of relationships that are supported by the platform.
   \begin{itemize}
-   \item 
+    \item Many-to-One association.
+    \item One-to-One association.
+    \item One-to-Many association.
   \end{itemize}
 
-Many-to-One association.
-One-to-One association.
-One-to-Many association.
-One might ask what happened to the Many-to-Many association. The answer is simple -- it is easily (and somewhat better) modelled by using One-to-Many associations as will be described later in this section.
+  One might ask what happened to the Many-to-Many association. 
+  The answer is simple -- it is easily (and somewhat better) modelled by using two One-to-Many associations as will be described later in this chapter.
 
-We shall refer to these associations as path associations, which means that there is a directed path in a corresponding directed graph of entity types that allows tracing of entity relationships. There is another kind of relationship -- functional or algorithmic -- that identifies the relationship between entities as the result of some  calculations instead of following an association path. This section is not concerned with functional/algorithmic associations.
+  We shall think of these associations as \emph{paths}.
+  Two entities are in association with each other if there is a \emph{directed path} in a corresponding \emph{directed graph} of entity types that allows tracing one entity to another. 
+  A different way to define association is functional or algorithmic -- the relationship between entities is identified as the result of some calculations instead of following an association path. 
+  This chapter is not concerned with functional/algorithmic associations.  
 
-Let's discuss each of the association kinds in details.
+\section{Many-to-One Association}
 
-\section{Many-to-One}
+  Many-to-One association states that one or more instances of certain entity type may reference the same instance of some other entity type (usually other than that referencing it). 
+  This is one of the simplest associations that occurs even in the most trivial cases.
+  Both the referring (left side, the Many) and the referred (right side, the One) entities are independent from each other unless there is an associations between them.
 
-  Many-to-One association states that one or more instance of some entity type may reference the same instance of some other entity type (usually other than that referencing it). This is one of the simplest associations that occurs even in the most trivial cases.
+  For example, type \emph{Wagon} is in one-to-many association with type \emph{WagonClass}, where many instances of type \emph{Wagon} may have the same value of its property \emph{wagonClass: WagonClass}.
+  At the same time any instance of entity type \emph{Wagon} can be changed or even deleted without any affect on the associated instace of type \emph{WagonClass}.
+  Similarly, instance of \emph{WagonClass} can be changed independently from any assocated wagon, and can even be deleted if there is no associations with wagons.
 
-  Both the referring (left side, the Many) and the referred (right side, the One) entities are independent from each other from their life-cycle point of view.
-
-  For example, there could be an entity type Vehicle and an entity type Model. The Vehicle type contains property model of type Model (this and similar cases we should denote as [property name]: [Type], such as model: Model in this case). If property model: Model is not required then both Vehicle and Model instances may exists and be used in the system (including deletion) independently.
-
-  The notion of referencing is very consistent at both Java and RDBMS levels, where in Java referred instance means a memory reference, and at the database level it means a foreign key for a referring entity table that references an ID column (primary key) of the table for a referred entity.
+  The notion of \emph{referencing} is very consistent at both Java and RDBMS levels, where in Java referred instance means a memory reference, and at the database level it means a foreign key for a referring entity table that references an ID column (primary key) of the table for a referred entity.
 
   \subsection{Context Free}
 
@@ -139,6 +142,9 @@ public class Vehicle extends AbstractEntity<String> {
   Following our example, type Vehicle is a context for type FuelUsage. This, for example, means that calculated properties, added manually or programmatically, to type FuelUsage may contain properties from type Vehicle.
 
   The master properties used as part of details calculated properties should be prefixed with $\leftarrow.$ (left arrow and a dot) indicating that property path resolution should start from the master type.
+
+  \subsection{Collectional Properties}
+  
 
 \section{One-to-Many: Special Case}
 
