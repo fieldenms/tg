@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity1;
@@ -1012,7 +1011,6 @@ public class AbstractEntityTest {
     }
 
     @Test
-    @Ignore
     public void test_illegal_one2many_collectional_property_definition_without_linkProperty_definition() {
 	try {
 	    factory.newEntity(MasterEntity3.class, "key", "description");
