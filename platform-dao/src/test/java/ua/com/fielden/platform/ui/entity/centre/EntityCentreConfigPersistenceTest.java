@@ -34,7 +34,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDomainDrivenTestC
 
     @Test
     public void test_insertion_and_retrieval_of_binary_data() {
-	final EntityCentreConfig config = new_(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
+	final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
 	config.setConfigBody(new byte[]{1,2,3});
 	dao.save(config);
 
@@ -45,7 +45,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDomainDrivenTestC
 
     @Test
     public void test_update_of_binary_data() {
-	final EntityCentreConfig config = new_(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
+	final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
 	config.setConfigBody(new byte[]{1,2,3});
 	dao.save(config);
 

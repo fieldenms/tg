@@ -19,25 +19,25 @@ public class OverlappingSequentialOpenPeriodsWithoutGapsTest extends AbstractDom
 
     @Test
     public void test_overlapping_for_new_closed_between_and_touching_existing() {
-	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 13:00:00")).setFinishDate(date("2011-11-01 14:00:00")).setIncident("001");
+	final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 13:00:00")).setFinishDate(date("2011-11-01 14:00:00")).setIncident("001");
 	assertFalse(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
     @Test
     public void test_overlapping_for_new_closed_between_existing() {
-	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 13:15:00")).setFinishDate(date("2011-11-01 13:45:00")).setIncident("001");
+	final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 13:15:00")).setFinishDate(date("2011-11-01 13:45:00")).setIncident("001");
 	assertFalse(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
     @Test
     public void test_overlapping_for_new_open_with_start_between_existing() {
-	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 15:30:00")).setIncident("001");
+	final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 15:30:00")).setIncident("001");
 	assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
     @Test
     public void test_overlapping_for_new_closed_containing_existing() {
-	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 13:30:00")).setFinishDate(date("2011-11-01 15:30:00")).setIncident("001");
+	final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 13:30:00")).setFinishDate(date("2011-11-01 15:30:00")).setIncident("001");
 	assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
@@ -58,9 +58,9 @@ public class OverlappingSequentialOpenPeriodsWithoutGapsTest extends AbstractDom
 
     @Override
     protected void populateDomain() {
-	save(new_(TgTimesheet.class, "USER1", date("2011-11-01 12:00:00")).setFinishDate(date("2011-11-01 13:00:00")).setIncident("001"));
-	save(new_(TgTimesheet.class, "USER1", date("2011-11-01 14:00:00")).setFinishDate(date("2011-11-01 15:00:00")).setIncident("002"));
-	save(new_(TgTimesheet.class, "USER1", date("2011-11-01 16:00:00")).setIncident("001"));
+	save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 12:00:00")).setFinishDate(date("2011-11-01 13:00:00")).setIncident("001"));
+	save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 14:00:00")).setFinishDate(date("2011-11-01 15:00:00")).setIncident("002"));
+	save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 16:00:00")).setIncident("001"));
     }
 
     @Override

@@ -104,7 +104,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
 
 	final TgBogieClass bo1 = save(new_(TgBogieClass.class, "BO1", "desc1").setTonnage(50));
 
-	save(new_(TgWagonClassCompatibility.class, wa1, bo1).setStatus("A"));
+	save(new_composite(TgWagonClassCompatibility.class, wa1, bo1).setStatus("A"));
 
 	save(new_(TgWagon.class, "WAGON1", "desc1").setWagonClass(wa1).setSerialNo("SN_1"));
 	save(new_(TgWagon.class, "WAGON2", "desc2").setWagonClass(wa2).setSerialNo("SN_2"));

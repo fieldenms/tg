@@ -84,7 +84,7 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
 	// retrieving the user, modifying it's password and saving changes
 	User user = userDao.findUserByKeyWithRoles("user1");
 	user.setPassword("new password");
-	UserAndRoleAssociation userAssociation = new_(UserAndRoleAssociation.class, user, new UserRole("role1", ""));
+	UserAndRoleAssociation userAssociation = new_composite(UserAndRoleAssociation.class, user, new UserRole("role1", ""));
 	final List<UserAndRoleAssociation> associations = new ArrayList<UserAndRoleAssociation>();
 	for (final UserAndRoleAssociation roleAssociation : user.getRoles()) {
 	    if (roleAssociation.equals(userAssociation)) {
@@ -102,7 +102,7 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
 	// checking whether the user role1 was removed or not
 	final Set<UserAndRoleAssociation> userRoleAssociations = user.getRoles();
 	assertEquals("the first person has wrong number of user roles, please check the testWhetherTheSaveWorksProperlyForUsers", 1, userRoleAssociations.size());
-	userAssociation = new_(UserAndRoleAssociation.class, user, new UserRole("role2", ""));
+	userAssociation = new_composite(UserAndRoleAssociation.class, user, new UserRole("role2", ""));
 	assertTrue("the " + 1 + "-th person doesn't have the second user role", userRoleAssociations.contains(userAssociation));
 
     }
@@ -117,9 +117,9 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
 	User user = save(new_(User.class, "new user", "new user desc").setPassword("new user password"));
 
 	Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<UserAndRoleAssociation>();
-	userRolesAssociation.add(new_(UserAndRoleAssociation.class, user, userRole1));
-	userRolesAssociation.add(new_(UserAndRoleAssociation.class, user, userRole2));
-	userRolesAssociation.add(new_(UserAndRoleAssociation.class, user, userRole3));
+	userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole1));
+	userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole2));
+	userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole3));
 
 	for (final UserAndRoleAssociation association : userRolesAssociation) {
 	    userAssociationDao.save(association);
@@ -134,7 +134,7 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
 	userRolesAssociation = user.getRoles();
 	assertEquals("the 'new user' person has wrong number of user roles, please check the testWhetherTheCreatedUserWereCorrectlySaved", 3, userRolesAssociation.size());
 	for (int userRoleIndex = 0; userRoleIndex < 3; userRoleIndex++) {
-	    final UserAndRoleAssociation userRoleAssociation = new_(UserAndRoleAssociation.class, user, new UserRole("nrole"
+	    final UserAndRoleAssociation userRoleAssociation = new_composite(UserAndRoleAssociation.class, user, new UserRole("nrole"
 		    + Integer.toString(userRoleIndex + 1), ""));
 	    assertTrue("the 'new user'-th person doesn't have the " + userRoleAssociation.getUserRole().getKey() + "-th user role", userRolesAssociation.contains(userRoleAssociation));
 	}
@@ -156,7 +156,7 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
     @Test
     public void test_that_new_security_role_association_can_be_saved() {
 	final UserRole role = save(new_(UserRole.class, "role56", "role56 desc"));
-	final SecurityRoleAssociation association = save(new_(SecurityRoleAssociation.class, FirstLevelSecurityToken1.class, role));
+	final SecurityRoleAssociation association = save(new_composite(SecurityRoleAssociation.class, FirstLevelSecurityToken1.class, role));
 	final List<SecurityRoleAssociation> roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
 	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 3, roles.size());
 	assertTrue("The " + FirstLevelSecurityToken1.class.getName() + " security token doesn't have a role56 user role", roles.contains(association));
@@ -194,27 +194,27 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
 	final User user3 = save(new_(User.class, "user3", "user desc 3").setBase(true).setPassword("userpass3"));
 	final User user4 = save(new_(User.class, "user4", "user desc 4").setBase(true).setPassword("userpass4"));
 
-	save(new_(UserAndRoleAssociation.class, user1, role1));
-	save(new_(UserAndRoleAssociation.class, user1, role2));
-	save(new_(UserAndRoleAssociation.class, user2, role3));
-	save(new_(UserAndRoleAssociation.class, user2, role4));
-	save(new_(UserAndRoleAssociation.class, user3, role5));
-	save(new_(UserAndRoleAssociation.class, user3, role6));
-	save(new_(UserAndRoleAssociation.class, user4, role7));
-	save(new_(UserAndRoleAssociation.class, user4, role8));
+	save(new_composite(UserAndRoleAssociation.class, user1, role1));
+	save(new_composite(UserAndRoleAssociation.class, user1, role2));
+	save(new_composite(UserAndRoleAssociation.class, user2, role3));
+	save(new_composite(UserAndRoleAssociation.class, user2, role4));
+	save(new_composite(UserAndRoleAssociation.class, user3, role5));
+	save(new_composite(UserAndRoleAssociation.class, user3, role6));
+	save(new_composite(UserAndRoleAssociation.class, user4, role7));
+	save(new_composite(UserAndRoleAssociation.class, user4, role8));
 
-	save(new_(SecurityRoleAssociation.class).setRole(role1).setSecurityToken(FirstLevelSecurityToken1.class));
-	save(new_(SecurityRoleAssociation.class).setRole(role2).setSecurityToken(FirstLevelSecurityToken1.class));
-	save(new_(SecurityRoleAssociation.class).setRole(role3).setSecurityToken(FirstLevelSecurityToken2.class));
-	save(new_(SecurityRoleAssociation.class).setRole(role4).setSecurityToken(FirstLevelSecurityToken2.class));
-	save(new_(SecurityRoleAssociation.class).setRole(role5).setSecurityToken(SecondLevelSecurityToken1.class));
-	save(new_(SecurityRoleAssociation.class).setRole(role6).setSecurityToken(SecondLevelSecurityToken1.class));
-	save(new_(SecurityRoleAssociation.class).setRole(role7).setSecurityToken(SecondLevelSecurityToken2.class));
-	save(new_(SecurityRoleAssociation.class).setRole(role8).setSecurityToken(SecondLevelSecurityToken2.class));
-	save(new_(SecurityRoleAssociation.class).setRole(role1).setSecurityToken(ThirdLevelSecurityToken1.class));
-	save(new_(SecurityRoleAssociation.class).setRole(role2).setSecurityToken(ThirdLevelSecurityToken1.class));
-	save(new_(SecurityRoleAssociation.class).setRole(role3).setSecurityToken(ThirdLevelSecurityToken2.class));
-	save(new_(SecurityRoleAssociation.class).setRole(role4).setSecurityToken(FirstLevelSecurityToken2.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role1).setSecurityToken(FirstLevelSecurityToken1.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role2).setSecurityToken(FirstLevelSecurityToken1.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role3).setSecurityToken(FirstLevelSecurityToken2.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role4).setSecurityToken(FirstLevelSecurityToken2.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role5).setSecurityToken(SecondLevelSecurityToken1.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role6).setSecurityToken(SecondLevelSecurityToken1.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role7).setSecurityToken(SecondLevelSecurityToken2.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role8).setSecurityToken(SecondLevelSecurityToken2.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role1).setSecurityToken(ThirdLevelSecurityToken1.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role2).setSecurityToken(ThirdLevelSecurityToken1.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role3).setSecurityToken(ThirdLevelSecurityToken2.class));
+	save(new_composite(SecurityRoleAssociation.class).setRole(role4).setSecurityToken(FirstLevelSecurityToken2.class));
     }
 
     @Override

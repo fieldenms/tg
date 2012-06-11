@@ -224,8 +224,8 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param keys
      * @return
      */
-    protected <T extends AbstractEntity<DynamicEntityKey>> T new_(final Class<T> entityClass, final Object... keys) {
-	return keys.length == 0 ? new_empty(entityClass) : factory.newByKey(entityClass, keys);
+    protected <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys) {
+	return keys.length == 0 ? new_(entityClass) : factory.newByKey(entityClass, keys);
     }
 
     /**
@@ -234,7 +234,7 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param entityClass
      * @return
      */
-    protected <T extends AbstractEntity<K>, K extends Comparable> T new_empty(final Class<T> entityClass) {
+    protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
 	return factory.newEntity(entityClass);
     }
 }

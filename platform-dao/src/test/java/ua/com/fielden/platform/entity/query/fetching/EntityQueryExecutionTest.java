@@ -834,18 +834,18 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final TgWagon wagon1 = save(new_(TgWagon.class, "WAGON1", "Wagon 1"));
 	final TgWagon wagon2 = save(new_(TgWagon.class, "WAGON2", "Wagon 2"));
 
-	save(new_(TgWagonSlot.class, wagon1, 5));
-	save(new_(TgWagonSlot.class, wagon1, 6));
-	save(new_(TgWagonSlot.class, wagon1, 7));
-	save(new_(TgWagonSlot.class, wagon1, 8));
-	save(new_(TgWagonSlot.class, wagon1, 4).setBogie(bogie1));
-	save(new_(TgWagonSlot.class, wagon1, 3).setBogie(bogie2));
-	save(new_(TgWagonSlot.class, wagon1, 2).setBogie(bogie3));
-	save(new_(TgWagonSlot.class, wagon1, 1).setBogie(bogie4));
+	save(new_composite(TgWagonSlot.class, wagon1, 5));
+	save(new_composite(TgWagonSlot.class, wagon1, 6));
+	save(new_composite(TgWagonSlot.class, wagon1, 7));
+	save(new_composite(TgWagonSlot.class, wagon1, 8));
+	save(new_composite(TgWagonSlot.class, wagon1, 4).setBogie(bogie1));
+	save(new_composite(TgWagonSlot.class, wagon1, 3).setBogie(bogie2));
+	save(new_composite(TgWagonSlot.class, wagon1, 2).setBogie(bogie3));
+	save(new_composite(TgWagonSlot.class, wagon1, 1).setBogie(bogie4));
 
-	save(new_(TgWagonSlot.class, wagon2, 1).setBogie(bogie5));
-	save(new_(TgWagonSlot.class, wagon2, 2).setBogie(bogie6));
-	save(new_(TgWagonSlot.class, wagon2, 3).setBogie(bogie7));
+	save(new_composite(TgWagonSlot.class, wagon2, 1).setBogie(bogie5));
+	save(new_composite(TgWagonSlot.class, wagon2, 2).setBogie(bogie6));
+	save(new_composite(TgWagonSlot.class, wagon2, 3).setBogie(bogie7));
 
 	final TgOrgUnit1 orgUnit1 = save(new_(TgOrgUnit1.class, "orgunit1", "desc orgunit1"));
 	final TgOrgUnit2 orgUnit2 = save(new_(TgOrgUnit2.class, "orgunit2", "desc orgunit2").setParent(orgUnit1));
@@ -871,10 +871,10 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
 	save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
 
-	save(new_(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")));
-	save(new_(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")));
+	save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")));
+	save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")));
 
-	save(new_(TgTimesheet.class, "USER1", date("2011-11-01 13:00:00")).setFinishDate(date("2011-11-01 15:00:00")).setIncident("002"));
+	save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 13:00:00")).setFinishDate(date("2011-11-01 15:00:00")).setIncident("002"));
 
 	final UserRole managerRole = save(new_(UserRole.class, "MANAGER", "Managerial role"));
 	final UserRole dataEntryRole = save(new_(UserRole.class, "DATAENTRY", "Data entry role"));
@@ -888,14 +888,14 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final User user2 = save(new_(User.class, "user2", "user2 desc").setBase(false).setBasedOnUser(baseUser1).setPassword("password1"));
 	final User user3 = save(new_(User.class, "user3", "user3 desc").setBase(false).setBasedOnUser(baseUser1).setPassword("password1"));
 
-	save(new_(UserAndRoleAssociation.class, user1, managerRole));
-	save(new_(UserAndRoleAssociation.class, user1, analyticRole));
-	save(new_(UserAndRoleAssociation.class, user2, dataEntryRole));
-	save(new_(UserAndRoleAssociation.class, user2, fleetOperatorRole));
-	save(new_(UserAndRoleAssociation.class, user2, warehouseOperatorRole));
-	save(new_(UserAndRoleAssociation.class, user3, dataEntryRole));
-	save(new_(UserAndRoleAssociation.class, user3, fleetOperatorRole));
-	save(new_(UserAndRoleAssociation.class, user3, warehouseOperatorRole));
+	save(new_composite(UserAndRoleAssociation.class, user1, managerRole));
+	save(new_composite(UserAndRoleAssociation.class, user1, analyticRole));
+	save(new_composite(UserAndRoleAssociation.class, user2, dataEntryRole));
+	save(new_composite(UserAndRoleAssociation.class, user2, fleetOperatorRole));
+	save(new_composite(UserAndRoleAssociation.class, user2, warehouseOperatorRole));
+	save(new_composite(UserAndRoleAssociation.class, user3, dataEntryRole));
+	save(new_composite(UserAndRoleAssociation.class, user3, fleetOperatorRole));
+	save(new_composite(UserAndRoleAssociation.class, user3, warehouseOperatorRole));
 
 	System.out.println("\n   DATA POPULATED SUCCESSFULLY\n\n\n\n\n\n\n\n\n");
     }

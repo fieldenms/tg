@@ -114,7 +114,7 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
 	save(new_(EntityWithMoney.class, "key3", "desc").setMoney(new Money("40.00")).setDateTimeProperty((new DateTime("2009-03-01T00:00:00Z")).toDate()));
 	save(new_(EntityWithMoney.class, "key4", "desc").setMoney(new Money("50.00")).setDateTimeProperty((new DateTime("2009-03-01T10:00:00Z")).toDate()));
 
-	save(new_(EntityWithDynamicCompositeKey.class, "key-1-1", ewm1).setDesc("soem desc"));
+	save(new_composite(EntityWithDynamicCompositeKey.class, "key-1-1", ewm1).setDesc("soem desc"));
     }
 
     @Override

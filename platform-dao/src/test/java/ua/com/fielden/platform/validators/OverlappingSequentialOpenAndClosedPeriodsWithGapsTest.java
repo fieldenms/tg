@@ -21,19 +21,19 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
 
     @Test
     public void test_overlapping_for_new_closed_within() {
-	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 15:00:00")).setFinishDate(date("2011-11-01 17:00:00")).setIncident("001");
+	final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 15:00:00")).setFinishDate(date("2011-11-01 17:00:00")).setIncident("001");
 	assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
     @Test
     public void test_overlapping_for_new_closed_over_two() {
-	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 12:30:00")).setFinishDate(date("2011-11-01 14:30:00")).setIncident("001");
+	final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 12:30:00")).setFinishDate(date("2011-11-01 14:30:00")).setIncident("001");
 	assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
     @Test
     public void test_overlapping_for_new_open_overlapping_the_last_open() {
-	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 15:00:00")).setIncident("001");
+	final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 15:00:00")).setIncident("001");
 	assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
@@ -53,7 +53,7 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
 
     @Test
     public void should_have_found_overlapping_timesheet_when_overlapping_with_open_ended_one() {
-	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 16:30:00")).setFinishDate(date("2011-11-01 19:00:00"));
+	final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 16:30:00")).setFinishDate(date("2011-11-01 19:00:00"));
 	final TgTimesheet offendedTs = Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person");
 	assertNotNull(offendedTs);
 	assertEquals("Incorrect offended timesheet.", "USER1", offendedTs.getPerson());
@@ -62,7 +62,7 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
 
     @Test
     public void should_have_found_overlapping_timesheet_when_itself_is_open_ended_and_overlapping_with_open_ended_too() {
-	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 16:30:00"));
+	final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 16:30:00"));
 	final TgTimesheet offendedTs = Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person");
 	assertNotNull(offendedTs);
 	assertEquals("Incorrect offended timesheet.", "USER1", offendedTs.getPerson());
@@ -71,7 +71,7 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
 
     @Test
     public void should_have_found_overlapping_timesheet_when_itself_is_open_ended_and_starts_without_overlaps_and_overlapping_with_open_ended_too() {
-	final TgTimesheet ts = new_(TgTimesheet.class, "USER1", date("2011-11-01 14:30:00"));
+	final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 14:30:00"));
 	final TgTimesheet offendedTs = Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person");
 	assertNotNull(offendedTs);
 	assertEquals("Incorrect offended timesheet.", "USER1", offendedTs.getPerson());
@@ -80,8 +80,8 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
 
     @Override
     protected void populateDomain() {
-	save(new_(TgTimesheet.class, "USER1", date("2011-11-01 12:00:00")).setFinishDate(date("2011-11-01 14:00:00")).setIncident("001"));
-	save(new_(TgTimesheet.class, "USER1", date("2011-11-01 15:00:00")).setIncident("002"));
+	save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 12:00:00")).setFinishDate(date("2011-11-01 14:00:00")).setIncident("001"));
+	save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 15:00:00")).setIncident("002"));
     }
 
     @Override

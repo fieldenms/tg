@@ -234,10 +234,10 @@ public class MenuAndConfigurationTestCase extends AbstractDomainDrivenTestCase {
 	/**/final MainMenuItem item_2_1 = /**/save(new_(MainMenuItem.class, "type7").setParent(root_2).setTitle("Item 2-1").setOrder(1)); // should be recognized as invisible
 
 	// populate invisibility
-	save(new_(MainMenuItemInvisibility.class, baseUser, root_2)); // should make principal items 5, 6 and "save as" item 0 not visible
+	save(new_composite(MainMenuItemInvisibility.class, baseUser, root_2)); // should make principal items 5, 6 and "save as" item 0 not visible
 
 	// populate entity centres
-	/**/save(new_(EntityCentreConfig.class, baseUser, "principal for item 2-1", item_2_1).setPrincipal(true));
-	/*    */save(new_(EntityCentreConfig.class, baseUser, "save as for item 2-1", item_2_1).setPrincipal(false));
+	/**/save(new_composite(EntityCentreConfig.class, baseUser, "principal for item 2-1", item_2_1).setPrincipal(true));
+	/*    */save(new_composite(EntityCentreConfig.class, baseUser, "save as for item 2-1", item_2_1).setPrincipal(false));
     }
 }

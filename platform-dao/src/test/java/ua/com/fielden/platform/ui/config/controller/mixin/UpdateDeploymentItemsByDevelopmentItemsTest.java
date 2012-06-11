@@ -1115,18 +1115,18 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
 	final MainMenuItem root_1 = save(new_(MainMenuItem.class, "type1").setTitle("Root 1").setOrder(1));
 	/**/final MainMenuItem item_1_1 = save(new_(MainMenuItem.class, "type2").setParent(root_1).setTitle("Item 1-1").setOrder(1));
 	/*    */final MainMenuItem item_1_1_1 = save(new_(MainMenuItem.class, "type3").setParent(item_1_1).setTitle("Item 1-1-1").setOrder(1));
-	/*    */save(new_(EntityCentreConfig.class, baseUser, "principal for item 1-1-1", item_1_1_1).setPrincipal(true));
-	/*        */save(new_(EntityCentreConfig.class, baseUser, "save as for item 1-1-1", item_1_1_1).setPrincipal(false));
+	/*    */save(new_composite(EntityCentreConfig.class, baseUser, "principal for item 1-1-1", item_1_1_1).setPrincipal(true));
+	/*        */save(new_composite(EntityCentreConfig.class, baseUser, "save as for item 1-1-1", item_1_1_1).setPrincipal(false));
 	/**/final MainMenuItem item_1_2 = save(new_(MainMenuItem.class, "type4").setParent(root_1).setTitle("Item 1-2").setOrder(2));
 	/*    */final MainMenuItem item_1_2_1 = save(new_(MainMenuItem.class, "type5").setParent(item_1_2).setTitle("Item 1-2-1").setOrder(1));
-	/*    */save(new_(EntityCentreConfig.class, baseUser, "principal for item 1-2-1", item_1_2_1).setPrincipal(true));
-	/*        */save(new_(EntityCentreConfig.class, baseUser, "save as for item 1-2-1", item_1_2_1).setPrincipal(false));
+	/*    */save(new_composite(EntityCentreConfig.class, baseUser, "principal for item 1-2-1", item_1_2_1).setPrincipal(true));
+	/*        */save(new_composite(EntityCentreConfig.class, baseUser, "save as for item 1-2-1", item_1_2_1).setPrincipal(false));
 	final MainMenuItem root_2 = save(new_(MainMenuItem.class, "type6").setTitle("Root 2").setOrder(2)); // should be recognized as invisible
 	/**/final MainMenuItem item_2_1 = save(new_(MainMenuItem.class, "type7").setParent(root_2).setTitle("Item 2-1").setOrder(1)); // should be recognized as invisible
-	/**/save(new_(EntityCentreConfig.class, baseUser, "principal for item 2-1", item_2_1).setPrincipal(true));
-	/*    */save(new_(EntityCentreConfig.class, baseUser, "save as for item 2-1", item_2_1).setPrincipal(false));
+	/**/save(new_composite(EntityCentreConfig.class, baseUser, "principal for item 2-1", item_2_1).setPrincipal(true));
+	/*    */save(new_composite(EntityCentreConfig.class, baseUser, "save as for item 2-1", item_2_1).setPrincipal(false));
 
 	// populate invisibility
-	save(new_(MainMenuItemInvisibility.class, baseUser, root_2)); // should make principal items 5, 6 and "save as" item 0 not visible
+	save(new_composite(MainMenuItemInvisibility.class, baseUser, root_2)); // should make principal items 5, 6 and "save as" item 0 not visible
     }
 }
