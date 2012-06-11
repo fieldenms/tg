@@ -80,11 +80,11 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
 
     @Test
-    @Ignore
     public void test_query_with_union_property() {
 	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.workshop.key").eq().val("WSHOP1").or().prop("location.wagonSlot.wagon.key").eq().val("WAGON1").model();
-	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("workshop"))).build());
+	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class).without("location").without("location.wagonSlot").without("location.workshop")).build());
 	assertEquals("Incorrect key 1", "BOGIE1", models.get(0).getKey());
+	//assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
     }
 
     @Test
@@ -100,7 +100,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     public void test_query_with_union_property2() {
 	final EntityResultQueryModel<TgWorkshop> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").yield().prop("location.workshop").modelAsEntity(TgWorkshop.class);
 	final List<TgWorkshop> models = workshopDao.getAllEntities(from(qry).with(fetch(TgWorkshop.class)).build());
-	System.out.println(models.get(0));
 	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getKey());
     }
 
@@ -288,6 +287,21 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     	final TgVehicleModel vehModel = models.get(0);
 	assertEquals("Incorrect key", "316", vehModel.getKey());
 	assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
+    }
+
+    @Test
+    @Ignore
+    public void test2_() {
+        final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("key").eq().val("316"). //
+                yield().prop("id").as("id").
+                yield().prop("version").as("version").
+                yield().prop("key").as("key").
+                yield().prop("desc").as("desc").
+                modelAsEntity(TgVehicleModel.class);
+        final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(model).with(fetchAll(TgVehicleModel.class)).build());
+            final TgVehicleModel vehModel = models.get(0);
+        assertEquals("Incorrect key", "316", vehModel.getKey());
+        assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
     }
 
     @Test
@@ -807,8 +821,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final TgWorkshop workshop1 = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
 	final TgWorkshop workshop2 = save(new_(TgWorkshop.class, "WSHOP2", "Workshop 2"));
 
-	final TgBogieLocation location = new TgBogieLocation().setWorkshop(workshop1);
-	location.ensureUnion("workshop", null);
+	final TgBogieLocation location = config.getEntityFactory().newEntity(TgBogieLocation.class);
+	location.setWorkshop(workshop1);
 	final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
 	final TgBogie bogie2 = save(new_(TgBogie.class, "BOGIE2", "Bogie 2"));
 	final TgBogie bogie3 = save(new_(TgBogie.class, "BOGIE3", "Bogie 3"));

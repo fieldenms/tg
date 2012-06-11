@@ -299,7 +299,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
 	    // check if the entity a union entity, which grands some extra processing
 	    if (AbstractUnionEntity.class.isAssignableFrom(entity.getType()) && AbstractEntity.class.isAssignableFrom(entity.getPropertyType(propertyName))) {
 		// if entity is of type AbstractUnionEntity then its properties can only be of type AbstractEntity
-		((AbstractUnionEntity) entity).ensureUnion(propertyName, (AbstractEntity) newAndOldValues.getKey());
+		((AbstractUnionEntity) entity).ensureUnion(propertyName);
 	    }
 	    // setter proceeded successfully (no exception or result were thrown). -> update DYNAMIC validator by correct result if validator exists and if no warning was detected
 	    // :

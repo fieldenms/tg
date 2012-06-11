@@ -29,7 +29,8 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     }
 
     public boolean isEmpty() {
-	 return countAllDataItems()== 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null;
+	return countAllDataItems()== 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null;
+	//return countAllDataItems() == 1 && (getId() != null || AbstractUnionEntity.class.isAssignableFrom(resultType));
     }
 
     public boolean notYetInitialised() {
@@ -61,8 +62,8 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 	for (final Map.Entry<String, EntityContainer<? extends AbstractEntity<?>>> entityEntry : entities.entrySet()) {
 	    final Object propValue = determinePropValue(entityEntry.getValue(), entFactory, userViewOnly);
 	    setPropertyValue(entity, entityEntry.getKey(), propValue);
-	    if (unionEntity && propValue != null) {
-		((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey(), (AbstractEntity) propValue);
+	    if (unionEntity && propValue != null && userViewOnly) {
+		((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey());
 	    }
 	}
 

@@ -21,9 +21,9 @@ import ua.com.fielden.platform.reflection.Reflector;
  * <p>
  * The descendants of this class will have several entity-type properties of unique types. The <i>union</i> part of the class name alludes to the fact that at most one property can
  * have a value, which basically defines the type and the value of a property in the holding entity.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
 public abstract class AbstractUnionEntity extends AbstractEntity<String> {
@@ -34,7 +34,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      * Enforces union rule -- only one property can be set and only once from the time of union entity instantiation. Such property drives values for properties <code>id</code>,
      * <code>key</code> and <code>desc</code>.
      */
-    public final void ensureUnion(final String propertyName, final AbstractEntity propertyValue) {
+    public final void ensureUnion(final String propertyName) {
 	if (!StringUtils.isEmpty(activePropertyName)) {
 	    throw new IllegalStateException("Union entity already has an active property.");
 	}
@@ -124,7 +124,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     /**
      * A convenient method to obtain the value of an active property. Returns null if all properties are null.
-     * 
+     *
      * @return
      */
     public final AbstractEntity activeEntity() {
@@ -142,7 +142,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     /**
      * Provides the list of property names, which are common for entity types used in "polymorphic" association.
-     * 
+     *
      * @param type
      * @param propertyFilter
      * @return
@@ -168,9 +168,9 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     /**
      * Finds all properties of {@link AbstractEntity} type that will form properties "union".
-     * 
+     *
      * Important : no other (non-union) properties should exist inside {@link AbstractUnionEntity} class.
-     * 
+     *
      * @return
      */
     public static final List<Field> unionProperties(final Class<? extends AbstractUnionEntity> type) {
@@ -186,7 +186,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     /**
      * Returns getters and setters method names for AbstractUnionEntity common properties.
-     * 
+     *
      * @param type
      * @return
      * @throws NoSuchMethodException
@@ -202,7 +202,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     /**
      * Returns getters and setters for AbstractUnionEntity common properties.
-     * 
+     *
      * @param type
      * @param propertyFilter
      * @return
