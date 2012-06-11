@@ -30,11 +30,10 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
     public boolean isEmpty() {
 	return countAllDataItems()== 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null;
-	//return countAllDataItems() == 1 && (getId() != null || AbstractUnionEntity.class.isAssignableFrom(resultType));
     }
 
     public boolean notYetInitialised() {
-	return countAllDataItems() == 1 && getId() != null;
+	return countAllDataItems() == 1 && getId() != null && !AbstractUnionEntity.class.isAssignableFrom(resultType);
     }
 
     public boolean isInstantiated() {
@@ -43,7 +42,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
     public Long getId() {
 	final Object idObject = primitives.get(AbstractEntity.ID);
-	return idObject != null ? ((Number) idObject).longValue() : null;
+	return idObject != null ? new Long(((Number) idObject).longValue()) : (AbstractUnionEntity.class.isAssignableFrom(resultType) ? entities.values().iterator().next().getId() : null);
     }
 
     public R instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
@@ -62,7 +61,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 	for (final Map.Entry<String, EntityContainer<? extends AbstractEntity<?>>> entityEntry : entities.entrySet()) {
 	    final Object propValue = determinePropValue(entityEntry.getValue(), entFactory, userViewOnly);
 	    setPropertyValue(entity, entityEntry.getKey(), propValue);
-	    if (unionEntity && propValue != null && userViewOnly) {
+	    if (unionEntity && propValue != null /*&& userViewOnly*/) {
 		((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey());
 	    }
 	}

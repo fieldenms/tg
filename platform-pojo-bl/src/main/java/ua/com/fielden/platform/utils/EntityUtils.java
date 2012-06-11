@@ -646,7 +646,7 @@ public class EntityUtils {
      * @return
      */
     public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance) {
-	if (instance.getProperties().containsKey("key")) {
+	if (!(instance instanceof AbstractUnionEntity) && instance.getProperties().containsKey("key")) {
 	    final Object keyValue = instance.get("key");
 	    if (keyValue != null) {
 		// handle property "key" assignment
@@ -655,7 +655,7 @@ public class EntityUtils {
 	}
 
 	for (final MetaProperty meta : instance.getProperties().values()) {
-	    if (meta != null) {
+	    if (meta != null && !(("desc".equals(meta.getName()) || "key".equals(meta.getName())) && instance instanceof AbstractUnionEntity) ) {
 		final Object newOriginalValue = instance.get(meta.getName());
 		meta.setOriginalValue(newOriginalValue);
 		if (!meta.isCollectional()) {
@@ -663,7 +663,10 @@ public class EntityUtils {
 		}
 	    }
 	}
-	instance.setDirty(false);
+	if (!(instance instanceof AbstractUnionEntity)) {
+	    instance.setDirty(false);
+	}
+
 	return instance;
     }
 
