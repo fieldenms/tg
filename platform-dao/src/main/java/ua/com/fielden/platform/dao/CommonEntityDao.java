@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -43,11 +46,9 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import com.google.inject.Inject;
-
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
@@ -80,7 +81,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Inject
     private IUserDao userDao;
-
+    @Inject
+    private IUniversalConstants universalConstants;
 
     /**
      * A principle constructor.
@@ -246,15 +248,15 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private void assignTransactionDate(final T entity) throws Exception {
 	final List<Field> transactionDateProperties = Finder.findRealProperties(entity.getType(), TransactionDate.class);
-
+	final DateTime now = universalConstants.now();
 	for (final Field property : transactionDateProperties) {
 	    property.setAccessible(true);
 	    final Object value = property.get(entity);
 	    if (value == null) {
 		if (Date.class.isAssignableFrom(property.getType())) {
-		    property.set(entity, new Date());
+		    property.set(entity, now.toDate());
 		} else if (DateTime.class.isAssignableFrom(property.getType())) {
-		    property.set(entity, new DateTime());
+		    property.set(entity, now);
 		} else {
 		    throw new IllegalArgumentException("The type of property " + entity.getType().getName() + "@" + property.getName()
 			    + " is not valid for annotation TransactionDate.");
@@ -627,5 +629,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	public int no() {
 	    return pageNumber;
 	}
+    }
+
+    public IUniversalConstants getUniversalConstants() {
+        return universalConstants;
     }
 }
