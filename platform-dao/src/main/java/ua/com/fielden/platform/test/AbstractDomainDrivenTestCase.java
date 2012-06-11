@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.test;
 
+import static java.lang.String.format;
+
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -25,7 +27,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
-import static java.lang.String.format;
 
 
 /**
@@ -191,15 +192,49 @@ public abstract class AbstractDomainDrivenTestCase {
 	return formatter.parseDateTime(dateTime);
     }
 
+    /**
+     * Instantiates a new entity with a non-composite key, the value for which is provided as the second argument, and description -- provided as the value for the third argument.
+     *
+     * @param entityClass
+     * @param key
+     * @param desc
+     * @return
+     */
     protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
 	return factory.newEntity(entityClass, key, desc);
     }
 
+    /**
+     * Instantiates a new entity with a non-composite key, the value for which is provided as the second argument.
+     *
+     * @param entityClass
+     * @param key
+     * @return
+     */
     protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
 	return factory.newByKey(entityClass, key);
     }
 
+    /**
+     * Instantiates a new entity with composite key, where composite key members are assigned based on the provide value.
+     * The order of values must match the order specified in key member definitions.
+     * An empty list of key values is permitted.
+     *
+     * @param entityClass
+     * @param keys
+     * @return
+     */
     protected <T extends AbstractEntity<DynamicEntityKey>> T new_(final Class<T> entityClass, final Object... keys) {
-	return keys.length == 0 ? factory.newEntity(entityClass) : factory.newByKey(entityClass, keys);
+	return keys.length == 0 ? new_empty(entityClass) : factory.newByKey(entityClass, keys);
+    }
+
+    /**
+     * Instantiates a new entity based on the provided type only, which leads to creation of a completely empty instance without any of entity properties assigned.
+     *
+     * @param entityClass
+     * @return
+     */
+    protected <T extends AbstractEntity<K>, K extends Comparable> T new_empty(final Class<T> entityClass) {
+	return factory.newEntity(entityClass);
     }
 }
