@@ -20,6 +20,7 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityCentreModel;
 import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder;
+import ua.com.fielden.platform.swing.review.report.centre.factory.EntityCentreFactoryBinder;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
 /**
@@ -44,15 +45,21 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     private final IGlobalDomainTreeManager gdtm;
 
     /**
+     * Entity centre and analysis factory binder.
+     */
+    private final EntityCentreFactoryBinder<T> centreFactoryBinder;
+
+    /**
      * Initiates this {@link CentreConfigurationModel} with instance of {@link IGlobalDomainTreeManager}, entity type and {@link EntityFactory}.
      *
      * @param entityType - the entity type for which this {@link CentreConfigurationModel} will be created.
      * @param gdtm - Associated {@link GlobalDomainTreeManager} instance.
      * @param entityFactory - {@link EntityFactory} needed for wizard model creation.
      */
-    public CentreConfigurationModel(final Class<? extends MiWithConfigurationSupport<T>> menuItemType, final String name, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
+    public CentreConfigurationModel(final Class<? extends MiWithConfigurationSupport<T>> menuItemType, final String name, final EntityCentreFactoryBinder<T> centreFactoryBinder, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
 	super(getEntityTypeForMenuItemClass(menuItemType), name, entityFactory, masterManager, criteriaGenerator);
 	this.menuItemType = menuItemType;
+	this.centreFactoryBinder = centreFactoryBinder;
 	this.gdtm = gdtm;
     }
 
@@ -123,6 +130,15 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      */
     public void initEntityCentreManager(){
 	gdtm.initEntityCentreManager(menuItemType, getName());
+    }
+
+    /**
+     * Returns the associated {@link EntityCentreFactoryBinder} instance.
+     *
+     * @return
+     */
+    public EntityCentreFactoryBinder<T> getCentreFactoryBinder() {
+	return centreFactoryBinder;
     }
 
     /**

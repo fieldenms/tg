@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
@@ -106,11 +107,13 @@ public class OpenMasterClickAction extends BlockingLayerCommand<AbstractEntity<?
 	return clickedObject instanceof AbstractEntity ? (AbstractEntity<?>) clickedObject : null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void postAction(final AbstractEntity<?> clickedEntity) {
 	super.postAction(clickedEntity);
 	if (clickedEntity != null) {
-	    entityMasterFactory.<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> showMaster(clickedEntity, ownerView);
+	    final AbstractEntity<?> originalClickedEntity = clickedEntity.copy((Class<AbstractEntity<?>>)DynamicEntityClassLoader.getOriginalType(clickedEntity.getType()));
+	    entityMasterFactory.<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> showMaster(originalClickedEntity, ownerView);
 	}
     }
 

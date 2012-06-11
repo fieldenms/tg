@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.report.interfaces;
+package ua.com.fielden.platform.swing.review.report.centre.factory;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -10,28 +10,23 @@ import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationView;
 
 /**
- * A Factory that allows one to create entity centre.
- * 
+ * Factory for entity centre.
+ *
  * @author TG Team
  *
+ * @param <T>
+ * @param <C>
  */
-public interface ICentreConfigurationFactory<T extends AbstractEntity<?>> {
+public interface IEntityCentreFactory<T extends AbstractEntity<?>> {
 
     /**
-     * Creates specific {@link CentreConfigurationView} instance.
-     * 
-     * @param menuItemType
-     * @param name
-     * @param centreFactory
-     * @param gdtm
-     * @param entityFactory
-     * @param masterManager
-     * @param criteriaGenerator
-     * @param progressLayer
+     * Creates new entity centre.
+     *
      * @return
      */
-    CentreConfigurationView<T, ?> createCentreConfigurationView(final Class<? extends MiWithConfigurationSupport<T>> menuItemType,//
+    CentreConfigurationView<T, ?> createEntityCentre(final Class<? extends MiWithConfigurationSupport<T>> menuItemType,//
 	    final String name,//
+	    final EntityCentreFactoryBinder<T> centreFactoryBinder,//
 	    final IGlobalDomainTreeManager gdtm,//
 	    final EntityFactory entityFactory,//
 	    final IEntityMasterManager masterManager,//

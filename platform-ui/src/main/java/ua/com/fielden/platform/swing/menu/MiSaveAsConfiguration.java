@@ -26,7 +26,7 @@ public final class MiSaveAsConfiguration<T extends AbstractEntity<?>> extends Tr
 		parentItem.getView().getTreeMenu(),//
 		name,//
 		parentItem.getView().getMenuItemClass(),//
-		parentItem.getView().getCentreFactory(),//
+		parentItem.getView().getCentreFactoryBinder(),//
 		parentItem.getView().getGlobalDomainTreeManager(),//
 		parentItem.getView().getEntityFactory(),//
 		parentItem.getView().getMasterManager(),//

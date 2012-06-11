@@ -11,9 +11,9 @@ import ua.com.fielden.platform.swing.model.DefaultUiModel;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationView;
+import ua.com.fielden.platform.swing.review.report.centre.factory.EntityCentreFactoryBinder;
 import ua.com.fielden.platform.swing.review.report.events.CentreConfigurationEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ICentreConfigurationEventListener;
-import ua.com.fielden.platform.swing.review.report.interfaces.ICentreConfigurationFactory;
 import ua.com.fielden.platform.swing.view.BaseNotifPanel;
 
 /**
@@ -37,7 +37,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
     private final EntityFactory entityFactory;
     private final IEntityMasterManager masterManager;
     private final ICriteriaGenerator criteriaGenerator;
-    private final ICentreConfigurationFactory<T> centreFactory;
+    private final EntityCentreFactoryBinder<T> centreFactoryBinder;
     private final CentreConfigurationView<T, ?> entityCentreConfigurationView;
     private final Class<? extends MiWithConfigurationSupport<T>> menuItemClass;
 
@@ -56,7 +56,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	    //Entity centre related parameters
 	    final String name,//
 	    final Class<? extends MiWithConfigurationSupport<T>> menuItemClass,//
-		    final ICentreConfigurationFactory<T> centreFactory,//
+		    final EntityCentreFactoryBinder<T> centreFactoryBinder,//
 		    final IGlobalDomainTreeManager gdtm,//
 		    final EntityFactory entityFactory,//
 		    final IEntityMasterManager masterManager,//
@@ -68,12 +68,12 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	this.entityFactory = entityFactory;
 	this.masterManager = masterManager;
 	this.criteriaGenerator = criteriaGenerator;
-	this.centreFactory = centreFactory;
+	this.centreFactoryBinder = centreFactoryBinder;
 	this.menuItemClass = menuItemClass;
 	//Create and configure entity centre;
 	//final CentreConfigurationModel<T> configModel = new CentreConfigurationModel<T>(entityType, name, gdtm, entityFactory, masterManager, criteriaGenerator);
 	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "");
-	this.entityCentreConfigurationView = centreFactory.createCentreConfigurationView(menuItemClass, name, gdtm, entityFactory, masterManager, criteriaGenerator, progressLayer);
+	this.entityCentreConfigurationView = centreFactoryBinder.getEntityCentreFactory().createEntityCentre(menuItemClass, name, centreFactoryBinder, gdtm, entityFactory, masterManager, criteriaGenerator, progressLayer);
 	this.entityCentreConfigurationView.addCentreConfigurationEventListener(createContreConfigurationListener());
 	//new MultipleAnalysisEntityCentreConfigurationView<T>(configModel, progressLayer);
 	progressLayer.setView(entityCentreConfigurationView);
@@ -156,8 +156,8 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	return criteriaGenerator;
     }
 
-    public ICentreConfigurationFactory<T> getCentreFactory() {
-	return centreFactory;
+    public EntityCentreFactoryBinder<T> getCentreFactoryBinder() {
+	return centreFactoryBinder;
     }
 
     public TreeMenuWithTabs<?> getTreeMenu() {

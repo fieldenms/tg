@@ -8,7 +8,7 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
-import ua.com.fielden.platform.swing.review.report.interfaces.ICentreConfigurationFactory;
+import ua.com.fielden.platform.swing.review.report.centre.factory.EntityCentreFactoryBinder;
 
 import com.google.inject.Injector;
 
@@ -38,10 +38,10 @@ public class MiWithConfigurationSupport<T extends AbstractEntity<?>> extends MiW
 	    final Injector injector,//
 	    final TreeMenuWithTabs<?> treeMenu,//
 	    //Entity centre related parameters
-	    final ICentreConfigurationFactory<T> centreFactory,//
+	    final EntityCentreFactoryBinder<T> centreFactoryBinder,//
 	    final ITreeMenuItemVisibilityProvider visibilityProvider,//
 	    final Class<? extends MiWithConfigurationSupport<T>> menuItemType) {
-	super(new DynamicReportWrapper<T>(caption, description, treeMenu, null, menuItemType, centreFactory, //
+	super(new DynamicReportWrapper<T>(caption, description, treeMenu, null, menuItemType, centreFactoryBinder, //
 		injector.getInstance(IGlobalDomainTreeManager.class), //
 		injector.getInstance(EntityFactory.class), //
 		injector.getInstance(IEntityMasterManager.class), //

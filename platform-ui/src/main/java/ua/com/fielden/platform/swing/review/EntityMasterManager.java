@@ -103,21 +103,20 @@ public class EntityMasterManager implements IEntityMasterManager {
 	}
 	// searching in cache first ...
 
-	final Class<T> entityType = (Class<T>)DynamicEntityClassLoader.getOriginalType(entity.getType());
-	final IEntityMasterCache cache = getEntityMasterCache(entityType);
+	final IEntityMasterCache cache = getEntityMasterCache((Class<T>) entity.getType());
 	BaseFrame frame = cache.get(entity.getId());
 	if (frame == null) {
 	    // if not found in cache, then creating new master frame and putting it to the cache
-	    final IEntityMasterFactory<T, DAO> factory = factories.get(entityType);
+	    final IEntityMasterFactory<T, DAO> factory = factories.get(entity.getType());
 	    if (factory == null) {
-		throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey() + " domain entity.");
+		throw new IllegalArgumentException("No master factory found for " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " domain entity.");
 	    }
-	    IMasterDomainTreeManager masterManager = gdtm.getEntityMasterManager(entityType);
+	    IMasterDomainTreeManager masterManager = gdtm.getEntityMasterManager(entity.getType());
 	    if (masterManager == null) {
-		gdtm.initEntityMasterManager(entityType);
-		masterManager = gdtm.getEntityMasterManager(entityType);
+		gdtm.initEntityMasterManager(entity.getType());
+		masterManager = gdtm.getEntityMasterManager(entity.getType());
 	    }
-	    frame = factory.createMasterFrame(getEntityProducer(entityType), //
+	    frame = factory.createMasterFrame(getEntityProducer((Class<T>) entity.getType()), //
 		    cache, //
 		    entity, //
 		    vmf, //
