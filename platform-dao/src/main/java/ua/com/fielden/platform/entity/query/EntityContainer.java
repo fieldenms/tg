@@ -10,6 +10,8 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+
 
 public final class EntityContainer<R extends AbstractEntity<?>> {
 
@@ -29,11 +31,11 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     }
 
     public boolean isEmpty() {
-	return (countAllDataItems()== 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null) || (AbstractUnionEntity.class.isAssignableFrom(resultType) && countAllDataItems()== 0);
+	return (countAllDataItems()== 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null) || (isUnionEntityType(resultType) && countAllDataItems()== 0);
     }
 
     public boolean notYetInitialised() {
-	return countAllDataItems() == 1 && getId() != null && !AbstractUnionEntity.class.isAssignableFrom(resultType);
+	return countAllDataItems() == 1 && getId() != null && !isUnionEntityType(resultType);
     }
 
     public boolean isInstantiated() {
@@ -42,13 +44,13 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
     public Long getId() {
 	final Object idObject = primitives.get(AbstractEntity.ID);
-	return idObject != null ? new Long(((Number) idObject).longValue()) : (AbstractUnionEntity.class.isAssignableFrom(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
+	return idObject != null ? new Long(((Number) idObject).longValue()) : (isUnionEntityType(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
     }
 
     public R instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
 	entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
 	entity.setInitialising(true);
-	final boolean unionEntity = AbstractUnionEntity.class.isAssignableFrom(resultType);
+	final boolean unionEntity = isUnionEntityType(resultType);
 
 	for (final Map.Entry<String, Object> primPropEntry : primitives.entrySet()) {
 	    setPropertyValue(entity, primPropEntry.getKey(), primPropEntry.getValue());

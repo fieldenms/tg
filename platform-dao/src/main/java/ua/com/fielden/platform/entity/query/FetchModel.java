@@ -62,7 +62,11 @@ public class FetchModel<T extends AbstractEntity<?>> {
 
     private void includeAllFirstLevelProps() {
 	for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(getEntityType())) {
-	    with(ppi.getName(), false);
+	    if (ppi.isUnionEntity()) {
+		with(ppi.getName(), new fetch(ppi.getJavaType(), FetchCategory.ALL));
+	    } else {
+		with(ppi.getName(), false);
+	    }
 	}
     }
 
