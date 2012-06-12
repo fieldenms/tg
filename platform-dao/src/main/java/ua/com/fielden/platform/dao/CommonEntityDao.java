@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -208,7 +209,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 		    final Object value = entity.get(propName);
 		    // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
 		    // the easiest way to do that is to load entity be id using the current session
-		    if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor)) {
+		    if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
 			persistedEntity.set(propName, getSession().load(((AbstractEntity) value).getType(), ((AbstractEntity) value).getId()));
 		    } else {
 			persistedEntity.set(propName, value);
