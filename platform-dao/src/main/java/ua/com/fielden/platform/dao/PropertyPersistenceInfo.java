@@ -204,7 +204,6 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
 	public PropertyPersistenceInfo build() {
 	    return new PropertyPersistenceInfo(this);
-
 	}
 
 	public Builder(final String name, final Class javaType, final boolean nullable) {
@@ -266,6 +265,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	PRIMITIVE_MEMBER_OF_COMPOSITE_KEY, //
 	COMPOSITE_DETAILS, //
 	CALCULATED, //
+	SYNTHETIC, //
 	UNION_ENTITY, //
 	UNION_DETAILS;
     }

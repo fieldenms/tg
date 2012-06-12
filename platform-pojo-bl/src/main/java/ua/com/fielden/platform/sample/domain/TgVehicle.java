@@ -9,13 +9,13 @@ import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -121,110 +121,44 @@ public class TgVehicle extends AbstractEntity<String> {
     protected TgVehicle() {
     }
 
-    @Observable
-    public TgVehicle setLastFuelUsage(final TgFuelUsage lastFuelUsage) {
-	this.lastFuelUsage = lastFuelUsage;
-	return this;
-    }
-
     public TgFuelUsage getLastFuelUsage() {
 	return lastFuelUsage;
-    }
-
-    @Observable
-    public TgVehicle setConstValueProp(final Integer constValueProp) {
-	this.constValueProp = constValueProp;
-	return this;
     }
 
     public Integer getConstValueProp() {
 	return constValueProp;
     }
 
-    @Observable
-    public TgVehicle setCalc0(final BigDecimal calc0) {
-	this.calc0 = calc0;
-	return this;
-    }
-
     public BigDecimal getCalc0() {
 	return calc0;
-    }
-
-    @Observable
-    public TgVehicle setLastFuelUsageQty(final BigDecimal lastFuelUsageQty) {
-	this.lastFuelUsageQty = lastFuelUsageQty;
-	return this;
     }
 
     public BigDecimal getLastFuelUsageQty() {
 	return lastFuelUsageQty;
     }
 
-    @Observable
-    public TgVehicle setCalcModel(final TgVehicleModel calcModel) {
-	this.calcModel = calcModel;
-	return this;
-    }
-
     public TgVehicleModel getCalcModel() {
 	return calcModel;
-    }
-
-    @Observable
-    public TgVehicle setSumOfPrices(final BigDecimal sumOfPrices) {
-	this.sumOfPrices = sumOfPrices;
-	return this;
     }
 
     public BigDecimal getSumOfPrices() {
 	return sumOfPrices;
     }
 
-    @Observable
-    public TgVehicle setCalc3(final BigDecimal calc3) {
-	this.calc3 = calc3;
-	return this;
-    }
-
     public BigDecimal getCalc3() {
 	return calc3;
-    }
-
-    @Observable
-    public TgVehicle setCalc4(final BigDecimal calc4) {
-	this.calc4 = calc4;
-	return this;
     }
 
     public BigDecimal getCalc4() {
 	return calc4;
     }
 
-    @Observable
-    public TgVehicle setCalc2(final BigDecimal calc2) {
-	this.calc2 = calc2;
-	return this;
-    }
-
     public BigDecimal getCalc2() {
 	return calc2;
     }
 
-    @Observable
-    public TgVehicle setCalc5(final BigDecimal calc5) {
-	this.calc5 = calc5;
-	return this;
-    }
-
     public BigDecimal getCalc5() {
 	return calc5;
-    }
-
-    @Observable
-    public TgVehicle setCalc6(final BigDecimal calc6) {
-	this.calc6 = calc6;
-	return this;
     }
 
     public BigDecimal getCalc6() {

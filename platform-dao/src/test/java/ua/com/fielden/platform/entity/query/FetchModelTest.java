@@ -6,6 +6,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
+import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
@@ -149,5 +151,21 @@ public class FetchModelTest extends BaseEntQueryTCase {
 	assertTrue(vehicleFetchModel.getIncludedPropsWithModels().size() == 0);
 	assertTrue(vehicleFetchModel.getIncudedProps().size() == 0);
 	assertTrue(vehicleFetchModel.getExcludedProps().size() == 0);
+    }
+
+    @Test
+    public void test_all_fetching_of_bogie() {
+	final fetch<TgBogie> bogieFetch = new fetch<TgBogie>(TgBogie.class, FetchCategory.ALL);
+	final FetchModel<TgBogie> fetchModel = new FetchModel<TgBogie>(bogieFetch, DOMAIN_PERSISTENCE_METADATA_ANALYSER);
+	assertTrue(fetchModel.containsProp("key"));
+	assertTrue(fetchModel.containsProp("desc"));
+	assertTrue(fetchModel.containsProp("id"));
+	assertTrue(fetchModel.containsProp("version"));
+	final fetch<? extends AbstractEntity<?>> locationFetchModel = fetchModel.getFetchModels().get("location");
+	assertTrue(locationFetchModel.getFetchCategory().equals(FetchCategory.ALL));
+	assertTrue(locationFetchModel.getEntityType().equals(TgBogieLocation.class));
+	assertTrue(locationFetchModel.getIncludedPropsWithModels().size() == 0);
+	assertTrue(locationFetchModel.getIncudedProps().size() == 0);
+	assertTrue(locationFetchModel.getExcludedProps().size() == 0);
     }
 }

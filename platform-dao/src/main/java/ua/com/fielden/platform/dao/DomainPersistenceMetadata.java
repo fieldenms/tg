@@ -3,7 +3,6 @@ package ua.com.fielden.platform.dao;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -53,6 +52,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.getCalculatedProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.getCompositeKeyProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.getPersistedProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getSyntheticProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyPartOfKey;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
@@ -105,28 +105,29 @@ public class DomainPersistenceMetadata {
 
 	final String tableClase = getTableClause(entityType);
 	if (tableClase != null) {
-		final Set<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
-		final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
-		result.addAll(ppis);
-		result.addAll(generatePPIsForCompositeTypeProps(ppis));
-
+	    final Set<PropertyPersistenceInfo> ppis = generateEntityPersistenceInfo(entityType);
+	    final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
+	    result.addAll(ppis);
+	    result.addAll(generatePPIsForCompositeTypeProps(ppis));
 	    return new EntityPersistenceMetadata(tableClase, entityType, getMap(result));
 	}
 
 	final EntityResultQueryModel<ET> entityModel = getEntityModel(entityType);
 	if (entityModel != null) {
-	    return new EntityPersistenceMetadata(entityModel, entityType, getMap(Collections.<PropertyPersistenceInfo> emptySet()));
-	}
+	    final Set<PropertyPersistenceInfo> ppis = generateSyntheticEntityPersistenceInfo(entityType, entityModel);
+	    final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
+	    result.addAll(ppis);
+	    result.addAll(generatePPIsForCompositeTypeProps(ppis));
 
+	    return new EntityPersistenceMetadata(entityModel, entityType, getMap(result));
+	}
 
 	final Set<PropertyPersistenceInfo> ppis = new HashSet<PropertyPersistenceInfo>();
 	for (final Field field : getPersistedProperties(entityType)) {
-		ppis.add(getCommonPropHibInfo(entityType, field));
+	    ppis.add(getCommonPropHibInfo(entityType, field));
 	}
 
 	return new EntityPersistenceMetadata(tableClase, entityType, getMap(ppis));
-
-	//throw new IllegalStateException("Couldn't detemine data source for entity type: " + entityType);
     }
 
     private Set<PropertyPersistenceInfo> generatePPIsForCompositeTypeProps(final Set<PropertyPersistenceInfo> ppis) {
@@ -210,6 +211,20 @@ public class DomainPersistenceMetadata {
 
 	for (final Field field : getCollectionalProperties(entityType)) {
 	    safeMapAdd(result, getCollectionalPropInfo(entityType, field));
+	}
+
+	return new HashSet<PropertyPersistenceInfo>(result.values());
+    }
+
+    private <ET extends AbstractEntity<?>> Set<PropertyPersistenceInfo> generateSyntheticEntityPersistenceInfo(final Class<ET> entityType, final EntityResultQueryModel<ET> model) throws Exception {
+	final Map<String, PropertyPersistenceInfo> result = new HashMap<String, PropertyPersistenceInfo>();
+
+	for (final Field field : getSyntheticProperties(entityType, model)) {
+	    safeMapAdd(result, getSyntheticPropInfo(entityType, field));
+	}
+
+	for (final Field field : getCalculatedProperties(entityType)) {
+	    safeMapAdd(result, getCalculatedPropInfo(entityType, field));
 	}
 
 	return new HashSet<PropertyPersistenceInfo>(result.values());
@@ -356,6 +371,13 @@ public class DomainPersistenceMetadata {
 	return new PropertyPersistenceInfo.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(PropertyPersistenceType.CALCULATED).aggregatedExpression(aggregatedExpression).build();
     }
 
+    private PropertyPersistenceInfo getSyntheticPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
+	final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+	final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+	final Object hibernateType = getHibernateType(javaType, persistedType, false);
+	return new PropertyPersistenceInfo.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).hibType(hibernateType).type(PropertyPersistenceType.SYNTHETIC).build();
+    }
+
     private PropertyPersistenceInfo getCollectionalPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
 	final boolean isEntity = isPersistedEntityType(field.getType());
 	final String propName = field.getName();
@@ -437,27 +459,28 @@ public class DomainPersistenceMetadata {
     }
 
     private <ET extends AbstractEntity<?>> EntityResultQueryModel<ET> getEntityModel(final Class<ET> entityType) {
-	return null;
+	try {
+	    final Field exprField = entityType.getDeclaredField("model_");
+	    exprField.setAccessible(true);
+	    return (EntityResultQueryModel<ET>) exprField.get(null);
+	} catch (final Exception e) {
+	    return null;
+	}
     }
 
     private String getTableClause(final Class<? extends AbstractEntity<?>> entityType) {
 	if (!EntityUtils.isPersistedEntityType(entityType)) {
 	    return null;
-	    //throw new IllegalArgumentException("Trying to determine table name for not-persisted entity type [" + entityType + "]");
 	}
 
 	final MapEntityTo mapEntityToAnnotation = AnnotationReflector.getAnnotation(MapEntityTo.class, entityType);
 
-//	if (mapEntityToAnnotation == null) {
-//	    return null;
-//	} else {
-	    final String providedTableName = mapEntityToAnnotation.value();
-	    if (!StringUtils.isEmpty(providedTableName)) {
-		return providedTableName;
-	    } else {
-		return DynamicEntityClassLoader.getOriginalType(entityType).getSimpleName().toUpperCase() + "_";
-	    }
-//	}
+	final String providedTableName = mapEntityToAnnotation.value();
+	if (!StringUtils.isEmpty(providedTableName)) {
+	    return providedTableName;
+	} else {
+	    return DynamicEntityClassLoader.getOriginalType(entityType).getSimpleName().toUpperCase() + "_";
+	}
     }
 
     public Map<Class, Object> getHibTypesDefaults() {

@@ -96,7 +96,7 @@ public class BaseEntQueryTCase {
 	return TypeFactory.basic(name);
     }
 
-    private static final DomainPersistenceMetadata DOMAIN_PERSISTENCE_METADATA = new DomainPersistenceMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes);
+    protected static final DomainPersistenceMetadata DOMAIN_PERSISTENCE_METADATA = new DomainPersistenceMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes);
 
     protected static final DomainPersistenceMetadataAnalyser DOMAIN_PERSISTENCE_METADATA_ANALYSER = new DomainPersistenceMetadataAnalyser(DOMAIN_PERSISTENCE_METADATA);
 

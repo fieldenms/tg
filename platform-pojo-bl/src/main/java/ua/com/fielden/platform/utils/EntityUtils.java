@@ -27,6 +27,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -780,6 +781,18 @@ public class EntityUtils {
 
 	for (final Field propField : Finder.findRealProperties(entityType, Calculated.class)) {
 	    result.add(propField);
+	}
+
+	return result;
+    }
+
+    public static <ET extends AbstractEntity<?>> List<Field> getSyntheticProperties(final Class<ET> entityType, final EntityResultQueryModel<ET> model) {
+	final List<Field> result = new ArrayList<Field>();
+
+	for (final Field propField : Finder.findRealProperties(entityType)) {
+	    if (!"desc".equals(propField.getName())) {
+		result.add(propField);
+	    }
 	}
 
 	return result;
