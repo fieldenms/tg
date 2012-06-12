@@ -80,9 +80,17 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
 
     @Test
+    public void test_query_with_union_property_being_null() {
+	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("key").eq().val("BOGIE2").model();
+	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("workshop"))).build());
+	assertEquals("Incorrect key 1", "BOGIE2", models.get(0).getKey());
+	assertTrue("Incorrect key 1", models.get(0).getLocation() == null);
+    }
+
+    @Test
     public void test_query_with_union_property() {
 	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.workshop.key").eq().val("WSHOP1").or().prop("location.wagonSlot.wagon.key").eq().val("WAGON1").model();
-	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("workshop"))).build()); //.without("location").without("location.wagonSlot").without("location.workshop")
+	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("workshop"))).build());
 	assertEquals("Incorrect key 1", "BOGIE1", models.get(0).getKey());
 	assertEquals("Incorrect key 1", "WSHOP1", models.get(0).getLocation().getWorkshop().getKey());
     }

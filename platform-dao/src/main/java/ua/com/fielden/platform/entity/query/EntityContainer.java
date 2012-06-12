@@ -29,7 +29,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     }
 
     public boolean isEmpty() {
-	return countAllDataItems()== 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null;
+	return (countAllDataItems()== 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null) || (AbstractUnionEntity.class.isAssignableFrom(resultType) && countAllDataItems()== 0);
     }
 
     public boolean notYetInitialised() {
@@ -42,7 +42,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
     public Long getId() {
 	final Object idObject = primitives.get(AbstractEntity.ID);
-	return idObject != null ? new Long(((Number) idObject).longValue()) : (AbstractUnionEntity.class.isAssignableFrom(resultType) ? entities.values().iterator().next().getId() : null);
+	return idObject != null ? new Long(((Number) idObject).longValue()) : (AbstractUnionEntity.class.isAssignableFrom(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
     }
 
     public R instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
