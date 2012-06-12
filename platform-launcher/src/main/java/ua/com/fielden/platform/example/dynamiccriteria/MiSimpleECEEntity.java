@@ -14,8 +14,9 @@ public class MiSimpleECEEntity extends MiWithConfigurationSupport<SimpleECEEntit
 
     private static final long serialVersionUID = 8348286315949258950L;
 
+    @SuppressWarnings("unchecked")
     public MiSimpleECEEntity(final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ITreeMenuItemVisibilityProvider visibilityProvider) {
-	super("Simple entity", "Simple entity description", injector, treeMenu, new EntityCentreFactoryBinder<SimpleECEEntity>(), visibilityProvider, MiSimpleECEEntity.class);
+	super("Simple entity", "Simple entity description", treeMenu, injector.getInstance(EntityCentreFactoryBinder.class), visibilityProvider, MiSimpleECEEntity.class);
     }
 
 }

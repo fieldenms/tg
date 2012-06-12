@@ -10,6 +10,5 @@ public class EntityLocatorModel<T extends AbstractEntity<?>> extends AbstractEnt
 
     public EntityLocatorModel(final EntityInspectorModel<EntityQueryCriteria<ILocatorDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> entityInspectorModel, final String name) {
 	super(entityInspectorModel, null, name);
-	// TODO Auto-generated constructor stub
     }
 }

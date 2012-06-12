@@ -3,7 +3,6 @@ package ua.com.fielden.platform.swing.review.report.centre;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.awt.Dimension;
-import java.awt.IllegalComponentStateException;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
@@ -14,53 +13,40 @@ import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
-import javax.swing.border.EtchedBorder;
 
 import net.miginfocom.swing.MigLayout;
 
 import org.jvnet.flamingo.common.ElementState;
 import org.jvnet.flamingo.common.icon.EmptyResizableIcon;
 
-import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.actions.ActionChanger;
-import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.ActionChangeButton;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
-import ua.com.fielden.platform.swing.egi.EntityGridInspector;
-import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
-import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.pagination.development.Paginator;
 import ua.com.fielden.platform.swing.pagination.development.Paginator.IPageChangeFeedback;
 import ua.com.fielden.platform.swing.pagination.model.development.IPageHolderManager;
 import ua.com.fielden.platform.swing.pagination.model.development.PaginatorModel;
-import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.development.AbstractEntityReview;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
-import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView;
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ILoadListener;
 import ua.com.fielden.platform.swing.taskpane.TaskPanel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
-import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
  * Implements common functionality for all types of entity centres: entity centre with single analysis, entity locators, entity centres with multiple analysis.
@@ -70,7 +56,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
  *
  * @param <T>
  */
-public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityReview<T, CDTME> implements IUmViewOwner{
+public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractEntityReview<T, CDTME> {
 
     private static final long serialVersionUID = -6079569752962700417L;
 
@@ -163,22 +149,6 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     }
 
     /**
-     * Updates the entity in the grid analysis.
-     */
-    public <E extends AbstractEntity<?>> void notifyEntityChange(final E entity) {
-	if (entity.isPersisted()) {
-	    SwingUtilitiesEx.invokeLater(new Runnable() {
-		@SuppressWarnings("unchecked")
-		@Override
-		public void run() {
-		    getEntityGridInspector(AbstractEntityCentre.this).getActualModel().refresh((T) entity);
-		    //getProgressLayer().setLocked(false);
-		}
-	    });
-	}
-    };
-
-    /**
      * Returns the currently operable analysis report.
      *
      * @return
@@ -186,13 +156,6 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     public final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> getCurrentAnalysisConfigurationView() {
 	return currentAnalysisConfigurationView;
     }
-
-    /**
-     * Returns the list of visible analysis associated with this entity centre.
-     *
-     * @return
-     */
-    public abstract List<AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?>> getVisibleAnalysisList();
 
     /**
      * Returns the {@link IPageHolderManager} for this entity centre.
@@ -283,31 +246,11 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
     public abstract JComponent getReviewPanel();
 
     /**
-     * Returns the list of selected entities.
-     *
-     * @return
-     */
-    public List<T> getSelectedEntities() {
-	final EntityGridInspector<T> egi = getEntityGridInspector(this);
-	final PropertyTableModel<T> tableModel = egi.getActualModel();
-	return tableModel.getSelectedEntities();
-    }
-
-    /**
      * Override this to provide custom tool bar.
      *
      * @return
      */
     protected JToolBar createToolBar() {
-	if(getModel().getMasterManager() != null){
-	    final JToolBar toolbar = new ActionPanelBuilder()//
-	    .addButton(createOpenMasterWithNewCommand())//
-	    .addButton(createOpenMasterCommand())//
-	    .buildActionPanel();
-	    toolbar.setFloatable(false);
-	    toolbar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-	    return toolbar;
-	}
 	return null ;
     }
 
@@ -379,142 +322,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	add(components.get(components.size()-1));
     }
 
-    /**
-     * A command that creates and opens an entity master frame for the new entity.
-     *
-     * @return
-     */
-    protected Command<T> createOpenMasterWithNewCommand() {
-	final Command<T> action = new Command<T>("New") {
-	    private static final long serialVersionUID = 1L;
 
-	    private IEntityProducer<T> entityProducer;
-	    private IEntityMasterManager masterManager;
-
-	    @Override
-	    protected boolean preAction() {
-		if (super.preAction()) {
-		    masterManager = getModel().getMasterManager();
-		    final Class<T> entityType = getModel().getCriteria().getEntityClass();
-		    entityProducer = masterManager != null ? masterManager.getEntityProducer(entityType) : null;
-		    return entityProducer != null;
-		}
-		return false;
-	    }
-
-	    @Override
-	    protected T action(final ActionEvent event) throws Exception {
-		return entityProducer.newEntity();
-	    }
-
-	    @Override
-	    protected void postAction(final T entity) {
-		masterManager.<T, IEntityDao<T>> showMaster(entity, AbstractEntityCentre.this);
-		super.postAction(entity);
-	    }
-	};
-	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_1);
-	action.putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/document-new.png"));
-	action.putValue(Action.SMALL_ICON, ResourceLoader.getIcon("images/document-new.png"));
-	action.putValue(Action.SHORT_DESCRIPTION, "New");
-	action.setEnabled(true);
-	return action;
-    }
-
-    /**
-     * A command that creates and opens an entity master frame for the selected in the EGI entity.
-     *
-     * @return
-     */
-    protected Command<T> createOpenMasterCommand() {
-	final Command<T> action = new BlockingLayerCommand<T>("Edit", getReviewProgressLayer()) {
-	    private static final long serialVersionUID = 1L;
-
-	    private IEntityMasterManager masterManager;
-
-	    @Override
-	    protected boolean preAction() {
-		setMessage("Opening...");
-		if (super.preAction()) {
-		    masterManager = getModel().getMasterManager();
-		    return masterManager != null && getSelectedEntities().size() == 1;
-		}
-		return false;
-	    }
-
-	    @Override
-	    protected T action(final ActionEvent event) throws Exception {
-		return getSelectedEntities().get(0);
-	    }
-
-	    @Override
-	    protected void postAction(final T entity) {
-		super.postAction(entity);
-		if (entity != null) {
-		    masterManager.<T, IEntityDao<T>> showMaster(entity, AbstractEntityCentre.this);
-		}
-	    }
-	};
-	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_2);
-	action.putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/document-edit.png"));
-	action.putValue(Action.SMALL_ICON, ResourceLoader.getIcon("images/document-edit.png"));
-	action.putValue(Action.SHORT_DESCRIPTION, "Edit");
-	action.setEnabled(true);
-	return action;
-    }
-
-    /**
-     * A command that removes the selected in the EGI entity.
-     *
-     * @return
-     */
-    protected Command<T> createDeleteCommand() {
-	final Command<T> action = new BlockingLayerCommand<T>("Delete", getReviewProgressLayer()) {
-	    private static final long serialVersionUID = 1L;
-
-	    @Override
-	    protected boolean preAction() {
-		final boolean superRes = super.preAction();
-		if(!superRes){
-		    return false;
-		}
-		final List<T> selectedEntities = getSelectedEntities();
-		if(selectedEntities.size() != 1){//There are no selected entities or there are more then one are selected.
-		    return false;
-		}
-		final T entity = selectedEntities.get(0);
-		if (JOptionPane.showConfirmDialog(AbstractEntityCentre.this, "Entity " + entity + " will be deleted. Proceed?", "Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
-		    return false;
-		}
-		setMessage("Deleting...");
-		return true;
-	    }
-
-	    @Override
-	    protected T action(final ActionEvent event) throws Exception {
-		final List<T> selectedEntities = getSelectedEntities();
-		final T entity = selectedEntities.get(0);
-		getModel().getCriteria().delete(entity);
-		return entity;
-	    }
-
-	    @SuppressWarnings("unchecked")
-	    @Override
-	    protected void postAction(final T entity) {
-		final PropertyTableModel<T> tableModel = getEntityGridInspector(AbstractEntityCentre.this).getActualModel();
-		tableModel.removeInstances(entity);
-		tableModel.fireTableDataChanged();
-		super.postAction(entity);
-	    }
-
-	};
-	action.setEnabled(true);
-	action.putValue(Action.SHORT_DESCRIPTION, "Delete");
-	action.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_3);
-	action.putValue(Action.LARGE_ICON_KEY, ResourceLoader.getIcon("images/document-delete.png"));
-	action.putValue(Action.SMALL_ICON, ResourceLoader.getIcon("images/document-delete.png"));
-	return action;
-    }
 
     /**
      * Adds the component to the list of passed components if it is not null and returns component's constraints.
@@ -524,29 +332,12 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
      * @param component
      * @return
      */
-    protected static String addToComponents(final List<JComponent> components, final String constraint, final JComponent component) {
+    public static String addToComponents(final List<JComponent> components, final String constraint, final JComponent component) {
 	if(component != null){
 	    components.add(component);
 	    return constraint;
 	}
 	return "";
-    }
-
-    /**
-     * Returns the {@link EntityGridInspector} of the single analysis that this centre owns.
-     *
-     * @return
-     */
-    @SuppressWarnings( "unchecked")
-    protected static <E extends AbstractEntity<?>, MAE extends ICentreDomainTreeManagerAndEnhancer> EntityGridInspector<E> getEntityGridInspector(final AbstractEntityCentre<E, MAE> entityCentre){
-	final List<AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?>> visibleAnalysis = entityCentre.getVisibleAnalysisList();
-	for(final AbstractAnalysisConfigurationView<E, MAE, ?, ?, ?> analysis : visibleAnalysis){
-	    if(analysis instanceof GridConfigurationView){
-		final GridConfigurationView<E, MAE> gridConfigPanel = (GridConfigurationView<E, MAE>)analysis;
-		return gridConfigPanel.getPreviousView().getEgiPanel().getEgi();
-	    }
-	}
-	throw new IllegalComponentStateException("The centre doesn't contain the main detais analysis!");
     }
 
     /**

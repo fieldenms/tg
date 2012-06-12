@@ -14,7 +14,8 @@ public class MiSimpleCompositeEntity extends MiWithConfigurationSupport<SimpleCo
 
     private static final long serialVersionUID = -1454299435907348281L;
 
+    @SuppressWarnings("unchecked")
     public MiSimpleCompositeEntity(final TreeMenuWithTabs<?> treeMenu, final Injector injector, final ITreeMenuItemVisibilityProvider visibilityProvider) {
-	super("Simple composite entity", "Simple composite entity description", injector, treeMenu, new EntityCentreFactoryBinder<SimpleCompositeEntity>(), visibilityProvider, MiSimpleCompositeEntity.class);
+	super("Simple composite entity", "Simple composite entity description", treeMenu, injector.getInstance(EntityCentreFactoryBinder.class), visibilityProvider, MiSimpleCompositeEntity.class);
     }
 }

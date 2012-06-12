@@ -25,7 +25,7 @@ public class GridConfigurationModel<T extends AbstractEntity<?>, CDTME extends I
 	return Result.successful(this);
     }
 
-    final GridAnalysisModel<T, CDTME> createGridAnalysisModel() {
+    public final GridAnalysisModel<T, CDTME> createGridAnalysisModel() {
 	return new GridAnalysisModel<T, CDTME>(getCriteria(), getPageHolder());
     }
 

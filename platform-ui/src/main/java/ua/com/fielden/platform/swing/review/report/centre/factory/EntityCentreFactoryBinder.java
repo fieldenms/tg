@@ -3,8 +3,23 @@ package ua.com.fielden.platform.swing.review.report.centre.factory;
 import java.util.HashMap;
 import java.util.Map;
 
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.swing.review.IEntityMasterManager;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
+import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
+import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationView;
+
+import com.google.inject.Inject;
 
 /**
  * Convenient entity centre and analysis factory binder
@@ -13,7 +28,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> {
+public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> implements IEntityCentreBuilder<T>, IAnalysisBuilder<T>{
+
+    //Entity centre related properties.
+    private final IGlobalDomainTreeManager gdtm;
+    private final EntityFactory entityFactory;
+    private final IEntityMasterManager masterManager;
+    private final ICriteriaGenerator criteriaGenerator;
 
     /**
      * Represents the entity centre factory.
@@ -29,7 +50,16 @@ public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> {
     /**
      * Initialises {@link EntityCentreFactoryBinder} with default entity centre and analysis factories.
      */
-    public EntityCentreFactoryBinder(){
+    @Inject
+    public EntityCentreFactoryBinder(//
+	    final IGlobalDomainTreeManager gdtm,//
+	    final EntityFactory entityFactory,//
+	    final IEntityMasterManager masterManager,
+	    final ICriteriaGenerator criteriaGenerator){
+	this.gdtm = gdtm;
+	this.entityFactory = entityFactory;
+	this.masterManager = masterManager;
+	this.criteriaGenerator = criteriaGenerator;
 	bindEntityCentreTo(new DefaultEntityCentreFactory<T>());
 	bindDefaultAnalysisTo(new DefaultGridAnalysisFactory<T>());
 	bindAnalysisTo(AnalysisType.SIMPLE, new DefaultChartAnalysisFactory<T>());
@@ -103,5 +133,28 @@ public class EntityCentreFactoryBinder<T extends AbstractEntity<?>> {
      */
     public IAnalysisFactory<T, ?> getDefaultAnalysisFactory(){
 	return getAnalysisFactoryFor(null);
+    }
+
+    @Override
+    public AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManagerAndEnhancer, ?, ?> createAnalysis(//
+	    final AnalysisType analysisType, //
+	    final String name, //
+	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
+	    final BlockingIndefiniteProgressLayer progressLayer) {
+	return getAnalysisFactoryFor(analysisType).createAnalysis(owner, criteria, name, progressLayer);
+    }
+
+    @Override
+    public CentreConfigurationView<T, ?> createEntityCentre(//
+	    final Class<? extends MiWithConfigurationSupport<T>> menuItemType, //
+		    final String name, //
+		    final BlockingIndefiniteProgressLayer progressLayer) {
+	return getEntityCentreFactory().createEntityCentre(//
+		menuItemType, //
+		name, //
+		this, //
+		gdtm, entityFactory, masterManager, criteriaGenerator,//
+		progressLayer);
     }
 }

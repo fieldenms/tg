@@ -10,6 +10,7 @@ import javax.swing.JComponent;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.SingleAnalysisEntityCentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
 
@@ -19,7 +20,6 @@ public class SingleAnalysisEntityCentre<T extends AbstractEntity<?>> extends Abs
 
     public SingleAnalysisEntityCentre(final EntityCentreModel<T> model, final SingleAnalysisEntityCentreConfigurationView<T> owner) {
 	super(model, owner);
-	createReview();
 	layoutComponents();
     }
 
@@ -37,6 +37,13 @@ public class SingleAnalysisEntityCentre<T extends AbstractEntity<?>> extends Abs
     @Override
     public JComponent getReviewPanel() {
 	return getReviewProgressLayer();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createGridAnalysis() {
+	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>)getModel().getAnalysisBuilder()//
+		.createAnalysis(null, null, this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     @Override

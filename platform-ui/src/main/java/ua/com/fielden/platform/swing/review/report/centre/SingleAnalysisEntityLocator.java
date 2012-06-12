@@ -56,7 +56,6 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 
     public SingleAnalysisEntityLocator(final EntityLocatorModel<T> model, final LocatorConfigurationView<T, ?> owner) {
 	super(model, owner);
-	createReview();
 	this.closeAction = createCloseAction();
 	this.selectAction = createSelectAction();
 	this.locatorPanel = createLocatorPanel();
@@ -64,7 +63,7 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 
 	    @Override
 	    public void viewWasLoaded(final LoadEvent event) {
-		final EntityGridInspector<T> egi = getEntityGridInspector(SingleAnalysisEntityLocator.this);
+		final EntityGridInspector<T> egi = getSingleAnalysis().getPreviousView().getEgiPanel().getEgi();
 		final ListSelectionListener listener = createEgiSelectionListener(egi, getOwner().isMultipleSelection());
 		egi.setSelectionMode(getOwner().isMultipleSelection() ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
 		egi.getSelectionModel().addListSelectionListener(listener);
@@ -98,7 +97,6 @@ public class SingleAnalysisEntityLocator<T extends AbstractEntity<?>> extends Ab
 	return (LocatorConfigurationView<T, ?>)super.getOwner();
     }
 
-    @Override
     public List<T> getSelectedEntities() {
 	return Collections.unmodifiableList(selectedEntities);
     }

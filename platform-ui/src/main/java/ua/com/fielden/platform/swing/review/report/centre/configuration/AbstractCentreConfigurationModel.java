@@ -72,8 +72,8 @@ public abstract class AbstractCentreConfigurationModel<T extends AbstractEntity<
 	return masterManager;
     }
 
-    abstract public AbstractEntityCentreModel<T, CDTME> createEntityCentreModel();
+    abstract protected AbstractEntityCentreModel<T, CDTME> createEntityCentreModel();
 
-    abstract public DomainTreeEditorModel<T> createDomainTreeEditorModel();
+    abstract protected DomainTreeEditorModel<T> createDomainTreeEditorModel();
 
 }

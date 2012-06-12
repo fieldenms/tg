@@ -1,17 +1,15 @@
 package ua.com.fielden.platform.swing.menu;
 
+import java.util.Set;
+
 import javax.swing.JOptionPane;
 
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.model.DefaultUiModel;
 import ua.com.fielden.platform.swing.model.ICloseGuard;
-import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.CentreConfigurationView;
-import ua.com.fielden.platform.swing.review.report.centre.factory.EntityCentreFactoryBinder;
+import ua.com.fielden.platform.swing.review.report.centre.factory.IEntityCentreBuilder;
 import ua.com.fielden.platform.swing.review.report.events.CentreConfigurationEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ICentreConfigurationEventListener;
 import ua.com.fielden.platform.swing.view.BaseNotifPanel;
@@ -33,11 +31,7 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
     private final String description;
 
     //Entity centre related properties.
-    private final IGlobalDomainTreeManager gdtm;
-    private final EntityFactory entityFactory;
-    private final IEntityMasterManager masterManager;
-    private final ICriteriaGenerator criteriaGenerator;
-    private final EntityCentreFactoryBinder<T> centreFactoryBinder;
+    private final IEntityCentreBuilder<T> centreBuilder;
     private final CentreConfigurationView<T, ?> entityCentreConfigurationView;
     private final Class<? extends MiWithConfigurationSupport<T>> menuItemClass;
 
@@ -49,31 +43,23 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
      * @param modelBuilder
      */
     public DynamicReportWrapper(
-	    //Menu item related parameters
-	    final String caption,//
+    //Menu item related parameters
+    final String caption,//
 	    final String description,//
 	    final TreeMenuWithTabs<?> treeMenu,//
 	    //Entity centre related parameters
 	    final String name,//
 	    final Class<? extends MiWithConfigurationSupport<T>> menuItemClass,//
-		    final EntityCentreFactoryBinder<T> centreFactoryBinder,//
-		    final IGlobalDomainTreeManager gdtm,//
-		    final EntityFactory entityFactory,//
-		    final IEntityMasterManager masterManager,//
-		    final ICriteriaGenerator criteriaGenerator) {
+	    final IEntityCentreBuilder<T> centreBuilder) {
 	super(caption, new DefaultUiModel(true));
 	this.description = description;
 	this.treeMenu = treeMenu;
-	this.gdtm = gdtm;
-	this.entityFactory = entityFactory;
-	this.masterManager = masterManager;
-	this.criteriaGenerator = criteriaGenerator;
-	this.centreFactoryBinder = centreFactoryBinder;
+	this.centreBuilder = centreBuilder;
 	this.menuItemClass = menuItemClass;
 	//Create and configure entity centre;
 	//final CentreConfigurationModel<T> configModel = new CentreConfigurationModel<T>(entityType, name, gdtm, entityFactory, masterManager, criteriaGenerator);
 	final BlockingIndefiniteProgressLayer progressLayer = new BlockingIndefiniteProgressLayer(null, "");
-	this.entityCentreConfigurationView = centreFactoryBinder.getEntityCentreFactory().createEntityCentre(menuItemClass, name, centreFactoryBinder, gdtm, entityFactory, masterManager, criteriaGenerator, progressLayer);
+	this.entityCentreConfigurationView = centreBuilder.createEntityCentre(menuItemClass, name, progressLayer);
 	this.entityCentreConfigurationView.addCentreConfigurationEventListener(createContreConfigurationListener());
 	//new MultipleAnalysisEntityCentreConfigurationView<T>(configModel, progressLayer);
 	progressLayer.setView(entityCentreConfigurationView);
@@ -131,6 +117,15 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	//fireCentreClosingEvent(new CentreClosingEvent(this));
     }
 
+    /**
+     * Returns the list of non principle entity centre names.
+     *
+     * @return
+     */
+    public Set<String> getNonPrincipleEntityCentreNames(){
+	return entityCentreConfigurationView.getModel().getNonPrincipleEntityCentreList();
+    }
+
     @Override
     public boolean canLeave() {
 	return true;
@@ -140,28 +135,12 @@ public class DynamicReportWrapper<T extends AbstractEntity<?>> extends BaseNotif
 	return menuItemClass;
     }
 
-    public final IGlobalDomainTreeManager getGlobalDomainTreeManager(){
-	return gdtm;
-    }
-
-    public EntityFactory getEntityFactory() {
-	return entityFactory;
-    }
-
-    public IEntityMasterManager getMasterManager() {
-	return masterManager;
-    }
-
-    public ICriteriaGenerator getCriteriaGenerator() {
-	return criteriaGenerator;
-    }
-
-    public EntityCentreFactoryBinder<T> getCentreFactoryBinder() {
-	return centreFactoryBinder;
-    }
-
     public TreeMenuWithTabs<?> getTreeMenu() {
 	return treeMenu;
+    }
+
+    public IEntityCentreBuilder<T> getCentreBuilder() {
+	return centreBuilder;
     }
 
     //	final DynamicCriteriaModelBuilder<T, DAO, R> newCriteriaModelBuilder = getDynamicCriteriaModelBuilderFor(getKeyToSave(), saveReportDialog.getEnteredFileName());

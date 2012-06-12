@@ -14,8 +14,16 @@ import ua.com.fielden.platform.swing.review.report.centre.configuration.Multiple
 public class DefaultEntityCentreFactory<T extends AbstractEntity<?>> implements IEntityCentreFactory<T> {
 
     @Override
-    public CentreConfigurationView<T, ?> createEntityCentre(final Class<? extends MiWithConfigurationSupport<T>> menuItemType, final String name, final EntityCentreFactoryBinder<T> centreFactoryBinder, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator, final BlockingIndefiniteProgressLayer progressLayer) {
-	final CentreConfigurationModel<T> configModel = new CentreConfigurationModel<T>(menuItemType, name, centreFactoryBinder, gdtm, entityFactory, masterManager, criteriaGenerator);
+    public CentreConfigurationView<T, ?> createEntityCentre(//
+	    final Class<? extends MiWithConfigurationSupport<T>> menuItemType, //
+	    final String name, //
+	    final IAnalysisBuilder<T> analysisBuilder, //
+	    final IGlobalDomainTreeManager gdtm, //
+	    final EntityFactory entityFactory, //
+	    final IEntityMasterManager masterManager, //
+	    final ICriteriaGenerator criteriaGenerator, //
+	    final BlockingIndefiniteProgressLayer progressLayer) {
+	final CentreConfigurationModel<T> configModel = new CentreConfigurationModel<T>(menuItemType, name, analysisBuilder, gdtm, entityFactory, masterManager, criteriaGenerator);
 	return new MultipleAnalysisEntityCentreConfigurationView<T>(configModel, progressLayer);
     }
 

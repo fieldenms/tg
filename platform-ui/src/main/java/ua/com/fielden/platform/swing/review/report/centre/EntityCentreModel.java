@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.ei.development.EntityInspectorModel;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuilder;
 
 //TODO consider necessity of the entity centre model existence.
 public class EntityCentreModel<T extends AbstractEntity<?>> extends AbstractEntityCentreModel<T, ICentreDomainTreeManagerAndEnhancer> {
@@ -13,9 +14,15 @@ public class EntityCentreModel<T extends AbstractEntity<?>> extends AbstractEnti
     //TODO is result view model is needed?
     //private AbstractAnalysisConfigurationModel resultViewModel;
 
+    private final IAnalysisBuilder<T> analysisBuilder;
 
-    public EntityCentreModel(final EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> entityInspectorModel, final IEntityMasterManager masterManager, final String name){
+    public EntityCentreModel(final EntityInspectorModel<EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>>> entityInspectorModel, final IAnalysisBuilder<T> analysisBuilder, final IEntityMasterManager masterManager, final String name){
 	super(entityInspectorModel, masterManager, name);
+	this.analysisBuilder = analysisBuilder;
+    }
+
+    public IAnalysisBuilder<T> getAnalysisBuilder() {
+	return analysisBuilder;
     }
 
     //    private final AbstractConfigurationModel getResultViewModel(){

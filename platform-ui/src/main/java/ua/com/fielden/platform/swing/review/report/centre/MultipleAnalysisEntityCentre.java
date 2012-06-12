@@ -34,12 +34,10 @@ import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabDialog;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabDialogModel;
 import ua.com.fielden.platform.swing.addtabdialog.AddTabOptions;
-import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.grid.configuration.GridConfigurationView;
-import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationModel;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.centre.configuration.MultipleAnalysisEntityCentreConfigurationView;
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.ConfigureAction;
@@ -93,16 +91,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
     @Override
     public JComponent getReviewPanel() {
 	return getReviewProgressLayer();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> getVisibleAnalysisList() {
-	final List<AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>> analysisList = new ArrayList<AbstractAnalysisConfigurationView<T,ICentreDomainTreeManagerAndEnhancer,?,?,?>>();
-	for(int tabIndex = 0; tabIndex < tabPanel.getTabCount(); tabIndex++){
-	    analysisList.add((AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)tabPanel.getComponentAt(tabIndex));
-	}
-	return analysisList;
     }
 
     @Override
@@ -559,10 +547,10 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      *
      * @return
      */
+    @SuppressWarnings("unchecked")
     private GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> createGridAnalysis(){
-	final GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer> configModel = new GridConfigurationModel<T, ICentreDomainTreeManagerAndEnhancer>(getModel().getCriteria());
-	final GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer> gridConfigView = new GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>(configModel, this, getReviewProgressLayer());
-	return gridConfigView;
+	return (GridConfigurationView<T, ICentreDomainTreeManagerAndEnhancer>)getModel().getAnalysisBuilder()//
+		.createAnalysis(null, null, this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     /**
@@ -571,10 +559,10 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * @param name
      * @return
      */
-    private ChartAnalysisConfigurationView<T> createChartAnalysis(final String name){
-	final ChartAnalysisConfigurationModel<T> configModel = new ChartAnalysisConfigurationModel<T>(getModel().getCriteria(), name);
-	final ChartAnalysisConfigurationView<T> configView = new ChartAnalysisConfigurationView<T>(configModel,this, getReviewProgressLayer());
-	return configView;
+    @SuppressWarnings("unchecked")
+    private ChartAnalysisConfigurationView<T> createChartAnalysis(final String name) {
+	return (ChartAnalysisConfigurationView<T>) getModel().getAnalysisBuilder()//
+		.createAnalysis(AnalysisType.SIMPLE, name, this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     /**
@@ -583,10 +571,10 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
      * @param name
      * @return
      */
+    @SuppressWarnings("unchecked")
     private PivotAnalysisConfigurationView<T> createPivotAnalysis(final String name){
-	final PivotAnalysisConfigurationModel<T> configModel = new PivotAnalysisConfigurationModel<T>(getModel().getCriteria(), name);
-	final PivotAnalysisConfigurationView<T> configView = new PivotAnalysisConfigurationView<T>(configModel,this, getReviewProgressLayer());
-	return configView;
+	return (PivotAnalysisConfigurationView<T>) getModel().getAnalysisBuilder()//
+		.createAnalysis(AnalysisType.PIVOT, name, this, getModel().getCriteria(), getReviewProgressLayer());
     }
 
     /**

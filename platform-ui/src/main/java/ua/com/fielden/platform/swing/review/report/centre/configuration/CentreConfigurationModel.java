@@ -20,7 +20,7 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.centre.EntityCentreModel;
 import ua.com.fielden.platform.swing.review.report.centre.binder.CentrePropertyBinder;
-import ua.com.fielden.platform.swing.review.report.centre.factory.EntityCentreFactoryBinder;
+import ua.com.fielden.platform.swing.review.report.centre.factory.IAnalysisBuilder;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
 
 /**
@@ -45,9 +45,9 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     private final IGlobalDomainTreeManager gdtm;
 
     /**
-     * Entity centre and analysis factory binder.
+     * The associated analysis builder.
      */
-    private final EntityCentreFactoryBinder<T> centreFactoryBinder;
+    private final IAnalysisBuilder<T> analysisBuilder;
 
     /**
      * Initiates this {@link CentreConfigurationModel} with instance of {@link IGlobalDomainTreeManager}, entity type and {@link EntityFactory}.
@@ -56,10 +56,10 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * @param gdtm - Associated {@link GlobalDomainTreeManager} instance.
      * @param entityFactory - {@link EntityFactory} needed for wizard model creation.
      */
-    public CentreConfigurationModel(final Class<? extends MiWithConfigurationSupport<T>> menuItemType, final String name, final EntityCentreFactoryBinder<T> centreFactoryBinder, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
+    public CentreConfigurationModel(final Class<? extends MiWithConfigurationSupport<T>> menuItemType, final String name, final IAnalysisBuilder<T> analysisBuilder, final IGlobalDomainTreeManager gdtm, final EntityFactory entityFactory, final IEntityMasterManager masterManager, final ICriteriaGenerator criteriaGenerator){
 	super(getEntityTypeForMenuItemClass(menuItemType), name, entityFactory, masterManager, criteriaGenerator);
 	this.menuItemType = menuItemType;
-	this.centreFactoryBinder = centreFactoryBinder;
+	this.analysisBuilder = analysisBuilder;
 	this.gdtm = gdtm;
     }
 
@@ -133,15 +133,6 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * Returns the associated {@link EntityCentreFactoryBinder} instance.
-     *
-     * @return
-     */
-    public EntityCentreFactoryBinder<T> getCentreFactoryBinder() {
-	return centreFactoryBinder;
-    }
-
-    /**
      * Returns the list of non principle entity centre list.
      *
      * @return
@@ -153,16 +144,16 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
-    public final EntityCentreModel<T> createEntityCentreModel() {
+    protected final EntityCentreModel<T> createEntityCentreModel() {
 	final ICentreDomainTreeManagerAndEnhancer cdtme = getEntityCentreManager();
 	if(cdtme == null || cdtme.getSecondTick().checkedProperties(getEntityType()).isEmpty()){
 	    throw new IllegalStateException("The centre manager is not specified");
 	}
-	return new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), getMasterManager(), getName());
+	return new EntityCentreModel<T>(createInspectorModel(getCriteriaGenerator().generateCentreQueryCriteria(getEntityType(), cdtme)), analysisBuilder, getMasterManager(), getName());
     }
 
     @Override
-    public final DomainTreeEditorModel<T> createDomainTreeEditorModel() {
+    protected final DomainTreeEditorModel<T> createDomainTreeEditorModel() {
 	final ICentreDomainTreeManagerAndEnhancer cdtm = getEntityCentreManager();
 	if(cdtm == null){
 	    throw new IllegalStateException("The centre manager is not specified");

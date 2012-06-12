@@ -176,7 +176,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
     }
 
     @Override
-    public final EntityLocatorModel<T> createEntityCentreModel() {
+    protected final EntityLocatorModel<T> createEntityCentreModel() {
 	if(isInUsagePhase()){
 	    throw new IllegalStateException("The locator must be refreshed!");
 	}
@@ -188,7 +188,7 @@ public class LocatorConfigurationModel<T extends AbstractEntity<?>, R extends Ab
     }
 
     @Override
-    public final DomainTreeEditorModel<T> createDomainTreeEditorModel() {
+    protected final DomainTreeEditorModel<T> createDomainTreeEditorModel() {
 	if(isInUsagePhase()){
 	    throw new IllegalStateException("locator must be refreshed!");
 	}

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.swing.review.report.centre.factory;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -10,14 +11,13 @@ import ua.com.fielden.platform.swing.review.report.analysis.configuration.Abstra
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 
 /**
- * Factory for analysis.
+ * A contract that allows one to build different analysis.
  *
  * @author TG Team
  *
  * @param <T>
- * @param <A>
  */
-public interface IAnalysisFactory<T extends AbstractEntity<?>, A extends AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManagerAndEnhancer, ?, ?>> {
+public interface IAnalysisBuilder<T extends AbstractEntity<?>> {
 
     /**
      * Creates an analysis configuration view.
@@ -28,8 +28,10 @@ public interface IAnalysisFactory<T extends AbstractEntity<?>, A extends Abstrac
      * @param progressLayer
      * @return
      */
-    A createAnalysis(final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
-	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
+    AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ? extends IAbstractAnalysisDomainTreeManagerAndEnhancer, ?, ?> createAnalysis(//
+	    final AnalysisType analysisType, //
 	    final String name, //
+	    final AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> owner, //
+	    final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, //
 	    final BlockingIndefiniteProgressLayer progressLayer);
 }

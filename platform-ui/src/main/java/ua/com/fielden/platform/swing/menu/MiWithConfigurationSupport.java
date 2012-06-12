@@ -3,14 +3,8 @@ package ua.com.fielden.platform.swing.menu;
 import java.util.HashSet;
 import java.util.Set;
 
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.swing.review.IEntityMasterManager;
-import ua.com.fielden.platform.swing.review.report.centre.factory.EntityCentreFactoryBinder;
-
-import com.google.inject.Injector;
+import ua.com.fielden.platform.swing.review.report.centre.factory.IEntityCentreBuilder;
 
 /**
  * The base class for implementing menu items, which require configuration support. Mainly used for representing entity center related menu items.
@@ -35,17 +29,12 @@ public class MiWithConfigurationSupport<T extends AbstractEntity<?>> extends MiW
 	    //Menu item related parameters
 	    final String caption,//
 	    final String description,//
-	    final Injector injector,//
 	    final TreeMenuWithTabs<?> treeMenu,//
 	    //Entity centre related parameters
-	    final EntityCentreFactoryBinder<T> centreFactoryBinder,//
+	    final IEntityCentreBuilder<T> centreBuilder,//
 	    final ITreeMenuItemVisibilityProvider visibilityProvider,//
 	    final Class<? extends MiWithConfigurationSupport<T>> menuItemType) {
-	super(new DynamicReportWrapper<T>(caption, description, treeMenu, null, menuItemType, centreFactoryBinder, //
-		injector.getInstance(IGlobalDomainTreeManager.class), //
-		injector.getInstance(EntityFactory.class), //
-		injector.getInstance(IEntityMasterManager.class), //
-		injector.getInstance(ICriteriaGenerator.class)), visibilityProvider);
+	super(new DynamicReportWrapper<T>(caption, description, treeMenu, null, menuItemType, centreBuilder), visibilityProvider);
 	scanForNonPrincipleReports();
     }
 
@@ -53,7 +42,7 @@ public class MiWithConfigurationSupport<T extends AbstractEntity<?>> extends MiW
      * Generates children ad hoc reports.
      */
     private void scanForNonPrincipleReports() {
-	final Set<String> names = new HashSet<String>(getView().getGlobalDomainTreeManager().entityCentreNames(this.getClass()));
+	final Set<String> names = new HashSet<String>(getView().getNonPrincipleEntityCentreNames());
 	names.remove(null); // remove principle centre key (null), which is returned in case when principle entity centre is persisted
 	for(final String centreName : names){
 	    final MiSaveAsConfiguration<T> newMenuItem = new MiSaveAsConfiguration<T>(this, centreName);
