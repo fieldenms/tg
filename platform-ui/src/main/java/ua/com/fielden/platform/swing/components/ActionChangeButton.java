@@ -23,10 +23,8 @@ import ua.com.fielden.platform.swing.actions.ActionChanger;
 public class ActionChangeButton extends JCommandButton {
 
     private static final long serialVersionUID = 1L;
-    @SuppressWarnings("unchecked")
-    private ActionChanger defaultAction;
-    @SuppressWarnings("unchecked")
-    final private List<ActionChanger> actions = new ArrayList<ActionChanger>();
+    private ActionChanger<?> defaultAction;
+    final private List<ActionChanger<?>> actions = new ArrayList<ActionChanger<?>>();
 
     /**
      * creates new instance of the ActionChangeButton and set the given action as the default action for the button
@@ -34,8 +32,7 @@ public class ActionChangeButton extends JCommandButton {
      * @param action
      *            - specified default action
      */
-    @SuppressWarnings("unchecked")
-    public ActionChangeButton(final ActionChanger action) {
+    public ActionChangeButton(final ActionChanger<?> action) {
 	this((String) action.getValue(Action.NAME), (ResizableIcon) action.getValue(Action.LARGE_ICON_KEY));
 	addAction(action);
 	setDefaultAction(action);
@@ -62,8 +59,7 @@ public class ActionChangeButton extends JCommandButton {
      * 
      * @return the default action
      */
-    @SuppressWarnings("unchecked")
-    public ActionChanger getDefaultAction() {
+    public ActionChanger<?> getDefaultAction() {
 	return defaultAction;
     }
 
@@ -73,8 +69,7 @@ public class ActionChangeButton extends JCommandButton {
      * @param defaultAction
      *            - specified new default action
      */
-    @SuppressWarnings("unchecked")
-    public void setDefaultAction(final ActionChanger defaultAction) {
+    public void setDefaultAction(final ActionChanger<?> defaultAction) {
 	if ((defaultAction != null) && (actions.indexOf(defaultAction) != -1)) {
 	    removeActionListener(this.defaultAction);
 	    this.defaultAction = defaultAction;
@@ -94,8 +89,7 @@ public class ActionChangeButton extends JCommandButton {
      * @param action
      *            - specified action for the new JMenuItem instance
      */
-    @SuppressWarnings("unchecked")
-    public void addAction(final ActionChanger action) {
+    public void addAction(final ActionChanger<?> action) {
 	if ((action != null) && (actions.indexOf(action) == -1)) {
 	    actions.add(action);
 	    action.setButton(this);
@@ -109,9 +103,8 @@ public class ActionChangeButton extends JCommandButton {
      *            - index of the menu item that must be removed
      * @return the removed action from menu item
      */
-    @SuppressWarnings("unchecked")
-    public ActionChanger removeAction(final int index) {
-	final ActionChanger action = actions.remove(index);
+    public ActionChanger<?> removeAction(final int index) {
+	final ActionChanger<?> action = actions.remove(index);
 	action.setButton(null);
 	return action;
     }
@@ -123,8 +116,7 @@ public class ActionChangeButton extends JCommandButton {
      *            - specified action that must be removed
      * @return the removed action from menu item
      */
-    @SuppressWarnings("unchecked")
-    public ActionChanger removeAction(final ActionChanger action) {
+    public ActionChanger<?> removeAction(final ActionChanger<?> action) {
 	final int index = actions.indexOf(action);
 	return removeAction(index);
     }

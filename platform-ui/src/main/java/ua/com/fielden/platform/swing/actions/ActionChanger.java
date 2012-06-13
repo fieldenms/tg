@@ -49,7 +49,16 @@ public abstract class ActionChanger<T> extends Command<T> {
 	final boolean result = super.preAction();
 	if (button != null) {
 	    button.setDefaultAction(this);
+	    button.setEnabled(false);
 	}
 	return result;
+    }
+
+    @Override
+    protected void postAction(final T value) {
+	super.postAction(value);
+	if (button != null) {
+	    button.setEnabled(true);
+	}
     }
 }

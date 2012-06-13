@@ -448,7 +448,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 	    columnConstraints.append("[70::,fill]");
 	    controlButtons.add(new JToggleButton(getCriteriaPanel().getSwitchAction()));
 	}
-	columnConstraints.append(addToComponents(controlButtons, "[160::,fill]", getCustomActionChanger()));
+	columnConstraints.append(addToComponents(controlButtons, "[120::,fill]", getCustomActionChanger()));
 
 	final JPanel controlPanel = new JPanel(new MigLayout("fill, insets 0", "[70::,fill]" + columnConstraints.toString() + "20:push[][][][]20[]push[:70:,fill][:70:,fill]", "[c,fill]"));
 
@@ -555,16 +555,13 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
 		putValue(LARGE_ICON_KEY, new EmptyResizableIcon(new Dimension(0, 0)));
 	    }
 
+
 	    @Override
 	    protected Void action(final ActionEvent e) throws Exception {
+		action.actionPerformed(null);
 		return null;
 	    }
 
-	    @Override
-	    protected void postAction(final Void value) {
-		action.actionPerformed(null);
-		super.postAction(value);
-	    }
 	};
     }
 

@@ -200,33 +200,6 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 		}
 	    }
 
-	    //	    @Override
-	    //	    public void hierarchyChanged(final HierarchyEvent e) {
-	    //		synchronized (AbstractConfigurationView.this) {
-	    //		    // should hierarchy change event be handled?
-	    //		    if (((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED)
-	    //			    && !wasHierarchyChanged) {
-	    //			// yes, so this one is first, lets handle it and set flag
-	    //			// to indicate that we won't handle any more
-	    //			// hierarchy changed events
-	    //			wasHierarchyChanged = true;
-	    //
-	    //			//The component was resized so lets see whether child was loaded if that is true then fire
-	    //			//event that this component was loaded.
-	    //			if(wasChildLoaded){
-	    //			    fireLoadEvent(new LoadEvent(AbstractConfigurationView.this));
-	    //			}
-	    //			// after this handler end its execution, lets remove it
-	    //			// from component because it is already not-useful
-	    //			final HierarchyListener refToThis = this;
-	    //			SwingUtilities.invokeLater(new Runnable() {
-	    //			    public void run() {
-	    //				removeHierarchyListener(refToThis);
-	    //			    }
-	    //			});
-	    //		    }
-	    //		}
-	    //	    }
 	};
     }
 
@@ -514,8 +487,8 @@ public abstract class AbstractConfigurationView<VT extends SelectableAndLoadBase
 
 	@Override
 	protected void postAction(final Result value) {
-	    super.postAction(value);
 	    getConfigurationView().getModel().setMode(reportMode);
+	    super.postAction(value);
 	}
 
 	/**
