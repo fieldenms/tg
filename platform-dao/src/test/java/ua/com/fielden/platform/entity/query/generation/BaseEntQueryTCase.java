@@ -117,7 +117,7 @@ public class BaseEntQueryTCase {
     }
 
     protected static EntQuery entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
-	return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).build());
+	return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model());
     }
 
     protected static EntQuery entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {

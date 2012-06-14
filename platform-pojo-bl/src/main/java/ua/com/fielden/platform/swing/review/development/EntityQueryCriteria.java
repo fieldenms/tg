@@ -136,10 +136,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
 		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), orderingPairs))//
-		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey())).build();
+		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey())).model();
 	if (!separatedFetch.getValue().isEmpty()) {
 	    final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = from(notOrderedQuery)//
-		    .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue())).build();
+		    .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue())).model();
 	    return firstPage(resultQuery, totalQuery, pageSize);
 	} else {
 	    return firstPage(resultQuery, pageSize);
@@ -162,7 +162,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
 		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), orderingPairs))//
-		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey())).build();
+		.with(DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey())).model();
 	final byte[] content;
 	if(getManagedType().equals(getEntityClass())){
 	    content = dao.export(resultQuery, propertyNames, propertyTitles);

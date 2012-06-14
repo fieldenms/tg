@@ -76,14 +76,14 @@ public class UserControllerRao extends CommonEntityRao<User> implements IUserCon
     @Override
     public User findUserByKeyWithRoles(final String key) {
 	final EntityResultQueryModel<User> model = select(User.class).where().prop("key").eq().val(key).model();
-	return getEntity(from(model).with(fetchModel).build());
+	return getEntity(from(model).with(fetchModel).model());
     }
 
     @Override
     public List<User> findAllUsersWithRoles() {
 	final EntityResultQueryModel<User> model = select(User.class).where().prop("key").isNotNull().model();
 	final OrderingModel orderBy = orderBy().prop("key").asc().model();
-	return getAllEntities(from(model).with(fetchModel).with(orderBy).build());
+	return getAllEntities(from(model).with(fetchModel).with(orderBy).model());
     }
 
     @Override

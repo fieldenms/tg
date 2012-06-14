@@ -61,7 +61,7 @@ public class AttachmentResourceTestCase extends WebBasedTestCase {
     @Test
     public void test_query_attachment_behaviour() {
 	final EntityResultQueryModel<Attachment> model = select(Attachment.class).where().prop("key").eq().val(ORIGINAL_FILE_NAME).model();
-	final List<Attachment> attachments = rao.getAllEntities(from(model).build());
+	final List<Attachment> attachments = rao.getAllEntities(from(model).model());
 	assertEquals("Incorrect number of attachments.", 1, attachments.size());
     }
 

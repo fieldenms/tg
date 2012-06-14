@@ -182,7 +182,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	    } else if (!entity.getDirtyProperties().isEmpty()) {
 		// let's also make sure that duplicate entities are not allowed
 		final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
-		final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, null, null).getEntities(from(model).build());
+		final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, null, null).getEntities(from(model).model());
 		final int count = ids.size();
 		if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
 		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " entity already exists."));
@@ -388,7 +388,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected int evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
 	final AggregatedResultQueryModel countQuery = model instanceof EntityResultQueryModel ?  select((EntityResultQueryModel<T>)model).yield().countAll().as("count").modelAsAggregate() :
 	    					      select((AggregatedResultQueryModel)model).yield().countAll().as("count").modelAsAggregate();
-	final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).lightweight(true).build();
+	final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).lightweight(true).model();
 	final List<EntityAggregates> counts = new EntityFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, filter, getUsername()). //
 		getEntities(countModel);
 	final int resultSize = ((Number) counts.get(0).get("count")).intValue();
@@ -514,7 +514,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	    throw new Result(new IllegalArgumentException("Null is not an acceptable value for eQuery model."));
 	}
 
-	final List<T> toBeDeleted = getAllEntities(from(model).with(paramValues).lightweight(true).build());
+	final List<T> toBeDeleted = getAllEntities(from(model).with(paramValues).lightweight(true).model());
 
 	for (final T entity : toBeDeleted) {
 	    defaultDelete(entity);

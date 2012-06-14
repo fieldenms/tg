@@ -109,7 +109,7 @@ public class WebResourceForGeneratedEntityTotalsTestCase extends WebBasedTestCas
 		yield().prop("intPropertySum").as("intPropertySum").//
 		yield().prop("minimaxDiff").as("minimaxDiff").//
 		modelAsEntity(type);
-	final IPage firstPage = rao.firstPage(from(model).build(), 15, binaryTypes);
+	final IPage firstPage = rao.firstPage(from(model).model(), 15, binaryTypes);
 
 	assertEquals("Incorrect value of returned items.", 1, firstPage.data().size());
 	final AbstractEntity instance = (AbstractEntity) firstPage.data().get(0);

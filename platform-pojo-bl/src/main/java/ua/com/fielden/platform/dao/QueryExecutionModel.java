@@ -79,7 +79,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
 	    private Map<String, Object> paramValues = new HashMap<String, Object>();
 	    private boolean lightweight = false;
 
-	public QueryExecutionModel<T, Q> build() {
+	public QueryExecutionModel<T, Q> model() {
 	    return new QueryExecutionModel<T, Q>(this);
 	}
 

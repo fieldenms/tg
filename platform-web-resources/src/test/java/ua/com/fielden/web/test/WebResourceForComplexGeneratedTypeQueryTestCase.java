@@ -109,7 +109,7 @@ public class WebResourceForComplexGeneratedTypeQueryTestCase extends WebBasedTes
     @Ignore
     public void test_query_with_condition_on_one_level_deep_calcualted_property() {
 	final EntityResultQueryModel model = select(type).where().prop("entityPropertyOne.calculatedProperty").eq().val(20).model();
-	final IPage firstPage = rao.firstPage(from(model).build(), 15, binaryTypes);
+	final IPage firstPage = rao.firstPage(from(model).model(), 15, binaryTypes);
 
 	assertEquals("Incorrect value of returned items.", 1, firstPage.data().size());
 	final AbstractEntity instance = (AbstractEntity) firstPage.data().get(0);
@@ -123,7 +123,7 @@ public class WebResourceForComplexGeneratedTypeQueryTestCase extends WebBasedTes
 
 	final EntityResultQueryModel model1 = select(propertyType).where().prop("id").eq().val(2).model();
 	rao.setEntityType(propertyType);
-	final IPage firstPage1 = rao.firstPage(from(model1).build(), 15, binaryTypes); //
+	final IPage firstPage1 = rao.firstPage(from(model1).model(), 15, binaryTypes); //
 	final AbstractEntity instance1 = (AbstractEntity) firstPage1.data().get(0);
 	assertEquals("Incorrect value.", 20, instance1.get("calculatedProperty"));
     }

@@ -26,6 +26,6 @@ public class CommonEntityAggregatesRao extends CommonEntityRao<EntityAggregates>
     }
 
     public int count(final AggregatedResultQueryModel model, final Map<String, Object> paramValues) {
-	return count(from(model).with(paramValues).build());
+	return count(from(model).with(paramValues).model());
     }
 }

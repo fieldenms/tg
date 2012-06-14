@@ -301,7 +301,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param model
      */
     private void retrieveAndInit(final Class<?> menuItemType, final String name, final EntityResultQueryModel<EntityCentreConfig> model) {
-	final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).build());
+	final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
 	final boolean owning = ecc.getOwner().equals(currentUser());
 	try {
 	    init(menuItemType, name, getSerialiser().deserialise(ecc.getConfigBody(), ICentreDomainTreeManagerAndEnhancer.class), owning);
@@ -321,7 +321,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param model
      */
     private void retrieveAndInitMaster(final Class<?> root, final EntityResultQueryModel<EntityMasterConfig> model) {
-	final EntityMasterConfig emc = entityMasterConfigController.getEntity(from(model).build());
+	final EntityMasterConfig emc = entityMasterConfigController.getEntity(from(model).model());
 	try {
 	    initMaster(root, getSerialiser().deserialise(emc.getConfigBody(), IMasterDomainTreeManager.class));
 	    return;
@@ -521,7 +521,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	    final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title);
 	    final int count = entityCentreConfigController.count(model);
 	    if (count == 1) { // for current user => 1 entity-centre
-		final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).build());
+		final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
 		ecc.setConfigBody(getSerialiser().serialise(currentMgr));
 		entityCentreConfigController.save(ecc);
 
@@ -592,7 +592,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final String newTitle = title(menuItemType, newName);
 
 	final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, newTitle);
-	entityCentreConfigController.getAllEntities(from(model).build());
+	entityCentreConfigController.getAllEntities(from(model).model());
 
 	final int count = entityCentreConfigController.count(model);
 	if (count == 0) { // for current user or its base => there are no entity-centres, so persist a copy with a new title
@@ -644,7 +644,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
 	final Set<String> names = new HashSet<String>();
 
-	final List<EntityCentreConfig> centresFromTheCloud = entityCentreConfigController.getAllEntities(from(modelForCurrentAndBaseUsers(menuItemType.getName())).with(fetchOnly(EntityCentreConfig.class).with("title").with("principal")).build());
+	final List<EntityCentreConfig> centresFromTheCloud = entityCentreConfigController.getAllEntities(from(modelForCurrentAndBaseUsers(menuItemType.getName())).with(fetchOnly(EntityCentreConfig.class).with("title").with("principal")).model());
 	for (final EntityCentreConfig ecc : centresFromTheCloud) {
 	    if (ecc.isPrincipal()) {
 		names.add(null);
@@ -711,7 +711,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 	final EntityResultQueryModel<EntityMasterConfig> model = masterModelForCurrentUser(root.getName());
 	final int count = entityMasterConfigController.count(model);
 	if (count == 1) { // for current user => 1 entity-centre
-	    final EntityMasterConfig emc = entityMasterConfigController.getEntity(from(model).build());
+	    final EntityMasterConfig emc = entityMasterConfigController.getEntity(from(model).model());
 	    emc.setConfigBody(getSerialiser().serialise(currentMgr));
 	    entityMasterConfigController.save(emc);
 

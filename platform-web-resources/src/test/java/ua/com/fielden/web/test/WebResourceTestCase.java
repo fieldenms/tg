@@ -74,7 +74,7 @@ public class WebResourceTestCase extends WebBasedTestCase {
 	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class).where().prop("intProperty").le().val(10).model();
 
 
-	final IPage<InspectedEntity> page = rao.getPage(from(q).build(), 0, 5);
+	final IPage<InspectedEntity> page = rao.getPage(from(q).model(), 0, 5);
 	assertEquals("Incorrect page number", 0, page.no());
 	assertEquals("Incorrect number of pages", 2, page.numberOfPages());
 	assertEquals("Incorrect number of instances on the page.", 5, page.data().size());
@@ -88,7 +88,7 @@ public class WebResourceTestCase extends WebBasedTestCase {
     @Test
     public void test_get_all_entities() {
 	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class).model();
-	final List<InspectedEntity> list = rao.getAllEntities(from(q).build());
+	final List<InspectedEntity> list = rao.getAllEntities(from(q).model());
 	assertEquals("Incorrect count value.", 45, list.size());
     }
 
@@ -97,7 +97,7 @@ public class WebResourceTestCase extends WebBasedTestCase {
 	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class).where().prop("intProperty").le().val(10).model();
 
 	try {
-	    final byte[] bytes = rao.export(from(q).build(), new String[] { "key", "dateProperty" }, new String[] { "this", "date" });
+	    final byte[] bytes = rao.export(from(q).model(), new String[] { "key", "dateProperty" }, new String[] { "this", "date" });
 	    assertNotNull("The export result should exist.", bytes);
 	    assertTrue("The export result should not be empty.", bytes.length > 0);
 	} catch (final IOException e) {

@@ -220,7 +220,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
     /** Implements the deletion by query model. Relies on the fact the DAO counterpart has method {@link IEntityDao#delete(EntityResultQueryModel)} implemented. */
     @Override
     public void delete(final EntityResultQueryModel<T> query, final Map<String, Object> params) {
-	final Representation envelope = restUtil.represent(from(query).with(params).build());
+	final Representation envelope = restUtil.represent(from(query).with(params).model());
 	// create a request URI containing the deletion flag
 	final String uri = restUtil.getQueryUri(getEntityType(), getDefaultWebResourceType()) + "?deletion=true";
 	final Request request = new Request(Method.POST, uri, envelope);
@@ -280,7 +280,7 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
 
     @Override
     public int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-	return count(from(model).with(paramValues).build());
+	return count(from(model).with(paramValues).model());
     }
 
     protected int count(final QueryExecutionModel<T, ?> model) {

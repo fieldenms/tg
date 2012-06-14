@@ -44,7 +44,7 @@ public class WebResourceEntityAggreagatesTestCase extends WebBasedTestCase {
 		.yield().prop("intProperty").as("intProperty").yield().beginExpr().countOf().prop("id").endExpr().as("kount").modelAsAggregate();
 
 	final OrderingModel orderBy = orderBy().prop("intProperty").asc().model();
-	final List<EntityAggregates> result = rao.getAllEntities(from(model).with(orderBy).build());
+	final List<EntityAggregates> result = rao.getAllEntities(from(model).with(orderBy).model());
 
 	assertEquals("Incorrect number of fetched aggregated items.", 2, result.size());
 	assertEquals("Incorrect value of aggregated property.", 10, result.get(0).get("intProperty"));
@@ -59,7 +59,7 @@ public class WebResourceEntityAggreagatesTestCase extends WebBasedTestCase {
 
 	final OrderingModel orderBy = orderBy().prop("intProperty").asc().model();
 
-	final IPage<EntityAggregates> page = rao.firstPage(from(model).with(orderBy).build(), 1);
+	final IPage<EntityAggregates> page = rao.firstPage(from(model).with(orderBy).model(), 1);
 
 	assertEquals("Incorrect page number", 0, page.no());
 	assertEquals("Incorrect number of pages", 2, page.numberOfPages());
@@ -76,7 +76,7 @@ public class WebResourceEntityAggreagatesTestCase extends WebBasedTestCase {
 	final OrderingModel orderBy = orderBy().prop("intProperty").asc().model();
 
 	try {
-	    final byte[] bytes = rao.export(from(model).with(orderBy).build(), new String[] { "intProperty", "kount" }, new String[] { "Integer Property", "Count" });
+	    final byte[] bytes = rao.export(from(model).with(orderBy).model(), new String[] { "intProperty", "kount" }, new String[] { "Integer Property", "Count" });
 	    assertNotNull("The export result should exist.", bytes);
 	    assertTrue("The export result should not be empty.", bytes.length > 0);
 	} catch (final IOException e) {
@@ -95,7 +95,7 @@ public class WebResourceEntityAggreagatesTestCase extends WebBasedTestCase {
 	final OrderingModel orderBy = orderBy().prop("entityPropertyOne.intProperty").asc().model();
 	final fetch<EntityAggregates> fetch = fetch(EntityAggregates.class).with("kount").with("entityPropertyOne", fetch(InspectedEntity.class));
 	try {
-	    final byte[] bytes = rao.export(from(model).with(orderBy).with(fetch).build(), new String[] { "entityPropertyOne.intProperty", "kount" }, new String[] { "Integer Property", "Count" });
+	    final byte[] bytes = rao.export(from(model).with(orderBy).with(fetch).model(), new String[] { "entityPropertyOne.intProperty", "kount" }, new String[] { "Integer Property", "Count" });
 	    assertNotNull("The export result should exist.", bytes);
 	    assertTrue("The export result should not be empty.", bytes.length > 0);
 	} catch (final IOException e) {

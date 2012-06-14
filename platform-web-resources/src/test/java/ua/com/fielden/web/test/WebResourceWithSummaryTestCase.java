@@ -104,7 +104,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 		yield().prop("intPropertySum").as("intPropertySum").//
 		yield().prop("minimaxDiff").as("minimaxDiff").//
 		modelAsEntity(type);
-	page = rao.firstPage(from(model).build(), from(summaryModel).build(), 15, binaryTypes);
+	page = rao.firstPage(from(model).model(), from(summaryModel).model(), 15, binaryTypes);
 
     }
 

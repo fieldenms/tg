@@ -94,14 +94,14 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
     @Override
     public User findUserByKeyWithRoles(final String key) {
 	final EntityResultQueryModel<User> query = select(User.class).where().prop(AbstractEntity.KEY).eq().val(key).model();
-	return getEntity(from(query).with(fetchModel).build());
+	return getEntity(from(query).with(fetchModel).model());
     }
 
     @Override
     public List<User> findAllUsersWithRoles() {
 	final EntityResultQueryModel<User> model = select(User.class).where().prop(AbstractEntity.KEY).isNotNull().model();
 	final OrderingModel orderBy = orderBy().prop(AbstractEntity.KEY).asc().model();
-	return getAllEntities(from(model).with(fetchModel).with(orderBy).build());
+	return getAllEntities(from(model).with(fetchModel).with(orderBy).model());
     }
 
     @Override

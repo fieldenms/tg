@@ -44,7 +44,7 @@ public class EntityAttachmentAssociationRao extends CommonEntityRao<EntityAttach
     public IPage<EntityAttachmentAssociation> findDetails(final AbstractEntity<?> masterEntity, final fetch<EntityAttachmentAssociation> model, final int pageCapacity) {
 	final EntityResultQueryModel<EntityAttachmentAssociation> q = select(EntityAttachmentAssociation.class).where().prop("entityId").eq().val(masterEntity.getId()).model();
 	final OrderingModel orderBy = orderBy().prop("attachment.key").asc().model();
-	return new SinglePage<EntityAttachmentAssociation>(getAllEntities(from(q).with(fetchAll(EntityAttachmentAssociation.class)).with(orderBy).build()));
+	return new SinglePage<EntityAttachmentAssociation>(getAllEntities(from(q).with(fetchAll(EntityAttachmentAssociation.class)).with(orderBy).model()));
     }
 
     @Override

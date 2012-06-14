@@ -39,7 +39,7 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
     @Test
     public void test_retrieval_of_user_role_associations() {
 	final EntityResultQueryModel<UserAndRoleAssociation> associationModel = select(UserAndRoleAssociation.class).model();
-	assertEquals("Incorrect number of user role associations.", 8, userAssociationDao.firstPage(from(associationModel).with(fetch(UserAndRoleAssociation.class).with("user", fetch(User.class))).build(), 10).data().size());
+	assertEquals("Incorrect number of user role associations.", 8, userAssociationDao.firstPage(from(associationModel).with(fetch(UserAndRoleAssociation.class).with("user", fetch(User.class))).model(), 10).data().size());
     }
 
     @Test
@@ -143,7 +143,7 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
     @Test
     public void test_that_security_associations_can_be_retrieved() {
 	final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
-	final List<SecurityRoleAssociation> associations = securityDao.firstPage(from(model).with(fetch(SecurityRoleAssociation.class).with("role")).build(), Integer.MAX_VALUE).data();
+	final List<SecurityRoleAssociation> associations = securityDao.firstPage(from(model).with(fetch(SecurityRoleAssociation.class).with("role")).model(), Integer.MAX_VALUE).data();
 	assertEquals("incorrect number of security token - role associations", 12, associations.size());
 	final List<SecurityRoleAssociation> roles = securityDao.findAssociationsFor(FirstLevelSecurityToken1.class);
 	assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());

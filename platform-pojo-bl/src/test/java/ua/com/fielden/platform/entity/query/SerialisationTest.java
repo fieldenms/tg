@@ -115,7 +115,7 @@ public class SerialisationTest {
 	final fetch<TgVehicle> originalFetch = fetch(TgVehicle.class).with("model").with("station");
 	final OrderingModel originalOrderBy = orderBy().prop("key").asc().model();
 
-	final QueryExecutionModel<TgVehicle, ?> original = from(originalModel).with(originalFetch).with(originalOrderBy).with("param1", 125).build();
+	final QueryExecutionModel<TgVehicle, ?> original = from(originalModel).with(originalFetch).with(originalOrderBy).with("param1", 125).model();
 	final QueryExecutionModel<TgVehicle, ?> restored = serialiseAndRestore(original);
 
 	assertEquals(original, restored);
@@ -126,7 +126,7 @@ public class SerialisationTest {
 	final AggregatedResultQueryModel originalModel =  select(TgVehicle.class).where().prop("key").like().val("RR%").groupBy().prop("model.make").yield().prop("model.make").as("make").modelAsAggregate();
 	final OrderingModel originalOrderBy = orderBy().prop("make.key").asc().model();
 
-	final QueryExecutionModel<EntityAggregates, ?> original = from(originalModel).with(originalOrderBy).with("param1", 125).build();
+	final QueryExecutionModel<EntityAggregates, ?> original = from(originalModel).with(originalOrderBy).with("param1", 125).model();
 	final QueryExecutionModel<EntityAggregates, ?> restored = serialiseAndRestore(original);
 
 	assertEquals(original, restored);

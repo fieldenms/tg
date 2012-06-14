@@ -63,7 +63,7 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
 	}
 	final Builder<T, EntityResultQueryModel<T>> builderModel = from(compondCondition.model())//
 		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), orderingPairs));
-	return firstPage(fetch == null ? builderModel.build() : builderModel.with((fetch<T>)fetch).build(), resultSize).data();
+	return firstPage(fetch == null ? builderModel.model() : builderModel.with((fetch<T>)fetch).model(), resultSize).data();
     }
 
     /**

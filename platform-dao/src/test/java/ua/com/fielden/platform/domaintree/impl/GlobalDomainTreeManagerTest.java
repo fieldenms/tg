@@ -233,7 +233,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	final IGlobalDomainTreeManager baseMgr = createManagerForBaseUser();
 	baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
 
-	final QueryExecutionModel<EntityCentreConfig, EntityResultQueryModel<EntityCentreConfig>> model = from(GlobalDomainTreeManager.modelForCurrentAndBaseUsers(MENU_ITEM_TYPE.getName(), GlobalDomainTreeManager.title(MENU_ITEM_TYPE, null), baseMgr.getUserProvider().getUser())).with(fetchOnly(EntityCentreConfig.class).with("principal")).build();
+	final QueryExecutionModel<EntityCentreConfig, EntityResultQueryModel<EntityCentreConfig>> model = from(GlobalDomainTreeManager.modelForCurrentAndBaseUsers(MENU_ITEM_TYPE.getName(), GlobalDomainTreeManager.title(MENU_ITEM_TYPE, null), baseMgr.getUserProvider().getUser())).with(fetchOnly(EntityCentreConfig.class).with("principal")).model();
 	final EntityCentreConfig centre = getInstance(IEntityCentreConfigController.class).getEntity(model);
 	assertTrue("Initialised automatically entity centre should be principle (even for non-base user that invoked).", centre.isPrincipal());
     }
@@ -243,7 +243,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	final IGlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
 	nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
 
-	final QueryExecutionModel<EntityCentreConfig, EntityResultQueryModel<EntityCentreConfig>> model = from(GlobalDomainTreeManager.modelForCurrentAndBaseUsers(MENU_ITEM_TYPE.getName(), GlobalDomainTreeManager.title(MENU_ITEM_TYPE, null), nonBaseMgr.getUserProvider().getUser())).with(fetchOnly(EntityCentreConfig.class).with("principal")).build();
+	final QueryExecutionModel<EntityCentreConfig, EntityResultQueryModel<EntityCentreConfig>> model = from(GlobalDomainTreeManager.modelForCurrentAndBaseUsers(MENU_ITEM_TYPE.getName(), GlobalDomainTreeManager.title(MENU_ITEM_TYPE, null), nonBaseMgr.getUserProvider().getUser())).with(fetchOnly(EntityCentreConfig.class).with("principal")).model();
 	final EntityCentreConfig centre = getInstance(IEntityCentreConfigController.class).getEntity(model);
 	assertTrue("Initialised automatically entity centre should be principle (even for non-base user that invoked).", centre.isPrincipal());
     }

@@ -92,7 +92,7 @@ public class WebResourceForGeneratedTypeQueryTestCase extends WebBasedTestCase {
 	final Class<? extends AbstractEntity<?>> type = (Class<? extends AbstractEntity<?>>) dtm.getEnhancer().getManagedType(InspectedEntity.class);
 	rao.setEntityType(type);
 	final EntityResultQueryModel model = select(type).model();
-	firstPage = rao.firstPage(from(model).build(), 15, toByteArray(binaryTypes));
+	firstPage = rao.firstPage(from(model).model(), 15, toByteArray(binaryTypes));
     }
 
     private List<byte[]> toByteArray(final List<ByteArray> list) {

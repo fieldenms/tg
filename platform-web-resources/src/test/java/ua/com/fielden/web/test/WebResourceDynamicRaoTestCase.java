@@ -64,7 +64,7 @@ public class WebResourceDynamicRaoTestCase extends WebBasedTestCase {
 	final EntityResultQueryModel<InspectedEntity> q = select(InspectedEntity.class)
 	.where().prop("intProperty").le().val(10).model();
 
-	final IPage<InspectedEntity> page = rao.getPage(from(q).build(), 0, 5);
+	final IPage<InspectedEntity> page = rao.getPage(from(q).model(), 0, 5);
 	assertEquals("Incorrect page number", 0, page.no());
 	assertEquals("Incorrect number of pages", 2, page.numberOfPages());
 	assertEquals("Incorrect number of instances on the page.", 5, page.data().size());

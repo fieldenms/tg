@@ -86,14 +86,14 @@ public final class MainMenuItemMixin {
 	// get all items
 	final EntityResultQueryModel<MainMenuItem> model = select(MainMenuItem.class).model();
 	final OrderingModel orderBy = orderBy().prop("order").asc().model();
-	final List<MainMenuItem> allItemsAsLinearList = mmiController.getAllEntities(from(model).with(fetchAll(MainMenuItem.class)).with(orderBy).build());
+	final List<MainMenuItem> allItemsAsLinearList = mmiController.getAllEntities(from(model).with(fetchAll(MainMenuItem.class)).with(orderBy).model());
 
 	// get those that are marked as invisible
 	final EntityResultQueryModel<MainMenuItem> invisibleItemsModel = select(MainMenuItem.class).as("mm").join(MainMenuItemInvisibility.class).as("viz").on() //
 	.prop("mm").eq().prop("viz.menuItem")//
 	.where().prop("viz.owner").eq().val(ownerId).model();
 	final OrderingModel invisibleItemsOrderBy = orderBy().prop("mm.order").asc().model();
-	final List<MainMenuItem> invisibleItems = mmiController.getAllEntities(from(invisibleItemsModel).with(fetchAll(MainMenuItem.class)).with(invisibleItemsOrderBy).build()); // could be optimized by not fetching all
+	final List<MainMenuItem> invisibleItems = mmiController.getAllEntities(from(invisibleItemsModel).with(fetchAll(MainMenuItem.class)).with(invisibleItemsOrderBy).model()); // could be optimized by not fetching all
 
 	if (user.isBase()) { // set visibility property for menu items, which does not take into account hierarchical structure
 	    for (final MainMenuItem item : allItemsAsLinearList) {
@@ -132,7 +132,7 @@ public final class MainMenuItemMixin {
 
 	final OrderingModel orderBy = orderBy().prop("menuItem.order").asc().model();
 
-	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(model).with(orderBy).build());
+	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(model).with(orderBy).model());
 
 	// iterate through the list of configurations and make new non-persistent instances of type MainMenuItem
 	// representing non-principal (i.e. save as) menu items of the same type as the referenced by the configuration menu item.
@@ -292,7 +292,7 @@ public final class MainMenuItemMixin {
 
 	// retrieve all EntityCentreConfig's, locally keep meta-info, and then purge them all
 	final EntityResultQueryModel<EntityCentreConfig> modelEcc = select(EntityCentreConfig.class).where().prop("owner.key").eq().val(user.getKey()).model();
-	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(modelEcc).build());
+	final List<EntityCentreConfig> eccs = eccController.getAllEntities(from(modelEcc).model());
 	final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = new HashMap<EntityCentreConfigKey, EntityCentreConfigBody>();
 	for (final EntityCentreConfig ecc : eccs) {
 	    centresKeysAndBodies.put(new EntityCentreConfigKey(ecc.getOwner(), ecc.getTitle(), ecc.getMenuItem().getKey()), new EntityCentreConfigBody(ecc.isPrincipal(), ecc.getConfigBody()));
@@ -300,7 +300,7 @@ public final class MainMenuItemMixin {
 	eccController.delete(modelEcc);
 	// retrieve all MainMenuItemInvisibility's, locally keep meta-info, and then purge them all
 	final EntityResultQueryModel<MainMenuItemInvisibility> modelMmii = select(MainMenuItemInvisibility.class).where().prop("owner.key").eq().val(user.getKey()).model();
-	final List<MainMenuItemInvisibility> mmiis = mmiiController.getAllEntities(from(modelMmii).build());
+	final List<MainMenuItemInvisibility> mmiis = mmiiController.getAllEntities(from(modelMmii).model());
 	final Set<MainMenuItemInvisibilityKey> invisibilitiesKeys = new HashSet<MainMenuItemInvisibilityKey>();
 	for (final MainMenuItemInvisibility mmii : mmiis) {
 	    invisibilitiesKeys.add(new MainMenuItemInvisibilityKey(mmii.getOwner(), mmii.getMenuItem().getKey()));

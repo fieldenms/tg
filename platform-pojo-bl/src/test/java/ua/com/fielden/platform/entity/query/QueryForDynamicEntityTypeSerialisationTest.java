@@ -83,7 +83,7 @@ public class QueryForDynamicEntityTypeSerialisationTest {
 	final Class<? extends AbstractEntity> newType1 = (Class<? extends AbstractEntity>) cl.startModification(TgVehicle.class.getName()).addProperties(pd1).endModification();
 
 	final EntityResultQueryModel q =  select(newType1).modelAsEntity(newType1);
-	final QueryExecutionModel original = from(q).build();
+	final QueryExecutionModel original = from(q).model();
 
 	final byte[] data = cl.getCachedByteArray(newType1.getName());
 	final List<byte[]> listOfClasses = new ArrayList<byte[]>();
@@ -105,7 +105,7 @@ public class QueryForDynamicEntityTypeSerialisationTest {
 	final Class<? extends AbstractEntity> newType1 = (Class<? extends AbstractEntity>) cl.startModification(TgVehicle.class.getName()).addProperties(pd1).endModification();
 
 	final EntityResultQueryModel q =  select(newType1).modelAsEntity(newType1);
-	final QueryExecutionModel original = from(q).build();
+	final QueryExecutionModel original = from(q).model();
 
 	final byte[] data = cl.getCachedByteArray(newType1.getName());
 	final List<byte[]> listOfClasses = new ArrayList<byte[]>();

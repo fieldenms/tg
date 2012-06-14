@@ -34,13 +34,13 @@ public class UserRoleRao extends CommonEntityRao<UserRole> implements IUserRoleD
     public List<UserRole> findAll() {
 	final EntityResultQueryModel<UserRole> model = select(UserRole.class).model();
 	final OrderingModel orderBy = orderBy().prop("key").asc().model();
-	return getAllEntities(from(model).with(orderBy).build());
+	return getAllEntities(from(model).with(orderBy).model());
     }
 
     @Override
     public List<UserRole> findByIds(final Long... ids) {
 	final EntityResultQueryModel<UserRole> model = select(UserRole.class).where().prop("id").in().values(ids).model();
 	final OrderingModel orderBy = orderBy().prop("key").asc().model();
-	return getAllEntities(from(model).with(orderBy).build());
+	return getAllEntities(from(model).with(orderBy).model());
     }
 }

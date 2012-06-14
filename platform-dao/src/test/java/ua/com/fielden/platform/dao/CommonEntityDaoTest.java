@@ -42,9 +42,9 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 	assertEquals("Incorrect key value.", "key1", dao.findByKey("key1").getKey());
 	// find by criteria
 	final EntityResultQueryModel<EntityWithMoney> model1 = select(EntityWithMoney.class).where().prop("key").like().val("k%").model();
-	assertEquals("Incorrect number of found entities.", 4, dao.getPage(from(model1).build(), 0, 25).data().size());
+	assertEquals("Incorrect number of found entities.", 4, dao.getPage(from(model1).model(), 0, 25).data().size());
 	final EntityResultQueryModel<EntityWithMoney> model2 = select(EntityWithMoney.class).where().prop("key").like().val("e%").model();
-	assertEquals("Incorrect number of found entities.", 0, dao.getPage(from(model2).build(), 0, 25).data().size());
+	assertEquals("Incorrect number of found entities.", 0, dao.getPage(from(model2).model(), 0, 25).data().size());
     }
 
     public void test_that_entity_with_composite_key_is_handled_correctly() {
@@ -59,9 +59,9 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 	assertEquals("Incorrect key value.", new DynamicEntityKey(result.get(0)), daoComposite.findByKey("key-1-1", keyPartTwo).getKey());
 	// find by criteria
 	final EntityResultQueryModel<EntityWithDynamicCompositeKey> model1 = select(EntityWithDynamicCompositeKey.class).where().prop("keyPartOne").like().val("k%").model();
-	assertEquals("Incorrect number of found entities.", 1, daoComposite.getPage(from(model1).build(), 0, 25).data().size());
+	assertEquals("Incorrect number of found entities.", 1, daoComposite.getPage(from(model1).model(), 0, 25).data().size());
 	final EntityResultQueryModel<EntityWithDynamicCompositeKey> model2 = select(EntityWithDynamicCompositeKey.class).where().prop("keyPartOne").like().val("e%").model();
-	assertEquals("Incorrect number of found entities.", 0, daoComposite.getPage(from(model2).build(), 0, 25).data().size());
+	assertEquals("Incorrect number of found entities.", 0, daoComposite.getPage(from(model2).model(), 0, 25).data().size());
     }
 
     public void test_that_unfiltered_pagination_works() {
@@ -88,7 +88,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 	.where().prop("money.amount").ge().val(new BigDecimal("30.00"))//
 	.model();
 
-	final IPage<EntityWithMoney> page = dao.firstPage(from(q).build(), 2);
+	final IPage<EntityWithMoney> page = dao.firstPage(from(q).model(), 2);
 	assertEquals("Incorrect number of instances on the page.", 2, page.data().size());
 	assertTrue("Page should have the next one.", page.hasNext());
 

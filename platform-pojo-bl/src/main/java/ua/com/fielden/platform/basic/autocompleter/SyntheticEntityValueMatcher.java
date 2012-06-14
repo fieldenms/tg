@@ -74,7 +74,7 @@ public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregat
 
     @Override
     public List<EntityAggregates> findMatches(final String value) {
-	return entityAggregatesDao.getPage(from(defaultModel).with(propertyParamName, value).build(), 0, pageSize).data();
+	return entityAggregatesDao.getPage(from(defaultModel).with(propertyParamName, value).model(), 0, pageSize).data();
     }
 
     @Override
