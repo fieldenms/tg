@@ -22,6 +22,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -41,6 +42,8 @@ import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.ResourceLoader;
+
+import com.jidesoft.grid.TableModelWrapperUtils;
 
 public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractAnalysisReview<T, CDTME, IAbstractAnalysisDomainTreeManagerAndEnhancer, IPage<T>> implements IUmViewOwner, IBlockingLayerProvider{
 
@@ -98,6 +101,39 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
         return getOwner().getProgressLayer();
     }
 
+    /**
+     * A convenient method for accessing selected in EGI not enhanced entity.
+     *
+     */
+    @SuppressWarnings("unchecked")
+    public T getSelectedEntity() {
+        final T selectedEntity = getEnhancedSelectedEntity();
+        return  selectedEntity == null ? null : (T) selectedEntity.copy((Class<AbstractEntity<?>>)DynamicEntityClassLoader.getOriginalType(selectedEntity.getType()));
+    }
+
+    /**
+     * A convenient method for accessing selected in EGI entity.
+     *
+     * @return
+     */
+    public T getEnhancedSelectedEntity(){
+        final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
+        int selectedRow = TableModelWrapperUtils.getActualRowAt(tableModel.getEntityGridInspector().getModel(), tableModel.getEntityGridInspector().getSelectedRow());
+        if (selectedRow == -1 && tableModel.instances().size() > 0) {
+            selectedRow = 0;
+        }
+        return selectedRow < 0 ? null : tableModel.instance(selectedRow);
+    }
+
+    /**
+     * Updates the specified entity in the grid inspector.
+     *
+     * @param entity
+     */
+    public void updateEntry(final T entity){
+	getEgiPanel().getEgi().getActualModel().refresh(entity);
+    }
+
     @Override
     public <E extends AbstractEntity<?>> void notifyEntityChange(final E entity) {
         if (entity.isPersisted()) {
@@ -105,8 +141,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
         	@SuppressWarnings("unchecked")
         	@Override
         	public void run() {
-        	    getEgiPanel().getEgi().getActualModel().refresh((T) entity);
-        	    //getProgressLayer().setLocked(false);
+        	    updateEntry((T) entity);
         	}
             });
         }
@@ -194,28 +229,25 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	final Command<T> action = new BlockingLayerCommand<T>("Edit", getBlockingLayer()) {
 	    private static final long serialVersionUID = 1L;
 
-	    private IEntityMasterManager masterManager;
-
 	    @Override
 	    protected boolean preAction() {
 		setMessage("Opening...");
 		if (super.preAction()) {
-		    masterManager = getMasterManager();
-		    return masterManager != null && getSelectedEntities().size() == 1;
+		    return getMasterManager() != null && getSelectedEntity() != null;
 		}
 		return false;
 	    }
 
 	    @Override
 	    protected T action(final ActionEvent event) throws Exception {
-		return getSelectedEntities().get(0);
+		return getSelectedEntity();
 	    }
 
 	    @Override
 	    protected void postAction(final T entity) {
 		super.postAction(entity);
 		if (entity != null) {
-		    masterManager.<T, IEntityDao<T>> showMaster(entity, GridAnalysisView.this);
+		    getMasterManager().<T, IEntityDao<T>> showMaster(entity, GridAnalysisView.this);
 		}
 	    }
 	};
@@ -242,12 +274,11 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 		if(!superRes){
 		    return false;
 		}
-		final List<T> selectedEntities = getSelectedEntities();
-		if(selectedEntities.size() != 1){//There are no selected entities or there are more then one are selected.
+		final T selectedEntity = getEnhancedSelectedEntity();
+		if(selectedEntity == null){//There are no selected entities or there are more then one are selected.
 		    return false;
 		}
-		final T entity = selectedEntities.get(0);
-		if (JOptionPane.showConfirmDialog(GridAnalysisView.this, "Entity " + entity + " will be deleted. Proceed?", "Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
+		if (JOptionPane.showConfirmDialog(GridAnalysisView.this, "Entity " + selectedEntity + " will be deleted. Proceed?", "Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
 		    return false;
 		}
 		setMessage("Deleting...");
@@ -256,10 +287,9 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
 	    @Override
 	    protected T action(final ActionEvent event) throws Exception {
-		final List<T> selectedEntities = getSelectedEntities();
-		final T entity = selectedEntities.get(0);
-		getModel().getCriteria().delete(entity);
-		return entity;
+		final T selectedEntity = getEnhancedSelectedEntity();
+		getModel().getCriteria().delete(selectedEntity);
+		return selectedEntity;
 	    }
 
 	    @SuppressWarnings("unchecked")
@@ -281,21 +311,12 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
     }
 
     /**
-     * Layouts the components of this analysis.
+     * A convenient method for accessing entity master manager.
+     *
+     * @return
      */
-    private void layoutView() {
-	final List<JComponent> components = new ArrayList<JComponent>();
-	final StringBuffer rowConstraints = new StringBuffer("");
-
-	//Creates entity centre's tool bar.
-	rowConstraints.append(AbstractEntityCentre.addToComponents(components, "[fill]", getToolBar()));
-	rowConstraints.append(AbstractEntityCentre.addToComponents(components, "[fill, grow]", getEgiPanel()));
-
-	setLayout(new MigLayout("fill, insets 0","[fill, grow]",  isEmpty(rowConstraints.toString()) ? "[fill, grow]" : rowConstraints.toString()));
-	for(int componentIndex = 0; componentIndex < components.size() - 1; componentIndex++){
-	    add(components.get(componentIndex), "wrap");
-	}
-	add(components.get(components.size()-1));
+    protected IEntityMasterManager getMasterManager() {
+        return getOwner().getOwner().getModel().getMasterManager();
     }
 
     /**
@@ -306,41 +327,30 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      * @return
      */
     final int getPageSize() {
-	double pageSize = egiPanel.getSize().getHeight() / EgiPanel1.ROW_HEIGHT;
-	if (getOwner().getOwner().getCriteriaPanel() != null) {
-	    pageSize += getOwner().getOwner().getCriteriaPanel().getSize().getHeight() / EgiPanel1.ROW_HEIGHT;
-	}
-	final int pageCapacity = (int) Math.floor(pageSize);
-	return pageCapacity > 1 ? pageCapacity : 1;
+        double pageSize = egiPanel.getSize().getHeight() / EgiPanel1.ROW_HEIGHT;
+        if (getOwner().getOwner().getCriteriaPanel() != null) {
+            pageSize += getOwner().getOwner().getCriteriaPanel().getSize().getHeight() / EgiPanel1.ROW_HEIGHT;
+        }
+        final int pageCapacity = (int) Math.floor(pageSize);
+        return pageCapacity > 1 ? pageCapacity : 1;
     }
-
-    //    /**
-    //     * Enables or disables the paginator's actions without enabling or disabling blocking layer.
-    //     *
-    //     * @param enable
-    //     */
-    //    private void enablePaginatorActionsWithoutBlockingLayer(final boolean enable){
-    //	getOwner().getPaginator().getFirst().setEnabled(enable, false);
-    //	getOwner().getPaginator().getPrev().setEnabled(enable, false);
-    //	getOwner().getPaginator().getNext().setEnabled(enable, false);
-    //	getOwner().getPaginator().getLast().setEnabled(enable, false);
-    //	if(getOwner().getPaginator().getFeedback() != null){
-    //	    getOwner().getPaginator().getFeedback().enableFeedback(false);
-    //	}
-    //    }
 
     /**
-     * Returns the list of selected entities.
-     *
-     * @return
+     * Layouts the components of this analysis.
      */
-    public List<T> getSelectedEntities() {
-	final PropertyTableModel<T> tableModel = egiPanel.getEgi().getActualModel();
-	return tableModel.getSelectedEntities();
-    }
+    private void layoutView() {
+        final List<JComponent> components = new ArrayList<JComponent>();
+        final StringBuffer rowConstraints = new StringBuffer("");
 
-    protected IEntityMasterManager getMasterManager() {
-        return getOwner().getOwner().getModel().getMasterManager();
+        //Creates entity centre's tool bar.
+        rowConstraints.append(AbstractEntityCentre.addToComponents(components, "[fill]", getToolBar()));
+        rowConstraints.append(AbstractEntityCentre.addToComponents(components, "[fill, grow]", getEgiPanel()));
+
+        setLayout(new MigLayout("fill, insets 0","[fill, grow]",  isEmpty(rowConstraints.toString()) ? "[fill, grow]" : rowConstraints.toString()));
+        for(int componentIndex = 0; componentIndex < components.size() - 1; componentIndex++){
+            add(components.get(componentIndex), "wrap");
+        }
+        add(components.get(components.size()-1));
     }
 
     /**
