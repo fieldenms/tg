@@ -4,8 +4,11 @@ import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 
@@ -21,5 +24,33 @@ public class TgVehicleMake extends AbstractEntity<String> {
      * Constructor for (@link EntityFactory}.
      */
     protected TgVehicleMake() {
+    }
+
+    @IsProperty
+    @Title(value = "Non-persisted prop", desc = "Desc")
+    private String npProp;
+
+    @Observable
+    public TgVehicleMake setNpProp(final String npProp) {
+	this.npProp = npProp;
+	return this;
+    }
+
+    public String getNpProp() {
+	return npProp;
+    }
+
+    @IsProperty
+    @Title(value = "Competitor", desc = "Competitor")
+    private TgVehicleMake competitor;
+
+    @Observable
+    public TgVehicleMake setCompetitor(final TgVehicleMake competitor) {
+	this.competitor = competitor;
+	return this;
+    }
+
+    public TgVehicleMake getCompetitor() {
+	return competitor;
     }
 }

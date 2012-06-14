@@ -80,6 +80,43 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
 
     @Test
+    public void test_retrieval_of_non_persisted_prop_from_type() {
+	final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicleMake.class).where().prop("npProp").eq().val("val").model();
+	try {
+	    vehicleMakeDao.getAllEntities(from(qry).model());
+	    fail("Should have failed while trying to resolve property [npProp]");
+	} catch (final Exception e) {
+	}
+    }
+
+    @Test
+    public void test_retrieval_of_non_persisted_prop_from_model() {
+	final EntityResultQueryModel<TgVehicleMake> qry = select(TgVehicleMake.class). //
+	yield().prop("id").as("id"). //
+	yield().prop("version").as("version"). //
+	yield().prop("key").as("key"). //
+	yield().prop("desc").as("desc"). //
+	yield().val("val").as("npProp"). //
+	modelAsEntity(TgVehicleMake.class);
+	assertEquals("Incorrect key", 4, vehicleMakeDao.getAllEntities(from(qry).model()).size());
+    }
+
+    @Test
+    public void test_retrieval_of_non_persisted_entity_prop_from_model() {
+	final EntityResultQueryModel<TgVehicleMake> makeQry = select(TgVehicleMake.class). //
+		where().prop("key").eq().val("MERC"). //
+	yield().prop("id").as("id"). //
+	yield().prop("version").as("version"). //
+	yield().prop("key").as("key"). //
+	yield().prop("desc").as("desc"). //
+	yield().beginExpr().val(vehicleMakeDao.findByKey("BMW")).add().val(1).sub().val(1).endExpr().as("competitor"). //
+	modelAsEntity(TgVehicleMake.class);
+	final EntityResultQueryModel<TgVehicleMake> qry = select(makeQry). //
+		where().prop("competitor.key").eq().val("BMW").model();
+	assertEquals("Incorrect key", 1, vehicleMakeDao.getAllEntities(from(qry).model()).size());
+    }
+
+    @Test
     public void test_query_with_union_property_being_null() {
 	final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("key").eq().val("BOGIE2").model();
 	final List<TgBogie> models = bogieDao.getAllEntities(from(qry).with(fetchAll(TgBogie.class)).model());
