@@ -131,7 +131,40 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      * @param entity
      */
     public void updateEntry(final T entity){
-	getEgiPanel().getEgi().getActualModel().refresh(entity);
+	new BlockingLayerCommand<T>(null, getBlockingLayer()) {
+
+	    private static final long serialVersionUID = 5213912604843799656L;
+
+	    @Override
+	    protected boolean preAction() {
+	        if(super.preAction()){
+	            enableRelatedActions(false, false);
+	            return true;
+	        }
+	        return false;
+	    }
+
+	    @Override
+	    protected T action(final ActionEvent e) throws Exception {
+		return getModel().getEntityById(entity.getId());
+	    }
+
+	    @Override
+	    protected void postAction(final T value) {
+		final PropertyTableModel<T> tableModel = getEgiPanel().getEgi().getActualModel();
+		tableModel.refresh(value);
+		tableModel.selectRow(tableModel.getRowOf(value));
+		enableRelatedActions(true, false);
+		super.postAction(value);
+	    };
+
+	    @Override
+	    protected void handlePreAndPostActionException(final Throwable ex) {
+		super.handlePreAndPostActionException(ex);
+		enableRelatedActions(true, false);
+	    }
+	}.actionPerformed(null);
+
     }
 
     @Override

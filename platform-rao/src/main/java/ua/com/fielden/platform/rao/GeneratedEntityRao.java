@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.rao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,10 +17,13 @@ import org.restlet.data.Response;
 import org.restlet.data.Status;
 import org.restlet.resource.Representation;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.CommonEntityRao.PageInfo;
@@ -63,6 +69,25 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 
     public Class<? extends Comparable> getKeyType() {
 	return keyType;
+    }
+
+    @Override
+    public T findById(final Long id, final fetch<T> fetchModel, final List<byte[]> binaryTypes) {
+	return fetchOneEntityInstance(id, fetchModel, binaryTypes);
+    }
+
+    @Override
+    public T findById(final Long id, final List<byte[]> binaryTypes) {
+	return fetchOneEntityInstance(id, null, binaryTypes);
+    }
+
+    @Override
+    public T getEntity(final QueryExecutionModel<T, ?> model, final List<byte[]> binaryTypes) {
+	final List<T> data = new EntityQueryPage(model, new PageInfo(0, 1, IEntityDao.DEFAULT_PAGE_CAPACITY), binaryTypes).data();
+	if (data.size() > 1) {
+	    throw new IllegalArgumentException("The provided query model leads to retrieval of more than one entity (" + data.size() + ").");
+	}
+	return data.size() == 1 ? data.get(0) : null;
     }
 
     @Override
@@ -191,6 +216,16 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
     protected T calcSummary(final QueryExecutionModel<T, ?> qem, final List<byte[]> binaryTypes) {
 	final List<T> list = getAllEntities(qem, binaryTypes);
 	return list.size() == 1 ? list.get(0) : null;
+    }
+
+
+    private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel, final List<byte[]> binaryTypes) {
+        try {
+            final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
+            return getEntity(from(query).with(fetchModel).build(), binaryTypes);
+        } catch (final Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 
@@ -352,6 +387,4 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
 	    return "Page " + (no() + 1) + " of " + numberOfPages;
 	}
     }
-
-
 }

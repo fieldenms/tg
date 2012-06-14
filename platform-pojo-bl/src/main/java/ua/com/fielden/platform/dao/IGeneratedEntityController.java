@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.pagination.IPage;
 
 /**
@@ -36,6 +37,37 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> {
      * @return
      */
     Class<? extends Comparable> getKeyType();
+
+    /**
+     * Finds entity by its surrogate id.
+     *
+     * @param id
+     *            -- ID of the entity to be loaded.
+     * @param models
+     *            -- one or more fetching models specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @return
+     */
+    T findById(final Long id, fetch<T> fetchModel, final List<byte[]> binaryTypes);
+
+    /**
+     * Finds entity by its surrogate id.
+     *
+     * @param id
+     *            -- ID of the entity to be loaded.
+     * @param models
+     *            -- one or more fetching models specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @return
+     */
+    T findById(final Long id, final List<byte[]> binaryTypes);
+
+    /**
+     * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
+     * found then a null value is returned.
+     *
+     * @param model
+     * @return
+     */
+    T getEntity(final QueryExecutionModel<T, ?> model, final List<byte[]> binaryTypes);
 
     /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query execution model.

@@ -48,6 +48,10 @@ public class GridAnalysisModel<T extends AbstractEntity<?>, CDTME extends ICentr
 	return newPage;
     }
 
+    protected T getEntityById(final Long id) {
+        return getCriteria().getEntityById(id);
+    }
+
     @Override
     protected Result canLoadData() {
 	return getCriteria().isValid();

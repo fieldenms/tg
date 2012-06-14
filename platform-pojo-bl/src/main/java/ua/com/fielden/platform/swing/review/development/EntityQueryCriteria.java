@@ -32,6 +32,7 @@ import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -174,6 +175,26 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	fo.write(content);
 	fo.flush();
 	fo.close();
+    }
+
+    /**
+     * Returns the entity for specified id
+     *
+     * @param entity
+     * @return
+     */
+    public T getEntityById(final Long id){
+	final Class<?> root = getEntityClass();
+	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
+	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
+	final fetch<T> fetchModel = DynamicFetchBuilder.createFetchModel(getManagedType(), separatedFetch.getKey());
+ 	if(getManagedType().equals(getEntityClass())){
+	    return dao.findById(id, fetchModel);
+	}else{
+	    generatedEntityController.setEntityType(getManagedType());
+	    return generatedEntityController.findById(id, fetchModel, getByteArrayForManagedType());
+	}
     }
 
     /**
