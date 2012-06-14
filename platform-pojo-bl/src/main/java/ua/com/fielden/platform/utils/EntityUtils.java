@@ -788,9 +788,10 @@ public class EntityUtils {
 
     public static <ET extends AbstractEntity<?>> List<Field> getSyntheticProperties(final Class<ET> entityType, final EntityResultQueryModel<ET> model) {
 	final List<Field> result = new ArrayList<Field>();
+	final boolean noDesc = !AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType);
 
 	for (final Field propField : Finder.findRealProperties(entityType)) {
-	    if (!"desc".equals(propField.getName())) {
+	    if (!(propField.getName().equals("desc") && noDesc)) {
 		result.add(propField);
 	    }
 	}

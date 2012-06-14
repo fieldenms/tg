@@ -113,13 +113,23 @@ public class EntQuery implements ISingleOperand {
             yields.getYields().put(idModel.getAlias(), idModel);
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-            for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(type())) {
-        	//ppi.isUnionEntity() || ppi.isUnionEntityDetails() || ppi.isUnionEntity() ||
-        	final boolean skipProperty =  ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
-      		if (!skipProperty) {
-                    final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn().getName() : null), ppi.getYieldDetailType());
+            if (getSources().getMain() instanceof TypeBasedSource) {
+                for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(type())) {
+            	//ppi.isUnionEntity() || ppi.isUnionEntityDetails() || ppi.isUnionEntity() ||
+            	final boolean skipProperty =  ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
+          		if (!skipProperty) {
+                        final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn().getName() : null), ppi.getYieldDetailType());
+                        yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
+                    }
+                }
+            } else {
+        	final QueryBasedSource sourceModel = (QueryBasedSource) getSources().getMain();
+                for (final ResultQueryYieldDetails ppi : sourceModel.sourceItems.values()) {
+            	//ppi.isUnionEntity() || ppi.isUnionEntityDetails() || ppi.isUnionEntity() ||
+                    final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn() : null), ppi.getYieldDetailsType());
                     yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
                 }
+
             }
         } else if (idPropYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";

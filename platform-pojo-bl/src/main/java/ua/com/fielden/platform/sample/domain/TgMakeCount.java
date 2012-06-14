@@ -3,7 +3,6 @@ package ua.com.fielden.platform.sample.domain;
 import java.math.BigInteger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -12,7 +11,6 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(TgVehicleMake.class)
-@DescTitle("Description")
 public class TgMakeCount extends AbstractEntity<TgVehicleMake> {
     private static final long serialVersionUID = 1L;
     private static final EntityResultQueryModel<TgMakeCount> model_ = select(TgVehicleModel.class).groupBy().prop("make").yield().prop("make").as("key").yield().countAll().as("count").modelAsEntity(TgMakeCount.class);
