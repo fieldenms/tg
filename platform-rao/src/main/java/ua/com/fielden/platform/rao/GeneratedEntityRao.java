@@ -222,7 +222,7 @@ public class GeneratedEntityRao<T extends AbstractEntity<?>> implements IGenerat
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel, final List<byte[]> binaryTypes) {
         try {
             final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
-            return getEntity(from(query).with(fetchModel).build(), binaryTypes);
+            return getEntity(from(query).with(fetchModel).model(), binaryTypes);
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
