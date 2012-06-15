@@ -12,7 +12,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -114,7 +114,7 @@ public class EntQuery implements ISingleOperand {
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
             if (getSources().getMain() instanceof TypeBasedSource) {
-                for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(type())) {
+                for (final PropertyMetadata ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(type())) {
             	//ppi.isUnionEntity() || ppi.isUnionEntityDetails() || ppi.isUnionEntity() ||
             	final boolean skipProperty =  ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
           		if (!skipProperty) {
@@ -158,7 +158,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Object determineYieldHibType(final Yield yield) {
-        final PropertyPersistenceInfo finalPropInfo = domainPersistenceMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
+        final PropertyMetadata finalPropInfo = domainPersistenceMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
         if (finalPropInfo != null) {
             return finalPropInfo.getHibType();
         } else {
@@ -167,7 +167,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private YieldDetailsType determineYieldDetailsType(final Yield yield) {
-        final PropertyPersistenceInfo finalPropInfo = domainPersistenceMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
+        final PropertyMetadata finalPropInfo = domainPersistenceMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
         if (finalPropInfo != null) {
             return finalPropInfo.getYieldDetailType();
         } else {

@@ -8,7 +8,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QueryBasedSource extends AbstractSource {
@@ -58,7 +58,7 @@ public class QueryBasedSource extends AbstractSource {
 	} else if (firstLevelPropYield.getInfo().getJavaType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
 	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true)) : null;
 	} else if (!StringUtils.isEmpty(rest)) {
-	    final PropertyPersistenceInfo propInfo = getDomainPersistenceMetadataAnalyser().getInfoForDotNotatedProp(firstLevelPropYield.getInfo().getJavaType(), rest);
+	    final PropertyMetadata propInfo = getDomainPersistenceMetadataAnalyser().getInfoForDotNotatedProp(firstLevelPropYield.getInfo().getJavaType(), rest);
 	    if (propInfo == null) {
 		return null;
 	    } else {

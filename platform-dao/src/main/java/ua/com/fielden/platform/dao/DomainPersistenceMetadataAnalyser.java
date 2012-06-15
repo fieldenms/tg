@@ -10,7 +10,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainPersistenceMetadataAnalyser {
-    private final Map<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata> hibTypeInfosMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata>();
+    private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> hibTypeInfosMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityMetadata>();
 
     private final DomainPersistenceMetadata domainPersistenceMetadata;
 
@@ -20,18 +20,18 @@ public class DomainPersistenceMetadataAnalyser {
 	hibTypeInfosMap.putAll(domainPersistenceMetadata.getHibTypeInfosMap());
     }
 
-    private EntityPersistenceMetadata getEntityPersistenceMetadata(final Class<? extends AbstractEntity<?>> entityType) {
+    private EntityMetadata getEntityPersistenceMetadata(final Class<? extends AbstractEntity<?>> entityType) {
 	if (entityType == null || !AbstractEntity.class.isAssignableFrom(entityType) || EntityAggregates.class.equals(entityType)) {
 	    return null;
 	}
 
-	final EntityPersistenceMetadata existing = hibTypeInfosMap.get(entityType);
+	final EntityMetadata existing = hibTypeInfosMap.get(entityType);
 
 	if (existing != null) {
 	    return existing;
 	} else {
 	    try {
-		final EntityPersistenceMetadata newOne = domainPersistenceMetadata.generateEntityPersistenceMetadata(entityType);
+		final EntityMetadata newOne = domainPersistenceMetadata.generateEntityPersistenceMetadata(entityType);
 		hibTypeInfosMap.put(entityType, newOne);
 		return newOne;
 	    } catch (final Exception e) {
@@ -48,8 +48,8 @@ public class DomainPersistenceMetadataAnalyser {
      * @param propName
      * @return
      */
-    public PropertyPersistenceInfo getPropPersistenceInfoExplicitly(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
-	final EntityPersistenceMetadata map = getEntityPersistenceMetadata(entityType);
+    public PropertyMetadata getPropPersistenceInfoExplicitly(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
+	final EntityMetadata map = getEntityPersistenceMetadata(entityType);
 	return map != null ? map.getProps().get(propName) : null;
     }
 
@@ -60,13 +60,13 @@ public class DomainPersistenceMetadataAnalyser {
      * @param propName
      * @return
      */
-    public PropertyPersistenceInfo getInfoForDotNotatedProp(final Class<? extends AbstractEntity<?>> entityType, final String dotNotatedPropName) {
-	final PropertyPersistenceInfo simplePropInfo = getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
+    public PropertyMetadata getInfoForDotNotatedProp(final Class<? extends AbstractEntity<?>> entityType, final String dotNotatedPropName) {
+	final PropertyMetadata simplePropInfo = getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
 	if (simplePropInfo != null) {
 	    return simplePropInfo;
 	} else {
 	    final Pair<String, String> propSplit = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
-	    final PropertyPersistenceInfo firstPropInfo = getPropPersistenceInfoExplicitly(entityType, propSplit.getKey());
+	    final PropertyMetadata firstPropInfo = getPropPersistenceInfoExplicitly(entityType, propSplit.getKey());
 	    if (firstPropInfo != null && firstPropInfo.getJavaType() != null) {
 		return getInfoForDotNotatedProp(firstPropInfo.getJavaType(), propSplit.getValue());
 	    } else {
@@ -76,12 +76,12 @@ public class DomainPersistenceMetadataAnalyser {
     }
 
     public boolean isNullable (final Class<? extends AbstractEntity<?>> entityType, final String dotNotatedPropName) {
-	final PropertyPersistenceInfo simplePropInfo = getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
+	final PropertyMetadata simplePropInfo = getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
 	if (simplePropInfo != null) {
 	    return simplePropInfo.isNullable();
 	} else {
 	    final Pair<String, String> propSplit = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
-	    final PropertyPersistenceInfo firstPropInfo = getPropPersistenceInfoExplicitly(entityType, propSplit.getKey());
+	    final PropertyMetadata firstPropInfo = getPropPersistenceInfoExplicitly(entityType, propSplit.getKey());
 	    if (firstPropInfo != null && firstPropInfo.getJavaType() != null) {
 		return isNullable(firstPropInfo.getJavaType(), propSplit.getValue()) || firstPropInfo.isNullable();
 	    } else {
@@ -90,16 +90,16 @@ public class DomainPersistenceMetadataAnalyser {
 	}
     }
 
-    public Collection<PropertyPersistenceInfo> getEntityPPIs(final Class<? extends AbstractEntity<?>> entityType) {
-	final EntityPersistenceMetadata epm = getEntityPersistenceMetadata(entityType);
+    public Collection<PropertyMetadata> getEntityPPIs(final Class<? extends AbstractEntity<?>> entityType) {
+	final EntityMetadata epm = getEntityPersistenceMetadata(entityType);
 	if (epm == null) {
 	    throw new IllegalStateException("Missing ppi map for entity type: " + entityType);
 	}
 	return epm.getProps().values();
     }
 
-    public EntityPersistenceMetadata getEntityPersistenceMetadate(final Class<? extends AbstractEntity<?>> entityType) {
-	final EntityPersistenceMetadata epm = getEntityPersistenceMetadata(entityType);
+    public EntityMetadata getEntityPersistenceMetadate(final Class<? extends AbstractEntity<?>> entityType) {
+	final EntityMetadata epm = getEntityPersistenceMetadata(entityType);
 	if (epm == null) {
 	    throw new IllegalStateException("Missing entity persistence metadata for entity type: " + entityType);
 	}

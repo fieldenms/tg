@@ -7,8 +7,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
+import ua.com.fielden.platform.dao.PropertyMetadata;
+import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
@@ -53,15 +53,15 @@ public class FetchModel<T extends AbstractEntity<?>> {
     }
 
     private void includeAllFirstLevelPrimPropsAndKey() {
-	for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(getEntityType())) {
+	for (final PropertyMetadata ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(getEntityType())) {
 	    if (!ppi.isCalculated()) {
-		with(ppi.getName(), (ppi.getType().equals(PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY) || ppi.getType().equals(PropertyPersistenceType.ENTITY_KEY)) ? false : true);
+		with(ppi.getName(), (ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || ppi.getType().equals(PropertyCategory.ENTITY_KEY)) ? false : true);
 	    }
 	}
     }
 
     private void includeAllFirstLevelProps() {
-	for (final PropertyPersistenceInfo ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(getEntityType())) {
+	for (final PropertyMetadata ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(getEntityType())) {
 	    if (ppi.isUnionEntity()) {
 		with(ppi.getName(), new fetch(ppi.getJavaType(), FetchCategory.ALL));
 	    } else {
@@ -80,7 +80,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
     }
 
     private Class getPropType(final String propName) {
-	final PropertyPersistenceInfo ppi = domainPersistenceMetadataAnalyser.getPropPersistenceInfoExplicitly(getEntityType(), propName);
+	final PropertyMetadata ppi = domainPersistenceMetadataAnalyser.getPropPersistenceInfoExplicitly(getEntityType(), propName);
 	if (ppi != null) {
 	    return ppi.getJavaType();
 	} else {

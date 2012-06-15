@@ -17,8 +17,8 @@ import org.hibernate.type.YesNoType;
 import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyColumn;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
+import ua.com.fielden.platform.dao.PropertyMetadata;
+import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PurePropInfo;
@@ -228,11 +228,11 @@ public class BaseEntQueryTCase {
 	return TypeFactory.basic(name);
     }
 
-    public static PropertyPersistenceInfo ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyPersistenceType type) {
-	return new PropertyPersistenceInfo.Builder(name, javaType, nullable).column(new PropertyColumn(column)).hibType(hibType).type(type).build();
+    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory type) {
+	return new PropertyMetadata.Builder(name, javaType, nullable).column(new PropertyColumn(column)).hibType(hibType).type(type).build();
     }
 
-    public static PropertyPersistenceInfo ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyPersistenceType type) {
-	return new PropertyPersistenceInfo.Builder(name, javaType, nullable).columns(columns).hibType(hibType).type(type).build();
+    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyCategory type) {
+	return new PropertyMetadata.Builder(name, javaType, nullable).columns(columns).hibType(hibType).type(type).build();
     }
 }

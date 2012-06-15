@@ -8,8 +8,8 @@ import java.util.TreeSet;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.PropertyColumn;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo.PropertyPersistenceType;
+import ua.com.fielden.platform.dao.PropertyMetadata;
+import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -21,46 +21,46 @@ import static org.junit.Assert.fail;
 public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
     @Test
     public void test1() {
-	final SortedSet<PropertyPersistenceInfo> expected = new TreeSet<PropertyPersistenceInfo>();
-	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyPersistenceType.ID));
-	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyPersistenceType.VERSION));
-	expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyPersistenceType.PRIMITIVE_KEY));
-	expected.add(ppi("desc", STRING, true, hibType("string"), "DESC_", PropertyPersistenceType.PROP));
-	expected.add(ppi("make", MAKE, false, hibType("long"), "MAKE_", PropertyPersistenceType.ENTITY));
+	final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
+	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
+	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
+	expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyCategory.PRIMITIVE_KEY));
+	expected.add(ppi("desc", STRING, true, hibType("string"), "DESC_", PropertyCategory.PROP));
+	expected.add(ppi("make", MAKE, false, hibType("long"), "MAKE_", PropertyCategory.ENTITY));
 
-	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
+	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
 	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(MODEL));
 	assertEquals("Incorrect result type", expected, actual);
     }
 
     @Test
     public void test2() {
-	final SortedSet<PropertyPersistenceInfo> expected = new TreeSet<PropertyPersistenceInfo>();
-	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyPersistenceType.ID));
-	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyPersistenceType.VERSION));
-	expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyPersistenceType.PRIMITIVE_KEY));
-	expected.add(ppi("desc", STRING, true, hibType("string"), "DESC_", PropertyPersistenceType.PROP));
-	expected.add(ppi("model", MODEL, false, hibType("long"), "MODEL_", PropertyPersistenceType.ENTITY));
-	expected.add(ppi("price.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PRICE_", PropertyPersistenceType.COMPOSITE_DETAILS));
-	expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PURCHASEPRICE_", PropertyPersistenceType.COMPOSITE_DETAILS));
-	expected.add(ppi("fuelUsages", FUEL_USAGE, false, null, Collections.<PropertyColumn> emptyList(), PropertyPersistenceType.COLLECTIONAL));
+	final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
+	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
+	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
+	expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyCategory.PRIMITIVE_KEY));
+	expected.add(ppi("desc", STRING, true, hibType("string"), "DESC_", PropertyCategory.PROP));
+	expected.add(ppi("model", MODEL, false, hibType("long"), "MODEL_", PropertyCategory.ENTITY));
+	expected.add(ppi("price.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PRICE_", PropertyCategory.COMPOSITE_DETAILS));
+	expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PURCHASEPRICE_", PropertyCategory.COMPOSITE_DETAILS));
+	expected.add(ppi("fuelUsages", FUEL_USAGE, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
 
-	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
+	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
 	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(VEHICLE));
 	assertTrue(actual.containsAll(expected));
     }
 
     @Test
     public void test5() {
-	final SortedSet<PropertyPersistenceInfo> expected = new TreeSet<PropertyPersistenceInfo>();
-	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyPersistenceType.ID));
-	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyPersistenceType.VERSION));
+	final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
+	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
+	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
 	//expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyPersistenceType.PRIMITIVE_KEY));
 	//expected.add(ppi("desc", STRING, false, hibType("string"), "DESC_", PropertyPersistenceType.PROP));
-	expected.add(ppi("vehicle", VEHICLE, false, hibType("long"), "VEHICLE_", PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY));
-	expected.add(ppi("date", DATE, false, DOMAIN_PERSISTENCE_METADATA_ANALYSER.getDomainPersistenceMetadata().getHibTypesDefaults().get(Date.class), "DATE_", PropertyPersistenceType.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY));
+	expected.add(ppi("vehicle", VEHICLE, false, hibType("long"), "VEHICLE_", PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY));
+	expected.add(ppi("date", DATE, false, DOMAIN_PERSISTENCE_METADATA_ANALYSER.getDomainPersistenceMetadata().getHibTypesDefaults().get(Date.class), "DATE_", PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY));
 
-	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
+	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
 	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(FUEL_USAGE));
 
 	assertTrue(actual.containsAll(expected));
@@ -69,13 +69,13 @@ public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
 
     @Test
     public void test4() {
-	final SortedSet<PropertyPersistenceInfo> expected = new TreeSet<PropertyPersistenceInfo>();
-	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyPersistenceType.ID));
-	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyPersistenceType.VERSION));
-	expected.add(ppi("key", STRING, false, hibType("string"), "USER_NAME", PropertyPersistenceType.PRIMITIVE_KEY));
-	expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<PropertyColumn> emptyList(), PropertyPersistenceType.COLLECTIONAL));
+	final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
+	expected.add(ppi("id", LONG, false, hibType("long"), "_ID", PropertyCategory.ID));
+	expected.add(ppi("version", LONG, false, hibType("long"), "_VERSION", PropertyCategory.VERSION));
+	expected.add(ppi("key", STRING, false, hibType("string"), "USER_NAME", PropertyCategory.PRIMITIVE_KEY));
+	expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
 
-	final SortedSet<PropertyPersistenceInfo> actual = new TreeSet<PropertyPersistenceInfo>();
+	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
 	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(User.class));
 
 	assertTrue(actual.containsAll(expected));

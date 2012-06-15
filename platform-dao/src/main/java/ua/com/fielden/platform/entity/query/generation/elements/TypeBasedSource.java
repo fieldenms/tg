@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
-import ua.com.fielden.platform.dao.EntityPersistenceMetadata;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao.EntityMetadata;
+import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class TypeBasedSource extends AbstractSource {
     private final Class<? extends AbstractEntity<?>> entityType;
     private final boolean generated;
-    private EntityPersistenceMetadata entityPersistenceMetadata;
+    private EntityMetadata entityPersistenceMetadata;
 
     public TypeBasedSource(final Class<? extends AbstractEntity<?>> entityType, final String alias, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser) {
 	this(entityType, alias, false, domainPersistenceMetadataAnalyser);
@@ -32,7 +32,7 @@ public class TypeBasedSource extends AbstractSource {
     public void populateSourceItems(final boolean parentLeftJoinLegacy) {
 	entityPersistenceMetadata = getDomainPersistenceMetadataAnalyser().getEntityPersistenceMetadate(sourceType());
 
-	for (final PropertyPersistenceInfo ppi : entityPersistenceMetadata.getProps().values()) {
+	for (final PropertyMetadata ppi : entityPersistenceMetadata.getProps().values()) {
 		// if parent nullability = false then take the one from ppi, else true
 	    sourceItems.put(ppi.getName(), new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn().getName() : null), ppi.isNullable() || parentLeftJoinLegacy, ppi.getYieldDetailType()));
 	}
@@ -40,7 +40,7 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     protected Pair<PurePropInfo, PurePropInfo> lookForProp(final String dotNotatedPropName) {
-	final PropertyPersistenceInfo finalPropInfo = getDomainPersistenceMetadataAnalyser().getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
+	final PropertyMetadata finalPropInfo = getDomainPersistenceMetadataAnalyser().getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
 
 	if (finalPropInfo != null) {
 	    final boolean finalPropNullability = getDomainPersistenceMetadataAnalyser().isNullable(entityType, dotNotatedPropName);
@@ -48,15 +48,15 @@ public class TypeBasedSource extends AbstractSource {
 	    ppi.setExpressionModel(finalPropInfo.getExpressionModel());
 	    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
 	} else {
-	    final PropertyPersistenceInfo propInfo = getDomainPersistenceMetadataAnalyser().getInfoForDotNotatedProp(entityType, dotNotatedPropName);
+	    final PropertyMetadata propInfo = getDomainPersistenceMetadataAnalyser().getInfoForDotNotatedProp(entityType, dotNotatedPropName);
 	    if (propInfo == null) {
 		return null;
 	    } else {
 		final boolean propNullability = getDomainPersistenceMetadataAnalyser().isNullable(entityType, dotNotatedPropName);
 		final String onePartProp = EntityUtils.splitPropByFirstDot(dotNotatedPropName).getKey();
-		final PropertyPersistenceInfo explicitPartPropInfo = getDomainPersistenceMetadataAnalyser().getPropPersistenceInfoExplicitly(entityType, onePartProp);
+		final PropertyMetadata explicitPartPropInfo = getDomainPersistenceMetadataAnalyser().getPropPersistenceInfoExplicitly(entityType, onePartProp);
 		final String twoPartProp = onePartProp + "." + EntityUtils.splitPropByFirstDot(EntityUtils.splitPropByFirstDot(dotNotatedPropName).getValue()).getKey();
-		final PropertyPersistenceInfo explicitPartPropInfo2 = getDomainPersistenceMetadataAnalyser().getPropPersistenceInfoExplicitly(entityType, twoPartProp);
+		final PropertyMetadata explicitPartPropInfo2 = getDomainPersistenceMetadataAnalyser().getPropPersistenceInfoExplicitly(entityType, twoPartProp);
 		if (explicitPartPropInfo2 != null) {
 			final boolean explicitPropNullability = true;
 			final PurePropInfo ppi = new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable());

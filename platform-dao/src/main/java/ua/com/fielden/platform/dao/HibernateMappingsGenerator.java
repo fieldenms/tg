@@ -18,9 +18,9 @@ import static ua.com.fielden.platform.dao.DomainPersistenceMetadata.specialProps
  *
  */
 public class HibernateMappingsGenerator {
-    private final Map<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata> hibTypeInfosMap;
+    private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> hibTypeInfosMap;
 
-    public HibernateMappingsGenerator(final Map<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata> hibTypeInfosMap) {
+    public HibernateMappingsGenerator(final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> hibTypeInfosMap) {
 	this.hibTypeInfosMap = hibTypeInfosMap;
     }
 
@@ -32,7 +32,7 @@ public class HibernateMappingsGenerator {
 	sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
 	sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-	for (final Map.Entry<Class<? extends AbstractEntity<?>>, EntityPersistenceMetadata> entityTypeEntry : hibTypeInfosMap.entrySet()) {
+	for (final Map.Entry<Class<? extends AbstractEntity<?>>, EntityMetadata> entityTypeEntry : hibTypeInfosMap.entrySet()) {
 	    try {
 		sb.append(getClassMapping(entityTypeEntry.getValue()));
 	    } catch (final Exception e) {
@@ -91,7 +91,7 @@ public class HibernateMappingsGenerator {
     }
 
 
-    private String getUnionEntityProperty(final PropertyPersistenceInfo info) {
+    private String getUnionEntityProperty(final PropertyMetadata info) {
 	    final StringBuffer sb = new StringBuffer();
 	    sb.append("\t<component name=\"" + info.getName() + "\" class=\"" + info.getJavaType().getName() + "\">\n");
 	    final List<Field> propsFields = AbstractUnionEntity.unionProperties(info.getJavaType());
@@ -136,19 +136,19 @@ public class HibernateMappingsGenerator {
      * @return
      * @throws Exception
      */
-    private String getClassMapping(final EntityPersistenceMetadata map) throws Exception {
+    private String getClassMapping(final EntityMetadata map) throws Exception {
 	final StringBuffer sb = new StringBuffer();
 	sb.append("<class name=\"" + map.getType().getName() + "\" table=\"" + map.getTable() + "\">\n");
 
 	sb.append(getCommonPropMappingString(map.getProps().get(AbstractEntity.ID)));
 	sb.append(getCommonPropMappingString(map.getProps().get(AbstractEntity.VERSION)));
 
-	final PropertyPersistenceInfo keyProp = map.getProps().get(AbstractEntity.KEY);
+	final PropertyMetadata keyProp = map.getProps().get(AbstractEntity.KEY);
 	if (!keyProp.isVirtual()) {
 	    sb.append(getCommonPropMappingString(keyProp));
 	}
 
-	for (final PropertyPersistenceInfo ppi : map.getProps().values()) {
+	for (final PropertyMetadata ppi : map.getProps().values()) {
 	    if (ppi.affectsMapping() && !specialProps.contains(ppi.getName())) {
 		    sb.append(getCommonPropMappingString(ppi));
 	    }
@@ -164,7 +164,7 @@ public class HibernateMappingsGenerator {
      * @return
      * @throws Exception
      */
-    private String getCommonPropMappingString(final PropertyPersistenceInfo info) throws Exception {
+    private String getCommonPropMappingString(final PropertyMetadata info) throws Exception {
 	switch (info.getType()) {
 	case UNION_ENTITY:
 	    return getUnionEntityProperty(info);

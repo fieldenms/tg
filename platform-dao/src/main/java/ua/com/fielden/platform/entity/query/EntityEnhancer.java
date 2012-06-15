@@ -12,7 +12,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyPersistenceInfo;
+import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -38,7 +38,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 		final String propName = entry.getKey();
 		final fetch<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
 		if (fetchModel.getEntityType() != EntityAggregates.class) {
-		    final PropertyPersistenceInfo ppi = domainPersistenceMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
+		    final PropertyMetadata ppi = domainPersistenceMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
 		    if (ppi == null || ppi.isCollection()) {
 			final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
 			for (final Field field : collProps) {

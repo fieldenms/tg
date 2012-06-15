@@ -7,25 +7,25 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-public class EntityPersistenceMetadata {
+public class EntityMetadata {
     private final String table;
     private final EntityResultQueryModel<? extends AbstractEntity<?>> model;
     private final Class<? extends AbstractEntity<?>> type;
-    private final SortedMap<String, PropertyPersistenceInfo> props;
+    private final SortedMap<String, PropertyMetadata> props;
 
-    public EntityPersistenceMetadata(final String table, final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyPersistenceInfo> props) {
+    public EntityMetadata(final String table, final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyMetadata> props) {
 	this(table, null, type, props);
     }
 
-    public EntityPersistenceMetadata(final EntityResultQueryModel<? extends AbstractEntity<?>> model, final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyPersistenceInfo> props) {
+    public EntityMetadata(final EntityResultQueryModel<? extends AbstractEntity<?>> model, final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyMetadata> props) {
 	this(null, model, type, props);
     }
 
-    public EntityPersistenceMetadata(final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyPersistenceInfo> props) {
+    public EntityMetadata(final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyMetadata> props) {
 	this(null, null, type, props);
     }
 
-    private EntityPersistenceMetadata(final String table, final EntityResultQueryModel<? extends AbstractEntity<?>> model, final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyPersistenceInfo> props) {
+    private EntityMetadata(final String table, final EntityResultQueryModel<? extends AbstractEntity<?>> model, final Class<? extends AbstractEntity<?>> type, final SortedMap<String, PropertyMetadata> props) {
 	super();
 	this.table = table;
 	this.type = type;
@@ -51,7 +51,7 @@ public class EntityPersistenceMetadata {
     public Class<? extends AbstractEntity<?>> getType() {
         return type;
     }
-    public SortedMap<String, PropertyPersistenceInfo> getProps() {
+    public SortedMap<String, PropertyMetadata> getProps() {
         return props;
     }
 

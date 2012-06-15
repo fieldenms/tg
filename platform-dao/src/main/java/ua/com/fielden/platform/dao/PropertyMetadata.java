@@ -19,11 +19,11 @@ import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYield
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceInfo> {
+public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final String name;
     private final Class javaType;
     private final Object hibType;
-    private final PropertyPersistenceType type;
+    private final PropertyCategory type;
     private final boolean nullable;
 
     private final List<PropertyColumn> columns;
@@ -31,18 +31,18 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     private final boolean aggregatedExpression; // contains aggregation function on the root level (i.e. Totals in entity centre tree)
     private final boolean virtual; // this property is limited to eQuery only - it has no real property on entity (the case with virtual generation of composite entity key by concatenation of all members.
 
-    private final static Set<PropertyPersistenceType> typesThatAffectsMapping = new HashSet<PropertyPersistenceType>();
+    private final static Set<PropertyCategory> typesThatAffectsMapping = new HashSet<PropertyCategory>();
     static {
-	typesThatAffectsMapping.add(PropertyPersistenceType.ENTITY);
-	typesThatAffectsMapping.add(PropertyPersistenceType.ENTITY_KEY);
-	typesThatAffectsMapping.add(PropertyPersistenceType.ENTITY_MEMBER_OF_COMPOSITE_KEY);
-	typesThatAffectsMapping.add(PropertyPersistenceType.ID);
-	typesThatAffectsMapping.add(PropertyPersistenceType.ONE2ONE_ID);
-	typesThatAffectsMapping.add(PropertyPersistenceType.PRIMITIVE_KEY);
-	typesThatAffectsMapping.add(PropertyPersistenceType.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
-	typesThatAffectsMapping.add(PropertyPersistenceType.PROP);
-	typesThatAffectsMapping.add(PropertyPersistenceType.VERSION);
-	typesThatAffectsMapping.add(PropertyPersistenceType.UNION_ENTITY);
+	typesThatAffectsMapping.add(PropertyCategory.ENTITY);
+	typesThatAffectsMapping.add(PropertyCategory.ENTITY_KEY);
+	typesThatAffectsMapping.add(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY);
+	typesThatAffectsMapping.add(PropertyCategory.ID);
+	typesThatAffectsMapping.add(PropertyCategory.ONE2ONE_ID);
+	typesThatAffectsMapping.add(PropertyCategory.PRIMITIVE_KEY);
+	typesThatAffectsMapping.add(PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
+	typesThatAffectsMapping.add(PropertyCategory.PROP);
+	typesThatAffectsMapping.add(PropertyCategory.VERSION);
+	typesThatAffectsMapping.add(PropertyCategory.UNION_ENTITY);
     }
 
     public YieldDetailsType getYieldDetailType() {
@@ -84,27 +84,27 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     }
 
     public boolean isCollection() {
-	return type.equals(PropertyPersistenceType.COLLECTIONAL);
+	return type.equals(PropertyCategory.COLLECTIONAL);
     }
 
     public boolean isId() {
-	return type.equals(PropertyPersistenceType.ID);
+	return type.equals(PropertyCategory.ID);
     }
 
     public boolean isOne2OneId() {
-	return type.equals(PropertyPersistenceType.ONE2ONE_ID);
+	return type.equals(PropertyCategory.ONE2ONE_ID);
     }
 
     public boolean isVersion() {
-	return type.equals(PropertyPersistenceType.VERSION);
+	return type.equals(PropertyCategory.VERSION);
     }
 
     public boolean isUnionEntity() {
-	return type.equals(PropertyPersistenceType.UNION_ENTITY);
+	return type.equals(PropertyCategory.UNION_ENTITY);
     }
 
     public boolean isUnionEntityDetails() {
-	return type.equals(PropertyPersistenceType.UNION_DETAILS);
+	return type.equals(PropertyCategory.UNION_DETAILS);
     }
 
     public String getTypeString() {
@@ -116,14 +116,14 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
     }
 
     @Override
-    public int compareTo(final PropertyPersistenceInfo o) {
+    public int compareTo(final PropertyMetadata o) {
 	final boolean areEqual = this.equals(o);
 	final int nameComp = name.compareTo(o.name);
 	return nameComp != 0 ? nameComp : (areEqual ? 0 : 1);
     }
 
-    public Set<PropertyPersistenceInfo> getCompositeTypeSubprops() {
-	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
+    public Set<PropertyMetadata> getCompositeTypeSubprops() {
+	final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
 	if (hibType instanceof ICompositeUserTypeInstantiate) {
 	    final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
 	    final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
@@ -131,16 +131,16 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    for (final String subpropName : subprops) {
 		final PropertyColumn column = columns.get(index);
 		final Object hibType = subpropsTypes.get(index);
-		result.add(new PropertyPersistenceInfo.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(PropertyPersistenceType.COMPOSITE_DETAILS).hibType(hibType).build());
+		result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(PropertyCategory.COMPOSITE_DETAILS).hibType(hibType).build());
 		index = index + 1;
 	    }
 	}
 	return result;
     }
 
-    public Set<PropertyPersistenceInfo> getComponentTypeSubprops() {
-	final Set<PropertyPersistenceInfo> result = new HashSet<PropertyPersistenceInfo>();
-	if (PropertyPersistenceType.UNION_ENTITY.equals(type)) {
+    public Set<PropertyMetadata> getComponentTypeSubprops() {
+	final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
+	if (PropertyCategory.UNION_ENTITY.equals(type)) {
 	    final List<Field> propsFields = AbstractUnionEntity.unionProperties(javaType);
 	    for (final Field subpropField : propsFields) {
 		final MapTo mapTo = subpropField.getAnnotation(MapTo.class);
@@ -148,13 +148,13 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 		    throw new IllegalStateException("Property [" + subpropField.getName() + "] in union entity type [" + javaType + "] is not annotated  no MapTo ");
 		}
 		final PropertyColumn column = new PropertyColumn(getColumn() + "_" + (StringUtils.isEmpty(mapTo.value()) ? subpropField.getName() : mapTo.value()));
-		result.add(new PropertyPersistenceInfo.Builder(name + "." + subpropField.getName(), subpropField.getType(), true).column(column).type(PropertyPersistenceType.UNION_DETAILS).hibType(Hibernate.LONG).build());
+		result.add(new PropertyMetadata.Builder(name + "." + subpropField.getName(), subpropField.getType(), true).column(column).type(PropertyCategory.UNION_DETAILS).hibType(Hibernate.LONG).build());
 	    }
 	}
 	return result;
     }
 
-    private PropertyPersistenceInfo(final Builder builder) {
+    private PropertyMetadata(final Builder builder) {
 	type = builder.type;
 	name = builder.name;
 	javaType = builder.javaType;
@@ -178,7 +178,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	return hibType;
     }
 
-    public PropertyPersistenceType getType() {
+    public PropertyCategory getType() {
 	return type;
     }
 
@@ -197,13 +197,13 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 
 	private Object hibType;
 	private List<PropertyColumn> columns = new ArrayList<PropertyColumn>();
-	private PropertyPersistenceType type = PropertyPersistenceType.PROP;
+	private PropertyCategory type = PropertyCategory.PROP;
 	private ExpressionModel expressionModel;
 	private boolean aggregatedExpression = false;
 	private boolean virtual = false;
 
-	public PropertyPersistenceInfo build() {
-	    return new PropertyPersistenceInfo(this);
+	public PropertyMetadata build() {
+	    return new PropertyMetadata(this);
 	}
 
 	public Builder(final String name, final Class javaType, final boolean nullable) {
@@ -222,7 +222,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	    return this;
 	}
 
-	public Builder type(final PropertyPersistenceType val) {
+	public Builder type(final PropertyCategory val) {
 	    type = val;
 	    return this;
 	}
@@ -252,7 +252,7 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	return nullable;
     }
 
-    public static enum PropertyPersistenceType {
+    public static enum PropertyCategory {
 	PROP, //
 	COLLECTIONAL, //
 	ENTITY, //
@@ -306,10 +306,10 @@ public class PropertyPersistenceInfo implements Comparable<PropertyPersistenceIn
 	if (obj == null) {
 	    return false;
 	}
-	if (!(obj instanceof PropertyPersistenceInfo)) {
+	if (!(obj instanceof PropertyMetadata)) {
 	    return false;
 	}
-	final PropertyPersistenceInfo other = (PropertyPersistenceInfo) obj;
+	final PropertyMetadata other = (PropertyMetadata) obj;
 	if (aggregatedExpression != other.aggregatedExpression) {
 	    return false;
 	}
