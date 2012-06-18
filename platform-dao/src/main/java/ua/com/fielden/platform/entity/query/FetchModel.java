@@ -53,7 +53,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
     }
 
     private void includeAllFirstLevelPrimPropsAndKey() {
-	for (final PropertyMetadata ppi : domainMetadataAnalyser.getEntityPPIs(getEntityType())) {
+	for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType())) {
 	    if (!ppi.isCalculated()) {
 		with(ppi.getName(), (ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || ppi.getType().equals(PropertyCategory.ENTITY_KEY)) ? false : true);
 	    }
@@ -61,7 +61,7 @@ public class FetchModel<T extends AbstractEntity<?>> {
     }
 
     private void includeAllFirstLevelProps() {
-	for (final PropertyMetadata ppi : domainMetadataAnalyser.getEntityPPIs(getEntityType())) {
+	for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType())) {
 	    if (ppi.isUnionEntity()) {
 		with(ppi.getName(), new fetch(ppi.getJavaType(), FetchCategory.ALL));
 	    } else {

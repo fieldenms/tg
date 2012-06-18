@@ -114,7 +114,7 @@ public class EntQuery implements ISingleOperand {
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
             if (getSources().getMain() instanceof TypeBasedSource) {
-                for (final PropertyMetadata ppi : domainMetadataAnalyser.getEntityPPIs(type())) {
+                for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(type())) {
             	//ppi.isUnionEntity() || ppi.isUnionEntityDetails() || ppi.isUnionEntity() ||
             	final boolean skipProperty =  ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
           		if (!skipProperty) {

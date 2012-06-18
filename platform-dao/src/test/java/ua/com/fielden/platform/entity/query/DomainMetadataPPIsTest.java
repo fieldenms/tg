@@ -29,7 +29,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("make", MAKE, false, hibType("long"), "MAKE_", PropertyCategory.ENTITY));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
-	actual.addAll(DOMAIN_METADATA_ANALYSER.getEntityPPIs(MODEL));
+	actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(MODEL));
 	assertEquals("Incorrect result type", expected, actual);
     }
 
@@ -46,7 +46,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("fuelUsages", FUEL_USAGE, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
-	actual.addAll(DOMAIN_METADATA_ANALYSER.getEntityPPIs(VEHICLE));
+	actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(VEHICLE));
 	assertTrue(actual.containsAll(expected));
     }
 
@@ -61,7 +61,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("date", DATE, false, DOMAIN_METADATA_ANALYSER.getDomainMetadata().getHibTypesDefaults().get(Date.class), "DATE_", PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
-	actual.addAll(DOMAIN_METADATA_ANALYSER.getEntityPPIs(FUEL_USAGE));
+	actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(FUEL_USAGE));
 
 	assertTrue(actual.containsAll(expected));
     }
@@ -76,7 +76,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
-	actual.addAll(DOMAIN_METADATA_ANALYSER.getEntityPPIs(User.class));
+	actual.addAll(DOMAIN_METADATA_ANALYSER.getPropertyMetadatasForEntity(User.class));
 
 	assertTrue(actual.containsAll(expected));
     }

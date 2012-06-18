@@ -11,7 +11,6 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadataAnalyser {
     private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityMetadata>();
-
     private final DomainMetadata domainMetadata;
 
     public DomainMetadataAnalyser(final DomainMetadata domainMetadata) {
@@ -37,7 +36,6 @@ public class DomainMetadataAnalyser {
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		throw new RuntimeException(e.getMessage() + "entityType = " + entityType);
-		//return null;
 	    }
 	}
     }
@@ -90,7 +88,7 @@ public class DomainMetadataAnalyser {
 	}
     }
 
-    public Collection<PropertyMetadata> getEntityPPIs(final Class<? extends AbstractEntity<?>> entityType) {
+    public Collection<PropertyMetadata> getPropertyMetadatasForEntity(final Class<? extends AbstractEntity<?>> entityType) {
 	final EntityMetadata epm = getEntityMetadata(entityType);
 	if (epm == null) {
 	    throw new IllegalStateException("Missing ppi map for entity type: " + entityType);
