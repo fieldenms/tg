@@ -9,35 +9,35 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
-public class DomainPersistenceMetadataAnalyser {
-    private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> hibTypeInfosMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityMetadata>();
+public class DomainMetadataAnalyser {
+    private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityMetadata>();
 
-    private final DomainPersistenceMetadata domainPersistenceMetadata;
+    private final DomainMetadata domainMetadata;
 
-    public DomainPersistenceMetadataAnalyser(final DomainPersistenceMetadata domainPersistenceMetadata) {
+    public DomainMetadataAnalyser(final DomainMetadata domainMetadata) {
 	super();
-	this.domainPersistenceMetadata = domainPersistenceMetadata;
-	hibTypeInfosMap.putAll(domainPersistenceMetadata.getHibTypeInfosMap());
+	this.domainMetadata = domainMetadata;
+	entityMetadataMap.putAll(domainMetadata.getEntityMetadataMap());
     }
 
-    private EntityMetadata getEntityPersistenceMetadata(final Class<? extends AbstractEntity<?>> entityType) {
+    public EntityMetadata getEntityMetadata(final Class<? extends AbstractEntity<?>> entityType) {
 	if (entityType == null || !AbstractEntity.class.isAssignableFrom(entityType) || EntityAggregates.class.equals(entityType)) {
 	    return null;
 	}
 
-	final EntityMetadata existing = hibTypeInfosMap.get(entityType);
+	final EntityMetadata existing = entityMetadataMap.get(entityType);
 
 	if (existing != null) {
 	    return existing;
 	} else {
 	    try {
-		final EntityMetadata newOne = domainPersistenceMetadata.generateEntityPersistenceMetadata(entityType);
-		hibTypeInfosMap.put(entityType, newOne);
+		final EntityMetadata newOne = domainMetadata.generateEntityMetadata(entityType);
+		entityMetadataMap.put(entityType, newOne);
 		return newOne;
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		throw new RuntimeException(e.getMessage() + "entityType = " + entityType);
-		    //return null;
+		//return null;
 	    }
 	}
     }
@@ -49,7 +49,7 @@ public class DomainPersistenceMetadataAnalyser {
      * @return
      */
     public PropertyMetadata getPropPersistenceInfoExplicitly(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
-	final EntityMetadata map = getEntityPersistenceMetadata(entityType);
+	final EntityMetadata map = getEntityMetadata(entityType);
 	return map != null ? map.getProps().get(propName) : null;
     }
 
@@ -91,22 +91,14 @@ public class DomainPersistenceMetadataAnalyser {
     }
 
     public Collection<PropertyMetadata> getEntityPPIs(final Class<? extends AbstractEntity<?>> entityType) {
-	final EntityMetadata epm = getEntityPersistenceMetadata(entityType);
+	final EntityMetadata epm = getEntityMetadata(entityType);
 	if (epm == null) {
 	    throw new IllegalStateException("Missing ppi map for entity type: " + entityType);
 	}
 	return epm.getProps().values();
     }
 
-    public EntityMetadata getEntityPersistenceMetadate(final Class<? extends AbstractEntity<?>> entityType) {
-	final EntityMetadata epm = getEntityPersistenceMetadata(entityType);
-	if (epm == null) {
-	    throw new IllegalStateException("Missing entity persistence metadata for entity type: " + entityType);
-	}
-	return epm;
-    }
-
-    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
-        return domainPersistenceMetadata;
+    public DomainMetadata getDomainMetadata() {
+        return domainMetadata;
     }
 }

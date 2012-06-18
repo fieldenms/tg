@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
+import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -19,14 +19,14 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
     private final DbVersion dbVersion;
-    private final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser;
+    private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final IFilter filter;
     private final String username;
 
 
-    public EntQueryGenerator(final DbVersion dbVersion, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser, final IFilter filter, final String username) {
+    public EntQueryGenerator(final DbVersion dbVersion, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
 	this.dbVersion = dbVersion;
-	this.domainPersistenceMetadataAnalyser = domainPersistenceMetadataAnalyser;
+	this.domainMetadataAnalyser = domainMetadataAnalyser;
 	this.filter = filter;
 	this.username = username;
     }
@@ -119,14 +119,14 @@ public class EntQueryGenerator {
 	}
 
 	return new EntQuery(from.getModel(), where != null ? where.getModel() : null, select.getModel(), groupBy.getModel(), orderBy.getModel(), qryModel.getResultType(), category, //
-		domainPersistenceMetadataAnalyser, filter, username, this, fetchModel == null ? null : new FetchModel(fetchModel, domainPersistenceMetadataAnalyser));
+		domainMetadataAnalyser, filter, username, this, fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser));
     }
 
     public DbVersion getDbVersion() {
         return dbVersion;
     }
 
-    public DomainPersistenceMetadataAnalyser getDomainPersistenceMetadataAnalyser() {
-        return domainPersistenceMetadataAnalyser;
+    public DomainMetadataAnalyser getDomainMetadataAnalyser() {
+        return domainMetadataAnalyser;
     }
 }

@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.test;
 
-import static java.lang.String.format;
-
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -27,6 +25,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IDefaultControllerProvider;
+import static java.lang.String.format;
 
 
 /**
@@ -47,7 +46,7 @@ public abstract class AbstractDomainDrivenTestCase {
     private final EntityFactory factory = config.getEntityFactory();
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final Collection<EntityMetadata> entityPersistenceMetadatas = config.getDomainPersistenceMetadata().getHibTypeInfosMap().values();
+    private final Collection<EntityMetadata> entityMetadatas = config.getDomainMetadata().getEntityMetadatas();
 
     private static boolean domainPopulated = false;
 
@@ -128,7 +127,7 @@ public abstract class AbstractDomainDrivenTestCase {
 	    st.close();
 
 	    // create truncate statements
-	    for (final EntityMetadata entry : entityPersistenceMetadatas) {
+	    for (final EntityMetadata entry : entityMetadatas) {
 		if (entry.isPersisted()) {
 		    truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
 		}

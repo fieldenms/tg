@@ -97,7 +97,7 @@ public abstract class DomainDrivenDataPopulation {
 	    st.close();
 
 	    // create truncate statements
-	    for (final EntityMetadata entry : config.getDomainPersistenceMetadata().getHibTypeInfosMap().values()) {
+	    for (final EntityMetadata entry : config.getDomainMetadata().getEntityMetadatas()) {
 		if (entry.isPersisted()) {
 		    truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
 		}

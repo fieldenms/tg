@@ -4,7 +4,7 @@ import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.attachment.IAttachmentController;
 import ua.com.fielden.platform.dao.AttachmentDao;
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
@@ -35,9 +35,9 @@ public class WebHibernateModule extends CommonFactoryModule {
 
     public WebHibernateModule(//
 	    final SessionFactory sessionFactory,//
-	    final DomainPersistenceMetadata domainPersistenceMetadata,//
+	    final DomainMetadata domainMetadata,//
 	    final ISerialisationClassProvider serialisationClassProvider) {
-	super(sessionFactory, domainPersistenceMetadata);
+	super(sessionFactory, domainMetadata);
 	this.serialisationClassProvider = serialisationClassProvider;
     }
 

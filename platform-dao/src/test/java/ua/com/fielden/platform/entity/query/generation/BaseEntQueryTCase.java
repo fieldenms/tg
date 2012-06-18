@@ -14,8 +14,8 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
-import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
+import ua.com.fielden.platform.dao.DomainMetadata;
+import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
@@ -96,13 +96,13 @@ public class BaseEntQueryTCase {
 	return TypeFactory.basic(name);
     }
 
-    protected static final DomainPersistenceMetadata DOMAIN_PERSISTENCE_METADATA = new DomainPersistenceMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes);
+    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes);
 
-    protected static final DomainPersistenceMetadataAnalyser DOMAIN_PERSISTENCE_METADATA_ANALYSER = new DomainPersistenceMetadataAnalyser(DOMAIN_PERSISTENCE_METADATA);
+    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
-    private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2, DOMAIN_PERSISTENCE_METADATA_ANALYSER, null, null);
+    private static final EntQueryGenerator qb = new EntQueryGenerator(DbVersion.H2, DOMAIN_METADATA_ANALYSER, null, null);
 
-    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DbVersion.H2, DOMAIN_PERSISTENCE_METADATA_ANALYSER, new SimpleUserFilter(), null);
+    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DbVersion.H2, DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
     protected static EntQuery entSourceQry(final QueryModel qryModel) {
 	return qb.generateEntQueryAsSourceQuery(qryModel);

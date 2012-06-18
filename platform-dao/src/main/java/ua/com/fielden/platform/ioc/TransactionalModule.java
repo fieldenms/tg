@@ -7,7 +7,7 @@ import java.util.Properties;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.annotations.Transactional;
@@ -32,12 +32,12 @@ public abstract class TransactionalModule extends EntityModule {
     protected final SessionFactory sessionFactory;
     private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
-    private final DomainPersistenceMetadata domainPersistenceMetadata;
+    private final DomainMetadata domainMetadata;
     protected final ProxyInterceptor interceptor;
     private final HibernateUtil hibernateUtil;
 
     /**
-     * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link DomainPersistenceMetadata}. All descending classes needs to provide those two
+     * Creates transactional module, which holds references to instances of {@link SessionFactory} and {@link DomainMetadata}. All descending classes needs to provide those two
      * parameters.
      *
      * @param sessionFactory
@@ -51,23 +51,23 @@ public abstract class TransactionalModule extends EntityModule {
 	hibernateUtil = new HibernateUtil(interceptor, hibernateConfig);
 
 	this.sessionFactory = hibernateUtil.getSessionFactory();
-	this.domainPersistenceMetadata = hcf.getDomainPersistenceMetadata();
+	this.domainMetadata = hcf.getDomainMetadata();
     }
 
-    public TransactionalModule(final SessionFactory sessionFactory, final DomainPersistenceMetadata domainPersistenceMetadata) {
+    public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
 	interceptor = null;
 	hibernateUtil = null;
 
 	this.sessionFactory = sessionFactory;
-	this.domainPersistenceMetadata = domainPersistenceMetadata;
+	this.domainMetadata = domainMetadata;
     }
 
     @Override
     protected void configure() {
 	super.configure();
 	// entity aggregates transformer
-	if (domainPersistenceMetadata != null) {
-	    bind(DomainPersistenceMetadata.class).toInstance(domainPersistenceMetadata);
+	if (domainMetadata != null) {
+	    bind(DomainMetadata.class).toInstance(domainMetadata);
 	}
 	// hibernate util
 	if (hibernateUtil != null) {
@@ -104,7 +104,7 @@ public abstract class TransactionalModule extends EntityModule {
 	return domainMetaPropertyConfig;
     }
 
-    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
-	return domainPersistenceMetadata;
+    public DomainMetadata getDomainMetadata() {
+	return domainMetadata;
     }
 }

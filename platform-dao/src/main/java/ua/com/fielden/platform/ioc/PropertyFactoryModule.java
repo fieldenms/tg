@@ -6,7 +6,7 @@ import java.util.Properties;
 
 import org.hibernate.SessionFactory;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.EntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
@@ -40,8 +40,8 @@ public class PropertyFactoryModule extends TransactionalModule {
 	interceptor.setFactory(entityFactory);
     }
 
-    public PropertyFactoryModule(final SessionFactory sessionFactory, final DomainPersistenceMetadata domainPersistenceMetadata) {
-	super(sessionFactory, domainPersistenceMetadata);
+    public PropertyFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
+	super(sessionFactory, domainMetadata);
 	daoFactory = new DaoFactory() {};
 	entityFactory = new EntityFactory() {};
 	defaultControllerProvider = new DefaultConrollerProviderImpl();

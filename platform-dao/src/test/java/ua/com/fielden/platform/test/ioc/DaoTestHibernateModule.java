@@ -2,7 +2,7 @@ package ua.com.fielden.platform.test.ioc;
 
 import org.hibernate.SessionFactory;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -74,8 +74,8 @@ import com.google.inject.TypeLiteral;
  */
 public class DaoTestHibernateModule extends CommonFactoryModule {
 
-    public DaoTestHibernateModule(final SessionFactory sessionFactory, final DomainPersistenceMetadata domainPersistenceMetadata) {
-	super(sessionFactory, domainPersistenceMetadata);
+    public DaoTestHibernateModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
+	super(sessionFactory, domainMetadata);
     }
 
     @Override

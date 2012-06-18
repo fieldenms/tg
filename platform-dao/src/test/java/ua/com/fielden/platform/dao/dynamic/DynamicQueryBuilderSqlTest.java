@@ -1,10 +1,5 @@
 package ua.com.fielden.platform.dao.dynamic;
 
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.createQuery;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -19,7 +14,7 @@ import org.hibernate.type.YesNoType;
 import org.junit.Before;
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -46,6 +41,11 @@ import ua.com.fielden.snappy.DateUtilities;
 import ua.com.fielden.snappy.MnemonicEnum;
 
 import com.google.inject.Injector;
+
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.createQuery;
+import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
@@ -117,7 +117,7 @@ public class DynamicQueryBuilderSqlTest {
 	domainTypes.add(MasterEntity.class);
 	domainTypes.add(SlaveEntity.class);
 	domainTypes.add(EvenSlaverEntity.class);
-	hibConf.addXML(new HibernateMappingsGenerator((new DomainPersistenceMetadata(hibTypeMap, null, domainTypes)).getHibTypeInfosMap()).generateMappings());
+	hibConf.addXML(new HibernateMappingsGenerator().generateMappings((new DomainMetadata(hibTypeMap, null, domainTypes)).getEntityMetadatas()));
 	final List<String> propertyNames = Arrays.asList(new String[] { //
 	"integerProp", //
 		"doubleProp", //

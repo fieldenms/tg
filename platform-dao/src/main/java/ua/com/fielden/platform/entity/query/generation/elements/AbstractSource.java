@@ -9,7 +9,7 @@ import java.util.TreeMap;
 
 import org.hibernate.Hibernate;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
+import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
@@ -42,7 +42,7 @@ public abstract class AbstractSource implements ISource {
     /**
      * Reference to mappings generator instance - used for acquiring properties persistence infos.
      */
-    private final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser;
+    private final DomainMetadataAnalyser domainMetadataAnalyser;
 
     private boolean nullable;
 
@@ -55,9 +55,9 @@ public abstract class AbstractSource implements ISource {
         this.sqlAlias = sqlAlias;
     }
 
-    public AbstractSource(final String alias, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser) {
+    public AbstractSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.alias = alias;
-        this.domainPersistenceMetadataAnalyser = domainPersistenceMetadataAnalyser;
+        this.domainMetadataAnalyser = domainMetadataAnalyser;
     }
 
     @Override
@@ -317,7 +317,7 @@ public abstract class AbstractSource implements ISource {
         final SortedMap<PurePropInfo, List<EntProp>> groups = determineGroups(getReferencingProps());
 
         for (final Map.Entry<PurePropInfo, List<EntProp>> groupEntry : groups.entrySet()) {
-            final TypeBasedSource qrySource = new TypeBasedSource(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, domainPersistenceMetadataAnalyser);
+            final TypeBasedSource qrySource = new TypeBasedSource(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, domainMetadataAnalyser);
             //System.out.println("                           adding new source: " + qrySource.getAlias() + " to existing source: " + getAlias());
             qrySource.populateSourceItems(groupEntry.getKey().nullable);
             qrySource.assignNullability(groupEntry.getKey().nullable);
@@ -327,8 +327,8 @@ public abstract class AbstractSource implements ISource {
         return result;
     }
 
-    public DomainPersistenceMetadataAnalyser getDomainPersistenceMetadataAnalyser() {
-        return domainPersistenceMetadataAnalyser;
+    public DomainMetadataAnalyser getDomainMetadataAnalyser() {
+        return domainMetadataAnalyser;
     }
 
     /**

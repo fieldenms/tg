@@ -2,7 +2,7 @@ package ua.com.fielden.platform.test;
 
 import java.util.Properties;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
@@ -20,5 +20,5 @@ public interface IDomainDrivenTestCaseConfiguration {
     <T> T getInstance(Class<T> type);
     DomainValidationConfig getDomainValidationConfig();
     DomainMetaPropertyConfig getDomainMetaPropertyConfig();
-    DomainPersistenceMetadata getDomainPersistenceMetadata();
+    DomainMetadata getDomainMetadata();
 }

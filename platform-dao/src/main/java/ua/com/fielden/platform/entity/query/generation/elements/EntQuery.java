@@ -11,7 +11,7 @@ import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadataAnalyser;
+import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.FetchModel;
@@ -33,7 +33,7 @@ public class EntQuery implements ISingleOperand {
     private final OrderBys orderings;
     private final Class resultType;
     private final QueryCategory category;
-    private final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser;
+    private final DomainMetadataAnalyser domainMetadataAnalyser;
 
     private EntQuery master;
 
@@ -114,7 +114,7 @@ public class EntQuery implements ISingleOperand {
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
             if (getSources().getMain() instanceof TypeBasedSource) {
-                for (final PropertyMetadata ppi : domainPersistenceMetadataAnalyser.getEntityPPIs(type())) {
+                for (final PropertyMetadata ppi : domainMetadataAnalyser.getEntityPPIs(type())) {
             	//ppi.isUnionEntity() || ppi.isUnionEntityDetails() || ppi.isUnionEntity() ||
             	final boolean skipProperty =  ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
           		if (!skipProperty) {
@@ -158,7 +158,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Object determineYieldHibType(final Yield yield) {
-        final PropertyMetadata finalPropInfo = domainPersistenceMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
+        final PropertyMetadata finalPropInfo = domainMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
         if (finalPropInfo != null) {
             return finalPropInfo.getHibType();
         } else {
@@ -167,7 +167,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private YieldDetailsType determineYieldDetailsType(final Yield yield) {
-        final PropertyMetadata finalPropInfo = domainPersistenceMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
+        final PropertyMetadata finalPropInfo = domainMetadataAnalyser.getInfoForDotNotatedProp(type(), yield.getAlias());
         if (finalPropInfo != null) {
             return finalPropInfo.getYieldDetailType();
         } else {
@@ -218,17 +218,17 @@ public class EntQuery implements ISingleOperand {
     private Sources enhanceSourcesWithUserDataFiltering(final IFilter filter, final String username, final Sources sources, final EntQueryGenerator generator) {
         final ISource newMain =
                 (sources.getMain() instanceof TypeBasedSource && filter != null && filter.enhance(sources.getMain().sourceType(), username) != null) ?
-            new QueryBasedSource(sources.getMain().getAlias(), domainPersistenceMetadataAnalyser, generator.generateEntQueryAsSourceQuery(filter.enhance(sources.getMain().sourceType(), username))) : null;
+            new QueryBasedSource(sources.getMain().getAlias(), domainMetadataAnalyser, generator.generateEntQueryAsSourceQuery(filter.enhance(sources.getMain().sourceType(), username))) : null;
 
         return newMain != null ? new Sources(newMain, sources.getCompounds()) : sources;
     }
 
     public EntQuery(final Sources sources, final Conditions conditions, final Yields yields, final GroupBys groups, final OrderBys orderings, //
-            final Class resultType, final QueryCategory category, final DomainPersistenceMetadataAnalyser domainPersistenceMetadataAnalyser, //
+            final Class resultType, final QueryCategory category, final DomainMetadataAnalyser domainMetadataAnalyser, //
             final IFilter filter, final String username, final EntQueryGenerator generator, final FetchModel fetchModel) {
         super();
         this.category = category;
-        this.domainPersistenceMetadataAnalyser = domainPersistenceMetadataAnalyser;
+        this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.sources = enhanceSourcesWithUserDataFiltering(filter, username, sources, generator);
         this.conditions = conditions;
         this.yields = yields;

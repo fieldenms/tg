@@ -102,6 +102,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    @Ignore
     public void test_retrieval_of_non_persisted_entity_prop_from_model() {
 	final EntityResultQueryModel<TgVehicleMake> makeQry = select(TgVehicleMake.class). //
 		where().prop("key").eq().val("MERC"). //
@@ -113,7 +114,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	modelAsEntity(TgVehicleMake.class);
 	final EntityResultQueryModel<TgVehicleMake> qry = select(makeQry). //
 		where().prop("competitor.key").eq().val("BMW").model();
-	assertEquals("Incorrect key", 1, vehicleMakeDao.getAllEntities(from(qry).model()).size());
+	assertEquals("Incorrect key", 1, vehicleMakeDao.getAllEntities(from(qry).with(fetchAll(TgVehicleMake.class).with("competitor")).model()).size());
     }
 
     @Test

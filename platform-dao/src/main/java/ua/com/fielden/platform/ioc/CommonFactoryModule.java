@@ -6,7 +6,7 @@ import java.util.Properties;
 
 import org.hibernate.SessionFactory;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.factory.DaoFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -23,8 +23,8 @@ public class CommonFactoryModule extends PropertyFactoryModule {
 	super(props, defaultHibernateTypes, applicationEntityTypes);
     }
 
-    public CommonFactoryModule(final SessionFactory sessionFactory, final DomainPersistenceMetadata domainPersistenceMetadata) {
-	super(sessionFactory, domainPersistenceMetadata);
+    public CommonFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
+	super(sessionFactory, domainMetadata);
     }
 
     protected EntityFactory getEntityFactory() {

@@ -3,6 +3,8 @@ package ua.com.fielden.platform.dao;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -65,7 +67,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPropertyRequired;
  * @author TG Team
  *
  */
-public class DomainPersistenceMetadata {
+public class DomainMetadata {
     public final static List<String> specialProps = Arrays.asList(new String[] { AbstractEntity.ID, AbstractEntity.KEY, AbstractEntity.VERSION });
     private final static PropertyColumn id = new PropertyColumn("_ID");
     private final static PropertyColumn version = new PropertyColumn("_VERSION");
@@ -73,14 +75,14 @@ public class DomainPersistenceMetadata {
     private final static PropertyMetadata idProperty = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(PropertyCategory.ID).build();
     private final static PropertyMetadata idPropertyInOne2One = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(TypeFactory.basic("long")).type(PropertyCategory.ONE2ONE_ID).build();
     private final static PropertyMetadata versionProperty = new PropertyMetadata.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(TypeFactory.basic("long")).type(PropertyCategory.VERSION).build();
-    private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> hibTypeInfosMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityMetadata>();
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
     private final Map<Class, Object> hibTypesDefaults = new HashMap<Class, Object>();
+    private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityMetadata>();
     private Injector hibTypesInjector;
 
-    public DomainPersistenceMetadata(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity<?>>> entityTypes) {
+    public DomainMetadata(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity<?>>> entityTypes) {
 	if (hibTypesDefaults != null) {
 	    for (final Entry<Class, Class> entry : hibTypesDefaults.entrySet()) {
 		try {
@@ -93,7 +95,7 @@ public class DomainPersistenceMetadata {
 	this.hibTypesInjector = hibTypesInjector;
 	for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
 	    try {
-		hibTypeInfosMap.put(entityType, generateEntityPersistenceMetadata(entityType));
+		entityMetadataMap.put(entityType, generateEntityMetadata(entityType));
 	    } catch (final Exception e) {
 		e.printStackTrace();
 		throw new IllegalStateException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
@@ -101,7 +103,7 @@ public class DomainPersistenceMetadata {
 	}
     }
 
-    public <ET extends AbstractEntity<?>> EntityMetadata generateEntityPersistenceMetadata(final Class<ET> entityType) throws Exception {
+    public <ET extends AbstractEntity<?>> EntityMetadata generateEntityMetadata(final Class<ET> entityType) throws Exception {
 
 	final String tableClase = getTableClause(entityType);
 	if (tableClase != null) {
@@ -483,7 +485,11 @@ public class DomainPersistenceMetadata {
         return hibTypesDefaults;
     }
 
-    public Map<Class<? extends AbstractEntity<?>>, EntityMetadata> getHibTypeInfosMap() {
-        return hibTypeInfosMap;
+    public Map<Class<? extends AbstractEntity<?>>, EntityMetadata> getEntityMetadataMap() {
+        return Collections.unmodifiableMap(entityMetadataMap);
+    }
+
+    public Collection<EntityMetadata> getEntityMetadatas() {
+        return Collections.unmodifiableCollection(entityMetadataMap.values());
     }
 }

@@ -18,7 +18,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
+public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
     @Test
     public void test1() {
 	final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
@@ -29,7 +29,7 @@ public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("make", MAKE, false, hibType("long"), "MAKE_", PropertyCategory.ENTITY));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
-	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(MODEL));
+	actual.addAll(DOMAIN_METADATA_ANALYSER.getEntityPPIs(MODEL));
 	assertEquals("Incorrect result type", expected, actual);
     }
 
@@ -46,7 +46,7 @@ public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("fuelUsages", FUEL_USAGE, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
-	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(VEHICLE));
+	actual.addAll(DOMAIN_METADATA_ANALYSER.getEntityPPIs(VEHICLE));
 	assertTrue(actual.containsAll(expected));
     }
 
@@ -58,10 +58,10 @@ public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
 	//expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyPersistenceType.PRIMITIVE_KEY));
 	//expected.add(ppi("desc", STRING, false, hibType("string"), "DESC_", PropertyPersistenceType.PROP));
 	expected.add(ppi("vehicle", VEHICLE, false, hibType("long"), "VEHICLE_", PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY));
-	expected.add(ppi("date", DATE, false, DOMAIN_PERSISTENCE_METADATA_ANALYSER.getDomainPersistenceMetadata().getHibTypesDefaults().get(Date.class), "DATE_", PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY));
+	expected.add(ppi("date", DATE, false, DOMAIN_METADATA_ANALYSER.getDomainMetadata().getHibTypesDefaults().get(Date.class), "DATE_", PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
-	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(FUEL_USAGE));
+	actual.addAll(DOMAIN_METADATA_ANALYSER.getEntityPPIs(FUEL_USAGE));
 
 	assertTrue(actual.containsAll(expected));
     }
@@ -76,27 +76,27 @@ public class DomainPersistenceMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("roles", UserAndRoleAssociation.class, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
-	actual.addAll(DOMAIN_PERSISTENCE_METADATA_ANALYSER.getEntityPPIs(User.class));
+	actual.addAll(DOMAIN_METADATA_ANALYSER.getEntityPPIs(User.class));
 
 	assertTrue(actual.containsAll(expected));
     }
 
     @Test
     public void test3() {
-	assertTrue(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "station"));
-	assertTrue(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "station.key"));
+	assertTrue(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "station"));
+	assertTrue(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "station.key"));
 
-	assertFalse(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "model"));
-	assertFalse(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "model.id"));
-	assertFalse(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "model.key"));
-	assertTrue(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "model.desc"));
-	assertFalse(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "model.make"));
-	assertFalse(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "model.make.id"));
-	assertFalse(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "model.make.key"));
-	assertTrue(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "model.make.desc"));
-	assertTrue(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "price.amount"));
+	assertFalse(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "model"));
+	assertFalse(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "model.id"));
+	assertFalse(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "model.key"));
+	assertTrue(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "model.desc"));
+	assertFalse(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "model.make"));
+	assertFalse(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "model.make.id"));
+	assertFalse(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "model.make.key"));
+	assertTrue(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "model.make.desc"));
+	assertTrue(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "price.amount"));
 	try {
-	    assertTrue(DOMAIN_PERSISTENCE_METADATA_ANALYSER.isNullable(VEHICLE, "price.currency"));
+	    assertTrue(DOMAIN_METADATA_ANALYSER.isNullable(VEHICLE, "price.currency"));
 	    fail("Should have failed!");
 	} catch (final Exception e) {
 	}

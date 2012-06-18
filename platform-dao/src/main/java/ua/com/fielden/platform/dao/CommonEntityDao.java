@@ -72,7 +72,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private ThreadLocal<Session> threadLocalSession = new ThreadLocal<Session>();
 
-    private DomainPersistenceMetadata domainPersistenceMetadata;
+    private DomainMetadata domainMetadata;
 
     private EntityFactory entityFactory;
 
@@ -111,8 +111,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param mappingExtractor
      */
     @Inject
-    protected void setDomainPersistenceMetadata(final DomainPersistenceMetadata domainPersistenceMetadata) {
-	this.domainPersistenceMetadata = domainPersistenceMetadata;
+    protected void setDomainMetadata(final DomainMetadata domainMetadata) {
+	this.domainMetadata = domainMetadata;
     }
 
     @Override
@@ -182,7 +182,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	    } else if (!entity.getDirtyProperties().isEmpty()) {
 		// let's also make sure that duplicate entities are not allowed
 		final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
-		final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, null, null).getEntities(from(model).model());
+		final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), domainMetadata, null, null, null).getEntities(from(model).model());
 		final int count = ids.size();
 		if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
 		    throw new Result(entity, new IllegalArgumentException("Such " + TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey() + " entity already exists."));
@@ -312,7 +312,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-	return new EntityFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, filter, getUsername()).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+	return new EntityFetcher(getSession(), getEntityFactory(), domainMetadata, null, filter, getUsername()).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
     }
 
     @Override
@@ -389,7 +389,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	final AggregatedResultQueryModel countQuery = model instanceof EntityResultQueryModel ?  select((EntityResultQueryModel<T>)model).yield().countAll().as("count").modelAsAggregate() :
 	    					      select((AggregatedResultQueryModel)model).yield().countAll().as("count").modelAsAggregate();
 	final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).lightweight(true).model();
-	final List<EntityAggregates> counts = new EntityFetcher(getSession(), getEntityFactory(), domainPersistenceMetadata, null, filter, getUsername()). //
+	final List<EntityAggregates> counts = new EntityFetcher(getSession(), getEntityFactory(), domainMetadata, null, filter, getUsername()). //
 		getEntities(countModel);
 	final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 
@@ -525,8 +525,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 	return entityFactory;
     }
 
-    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
-        return domainPersistenceMetadata;
+    public DomainMetadata getDomainMetadata() {
+        return domainMetadata;
     }
 
     @Override

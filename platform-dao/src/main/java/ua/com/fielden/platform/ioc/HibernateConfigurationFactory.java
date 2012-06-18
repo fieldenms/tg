@@ -6,7 +6,7 @@ import java.util.Properties;
 
 import org.hibernate.cfg.Configuration;
 
-import ua.com.fielden.platform.dao.DomainPersistenceMetadata;
+import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
@@ -38,15 +38,13 @@ import com.google.inject.Guice;
 public class HibernateConfigurationFactory {
 
     private final Properties props;
-    private final DomainPersistenceMetadata domainPersistenceMetadata;
+    private final DomainMetadata domainMetadata;
     private final Configuration cfg = new Configuration();
 
     public HibernateConfigurationFactory(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) throws Exception {
 	this.props = props;
-	domainPersistenceMetadata = new DomainPersistenceMetadata(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()), applicationEntityTypes);
-	if (domainPersistenceMetadata != null) {
-	    cfg.addXML(new HibernateMappingsGenerator(domainPersistenceMetadata.getHibTypeInfosMap()).generateMappings());
-	}
+	domainMetadata = new DomainMetadata(defaultHibernateTypes, Guice.createInjector(new HibernateUserTypesModule()), applicationEntityTypes);
+	cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata.getEntityMetadatas()));
     }
 
     public Configuration build() {
@@ -73,8 +71,8 @@ public class HibernateConfigurationFactory {
 	return cfg;
     }
 
-    public DomainPersistenceMetadata getDomainPersistenceMetadata() {
-	return domainPersistenceMetadata;
+    public DomainMetadata getDomainMetadata() {
+	return domainMetadata;
     }
 
     private Configuration setSafely(final String propertyName, final String defaultValue) {
