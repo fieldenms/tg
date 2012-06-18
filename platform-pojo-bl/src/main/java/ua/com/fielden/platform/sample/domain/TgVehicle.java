@@ -82,7 +82,7 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty @MapTo(length = 10, precision = 3, scale = 10)  @Title("Last meter reading")
     private BigDecimal lastMeterReading;
 
-    @IsProperty @Calculated  @Title("Last fuel usage")
+    @IsProperty(linkProperty = "vehicle") @Calculated  @Title("Last fuel usage")
     private TgFuelUsage lastFuelUsage;
 
     @IsProperty @Calculated @Title("Const value prop")

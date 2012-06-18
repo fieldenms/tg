@@ -58,4 +58,11 @@ public class EntityMetadata {
     public EntityResultQueryModel<? extends AbstractEntity<?>> getModel() {
         return model;
     }
+
+    public static enum EntityCategory {
+	PERSISTED, //
+	CALCULATED, //
+	UNION, //
+	DEFINITION;
+    }
 }

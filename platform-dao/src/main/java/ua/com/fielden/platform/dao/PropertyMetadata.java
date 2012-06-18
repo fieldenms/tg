@@ -29,7 +29,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final List<PropertyColumn> columns;
     private final ExpressionModel expressionModel;
     private final boolean aggregatedExpression; // contains aggregation function on the root level (i.e. Totals in entity centre tree)
-    private final boolean virtual; // this property is limited to eQuery only - it has no real property on entity (the case with virtual generation of composite entity key by concatenation of all members.
 
     private final static Set<PropertyCategory> typesThatAffectsMapping = new HashSet<PropertyCategory>();
     static {
@@ -40,6 +39,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	typesThatAffectsMapping.add(PropertyCategory.ONE2ONE_ID);
 	typesThatAffectsMapping.add(PropertyCategory.PRIMITIVE_KEY);
 	typesThatAffectsMapping.add(PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
+	typesThatAffectsMapping.add(PropertyCategory.COMPONENT_HEADER);
 	typesThatAffectsMapping.add(PropertyCategory.PROP);
 	typesThatAffectsMapping.add(PropertyCategory.VERSION);
 	typesThatAffectsMapping.add(PropertyCategory.UNION_ENTITY);
@@ -107,6 +107,11 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	return type.equals(PropertyCategory.UNION_DETAILS);
     }
 
+    public boolean isVirtual() {
+	return type.equals(PropertyCategory.VIRTUAL_COMPOSITE_KEY);
+    }
+
+
     public String getTypeString() {
 	if (hibType != null) {
 	    return hibType.getClass().getName();
@@ -124,14 +129,14 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public Set<PropertyMetadata> getCompositeTypeSubprops() {
 	final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
-	if (hibType instanceof ICompositeUserTypeInstantiate) {
+	if (PropertyCategory.COMPONENT_HEADER.equals(type)) {
 	    final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
 	    final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
 	    int index = 0;
 	    for (final String subpropName : subprops) {
 		final PropertyColumn column = columns.get(index);
 		final Object hibType = subpropsTypes.get(index);
-		result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(PropertyCategory.COMPOSITE_DETAILS).hibType(hibType).build());
+		result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(PropertyCategory.COMPONENT_DETAILS).hibType(hibType).build());
 		index = index + 1;
 	    }
 	}
@@ -163,7 +168,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	nullable = builder.nullable;
 	expressionModel = builder.expressionModel;
 	aggregatedExpression = builder.aggregatedExpression;
-	virtual = builder.virtual;
     }
 
     public String getName() {
@@ -197,10 +201,9 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
 	private Object hibType;
 	private List<PropertyColumn> columns = new ArrayList<PropertyColumn>();
-	private PropertyCategory type = PropertyCategory.PROP;
+	private PropertyCategory type;// = PropertyCategory.PROP;
 	private ExpressionModel expressionModel;
 	private boolean aggregatedExpression = false;
-	private boolean virtual = false;
 
 	public PropertyMetadata build() {
 	    return new PropertyMetadata(this);
@@ -237,11 +240,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	    return this;
 	}
 
-	public Builder virtual(final boolean val) {
-	    virtual = val;
-	    return this;
-	}
-
 	public Builder columns(final List<PropertyColumn> columns) {
 	    this.columns.addAll(columns);
 	    return this;
@@ -263,11 +261,13 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	ENTITY_KEY, //
 	ENTITY_MEMBER_OF_COMPOSITE_KEY, //
 	PRIMITIVE_MEMBER_OF_COMPOSITE_KEY, //
-	COMPOSITE_DETAILS, //
+	COMPONENT_HEADER, //
+	COMPONENT_DETAILS, //
 	CALCULATED, //
 	SYNTHETIC, //
 	UNION_ENTITY, //
-	UNION_DETAILS;
+	UNION_DETAILS, //
+	VIRTUAL_COMPOSITE_KEY; // the case of virtual generation of composite entity key by concatenation of all members during eQuery processing.
     }
 
     public ExpressionModel getExpressionModel() {
@@ -278,9 +278,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return aggregatedExpression;
     }
 
-    public boolean isVirtual() {
-        return virtual;
-    }
 
     @Override
     public int hashCode() {
@@ -294,7 +291,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	result = prime * result + ((name == null) ? 0 : name.hashCode());
 	result = prime * result + (nullable ? 1231 : 1237);
 	result = prime * result + ((type == null) ? 0 : type.hashCode());
-	result = prime * result + (virtual ? 1231 : 1237);
 	return result;
     }
 
@@ -352,9 +348,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	    return false;
 	}
 	if (type != other.type) {
-	    return false;
-	}
-	if (virtual != other.virtual) {
 	    return false;
 	}
 	return true;

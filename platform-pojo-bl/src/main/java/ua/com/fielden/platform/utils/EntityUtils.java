@@ -19,7 +19,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -768,7 +767,7 @@ public class EntityUtils {
 	final List<Field> result = new ArrayList<Field>();
 
 	for (final Field propField : Finder.findRealProperties(entityType)) {
-	    if (Finder.hasLinkProperty(entityType, propField.getName())) {
+	    if (Collection.class.isAssignableFrom(propField.getType()) && Finder.hasLinkProperty(entityType, propField.getName())) {
 		result.add(propField);
 	    }
 	}
@@ -794,16 +793,6 @@ public class EntityUtils {
 	    if (!(propField.getName().equals("desc") && noDesc)) {
 		result.add(propField);
 	    }
-	}
-
-	return result;
-    }
-
-    public static List<Field> getCompositeKeyProperties(final Class entityType) {
-	final List<Field> result = new ArrayList<Field>();
-
-	for (final Field propField : Finder.findRealProperties(entityType, CompositeKeyMember.class)) {
-	    result.add(propField);
 	}
 
 	return result;

@@ -41,8 +41,8 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
 	expected.add(ppi("key", STRING, false, hibType("string"), "KEY_", PropertyCategory.PRIMITIVE_KEY));
 	expected.add(ppi("desc", STRING, true, hibType("string"), "DESC_", PropertyCategory.PROP));
 	expected.add(ppi("model", MODEL, false, hibType("long"), "MODEL_", PropertyCategory.ENTITY));
-	expected.add(ppi("price.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PRICE_", PropertyCategory.COMPOSITE_DETAILS));
-	expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PURCHASEPRICE_", PropertyCategory.COMPOSITE_DETAILS));
+	expected.add(ppi("price.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PRICE_", PropertyCategory.COMPONENT_DETAILS));
+	expected.add(ppi("purchasePrice.amount", BIG_DECIMAL, true, hibType("big_decimal"), "PURCHASEPRICE_", PropertyCategory.COMPONENT_DETAILS));
 	expected.add(ppi("fuelUsages", FUEL_USAGE, false, null, Collections.<PropertyColumn> emptyList(), PropertyCategory.COLLECTIONAL));
 
 	final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();
