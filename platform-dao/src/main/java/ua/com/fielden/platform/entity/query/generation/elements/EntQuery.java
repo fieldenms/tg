@@ -98,43 +98,49 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean allPropsYieldEnhancementRequired() {
-        return yields.getYields().size() == 0 && EntityUtils.isPersistedEntityType(resultType) && !isSubQuery();
+        return yields.getYields().size() == 0 && !isSubQuery() && //
+        ((mainSourceIsTypeBased() && EntityUtils.isPersistedEntityType(resultType)) || mainSourceIsQueryBased());
     }
 
     private boolean idPropYieldEnhancementRequired() {
         return yields.getYields().size() == 0 && EntityUtils.isPersistedEntityType(resultType) && isSubQuery();
     }
 
-    private void enhanceYieldsModel() {
-        // enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
-        if (idAliasEnhancementRequired()) {
-            final Yield idModel = new Yield(yields.getYields().values().iterator().next().getOperand(), AbstractEntity.ID);
-            yields.getYields().clear();
-            yields.getYields().put(idModel.getAlias(), idModel);
-        } else if (allPropsYieldEnhancementRequired()) {
-            final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-            if (getSources().getMain() instanceof TypeBasedSource) {
-                for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(type())) {
-            	//ppi.isUnionEntity() || ppi.isUnionEntityDetails() || ppi.isUnionEntity() ||
-            	final boolean skipProperty =  ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
-          		if (!skipProperty) {
-                        final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn().getName() : null), ppi.getYieldDetailType());
-                        yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
-                    }
-                }
-            } else {
-        	final QueryBasedSource sourceModel = (QueryBasedSource) getSources().getMain();
-                for (final ResultQueryYieldDetails ppi : sourceModel.sourceItems.values()) {
-            	//ppi.isUnionEntity() || ppi.isUnionEntityDetails() || ppi.isUnionEntity() ||
-                    final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn() : null), ppi.getYieldDetailsType());
-                    yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
-                }
+    private boolean mainSourceIsTypeBased() {
+	return getSources().getMain() instanceof TypeBasedSource;
+    }
 
-            }
-        } else if (idPropYieldEnhancementRequired()) {
-            final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-            yields.getYields().put(AbstractEntity.ID, new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
-        }
+    private boolean mainSourceIsQueryBased() {
+	return getSources().getMain() instanceof QueryBasedSource;
+    }
+
+    private void enhanceYieldsModel() {
+	// enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
+	if (idAliasEnhancementRequired()) {
+	    final Yield idModel = new Yield(yields.getYields().values().iterator().next().getOperand(), AbstractEntity.ID);
+	    yields.getYields().clear();
+	    yields.getYields().put(idModel.getAlias(), idModel);
+	} else if (allPropsYieldEnhancementRequired()) {
+	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+	    if (mainSourceIsTypeBased()) {
+		for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(type())) {
+		    final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
+		    if (!skipProperty) {
+			final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn().getName() : null), ppi.getYieldDetailType());
+			yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
+		    }
+		}
+	    } else {
+		final QueryBasedSource sourceModel = (QueryBasedSource) getSources().getMain();
+		for (final ResultQueryYieldDetails ppi : sourceModel.sourceItems.values()) {
+		    final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn() : null), ppi.getYieldDetailsType());
+		    yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
+		}
+	    }
+	} else if (idPropYieldEnhancementRequired()) {
+	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+	    yields.getYields().put(AbstractEntity.ID, new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
+	}
     }
 
     private void adjustYieldsModelAccordingToFetchModel(final FetchModel fetchModel) {
@@ -149,12 +155,10 @@ public class EntQuery implements ISingleOperand {
     }
 
     private void assignPropertyPersistenceInfoToYields() {
-        //System.out.println(category);
 	int yieldIndex = 0;
         for (final Yield yield : yields.getYields().values()) {
             yieldIndex = yieldIndex + 1;
             final ResultQueryYieldDetails ppi = new ResultQueryYieldDetails(yield.getAlias(), determineYieldJavaType(yield), determineYieldHibType(yield), "C" + yieldIndex, determineYieldNullability(yield), determineYieldDetailsType(yield));
-            //System.out.println("------------- setting info to yield " + yield.getAlias() + " !");
             yield.setInfo(ppi);
         }
     }

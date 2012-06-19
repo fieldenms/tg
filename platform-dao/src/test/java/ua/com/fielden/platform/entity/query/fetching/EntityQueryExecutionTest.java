@@ -84,9 +84,25 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
     @Test
-    public void test_retrieval_of_synthetic_entity() {
-	//final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).where().prop("make.key").in().values("MERC", "BMW").model();
+    public void test_retrieval_of_synthetic_entity3() {
+	final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).where().prop("make.key").in().values("MERC", "BMW").model();
+	final List<TgMakeCount> models = makeCountDao.getAllEntities(from(qry).model());
+	assertEquals("Incorrect key", 2, models.size());
+    }
 
+    @Test
+    public void test_retrieval_of_synthetic_entity2() {
+	final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).where().prop("make.key").in().values("MERC", "BMW"). //
+	yield().prop("make").as("make").
+	yield().prop("count").as("count").
+	modelAsEntity(TgMakeCount.class);
+
+	final List<TgMakeCount> models = makeCountDao.getAllEntities(from(qry).model());
+	assertEquals("Incorrect key", 2, models.size());
+    }
+
+    @Test
+    public void test_retrieval_of_synthetic_entity() {
 	final AggregatedResultQueryModel model = select(TgMakeCount.class).where().prop("make.key").in().values("MERC", "BMW").yield().prop("make").as("make").modelAsAggregate();
 	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).model());
 	assertEquals("Incorrect key", 2, models.size());

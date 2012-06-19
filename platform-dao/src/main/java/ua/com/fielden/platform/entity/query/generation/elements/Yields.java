@@ -51,7 +51,7 @@ public class Yields implements IPropertyCollector {
 	}
 
 	if (yieldsToBeIncludedIntoSql.size() == 0) {
-	    yieldsToBeIncludedIntoSql.add(new Yield(new EntValue(1), null));
+	    throw new IllegalStateException("It appears to be yieldless query!");
 	}
 
 	for (final Iterator<Yield> iterator = yieldsToBeIncludedIntoSql.iterator(); iterator.hasNext();) {
