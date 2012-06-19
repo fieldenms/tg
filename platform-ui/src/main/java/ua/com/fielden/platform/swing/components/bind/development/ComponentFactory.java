@@ -87,14 +87,26 @@ public class ComponentFactory {
      * @return
      */
     private static JTextField createTextField(final AbstractDocumentFilter abstractDocumentFilter, final EditorCase editorCase) {
+	return createCustomTextField(abstractDocumentFilter, editorCase, new PlainDocument());
+    }
+
+    /**
+     * creates simple {@link JTextField} with the specified DocumentFilter. Use FilterFactory
+     *
+     * @param abstractDocumentFilter
+     * @param upperCase
+     *            - determines whether {@link UpperCaseTextField} or simple {@link JTextField} should be created
+     * @return
+     */
+    private static JTextField createCustomTextField(final AbstractDocumentFilter abstractDocumentFilter, final EditorCase editorCase, final PlainDocument document) {
 	final JTextField textField = !EditorCase.UPPER_CASE.equals(editorCase) ? new JTextField() {
 	    private static final long serialVersionUID = -54713246930625222L;
 
 	    @Override
 	    protected Document createDefaultModel() {
-		final PlainDocument bdd = new PlainDocument();
-		bdd.setDocumentFilter(abstractDocumentFilter);
-		return bdd;
+		// final PlainDocument bdd = new PlainDocument();
+		document.setDocumentFilter(abstractDocumentFilter);
+		return document;
 	    }
 	} : new UpperCaseTextField();
 
@@ -565,6 +577,27 @@ public class ComponentFactory {
     public static BoundedValidationLayer<JTextField> createStringTextField(final IBindingEntity entity, final String propertyName, final boolean commitOnFocusLost, final String originalToolTipText, final EditorCase editorCase, final IOnCommitAction... actions) {
 	final JTextField textField = createTextField(FilterFactory.createStringDocumentFilter(), editorCase);
 	final BoundedValidationLayer<JTextField> boundedValidationLayer = createBoundedValidationLayer(textField, originalToolTipText);
+	Binder.bindStringTextAreaOrField(boundedValidationLayer, entity, propertyName, commitOnFocusLost, actions);
+	return boundedValidationLayer;
+    }
+
+    /**
+     * creates textField and binds it with String property. If you create onFocusLost model binding, you can manually commit()/flush() it from BoundedValidationLayer methods
+     * commit()/flush().
+     *
+     * @param entity
+     * @param propertyName
+     * @param commitOnFocusLost
+     *            - true to commit on focus lost, false - to commit on key typed!!
+     * @param originalToolTipText
+     * @param upperCase
+     *            - determines whether {@link UpperCaseTextField} or simple {@link JTextField} can be created
+     * @param actions
+     * @return
+     */
+    public static BoundedValidationLayer<JTextField> createCustomStringTextField(final IBindingEntity entity, final String propertyName, final boolean commitOnFocusLost, final String originalToolTipText, final EditorCase editorCase, final PlainDocument document, final IOnCommitAction... actions) {
+	final JTextField textField = createCustomTextField(FilterFactory.createStringDocumentFilter(), editorCase, document);
+	final BoundedValidationLayer<JTextField> boundedValidationLayer = createBoundedValidationLayer(textField, originalToolTipText, false);
 	Binder.bindStringTextAreaOrField(boundedValidationLayer, entity, propertyName, commitOnFocusLost, actions);
 	return boundedValidationLayer;
     }

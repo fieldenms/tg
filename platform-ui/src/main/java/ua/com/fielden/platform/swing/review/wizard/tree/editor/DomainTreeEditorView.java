@@ -68,15 +68,12 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 	    public void startEdit() {
 		tree.setEditable(false);
 		setEditorViewVisible(true);
-		validate();
-		repaint();
 	    }
 
 	    @Override
 	    public void finishEdit() {
 		tree.setEditable(true);
-		//TODO consider whether to start editing tree path after editor panel was collapsed!
-		//tree.startEditingAtPath(tree.getSelectionPath());
+		tree.startEditingAtPath(tree.getSelectionPath());
 		setEditorViewVisible(false);
 	    }
 	};
@@ -109,7 +106,7 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 
     /**
      * Shows or hide editor's panel.
-     * 
+     *
      * @param visible
      */
     private void setEditorViewVisible(final boolean visible){
@@ -130,7 +127,7 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 
     /**
      * Returns the user object for the last component of the specified tree path.
-     * 
+     *
      * @param path
      * @return
      */

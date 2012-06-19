@@ -4,34 +4,32 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.ButtonGroup;
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.JToggleButton;
-import javax.swing.KeyStroke;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.PlainDocument;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.expression.IExpressionErrorPosition;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.NotificationLayer.MessageType;
 import ua.com.fielden.platform.swing.components.bind.development.BoundedValidationLayer;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory;
 import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase;
-import ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.IOnCommitAction;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.development.IPropertyEditor;
@@ -41,8 +39,6 @@ import ua.com.fielden.platform.swing.model.UmState;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
-
-import com.jgoodies.binding.value.Trigger;
 
 /**
  * Model for expression editor.
@@ -56,6 +52,8 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
     private final OriginationPropertyEditor originationEditor;
     private final IPropertyProvider propertySelectionModel;
 
+    private ITextSetter currentTextSetter = null;
+
 
     /**
      * Initiates expression editor with specific {@link ExpressionEntity} instance and appropriate {@link ILightweightPropertyBinder}.
@@ -66,14 +64,11 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
     public ExpressionEditorModel(final CalculatedProperty entity, final ILightweightPropertyBinder<CalculatedProperty> propertyBinder) {
 	super(entity, null, propertyBinder, false);
 	this.expressionEditor = new ExpressionPropertyEditor(entity);
+	this.expressionEditor.getEditor().getView().addFocusListener(createTextSetterSwitch(expressionEditor));
 	this.originationEditor = new OriginationPropertyEditor(entity);
+	this.originationEditor.getEditor().getView().addFocusListener(createTextSetterSwitch(originationEditor));
+	this.currentTextSetter = expressionEditor;
 	this.propertySelectionModel = new PropertyProvider();
-
-	//Configuring edit buttons of two property editors: expression editor and origination property editor.
-	final ButtonGroup buttonGroup = new ButtonGroup();
-	buttonGroup.add(expressionEditor.getEditButton());
-	buttonGroup.add(originationEditor.getEditButton());
-	expressionEditor.getEditButton().setSelected(true);
 
 	//Configuring property selection model. Added listener that updates one of two editors: expression editor or origination property editor.
 	this.propertySelectionModel.addPropertySelectionListener(createPropertySelectionListener());
@@ -132,6 +127,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    protected void postAction(final Void newEntity) {
 		setState(UmState.NEW);
 		notifyActionStageChange(ActionStage.NEW_POST_ACTION);
+		getEditors().get("contextualExpression").getEditor().requestFocusInWindow();
 	    }
 
 	    @Override
@@ -171,6 +167,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    protected void postAction(final Void entity) {
 		setState(UmState.EDIT);
 		notifyActionStageChange(ActionStage.EDIT_POST_ACTION);
+		getEditors().get("contextualExpression").getEditor().requestFocusInWindow();
 	    }
 
 	    @Override
@@ -198,7 +195,6 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    @Override
 	    protected boolean preAction() {
 		this.restoreState = getState();
-		expressionEditor.commitEditorValue();
 		notifyActionStageChange(ActionStage.SAVE_PRE_ACTION);
 		setState(UmState.UNDEFINED);
 		getCancelAction().setEnabled(false);
@@ -377,6 +373,27 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
     }
 
     /**
+     * {@link FocusListener} that determines into which component text must be set.
+     *
+     * @param textSetter
+     * @return
+     */
+    private FocusListener createTextSetterSwitch(final ITextSetter textSetter) {
+        return new FocusListener() {
+
+            @Override
+            public void focusLost(final FocusEvent e) {
+            }
+
+            @Override
+            public void focusGained(final FocusEvent e) {
+        	currentTextSetter = textSetter;
+            }
+        };
+    }
+
+
+    /**
      * Creates {@link IPropertySelectionListener} that listens property selection event and adds property name to expression.
      *
      * @return
@@ -388,24 +405,32 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    public void propertyStateChanged(final String property, final boolean isSelected) {
 		if(isSelected){
 		    final String textToInsert = Reflector.fromAbsotule2RelativePath(getManagedEntity().getContextPath(), property);
-		    if(expressionEditor.isChecked()){
-			expressionEditor.insertText(textToInsert, TextInsertionType.REPLACE, true, 0, textToInsert.length(), textToInsert.length());
-		    }else if (originationEditor.isChecked()){
-			// TODO originationEditor.setText(textToInsert, true, textToInsert.length());
-			originationEditor.getEntity().setOriginationProperty(textToInsert);
-		    }
+		    currentTextSetter.setText(textToInsert);
 		}
 	    }
 	};
     }
 
-    private static class ExpressionPropertyEditor implements IPropertyEditor{
+    /**
+     * The contract for anything that is interested in setting text.
+     *
+     * @author TG Team
+     *
+     */
+    private static interface ITextSetter{
+
+	/**
+	 * Set the specified text.
+	 *
+	 * @param text
+	 */
+	void setText(String text);
+    }
+
+    private static class ExpressionPropertyEditor implements IPropertyEditor, ITextSetter{
 
 	private final JLabel label;
 	private final BoundedValidationLayer<JTextField> textEditor;
-	private final JToggleButton editButton;
-	private final JPanel editor;
-	private final Trigger commitTrigger;
 
 	private CalculatedProperty entity;
 	private final String propertyName;
@@ -418,72 +443,58 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	public ExpressionPropertyEditor(final CalculatedProperty entity){
 	    this.entity = entity;
 	    this.propertyName = "contextualExpression";
-	    entity.getProperty(getPropertyName()).addValidationResultsChangeListener(createExpressionValidationListener());
-	    this.commitTrigger = new Trigger();
 	    final Pair<String, String> titleAndDesc = LabelAndTooltipExtractor.extract(propertyName, entity.getType());
 
 	    label = DummyBuilder.label(titleAndDesc.getKey());
 	    label.setToolTipText(titleAndDesc.getValue());
 
-	    textEditor = ComponentFactory.createTriggeredStringTextField(entity, propertyName, commitTrigger, false, entity.getProperty(propertyName).getDesc());
-	    editButton = new JToggleButton(ResourceLoader.getIcon("images/cursor.png"));
-	    editor = new JPanel(new MigLayout("fill, insets 0", "[fill, grow]5[]", "[fill, grow]"));
-	    editor.add(textEditor);
-	    editor.add(editButton);
-	    manualTextSetter = new ManualTextSetter(textEditor, false);
-
-	    final JTextField field = textEditor.getView();
-	    final String actionName = "Enter action";
-	    field.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), actionName);
-	    field.getActionMap().put(actionName, createCommiteAction());
+	    textEditor = ComponentFactory.createCustomStringTextField(entity, propertyName, true, entity.getProperty(propertyName).getDesc(), EditorCase.MIXED_CASE, createExpressionEditorDocument());
+	    manualTextSetter = new ManualTextSetter(textEditor, entity, propertyName);
 	}
 
-	private PropertyChangeListener createExpressionValidationListener() {
-	    return new PropertyChangeListener() {
+	private PlainDocument createExpressionEditorDocument(){
+	    return new PlainDocument(){
+
+		private static final long serialVersionUID = -6048781732872266049L;
+
+		{
+		    addDocumentListener(new DocumentListener() {
+
+		        @Override
+		        public void removeUpdate(final DocumentEvent e) {
+		    	// TODO Auto-generated method stub
+
+		        }
+
+		        @Override
+		        public void insertUpdate(final DocumentEvent e) {
+		            System.out.println("this listener");
+		        }
+
+		        @Override
+		        public void changedUpdate(final DocumentEvent e) {
+		    	// TODO Auto-generated method stub
+
+		        }
+		    });
+		}
 
 		@Override
-		public void propertyChange(final PropertyChangeEvent evt) {
-		    final Object  obj = evt.getNewValue();
-		    final Result res = obj instanceof Result ? (Result) obj : null;
-		    if(res != null && !res.isSuccessful() && res.getEx() instanceof IExpressionErrorPosition){
-			final Exception ex = res.getEx();
-			final IExpressionErrorPosition errorPosition = (IExpressionErrorPosition) ex;
-			manualTextSetter.setCaretPosition(errorPosition.position().intValue());
+		public void replace(final int offset, final int length, final String text, final AttributeSet attrs) throws BadLocationException {
+		    super.replace(offset, length, text, attrs);
+		    if (manualTextSetter != null) {
+			manualTextSetter.updateComponent();
 		    }
-
 		}
-	    };
-
-	}
-
-	/**
-	 * Returns action that commits this property value.
-	 *
-	 * @return
-	 */
-	private Action createCommiteAction() {
-	    return new AbstractAction() {
-
-		private static final long serialVersionUID = 7762859719401177647L;
 
 		@Override
-		public void actionPerformed(final ActionEvent e) {
-		    commitEditorValue();
+		public void insertString(final int offs, final String str, final AttributeSet a) throws BadLocationException {
+		    super.insertString(offs, str, a);
+		    if (manualTextSetter != null) {
+			manualTextSetter.updateComponent();
+		    }
 		}
 	    };
-	}
-
-	/**
-	 * Set the specified text in to the editor.
-	 *
-	 * @param text
-	 * @param select
-	 * @param relativeCaretPosition
-	 */
-	public void setText(final String text, final boolean select, final int relativeCaretPosition){
-	    final JTextField field = textEditor.getView();
-	    field.selectAll();
-	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, select, 0, text.length(), relativeCaretPosition);
 	}
 
 	/**
@@ -511,6 +522,7 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	public void bind(final AbstractEntity<?> entity) {
 	    this.entity = (CalculatedProperty)entity;
 	    this.textEditor.rebindTo(entity);
+	    this.manualTextSetter.setEntity(entity);
 	}
 
 	@Override
@@ -519,26 +531,8 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	}
 
 	@Override
-	public JPanel getEditor() {
-	    return editor;
-	}
-
-	/**
-	 * Returns the toggle button that is associated with this property editor.
-	 *
-	 * @return
-	 */
-	public JToggleButton getEditButton() {
-	    return editButton;
-	}
-
-	/**
-	 * Returns the value that indicates whether this property editor is selected to receive input.
-	 *
-	 * @return
-	 */
-	public boolean isChecked(){
-	    return getEditButton().isSelected();
+	public BoundedValidationLayer<JTextField> getEditor() {
+	    return textEditor;
 	}
 
 	@Override
@@ -554,28 +548,19 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
 	}
 
-	/**
-	 * Triggers commit action for this property editor.
-	 */
-	public void commitEditorValue(){
-	    commitTrigger.triggerCommit();
+	@Override
+	public void setText(final String text) {
+	    insertText(text, TextInsertionType.REPLACE, true, 0, text.length(), text.length());
 	}
     }
 
-    private static class OriginationPropertyEditor implements IPropertyEditor{
+    private static class OriginationPropertyEditor implements IPropertyEditor, ITextSetter{
 
 	private final JLabel label;
 	private final BoundedValidationLayer<JTextField> textEditor;
-	private final JToggleButton editButton;
-	private final JPanel editor;
 
 	private CalculatedProperty entity;
 	private final String propertyName;
-
-	/**
-	 * Allows to set manually specified text.
-	 */
-	private final ManualTextSetter manualTextSetter;
 
 	public OriginationPropertyEditor(final CalculatedProperty entity){
 	    this.entity = entity;
@@ -586,35 +571,6 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    label.setToolTipText(titleAndDesc.getValue());
 
 	    textEditor = ComponentFactory.createStringTextField(entity, propertyName, true, entity.getProperty(propertyName).getDesc(), EditorCase.MIXED_CASE);
-	    editButton = new JToggleButton(ResourceLoader.getIcon("images/cursor.png"));
-	    editor = new JPanel(new MigLayout("fill, insets 0", "[fill, grow]5[]", "[fill, grow]"));
-	    editor.add(textEditor);
-	    editor.add(editButton);
-	    manualTextSetter = new ManualTextSetter(textEditor, true);
-	}
-
-	/**
-	 * Set the specified text in to the editor.
-	 *
-	 * @param text
-	 * @param select
-	 * @param relativeCaretPosition
-	 */
-	public void setText(final String text, final boolean select, final int relativeCaretPosition){
-	    final JTextField field = textEditor.getView();
-	    field.selectAll();
-	    manualTextSetter.insertText(text, TextInsertionType.REPLACE, select, 0, text.length(), relativeCaretPosition);
-	}
-
-	/**
-	 * Inserts specified text at the caret position or replaces selected text.
-	 *
-	 * @param textToInsert - specified text to insert.
-	 * @param insertionType
-	 * @param select - indicates whether select inserted text or not.
-	 */
-	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int selectionStartIndex, final int charNumberToSelect, final int relativeCaretPosition){
-	    manualTextSetter.insertText(textToInsert, insertionType, select, selectionStartIndex, charNumberToSelect, relativeCaretPosition);
 	}
 
 	@Override
@@ -639,26 +595,8 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	}
 
 	@Override
-	public JPanel getEditor() {
-	    return editor;
-	}
-
-	/**
-	 * Returns the toggle button that is associated with this property editor.
-	 *
-	 * @return
-	 */
-	public JToggleButton getEditButton() {
-	    return editButton;
-	}
-
-	/**
-	 * Returns the value that indicates whether this property editor is selected to receive input.
-	 *
-	 * @return
-	 */
-	public boolean isChecked(){
-	    return getEditButton().isSelected();
+	public BoundedValidationLayer<JTextField> getEditor() {
+	    return textEditor;
 	}
 
 	@Override
@@ -672,6 +610,11 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	@Override
 	public IValueMatcher<?> getValueMatcher() {
 	    throw new UnsupportedOperationException("Value matcher are not applicable for ordinary properties.");
+	}
+
+	@Override
+	public void setText(final String text) {
+	    entity.setOriginationProperty(text);
 	}
     }
 
@@ -689,14 +632,14 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	private final BoundedValidationLayer<JTextField> textComponent;
 
 	/**
-	 * Determines whether trigger commit after the text was inserted or not.
+	 * The name of the property for which the text must be set.
 	 */
-	private final boolean triggerCommitOnTextInsertion;
+	private final String propertyName;
 
 	/**
-	 * Temporary holds text to insert in to the expression editor. After the text was inserted, the property value can be set to null.
+	 * The binded entity.
 	 */
-	private String textToInsert = null;
+	private AbstractEntity<?> entity;
 
 	/**
 	 * Indicates whether select inserted text or not.
@@ -704,9 +647,10 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	private boolean select = false;
 
 	/**
-	 * Indexes, those points on to the beginning and on to the end of the place where text should be inserted.
+	 * Holds the start and end index of the place where the textToSet should be inserted.
 	 */
-	private int startIndex, endIndex;
+	private int startIndex = 0;
+	private int endIndex = 0;
 
 	/**
 	 * Determines the selection region to select after insertion.
@@ -719,44 +663,48 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	private int relativeCaretPosition;
 
 	/**
-	 * Determines the operation that must be performed after the {@link #textComponent} gained the input focus.
+	 * Current action that must be performed after text was set to the model.
 	 */
-	private FocusGainedOperation focusGainedOperation = FocusGainedOperation.NONE;
-
-	/**
-	 * Determines the operation that must be performed after the on commit action was performed.
-	 */
-	private AfterCommitActions afterCommitAction = AfterCommitActions.NONE;
+	private AfterTextSetAction textSetAction = AfterTextSetAction.NONE;
 
 	/**
 	 * Initiates this {@link ManualTextSetter} with specified {@link BoundedValidationLayer} instance.
 	 *
 	 * @param textComponent
 	 */
-	public ManualTextSetter(final BoundedValidationLayer<JTextField> textComponent, final boolean triggerCommitOnTextInsertion){
+	public ManualTextSetter(final BoundedValidationLayer<JTextField> textComponent, final AbstractEntity<?> entity, final String propertyName){
 	    this.textComponent = textComponent;
-	    this.triggerCommitOnTextInsertion = triggerCommitOnTextInsertion;
-	    final JTextField field = textComponent.getView();
-	    field.addFocusListener(createExpressionFocusListener(textComponent.getView()));
-	    if(triggerCommitOnTextInsertion){
-		textComponent.addOnCommitAction(createSelectionOnCommitAction(textComponent.getView()));
-	    }
+	    this.propertyName = propertyName;
+	    this.entity = entity;
 	}
 
 	/**
-	 * Set the specified caret position for wrapped text component.
-	 *
-	 * @param position
+	 * Updates component after text was inserted in to the text editor.
 	 */
-	public void setCaretPosition(final int position){
+	public void updateComponent() {
 	    final JTextField field = textComponent.getView();
-	    if(field.hasFocus()){
-		field.setCaretPosition(position);
-	    }else{
-		focusGainedOperation = FocusGainedOperation.CARRET_CONTROL;
-		relativeCaretPosition = position;
+
+	    if(textSetAction == AfterTextSetAction.UPDATE_COMPONENT){
+		field.setCaretPosition(startIndex + relativeCaretPosition);
+		if (select) {
+		    field.select(startIndex + selectionStartIndex, startIndex + selectionStartIndex + charNumberToSelect);
+		} else {
+		    field.select(field.getCaretPosition(), field.getCaretPosition());
+		}
+		startIndex = endIndex = relativeCaretPosition = charNumberToSelect = selectionStartIndex = 0;
+		select = false;
+		textSetAction = AfterTextSetAction.NONE;
 		field.requestFocusInWindow();
-	    }
+            }
+	}
+
+	/**
+	 * Set the binded entity.
+	 *
+	 * @param entity
+	 */
+	public void setEntity(final AbstractEntity<?> entity) {
+	    this.entity = entity;
 	}
 
 	/**
@@ -768,9 +716,10 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	 */
 	public void insertText(final String textToInsert, final TextInsertionType insertionType, final boolean select, final int selectionStartIndex, final int charNumberToSelect, final int relativeCaretPosition){
 	    final JTextField field = textComponent.getView();
+	    final String textToSet;
 	    if(field.getSelectionStart() == field.getSelectionEnd()){
 		startIndex = endIndex = field.getCaretPosition();
-		this.textToInsert = textToInsert;
+		textToSet = textToInsert;
 		this.select = TextInsertionType.APPLY == insertionType ? false : select;
 		this.selectionStartIndex = selectionStartIndex;
 		this.charNumberToSelect = charNumberToSelect;
@@ -779,120 +728,50 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 		this.select = select;
 		switch(insertionType){
 		case APPLY:
-		    this.startIndex = field.getSelectionStart();
-		    this.endIndex = field.getSelectionEnd();
+		    startIndex = field.getSelectionStart();
+		    endIndex = field.getSelectionEnd();
 		    this.selectionStartIndex = selectionStartIndex;
 
-		    this.textToInsert = textToInsert.substring(0, relativeCaretPosition) //
+		    textToSet = textToInsert.substring(0, relativeCaretPosition) //
 			    /*              */+ field.getText().substring(startIndex, endIndex) + textToInsert.substring(relativeCaretPosition);
-		    this.relativeCaretPosition = this.textToInsert.length();
+		    this.relativeCaretPosition = textToSet.length();
 		    this.charNumberToSelect = field.getText().substring(startIndex, endIndex).length() + charNumberToSelect;
 		    break;
 		case APPEND:
-		    this.startIndex = this.endIndex = field.getCaretPosition();
-		    this.textToInsert = textToInsert;
+		    startIndex = endIndex = field.getCaretPosition();
+		    textToSet = textToInsert;
 		    this.relativeCaretPosition = relativeCaretPosition;
 		    this.selectionStartIndex = selectionStartIndex;
 		    this.charNumberToSelect = charNumberToSelect;
 		    break;
 		case REPLACE:
-		    this.startIndex = field.getSelectionStart();
-		    this.endIndex = field.getSelectionEnd();
+		    startIndex = field.getSelectionStart();
+		    endIndex = field.getSelectionEnd();
+		    textToSet = textToInsert;
 		    this.relativeCaretPosition = relativeCaretPosition;
-		    this.textToInsert = textToInsert;
 		    this.selectionStartIndex = selectionStartIndex;
 		    this.charNumberToSelect = charNumberToSelect;
 		    break;
+		default:
+		    textToSet = null;
+		    break;
 		}
 	    }
-	    focusGainedOperation = FocusGainedOperation.TEXT_INSERTION;
-	    field.requestFocusInWindow();
-	}
-
-
-	private IOnCommitAction createSelectionOnCommitAction(final JTextField textField) {
-	    return new IOnCommitAction() {
-
-		@Override
-		public void postSuccessfulCommitAction() {
-		    //Ignored for now.
-		}
-
-		@Override
-		public void postNotSuccessfulCommitAction() {
-		    //Ignored for now.
-		}
-
-		@Override
-		public void postCommitAction() {
-		    if(AfterCommitActions.SELECT == afterCommitAction){
-			if(select){
-			    textField.select(startIndex + selectionStartIndex, startIndex + selectionStartIndex + charNumberToSelect);
-			}else{
-			    textField.select(textField.getCaretPosition(), textField.getCaretPosition());
-			}
-		    }
-		    afterCommitAction = AfterCommitActions.NONE;
-		}
-	    };
+	    final String previousText = field.getText();
+	    textSetAction = AfterTextSetAction.UPDATE_COMPONENT;
+	    entity.set(propertyName, previousText.substring(0, startIndex) + textToSet + previousText.substring(endIndex));
 	}
 
 	/**
-	 * Returns the {@link FocusListener} that listens the focus gained event for the specified {@link JTextField} instance.
-	 * This event handler also performs specific actions: text insert or caret position change.
-	 *
-	 * @param textField
-	 * @return
-	 */
-	private FocusListener createExpressionFocusListener(final JTextField textField) {
-	    return new FocusListener() {
-
-		@Override
-		public void focusLost(final FocusEvent e) {
-		    // is ignored for now
-		}
-
-		@Override
-		public void focusGained(final FocusEvent e) {
-		    switch(focusGainedOperation){
-		    case TEXT_INSERTION:
-			final String previousText = textField.getText();
-			textField.setText(previousText.substring(0, startIndex) + textToInsert + previousText.substring(endIndex));
-			textField.setCaretPosition(startIndex+relativeCaretPosition);
-			if(triggerCommitOnTextInsertion){
-			    afterCommitAction = AfterCommitActions.SELECT;
-			    textComponent.commit();
-			}else{
-			    if(select){
-				textField.select(startIndex + selectionStartIndex, startIndex + selectionStartIndex + charNumberToSelect);
-			    }else{
-				textField.select(textField.getCaretPosition(), textField.getCaretPosition());
-			    }
-			}
-			break;
-		    case CARRET_CONTROL:
-			textField.setCaretPosition(relativeCaretPosition);
-			break;
-		    }
-		    focusGainedOperation = FocusGainedOperation.NONE;
-		}
-	    };
-	}
-
-	/**
-	 * Determines the operation that should be performed after the text field gained the focus. There are three type of operation:
-	 * text insertion, caret position controlling or there was no operation to perform.
+	 * Determines the action that must be performed after text was set to the model.
 	 *
 	 * @author TG Team
 	 *
 	 */
-	private static enum FocusGainedOperation{
-	    TEXT_INSERTION, CARRET_CONTROL, NONE;
+	private static enum AfterTextSetAction{
+	    UPDATE_COMPONENT, NONE;
 	}
 
-	private static enum AfterCommitActions{
-	    SELECT, NONE;
-	}
     }
 
     /**

@@ -19,6 +19,8 @@ import javax.swing.text.JTextComponent;
 import javax.swing.text.NumberFormatter;
 import javax.swing.text.PlainDocument;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.IBindingEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
@@ -250,21 +252,26 @@ public final class TextComponentConnector extends PropertyConnectorAdapter imple
     }
 
     /**
-     * Sets the text component's contents without notifying the subject about the change. Invoked by the subject change listener. Sets the text, then sets the caret position to 0.
+     * Sets the text component's contents without notifying the subject about the change.
+     * This method is invoked by the subject change listener.
+     * <p>
+     * Sets the text, then restores the caret position and selection in case when text has not been changed.
      *
      * @param newText
      *            the text to be set in the document
      */
     private void setDocumentTextSilently(final String newText) {
-	final int position = textComponent.getCaretPosition();
+	final int selectionStart = textComponent.getSelectionStart();
+	final int selectionEnd = textComponent.getSelectionEnd();
+	final String oldText = textComponent.getText();
+
 	textComponent.getDocument().removeDocumentListener(textChangeHandler);
 	textComponent.setText(newText);
 	textComponent.getDocument().addDocumentListener(textChangeHandler);
-	try {
-	    textComponent.setCaretPosition(position);
-	} catch (final Exception e) {
-	    System.out.println(e.toString());
-	    textComponent.setCaretPosition(0);
+
+	if (StringUtils.equals(newText, oldText)) {
+	    textComponent.setCaretPosition(selectionStart);
+	    textComponent.moveCaretPosition(selectionEnd);
 	}
     }
 
