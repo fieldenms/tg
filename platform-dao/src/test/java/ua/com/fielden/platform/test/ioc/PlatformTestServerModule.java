@@ -19,6 +19,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogie;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogieClass;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
+import ua.com.fielden.platform.sample.domain.controller.ITgMakeCount;
 import ua.com.fielden.platform.sample.domain.controller.ITgMeterReading;
 import ua.com.fielden.platform.sample.domain.controller.ITgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.controller.ITgOrgUnit2;
@@ -37,6 +38,7 @@ import ua.com.fielden.platform.sample.domain.controller.ITgWagonSlot;
 import ua.com.fielden.platform.sample.domain.controller.ITgWorkshop;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.test.domain.entities.daos.TgMakeCountDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgMeterReadingDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleMakeDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgVehicleModelDao;
@@ -121,6 +123,8 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 	bind(IMigrationErrorDao.class).to(MigrationErrorDao.class);
 	bind(IMigrationRunDao.class).to(MigrationRunDao.class);
 	bind(IMigrationHistoryDao.class).to(MigrationHistoryDao.class);
+
+	bind(ITgMakeCount.class).to(TgMakeCountDao.class);
 
 	bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
 	}).to(EntityWithMoneyDao.class);

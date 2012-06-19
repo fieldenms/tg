@@ -23,6 +23,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgMakeCount;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
@@ -38,6 +39,8 @@ import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogie;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
+import ua.com.fielden.platform.sample.domain.controller.ITgMakeCount;
+import ua.com.fielden.platform.sample.domain.controller.ITgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.controller.ITgVehicleModel;
@@ -77,7 +80,17 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final IEntityAggregatesDao aggregateDao = getInstance(IEntityAggregatesDao.class);
     private final EntityWithMoneyDao entityWithMoneyDao = getInstance(EntityWithMoneyDao.class);
     private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
+    private final ITgMakeCount makeCountDao = getInstance(ITgMakeCount.class);
+    private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
+    @Test
+    public void test_retrieval_of_synthetic_entity() {
+	//final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).where().prop("make.key").in().values("MERC", "BMW").model();
+
+	final AggregatedResultQueryModel model = select(TgMakeCount.class).where().prop("make.key").in().values("MERC", "BMW").yield().prop("make").as("make").modelAsAggregate();
+	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).model());
+	assertEquals("Incorrect key", 2, models.size());
+    }
 
     @Test
     public void test_retrieval_of_non_persisted_prop_from_type() {
@@ -102,7 +115,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
     public void test_retrieval_of_non_persisted_entity_prop_from_model() {
 	final EntityResultQueryModel<TgVehicleMake> makeQry = select(TgVehicleMake.class). //
 		where().prop("key").eq().val("MERC"). //
@@ -114,7 +126,9 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	modelAsEntity(TgVehicleMake.class);
 	final EntityResultQueryModel<TgVehicleMake> qry = select(makeQry). //
 		where().prop("competitor.key").eq().val("BMW").model();
-	assertEquals("Incorrect key", 1, vehicleMakeDao.getAllEntities(from(qry).with(fetchAll(TgVehicleMake.class).with("competitor")).model()).size());
+	final List<TgVehicleMake> models = vehicleMakeDao.getAllEntities(from(qry).with(fetchAll(TgVehicleMake.class).with("competitor")).model());
+	assertEquals("Incorrect size", 1, models.size());
+	assertEquals("Incorrect key", "BMW", models.get(0).getCompetitor().getKey());
     }
 
     @Test

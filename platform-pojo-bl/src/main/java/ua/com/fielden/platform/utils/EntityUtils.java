@@ -17,16 +17,11 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -685,32 +680,6 @@ public class EntityUtils {
     }
 
     /**
-     * Checks whether given first level property is part of given entity type key.
-     * @param entityType
-     * @param firstLevelPropName
-     * @return
-     */
-    public static boolean isPropertyPartOfKey(final Class entityType, final String firstLevelPropName) {
-	if (firstLevelPropName.contains(".")) {
-	    throw new IllegalArgumentException("Determining whether property [" + firstLevelPropName + "] constitutes key of entity type [" + entityType.getSimpleName() + "]. First level prop name expected, but was [" + firstLevelPropName + "]");
-	}
-	return Finder.getFieldNames(Finder.getKeyMembers(entityType)).contains(firstLevelPropName);
-    }
-
-    /**
-     * Checks whether given first level property of the given entity type is marked as "required".
-     * @param entityType
-     * @param firstLevelPropName
-     * @return
-     */
-    public static boolean isPropertyRequired(final Class entityType, final String firstLevelPropName) {
-	if (firstLevelPropName.contains(".")) {
-	    throw new IllegalArgumentException("Determining whether property [" + firstLevelPropName + "] is marked as 'required' for entity type [" + entityType.getSimpleName() + "]. First level prop name expected, but was [" + firstLevelPropName + "]");
-	}
-	return Finder.getFieldNames(Finder.findProperties(entityType, Required.class)).contains(firstLevelPropName);
-    }
-
-    /**
      * Returns true if the provided <code>dotNotationProp</code> is a valid property in the specified entity type.
      *
      * @param type
@@ -725,16 +694,6 @@ public class EntityUtils {
 	}
     }
 
-
-    /**
-     * Checks whether given entity type has composite key
-     * @param entityType
-     * @return
-     */
-    public static boolean entityWithDynamicKey(final Class entityType) {
-	return DynamicEntityKey.class.equals(AnnotationReflector.getKeyType(entityType));
-    }
-
     /**
      * Retrieves all persisted properties fields within given entity type
      *
@@ -743,13 +702,10 @@ public class EntityUtils {
      */
     public static List<Field> getPersistedProperties(final Class entityType) {
 	final List<Field> result = new ArrayList<Field>();
-	result.add(Finder.getFieldByName(entityType, "id"));
-	result.add(Finder.getFieldByName(entityType, "version"));
-	final boolean dynamicKey = entityWithDynamicKey(entityType);
 	final boolean noDesc = !AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType);
 
-	for (final Field propField : Finder.findRealProperties(entityType, MapTo.class)) {
-	    if (!((propField.getName().equals("key") && dynamicKey) || (propField.getName().equals("desc") && noDesc))) {
+	for (final Field propField : Finder.findRealProperties(entityType)) { //, MapTo.class
+	    if (!(propField.getName().equals("desc") && noDesc)) {
 		result.add(propField);
 	    }
 	}
@@ -768,29 +724,6 @@ public class EntityUtils {
 
 	for (final Field propField : Finder.findRealProperties(entityType)) {
 	    if (Collection.class.isAssignableFrom(propField.getType()) && Finder.hasLinkProperty(entityType, propField.getName())) {
-		result.add(propField);
-	    }
-	}
-
-	return result;
-    }
-
-    public static List<Field> getCalculatedProperties(final Class entityType) {
-	final List<Field> result = new ArrayList<Field>();
-
-	for (final Field propField : Finder.findRealProperties(entityType, Calculated.class)) {
-	    result.add(propField);
-	}
-
-	return result;
-    }
-
-    public static <ET extends AbstractEntity<?>> List<Field> getSyntheticProperties(final Class<ET> entityType, final EntityResultQueryModel<ET> model) {
-	final List<Field> result = new ArrayList<Field>();
-	final boolean noDesc = !AnnotationReflector.isAnnotationPresent(DescTitle.class, entityType);
-
-	for (final Field propField : Finder.findRealProperties(entityType)) {
-	    if (!(propField.getName().equals("desc") && noDesc)) {
 		result.add(propField);
 	    }
 	}

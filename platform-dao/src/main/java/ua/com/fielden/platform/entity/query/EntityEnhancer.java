@@ -40,6 +40,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
 		if (fetchModel.getEntityType() != EntityAggregates.class) {
 		    final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
 		    if (ppi == null || ppi.isCollection()) {
+			// TODO replace with EntityTree metadata (wrt collectional properties retrieval)
 			final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
 			for (final Field field : collProps) {
 			    if (field.getName().equals(propName)) {

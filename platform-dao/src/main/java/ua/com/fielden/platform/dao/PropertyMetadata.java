@@ -111,6 +111,10 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	return type.equals(PropertyCategory.VIRTUAL_COMPOSITE_KEY);
     }
 
+    public boolean isSynthetic() {
+	return type.equals(PropertyCategory.SYNTHETIC);
+    }
+
 
     public String getTypeString() {
 	if (hibType != null) {

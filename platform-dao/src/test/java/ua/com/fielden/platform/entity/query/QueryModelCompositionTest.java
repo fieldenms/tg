@@ -282,11 +282,11 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final Conditions condition2 = new Conditions(new ComparisonTest(prop("v"), _eq, prop("wo2.vehicle")), new ArrayList<CompoundCondition>());
 
 	final List<CompoundSource> others = new ArrayList<CompoundSource>();
-	others.add(new CompoundSource(new TypeBasedSource(TgWorkOrder.class, "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition1));
-	others.add(new CompoundSource(new TypeBasedSource(TgWorkOrder.class, "wo2", DOMAIN_METADATA_ANALYSER), JoinType.LJ, condition2));
+	others.add(new CompoundSource(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition1));
+	others.add(new CompoundSource(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), "wo2", DOMAIN_METADATA_ANALYSER), JoinType.LJ, condition2));
 
 	final EntQuery act = entResultQry(qry);
-	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", DOMAIN_METADATA_ANALYSER), others);
+	final Sources exp = new Sources(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(VEHICLE), "v", DOMAIN_METADATA_ANALYSER), others);
 	assertEquals("models are different", exp, act.getSources());
 
 	final List<CompoundCondition> others2 = new ArrayList<CompoundCondition>();
@@ -445,9 +445,9 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final Conditions condition = new Conditions(new ComparisonTest(new EntProp("v"), ComparisonOperator.EQ, new EntProp("vehicle")), new ArrayList<CompoundCondition>());
 
 	final List<CompoundSource> others = new ArrayList<CompoundSource>();
-	others.add(new CompoundSource(new TypeBasedSource(WORK_ORDER, "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition));
+	others.add(new CompoundSource(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition));
 
-	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", DOMAIN_METADATA_ANALYSER), others);
+	final Sources exp = new Sources(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(VEHICLE), "v", DOMAIN_METADATA_ANALYSER), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 
@@ -458,9 +458,9 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final Conditions condition = new Conditions(new ComparisonTest(new EntProp("v"), ComparisonOperator.EQ, new EntProp("wo.vehicle")), new ArrayList<CompoundCondition>());
 
 	final List<CompoundSource> others = new ArrayList<CompoundSource>();
-	others.add(new CompoundSource(new TypeBasedSource(WORK_ORDER, "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition));
+	others.add(new CompoundSource(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition));
 
-	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", DOMAIN_METADATA_ANALYSER), others);
+	final Sources exp = new Sources(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(VEHICLE), "v", DOMAIN_METADATA_ANALYSER), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 
@@ -471,9 +471,9 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final Conditions condition = new Conditions(new ComparisonTest(new EntProp("v"), ComparisonOperator.EQ, new EntProp("vehicle")), new ArrayList<CompoundCondition>());
 
 	final List<CompoundSource> others = new ArrayList<CompoundSource>();
-	others.add(new CompoundSource(new TypeBasedSource(WORK_ORDER, null, DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition));
+	others.add(new CompoundSource(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), null, DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition));
 
-	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", DOMAIN_METADATA_ANALYSER), others);
+	final Sources exp = new Sources(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(VEHICLE), "v", DOMAIN_METADATA_ANALYSER), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 
@@ -485,10 +485,10 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final Conditions condition2 = new Conditions(new ComparisonTest(new EntProp("v"), ComparisonOperator.EQ, new EntProp("wo2.vehicle")), new ArrayList<CompoundCondition>());
 
 	final List<CompoundSource> others = new ArrayList<CompoundSource>();
-	others.add(new CompoundSource(new TypeBasedSource(WORK_ORDER, "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition1));
-	others.add(new CompoundSource(new TypeBasedSource(WORK_ORDER, "wo2", DOMAIN_METADATA_ANALYSER), JoinType.LJ, condition2));
+	others.add(new CompoundSource(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), "wo", DOMAIN_METADATA_ANALYSER), JoinType.IJ, condition1));
+	others.add(new CompoundSource(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(WORK_ORDER), "wo2", DOMAIN_METADATA_ANALYSER), JoinType.LJ, condition2));
 
-	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", DOMAIN_METADATA_ANALYSER), others);
+	final Sources exp = new Sources(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(VEHICLE), "v", DOMAIN_METADATA_ANALYSER), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 
@@ -530,7 +530,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_simple_query_model_13_() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").model();
 	final List<CompoundSource> others = new ArrayList<CompoundSource>();
-	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, "v", DOMAIN_METADATA_ANALYSER), others);
+	final Sources exp = new Sources(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(VEHICLE), "v", DOMAIN_METADATA_ANALYSER), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 
@@ -538,7 +538,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     public void test_simple_query_model_14() {
 	final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).model();
 	final List<CompoundSource> others = new ArrayList<CompoundSource>();
-	final Sources exp = new Sources(new TypeBasedSource(VEHICLE, null, DOMAIN_METADATA_ANALYSER), others);
+	final Sources exp = new Sources(new TypeBasedSource(DOMAIN_METADATA_ANALYSER.getEntityMetadata(VEHICLE), null, DOMAIN_METADATA_ANALYSER), others);
 	assertEquals("models are different", exp, entResultQry(qry).getSources());
     }
 

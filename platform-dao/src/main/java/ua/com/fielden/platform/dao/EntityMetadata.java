@@ -29,6 +29,9 @@ public class EntityMetadata {
 	super();
 	this.table = table;
 	this.type = type;
+	if (type == null) {
+	    throw new IllegalArgumentException("Missing entity type!");
+	}
 	this.props = props;
 	this.model = model;
     }
@@ -64,5 +67,59 @@ public class EntityMetadata {
 	CALCULATED, //
 	UNION, //
 	DEFINITION;
+    }
+
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + ((model == null) ? 0 : model.hashCode());
+	result = prime * result + ((props == null) ? 0 : props.hashCode());
+	result = prime * result + ((table == null) ? 0 : table.hashCode());
+	result = prime * result + ((type == null) ? 0 : type.hashCode());
+	return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	if (this == obj) {
+	    return true;
+	}
+	if (obj == null) {
+	    return false;
+	}
+	if (!(obj instanceof EntityMetadata)) {
+	    return false;
+	}
+	final EntityMetadata other = (EntityMetadata) obj;
+	if (model == null) {
+	    if (other.model != null) {
+		return false;
+	    }
+	} else if (!model.equals(other.model)) {
+	    return false;
+	}
+	if (props == null) {
+	    if (other.props != null) {
+		return false;
+	    }
+	} else if (!props.equals(other.props)) {
+	    return false;
+	}
+	if (table == null) {
+	    if (other.table != null) {
+		return false;
+	    }
+	} else if (!table.equals(other.table)) {
+	    return false;
+	}
+	if (type == null) {
+	    if (other.type != null) {
+		return false;
+	    }
+	} else if (!type.equals(other.type)) {
+	    return false;
+	}
+	return true;
     }
 }

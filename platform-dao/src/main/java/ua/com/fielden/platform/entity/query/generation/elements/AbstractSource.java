@@ -317,7 +317,8 @@ public abstract class AbstractSource implements ISource {
         final SortedMap<PurePropInfo, List<EntProp>> groups = determineGroups(getReferencingProps());
 
         for (final Map.Entry<PurePropInfo, List<EntProp>> groupEntry : groups.entrySet()) {
-            final TypeBasedSource qrySource = new TypeBasedSource(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, domainMetadataAnalyser);
+//            final TypeBasedSource qrySource = new TypeBasedSource(groupEntry.getKey().type, composeAlias(groupEntry.getKey().name), true, domainMetadataAnalyser);
+            final TypeBasedSource qrySource = new TypeBasedSource(domainMetadataAnalyser.getEntityMetadata(groupEntry.getKey().type), composeAlias(groupEntry.getKey().name), true, domainMetadataAnalyser);
             //System.out.println("                           adding new source: " + qrySource.getAlias() + " to existing source: " + getAlias());
             qrySource.populateSourceItems(groupEntry.getKey().nullable);
             qrySource.assignNullability(groupEntry.getKey().nullable);

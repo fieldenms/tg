@@ -116,7 +116,7 @@ public class EntQuery implements ISingleOperand {
             if (getSources().getMain() instanceof TypeBasedSource) {
                 for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(type())) {
             	//ppi.isUnionEntity() || ppi.isUnionEntityDetails() || ppi.isUnionEntity() ||
-            	final boolean skipProperty =  ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
+            	final boolean skipProperty =  ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
           		if (!skipProperty) {
                         final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn().getName() : null), ppi.getYieldDetailType());
                         yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
@@ -149,10 +149,12 @@ public class EntQuery implements ISingleOperand {
     }
 
     private void assignPropertyPersistenceInfoToYields() {
-        int yieldIndex = 0;
+        //System.out.println(category);
+	int yieldIndex = 0;
         for (final Yield yield : yields.getYields().values()) {
             yieldIndex = yieldIndex + 1;
             final ResultQueryYieldDetails ppi = new ResultQueryYieldDetails(yield.getAlias(), determineYieldJavaType(yield), determineYieldHibType(yield), "C" + yieldIndex, determineYieldNullability(yield), determineYieldDetailsType(yield));
+            //System.out.println("------------- setting info to yield " + yield.getAlias() + " !");
             yield.setInfo(ppi);
         }
     }
