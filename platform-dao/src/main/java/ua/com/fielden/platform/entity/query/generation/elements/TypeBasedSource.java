@@ -6,6 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.EntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -20,7 +21,7 @@ public class TypeBasedSource extends AbstractSource {
     public TypeBasedSource(final EntityMetadata entityMetadata, final String alias, final boolean generated, final DomainMetadataAnalyser domainMetadataAnalyser) {
 	super(alias, domainMetadataAnalyser);
 	this.generated = generated;
-	this.entityMetadata = entityMetadata;//getDomainMetadataAnalyser().getEntityMetadata(sourceType());
+	this.entityMetadata = entityMetadata;
 	if (entityMetadata == null) {
 	    throw new IllegalStateException("Missing entity persistence metadata for entity type: " + sourceType());
 	}
@@ -55,7 +56,7 @@ public class TypeBasedSource extends AbstractSource {
 		final String twoPartProp = onePartProp + "." + EntityUtils.splitPropByFirstDot(EntityUtils.splitPropByFirstDot(dotNotatedPropName).getValue()).getKey();
 		final PropertyMetadata explicitPartPropInfo2 = getDomainMetadataAnalyser().getPropPersistenceInfoExplicitly(sourceType(), twoPartProp);
 		if (explicitPartPropInfo2 != null) {
-			final boolean explicitPropNullability = true;
+			final boolean explicitPropNullability = true; // TODO why this
 			final PurePropInfo ppi = new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || isNullable());
 			ppi.setExpressionModel(propInfo.getExpressionModel());
 			return new Pair<PurePropInfo, PurePropInfo>( //
@@ -79,7 +80,7 @@ public class TypeBasedSource extends AbstractSource {
     }
 
     @Override
-    public Class sourceType() {
+    public Class<? extends AbstractEntity<?>> sourceType() {
 	return entityMetadata.getType();
     }
 
@@ -98,12 +99,10 @@ public class TypeBasedSource extends AbstractSource {
         return sourceType().getSimpleName() + "-table AS " + getAlias() + " /*" + (generated ? " GEN " : "") + "*/";
     }
 
-
     @Override
     public int hashCode() {
 	final int prime = 31;
-	int result = 1;
-	result = prime * result + ((getAlias() == null) ? 0 : getAlias().hashCode());
+	int result = super.hashCode();
 	result = prime * result + ((entityMetadata == null) ? 0 : entityMetadata.hashCode());
 	return result;
     }
@@ -113,20 +112,13 @@ public class TypeBasedSource extends AbstractSource {
 	if (this == obj) {
 	    return true;
 	}
-	if (obj == null) {
+	if (!super.equals(obj)) {
 	    return false;
 	}
 	if (!(obj instanceof TypeBasedSource)) {
 	    return false;
 	}
 	final TypeBasedSource other = (TypeBasedSource) obj;
-	if (getAlias() == null) {
-	    if (other.getAlias() != null) {
-		return false;
-	    }
-	} else if (!getAlias().equals(other.getAlias())) {
-	    return false;
-	}
 	if (entityMetadata == null) {
 	    if (other.entityMetadata != null) {
 		return false;
@@ -136,5 +128,4 @@ public class TypeBasedSource extends AbstractSource {
 	}
 	return true;
     }
-
 }

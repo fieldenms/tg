@@ -126,8 +126,7 @@ public class QueryBasedSource extends AbstractSource {
     @Override
     public int hashCode() {
 	final int prime = 31;
-	int result = 1;
-	result = prime * result + ((getAlias() == null) ? 0 : getAlias().hashCode());
+	int result = super.hashCode();
 	result = prime * result + ((models == null) ? 0 : models.hashCode());
 	return result;
     }
@@ -137,20 +136,13 @@ public class QueryBasedSource extends AbstractSource {
 	if (this == obj) {
 	    return true;
 	}
-	if (obj == null) {
+	if (!super.equals(obj)) {
 	    return false;
 	}
 	if (!(obj instanceof QueryBasedSource)) {
 	    return false;
 	}
 	final QueryBasedSource other = (QueryBasedSource) obj;
-	if (getAlias() == null) {
-	    if (other.getAlias() != null) {
-		return false;
-	    }
-	} else if (!getAlias().equals(other.getAlias())) {
-	    return false;
-	}
 	if (models == null) {
 	    if (other.models != null) {
 		return false;
