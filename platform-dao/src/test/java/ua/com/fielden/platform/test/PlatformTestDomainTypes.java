@@ -13,6 +13,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
+import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgModelCount;
 import ua.com.fielden.platform.sample.domain.TgModelYearCount;
@@ -70,6 +71,7 @@ public class PlatformTestDomainTypes {
 	add(TgOrgUnit5.class);
 	add(TgWorkOrder.class);
 	add(TgFuelUsage.class);
+	add(TgFuelType.class);
 	add(TgModelCount.class);
 	add(TgModelYearCount.class);
 	add(CompositeEntity.class);

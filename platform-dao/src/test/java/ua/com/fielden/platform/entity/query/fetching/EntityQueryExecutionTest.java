@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
+import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgMakeCount;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
@@ -265,6 +266,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     @Ignore
     public void test0_0b() {
+	// FIXME
 	final EntityResultQueryModel<TgVehicle> vehSubqry = select(TgVehicle.class).where().prop("lastFuelUsageQty").eq().val(120).//
 	yield().prop("key").as("key"). //
 	yield().prop("id").as("id"). //
@@ -816,6 +818,16 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    public void test_calculated_entity_prop_in_fetching() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).model();
+	final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class).with("lastFuelUsage", fetchAll(TgFuelUsage.class))).model());
+	assertEquals("Incorrect count", 1, vehicles.size());
+	final TgVehicle vehicle = vehicles.get(0);
+	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+	assertEquals("Incorrect key", "P", vehicle.getLastFuelUsage().getFuelType().getKey());
+    }
+
+    @Test
     public void test_calculated_entity_props_in_condition_() {
 	final AggregatedResultQueryModel qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).yield().countAll().as("aa").modelAsAggregate();
 	final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).model());
@@ -943,8 +955,12 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Override
     protected void populateDomain() {
+	final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
+	final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
+
 	final TgWorkshop workshop1 = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
 	final TgWorkshop workshop2 = save(new_(TgWorkshop.class, "WSHOP2", "Workshop 2"));
+
 
 	final TgBogieLocation location = config.getEntityFactory().newEntity(TgBogieLocation.class);
 	location.setWorkshop(workshop1);
@@ -996,8 +1012,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
 	save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
 
-	save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")));
-	save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")));
+	save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
+	save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));
 
 	save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 13:00:00")).setFinishDate(date("2011-11-01 15:00:00")).setIncident("002"));
 

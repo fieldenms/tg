@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.DefaultController;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
@@ -34,6 +35,23 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty @MapTo @Title(value = "Fuel Qty", desc = "Fuel Qty")
     private BigDecimal qty;
+
+
+    @IsProperty
+    @Required
+    @MapTo
+    @Title(value = "Fuel type", desc = "Fuel type")
+    private TgFuelType fuelType;
+
+    @Observable
+    public TgFuelUsage setFuelType(final TgFuelType fuelType) {
+	this.fuelType = fuelType;
+	return this;
+    }
+
+    public TgFuelType getFuelType() {
+	return fuelType;
+    }
 
     public BigDecimal getQty() {
 	return qty;
