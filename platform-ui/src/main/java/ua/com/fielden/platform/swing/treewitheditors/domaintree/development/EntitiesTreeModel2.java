@@ -214,12 +214,12 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	final EntitiesTreeNode2 parentNode = StringUtils.isEmpty(property) ? rootNode //
 		: !PropertyTypeDeterminator.isDotNotation(property) ? node(root, "", true) //
 			: node(root, PropertyTypeDeterminator.penultAndLast(property).getKey(), true);
-		final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
-		nodesCache.put(AbstractDomainTree.key(root, property), node);
-		if (isNotDummyAndNotCommonProperty(property)) {
-		    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
-		}
-		this.insertNodeInto(node, parentNode, parentNode.getChildCount());
+	final EntitiesTreeNode2 node = new EntitiesTreeNode2(createUserObject(root, property));
+	nodesCache.put(AbstractDomainTree.key(root, property), node);
+	if (isNotDummyAndNotCommonProperty(property)) {
+	    nodesForSimplePropertiesCache.put(AbstractDomainTree.key(root, AbstractDomainTree.reflectionProperty(property)), node);
+	}
+	this.insertNodeInto(node, parentNode, parentNode.getChildCount());
     }
 
     protected boolean isNotDummyAndNotCommonProperty(final String property) {
@@ -390,11 +390,11 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
     /**
      * Extracts title and description from a property (with a "dummy" contract).
      *
-     * @param root
+     * @param managedType
      * @param property
      * @return
      */
-    public static Pair<String, String> extractTitleAndDesc(final Class<?> root, final String property) {
+    public static Pair<String, String> extractTitleAndDesc(final Class<?> root, final Class<?> managedType, final String property) {
 	final String title, desc;
 	if (EntitiesTreeModel2.ROOT_PROPERTY.equals(property)) { // root node
 	    title = "Entities";
@@ -403,7 +403,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    title = "Common";
 	    desc = TitlesDescsGetter.italic("<b>Common properties</b>");
 	} else { // entity node
-	    final Pair<String, String> tad = "".equals(property) ? TitlesDescsGetter.getEntityTitleAndDesc(root) : TitlesDescsGetter.getTitleAndDesc(AbstractDomainTree.reflectionProperty(property), root);
+	    final Pair<String, String> tad = "".equals(property) ? TitlesDescsGetter.getEntityTitleAndDesc(root) : TitlesDescsGetter.getTitleAndDesc(AbstractDomainTree.reflectionProperty(property), managedType);
 	    title = StringUtils.isEmpty(tad.getKey()) ? property : tad.getKey();
 	    desc = TitlesDescsGetter.italic("<b>" + tad.getValue() + "</b>");
 	}
@@ -444,7 +444,7 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    super(root, property);
 
 	    final Class<?> managedRoot = EntitiesTreeModel2.ROOT_PROPERTY.equals(property) ? root : getManager().getEnhancer().getManagedType(root);
-	    final Pair<String, String> titleAndDesc = extractTitleAndDesc(managedRoot, property);
+	    final Pair<String, String> titleAndDesc = extractTitleAndDesc(root, managedRoot, property);
 	    toStringTitle = titleAndDesc.getKey();
 	    labelTooltip = titleAndDesc.getValue();
 	    firstTickTooltip = createCriteriaCheckboxToolTipText(root, managedRoot, property);
@@ -473,16 +473,16 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 		return null;
 	    }
 	    if (EntityUtils.isUnionEntityType(PropertyTypeDeterminator.transform(managedRoot, AbstractDomainTree.reflectionProperty(property)).getKey())) { // parent is union entity
-		return "<html>If not selected, then entities with <i><b>" + EntitiesTreeModel2.extractTitleAndDesc(managedRoot, property).getKey() + "</b></i> will be ignored</html>";
+		return "<html>If not selected, then entities with <i><b>" + EntitiesTreeModel2.extractTitleAndDesc(root, managedRoot, property).getKey() + "</b></i> will be ignored</html>";
 	    }
-	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(managedRoot, property).getKey() + "</b> to/from " + firstTickCaption + "</html>";
+	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, managedRoot, property).getKey() + "</b> to/from " + firstTickCaption + "</html>";
 	}
 
 	private String createResultSetCheckboxToolTipText(final Class<?> root, final Class<?> managedRoot, final String property) {
 	    if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getSecondTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
 		return null;
 	    }
-	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(managedRoot, property).getKey() + "</b> to/from " + secondTickCaption + "</html>";
+	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, managedRoot, property).getKey() + "</b> to/from " + secondTickCaption + "</html>";
 	}
     }
 
