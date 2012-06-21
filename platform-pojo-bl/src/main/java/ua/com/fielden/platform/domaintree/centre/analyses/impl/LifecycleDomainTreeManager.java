@@ -23,8 +23,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManager implements ILifecycleDomainTreeManager {
-    private static final long serialVersionUID = -4155274305648154329L;
-
     private Pair<Class<?>, String> lifecycleProperty;
     private Date from, to;
     private Boolean total;
@@ -72,8 +70,6 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
     }
 
     public static class LifecycleAddToDistributionTickManager extends AbstractAnalysisAddToDistributionTickManager implements ILifecycleAddToDistributionTickManager {
-	private static final long serialVersionUID = 4659406246345595522L;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.
@@ -99,8 +95,6 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
     }
 
     public static class LifecycleAddToCategoriesTickManager extends AbstractAnalysisAddToAggregationTickManager implements ILifecycleAddToCategoriesTickManager {
-	private static final long serialVersionUID = -4025471910983945279L;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.

@@ -13,7 +13,6 @@ import org.junit.Test;
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -57,23 +56,23 @@ public class FindLinkPropertyInGeneratedTypeTest {
     public void setUp() {
 	dtm = new DomainTreeEnhancer(serialiser, rootTypes);
 
-	final CalculatedProperty calc4One2One = CalculatedProperty.createAndValidate(factory, MasterEntityWithOneToOneAssociation.class, "", "2 * intProp", "Calculated property", "desc", NO_ATTR, "intProp", dtm);
-	dtm.addCalculatedProperty(calc4One2One);
+	// calc4One2One
+	dtm.addCalculatedProperty(MasterEntityWithOneToOneAssociation.class, "", "2 * intProp", "Calculated property", "desc", NO_ATTR, "intProp");
 	dtm.apply();
 	typeWithOne2One = (Class<? extends AbstractEntity<?>>) dtm.getManagedType(MasterEntityWithOneToOneAssociation.class);
 
-	final CalculatedProperty calc4One2Many = CalculatedProperty.createAndValidate(factory, MasterEntityWithOneToManyAssociation.class, "", "2 * moneyProp", "Calculated property", "desc", NO_ATTR, "moneyProp", dtm);
-	dtm.addCalculatedProperty(calc4One2Many);
+	// calc4One2Many
+	dtm.addCalculatedProperty(MasterEntityWithOneToManyAssociation.class, "", "2 * moneyProp", "Calculated property", "desc", NO_ATTR, "moneyProp");
 	dtm.apply();
 	typeWithOne2Many = (Class<? extends AbstractEntity<?>>) dtm.getManagedType(MasterEntityWithOneToManyAssociation.class);
 
-	final CalculatedProperty calc4EnhancedOne2One = CalculatedProperty.createAndValidate(factory, MasterEntityWithOneToOneAssociation.class, "one2oneAssociation", "2 * intProp", "Calculated property", "desc", NO_ATTR, "intProp", dtm);
-	dtm.addCalculatedProperty(calc4EnhancedOne2One);
+	// calc4EnhancedOne2One
+	dtm.addCalculatedProperty(MasterEntityWithOneToOneAssociation.class, "one2oneAssociation", "2 * intProp", "Calculated property", "desc", NO_ATTR, "intProp");
 	dtm.apply();
 	typeWithEnhancedOne2One = (Class<? extends AbstractEntity<?>>) dtm.getManagedType(MasterEntityWithOneToOneAssociation.class);
 
-	final CalculatedProperty calc4EnhancedOne2Many = CalculatedProperty.createAndValidate(factory, MasterEntityWithOneToManyAssociation.class, "one2manyAssociationCollectional", "2 * intProp", "Calculated property", "desc", NO_ATTR, "intProp", dtm);
-	dtm.addCalculatedProperty(calc4EnhancedOne2Many);
+	// calc4EnhancedOne2Many
+	dtm.addCalculatedProperty(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationCollectional", "2 * intProp", "Calculated property", "desc", NO_ATTR, "intProp");
 	dtm.apply();
 	typeWithEnhancedOne2Many = (Class<? extends AbstractEntity<?>>) dtm.getManagedType(MasterEntityWithOneToManyAssociation.class);
     }

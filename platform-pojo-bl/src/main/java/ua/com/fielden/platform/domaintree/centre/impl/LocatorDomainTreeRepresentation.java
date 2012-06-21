@@ -19,8 +19,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class LocatorDomainTreeRepresentation extends CentreDomainTreeRepresentation implements ILocatorDomainTreeRepresentation {
-    private static final long serialVersionUID = -2470587042269751368L;
-
     /**
      * A <i>representation</i> constructor for the first time instantiation. Initialises also children references on itself.
      */

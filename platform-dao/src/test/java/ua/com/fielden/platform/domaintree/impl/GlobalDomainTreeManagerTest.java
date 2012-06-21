@@ -15,7 +15,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
@@ -718,7 +718,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
 	try {
 	    newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).getEnhancer().getCalculatedProperty(EntityWithStringKeyType.class, "newCalcProp");
 	    fail("The calc prop should not be acceptable after discard operation.");
-	} catch (final IncorrectCalcPropertyKeyException e) {
+	} catch (final IncorrectCalcPropertyException e) {
 	}
 	assertTrue("The state is incorrect.", newNonBaseMgr.getEntityMasterManager(MENU_ITEM_TYPE).getLocatorManager(ROOT, property).isRunAutomatically());
     }

@@ -14,8 +14,7 @@ public class AceCalculatedPropertyMetaInformationPopulation implements IAfterCha
 
     @Override
     public void handle(final MetaProperty property, final Object entityPropertyValue) {
-	final CalculatedProperty cp = (CalculatedProperty) property.getEntity();
-	cp.inferMetaInformationFromExpression();
+	((CalculatedProperty) property.getEntity()).inferMetaInformation();
     }
 
 }

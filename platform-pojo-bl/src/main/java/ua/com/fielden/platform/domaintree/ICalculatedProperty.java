@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree;
 
 import ua.com.fielden.platform.basic.IPropertyEnum;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
 /**
  * The <b>calculated property</b> represents an abstraction for an expression which could be used in queries
@@ -595,6 +596,15 @@ public interface ICalculatedProperty {
      * @return
      */
     Class<?> resultType();
+
+    /**
+     * Returns an expression model that is currently associated with calculated property. The expression model
+     * is typically changed when {@link #setContextualExpression(String)} invokes. If expression model has not been
+     * initialised --  it returns <code>null</code>.
+     *
+     * @return
+     */
+    ExpressionModel getExpressionModel();
 
     @Override
     public boolean equals(Object obj);

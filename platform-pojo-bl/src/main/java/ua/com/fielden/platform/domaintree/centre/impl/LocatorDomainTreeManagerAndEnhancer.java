@@ -73,8 +73,6 @@ public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManager
      *
      */
     protected class LocatorDomainTreeRepresentationAndEnhancer extends CentreDomainTreeRepresentationAndEnhancer implements ILocatorDomainTreeRepresentation {
-	private static final long serialVersionUID = -5345869657944629725L;
-
 	protected LocatorDomainTreeRepresentationAndEnhancer(final AbstractDomainTreeRepresentation base) {
 	    super(base);
 	}

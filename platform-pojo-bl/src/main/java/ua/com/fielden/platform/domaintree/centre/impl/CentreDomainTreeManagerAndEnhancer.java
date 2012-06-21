@@ -34,8 +34,6 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManagerAndEnhancer implements ICentreDomainTreeManagerAndEnhancer {
-    private static final long serialVersionUID = 8558129093648869501L;
-
     /**
      * A <i>manager with enhancer</i> constructor for the first time instantiation.
      */
@@ -329,7 +327,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	    // inject an enhanced type into method implementation
 	    base().insertCheckedProperty(enhancer().getManagedType(root), property, index);
 	}
-	
+
 	@Override
 	protected void removeCheckedProperty(final Class<?> root, final String property) {
 	    // inject an enhanced type into method implementation
@@ -344,8 +342,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
      *
      */
     protected class AddToResultTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAddToResultTickManager {
-	private static final long serialVersionUID = 192045576594016450L;
-
 	private AddToResultTickManagerAndEnhancer(final TickManager base) {
 	    super(base);
 	}
@@ -404,8 +400,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
      *
      */
     protected class CentreDomainTreeRepresentationAndEnhancer extends DomainTreeRepresentationAndEnhancer implements ICentreDomainTreeRepresentation {
-	private static final long serialVersionUID = -5345869657944629725L;
-
 	protected CentreDomainTreeRepresentationAndEnhancer(final AbstractDomainTreeRepresentation base) {
 	    super(base);
 	}
@@ -482,8 +476,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 	 *
 	 */
 	protected class AddToResultTickRepresentationAndEnhancer extends TickRepresentationAndEnhancer implements IAddToResultTickRepresentation {
-	    private static final long serialVersionUID = -6145540404981386675L;
-
 	    protected AddToResultTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }

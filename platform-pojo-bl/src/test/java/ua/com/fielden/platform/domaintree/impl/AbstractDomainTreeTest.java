@@ -459,6 +459,7 @@ public abstract class AbstractDomainTreeTest {
     public void test_that_equality_and_copying_works() {
 	if (dtm() != null) {
 	    final IDomainTreeManagerAndEnhancer dtm = dtm();
+	    dtm.getEnhancer().apply();
 	    assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
 
 	    final IDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
@@ -543,6 +544,7 @@ public abstract class AbstractDomainTreeTest {
 	    final IDomainTreeManagerAndEnhancer dtm = dtm();
 
 	    dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "7 * integerProp", "Calculated Property", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	    dtm.getEnhancer().apply();
 
 	    checkAccessabilityOfCalculatedPropertiesAndTheirState(dtm);
 

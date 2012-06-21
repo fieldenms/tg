@@ -37,8 +37,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresentation implements ICentreDomainTreeRepresentation {
-    private static final long serialVersionUID = -2470587042269751368L;
-
     /**
      * A <i>representation</i> constructor for the first time instantiation. Initialises also children references on itself.
      */
@@ -74,7 +72,6 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
      *
      */
     protected static class AddToCriteriaTick extends AbstractTickRepresentation implements IAddToCriteriaTickRepresentation {
-	private static final long serialVersionUID = -4402869381859112250L;
 	private final EnhancementPropertiesMap<Object> propertiesDefaultValues1;
 	private final EnhancementPropertiesMap<Object> propertiesDefaultValues2;
 
@@ -200,7 +197,6 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
      *
      */
     protected static class AddToResultSetTick extends AbstractTickRepresentation implements IAddToResultTickRepresentation {
-	private static final long serialVersionUID = -3615430853744511063L;
 	private final EnhancementPropertiesMap<Integer> propertiesWidths;
 	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
 	private final EnhancementSet propertiesOrderingDisablement;

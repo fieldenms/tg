@@ -10,7 +10,7 @@ import javax.swing.tree.TreePath;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
@@ -54,7 +54,7 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 	    getRenderer().setCopyButtonVisible(true);
 	    getRenderer().setRemoveButtonVisible(true);
 
-	} catch (final IncorrectCalcPropertyKeyException ex){
+	} catch (final IncorrectCalcPropertyException ex){
 	    if(EntityUtils.isEntityType(propertyType(node))){
 		getRenderer().setNewButtonVisible(true);
 	    }
@@ -94,7 +94,7 @@ public class EntitiesTreeCellEditor extends MultipleCheckboxTreeCellEditor2 {
 		try {
 		    getTree().getEntitiesModel().getManager().getEnhancer().getCalculatedProperty(node.getUserObject().getKey(), node.getUserObject().getValue());
 		    return true;
-		} catch (final IncorrectCalcPropertyKeyException ex) {
+		} catch (final IncorrectCalcPropertyException ex) {
 		    if (EntityUtils.isEntityType(propertyType(node))) {
 			return true;
 		    }

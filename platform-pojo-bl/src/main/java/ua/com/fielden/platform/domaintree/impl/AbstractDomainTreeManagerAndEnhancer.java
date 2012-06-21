@@ -34,7 +34,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTreeManagerAndEnhancer {
-    private static final long serialVersionUID = 7838262757425383240L;
     private final AbstractDomainTreeManager base;
     private final IDomainTreeEnhancer enhancer;
     private transient final IDomainTreeEnhancer enhancerWithPropertiesPopulation;
@@ -69,7 +68,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
      * @author TG Team
      *
      */
-    private static class DomainTreeEnhancerWithPropertiesPopulation implements IDomainTreeEnhancer {
+    protected static class DomainTreeEnhancerWithPropertiesPopulation implements IDomainTreeEnhancer {
 	private final transient Logger logger = Logger.getLogger(getClass());
 	private final DomainTreeEnhancer baseEnhancer;
 	private final DomainTreeRepresentationAndEnhancer dtr;
@@ -108,10 +107,10 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	 * @param oldCalculatedProperties
 	 * @return
 	 */
-	private Set<Pair<Class<?>, String>> migrateToSet(final Map<Class<?>, List<ICalculatedProperty>> oldCalculatedProperties) {
+	private Set<Pair<Class<?>, String>> migrateToSet(final Map<Class<?>, List<CalculatedProperty>> oldCalculatedProperties) {
 	    final Set<Pair<Class<?>, String>> set = new HashSet<Pair<Class<?>, String>>();
-	    for (final Entry<Class<?>, List<ICalculatedProperty>> entry : oldCalculatedProperties.entrySet()) {
-		for (final ICalculatedProperty prop : entry.getValue()) {
+	    for (final Entry<Class<?>, List<CalculatedProperty>> entry : oldCalculatedProperties.entrySet()) {
+		for (final CalculatedProperty prop : entry.getValue()) {
 		    set.add(new Pair<Class<?>, String>(entry.getKey(), prop.pathAndName()));
 		}
 	    }
@@ -120,9 +119,9 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
 	@Override
 	public void apply() {
-	    final Map<Class<?>, List<ICalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer);
+	    final Map<Class<?>, List<CalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer, false);
 	    baseEnhancer.apply();
-	    final Map<Class<?>, List<ICalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<ICalculatedProperty>>(baseEnhancer.calculatedProperties());
+	    final Map<Class<?>, List<CalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<CalculatedProperty>>(baseEnhancer.calculatedProperties());
 
 	    final Set<Pair<Class<?>, String>> was = migrateToSet(oldCalculatedProperties);
 	    for (final Pair<Class<?>, String> rootAndProp : was) {
@@ -234,8 +233,12 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	}
 
 	@Override
-	public ICalculatedProperty validateCalculatedPropertyKey(final ICalculatedProperty calculatedProperty, final String pathAndName) {
-	    return baseEnhancer.validateCalculatedPropertyKey(calculatedProperty, pathAndName);
+	public Set<Class<?>> rootTypes() {
+	    return baseEnhancer.rootTypes();
+	}
+
+	protected DomainTreeEnhancer baseEnhancer() {
+	    return baseEnhancer;
 	}
     }
 
@@ -279,7 +282,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
      *
      */
     protected class TickManagerAndEnhancer extends TickManager implements ITickManagerWithMutability {
-	private static final long serialVersionUID = 6961101639080080892L;
 	private final TickManager base;
 
 	protected TickManager base() {
@@ -375,7 +377,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
      *
      */
     protected class DomainTreeRepresentationAndEnhancer implements IDomainTreeRepresentationWithMutability {
-	private static final long serialVersionUID = 7828017670201120912L;
 	private final AbstractDomainTreeRepresentation base;
 	private final ITickRepresentation firstTick;
 	private final ITickRepresentation secondTick;
@@ -433,7 +434,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	 *
 	 */
 	protected class TickRepresentationAndEnhancer implements ITickRepresentationWithMutability {
-	    private static final long serialVersionUID = -4811228680416493535L;
 	    private final AbstractTickRepresentation base;
 
 	    protected TickRepresentationAndEnhancer(final AbstractTickRepresentation base) {

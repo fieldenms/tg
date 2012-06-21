@@ -19,8 +19,6 @@ import ua.com.fielden.platform.serialisation.impl.TgKryo;
  *
  */
 public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager implements IPivotDomainTreeManager {
-    private static final long serialVersionUID = -4155274305648154329L;
-
     /**
      * A <i>manager</i> constructor for the first time instantiation.
      *
@@ -59,8 +57,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
     }
 
     public static class PivotAddToDistributionTickManager extends AbstractAnalysisAddToDistributionTickManager implements IPivotAddToDistributionTickManager {
-	private static final long serialVersionUID = 4659406246345595522L;
-
 	private final EnhancementPropertiesMap<Integer> propertiesWidths;
 
 	/**
@@ -118,8 +114,6 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
     }
 
     public static class PivotAddToAggregationTickManager extends AbstractAnalysisAddToAggregationTickManager implements IPivotAddToAggregationTickManager {
-	private static final long serialVersionUID = -4025471910983945279L;
-
 	private final EnhancementPropertiesMap<Integer> propertiesWidths;
 
 	/**

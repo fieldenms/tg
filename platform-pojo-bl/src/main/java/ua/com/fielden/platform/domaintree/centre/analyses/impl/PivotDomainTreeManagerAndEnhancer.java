@@ -121,8 +121,6 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
 	 *
 	 */
 	public class PivotAddToDistributionTickRepresentationAndEnhancer extends AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer implements IPivotAddToDistributionTickRepresentation {
-	    private static final long serialVersionUID = -8143739289123268471L;
-
 	    protected PivotAddToDistributionTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
@@ -150,8 +148,6 @@ public class PivotDomainTreeManagerAndEnhancer extends AbstractAnalysisDomainTre
 	 *
 	 */
 	public class PivotAddToAggregationTickRepresentationAndEnhancer extends AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer implements IPivotAddToAggregationTickRepresentation {
-	    private static final long serialVersionUID = -8143739289123268471L;
-
 	    protected PivotAddToAggregationTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }

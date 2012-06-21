@@ -13,8 +13,6 @@ import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainTreeRepresentation1 extends AbstractDomainTreeRepresentation {
-    private static final long serialVersionUID = -8746883123699403533L;
-
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      *
@@ -32,8 +30,6 @@ public class DomainTreeRepresentation1 extends AbstractDomainTreeRepresentation 
     }
 
     public static class TickRepresentationForTest extends AbstractTickRepresentation {
-	private static final long serialVersionUID = -4112761380255058134L;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr"
 	 * field.

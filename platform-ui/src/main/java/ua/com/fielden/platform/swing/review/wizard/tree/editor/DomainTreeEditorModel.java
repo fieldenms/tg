@@ -5,22 +5,18 @@ import java.awt.event.ActionEvent;
 import javax.swing.Action;
 import javax.swing.event.EventListenerList;
 
-import org.apache.commons.lang.StringUtils;
-
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorModel;
 import ua.com.fielden.platform.expression.editor.IPropertySelectionListener;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.ei.development.MasterPropertyBinder;
 import ua.com.fielden.platform.swing.ei.editors.development.ILightweightPropertyBinder;
 import ua.com.fielden.platform.swing.model.UmState;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
@@ -52,8 +48,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	this.rootType = rootType;
 	this.dtme = dtme;
 	this.factory = factory;
-	final CalculatedProperty entity = CalculatedProperty.createEmpty(factory, rootType, "", dtme.getEnhancer());
-	this.expressionModel = new ExpressionEditorModelForWizard(entity, MasterPropertyBinder.<CalculatedProperty>createPropertyBinderWithoutLocatorSupport(null));
+	this.expressionModel = new ExpressionEditorModelForWizard(CalculatedProperty.createEmpty(factory, rootType, "", dtme.getEnhancer()), MasterPropertyBinder.<CalculatedProperty>createPropertyBinderWithoutLocatorSupport(null));
 	this.listenerList = new EventListenerList();
 	this.propertySelectionModel = new CalculatedPropertySelectModel();
 	this.propertySelectionModel.addPropertySelectionListener(createPropertySelectedListener());
@@ -62,7 +57,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
     /**
      * Returns the {@link IDomainTreeManagerAndEnhancer} instance associated with this {@link DomainTreeEditorModel}.
-     * 
+     *
      * @return
      */
     public IDomainTreeManagerAndEnhancer getDomainTreeManagerAndEnhancer(){
@@ -131,7 +126,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	try{
 	    dtme.getEnhancer().getCalculatedProperty(rootType, propertyName);
 	    return true;
-	}catch (final IncorrectCalcPropertyKeyException ex){
+	}catch (final IncorrectCalcPropertyException ex){
 	    return false;
 	}
     }
@@ -188,7 +183,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
 	/**
 	 * Returns the "copy calculated property" action.
-	 * 
+	 *
 	 * @return
 	 */
 	public Action getCopyAction() {
@@ -200,31 +195,23 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 	    super.notifyActionStageChange(actionState);
 	    switch(actionState){
 	    case NEW_ACTION:
-		//TODO if this implementation is incorrect then advise!
-		if(propertySelectionModel != null && propertySelectionModel.isPropertySelected()){
-		    final Class<?> propertyType = StringUtils.isEmpty(propertySelectionModel.getSelectedProperty()) ? rootType : PropertyTypeDeterminator.determinePropertyType(rootType, propertySelectionModel.getSelectedProperty());
-		    if(EntityUtils.isEntityType(propertyType)){
-			final CalculatedProperty entity = CalculatedProperty.createEmpty(factory, rootType, propertySelectionModel.getSelectedProperty(), /* null, null, null, CalculatedPropertyAttribute.NO_ATTR, null, */ dtme.getEnhancer());
-			setEntity(entity);
-			isNew = true;
-		    } else {
-			throw new IllegalStateException("The context property can not have type different then entity type!");
-		    }
+		if (propertySelectionModel != null && propertySelectionModel.isPropertySelected()) {
+		    setEntity(CalculatedProperty.createEmpty(factory, rootType, propertySelectionModel.getSelectedProperty(), dtme.getEnhancer()));
+		    isNew = true;
 		} else {
 		    throw new IllegalStateException("Please select property first to create new calculated property!");
 		}
 		break;
 	    case EDIT_ACTION:
-		if(canEdit()){
-		    final CalculatedProperty entity = (CalculatedProperty)dtme.getEnhancer().getCalculatedProperty(rootType, propertySelectionModel.getSelectedProperty());
-		    setEntity(entity);
+		if (canEdit()) {
+		    setEntity((CalculatedProperty) dtme.getEnhancer().getCalculatedProperty(rootType, propertySelectionModel.getSelectedProperty()));
 		    isNew = false;
 		} else {
 		    throw new IllegalStateException("Please select generated property first to edit it");
 		}
 		break;
 	    case DELETE_ACTION:
-		if(propertySelectionModel != null && propertySelectionModel.isPropertySelected()){
+		if (propertySelectionModel != null && propertySelectionModel.isPropertySelected()) {
 		    dtme.getEnhancer().removeCalculatedProperty(rootType, propertySelectionModel.getSelectedProperty());
 		    dtme.getEnhancer().apply();
 		} else {
@@ -233,7 +220,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 		break;
 	    case NEW_POST_ACTION:
 	    case EDIT_POST_ACTION:
-		firePropertyProcessAction(new IPropertyProcessingAction(){
+		firePropertyProcessAction(new IPropertyProcessingAction() {
 
 		    @Override
 		    public void processPropertyEditAction(final IPropertyEditListener listener) {
@@ -243,7 +230,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 		break;
 
 	    case SAVE_POST_ACTION_SUCCESSFUL:
-		//TODO must ask whether can add edited calculated property or not.
+		// TODO must ask whether can add edited calculated property or not.
 		if (isNew) {
 		    dtme.getEnhancer().addCalculatedProperty(getEntity());
 		}
@@ -291,9 +278,8 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
 
 		@Override
 		protected Void action(final ActionEvent event) throws Exception {
-		    if(propertySelectionModel != null && propertySelectionModel.isPropertySelected()){
-			final CalculatedProperty entity = (CalculatedProperty)dtme.getEnhancer().copyCalculatedProperty(rootType, propertySelectionModel.getSelectedProperty());
-			setEntity(entity);
+		    if (propertySelectionModel != null && propertySelectionModel.isPropertySelected()) {
+			setEntity((CalculatedProperty) dtme.getEnhancer().copyCalculatedProperty(rootType, propertySelectionModel.getSelectedProperty()));
 			isNew = true;
 		    } else {
 			throw new IllegalStateException("Please select calculated property to edit!");

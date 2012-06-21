@@ -17,7 +17,6 @@ import org.restlet.Router;
 
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -82,10 +81,8 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 	super.setUp();
 
 	dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
-	final CalculatedProperty totalProperty1 = CalculatedProperty.createAndValidate(factory, InspectedEntity.class, "", "SUM(intProperty)", "intProperty Sum", "desc", NO_ATTR, "intProperty", dtm.getEnhancer());
-	final CalculatedProperty totalProperty2 = CalculatedProperty.createAndValidate(factory, InspectedEntity.class, "", "MAX(intProperty) - MIN(intProperty)", "minimaxDiff", "desc", NO_ATTR, "intProperty", dtm.getEnhancer());
-	dtm.getEnhancer().addCalculatedProperty(totalProperty1);
-	dtm.getEnhancer().addCalculatedProperty(totalProperty2);
+	dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "", "SUM(intProperty)", "intProperty Sum", "desc", NO_ATTR, "intProperty");
+	dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "", "MAX(intProperty) - MIN(intProperty)", "minimaxDiff", "desc", NO_ATTR, "intProperty");
 	dtm.getEnhancer().apply();
 	final List<ByteArray> byteListOfTypes = dtm.getEnhancer().getManagedTypeArrays(InspectedEntity.class);
 	binaryTypes = toByteArray(byteListOfTypes);

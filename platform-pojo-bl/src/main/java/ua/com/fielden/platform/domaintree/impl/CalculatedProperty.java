@@ -3,16 +3,20 @@ package ua.com.fielden.platform.domaintree.impl;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isCollectionOrInCollectionHierarchy;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.parentCollection;
 
-import java.nio.ByteBuffer;
+import java.lang.reflect.Field;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.CalcPropertyWarning;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer.DomainTreeEnhancerWithPropertiesPopulation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -27,22 +31,20 @@ import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.ast.visitor.LevelAllocatingVisitor;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
-import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.ClassComparator;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
- * An {@link ICalculatedProperty} default implementation, which can be binded to Expression Editor.
+ * The only {@link ICalculatedProperty} implementation, which can be binded to Expression Editor.
  *
  * @author TG Team
  *
@@ -50,27 +52,24 @@ import ua.com.fielden.platform.utils.EntityUtils;
 @KeyType(DynamicEntityKey.class)
 @EntityTitle(value = "Calculated property", desc = "<i>Calculated property</i> entity")
 @DescTitle(value = "Description", desc= "Calculated property description")
-public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> implements ICalculatedProperty {
+public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntityKey> implements ICalculatedProperty {
     private static final long serialVersionUID = -8413970385471726648L;
-    protected static final String BULLSHIT = "BULLSHIT";
 
     // Required and immutable stuff
     @IsProperty
     @CompositeKeyMember(1)
-    @Title(value = "Root type", desc = "A higher order type")
+    @Title(value = "Root type", desc = "A higher order type that contains calculated property (not enhanced)")
     @Readonly
     @Invisible
-    @BeforeChange(@Handler(BceRootValidation.class))
-    private /* final */ Class<?> root = Class.class;
+    private /* final */ Class<?> root;
 
     @IsProperty
     @CompositeKeyMember(2)
     @Title(value = "Context path", desc = "A path to the calculated property context")
     @Readonly
     @Invisible
-    @BeforeChange(@Handler(BceContextPathValidation.class))
     @AfterChange(AceCalculatedPropertyContextTypePopulation.class)
-    private /* final */ String contextPath = BULLSHIT;
+    private /* final */ String contextPath;
 
     // Required and mutable stuff
     @IsProperty
@@ -96,13 +95,13 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     @Dependent("title") // revalidates "title" to ensure that title / name of property is unique in potentially another parentType (after "attribute" has been changed)
     @BeforeChange(@Handler(BceAttributeValidation.class))
     @AfterChange(AceCalculatedPropertyMetaInformationPopulation.class)
-    private CalculatedPropertyAttribute attribute = CalculatedPropertyAttribute.NO_ATTR; // enabled only for COLLECTIONAL_EXPRESSION category of property and mutates category to ATTRIBUTED_COLLECTIONAL_EXPRESSION
+    private CalculatedPropertyAttribute attribute; // enabled only for COLLECTIONAL_EXPRESSION category of property and mutates category to ATTRIBUTED_COLLECTIONAL_EXPRESSION
 
     @IsProperty
     @CompositeKeyMember(6)
     @Title(value = "Origination property", desc = "A property from which this calculated property has been originated.")
     @BeforeChange(@Handler(BceOriginationPropertyValidation.class))
-    private String originationProperty = ""; // required only for AGGREGATED_EXPRESSIONs which represent Totals and should be assigned to some "original" property
+    private String originationProperty; // required only for AGGREGATED_EXPRESSIONs which represent Totals and should be assigned to some "original" property
 
     // Inferred stuff
     private /* final */ transient Class<?> contextType;
@@ -114,6 +113,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     private transient AstNode ast;
 
     private /* final */ transient IDomainTreeEnhancer enhancer;
+    private transient boolean validateTitleContextOfExtractedProperties;
 
     /**
      * Default constructor.
@@ -124,7 +124,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	setKey(key);
     }
 
-    protected Class<?> determineType(final String path) {
+    private Class<?> determineType(final String path) {
 	return StringUtils.isEmpty(path) ? this.root : PropertyTypeDeterminator.determinePropertyType(this.root, path);
     }
 
@@ -159,18 +159,16 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     /**
      * Inferred all needed information from {@link #contextualExpression} and {@link #attribute}.
      */
-    protected void inferMetaInformationFromExpression() {
-	if (ast == null) {
-	    try {
-		initAst(contextualExpression);
-	    } catch (final Exception e) {
-		e.printStackTrace();
-		throw new Result("The calculated property correctness should be verified earlier! Please check validation logic..", e);
-	    }
+    protected void inferMetaInformation() {
+	try {
+	    this.ast = createAst(contextualExpression);
+	} catch (final Exception e) {
+	    e.printStackTrace();
+	    throw new Result("The calculated property correctness should be verified earlier! Please check validation logic..", e);
 	}
 	this.resultType = ast.getType();
 
-	final int levelsToRaiseTheProperty = levelsToRaiseTheProperty();
+	final int levelsToRaiseTheProperty = levelsToRaiseTheProperty(getRoot(), getContextPath(), ast.getLevel());
 
 	final boolean collectionOrInCollectionHierarchy = isCollectionOrInCollectionHierarchy(this.root, this.getContextPath());
 	final String masterPath = collectionOrInCollectionHierarchy ? parentCollection(this.root, this.getContextPath()) : "";
@@ -215,9 +213,14 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 	getProperty("originationProperty").setRequired(CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(this.category));
     }
 
-    protected int levelsToRaiseTheProperty() {
-	final int contextPathLevel = new LevelAllocatingVisitor((Class<? extends AbstractEntity>) getRoot(), getContextPath()).getContextLevel();
-	final int level = ast.getLevel() == null ? contextPathLevel : ast.getLevel();
+    @Override
+    public ExpressionModel getExpressionModel() {
+        return ast == null ? null : ast.getModel();
+    }
+
+    protected static int levelsToRaiseTheProperty(final Class<?> root, final String contextPath, final Integer expressionLevel) {
+	final int contextPathLevel = new LevelAllocatingVisitor((Class<? extends AbstractEntity>) root, contextPath).getContextLevel();
+	final int level = expressionLevel == null ? contextPathLevel : expressionLevel;
 	return contextPathLevel - level;
     }
 
@@ -311,7 +314,7 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
     }
 
     public String pathWith(final String name) {
-	return path() == null ? null : "".equals(path()) ? name : path() + "." + name;
+	return path() == null ? null : name == null ? null : "".equals(path()) ? name : path() + "." + name;
     }
 
     @Override
@@ -331,18 +334,20 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
 
     // Fictive setters for actually "immutable" root and contextPath
     @Observable
-    public void setRoot(final Class<?> root) {
+    public CalculatedProperty setRoot(final Class<?> root) {
         this.root = root;
+        return this;
     }
 
     @Observable
-    public void setContextPath(final String contextPath) {
+    public CalculatedProperty setContextPath(final String contextPath) {
         this.contextPath = contextPath;
+        return this;
     }
 
     /**
      * Creates empty {@link CalculatedProperty} with only necessary {@link #getRoot()} and {@link #getContextPath()} initialised.
-     * It is obvious that other required stuff will not be initialised. immediate validation intentionally will not be performed.
+     * It is obvious that other required stuff will not be initialised. Immediate validation intentionally will not be performed.
      *
      * @param factory
      * @param root
@@ -351,23 +356,58 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
      * @return
      */
     public static CalculatedProperty createEmpty(final EntityFactory factory, final Class<?> root, final String contextPath, final IDomainTreeEnhancer domainTreeEnhancer) {
-        final CalculatedProperty calc = factory.newEntity(CalculatedProperty.class);
+	return createEmpty(factory, root, contextPath, domainTreeEnhancer, true);
+    }
 
-        // make Root and ContextPath not required -- their non-empty logic has been moved to corresponding Before Change Events
-        calc.getProperty("root").setRequired(false);
-        calc.getProperty("contextPath").setRequired(false);
+    /**
+     * Creates empty {@link CalculatedProperty} with only necessary {@link #getRoot()} and {@link #getContextPath()} initialised.
+     * It is obvious that other required stuff will not be initialised. Immediate validation intentionally will not be performed.
+     *
+     * @param factory
+     * @param root
+     * @param contextPath
+     * @param domainTreeEnhancer
+     * @return
+     */
+    private static CalculatedProperty createEmpty(final EntityFactory factory, final Class<?> root, final String contextPath, final IDomainTreeEnhancer domainTreeEnhancer, final boolean validateTitleContextOfExtractedProperties) {
+	if (factory == null) {
+	    throw new IncorrectCalcPropertyException("Calculated property cannot be created using 'null' entity factory.");
+	}
+        final CalculatedProperty calc = factory.newEntity(CalculatedProperty.class);
+        calc.validateTitleContextOfExtractedProperties = validateTitleContextOfExtractedProperties;
+
+        // Enhancer:
+        if (domainTreeEnhancer == null) {
+            throw new IncorrectCalcPropertyException("Domain Tree Enhancer is essential part of calculated property. It can not be 'null'.");
+        }
+        calc.setEnhancer(domainTreeEnhancer);
+
+        // Root:
+	validateRoot(calc.getEnhancer(), root); // here immediate validation will be performed and exception will be thrown if smth. goes wrong
+	calc.setRoot(root).validateAndThrow("root");
+
+	// ContextPath:
+        validateContextPath(calc, contextPath);
+        calc.getProperty("contextPath").setRequired(false); // make ContextPath not required -- due to legality of "" contextPath, however 'null' is not correct
+        calc.setContextPath(contextPath).validateAndThrow("contextPath");
+
+	// Attribute:
+        calc.attribute = CalculatedPropertyAttribute.NO_ATTR; // no validation and Ace kicking will be performed
+        calc.validateAndThrow("attribute");
+        calc.getProperty("attribute").setRequired(false); // the requiredness should be relaxed after proper check of non-emptiness for "attribute"
+	calc.getProperty("attribute").setEditable(false); // attribute should be disabled at beginning. Its enablement will change after CalculatedProperty category changes.
+
 	// after the property has fully defined its correct context, the requiredness of originationProperty should be relaxed
 	// (originationProperty is required because it is key member). The requiredness of originationProperty depends on the
 	// expression category (e.g. for AGGREGATION_PROPERTY it should be required)
 	calc.getProperty("originationProperty").setRequired(false);
-	// Attribute property should be disabled at beginning. Its enablement will change after CalculatedProperty category changes.
-	calc.getProperty("attribute").setEditable(false);
-
-        calc.setRoot(root);
-        calc.setContextPath(contextPath);
-
-        calc.setEnhancer(domainTreeEnhancer);
         return calc;
+    }
+
+    private void validateAndThrow(final String property) {
+	if (!getProperty(property).isValidWithRequiredCheck()) {
+            throw getProperty(property).getFirstFailure();
+        }
     }
 
     /**
@@ -384,64 +424,42 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
      * @param domainTreeEnhancer
      * @return
      */
-    protected static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
-        return setImportantStuff(contextualExpression, title, desc, attribute, originationProperty, createEmpty(factory, root, contextPath, domainTreeEnhancer));
+    private static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer, final boolean validateTitleContextOfExtractedProperties) {
+        return setImportantStuff(contextualExpression, title, desc, attribute, originationProperty, createEmpty(factory, root, contextPath, domainTreeEnhancer, validateTitleContextOfExtractedProperties));
+    }
+
+    /**
+     * Creates full {@link CalculatedProperty} with all keys initialised and validates it.
+     *
+     * @return
+     */
+    private static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
+        return create(factory, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, domainTreeEnhancer, true);
     }
 
     /**
      * Creates full {@link CalculatedProperty} with all keys initialised, validates it and throws validation exception if any.
-     *
-     * @param factory
-     * @param root
-     * @param contextPath
-     * @param contextualExpression
-     * @param title
-     * @param desc
-     * @param attribute
-     * @param originationProperty
-     * @param domainTreeEnhancer
-     * @return
      */
-    public static CalculatedProperty createAndValidate(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
-	final CalculatedProperty calc = create(factory, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, domainTreeEnhancer);
+    protected final static CalculatedProperty createCorrect(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
+	return createCorrect(factory, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, domainTreeEnhancer, true);
+    }
+
+    /**
+     * Creates full {@link CalculatedProperty} with all keys initialised, validates it and throws validation exception if any.
+     */
+    protected final static CalculatedProperty createCorrect(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer, final boolean validateTitleContextOfExtractedProperties) {
+	final CalculatedProperty calc = create(factory, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, domainTreeEnhancer, validateTitleContextOfExtractedProperties);
 
 	if (!calc.isValid().isSuccessful()) {
 	    throw calc.isValid();
 	}
 	if (calc.category() == null) {
-	    throw new IncorrectCalcPropertyKeyException("The category of calculated property cannot be null.");
+	    throw new IncorrectCalcPropertyException("The category of calculated property cannot be null.");
 	}
-
         return calc;
     }
 
-    /**
-     * Creates full {@link CalculatedProperty} with all keys initialised without validation.
-     * It should be used only when the {@link CalculatedProperty} is surely correct, e.g. after 1) deserialisation 2) extracting from enhanced domain.
-     *
-     * @param factory
-     * @param root
-     * @param contextPath
-     * @param contextualExpression
-     * @param title
-     * @param desc
-     * @param attribute
-     * @param originationProperty
-     * @param domainTreeEnhancer
-     * @return
-     */
-    protected static CalculatedProperty createWithoutValidation(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
-	final CalculatedProperty calc = createEmpty(factory, root, contextPath, domainTreeEnhancer);
-
-        calc.setInitialising(true);
-	setImportantStuff(contextualExpression, title, desc, attribute, originationProperty, calc);
-        calc.setInitialising(false);
-        EntityUtils.handleMetaProperties(calc); // it is important to invoke definers after raw setters (without validation) have been invoked.
-
-        return calc;
-    }
-
-    protected static CalculatedProperty setImportantStuff(final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final CalculatedProperty calc) {
+    private static CalculatedProperty setImportantStuff(final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final CalculatedProperty calc) {
 	calc.setContextualExpression(contextualExpression);
         calc.setTitle(title);
         calc.setDesc(desc);
@@ -450,122 +468,198 @@ public class CalculatedProperty extends AbstractEntity<DynamicEntityKey> impleme
         return calc;
     }
 
-    protected static CalculatedProperty repeatSettingOfImportantStuff(final CalculatedProperty cp) {
-	return setImportantStuff((String) cp.getProperty("contextualExpression").getLastAttemptedValue(), //
-		(String) cp.getProperty("title").getLastAttemptedValue(), //
-		(String) cp.getProperty("desc").getLastAttemptedValue(), //
-		(CalculatedPropertyAttribute) cp.getProperty("attribute").getLastAttemptedValue(), //
-		(String) cp.getProperty("originationProperty").getLastAttemptedValue(), cp);
-    }
-
-    public IDomainTreeEnhancer getEnhancer() {
+    protected IDomainTreeEnhancer getEnhancer() {
         return enhancer;
     }
 
-    public void setEnhancer(final IDomainTreeEnhancer enhancer) {
-//	if (enhancer == null) {
-//	    throw new IncorrectCalcPropertyKeyException("An enhancer of the calculated property cannot be 'null'.");
+    private void setEnhancer(final IDomainTreeEnhancer enhancer) {
+	if (enhancer == null) {
+	    throw new IncorrectCalcPropertyException("An enhancer of the calculated property cannot be 'null'.");
+	}
+	this.enhancer = enhancer;
+    }
+
+    protected DomainTreeEnhancer enhancer() {
+	if (enhancer instanceof DomainTreeEnhancer) {
+	    return (DomainTreeEnhancer) enhancer;
+	} else if (enhancer instanceof DomainTreeEnhancerWithPropertiesPopulation) {
+	    return ((DomainTreeEnhancerWithPropertiesPopulation) enhancer).baseEnhancer();
+	} else {
+	    throw new IncorrectCalcPropertyException("Unknown enhancer type [" + enhancer.getClass() + "].");
+	}
+    }
+
+    protected void inferName() {
+	this.name = generateNameFrom(title);
+    }
+
+    protected void inferContextType() {
+	this.contextType = determineType(contextPath);
+    }
+
+    protected AstNode createAst(final String newContextualExpression) throws RecognitionException, SemanticException {
+	return new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getEnhancer().getManagedType(getRoot()), getContextPath(), newContextualExpression).convert();
+    }
+
+    protected CalculatedProperty copy() {
+	try {
+	    getEnhancer().getCalculatedProperty(getRoot(), pathAndName());
+	} catch (final IncorrectCalcPropertyException e) {
+	    throw new IncorrectCalcPropertyException("Cannot copy calculated property [" + this + "], that was not added to its enhancer.");
+	}
+	if (!isValid().isSuccessful()) {
+	    throw new IncorrectCalcPropertyException("Cannot copy invalid calculated property [" + this + "]. " + isValid().getMessage());
+	}
+	// the copy will be surely incorrect due to the same "title"
+	return create(getEntityFactory(), root, contextPath, contextualExpression, title, getDesc(), attribute, originationProperty, getEnhancer());
+    }
+
+    protected boolean isValidateTitleContextOfExtractedProperties() {
+        return validateTitleContextOfExtractedProperties;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////// VALIDATION UTILITIES ////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    protected static void validateRootWithoutRootTypeEnforcement(final IDomainTreeEnhancer enhancer, final Class<?> root) {
+	try {
+	    AbstractDomainTree.validateRootType(root);
+	} catch (final IllegalArgumentException e) {
+	    throw new IncorrectCalcPropertyException(e.getMessage());
+	}
+    }
+
+    protected static void validateRoot(final IDomainTreeEnhancer enhancer, final Class<?> root) {
+	validateRootWithoutRootTypeEnforcement(enhancer, root);
+	if (!enhancer.rootTypes().contains(root)) {
+	    throw new IncorrectCalcPropertyException("The type [" + root.getSimpleName() + "] is not a root type of enhancer. So the calculated property for that enhancer cannot be created.");
+	}
+    }
+
+    private static void validateContextPath(final CalculatedProperty cp, final String newContextPath) {
+	validatePath(cp.getRoot(), newContextPath, "The path [" + newContextPath + "] in type [" + cp.getRoot() + "] does not exist. It cannot be used as context path for calculated property.");
+	try {
+	    AbstractDomainTree.illegalType(cp.getRoot(), newContextPath, "Could not use 'non-AE' property [" + newContextPath + "] in type [" + cp.getRoot().getSimpleName() + "] for 'contextPath' of calculated property.", AbstractEntity.class);
+	} catch (final IllegalArgumentException e) {
+	    throw new IncorrectCalcPropertyException(e.getMessage());
+	}
+    }
+
+    private static void validatePath(final Class<?> root, final String path, final String message) {
+        if (path == null) {
+            throw new IncorrectCalcPropertyException(message);
+        }
+        if (!"".equals(path)) { // validate path
+            try {
+        	PropertyTypeDeterminator.determinePropertyType(root, path); // throw exception when the place does not exist
+            } catch (final Exception e) {
+        	throw new IncorrectCalcPropertyException(message);
+            }
+        }
+    }
+
+    protected static void validateContextualExpression(final CalculatedProperty cp, final String newContextualExpression) {
+//	if (StringUtils.isEmpty(newContextualExpression)) {
+//	    throw new IncorrectCalcPropertyException("The expression cannot be empty.");
+//	} -- should be handled by requiredness
+	final AstNode ast;
+	try {
+	    ast = cp.createAst(newContextualExpression);
+	} catch (final Exception ex) {
+	    throw new IncorrectCalcPropertyException(ex.getMessage());
+	}
+
+	final int levelsToRaiseTheProperty = CalculatedProperty.levelsToRaiseTheProperty(cp.getRoot(), cp.getContextPath(), ast.getLevel());
+	if (isCollectionOrInCollectionHierarchy(cp.getRoot(), cp.getContextPath())) { // collectional hierarchy
+	    if (levelsToRaiseTheProperty >= 1) {
+		throw new IncorrectCalcPropertyException("Aggregated collections are currently unsupported. Please try to use simple expressions under collections (or with ALL / ANY attributes).");
+	    }
+	} else {
+	    if (levelsToRaiseTheProperty > 1) {
+		throw new IncorrectCalcPropertyException("The aggregation cannot be applied twice or more for simple non-collectional entity hirerarchy (\"Total\" values cannot be aggregated).");
+	    }
+	}
+    }
+
+    protected static void validateTitle(final CalculatedProperty cp, final String newTitle) {
+//	if (StringUtils.isEmpty(newTitle)) {
+//	    throw new IncorrectCalcPropertyException("A title of the calculated property cannot be empty.");
 //	}
-        this.enhancer = enhancer;
-    }
+	final String name = CalculatedProperty.generateNameFrom(newTitle);
+	if (StringUtils.isEmpty(name)) {
+	    throw new IncorrectCalcPropertyException("Please specify more appropriate title with some characters (and perhaps digits).");
+	}
 
-    public void setName(final String name) {
-	this.name = name;
-    }
-
-    public void setContextType(final Class<?> contextType) {
-	this.contextType = contextType;
-    }
-
-    public AstNode getAst() {
-	return ast;
-    }
-
-    public void initAst(final String newContextualExpression) throws RecognitionException, SemanticException {
-	final ExpressionText2ModelConverter et2mc = new ExpressionText2ModelConverter((Class<? extends AbstractEntity>) getEnhancer().getManagedType(getRoot()), getContextPath(), newContextualExpression);
-	this.ast = et2mc.convert();
+	if (cp.path() != null) {
+	    // validate if calculated property is correct in context of other calculated properties inside Domain Tree Enhancer
+	    validateCalculatedPropertyKey1(cp, cp.pathWith(name));
+	}
     }
 
     /**
-     * Root and context path are essential for all other parts of {@link CalculatedProperty}.
-     * So this method returns a first failure for these properties or <code>null</code> if there is no failure.
+     * Validates the calculated property key (see {@link #validatePropertyKey0(Class, String, Map)}) and checks whether another property with the same name exists (calculated or not).
+     * If exists -- throws {@link IncorrectCalcPropertyException}.
      *
+     * @param calculatedPropertyToCheck
+     * @param newPathAndName
+     * @param calculatedProperties
+     * @param originalAndEnhancedRootTypes
      * @return
      */
-    protected IncorrectCalcPropertyKeyException validateRootAndContext() {
-	if (!getProperty("root").isValid()) {
-	    return (IncorrectCalcPropertyKeyException) getProperty("root").getFirstFailure();
-	} else if (!getProperty("contextPath").isValid()) {
-	    return (IncorrectCalcPropertyKeyException) getProperty("contextPath").getFirstFailure();
-	} else {
-	    return null;
+    private static void validateCalculatedPropertyKey1(final CalculatedProperty calculatedPropertyToCheck, final String newPathAndName) {
+	final Class<?> root = calculatedPropertyToCheck.getRoot();
+
+	final ICalculatedProperty calculatedProperty = calculatedPropertyToCheck.enhancer().calculatedProperty(root, newPathAndName);
+	if (calculatedProperty != null) {
+	    if (calculatedProperty == calculatedPropertyToCheck) {
+		// this is the same property!
+	    } else {
+		if (calculatedPropertyToCheck.isValidateTitleContextOfExtractedProperties()) {
+		    throw new IncorrectCalcPropertyException("The calculated property with name [" + newPathAndName + "] already exists.");
+		}
+	    }
+	}
+	try {
+	    PropertyTypeDeterminator.determinePropertyType(root, newPathAndName);
+	    // if (AbstractDomainTreeRepresentation.isCalculated(root, pathAndName)) {
+	    //     return null; // the property with a suggested name exists in original domain, but it is "calculated", which is correct
+	    // }
+	} catch (final Exception e) {
+	    return; // the property with a suggested name does not exist in original domain, which is correct
+	}
+	throw new IncorrectCalcPropertyException("The property with the name [" + newPathAndName + "] already exists in original domain (inside " + root.getSimpleName() + " root). Please try another name for calculated property.");
+    }
+
+    protected static void validateAttribute(final CalculatedProperty cp, final CalculatedPropertyAttribute newAttribute) {
+	if (newAttribute == null) {
+	    throw new IncorrectCalcPropertyException("The attribute cannot be null.");
+	}
+	final boolean hasAttribute = !CalculatedPropertyAttribute.NO_ATTR.equals(newAttribute);
+	if (hasAttribute && cp.category() == null) {
+	    throw new IncorrectCalcPropertyException("ALL / ANY attribute cannot be applied without a category which was not defined due to invalid expression.");
+	}
+	if (hasAttribute && cp.category() != null && !CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION.equals(cp.category())) {
+	    throw new IncorrectCalcPropertyException("ALL / ANY attribute cannot be applied to non-collectional sub-property [" + cp.getContextualExpression() + "].");
 	}
     }
 
-    /**
-     * A specific Kryo serialiser for {@link CalculatedProperty}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class CalculatedPropertySerialiser extends TgSimpleSerializer<CalculatedProperty> {
-	public CalculatedPropertySerialiser(final TgKryo kryo) {
-	    super(kryo);
+    protected static void validateOriginationProperty(final CalculatedProperty cp, final String newOriginationProperty) {
+//	if (newOriginationProperty == null) {
+//	    return new IncorrectCalcPropertyException("The origination property cannot be null.");
+//	}
+//	// check if the "originationProperty" is correct in context of "contextType":
+//	if (property.isRequired() && StringUtils.isEmpty(newOriginationProperty)) {
+//	    return new IncorrectCalcPropertyException("The origination property cannot be empty for Aggregated Expressions.");
+//	}
+
+	final Class<?> managedType = cp.getEnhancer().getManagedType(cp.getRoot());
+	final String realOriginationProperty = Reflector.fromRelative2AbsotulePath(cp.getContextPath(), newOriginationProperty);
+	validatePath(managedType, realOriginationProperty, "The origination property [" + newOriginationProperty + "] does not exist in type [" + managedType + "].");
+
+	final Field field = StringUtils.isEmpty(realOriginationProperty) ? null : Finder.findFieldByName(managedType, realOriginationProperty);
+	final String originationPropExpression = field != null && field.isAnnotationPresent(Calculated.class) ? field.getAnnotation(Calculated.class).value() : newOriginationProperty;
+	if (cp.getContextualExpression() == null || !cp.getContextualExpression().contains(originationPropExpression)) {
+	    throw new CalcPropertyWarning("The origination property does not take a part in the expression. Is that correct?");
 	}
-
-	@Override
-	public CalculatedProperty read(final ByteBuffer buffer) {
-	    final Class<?> root = readValue(buffer, Class.class);
-	    final String contextPath = readValue(buffer, String.class);
-	    final String contextualExpression = readValue(buffer, String.class);
-	    final String title = readValue(buffer, String.class);
-	    final CalculatedPropertyAttribute attribute = readValue(buffer, CalculatedPropertyAttribute.class);
-	    final String originationProperty = readValue(buffer, String.class);
-	    final String desc = readValue(buffer, String.class);
-	    return CalculatedProperty.create(kryo.factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, /* domainTreeEnhancer should be initialised later!*/ null);
-	}
-
-	@Override
-	public void write(final ByteBuffer buffer, final CalculatedProperty cp) {
-	    writeValue(buffer, cp.root);
-	    writeValue(buffer, cp.contextPath);
-	    writeValue(buffer, cp.contextualExpression);
-	    writeValue(buffer, cp.title);
-	    writeValue(buffer, cp.attribute);
-	    writeValue(buffer, cp.originationProperty);
-	    writeValue(buffer, cp.getDesc());
-	}
-    }
-
-    protected CalculatedProperty copy(final ISerialiser serialiser) {
-	final CalculatedProperty copy = EntityUtils.deepCopy(this, serialiser);
-	copy.setEnhancer(enhancer);
-
-	// copy meta-information to be "identical" copy
-	for (final MetaProperty thisProperty : this.getProperties().values()) {
-	    final MetaProperty copyProperty = copy.getProperty(thisProperty.getName());
-//	    for (final Entry<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> entry : thisProperty.getValidators().entrySet()) {
-//		for (final Entry<IBeforeChangeEventHandler, Result> entryInner : entry.getValue().entrySet()) {
-//		    final Result resultCopy = entryInner.getValue() == null ? null : new Result(copy, entryInner.getValue().getMessage(), entryInner.getValue().getEx());
-//		    copyProperty.setValidationResult(entry.getKey(), entryInner.getKey(), resultCopy);
-//		}
-//	    }
-	    copyProperty.setAssigned(thisProperty.isAssigned());
-	    copyProperty.setDesc(thisProperty.getDesc());
-	    copyProperty.setDirty(thisProperty.isDirty());
-	    copyProperty.setEditable(thisProperty.isEditable());
-	    copyProperty.setEnforceMutator(thisProperty.isEnforceMutator());
-	    // copyProperty.setLastInvalidValue(thisProperty.getLastInvalidValue());
-	    copyProperty.setOriginalValue(thisProperty.getOriginalValue());
-	    copyProperty.setPrevValue(thisProperty.getPrevValue());
-	    copyProperty.setRequired(thisProperty.isRequired());
-	    copyProperty.setTitle(thisProperty.getTitle());
-	    copyProperty.setType(thisProperty.getType());
-	    copyProperty.setVisible(thisProperty.isVisible());
-	}
-
-	CalculatedProperty.repeatSettingOfImportantStuff(copy);
-	copy.isValid();
-	return copy;
     }
 }

@@ -85,11 +85,14 @@ public abstract class AbstractDomainTree {
      * @param rootTypes
      */
     public static void validateRootType(final Class<?> klass) {
+	if (klass == null) {
+	    throw new IllegalArgumentException("Root type [" + klass + "] should be NOT NULL.");
+	}
 	if (!EntityUtils.isEntityType(klass)) {
-	    throw new IllegalArgumentException("Raw domain tree creation should use entity-typed root types. Current == [" + klass + "].");
+	    throw new IllegalArgumentException("Root type [" + klass + "] should be entity-typed.");
 	}
 	if (DynamicEntityClassLoader.isEnhanced(klass)) {
-	    throw new IllegalArgumentException("Raw domain tree creation should use NOT ENHANCED root types. Current == [" + klass + "].");
+	    throw new IllegalArgumentException("Root type [" + klass + "] should be NOT ENHANCED type.");
 	}
     }
 

@@ -65,8 +65,6 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
      *
      */
     protected abstract class AbstractAnalysisAddToDistributionTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAbstractAnalysisAddToDistributionTickManager {
-	private static final long serialVersionUID = 5845028563069886027L;
-
 	protected AbstractAnalysisAddToDistributionTickManagerAndEnhancer(final TickManager base) {
 	    super(base);
 	}
@@ -112,8 +110,6 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
      *
      */
     protected abstract class AbstractAnalysisAddToAggregationTickManagerAndEnhancer extends TickManagerAndEnhancer implements IAbstractAnalysisAddToAggregationTickManager {
-	private static final long serialVersionUID = 5845028563069886027L;
-
 	protected AbstractAnalysisAddToAggregationTickManagerAndEnhancer(final TickManager base) {
 	    super(base);
 	}
@@ -181,8 +177,6 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
      *
      */
     protected abstract class AbstractAnalysisDomainTreeRepresentationAndEnhancer extends DomainTreeRepresentationAndEnhancer implements IAbstractAnalysisDomainTreeRepresentation {
-	private static final long serialVersionUID = -5345869657944629725L;
-
 	protected AbstractAnalysisDomainTreeRepresentationAndEnhancer(final AbstractDomainTreeRepresentation base) {
 	    super(base);
 	}
@@ -220,8 +214,6 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
 	 *
 	 */
 	protected abstract class AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer extends TickRepresentationAndEnhancer implements IAbstractAnalysisAddToDistributionTickRepresentation {
-	    private static final long serialVersionUID = -8143739289123268471L;
-
 	    protected AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
@@ -239,8 +231,6 @@ public abstract class AbstractAnalysisDomainTreeManagerAndEnhancer extends Abstr
 	 *
 	 */
 	protected abstract class AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer extends TickRepresentationAndEnhancer implements IAbstractAnalysisAddToAggregationTickRepresentation {
-	    private static final long serialVersionUID = -8143739289123268471L;
-
 	    protected AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }

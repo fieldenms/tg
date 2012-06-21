@@ -2,8 +2,6 @@ package ua.com.fielden.platform.domaintree;
 
 import java.util.List;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
-
 /**
  * This interface defines how domain tree can be managed. <br><br>
  *

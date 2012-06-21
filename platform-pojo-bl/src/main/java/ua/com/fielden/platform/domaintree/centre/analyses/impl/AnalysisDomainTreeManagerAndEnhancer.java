@@ -107,8 +107,6 @@ public class AnalysisDomainTreeManagerAndEnhancer extends AbstractAnalysisDomain
 	 *
 	 */
 	public class AnalysisAddToDistributionTickRepresentationAndEnhancer extends AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer implements IAnalysisAddToDistributionTickRepresentation {
-	    private static final long serialVersionUID = -8143739289123268471L;
-
 	    protected AnalysisAddToDistributionTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
@@ -126,8 +124,6 @@ public class AnalysisDomainTreeManagerAndEnhancer extends AbstractAnalysisDomain
 	 *
 	 */
 	public class AnalysisAddToAggregationTickRepresentationAndEnhancer extends AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer implements IAnalysisAddToAggregationTickRepresentation {
-	    private static final long serialVersionUID = -8143739289123268471L;
-
 	    protected AnalysisAddToAggregationTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }

@@ -10,10 +10,10 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
@@ -48,7 +48,7 @@ public class DynamicOrderingBuilderTest {
     }
 
     private static final Class<? extends AbstractEntity<?>> masterKlass;
-    private static final CalculatedProperty firstCalc, secondCalc, thirdCalc;
+    private static final ICalculatedProperty firstCalc, secondCalc, thirdCalc;
 
 
     static {
@@ -66,9 +66,9 @@ public class DynamicOrderingBuilderTest {
 
  	masterKlass = (Class<? extends AbstractEntity<?>>) dte.getManagedType(MasterEntity.class);
 
- 	firstCalc = (CalculatedProperty) dte.getCalculatedProperty(MasterEntity.class, "firstCalc");
- 	secondCalc = (CalculatedProperty) dte.getCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp.secondCalc");
- 	thirdCalc = (CalculatedProperty) dte.getCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp.thirdCalc");
+ 	firstCalc = dte.getCalculatedProperty(MasterEntity.class, "firstCalc");
+ 	secondCalc = dte.getCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp.secondCalc");
+ 	thirdCalc = dte.getCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp.thirdCalc");
     }
 
     @Test
@@ -107,18 +107,18 @@ public class DynamicOrderingBuilderTest {
 	final List<Pair<Object, Ordering>> orderingPairs = new ArrayList<Pair<Object,Ordering>>();
 	orderingPairs.add(new Pair<Object, Ordering>("", Ordering.ASCENDING));
 	orderingPairs.add(new Pair<Object, Ordering>("stringProp", Ordering.DESCENDING));
-	orderingPairs.add(new Pair<Object, Ordering>(firstCalc.getAst().getModel(), Ordering.ASCENDING));
+	orderingPairs.add(new Pair<Object, Ordering>(firstCalc.getExpressionModel(), Ordering.ASCENDING));
 	orderingPairs.add(new Pair<Object, Ordering>("entityProp.mutablyCheckedProp", Ordering.ASCENDING));
 	orderingPairs.add(new Pair<Object, Ordering>("entityProp.mutablyCheckedProp.integerProp", Ordering.DESCENDING));
-	orderingPairs.add(new Pair<Object, Ordering>(secondCalc.getAst().getModel(), Ordering.DESCENDING));
+	orderingPairs.add(new Pair<Object, Ordering>(secondCalc.getExpressionModel(), Ordering.DESCENDING));
 	orderingPairs.add(new Pair<Object, Ordering>("entityProp.entityProp.simpleEntityProp", Ordering.ASCENDING));
 	orderingPairs.add(new Pair<Object, Ordering>("entityProp.entityProp.simpleEntityProp.integerProp", Ordering.ASCENDING));
-	orderingPairs.add(new Pair<Object, Ordering>(thirdCalc.getAst().getModel(), Ordering.DESCENDING));
+	orderingPairs.add(new Pair<Object, Ordering>(thirdCalc.getExpressionModel(), Ordering.DESCENDING));
 
-	final OrderingModel expectedOrdering = orderBy().prop(alias + ".key").asc().prop(alias + ".stringProp").desc().expr(firstCalc.getAst().getModel()).asc()//
+	final OrderingModel expectedOrdering = orderBy().prop(alias + ".key").asc().prop(alias + ".stringProp").desc().expr(firstCalc.getExpressionModel()).asc()//
 		.prop(alias + ".entityProp.mutablyCheckedProp.key").asc().prop(alias + ".entityProp.mutablyCheckedProp.integerProp").desc()//
-		.expr(secondCalc.getAst().getModel()).desc().prop(alias + ".entityProp.entityProp.simpleEntityProp.key").asc()//
-		.prop(alias + ".entityProp.entityProp.simpleEntityProp.integerProp").asc().expr(thirdCalc.getAst().getModel()).desc().model();
+		.expr(secondCalc.getExpressionModel()).desc().prop(alias + ".entityProp.entityProp.simpleEntityProp.key").asc()//
+		.prop(alias + ".entityProp.entityProp.simpleEntityProp.integerProp").asc().expr(thirdCalc.getExpressionModel()).desc().model();
 
 	assertEquals("The ordering model is incorrect", expectedOrdering, DynamicOrderingBuilder.createOrderingModel(masterKlass, orderingPairs));
     }

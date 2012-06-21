@@ -20,8 +20,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class MasterDomainTreeManager extends AbstractDomainTree implements IMasterDomainTreeManager, ILocatorManager {
-    private static final long serialVersionUID = 7832625541851145438L;
-
     private final LocatorManager locatorManager;
 
     public LocatorManager locatorManager() {

@@ -16,7 +16,6 @@ import org.restlet.Router;
 
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -84,8 +83,7 @@ public class WebResourceForGeneratedTypeQueryTestCase extends WebBasedTestCase {
 	super.setUp();
 
 	dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
-	final CalculatedProperty calc = CalculatedProperty.createAndValidate(factory, InspectedEntity.class, "", "2 * intProperty", "Calculated property", "desc", NO_ATTR, "intProperty", dtm.getEnhancer());
-	dtm.getEnhancer().addCalculatedProperty(calc);
+	dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "", "2 * intProperty", "Calculated property", "desc", NO_ATTR, "intProperty");
 	dtm.getEnhancer().apply();
 	final List<ByteArray> binaryTypes = dtm.getEnhancer().getManagedTypeArrays(InspectedEntity.class);
 

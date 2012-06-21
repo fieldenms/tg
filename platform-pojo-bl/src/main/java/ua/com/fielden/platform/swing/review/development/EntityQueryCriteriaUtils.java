@@ -8,11 +8,10 @@ import java.util.Set;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
@@ -66,7 +65,7 @@ public class EntityQueryCriteriaUtils {
 		} else {
         	    fetchProperties.add(property);
         	}
-            } catch (final IncorrectCalcPropertyKeyException ex) {
+            } catch (final IncorrectCalcPropertyException ex) {
         	fetchProperties.add(property);
             }
         return new Pair<Set<String>, Set<String>>(fetchProperties, totalProperties);
@@ -83,15 +82,15 @@ public class EntityQueryCriteriaUtils {
     }
 
     /**
-     * Returns the expression for calculated property specified with propName parameter. If the property is not calculated then returns null.
+     * Returns the expression for calculated property specified with propName parameter. If the property is not calculated then returns <code>null</code>.
      *
      * @param propName - the name of the calculated property.
      * @return
      */
     private static ExpressionModel getExpressionForProp(final Class<?> root, final String propName, final IDomainTreeEnhancer enhancer) {
 	try {
-	    return ((CalculatedProperty) enhancer.getCalculatedProperty(root, propName)).getAst().getModel();
-	} catch (final IncorrectCalcPropertyKeyException e) {
+	    return enhancer.getCalculatedProperty(root, propName).getExpressionModel();
+	} catch (final IncorrectCalcPropertyException e) {
 	    return null;
 	}
     }

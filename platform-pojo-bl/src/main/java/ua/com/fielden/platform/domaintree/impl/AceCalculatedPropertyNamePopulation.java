@@ -10,11 +10,8 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
  *
  */
 public class AceCalculatedPropertyNamePopulation implements IAfterChangeEventHandler<String> {
-
     @Override
     public void handle(final MetaProperty property, final String title) {
-	final CalculatedProperty calculatedProperty = (CalculatedProperty) property.getEntity();
-	calculatedProperty.setName(CalculatedProperty.generateNameFrom(title));
+	((CalculatedProperty) property.getEntity()).inferName();
     }
-
 }

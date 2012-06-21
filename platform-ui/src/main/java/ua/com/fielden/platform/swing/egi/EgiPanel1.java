@@ -46,7 +46,7 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -409,7 +409,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 		}else{
 		    columns.add(new Pair<String, Integer>(property, Integer.valueOf(cdtme.getSecondTick().getWidth(rootType, property))));
 		}
-	    } catch(final IncorrectCalcPropertyKeyException ex){
+	    } catch(final IncorrectCalcPropertyException ex){
 		columns.add(new Pair<String, Integer>(property, Integer.valueOf(cdtme.getSecondTick().getWidth(rootType, property))));
 	    }
 	}

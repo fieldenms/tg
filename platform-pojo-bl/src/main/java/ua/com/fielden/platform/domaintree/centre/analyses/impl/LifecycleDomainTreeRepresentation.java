@@ -19,8 +19,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTreeRepresentation implements ILifecycleDomainTreeRepresentation {
-    private static final long serialVersionUID = 6796573637187428691L;
-
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      *
@@ -49,8 +47,6 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
     }
 
     public static class LifecycleAddToDistributionTickRepresentation extends AbstractAnalysisAddToDistributionTickRepresentation implements ILifecycleAddToDistributionTickRepresentation {
-	private static final long serialVersionUID = 4243970952493957297L;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr"
 	 * field.
@@ -60,8 +56,6 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
     }
 
     public static class LifecycleAddToCategoriesTickRepresentation extends AbstractAnalysisAddToAggregationTickRepresentation implements ILifecycleAddToCategoriesTickRepresentation {
-	private static final long serialVersionUID = 4629386477984565938L;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr"
 	 * field.

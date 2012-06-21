@@ -7,8 +7,6 @@ import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 
-
-
 /**
  * This interface defines how domain can be enhanced via <b>calculated properties</b> management. <br><br>
  *
@@ -17,8 +15,6 @@ import ua.com.fielden.platform.error.Warning;
  * The <b>calculated property</b> represents an abstraction for an expression which could be used in queries
  * and their results exactly as simple property. <b>Calculated property</b> could be added / removed / mutated from this interface.
  * Mutated root domain entities meta-information could be obtained from {@link #getManagedType(Class)} method. <br><br>
- *
- * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances. <br><br>
  *
  * For example (root entity is Vehicle.class):<br>
  * 1. <i>Vehicle.doubleTanksQty := "2 * SUM([Vehicle.fuelUsages.oilQuantity]) / [Vehicle.techDetails.tankCapasity]"</i> (collectional aggregation, could contain an <i>aggregated collectional</i> atoms or simple atoms -- adds as domain tree extension, could be queried/resulted)<br>
@@ -29,7 +25,7 @@ import ua.com.fielden.platform.error.Warning;
  * @author TG Team
  *
  */
-public interface IDomainTreeEnhancer /* extends Serializable */ {
+public interface IDomainTreeEnhancer extends IRootTyped {
     /**
      * Applies (commits) all domain changes. <b>Apply</b> action is <b>necessary</b> to complete domain enhancements and to load adjusted domain into memory.
      */
@@ -60,7 +56,7 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
 
     /**
      * Adds the <code>calculatedProperty</code> to root type's {@link ICalculatedProperty#getRoot()} hierarchy.
-     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property is incorrect.<br><br>
+     * Throws {@link IncorrectCalcPropertyException} when the calculated property is incorrect.<br><br>
      *
      * <i>Important</i> : the <code>calculatedProperty</code> should strictly be expressed in context of {@link ICalculatedProperty#contextType()} hierarchy.
      *
@@ -70,7 +66,7 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
 
     /**
      * Creates a new calculated property based on provided meta-information and adds it to the root type's {@link ICalculatedProperty#getRoot()} hierarchy.
-     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property is incorrect.<br><br>
+     * Throws {@link IncorrectCalcPropertyException} when the calculated property is incorrect.<br><br>
      *
      * @param root
      * @param contextPath
@@ -84,7 +80,7 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
 
     /**
      * Removes the calculated property with a name <code>calculatedPropertyName</code>(dot-notation expression) from <code>rootType</code> hierarchy.
-     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property is incorrect.<br><br>
+     * Throws {@link IncorrectCalcPropertyException} when the calculated property is incorrect.<br><br>
      *
      * @param rootType -- type of <b>root</b> entity, from which the calculated property should be removed (not derived type)
      * @param calculatedPropertyName -- the dot-notation expression name of calculated property to be removed
@@ -93,7 +89,7 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
 
     /**
      * Gets the calculated property with a name <code>calculatedPropertyName</code>(dot-notation expression) from <code>rootType</code> hierarchy.
-     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property name is incorrect.<br><br>
+     * Throws {@link IncorrectCalcPropertyException} when the calculated property name is incorrect.<br><br>
      *
      * @param rootType -- type of <b>root</b> entity, from which the calculated property should be obtained (not derived type).
      * @param calculatedPropertyName -- the dot-notation expression name of calculated property to be obtained.
@@ -102,7 +98,7 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
 
     /**
      * Copies the calculated property with a name <code>calculatedPropertyName</code>(dot-notation expression) from <code>rootType</code> hierarchy.
-     * Throws {@link IncorrectCalcPropertyKeyException} when the calculated property name is incorrect.<br><br>
+     * Throws {@link IncorrectCalcPropertyException} when the calculated property name is incorrect.<br><br>
      *
      * @param rootType -- type of <b>root</b> entity, from which the calculated property should be copied (not derived type).
      * @param calculatedPropertyName -- the dot-notation expression name of calculated property to be copied.
@@ -115,10 +111,10 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
      * @author TG Team
      *
      */
-    public class IncorrectCalcPropertyKeyException extends Result {
+    public class IncorrectCalcPropertyException extends Result {
 	private static final long serialVersionUID = 435410515344805056L;
 
-	public IncorrectCalcPropertyKeyException(final String s) {
+	public IncorrectCalcPropertyException(final String s) {
 	    super(null, s, new Exception(s));
 	}
     }
@@ -129,10 +125,10 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
      * @author TG Team
      *
      */
-    public class CalcPropertyKeyWarning extends Warning {
+    public class CalcPropertyWarning extends Warning {
 	private static final long serialVersionUID = 435410515344805056L;
 
-	public CalcPropertyKeyWarning(final String s) {
+	public CalcPropertyWarning(final String s) {
 	    super(s);
 	}
     }
@@ -142,13 +138,4 @@ public interface IDomainTreeEnhancer /* extends Serializable */ {
 
     @Override
     public int hashCode();
-
-    /**
-     * Validates the calculated property by its new "pathAndName". Validation depends on current state of enhanced domain.
-     *
-     * @param calculatedProperty
-     * @param newPathAndName
-     * @return
-     */
-    ICalculatedProperty validateCalculatedPropertyKey(final ICalculatedProperty calculatedProperty, final String newPathAndName);
 }

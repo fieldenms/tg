@@ -18,10 +18,7 @@ import ua.com.fielden.platform.serialisation.impl.TgKryo;
  *
  */
 public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager implements IAnalysisDomainTreeManager {
-    private static final long serialVersionUID = -4155274305648154329L;
-
     private Integer visibleDistributedValuesNumber;
-
 
     /**
      * A <i>manager</i> constructor for the first time instantiation.
@@ -63,8 +60,6 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
     }
 
     public static class AnalysisAddToDistributionTickManager extends AbstractAnalysisAddToDistributionTickManager implements IAnalysisAddToDistributionTickManager {
-	private static final long serialVersionUID = 4659406246345595522L;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.
@@ -90,8 +85,6 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
     }
 
     public static class AnalysisAddToAggregationTickManager extends AbstractAnalysisAddToAggregationTickManager implements IAnalysisAddToAggregationTickManager {
-	private static final long serialVersionUID = -4025471910983945279L;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
 	 * fields.

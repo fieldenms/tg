@@ -109,8 +109,6 @@ public class LifecycleDomainTreeManagerAndEnhancer extends AbstractAnalysisDomai
 	 *
 	 */
 	public class LifecycleAddToDistributionTickRepresentationAndEnhancer extends AbstractAnalysisAddToDistributionTickRepresentationAndEnhancer implements ILifecycleAddToDistributionTickRepresentation {
-	    private static final long serialVersionUID = -8143739289123268471L;
-
 	    protected LifecycleAddToDistributionTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }
@@ -128,8 +126,6 @@ public class LifecycleDomainTreeManagerAndEnhancer extends AbstractAnalysisDomai
 	 *
 	 */
 	public class LifecycleAddToCategoriesTickRepresentationAndEnhancer extends AbstractAnalysisAddToAggregationTickRepresentationAndEnhancer implements ILifecycleAddToCategoriesTickRepresentation {
-	    private static final long serialVersionUID = -8143739289123268471L;
-
 	    protected LifecycleAddToCategoriesTickRepresentationAndEnhancer(final AbstractTickRepresentation base) {
 		super(base);
 	    }

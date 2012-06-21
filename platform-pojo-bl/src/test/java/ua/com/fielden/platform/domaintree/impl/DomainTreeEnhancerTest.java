@@ -21,7 +21,7 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -50,12 +50,14 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
 	rootTypes.add(EnhancingMasterEntity.class);
 
-	final DomainTreeEnhancer dm1 = new DomainTreeEnhancer(serialiser(), rootTypes);
-	dm1.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "1 * integerProp", "Old single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm1.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "2 * integerProp", "Old double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm1.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "3 * integerProp", "Old triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm1.addCalculatedProperty(EnhancingMasterEntity.class, "", "4 * integerProp", "Old quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	dm1.apply();
+	final DomainTreeEnhancer dte = new DomainTreeEnhancer(serialiser(), rootTypes);
+	dte.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "1 * integerProp", "Old single", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dte.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "2 * integerProp", "Old double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dte.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "3 * integerProp", "Old triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dte.addCalculatedProperty(EnhancingMasterEntity.class, "", "4 * integerProp", "Old quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dte.apply();
+
+	assertEquals("Incorrect count of enhanced types byte arrays.", 6, dte.getManagedTypeArrays(EnhancingMasterEntity.class).size());
 
 	/////////////////////////////////////////////////////////////////
 	//////////////////////// IMPORTANT //////////////////////////////
@@ -68,7 +70,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	/////////////////////////////////////////////////////////////////
 	//////////////////////// IMPORTANT //////////////////////////////
 	/////////////////////////////////////////////////////////////////
-	setDtmArray(serialiser().serialise(dm1));
+	setDtmArray(serialiser().serialise(dte));
 	System.out.println("Domain Tree Enhancer with enhanced domain has been serialised successfully.");
     }
 
@@ -463,7 +465,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	try {
 	    dm.addCalculatedProperty(rootType, contextPath, "5 * integerProp", title, "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	    fail("The calculated property key is incorrect. The action should be failed. Context path = [" + contextPath + "], title = " + title);
-	} catch (final IncorrectCalcPropertyKeyException e) {
+	} catch (final IncorrectCalcPropertyException e) {
 	} catch (final Exception e) {
 	}
     }
@@ -472,12 +474,12 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	try {
 	    dm.getCalculatedProperty(rootType, pathAndName);
 	    fail("The calculated property key is incorrect. The action should be failed. pathAndName = [" + pathAndName + "]");
-	} catch (final IncorrectCalcPropertyKeyException e) {
+	} catch (final IncorrectCalcPropertyException e) {
 	}
 	try {
 	    dm.removeCalculatedProperty(rootType, pathAndName);
 	    fail("The calculated property key is incorrect. The action should be failed. pathAndName = [" + pathAndName + "]");
-	} catch (final IncorrectCalcPropertyKeyException e) {
+	} catch (final IncorrectCalcPropertyException e) {
 	}
     }
 
@@ -548,13 +550,13 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "5 * integerProp", "Quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "6 * integerProp", "Sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "Septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+
+	dm.apply();
+
 	// this is very important test due to JVM's lazy class loading!
 	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
-
-	copy.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "Septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	copy.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-
-	copy.apply();
 
 	// check the snapshot of domain
 	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "oldSingle");
@@ -592,14 +594,13 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp", "4 * integerProp", "Any of quadruple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
 	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp", "5 * integerProp", "All of quintuple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
 	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityCollProp.evenSlaverEntityCollProp", "6 * integerProp", "Any of sextuple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "All of septuple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Any of octuple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
+
+	dm.apply();
 
 	// this is very important test due to JVM's lazy class loading!
 	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
-
-	copy.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityCollProp.slaveEntityProp", "7 * integerProp", "All of septuple", "Desc", CalculatedPropertyAttribute.ALL, "integerProp");
-	copy.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityCollProp.slaveEntityProp.masterEntityCollProp", "8 * integerProp", "Any of octuple", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
-
-	copy.apply();
 
 	// check the snapshot of domain
 	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "oldSingle");
@@ -682,14 +683,13 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "MAX(4 * integerProp) * MIN(3 * integerProp)", "Max of quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp", "SUM(5 * integerProp + masterEntityProp.slaveEntityProp.integerProp)", "Sum of quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
 	dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.evenSlaverEntityProp", "SUM(6 * integerProp)", "Sum of sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.slaveEntityProp", "SUM(7 * integerProp)", "Sum of septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp.masterEntityProp", "SUM(8 * integerProp)", "Sum of octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+
+	dm.apply();
 
 	// this is very important test due to JVM's lazy class loading!
 	final IDomainTreeEnhancer copy = EntityUtils.deepCopy(dm, getSerialiser());
-
-	copy.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.slaveEntityProp", "SUM(7 * integerProp)", "Sum of septuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-	copy.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp.masterEntityProp", "SUM(8 * integerProp)", "Sum of octuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-
-	copy.apply();
 
 	// check the snapshot of domain
 	fieldDoesNotExistInAnyPlace(copy.getManagedType(EnhancingMasterEntity.class), "oldSingle");

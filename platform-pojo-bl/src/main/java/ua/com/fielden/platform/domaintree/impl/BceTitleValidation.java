@@ -3,9 +3,7 @@ package ua.com.fielden.platform.domaintree.impl;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
-
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyKeyException;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
@@ -19,27 +17,10 @@ import ua.com.fielden.platform.error.Result;
 public class BceTitleValidation implements IBeforeChangeEventHandler<String> {
     @Override
     public Result handle(final MetaProperty property, final String newTitle, final String oldValue, final Set<Annotation> mutatorAnnotations) {
-	final CalculatedProperty cp = (CalculatedProperty) property.getEntity();
-
-	if (cp.validateRootAndContext() != null) {
-	    return cp.validateRootAndContext();
-	}
-
-	if (StringUtils.isEmpty(newTitle)) {
-	    return new IncorrectCalcPropertyKeyException("A title of the calculated property cannot be empty.");
-	}
-	final String name = CalculatedProperty.generateNameFrom(newTitle);
-	if (StringUtils.isEmpty(name)) {
-	    return new IncorrectCalcPropertyKeyException("Please specify more appropriate title with some characters (and perhaps digits).");
-	}
-
-	if (cp.getEnhancer() != null && cp.path() != null) {
-	    // validate if calculated property is correct in context of other calculated properties inside Domain Tree Enhancer
-	    try {
-		cp.getEnhancer().validateCalculatedPropertyKey(cp, cp.pathWith(name));
-	    } catch (final IncorrectCalcPropertyKeyException e) {
-		return e;
-	    }
+	try {
+	    CalculatedProperty.validateTitle((CalculatedProperty) property.getEntity(), newTitle);
+	} catch (final IncorrectCalcPropertyException e) {
+	    return e;
 	}
 	return Result.successful(newTitle);
     }

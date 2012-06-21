@@ -443,12 +443,12 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	public EntitiesTreeUserObject(final Class<?> root, final String property) {
 	    super(root, property);
 
-	    final Class<?> managedRoot = getManager().getEnhancer().getManagedType(root);
+	    final Class<?> managedRoot = EntitiesTreeModel2.ROOT_PROPERTY.equals(property) ? root : getManager().getEnhancer().getManagedType(root);
 	    final Pair<String, String> titleAndDesc = extractTitleAndDesc(managedRoot, property);
 	    toStringTitle = titleAndDesc.getKey();
 	    labelTooltip = titleAndDesc.getValue();
-	    firstTickTooltip = createCriteriaCheckboxToolTipText(managedRoot, property);
-	    secondTickTooltip = createResultSetCheckboxToolTipText(managedRoot, property);
+	    firstTickTooltip = createCriteriaCheckboxToolTipText(root, managedRoot, property);
+	    secondTickTooltip = createResultSetCheckboxToolTipText(root, managedRoot, property);
 	}
 
 	@Override
@@ -468,21 +468,21 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    return secondTickTooltip;
 	}
 
-	private String createCriteriaCheckboxToolTipText(final Class<?> root, final String property) {
+	private String createCriteriaCheckboxToolTipText(final Class<?> root, final Class<?> managedRoot, final String property) {
 	    if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getFirstTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
 		return null;
 	    }
-	    if (EntityUtils.isUnionEntityType(PropertyTypeDeterminator.transform(root, AbstractDomainTree.reflectionProperty(property)).getKey())) { // parent is union entity
-		return "<html>If not selected, then entities with <i><b>" + EntitiesTreeModel2.extractTitleAndDesc(root, property).getKey() + "</b></i> will be ignored</html>";
+	    if (EntityUtils.isUnionEntityType(PropertyTypeDeterminator.transform(managedRoot, AbstractDomainTree.reflectionProperty(property)).getKey())) { // parent is union entity
+		return "<html>If not selected, then entities with <i><b>" + EntitiesTreeModel2.extractTitleAndDesc(managedRoot, property).getKey() + "</b></i> will be ignored</html>";
 	    }
-	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, property).getKey() + "</b> to/from " + firstTickCaption + "</html>";
+	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(managedRoot, property).getKey() + "</b> to/from " + firstTickCaption + "</html>";
 	}
 
-	private String createResultSetCheckboxToolTipText(final Class<?> root, final String property) {
+	private String createResultSetCheckboxToolTipText(final Class<?> root, final Class<?> managedRoot, final String property) {
 	    if (!EntitiesTreeModel2.ROOT_PROPERTY.equals(property) && !AbstractDomainTree.isCommonBranch(property) && manager.getRepresentation().getSecondTick().isDisabledImmutably(root, AbstractDomainTree.reflectionProperty(property))) { // no tooltip for disabled property
 		return null;
 	    }
-	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, property).getKey() + "</b> to/from " + secondTickCaption + "</html>";
+	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(managedRoot, property).getKey() + "</b> to/from " + secondTickCaption + "</html>";
 	}
     }
 

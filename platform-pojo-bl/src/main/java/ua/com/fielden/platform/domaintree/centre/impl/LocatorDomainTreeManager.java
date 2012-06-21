@@ -31,8 +31,6 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class LocatorDomainTreeManager extends CentreDomainTreeManager implements ILocatorDomainTreeManager {
-    private static final long serialVersionUID = 7832625541851145438L;
-
     private Boolean useForAutocompletion;
     private SearchBy searchBy;
 
@@ -105,8 +103,6 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
      *
      */
     public static class AddToCriteriaTickManagerForLocator extends AddToCriteriaTickManager implements IAddToCriteriaTickManager {
-	private static final long serialVersionUID = 2723287339828318955L;
-
 	/**
 	 * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr", "tr" and "serialiser" fields.
 	 */

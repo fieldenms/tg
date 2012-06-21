@@ -29,8 +29,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractDomainTreeRepresentation implements IAbstractAnalysisDomainTreeRepresentation {
-    private static final long serialVersionUID = -662851789405859468L;
-
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
@@ -59,8 +57,6 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
      *
      */
     protected abstract static class AbstractAnalysisAddToDistributionTickRepresentation extends AbstractTickRepresentation implements IAbstractAnalysisAddToDistributionTickRepresentation {
-	private static final long serialVersionUID = 285667836926011724L;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr" field.
 	 */
@@ -100,8 +96,6 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
      *
      */
     protected abstract static class AbstractAnalysisAddToAggregationTickRepresentation extends AbstractTickRepresentation implements IAbstractAnalysisAddToAggregationTickRepresentation {
-	private static final long serialVersionUID = -9171185828185404608L;
-
 	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
 	private final EnhancementSet propertiesOrderingDisablement;
 

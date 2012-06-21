@@ -19,8 +19,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class AnalysisDomainTreeRepresentation extends AbstractAnalysisDomainTreeRepresentation implements IAnalysisDomainTreeRepresentation {
-    private static final long serialVersionUID = 6796573637187428691L;
-
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      *
@@ -49,8 +47,6 @@ public class AnalysisDomainTreeRepresentation extends AbstractAnalysisDomainTree
     }
 
     public static class AnalysisAddToDistributionTickRepresentation extends AbstractAnalysisAddToDistributionTickRepresentation implements IAnalysisAddToDistributionTickRepresentation {
-	private static final long serialVersionUID = 4243970952493957297L;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr"
 	 * field.
@@ -60,8 +56,6 @@ public class AnalysisDomainTreeRepresentation extends AbstractAnalysisDomainTree
     }
 
     public static class AnalysisAddToAggregationTickRepresentation extends AbstractAnalysisAddToAggregationTickRepresentation implements IAnalysisAddToAggregationTickRepresentation {
-	private static final long serialVersionUID = 4629386477984565938L;
-
 	/**
 	 * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor, which should initialise "dtr"
 	 * field.

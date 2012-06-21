@@ -9,12 +9,12 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
@@ -45,7 +45,7 @@ public class EntityQueryUtilsTest {
     }
 
     private static final Class<? extends AbstractEntity<?>> masterKlass;
-    private static final CalculatedProperty firstCalc, secondCalc, thirdCalc;
+    private static final ICalculatedProperty firstCalc, secondCalc, thirdCalc;
 
 
     static {
@@ -63,9 +63,9 @@ public class EntityQueryUtilsTest {
 
  	masterKlass = (Class<? extends AbstractEntity<?>>) dte.getManagedType(MasterEntity.class);
 
- 	firstCalc = (CalculatedProperty) dte.getCalculatedProperty(MasterEntity.class, "firstCalc");
- 	secondCalc = (CalculatedProperty) dte.getCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp.secondCalc");
- 	thirdCalc = (CalculatedProperty) dte.getCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp.thirdCalc");
+ 	firstCalc = dte.getCalculatedProperty(MasterEntity.class, "firstCalc");
+ 	secondCalc = dte.getCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp.secondCalc");
+ 	thirdCalc = dte.getCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp.thirdCalc");
 
  	cdtme.getSecondTick().check(MasterEntity.class, "", true);
  	cdtme.getSecondTick().check(MasterEntity.class, "stringProp", true);
@@ -103,13 +103,13 @@ public class EntityQueryUtilsTest {
 	final List<Pair<Object, Ordering>> expectedList = new ArrayList<Pair<Object,Ordering>>();
 	expectedList.add(new Pair<Object, Ordering>("", Ordering.DESCENDING));
 	expectedList.add(new Pair<Object, Ordering>("stringProp", Ordering.DESCENDING));
-	expectedList.add(new Pair<Object, Ordering>(firstCalc.getAst().getModel(), Ordering.ASCENDING));
+	expectedList.add(new Pair<Object, Ordering>(firstCalc.getExpressionModel(), Ordering.ASCENDING));
 	expectedList.add(new Pair<Object, Ordering>("entityProp.mutablyCheckedProp", Ordering.ASCENDING));
 	expectedList.add(new Pair<Object, Ordering>("entityProp.mutablyCheckedProp.integerProp", Ordering.DESCENDING));
-	expectedList.add(new Pair<Object, Ordering>(secondCalc.getAst().getModel(), Ordering.DESCENDING));
+	expectedList.add(new Pair<Object, Ordering>(secondCalc.getExpressionModel(), Ordering.DESCENDING));
 	expectedList.add(new Pair<Object, Ordering>("entityProp.entityProp.simpleEntityProp", Ordering.DESCENDING));
 	expectedList.add(new Pair<Object, Ordering>("entityProp.entityProp.simpleEntityProp.integerProp", Ordering.ASCENDING));
-	expectedList.add(new Pair<Object, Ordering>(thirdCalc.getAst().getModel(), Ordering.ASCENDING));
+	expectedList.add(new Pair<Object, Ordering>(thirdCalc.getExpressionModel(), Ordering.ASCENDING));
 
 	assertEquals("The getOrderingList() method works incorrect", expectedList, EntityQueryCriteriaUtils.getOrderingList(MasterEntity.class, cdtme.getSecondTick(), cdtme.getEnhancer()));
     }

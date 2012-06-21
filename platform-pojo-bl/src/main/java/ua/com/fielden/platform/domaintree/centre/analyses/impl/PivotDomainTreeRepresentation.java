@@ -22,8 +22,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRepresentation implements IPivotDomainTreeRepresentation {
-    private static final long serialVersionUID = 6796573637187428691L;
-
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      *
@@ -52,8 +50,6 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
     }
 
     public static class PivotAddToDistributionTickRepresentation extends AbstractAnalysisAddToDistributionTickRepresentation implements IPivotAddToDistributionTickRepresentation {
-	private static final long serialVersionUID = 4243970952493957297L;
-
 	private final EnhancementPropertiesMap<Integer> propertiesWidthsByDefault;
 
 	/**
@@ -103,8 +99,6 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
     }
 
     public static class PivotAddToAggregationTickRepresentation extends AbstractAnalysisAddToAggregationTickRepresentation implements IPivotAddToAggregationTickRepresentation {
-	private static final long serialVersionUID = 4629386477984565938L;
-
 	private final EnhancementPropertiesMap<Integer> propertiesWidthsByDefault;
 
 	/**

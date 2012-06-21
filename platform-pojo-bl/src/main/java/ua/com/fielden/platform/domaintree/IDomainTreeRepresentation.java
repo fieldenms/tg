@@ -3,8 +3,6 @@ package ua.com.fielden.platform.domaintree;
 import java.util.List;
 import java.util.Set;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
-
 /**
  * This interface defines how domain tree can be represented. <br><br>
  *

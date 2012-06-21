@@ -29,8 +29,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTreeManager implements IAbstractAnalysisDomainTreeManager {
-    private static final long serialVersionUID = -6113130505321975328L;
-
     private Boolean visible;
 
     @Override
@@ -103,8 +101,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
     }
 
     protected abstract static class AbstractAnalysisAddToDistributionTickManager extends TickManager implements IAbstractAnalysisAddToDistributionTickManager {
-	private static final long serialVersionUID = 4659406246345595522L;
-
 	private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
 	private final transient List<IPropertyUsageListener> propertyUsageListeners;
 
@@ -199,8 +195,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
     }
 
     protected abstract static class AbstractAnalysisAddToAggregationTickManager extends TickManager implements IAbstractAnalysisAddToAggregationTickManager {
-	private static final long serialVersionUID = -4025471910983945279L;
-
 	private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
 	private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
 	private final transient List<IPropertyUsageListener> propertyUsageListeners;
