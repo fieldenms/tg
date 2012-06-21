@@ -40,9 +40,6 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 import net.miginfocom.swing.MigLayout;
-
-import org.apache.commons.lang.StringUtils;
-
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -53,7 +50,7 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Orderin
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.egi.models.builders.PropertyTableModelBuilder;
 import ua.com.fielden.platform.swing.review.OrderingArrow;
@@ -275,13 +272,14 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
     private static JPanel createTotalPanel(final Class<?> managedType, final List<String> total, final int rowNumber, final Integer size, final Map<String, JTextField> totalEditors) {
 	final JPanel totalPanel = new JPanel(new MigLayout("fill, insets 0","[fill, grow]", "0[t]0"));
 	totalPanel.setPreferredSize(new Dimension(size, 0));
-	if(total != null){
+	if (total != null) {
+	    final EntityDescriptor ed = new EntityDescriptor(managedType, total);
 	    for(int totalIndex = 0; totalIndex < total.size() - 1; totalIndex++){
-		final JTextField totalEditor = createTotalEditor(managedType, total.get(totalIndex), size);
+		final JTextField totalEditor = createTotalEditor(managedType, total.get(totalIndex), size, ed);
 		totalPanel.add(totalEditor, "wrap");
 		totalEditors.put(total.get(totalIndex), totalEditor);
 	    }
-	    final JTextField totalEditor = createTotalEditor(managedType, total.get(total.size()-1), size);
+	    final JTextField totalEditor = createTotalEditor(managedType, total.get(total.size()-1), size, ed);
 	    totalPanel.add(totalEditor);
 	    totalEditors.put(total.get(total.size()-1), totalEditor);
 	}
@@ -294,19 +292,19 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
      *
      * @return
      */
-    private static JTextField createTotalEditor(final Class<?> managedType, final String propertyName, final Integer size) {
+    private static JTextField createTotalEditor(final Class<?> managedType, final String propertyName, final Integer size, final EntityDescriptor ed) {
 	final JTextField totalsEditor = new JTextField();
 	totalsEditor.setPreferredSize(new Dimension(size, ROW_HEIGHT));
 	totalsEditor.setEditable(false);
-	final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(propertyName, managedType);
-	String toolTip = "";
-	if(!StringUtils.isEmpty(titleAndDesc.getKey())){
-	    toolTip += titleAndDesc.getKey();
-	}
-	if(!StringUtils.isEmpty(titleAndDesc.getValue())){
-	    toolTip += StringUtils.isEmpty(toolTip) ? titleAndDesc.getValue() : "(" + titleAndDesc.getValue() + ")";
-	}
-	totalsEditor.setToolTipText(toolTip);
+//	final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(propertyName, managedType);
+//	String toolTip = "";
+//	if(!StringUtils.isEmpty(titleAndDesc.getKey())){
+//	    toolTip += titleAndDesc.getKey();
+//	}
+//	if(!StringUtils.isEmpty(titleAndDesc.getValue())){
+//	    toolTip += StringUtils.isEmpty(toolTip) ? titleAndDesc.getValue() : "(" + titleAndDesc.getValue() + ")";
+//	}
+	totalsEditor.setToolTipText(ed.getTitleAndDesc(propertyName).getValue() /* toolTip */);
 	return totalsEditor;
     }
 
