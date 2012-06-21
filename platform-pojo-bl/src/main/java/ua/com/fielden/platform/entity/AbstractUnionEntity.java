@@ -43,20 +43,25 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     @Override
     public Long getId() {
-	if (StringUtils.isEmpty(activePropertyName)) {
-	    throw new IllegalStateException("Active property has not yet been specified.");
-	}
+	ensureActiveProperty();
 	if (activeEntity() != null) {
 	    return activeEntity().getId();
 	}
 	return null;
     }
 
+    private void ensureActiveProperty() {
+	if (StringUtils.isEmpty(activePropertyName)) {
+	    activePropertyName = getNameOfAssignedUnionProperty();
+	    if (StringUtils.isEmpty(activePropertyName)) {
+		throw new IllegalStateException("Union entity active property has not been determined.");
+	    }
+	}
+    }
+
     @Override
     public String getKey() {
-	if (StringUtils.isEmpty(activePropertyName)) {
-	    throw new IllegalStateException("Active property has not yet been specified.");
-	}
+	ensureActiveProperty();
 	if (activeEntity() != null) {
 	    return activeEntity().getKey() != null ? activeEntity().getKey().toString() : null;
 	}
@@ -65,9 +70,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     @Override
     public String getDesc() {
-	if (StringUtils.isEmpty(activePropertyName)) {
-	    throw new IllegalStateException("Active property has not yet been specified.");
-	}
+	ensureActiveProperty();
 	if (activeEntity() != null) {
 	    return activeEntity().getDesc();
 	}
@@ -122,16 +125,34 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 	super.setMetaPropertyFactory(metaPropertyFactory);
     }
 
+    private String getNameOfAssignedUnionProperty() {
+	final List<Field> fields = Finder.findRealProperties(getType());
+	final List<Class<? extends AbstractEntity>> propertyTypes = new ArrayList<Class<? extends AbstractEntity>>();
+	for (final Field field : fields) {
+	    if (!KEY.equals(field.getName()) && !DESC.equals(field.getName())) {
+		field.setAccessible(true);
+		try {
+		    if (field.get(this) != null) {
+		        return field.getName();
+		    }
+		} catch (final Exception e) {
+		    throw new IllegalStateException(e);
+		}
+	    }
+	}
+	return null;
+    }
+
     /**
      * A convenient method to obtain the value of an active property. Returns null if all properties are null.
      *
      * @return
      */
-    public final AbstractEntity activeEntity() {
+    public final AbstractEntity<?> activeEntity() {
 	final Map<String, MetaProperty> properties = getProperties();
 	for (final MetaProperty property : properties.values()) {
 	    if (!KEY.equals(property.getName()) && !DESC.equals(property.getName())) { // there should be no other properties of ordinary types
-		final AbstractEntity value = (AbstractEntity) get(property.getName());
+		final AbstractEntity<?> value = (AbstractEntity<?>) get(property.getName());
 		if (value != null) {
 		    return value;
 		}
