@@ -1,5 +1,13 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.ALL;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.ANY;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isCollectionOrInCollectionHierarchy;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.parentCollection;
 
@@ -175,13 +183,13 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
 	if (collectionOrInCollectionHierarchy) { // collectional hierarchy
 	    if (levelsToRaiseTheProperty == 0) {
 		if (isAttributed()) { // 0 level attributed
-		    this.category = CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION;
+		    this.category = ATTRIBUTED_COLLECTIONAL_EXPRESSION;
 		} else { // 0 level
-		    this.category = CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION;
+		    this.category = COLLECTIONAL_EXPRESSION;
 		}
 		this.path = this.getContextPath();
 	    } else if (levelsToRaiseTheProperty == 1) {
-		this.category = CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION;
+		this.category = AGGREGATED_COLLECTIONAL_EXPRESSION;
 		this.path = above(masterPath); // the level above except for root level -- ""
 	    } else {
 		// TODO
@@ -189,10 +197,10 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
 	    }
 	} else { // simple hierarchy
 	    if (levelsToRaiseTheProperty == 0) {
-		this.category = CalculatedPropertyCategory.EXPRESSION;
+		this.category = EXPRESSION;
 		this.path = this.getContextPath();
 	    } else if (levelsToRaiseTheProperty == 1) {
-		this.category = CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
+		this.category = AGGREGATED_EXPRESSION;
 		this.path = above(masterPath); // the level above except for root level -- ""
 	    } else {
 		// TODO
@@ -202,15 +210,15 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
 	this.parentType = determineType(this.path);
 
 	// reset attribute for non-ATTRIBUTED_COLLECTIONAL_EXPRESSIONs
-	final boolean isAttributedCategory = CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION.equals(this.category);
+	final boolean isAttributedCategory = ATTRIBUTED_COLLECTIONAL_EXPRESSION.equals(this.category);
 	if (!isAttributedCategory) {
 	    resetAttribute();
 	}
 	// make attribute enabled for COLLECTIONAL_EXPRESSIONs and ATTRIBUTED_COLLECTIONAL_EXPRESSIONs
-	getProperty("attribute").setEditable(CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION.equals(this.category) || isAttributedCategory);
+	getProperty("attribute").setEditable(COLLECTIONAL_EXPRESSION.equals(this.category) || isAttributedCategory);
 
 	// make originationProperty required for AGGREGATION_EXPRESSIONs
-	getProperty("originationProperty").setRequired(CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(this.category));
+	getProperty("originationProperty").setRequired(AGGREGATED_EXPRESSION.equals(this.category));
     }
 
     @Override
@@ -225,15 +233,15 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
     }
 
     protected boolean isAttributed() {
-	return CalculatedPropertyAttribute.ALL.equals(this.attribute) || CalculatedPropertyAttribute.ANY.equals(this.attribute);
+	return ALL.equals(this.attribute) || ANY.equals(this.attribute);
     }
 
     /**
      * Resets attribute to default NO_ATTR value for expressions to which the attributes are not applicable (they are applicable only to COLLECTIONAL_EXPRESSIONs).
      */
     protected void resetAttribute() {
-	if (!CalculatedPropertyAttribute.NO_ATTR.equals(getAttribute())) {
-	    setAttribute(CalculatedPropertyAttribute.NO_ATTR);
+	if (!NO_ATTR.equals(getAttribute())) {
+	    setAttribute(NO_ATTR);
 	}
     }
 
@@ -392,7 +400,7 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
         calc.setContextPath(contextPath).validateAndThrow("contextPath");
 
 	// Attribute:
-        calc.attribute = CalculatedPropertyAttribute.NO_ATTR; // no validation and Ace kicking will be performed
+        calc.attribute = NO_ATTR; // no validation and Ace kicking will be performed
         calc.validateAndThrow("attribute");
         calc.getProperty("attribute").setRequired(false); // the requiredness should be relaxed after proper check of non-emptiness for "attribute"
 	calc.getProperty("attribute").setEditable(false); // attribute should be disabled at beginning. Its enablement will change after CalculatedProperty category changes.
@@ -634,12 +642,12 @@ public /* final */ class CalculatedProperty extends AbstractEntity<DynamicEntity
 	if (newAttribute == null) {
 	    throw new IncorrectCalcPropertyException("The attribute cannot be null.");
 	}
-	final boolean hasAttribute = !CalculatedPropertyAttribute.NO_ATTR.equals(newAttribute);
-	if (hasAttribute && cp.category() == null) {
+	final boolean any_or_all = !NO_ATTR.equals(newAttribute);
+	if (any_or_all && cp.category() == null) {
 	    throw new IncorrectCalcPropertyException("ALL / ANY attribute cannot be applied without a category which was not defined due to invalid expression.");
 	}
-	if (hasAttribute && cp.category() != null && !CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION.equals(cp.category())) {
-	    throw new IncorrectCalcPropertyException("ALL / ANY attribute cannot be applied to non-collectional sub-property [" + cp.getContextualExpression() + "].");
+	if (any_or_all && cp.category() != null && !COLLECTIONAL_EXPRESSION.equals(cp.category()) && !ATTRIBUTED_COLLECTIONAL_EXPRESSION.equals(cp.category())) {
+	    throw new IncorrectCalcPropertyException("ALL / ANY attribute cannot be applied to property with category [" + cp.category() + "].");
 	}
     }
 

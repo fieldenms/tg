@@ -819,6 +819,24 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	assertMetaState3(cp);
     }
 
+    @Test
+    public void test_that_Attribute_mutation_remains_it_valid_for_ATTRIBUTED_COLLECTIONAL_EXPRESSION_category_and_other_ALL_or_ANY_attribute() {
+	final CalculatedProperty cp = createEmpty(factory(), MasterEntity.class, "collection", dtm().getEnhancer());
+	cp.setContextualExpression("2 * integerProp");
+	cp.setAttribute(ANY);
+
+	cp.setAttribute(ALL);
+
+	checkTrivialParams(cp, MasterEntity.class, "collection", "2 * integerProp", null, null, ALL, null, dtm().getEnhancer());
+	assertCalculatedProperty(cp, ATTRIBUTED_COLLECTIONAL_EXPRESSION, null, "collection", null, SlaveEntity.class, SlaveEntity.class, Integer.class);
+	assertMetaState(cp, "root", true, false, true);
+	assertMetaState(cp, "contextPath", false, false, true);
+	assertMetaState(cp, "contextualExpression", true, true, true);
+	assertMetaState(cp, "title", true, true, true);
+	assertMetaState(cp, "attribute", false, true, true);
+	assertMetaState(cp, "originationProperty", false, true, true);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////// 2. 4. originationProperty /////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -991,53 +1009,6 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	}
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    protected void incorrectCalculatedPropertyCreationWithRoot(final Class<?> root) {
-//	final CalculatedProperty cp = CalculatedProperty.createEmpty(factory(), root, "", dtm().getEnhancer());
-//	checkTrivialParams(cp, Class.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, "", dtm().getEnhancer());
-//
-//	final String message = "The creation of calc prop with root [" + root + "] should be failed.";
-//	assertNotNull(message, cp.isValid());
-//	assertNotNull(message, cp.getProperty("root").getFirstFailure());
-//	assertFalse(message, cp.getProperty("root").getFirstFailure().isSuccessful());
-//	assertTrue(message, cp.getProperty("root").getFirstFailure() instanceof IncorrectCalcPropertyException);
-//    }
-//
-//    protected void incorrectCalculatedPropertyCreationWithContextPath(final String contextPath) {
-//	final CalculatedProperty cp = CalculatedProperty.createEmpty(factory(), MasterEntity.class, contextPath, dtm().getEnhancer());
-//	checkTrivialParams(cp, MasterEntity.class, CalculatedProperty.BULLSHIT, null, null, null, NO_ATTR, "", dtm().getEnhancer());
-//
-//	final String message = "The creation of calc prop with contextPath [" + contextPath + "] should be failed.";
-//	assertNotNull(message, cp.isValid());
-//	assertNotNull(message, cp.getProperty("contextPath").getFirstFailure());
-//	assertFalse(message, cp.getProperty("contextPath").getFirstFailure().isSuccessful());
-//	assertTrue(message, cp.getProperty("contextPath").getFirstFailure() instanceof IncorrectCalcPropertyException);
-//    }
-//
-//    protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath) {
-//	final CalculatedProperty calc = CalculatedProperty.createEmpty(factory(), root, contextPath, dtm().getEnhancer());
-//	checkTrivialParams(calc, root, contextPath, null, null, null, CalculatedPropertyAttribute.NO_ATTR, "", dtm().getEnhancer());
-//	return calc;
-//    }
-
     @Test
     public void test_inferred_category_context_and_place_for_Outsider_Context_expressions() {
 	// EXPRESSION
@@ -1149,91 +1120,4 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
 	// reversed
 	// assertCalculatedProperty(correctCalculatedPropertyCreation(MasterEntity.class, "entityProp.collection", "MAX(←.integerProp) + 2 * integerProp + ←.integerProp", "Calculated property", "desc", ANY, "integerProp"), ATTRIBUTED_COLLECTIONAL_EXPRESSION, "calculatedProperty", "entityProp.collection", "entityProp.collection.calculatedProperty", EvenSlaverEntity.class, EvenSlaverEntity.class, Integer.class);
     }
-
-
-
-
-
-
-
-//    protected void assertCalculatedPropertyName(final ICalculatedProperty calc, final String name) {
-//	assertEquals("The name is incorrect.", name, calc.name());
-//    }
-//
-//    protected CalculatedProperty correctCalculatedPropertyCreationWithName(final String title) {
-//	return correctCalculatedPropertyCreation(MasterEntity.class, "", "2 * integerProp", title, "desc", NO_ATTR, "integerProp");
-//    }
-//
-//    protected void incorrectCalculatedPropertyCreationWithName(final String title) {
-//	final CalculatedProperty cp = CalculatedProperty.create(factory(), MasterEntity.class, "", "2 * integerProp", title, "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
-//	checkTrivialParams(cp, MasterEntity.class, "", "2 * integerProp", null, "desc", NO_ATTR, "integerProp", dtm().getEnhancer());
-//
-//	assertNotNull("The creation of calc prop with title [" + title + "] should be failed.", cp.isValid());
-//	assertNotNull("The creation of calc prop with title [" + title + "] should be failed.", cp.getProperty("title").getFirstFailure());
-//	assertFalse("The creation of calc prop with title [" + title + "] should be failed.", cp.getProperty("title").getFirstFailure().isSuccessful());
-//	if (!StringUtils.isEmpty(title)) {
-//	    assertTrue("The creation of calc prop with title [" + title + "] should be failed.", cp.getProperty("title").getFirstFailure() instanceof IncorrectCalcPropertyException);
-//	}
-//    }
-//
-//    protected void incorrectCalculatedPropertyCreationWithAttribute(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-//	final CalculatedProperty cp = CalculatedProperty.create(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm().getEnhancer());
-//	checkTrivialParams(cp, root, contextPath, contextualExpression, title, desc, CalculatedPropertyAttribute.NO_ATTR, originationProperty, dtm().getEnhancer());
-//
-//	final String message = "The creation of calc prop with attribute [" + attribute + "] should be failed.";
-//	assertNotNull(message, cp.isValid());
-//	assertNotNull(message, cp.getProperty("attribute").getFirstFailure());
-//	assertFalse(message, cp.getProperty("attribute").getFirstFailure().isSuccessful());
-//	assertTrue(message, cp.getProperty("attribute").getFirstFailure() instanceof IncorrectCalcPropertyException);
-//    }
-//
-//    protected CalculatedProperty assertCalculatedPropertyOrigination(final CalculatedProperty calc, final String originationProperty) {
-//	assertEquals("The originationProperty is incorrect.", originationProperty, calc.getOriginationProperty());
-//	return calc;
-//    }
-//
-//    private static int i = 0;
-//
-//    protected CalculatedProperty correctCalculatedPropertyCreationWithOriginationProperty(final String originationProperty, final String contextualExpression) {
-//	return correctCalculatedPropertyCreation(MasterEntity.class, "entityProp", contextualExpression, "Calculated property" + (++i), "desc", NO_ATTR, originationProperty);
-//    }
-//
-//    protected void incorrectCalculatedPropertyCreationWithOriginationProperty(final String originationProperty, final String contextualExpression) {
-//	final CalculatedProperty cp = CalculatedProperty.create(factory(), MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, originationProperty, dtm().getEnhancer());
-//	checkTrivialParams(cp, MasterEntity.class, "entityProp", contextualExpression, "Calculated property", "desc", NO_ATTR, "", dtm().getEnhancer());
-//
-//	final String message = "The creation of calc prop with originationProperty [" + originationProperty + "] should be failed.";
-//	assertNotNull(message, cp.isValid());
-//	assertNotNull(message, cp.getProperty("originationProperty").getFirstFailure());
-//	assertFalse(message, cp.getProperty("originationProperty").getFirstFailure().isSuccessful());
-//	if (!StringUtils.isEmpty(originationProperty)) {
-//	    assertTrue(message, cp.getProperty("originationProperty").getFirstFailure() instanceof IncorrectCalcPropertyException);
-//	}
-//    }
-//
-//    protected CalculatedProperty correctCalculatedPropertyCreationWithOriginationPropertyWithWarning(final String originationProperty, final String contextualExpression) {
-//	final CalculatedProperty cp = assertCalculatedPropertyOrigination(correctCalculatedPropertyCreationWithOriginationProperty(originationProperty, contextualExpression), originationProperty);
-//
-//	final String message = "The creation of calc prop with originationProperty [" + originationProperty + "] should be warned.";
-//	assertNotNull(message, cp.isValid());
-//	assertTrue(message, cp.isValid().isSuccessful());
-//	assertNull(message, cp.getProperty("originationProperty").getFirstFailure());
-//	assertNotNull(message, cp.getProperty("originationProperty").getFirstWarning());
-//	assertTrue(message, cp.getProperty("originationProperty").getFirstWarning().isSuccessful());
-//	assertTrue(message, cp.getProperty("originationProperty").getFirstWarning() instanceof CalcPropertyWarning);
-//	return cp;
-//    }
-//
-//    protected CalculatedProperty correctCalculatedPropertyCreationWithOriginationPropertyWithoutWarning(final String originationProperty, final String contextualExpression) {
-//	final CalculatedProperty cp = assertCalculatedPropertyOrigination(correctCalculatedPropertyCreationWithOriginationProperty(originationProperty, contextualExpression), originationProperty);
-//
-//	final String message = "The creation of calc prop with originationProperty [" + originationProperty + "] should be without warning.";
-//	assertNotNull(message, cp.isValid());
-//	assertTrue(message, cp.isValid().isSuccessful());
-//	assertNull(message, cp.getProperty("originationProperty").getFirstFailure());
-//	assertNull(message, cp.getProperty("originationProperty").getFirstWarning());
-//	return cp;
-//    }
-
-
 }
