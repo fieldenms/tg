@@ -13,8 +13,6 @@ import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
@@ -456,28 +454,6 @@ public class ExpressionEditorModel extends UModel<CalculatedProperty, Calculated
 	    return new PlainDocument(){
 
 		private static final long serialVersionUID = -6048781732872266049L;
-
-		{
-		    addDocumentListener(new DocumentListener() {
-
-		        @Override
-		        public void removeUpdate(final DocumentEvent e) {
-		    	// TODO Auto-generated method stub
-
-		        }
-
-		        @Override
-		        public void insertUpdate(final DocumentEvent e) {
-		            System.out.println("this listener");
-		        }
-
-		        @Override
-		        public void changedUpdate(final DocumentEvent e) {
-		    	// TODO Auto-generated method stub
-
-		        }
-		    });
-		}
 
 		@Override
 		public void replace(final int offset, final int length, final String text, final AttributeSet attrs) throws BadLocationException {

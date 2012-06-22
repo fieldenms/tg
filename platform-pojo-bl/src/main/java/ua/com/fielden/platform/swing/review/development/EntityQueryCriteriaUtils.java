@@ -57,8 +57,8 @@ public class EntityQueryCriteriaUtils {
         for (final String property : checkedProperties)
             try {
         	final ICalculatedProperty calcProperty = enhancer.getCalculatedProperty(root, property);
-        	final String originProperty = Reflector.fromRelative2AbsotulePath(calcProperty.getContextPath(), calcProperty.getOriginationProperty());
-		if(calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION){
+		if(calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION && calcProperty.getOriginationProperty() != null){
+		    final String originProperty = Reflector.fromRelative2AbsotulePath(calcProperty.getContextPath(), calcProperty.getOriginationProperty());
 		    if(checkedProperties.contains(originProperty)){
 			totalProperties.add(property);
 		    }

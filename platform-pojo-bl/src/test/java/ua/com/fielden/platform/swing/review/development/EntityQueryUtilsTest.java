@@ -50,6 +50,7 @@ public class EntityQueryUtilsTest {
 
     static {
 	final IDomainTreeEnhancer dte = cdtme.getEnhancer();
+	dte.addCalculatedProperty(MasterEntity.class, "", "3 + integerProp", "firstCalcWithoutOrigin", "firstCalcWithoutOrigin", CalculatedPropertyAttribute.NO_ATTR, null);
  	dte.addCalculatedProperty(MasterEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
  	dte.addCalculatedProperty(MasterEntity.class, "", "SUM(integerProp)", "sumInt", "Int Summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
  	dte.addCalculatedProperty(MasterEntity.class, "", "AVG(integerProp)", "avgInt", "Int Average", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
@@ -69,6 +70,7 @@ public class EntityQueryUtilsTest {
 
  	cdtme.getSecondTick().check(MasterEntity.class, "", true);
  	cdtme.getSecondTick().check(MasterEntity.class, "stringProp", true);
+ 	cdtme.getSecondTick().check(MasterEntity.class, "firstCalcWithoutOrigin", true);
  	cdtme.getSecondTick().check(MasterEntity.class, "firstCalc", true);
  	cdtme.getSecondTick().check(MasterEntity.class, "sumInt", true);
  	cdtme.getSecondTick().check(MasterEntity.class, "avgInt", true);
@@ -126,6 +128,7 @@ public class EntityQueryUtilsTest {
 	expectedFetchProperties.add("entityProp.entityProp.simpleEntityProp");
 	expectedFetchProperties.add("entityProp.entityProp.simpleEntityProp.integerProp");
 	expectedFetchProperties.add("entityProp.entityProp.simpleEntityProp.thirdCalc");
+	expectedFetchProperties.add("firstCalcWithoutOrigin");
 	final Set<String> expectedTotalProperties = new HashSet<String>();
 	expectedTotalProperties.add("mutIntSum");
 	expectedTotalProperties.add("propIntSum");

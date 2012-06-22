@@ -3,6 +3,7 @@ package ua.com.fielden.platform.swing.review.report.analysis.configuration;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
@@ -52,7 +53,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
 
     /**
      * Returns value that determines whether this analysis is freeze or not.
-     * 
+     *
      * @return
      */
     public boolean isFreeze(){
@@ -68,7 +69,7 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
 
     /**
      * Returns the instance of {@link IAbstractAnalysisDomainTreeManagerAndEnhancer} that is associated with this analysis.
-     * 
+     *
      * @return
      */
     public IAbstractAnalysisDomainTreeManagerAndEnhancer getAnalysisManager(){
@@ -77,11 +78,23 @@ public abstract class AbstractAnalysisConfigurationModel<T extends AbstractEntit
 
     /**
      * Initialises the analysis manager for this analysis.
-     * 
+     *
      * @param analysisType
      */
     public void initAnalysisManager(final AnalysisType analysisType){
 	getCriteria().getCentreDomainTreeMangerAndEnhancer().initAnalysisManagerByDefault(getName(), analysisType);
+    }
+
+    /**
+     * Makes analysis visible or invisible.
+     *
+     * @param visible
+     */
+    public void setAnalysisVisible(final boolean visible){
+	final IAbstractAnalysisDomainTreeManager adtm = getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(getName());
+	if(adtm != null){
+	    adtm.setVisible(visible);
+	}
     }
 
     /**

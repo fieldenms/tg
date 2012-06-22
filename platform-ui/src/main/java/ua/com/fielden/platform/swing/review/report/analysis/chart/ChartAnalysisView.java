@@ -118,14 +118,13 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	this.aggregationList = createAggregationList();
 	this.spinner = createColumnCounterSpinner();
 	this.switchChartModel = new SwitchChartsModel<List<EntityAggregates>, CategoryChartTypes>(chartPanel);
-	//	updateChart(new ArrayList<EntityAggregates>(), null);
 	this.toolBar = createChartToolBar();
 	this.addSelectionEventListener(createChartAnalysisSelectionListener());
+	updateChart(new ArrayList<EntityAggregates>(), null);
 	layoutComponents();
 
-
-	//DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), new AnalysisChartDragToSupport<T, DAO, IAggregatedProperty, List<EntityAggregates>, CategoryChartTypes>(aggregationList, chartPanel, reportView.getModel()), true);
-	//DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), new AnalysisListDragToSupport(distributionList), true);
+//	DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), new AnalysisChartDragToSupport<T, DAO, IAggregatedProperty, List<EntityAggregates>, CategoryChartTypes>(aggregationList, chartPanel, reportView.getModel()), true);
+//	DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), new AnalysisListDragToSupport(distributionList), true);
     }
 
     @SuppressWarnings("unchecked")
@@ -171,7 +170,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     /**
      * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
-     * 
+     *
      * @return
      */
     private ISelectionEventListener createChartAnalysisSelectionListener() {
@@ -268,7 +267,6 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
 		final Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-		final boolean isValueChosen = secondTick.isUsed(root, value.toString());
 		if (secondTick.isUsed(root, value.toString())) {
 		    arrow.setVisible(true);
 		    if (aggregationList.getSortingModel().isSortable(value.toString())) {
@@ -301,7 +299,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public void valueChanged(final ListCheckingEvent<String> e) {
 		secondTick.use(root, e.getValue(), e.isChecked());
-		updateChart(getModel().getChartAnalysisDataProvider().getLoadedData().data(), null);
+		updateChart(getModel().getChartAnalysisDataProvider().getLoadedData(), null);
 		chartScroller.resetScrollRanges();
 	    }
 	});
@@ -353,7 +351,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
 		split = splitChartButton.isSelected();
-		updateChart(getModel().getChartAnalysisDataProvider().getLoadedData().data(), null);
+		updateChart(getModel().getChartAnalysisDataProvider().getLoadedData(), null);
 		chartScroller.resetScrollRanges();
 	    }
 

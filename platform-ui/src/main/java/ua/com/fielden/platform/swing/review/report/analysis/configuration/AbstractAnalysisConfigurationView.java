@@ -61,7 +61,7 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 
     /**
      * Returns the save action.
-     * 
+     *
      * @return
      */
     public Action getSave() {
@@ -70,7 +70,7 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 
     /**
      * Returns the remove action.
-     * 
+     *
      * @return
      */
     public Action getRemove() {
@@ -97,7 +97,7 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
      *
      * @param l
      */
-    public void removeCentreConfigurationEventListener(final IAnalysisConfigurationEventListener l){
+    public void removeAnalysisConfigurationEventListener(final IAnalysisConfigurationEventListener l){
 	listenerList.remove(IAnalysisConfigurationEventListener.class, l);
     }
 
@@ -110,9 +110,14 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 	return owner;
     }
 
+    @Override
+    public void close() {
+	getModel().setAnalysisVisible(false);
+    }
+
     /**
      * Returns the selection listener that is responsible for selecting the this analysis configurable view.
-     * 
+     *
      * @return
      */
     private ISelectionEventListener createSelectionListener() {

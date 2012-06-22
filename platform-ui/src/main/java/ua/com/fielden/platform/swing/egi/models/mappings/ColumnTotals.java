@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.swing.egi.models.mappings;
 
-import ua.com.fielden.platform.swing.egi.EgiPanel;
+import ua.com.fielden.platform.swing.egi.EgiPanel1;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 
 /**
  * Enumeration, defining policy for displaying totals for separate column.
- * 
+ *
  * @author yura
- * 
+ *
  */
 public enum ColumnTotals {
     /**
@@ -53,7 +53,7 @@ public enum ColumnTotals {
 	}
     },
     /**
-     * Only grand totals displayed as separate footer below {@link EntityGridInspector} when using {@link EgiPanel}.
+     * Only grand totals displayed as separate footer below {@link EntityGridInspector} when using {@link EgiPanel1}.
      */
     GRAND_TOTALS_SEPARATE_FOOTER {
 	@Override
@@ -83,14 +83,14 @@ public enum ColumnTotals {
 
     /**
      * Returns true if this column totals includes group totals. False otherwise.
-     * 
+     *
      * @return
      */
     public abstract boolean hasGroupTotals();
 
     /**
      * Returns true if this column totals includes grand totals. False otherwise.
-     * 
+     *
      * @return
      */
     public abstract boolean hasGrandTotals();

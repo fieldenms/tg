@@ -40,7 +40,7 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
     //TODO Provide getConfigurationModel() that returns the specific configuration model for this analysis.
 
 
-    public ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage<EntityAggregates>> getChartAnalysisDataProvider() {
+    public ICategoryAnalysisDataProvider<Comparable<?>, Number, List<EntityAggregates>> getChartAnalysisDataProvider() {
 	return chartAnalysisDataProvider;
     }
 
@@ -59,13 +59,11 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	return null;
     }
 
-    private static class ChartAnalysisDataProvider extends AbstractCategoryAnalysisDataProvider<Comparable<?>, Number, IPage<EntityAggregates>> {
+    private static class ChartAnalysisDataProvider extends AbstractCategoryAnalysisDataProvider<Comparable<?>, Number, List<EntityAggregates>> {
 
 	private final LinkedHashMap<String, String> categoryAliasMap = new LinkedHashMap<String, String>();
 	private final LinkedHashMap<String, String> aggregatedAliasMap = new LinkedHashMap<String, String>();
-
-	private IPage<EntityAggregates> loadedPage;
-	private List<EntityAggregates> loadedData;
+	private final List<EntityAggregates> loadedData = new ArrayList<EntityAggregates>();
 
 	@Override
 	public int getCategoryDataEntryCount() {
@@ -90,8 +88,8 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	}
 
 	@Override
-	public IPage<EntityAggregates> getLoadedData() {
-	    return loadedPage;
+	public List<EntityAggregates> getLoadedData() {
+	    return loadedData;
 	}
 
 	/**
@@ -101,8 +99,8 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	 */
 	private void setLoadedPage(final IPage<EntityAggregates> loadedPage){
 	    if(loadedPage != null ){
-		this.loadedPage = loadedPage;
-		this.loadedData = loadedPage.data();
+		this.loadedData.clear();
+		this.loadedData.addAll(loadedPage.data());
 		fireAnalysisModelChangeEvent(new AnalysisModelChangedEvent(this));
 	    }
 	}

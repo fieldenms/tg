@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
@@ -78,7 +80,7 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 	    (!isEntityItself && EntityUtils.isEntityType(propertyType) && (EntityUtils.isEntityType(keyTypeAnnotation.value()) || DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value()))) || // disable properties of "entity with AE or composite key" type
 
 	    (!isEntityItself && Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation == null) || // disable non-calc integer props
-	    (!isEntityItself && Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation != null && !EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination()))) || // disable integer calculated properties which were originated not from Date property
+	    (!isEntityItself && Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation != null && !StringUtils.isEmpty(calculatedAnnotation.origination()) && !EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination()))) || // disable integer calculated properties which were originated not from Date property
 	    (!isEntityItself && !Integer.class.isAssignableFrom(propertyType) && !EntityUtils.isEntityType(propertyType) && !EntityUtils.isBoolean(propertyType)); // disable properties of non-"entity or boolean" type
 	    //		    Integer.class.isAssignableFrom(propertyType) && calculatedAnnotation != null && !EntityUtils.isDate(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination())));// disable integer calculated properties which were originated not from Date property
 	    //(!isEntityItself && !EntityUtils.isEntityType(propertyType) && !EntityUtils.isDate(propertyType) && !EntityUtils.isBoolean(propertyType)); // disable properties of "entity with AE or composite key" type

@@ -124,22 +124,22 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	};
     }
 
-    //    @Override
-    //    protected JToolBar createToolBar() {
-    //	ActionPanelBuilder panelBuilder = new ActionPanelBuilder();
-    //	final JToolBar subToolBar = super.createToolBar();
-    //	if(subToolBar != null){
-    //	    panelBuilder = panelBuilder.addSubToolBar(subToolBar).addSeparator();
-    //	}
-    //	final JToolBar toolBar = panelBuilder//
-    //		.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")))//
-    //		.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
-    //		.addButton(createRemoveAnalysisAction())
-    //		.buildActionPanel();
-    //	toolBar.setFloatable(false);
-    //	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-    //	return toolBar;
-    //    }
+//        @Override
+//        protected JToolBar createToolBar() {
+//    	ActionPanelBuilder panelBuilder = new ActionPanelBuilder();
+//    	final JToolBar subToolBar = super.createToolBar();
+//    	if(subToolBar != null){
+//    	    panelBuilder = panelBuilder.addSubToolBar(subToolBar).addSeparator();
+//    	}
+//    	final JToolBar toolBar = panelBuilder//
+//    		.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")))//
+//    		//.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
+//    		.addButton(createRemoveAnalysisAction())
+//    		.buildActionPanel();
+//    	toolBar.setFloatable(false);
+//    	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+//    	return toolBar;
+//        }
 
     @Override
     protected List<Action> createCustomActionList() {
@@ -166,7 +166,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    if(analysis != null){
 		tabPanel.addTab(analysis.getModel().getName(), analysis);
 		tabPanel.setSelectedComponent(analysis);
-		getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name).setVisible(true);
 		analysis.open();
 	    }
 	}
@@ -181,7 +180,6 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	final int tabIndex = tabIndex(tabPanel, name);
 	if(canRemoveTabSheet(tabIndex)){
 	    removeTabSheet(tabIndex);
-	    getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer().getAnalysisManager(name).setVisible(false);
 	}
     }
 

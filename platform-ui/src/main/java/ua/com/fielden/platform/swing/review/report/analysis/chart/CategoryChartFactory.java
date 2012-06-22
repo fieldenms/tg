@@ -42,7 +42,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.equery.lifecycle.IProgressUpdater;
-import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
 import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
 import ua.com.fielden.platform.swing.categorychart.FixedCategoryAxis;
@@ -60,13 +59,13 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 
     private final List<Integer> seriesIndexes = new ArrayList<Integer>();
 
-    private final ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage<EntityAggregates>> dataProvider;
+    private final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<EntityAggregates>> dataProvider;
 
     private final NumberFormat numberFormat;
 
     private DefaultCategoryDataset dataSet;
 
-    public CategoryChartFactory(final ICategoryAnalysisDataProvider<Comparable<?>, Number, IPage<EntityAggregates>> dataProvider, final CategoryDataModel chartEntryModel, final boolean all, final int... indexes) {
+    public CategoryChartFactory(final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<EntityAggregates>> dataProvider, final CategoryDataModel chartEntryModel, final boolean all, final int... indexes) {
 	this.chartEntryModel = chartEntryModel;
 	this.dataProvider = dataProvider;
 	this.numberFormat = new DecimalFormat("#,##0.00");
@@ -252,7 +251,7 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
 
     @Override
     public List<EntityAggregates> getModel() {
-	return dataProvider.getLoadedData().data();
+	return dataProvider.getLoadedData();
     }
 
     private static class CommonCategoryRenderer extends AbstractCategoryItemRenderer {

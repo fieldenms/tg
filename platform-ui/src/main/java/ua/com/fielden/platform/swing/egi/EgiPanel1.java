@@ -394,8 +394,8 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
 	for(final String property : checkedProperties){
 	    try {
 		final ICalculatedProperty calcProperty = enhancer.getCalculatedProperty(rootType, property);
-		final String originProperty = Reflector.fromRelative2AbsotulePath(calcProperty.getContextPath(), calcProperty.getOriginationProperty());
-		if(calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION){
+		if(calcProperty.category() == CalculatedPropertyCategory.AGGREGATED_EXPRESSION && calcProperty.getOriginationProperty() != null){
+		    final String originProperty = Reflector.fromRelative2AbsotulePath(calcProperty.getContextPath(), calcProperty.getOriginationProperty());
 		    if(checkedProperties.contains(originProperty)){
 			List<String> totalList = totals.get(originProperty);
 			    if(totalList == null){

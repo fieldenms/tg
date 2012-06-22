@@ -63,6 +63,7 @@ public class EntityCentreDataPopulationConfiguration implements IDomainDrivenTes
 	return module.getDomainMetaPropertyConfig();
     }
 
+    @Override
     public DomainMetadata getDomainMetadata() {
 	return module.getDomainMetadata();
     }

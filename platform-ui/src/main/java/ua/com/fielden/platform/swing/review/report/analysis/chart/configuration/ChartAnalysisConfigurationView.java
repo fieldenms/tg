@@ -48,6 +48,8 @@ public class ChartAnalysisConfigurationView<T extends AbstractEntity<?>> extends
 		    IAnalysisDomainTreeManagerAndEnhancer adtme = (IAnalysisDomainTreeManagerAndEnhancer)getModel().getAnalysisManager();
 		    if(adtme == null){
 			getModel().initAnalysisManager(AnalysisType.SIMPLE);
+			getModel().save();
+			getModel().setAnalysisVisible(true);
 			adtme = (IAnalysisDomainTreeManagerAndEnhancer)getModel().getAnalysisManager();
 		    }
 		    if(adtme == null){

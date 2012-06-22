@@ -62,7 +62,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 
     /**
      * A convenient constructor, which results in creation of a tree menu with default info panel and undockable tab sheets.
-     * 
+     *
      * @param menuItem
      * @param menuFilter
      * @param blockingPane
@@ -73,7 +73,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 
     /**
      * Principle constructor.
-     * 
+     *
      * @param menuItem
      *            -- the root of the tree menu.
      * @param menuFilter
@@ -196,7 +196,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 
     /**
      * Creates {@link Action} that attaches {@link TreeMenuItem} to the tab panel.
-     * 
+     *
      * @return
      */
     private Action createDockTreeItemAction() {
@@ -221,7 +221,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 
     /**
      * Creates {@link Action} that detaches selected {@link TreeMenuItem}.
-     * 
+     *
      * @return
      */
     private Action createUndockTreeItemAction() {
@@ -249,6 +249,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 
 	    private static final long serialVersionUID = -8376589711459657749L;
 
+	    @SuppressWarnings("rawtypes")
 	    @Override
 	    public void actionPerformed(final ActionEvent e) {
 		final TreeMenuItem<?> treeMenuItem = getTabPane().getSelectedComponent() instanceof BaseNotifPanel ? ((BaseNotifPanel) getTabPane().getSelectedComponent()).getAssociatedTreeMenuItem()
@@ -308,7 +309,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 
     /**
      * Activates specified {@link TreeMenuItem} and sets specified state for it.
-     * 
+     *
      * @param item
      * @param state
      */
@@ -427,7 +428,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 
     /**
      * Returns the progress layer for this tree.
-     * 
+     *
      * @return
      */
     public BlockingIndefiniteProgressLayer getTreeProgressLayer() {
@@ -436,9 +437,9 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 
     /**
      * {@link MouseListener} that handles {@link JPopupMenu} triggering, also selects {@link TreeMenuItem} where pop up menu was triggered.
-     * 
+     *
      * @author oleh
-     * 
+     *
      */
     private class PopupMenuListener extends MouseAdapter {
 
@@ -454,7 +455,7 @@ public class UndockableTreeMenuWithTabs<V extends BaseNotifPanel> extends TreeMe
 
 	/**
 	 * Selects the row where pop up menu was triggered and shows it at appropriate position.
-	 * 
+	 *
 	 * @param e
 	 */
 	private void showMenu(final MouseEvent e) {
