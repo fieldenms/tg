@@ -398,7 +398,17 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @return
      */
     protected final CalculatedProperty calculatedProperty(final Class<?> root, final String pathAndName) {
-	final List<CalculatedProperty> calcProperties = calculatedProperties.get(root);
+	return calculatedProperty(calculatedProperties.get(root), pathAndName);
+    }
+    
+    /**
+     * Iterates through the set of calculated properties to find appropriate calc property.
+     *
+     * @param root
+     * @param pathAndName
+     * @return
+     */
+    protected static final CalculatedProperty calculatedProperty(final List<CalculatedProperty> calcProperties, final String pathAndName) {
 	if (calcProperties != null) {
 	    for (final CalculatedProperty prop : calcProperties) {
 		if (prop.pathAndName().equals(pathAndName)) {

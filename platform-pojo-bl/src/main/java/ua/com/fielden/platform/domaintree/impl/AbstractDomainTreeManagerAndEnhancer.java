@@ -104,91 +104,118 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 	/**
 	 * Migrate <code>calcProps</code> from map form to a set form.
 	 *
-	 * @param oldCalculatedProperties
+	 * @param calculatedProperties
 	 * @return
 	 */
-	private Set<Pair<Class<?>, String>> migrateToSet(final Map<Class<?>, List<CalculatedProperty>> oldCalculatedProperties) {
+	private Set<Pair<Class<?>, String>> migrateToSet(final Map<Class<?>, List<CalculatedProperty>> calculatedProperties) {
 	    final Set<Pair<Class<?>, String>> set = new HashSet<Pair<Class<?>, String>>();
-	    for (final Entry<Class<?>, List<CalculatedProperty>> entry : oldCalculatedProperties.entrySet()) {
+	    for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
 		for (final CalculatedProperty prop : entry.getValue()) {
 		    set.add(new Pair<Class<?>, String>(entry.getKey(), prop.pathAndName()));
 		}
 	    }
 	    return set;
 	}
+	
+	private static Set<Pair<Class<?>, String>> union(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
+	    final Set<Pair<Class<?>, String>> a_union_b = new HashSet<Pair<Class<?>, String>>(a);
+	    a_union_b.addAll(b);
+	    return a_union_b;
+	}
+	
+	private static Set<Pair<Class<?>, String>> subtract(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
+	    final Set<Pair<Class<?>, String>> a_subtract_b = new HashSet<Pair<Class<?>, String>>(a);
+	    a_subtract_b.removeAll(b);
+	    return a_subtract_b;
+	}
+	
+	private static Set<Pair<Class<?>, String>> intersect(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
+	    final Set<Pair<Class<?>, String>> a_intersect_b = new HashSet<Pair<Class<?>, String>>(a);
+	    a_intersect_b.retainAll(b);
+	    return a_intersect_b;
+	}
 
 	@Override
 	public void apply() {
 	    final Map<Class<?>, List<CalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer, false);
-	    baseEnhancer.apply();
 	    final Map<Class<?>, List<CalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<CalculatedProperty>>(baseEnhancer.calculatedProperties());
-
+	    
 	    final Set<Pair<Class<?>, String>> was = migrateToSet(oldCalculatedProperties);
-	    for (final Pair<Class<?>, String> rootAndProp : was) {
-		logger.debug("The property (was): root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
-	    }
 	    final Set<Pair<Class<?>, String>> is = migrateToSet(newCalculatedProperties);
-	    for (final Pair<Class<?>, String> rootAndProp : is) {
-		logger.debug("The property (is): root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
+	    
+	    // form a set of retained calculated properties:
+	    final Set<Pair<Class<?>, String>> retained = intersect(was, is);
+	    final Set<Pair<Class<?>, String>> retainedAndSignificantlyChanged = new HashSet<Pair<Class<?>, String>>();
+	    for (final Pair<Class<?>, String> rootAndProp : retained) {
+		final CalculatedProperty newProp = DomainTreeEnhancer.calculatedProperty(newCalculatedProperties.get(rootAndProp.getKey()), rootAndProp.getValue());
+		final CalculatedProperty oldProp = DomainTreeEnhancer.calculatedProperty(oldCalculatedProperties.get(rootAndProp.getKey()), rootAndProp.getValue());
+		if (significantlyChanged(newProp, oldProp)) {
+		    retainedAndSignificantlyChanged.add(rootAndProp);
+		}
+	    }
+	    
+	    // remove obsolete calc properties from included properties list
+	    final Set<Pair<Class<?>, String>> removed = subtract(union(was, is), is);
+	    for (final Pair<Class<?>, String> rootAndRemovalProp : union(removed, retainedAndSignificantlyChanged)) {
+		removeMetaStateFromPropertyToBeRemoved(rootAndRemovalProp.getKey(), rootAndRemovalProp.getValue());
 	    }
 
-	    final Set<Pair<Class<?>, String>> wasUnionIs = new HashSet<Pair<Class<?>,String>>(was);
-	    wasUnionIs.addAll(is);
+	    baseEnhancer.apply();
 
-	    // form a set of completely new calculated properties:
-	    final Set<Pair<Class<?>, String>> neew = new HashSet<Pair<Class<?>,String>>(wasUnionIs);
-	    neew.removeAll(was);
 	    // add new calc properties to included properties list
-	    for (final Pair<Class<?>, String> rootAndProp : neew) {
-		final Class<?> root = /*baseEnhancer.getManagedType(*/ rootAndProp.getKey()/* ) */;
-		final String newProperty = rootAndProp.getValue();
-		final List<String> inclProps = dtr.includedProperties(root);
-		if (!dtr.isExcludedImmutably(root, newProperty)) {
-		    // the property is not excluded 1) by contract 2) was not excluded manually
-		    // this is a new property. "includedProperties" should be updated (the new property added).
-		    logger.debug("The property to be added: root == " + root + ", property == " + newProperty);
-		    final String parent = PropertyTypeDeterminator.isDotNotation(newProperty) ? PropertyTypeDeterminator.penultAndLast(newProperty).getKey() : "";
-		    // ! important ! the parent should be warmed up before adding anything to it!
-		    dtr.warmUp(root, parent);
+	    final Set<Pair<Class<?>, String>> neew = subtract(union(was, is), was);
+	    for (final Pair<Class<?>, String> rootAndProp : union(neew, retainedAndSignificantlyChanged)) {
+		populateMetaStateForActuallyAddedNewProperty(rootAndProp.getKey(), rootAndProp.getValue());
+	    }
+	}
 
-		    final int pathIndex = inclProps.indexOf(parent);
-		    // add the property on the place of the last parent child (just before next branch of properties)
-		    final int nextBranchIndex = nextBranchIndex(pathIndex, parent, inclProps);
-		    if (nextBranchIndex > 0 && !EntityUtils.equalsEx(inclProps.get(nextBranchIndex - 1), newProperty)) { // edge-case : when warming up a NEW calc property WILL BE restored from enhanced type, and it should not be added twice
-			if (nextBranchIndex < inclProps.size()) {
-			    dtr.includedPropertiesMutable(root).add(nextBranchIndex, newProperty);
-			} else {
-			    dtr.includedPropertiesMutable(root).add(newProperty);
-			}
+	/**
+	 * Returns <code>true</code> when the property has been changed <b>significantly</b> which means that maybe category or place of the property has been changed.
+	 * This can be result of the {@link CalculatedProperty#setContextualExpression(String)} or {@link CalculatedProperty#setTitle(String)} or 
+	 * {@link CalculatedProperty#setAttribute(CalculatedPropertyAttribute)} actions.
+	 * 
+	 * @param newProp
+	 * @param oldProp
+	 * @return
+	 */
+	private boolean significantlyChanged(final CalculatedProperty newProp, final CalculatedProperty oldProp) {
+//	    return !EntityUtils.equalsEx(newProp.getContextualExpression(), oldProp.getContextualExpression()) || // 
+//	    !EntityUtils.equalsEx(newProp.getTitle(), oldProp.getTitle()) || //
+//	    !EntityUtils.equalsEx(newProp.getAttribute(), oldProp.getAttribute());
+	    return !EntityUtils.equalsEx(newProp.category(), oldProp.category()) || // 
+	    !EntityUtils.equalsEx(newProp.path(), oldProp.path());
+	}
+
+	private void removeMetaStateFromPropertyToBeRemoved(final Class<?> root, final String removedProperty) {
+	    // this is a removed property. "includedProperties" should be updated (the removed property should be removed in incl properties).
+	    logger.debug("The property to be removed: root == " + root + ", property == " + removedProperty);
+	    dtr.includedPropertiesMutable(root).remove(removedProperty);
+	    // the "excludedProperties" set should be updated after the property has been physically removed from domain
+	    if (dtr.excludedPropertiesMutable().contains(AbstractDomainTree.key(root, removedProperty))) {
+	        dtr.excludedPropertiesMutable().remove(AbstractDomainTree.key(root, removedProperty));
+	    }
+	}
+
+	private void populateMetaStateForActuallyAddedNewProperty(final Class<?> root, final String newProperty) {
+	    final List<String> inclProps = dtr.includedProperties(root);
+	    if (!dtr.isExcludedImmutably(root, newProperty)) {
+		// the property is not excluded 1) by contract 2) was not excluded manually
+		// this is a new property. "includedProperties" should be updated (the new property added).
+		logger.debug("The property to be added: root == " + root + ", property == " + newProperty);
+		final String parent = PropertyTypeDeterminator.isDotNotation(newProperty) ? PropertyTypeDeterminator.penultAndLast(newProperty).getKey() : "";
+		// ! important ! the parent should be warmed up before adding anything to it!
+		dtr.warmUp(root, parent);
+
+		final int pathIndex = inclProps.indexOf(parent);
+		// add the property on the place of the last parent child (just before next branch of properties)
+		final int nextBranchIndex = nextBranchIndex(pathIndex, parent, inclProps);
+		if (nextBranchIndex > 0 && !EntityUtils.equalsEx(inclProps.get(nextBranchIndex - 1), newProperty)) { // edge-case : when warming up a NEW calc property WILL BE restored from enhanced type, and it should not be added twice
+		    if (nextBranchIndex < inclProps.size()) {
+			dtr.includedPropertiesMutable(root).add(nextBranchIndex, newProperty);
+		    } else {
+			dtr.includedPropertiesMutable(root).add(newProperty);
 		    }
 		}
-	    }
-
-	    // form a set of removed calculated properties:
-	    final Set<Pair<Class<?>, String>> removed = new HashSet<Pair<Class<?>,String>>(wasUnionIs);
-	    removed.removeAll(is);
-	    // remove obsolete calc properties from included properties list
-	    for (final Pair<Class<?>, String> rootAndProp : removed) {
-		final Class<?> root = rootAndProp.getKey();
-		final String removedProperty = rootAndProp.getValue();
-		// this is a removed property. "includedProperties" should be updated (the removed property should be removed in incl properties).
-		logger.debug("The property to be removed: root == " + root + ", property == " + removedProperty);
-		dtr.includedPropertiesMutable(root).remove(removedProperty);
-		// the "excludedProperties" set should be updated after the property has been physically removed from domain
-		if (dtr.excludedPropertiesMutable().contains(AbstractDomainTree.key(root, removedProperty))) {
-		    dtr.excludedPropertiesMutable().remove(AbstractDomainTree.key(root, removedProperty));
-		}
-	    }
-
-	    // TODO update retained calc properties in included properties list? Will their places be changed? Will excludement logic be changed after that?
-	    // TODO update retained calc properties in included properties list? Will their places be changed? Will excludement logic be changed after that?
-	    // TODO update retained calc properties in included properties list? Will their places be changed? Will excludement logic be changed after that?
-	    // TODO update retained calc properties in included properties list? Will their places be changed? Will excludement logic be changed after that?
-	    // form a set of retained calculated properties:
-	    final Set<Pair<Class<?>, String>> retained = new HashSet<Pair<Class<?>, String>>(is);
-	    retained.retainAll(was);
-	    for (final Pair<Class<?>, String> rootAndProp : retained) {
-		logger.debug("The property to be retained: root == " + rootAndProp.getKey() + ", property == " + rootAndProp.getValue());
 	    }
 	}
 
