@@ -346,4 +346,12 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     @Override
     public void test_that_PropertyListeners_work() {
     }
+
+    @Override
+    public void test_that_domain_changes_for_calc_property_modifications_are_correctly_reflected_in_Included_properties() {
+    }
+
+    @Override
+    public void test_that_domain_changes_for_property_removal_are_correctly_reflected_in_Included_properties_with_resetting_of_the_meta_state() {
+    }
 }

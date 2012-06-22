@@ -472,4 +472,8 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     @Override
     public void test_that_PropertyListeners_work() {
     }
+
+    @Override
+    public void test_that_domain_changes_for_calc_property_modifications_are_correctly_reflected_in_Included_properties() {
+    }
 }
