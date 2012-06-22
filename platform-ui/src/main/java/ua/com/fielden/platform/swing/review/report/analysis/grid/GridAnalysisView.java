@@ -27,7 +27,7 @@ import ua.com.fielden.platform.swing.actions.BlockingLayerCommand;
 import ua.com.fielden.platform.swing.actions.Command;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
-import ua.com.fielden.platform.swing.egi.EgiPanel1;
+import ua.com.fielden.platform.swing.egi.EgiPanel;
 import ua.com.fielden.platform.swing.egi.models.PropertyTableModel;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.pagination.model.development.IPageChangedListener;
@@ -49,7 +49,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     private static final long serialVersionUID = 8538099803371092525L;
 
-    private final EgiPanel1<T> egiPanel;
+    private final EgiPanel<T> egiPanel;
 
     /**
      * Tool bar that contain master related actions.
@@ -58,7 +58,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 
     public GridAnalysisView(final GridAnalysisModel<T, CDTME> model, final GridConfigurationView<T, CDTME> owner) {
 	super(model, owner);
-	this.egiPanel = new EgiPanel1<T>(getModel().getCriteria().getEntityClass(), getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer());
+	this.egiPanel = new EgiPanel<T>(getModel().getCriteria().getEntityClass(), getModel().getCriteria().getCentreDomainTreeMangerAndEnhancer());
 	this.toolBar = createToolBar();
 	if (getMasterManager() != null) {
 	    OpenMasterClickAction.enhanceWithClickAction(egiPanel.getEgi().getActualModel().getPropertyColumnMappings(),//
@@ -87,7 +87,7 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
 	return toolBar;
     }
 
-    public final EgiPanel1<T> getEgiPanel() {
+    public final EgiPanel<T> getEgiPanel() {
 	return egiPanel;
     }
 
@@ -360,9 +360,9 @@ public class GridAnalysisView<T extends AbstractEntity<?>, CDTME extends ICentre
      * @return
      */
     final int getPageSize() {
-        double pageSize = egiPanel.getSize().getHeight() / EgiPanel1.ROW_HEIGHT;
+        double pageSize = egiPanel.getSize().getHeight() / EgiPanel.ROW_HEIGHT;
         if (getOwner().getOwner().getCriteriaPanel() != null) {
-            pageSize += getOwner().getOwner().getCriteriaPanel().getSize().getHeight() / EgiPanel1.ROW_HEIGHT;
+            pageSize += getOwner().getOwner().getCriteriaPanel().getSize().getHeight() / EgiPanel.ROW_HEIGHT;
         }
         final int pageCapacity = (int) Math.floor(pageSize);
         return pageCapacity > 1 ? pageCapacity : 1;

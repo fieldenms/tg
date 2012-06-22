@@ -60,7 +60,7 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
-public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
+public class EgiPanel<T extends AbstractEntity<?>> extends JPanel {
 
     private static final long serialVersionUID = 366454499584851959L;
 
@@ -78,7 +78,7 @@ public class EgiPanel1<T extends AbstractEntity<?>> extends JPanel {
      */
     private final Map<String, JTextField> totalEditors = new HashMap<String, JTextField>();
 
-    public EgiPanel1(final Class<T> rootType, final ICentreDomainTreeManagerAndEnhancer cdtme) {
+    public EgiPanel(final Class<T> rootType, final ICentreDomainTreeManagerAndEnhancer cdtme) {
 	super();
 	final Pair<List<Pair<String, Integer>>, Map<String, List<String>>> gridDataModel = createGridDataModel(rootType, cdtme);
 	final Class<?> managedType = cdtme.getEnhancer().getManagedType(rootType);
