@@ -1,11 +1,9 @@
 package ua.com.fielden.platform.reflection;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,7 +14,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.Collectional;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -130,47 +127,6 @@ public final class AnnotationReflector {
     public static Class<? extends Comparable> getKeyType(final Class<?> type) {
 	final KeyType keyType = getAnnotation(KeyType.class, type);
 	return keyType != null ? keyType.value() : null;
-    }
-
-    /**
-     * Returns a list of types of "collectional" associations of specified <code>type</code>.
-     * <p>Note that, at this stage "collectional" association should be explicitly specified using {@link Collectional} annotation. If specified "collectional" entity type is not actual type.
-     *
-     * @param type
-     * @return
-     */
-    public static List<Class<? extends AbstractEntity>> getCollectionalPropertyTypes(final Class type) {
-	final Collectional collectional = getAnnotation(Collectional.class, type);
-	if (collectional != null){
-	    // check if declared "collectional" property types is actually "collectional" for specified type:
-	    for (final Class<? extends AbstractEntity> collectionalPropertyType : collectional.value()){
-		final List<Field> keyMembers = Finder.getKeyMembers(collectionalPropertyType);
-		if (keyMembers.size() <= 1){
-		    final String msg = "The type [" + collectionalPropertyType.getSimpleName() + "] has non-composite key, so it could not be used as a collectional property for type [" + type.getSimpleName() + "]";
-		    logger.error(msg);
-		    throw new RuntimeException(msg);
-		}
-		boolean found = false;
-		for (final Field keyMember : keyMembers){
-		    if (keyMember.getType().equals(type)){
-			if (found){ // already found:
-			    final String msg = "The type [" + collectionalPropertyType.getSimpleName() + "] has duplicate composite member of type [" + type.getSimpleName() + "].";
-			    logger.error(msg);
-			    throw new RuntimeException(msg);
-			}
-			found = true;
-		    }
-		}
-		if (!found){
-		    final String msg = "The type [" + collectionalPropertyType.getSimpleName() + "] has no composite member of type [" + type.getSimpleName() + "].";
-		    logger.error(msg);
-		    throw new RuntimeException(msg);
-		}
-
-	    }
-	    return Arrays.asList(collectional.value());
-	}
-	return Collections.emptyList();
     }
 
     /**
