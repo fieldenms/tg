@@ -373,6 +373,71 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     }
 
     @Test
+    public void test_that_domain_changes_for_property_removal_are_correctly_reflected_in_Included_properties_with_resetting_of_the_meta_state() {
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getFirstTick().check(MasterEntityForIncludedPropertiesLogic.class, "prop1", true);
+
+	dtm().getEnhancer().removeCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "prop1");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+    }
+
+    @Test
+    public void test_that_domain_changes_for_calc_property_modifications_are_correctly_reflected_in_Included_properties() {
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	dtm().getFirstTick().check(MasterEntityForIncludedPropertiesLogic.class, "prop1", true);
+	dtm().getSecondTick().check(MasterEntityForIncludedPropertiesLogic.class, "prop1", true);
+
+	// minor change which should do nothing with meta-state
+	dtm().getEnhancer().getCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "prop1").setDesc("Changed desc");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	assertTrue("Should be unchanged.", dtm().getFirstTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+	assertTrue("Should be unchanged.", dtm().getSecondTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+
+	// minor change which should do nothing with meta-state
+	dtm().getEnhancer().getCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "prop1").setOriginationProperty("moneyProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	assertTrue("Should be unchanged.", dtm().getFirstTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+	assertTrue("Should be unchanged.", dtm().getSecondTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+
+	// minor change which should do nothing with meta-state
+	dtm().getEnhancer().getCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "prop1").setContextualExpression("3 * moneyProp");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	assertTrue("Should be unchanged.", dtm().getFirstTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+	assertTrue("Should be unchanged.", dtm().getSecondTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+
+	// at this stage -- title change is treated as "significant"
+	dtm().getEnhancer().getCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "prop1").setTitle("Prop 2");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "prop2"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	assertFalse("Should be unchanged.", dtm().getFirstTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop2"));
+	assertFalse("Should be unchanged.", dtm().getSecondTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop2"));
+
+	dtm().getEnhancer().getCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "prop2").setTitle("Prop 1");
+	dtm().getEnhancer().apply();
+	dtm().getFirstTick().check(MasterEntityForIncludedPropertiesLogic.class, "prop1", true);
+	dtm().getSecondTick().check(MasterEntityForIncludedPropertiesLogic.class, "prop1", true);
+
+	// significant change which should reset+update meta-state
+	dtm().getEnhancer().getCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "prop1").setContextualExpression("MAX(2 * integerProp)");
+	dtm().getEnhancer().apply();
+	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+	assertFalse("Should be resetted.", dtm().getFirstTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+	assertFalse("Should be resetted.", dtm().getSecondTick().isChecked(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+	assertFalse("Should be updated again by default value.", dtm().getRepresentation().getFirstTick().isDisabledImmutably(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+	assertFalse("Should be updated again by default value.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntityForIncludedPropertiesLogic.class, "prop1"));
+    }
+
+    @Test
     public void test_that_manual_exclusion_is_correctly_reflected_in_Included_properties() {
 	assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
 	dtm().getRepresentation().excludeImmutably(MasterEntityForIncludedPropertiesLogic.class, "entityPropCollection.integerProp");
