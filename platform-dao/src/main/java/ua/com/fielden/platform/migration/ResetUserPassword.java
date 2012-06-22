@@ -17,10 +17,10 @@ import ua.com.fielden.platform.security.user.User;
  * @author TG Team
  *
  */
-public class ResetUserPassword2 {
+public class ResetUserPassword {
     private final IUserController controller;
 
-    public ResetUserPassword2(final IUserController controller) {
+    public ResetUserPassword(final IUserController controller) {
 	this.controller = controller;
     }
 

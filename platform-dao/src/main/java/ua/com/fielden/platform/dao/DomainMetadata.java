@@ -135,7 +135,7 @@ public class DomainMetadata {
 	    return new EntityMetadata(entityModel, entityType, getMap(result));
 	}
 
-	final Set<PropertyMetadata> ppis = generatePropertyMetadatasForEntity(entityType, EntityCategory.DEFINITION);
+	final Set<PropertyMetadata> ppis = generatePropertyMetadatasForEntity(entityType, EntityCategory.PURE);
 	final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
 	result.addAll(ppis);
 	result.addAll(generatePPIsForCompositeTypeProps(ppis));

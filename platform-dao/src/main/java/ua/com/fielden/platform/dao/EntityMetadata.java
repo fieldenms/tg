@@ -44,7 +44,7 @@ public class EntityMetadata {
 	return model != null;
     }
 
-    public boolean isDefinitionOnly() {
+    public boolean isPure() {
 	return !isPersisted() && !isSynthetic();
     }
 
@@ -66,7 +66,7 @@ public class EntityMetadata {
 	PERSISTED, //
 	CALCULATED, //
 	UNION, //
-	DEFINITION;
+	PURE;
     }
 
     @Override
