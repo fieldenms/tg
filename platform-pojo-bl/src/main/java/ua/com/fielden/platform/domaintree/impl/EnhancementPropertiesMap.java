@@ -35,4 +35,10 @@ public class EnhancementPropertiesMap <T> extends HashMap<Pair<Class<?>, String>
 	final Pair<Class<?>, String> key1 = (Pair<Class<?>, String>) key;
 	return super.get(new Pair<Class<?>, String>(DynamicEntityClassLoader.getOriginalType(key1.getKey()), key1.getValue()));
     };
+
+    @Override
+    public T remove(final Object key) {
+	final Pair<Class<?>, String> key1 = (Pair<Class<?>, String>) key;
+        return super.remove(new Pair<Class<?>, String>(DynamicEntityClassLoader.getOriginalType(key1.getKey()), key1.getValue()));
+    }
 }

@@ -35,4 +35,10 @@ public class EnhancementRootsMap <T> extends HashMap<Class<?>, T> {
 	final Class<?> key1 = (Class<?>) key;
 	return super.get(DynamicEntityClassLoader.getOriginalType(key1));
     };
+
+    @Override
+    public T remove(final Object key) {
+	final Class<?> key1 = (Class<?>) key;
+        return super.remove(DynamicEntityClassLoader.getOriginalType(key1));
+    }
 }
