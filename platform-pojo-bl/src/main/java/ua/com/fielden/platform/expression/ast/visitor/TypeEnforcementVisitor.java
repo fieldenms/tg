@@ -439,6 +439,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 	    if (Year.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) {
 		return Year.class;
 	    }
+	    break;
 	case MINUS:
 	    if (String.class.isAssignableFrom(leftOperandType) || String.class.isAssignableFrom(rightOperandType)) {
 		throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, String.class, node.getToken());

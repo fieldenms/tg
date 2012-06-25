@@ -2,6 +2,7 @@ package ua.com.fielden.platform.expression.ast.visitor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 
@@ -112,6 +113,49 @@ public class TypeEnforcementForPlusOperationTest {
 	assertEquals("Incorrect type.", Year.class, ast.getType());
 	assertEquals("Incorrect value.", new Year(5), ast.getValue());
     }
+
+    @Test
+    public void plus_operation_should_not_be_applicable_to_different_date_literal_types() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("3y + 2m").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+	try {
+	    new AstWalker(ast, visitor).walk();
+	    fail("plus operation with two differently typed date literals are not supported at this stage.");
+	} catch (final Exception ex) {
+
+	}
+    }
+
+    @Test
+    public void plus_operation_should_not_be_applicable_to_date_literal_and_date_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("dateProperty + 1y").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+	try {
+	    new AstWalker(ast, visitor).walk();
+	    fail("plus operation applied to date property and a date literal are not supported at this stage.");
+	} catch (final Exception ex) {
+
+	}
+    }
+
+    @Test
+    public void plus_operation_should_not_be_applicable_to_date_literal_and_int_property() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
+	final Token[] tokens = new ExpressionLexer("intProperty + 1y").tokenize();
+	final ExpressionParser parser = new ExpressionParser(tokens);
+	final AstNode ast = parser.parse();
+	final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
+	try {
+	    new AstWalker(ast, visitor).walk();
+	    fail("plus operation applied to date property and a date literal are not supported at this stage.");
+	} catch (final Exception ex) {
+
+	}
+    }
+
 
     @Test
     public void test_plus_operation_with_literals_case_9() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
