@@ -238,13 +238,13 @@ public class DomainMetadata {
     }
 
     private void safeMapAdd(final Map<String, PropertyMetadata> map, final PropertyMetadata addedItem) {
-	if (addedItem != null) {
-	    if (!map.containsKey(addedItem.getName())) {
+	//if (addedItem != null) {
+//	    if (!map.containsKey(addedItem.getName())) {
 		map.put(addedItem.getName(), addedItem);
-	    } else {
-		throw new IllegalStateException("Trying to generate duplicate PropertyPersistenceInfo " + addedItem + " for already existing " + map.get(addedItem.getName()));
-	    }
-	}
+//	    } else {
+//		throw new IllegalStateException("Trying to generate duplicate PropertyPersistenceInfo " + addedItem + " for already existing " + map.get(addedItem.getName()));
+//	    }
+	//}
     }
 
     /**

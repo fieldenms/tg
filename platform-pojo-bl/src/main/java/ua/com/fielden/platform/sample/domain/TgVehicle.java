@@ -112,10 +112,24 @@ public class TgVehicle extends AbstractEntity<String> {
     private TgVehicleModel calcModel;
     private static final ExpressionModel calcModel_ = expr().prop("model").model();
 
+    @IsProperty
+    @Title(value = "Financial details", desc = "Fin Details")
+    private TgVehicleFinDetails finDetails;
+
     /**
      * Constructor for (@link EntityFactory}.
      */
     protected TgVehicle() {
+    }
+
+    @Observable
+    public TgVehicle setFinDetails(final TgVehicleFinDetails finDetails) {
+	this.finDetails = finDetails;
+	return this;
+    }
+
+    public TgVehicleFinDetails getFinDetails() {
+	return finDetails;
     }
 
     public TgFuelUsage getLastFuelUsage() {
