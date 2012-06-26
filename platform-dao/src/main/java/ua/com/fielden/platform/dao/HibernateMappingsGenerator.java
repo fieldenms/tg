@@ -1,4 +1,4 @@
-	package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.dao;
 
 import java.lang.reflect.Field;
 import java.util.Collection;

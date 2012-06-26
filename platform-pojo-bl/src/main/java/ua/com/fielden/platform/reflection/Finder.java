@@ -936,5 +936,4 @@ public class Finder {
 	final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.transform(type, dotNotationExp).getKey());
 	return EntityUtils.isEntityType(propertyType) && DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, AbstractEntity.KEY)).equals(masterType);
     }
-
 }

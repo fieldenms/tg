@@ -85,6 +85,20 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
     @Test
+    public void test_condition_on_121_property() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class)).model());
+	assertEquals("Incorrect key", 0, models.size());
+    }
+
+    @Test
+    public void test_fetching_of_121_property() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class).with("finDetails")).model());
+	assertEquals("Incorrect key", "CAP_NO1", models.get(0).getFinDetails().getCapitalWorksNo());
+    }
+
+    @Test
     public void test_retrieval_of_synthetic_entity3() {
 	final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).where().prop("make.key").in().values("MERC", "BMW").model();
 	final List<TgMakeCount> models = makeCountDao.getAllEntities(from(qry).model());

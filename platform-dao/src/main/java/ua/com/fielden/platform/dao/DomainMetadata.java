@@ -228,6 +228,8 @@ public class DomainMetadata {
 		    safeMapAdd(result, getCalculatedPropInfo(entityType, field));
 		} else if (field.isAnnotationPresent(MapTo.class)){
 		    safeMapAdd(result, getCommonPropHibInfo(entityType, field));
+		} else if (Finder.isOne2One_association(entityType, field.getName())) {
+		    safeMapAdd(result, getOneToOnePropInfo(entityType, field));
 		} else {
 		    safeMapAdd(result, getSyntheticPropInfo(entityType, field));
 		}
@@ -238,13 +240,7 @@ public class DomainMetadata {
     }
 
     private void safeMapAdd(final Map<String, PropertyMetadata> map, final PropertyMetadata addedItem) {
-	//if (addedItem != null) {
-//	    if (!map.containsKey(addedItem.getName())) {
-		map.put(addedItem.getName(), addedItem);
-//	    } else {
-//		throw new IllegalStateException("Trying to generate duplicate PropertyPersistenceInfo " + addedItem + " for already existing " + map.get(addedItem.getName()));
-//	    }
-	//}
+	map.put(addedItem.getName(), addedItem);
     }
 
     /**
@@ -377,6 +373,16 @@ public class DomainMetadata {
 	final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
 	expressionModel.setContextPrefixNeeded(needsContextPrefix(entityType, calculatedPropfield));
 	return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(CALCULATED).aggregatedExpression(aggregatedExpression).build();
+    }
+
+    private PropertyMetadata getOneToOnePropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
+	final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+	final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+	final Object hibernateType = getHibernateType(javaType, persistedType, true);
+
+	final ExpressionModel expressionModel = expr().prop("id").model();
+	expressionModel.setContextPrefixNeeded(needsContextPrefix(entityType, calculatedPropfield));
+	return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(PropertyCategory.IMPLICITLY_CALCULATED).build();
     }
 
     private PropertyMetadata getSyntheticPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {

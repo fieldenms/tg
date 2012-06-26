@@ -18,6 +18,23 @@ import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.utils.EntityUtils;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLLECTIONAL;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ID;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.IMPLICITLY_CALCULATED;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PROP;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_COMPOSITE_KEY;
 
 public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final String name;
@@ -32,17 +49,17 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     private final static Set<PropertyCategory> typesThatAffectsMapping = new HashSet<PropertyCategory>();
     static {
-	typesThatAffectsMapping.add(PropertyCategory.ENTITY);
-	typesThatAffectsMapping.add(PropertyCategory.ENTITY_KEY);
-	typesThatAffectsMapping.add(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY);
-	typesThatAffectsMapping.add(PropertyCategory.ID);
-	typesThatAffectsMapping.add(PropertyCategory.ONE2ONE_ID);
-	typesThatAffectsMapping.add(PropertyCategory.PRIMITIVE_KEY);
-	typesThatAffectsMapping.add(PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
-	typesThatAffectsMapping.add(PropertyCategory.COMPONENT_HEADER);
-	typesThatAffectsMapping.add(PropertyCategory.PROP);
-	typesThatAffectsMapping.add(PropertyCategory.VERSION);
-	typesThatAffectsMapping.add(PropertyCategory.UNION_ENTITY);
+	typesThatAffectsMapping.add(ENTITY);
+	typesThatAffectsMapping.add(ENTITY_KEY);
+	typesThatAffectsMapping.add(ENTITY_MEMBER_OF_COMPOSITE_KEY);
+	typesThatAffectsMapping.add(ID);
+	typesThatAffectsMapping.add(ONE2ONE_ID);
+	typesThatAffectsMapping.add(PRIMITIVE_KEY);
+	typesThatAffectsMapping.add(PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
+	typesThatAffectsMapping.add(COMPONENT_HEADER);
+	typesThatAffectsMapping.add(PROP);
+	typesThatAffectsMapping.add(VERSION);
+	typesThatAffectsMapping.add(UNION_ENTITY);
     }
 
     public YieldDetailsType getYieldDetailType() {
@@ -51,6 +68,10 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public boolean isCalculated() {
 	return expressionModel != null;
+    }
+
+    public boolean isImplicitlyCalculated() {
+	return type.equals(IMPLICITLY_CALCULATED);
     }
 
     public boolean affectsMapping() {
@@ -84,7 +105,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
 
     public boolean isCollection() {
-	return type.equals(PropertyCategory.COLLECTIONAL);
+	return type.equals(COLLECTIONAL);
     }
 
     public boolean isId() {
@@ -92,27 +113,27 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
 
     public boolean isOne2OneId() {
-	return type.equals(PropertyCategory.ONE2ONE_ID);
+	return type.equals(ONE2ONE_ID);
     }
 
     public boolean isVersion() {
-	return type.equals(PropertyCategory.VERSION);
+	return type.equals(VERSION);
     }
 
     public boolean isUnionEntity() {
-	return type.equals(PropertyCategory.UNION_ENTITY);
+	return type.equals(UNION_ENTITY);
     }
 
     public boolean isUnionEntityDetails() {
-	return type.equals(PropertyCategory.UNION_DETAILS);
+	return type.equals(UNION_DETAILS);
     }
 
     public boolean isVirtual() {
-	return type.equals(PropertyCategory.VIRTUAL_COMPOSITE_KEY);
+	return type.equals(VIRTUAL_COMPOSITE_KEY);
     }
 
     public boolean isSynthetic() {
-	return type.equals(PropertyCategory.SYNTHETIC);
+	return type.equals(SYNTHETIC);
     }
 
 
@@ -133,14 +154,14 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public Set<PropertyMetadata> getCompositeTypeSubprops() {
 	final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
-	if (PropertyCategory.COMPONENT_HEADER.equals(type)) {
+	if (COMPONENT_HEADER.equals(type)) {
 	    final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
 	    final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
 	    int index = 0;
 	    for (final String subpropName : subprops) {
 		final PropertyColumn column = columns.get(index);
 		final Object hibType = subpropsTypes.get(index);
-		result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(PropertyCategory.COMPONENT_DETAILS).hibType(hibType).build());
+		result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(COMPONENT_DETAILS).hibType(hibType).build());
 		index = index + 1;
 	    }
 	}
@@ -268,6 +289,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	COMPONENT_HEADER, //
 	COMPONENT_DETAILS, //
 	CALCULATED, //
+	IMPLICITLY_CALCULATED, //
 	SYNTHETIC, //
 	UNION_ENTITY, //
 	UNION_DETAILS, //
