@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -90,7 +91,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean onlyOneYieldAndWithoutAlias() {
-        return yields.getYields().size() == 1 && yields.getYields().values().iterator().next().getAlias().equals("");
+        return yields.size() == 1 && yields.getFirstYield().getAlias().equals("");
     }
 
     private boolean idAliasEnhancementRequired() {
@@ -98,12 +99,12 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean allPropsYieldEnhancementRequired() {
-        return yields.getYields().size() == 0 && !isSubQuery() && //
+        return yields.size() == 0 && !isSubQuery() && //
         ((mainSourceIsTypeBased() && EntityUtils.isPersistedEntityType(resultType)) || mainSourceIsQueryBased());
     }
 
     private boolean idPropYieldEnhancementRequired() {
-        return yields.getYields().size() == 0 && EntityUtils.isPersistedEntityType(resultType) && isSubQuery();
+        return yields.size() == 0 && EntityUtils.isPersistedEntityType(resultType) && isSubQuery();
     }
 
     private boolean mainSourceIsTypeBased() {
@@ -117,9 +118,9 @@ public class EntQuery implements ISingleOperand {
     private void enhanceYieldsModel() {
 	// enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
 	if (idAliasEnhancementRequired()) {
-	    final Yield idModel = new Yield(yields.getYields().values().iterator().next().getOperand(), AbstractEntity.ID);
-	    yields.getYields().clear();
-	    yields.getYields().put(idModel.getAlias(), idModel);
+	    final Yield idModel = new Yield(yields.getFirstYield().getOperand(), AbstractEntity.ID);
+	    yields.clear();
+	    yields.addYield(idModel);
 	} else if (allPropsYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
 	    if (mainSourceIsTypeBased()) {
@@ -127,36 +128,37 @@ public class EntQuery implements ISingleOperand {
 		    final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
 		    if (!skipProperty) {
 			final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn().getName() : null), ppi.getYieldDetailType());
-			yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
+			yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
 		    }
 		}
 	    } else {
 		final QueryBasedSource sourceModel = (QueryBasedSource) getSources().getMain();
 		for (final ResultQueryYieldDetails ppi : sourceModel.sourceItems.values()) {
 		    final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn() : null), ppi.getYieldDetailsType());
-		    yields.getYields().put(rqyd.getName(), new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
+		    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
 		}
 	    }
 	} else if (idPropYieldEnhancementRequired()) {
 	    final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-	    yields.getYields().put(AbstractEntity.ID, new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
+	    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
 	}
     }
 
     private void adjustYieldsModelAccordingToFetchModel(final FetchModel fetchModel) {
 	if (fetchModel != null) {
-	    for (final Iterator<Entry<String, Yield>> iterator = yields.getYields().entrySet().iterator(); iterator.hasNext();) {
-		final Entry<String, Yield> yieldEntry = iterator.next();
-		if (!fetchModel.containsProp(yieldEntry.getKey())) {
-		    iterator.remove();
+	    final Set<Yield> toBeRemoved = new HashSet<Yield>();
+	    for (final Yield yield : yields.getYields()) {
+		if (!fetchModel.containsProp(yield.getAlias())) {
+		    toBeRemoved.add(yield);
 		}
 	    }
+	    yields.removeYields(toBeRemoved);
 	}
     }
 
     private void assignPropertyPersistenceInfoToYields() {
 	int yieldIndex = 0;
-        for (final Yield yield : yields.getYields().values()) {
+        for (final Yield yield : yields.getYields()) {
             yieldIndex = yieldIndex + 1;
             final ResultQueryYieldDetails ppi = new ResultQueryYieldDetails(yield.getAlias(), determineYieldJavaType(yield), determineYieldHibType(yield), "C" + yieldIndex, determineYieldNullability(yield), determineYieldDetailsType(yield));
             yield.setInfo(ppi);
@@ -240,7 +242,7 @@ public class EntQuery implements ISingleOperand {
         this.yields = yields;
         this.groups = groups;
         this.orderings = orderings;
-        this.resultType = resultType != null ? resultType : (yields.getYields().size() == 0 ? this.sources.getMain().sourceType() : null);
+        this.resultType = resultType != null ? resultType : (yields.size() == 0 ? this.sources.getMain().sourceType() : null);
 
         enhanceToFinalState(generator, fetchModel);
 
@@ -547,16 +549,16 @@ public class EntQuery implements ISingleOperand {
 
     @Override
     public Object hibType() {
-        if (yields.getYields().size() == 1) {
-          return yields.getYields().values().iterator().next().getInfo().getHibType();
+        if (yields.size() == 1) {
+          return yields.getFirstYield().getInfo().getHibType();
         }
         return null;
     }
 
     @Override
     public boolean isNullable() {
-        if (yields.getYields().size() == 1) {
-                  return yields.getYields().values().iterator().next().getInfo().isNullable();
+        if (yields.size() == 1) {
+                  return yields.getFirstYield().getInfo().isNullable();
                 }
         return true;
     }

@@ -117,6 +117,20 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    public void test_validation_of_duplicate_yields() {
+	final AggregatedResultQueryModel model = select(TgVehicle.class). //
+		yield().prop("id").as("id"). //
+		yield().prop("key").as("key"). //
+		yield().prop("version").as("id"). //
+		modelAsAggregate();
+	try {
+	    aggregateDao.getAllEntities(from(model).model());
+	    fail("Should have failed while trying to yield duplicates");
+	} catch (final Exception e) {
+	}
+    }
+
+    @Test
     public void test_retrieval_of_synthetic_entity() {
 	final AggregatedResultQueryModel model = select(TgMakeCount.class).where().prop("make.key").in().values("MERC", "BMW").yield().prop("make").as("make").modelAsAggregate();
 	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).model());

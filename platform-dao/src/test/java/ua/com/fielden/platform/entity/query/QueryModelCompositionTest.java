@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -301,9 +299,8 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
 	final EntQuery act = entResultQry(qry);
 
-	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
-	yields.put("id", new Yield(new EntProp("model"), "id"));
-	final Yields exp = new Yields(yields);
+	final Yields exp = new Yields();
+	exp.addYield(new Yield(new EntProp("model"), "id"));
 
 	assertEquals("models are different", exp, act.getYields());
 
@@ -320,10 +317,9 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final YearOf yearOfModel = new YearOf(new EntProp("initDate"));
 	final EntProp eqClassProp = new EntProp("model");
 
-	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
-	yields.put("model", new Yield(eqClassProp, "model"));
-	yields.put("initYear", new Yield(yearOfModel, "initYear"));
-	final Yields exp = new Yields(yields);
+	final Yields exp = new Yields();
+	exp.addYield(new Yield(eqClassProp, "model"));
+	exp.addYield(new Yield(yearOfModel, "initYear"));
 	assertEquals("models are different", exp, act.getYields());
 
 	final List<GroupBy> groups = new ArrayList<GroupBy>();
@@ -354,50 +350,45 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
 	final Map<String, Object> paramValues = new HashMap<String, Object>();
 	paramValues.put("param", 20);
 	final AggregatedResultQueryModel qry = select(VEHICLE).yield().prop("station").as("st").yield().beginExpr().prop("model").add().param("param").endExpr().as("m").modelAsAggregate();
-	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
-	yields.put("st", new Yield(new EntProp("station"), "st"));
+	final Yields exp = new Yields();
+	exp.addYield(new Yield(new EntProp("station"), "st"));
 	final List<CompoundSingleOperand> compSingleOperands = new ArrayList<CompoundSingleOperand>();
 	compSingleOperands.add(new CompoundSingleOperand(new EntValue(20), ArithmeticalOperator.ADD));
 	final Expression expression = new Expression(new EntProp("model"), compSingleOperands);
-	yields.put("m", new Yield(expression, "m"));
-	final Yields exp = new Yields(yields);
+	exp.addYield(new Yield(expression, "m"));
 	assertEquals("models are different", exp, entResultQry(qry, paramValues).getYields());
     }
 
     @Test
     public void test2() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).yield().prop("model").modelAsEntity(MODEL);
-	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
-	yields.put("id", new Yield(new EntProp("model"), "id"));
-	final Yields exp = new Yields(yields);
+	final Yields exp = new Yields();
+	exp.addYield(new Yield(new EntProp("model"), "id"));
 	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 
     @Test
     public void test3() {
 	final AggregatedResultQueryModel qry = select(VEHICLE).yield().prop("station").as("st").yield().prop("model").as("m").modelAsAggregate();
-	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
-	yields.put("st", new Yield(new EntProp("station"), "st"));
-	yields.put("m", new Yield(new EntProp("model"), "m"));
-	final Yields exp = new Yields(yields);
+	final Yields exp = new Yields();
+	exp.addYield(new Yield(new EntProp("station"), "st"));
+	exp.addYield(new Yield(new EntProp("model"), "m"));
 	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 
     @Test
     public void test4() {
 	final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsEntity(MODEL);
-	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
-	yields.put("id", new Yield(new EntProp("v.model"), "id"));
-	final Yields exp = new Yields(yields);
+	final Yields exp = new Yields();
+	exp.addYield(new Yield(new EntProp("v.model"), "id"));
 	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 
     @Test
     public void test5() {
 	final PrimitiveResultQueryModel qry = select(VEHICLE).as("v").yield().prop("v.model").modelAsPrimitive();
-	final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
-	yields.put("", new Yield(new EntProp("v.model"), ""));
-	final Yields exp = new Yields(yields);
+	final Yields exp = new Yields();
+	exp.addYield(new Yield(new EntProp("v.model"), ""));
 	assertEquals("models are different", exp, entResultQry(qry).getYields());
     }
 

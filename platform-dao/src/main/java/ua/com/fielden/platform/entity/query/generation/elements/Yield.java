@@ -79,8 +79,4 @@ public class Yield {
     public void setInfo(final ResultQueryYieldDetails info) {
 	this.info = info;
     }
-
-    public boolean shouldBeIgnored() {
-	return false;
-    }
 }

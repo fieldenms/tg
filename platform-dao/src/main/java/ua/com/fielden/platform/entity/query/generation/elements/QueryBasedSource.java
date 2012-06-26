@@ -25,7 +25,7 @@ public class QueryBasedSource extends AbstractSource {
 
     @Override
     public void populateSourceItems(final boolean parentLeftJoinLegacy) {
-	for (final Yield yield : model().getYields().getYields().values()) {
+	for (final Yield yield : model().getYields().getYields()) {
 	    sourceItems.put(yield.getAlias(), new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), yield.getInfo().isNullable() || parentLeftJoinLegacy, yield.getInfo().getYieldDetailsType()));
 	}
     }
@@ -52,7 +52,7 @@ public class QueryBasedSource extends AbstractSource {
     }
 
     private Pair<PurePropInfo, PurePropInfo> validateCandidate(final String dotNotatedPropName, final String first, final String rest) {
-	final Yield firstLevelPropYield = model().getYields().getYields().get(first);
+	final Yield firstLevelPropYield = model().getYields().getYieldByAlias(first);
 	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query yields
 	    final PropertyMetadata propInfo = getDomainMetadataAnalyser().getInfoForDotNotatedProp(sourceType(), first);
 	    if (propInfo == null) {

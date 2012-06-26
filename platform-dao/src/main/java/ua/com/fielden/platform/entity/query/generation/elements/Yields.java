@@ -1,16 +1,59 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
 
 public class Yields implements IPropertyCollector {
-    private final SortedMap<String, Yield> yields;
+    private final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
 
-    public Yields(final SortedMap<String, Yield> yields) {
-	this.yields = yields;
+    public Yields() {
+    }
+
+    public void addYield(final Yield yield) {
+	if (yields.containsKey(yield.getAlias())) {
+	    throw new IllegalStateException("Query contains duplicate yields for alias [" + yield.getAlias() + "]");
+	}
+	yields.put(yield.getAlias(), yield);
+    }
+
+    public void removeYield(final Yield yield) {
+	if (!yields.containsKey(yield.getAlias())) {
+	    throw new IllegalStateException("Query does not contain the following yield [" + yield + "]");
+	}
+	yields.remove(yield.getAlias());
+    }
+
+    public void removeYields(final Set<Yield> toBeRemoved) {
+	for (final Yield yield : toBeRemoved) {
+	    removeYield(yield);
+	}
+    }
+
+    public Yield getFirstYield() {
+	return !yields.isEmpty() ? yields.values().iterator().next() : null;
+    }
+
+    public int size() {
+	return yields.size();
+    }
+
+    public Collection<Yield> getYields() {
+	return Collections.unmodifiableCollection(yields.values());
+    }
+
+    public void clear() {
+	yields.clear();
+    }
+
+    public Yield getYieldByAlias(final String alias) {
+	return yields.get(alias);
     }
 
     @Override
@@ -45,7 +88,7 @@ public class Yields implements IPropertyCollector {
 	final List<Yield> yieldsToBeIncludedIntoSql = new ArrayList<Yield>();
 
 	for (final Yield yield : yields.values()) {
-	    if (!yield.shouldBeIgnored() && !yield.getInfo().isCompositeProperty() && !yield.getInfo().isUnionEntity()) {
+	    if (!yield.getInfo().isCompositeProperty() && !yield.getInfo().isUnionEntity()) {
 		yieldsToBeIncludedIntoSql.add(yield);
 	    }
 	}
@@ -68,10 +111,6 @@ public class Yields implements IPropertyCollector {
     @Override
     public String toString() {
 	return yields.toString();
-    }
-
-    public SortedMap<String, Yield> getYields() {
-        return yields;
     }
 
     @Override
