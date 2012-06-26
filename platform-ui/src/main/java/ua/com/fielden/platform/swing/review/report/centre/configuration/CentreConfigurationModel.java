@@ -67,13 +67,41 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * Saves this configuration.
      */
     public void save(){
+	acceptAnalysis();
 	gdtm.saveEntityCentreManager(menuItemType, getName());
+    }
+
+    /**
+     * Accepts all the modifications applied to the analysis manager.
+     */
+    public void acceptAnalysis(){
+	final ICentreDomainTreeManager cdtm = getEntityCentreManager();
+	if(cdtm == null){
+	    return;
+	}
+	for(final String analysis : cdtm.analysisKeys()){
+	    cdtm.acceptAnalysisManager(analysis);
+	}
+    }
+
+    /**
+     * Discards the analysis managers.
+     */
+    public void discardAnalysis(){
+	final ICentreDomainTreeManager cdtm = getEntityCentreManager();
+	if(cdtm == null){
+	    return;
+	}
+	for(final String analysis : cdtm.analysisKeys()){
+	    cdtm.discardAnalysisManager(analysis);
+	}
     }
 
     /**
      * Discards changes in the entity centre.
      */
     public void discard(){
+	discardAnalysis();
 	gdtm.discardEntityCentreManager(menuItemType, getName());
     }
 
@@ -81,6 +109,7 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
      * Saves as this configuration.
      */
     public void saveAs(final String saveAsName){
+	acceptAnalysis();
 	gdtm.saveAsEntityCentreManager(menuItemType, getName(), saveAsName);
     }
 

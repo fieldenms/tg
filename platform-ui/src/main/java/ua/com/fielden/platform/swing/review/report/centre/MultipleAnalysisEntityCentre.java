@@ -18,10 +18,13 @@ import javax.swing.DefaultSingleSelectionModel;
 import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
+import javax.swing.JToolBar;
 import javax.swing.SingleSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EtchedBorder;
 
 import net.miginfocom.swing.MigLayout;
+import ua.com.fielden.platform.actionpanelmodel.ActionPanelBuilder;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -124,22 +127,22 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	};
     }
 
-//        @Override
-//        protected JToolBar createToolBar() {
-//    	ActionPanelBuilder panelBuilder = new ActionPanelBuilder();
-//    	final JToolBar subToolBar = super.createToolBar();
-//    	if(subToolBar != null){
-//    	    panelBuilder = panelBuilder.addSubToolBar(subToolBar).addSeparator();
-//    	}
-//    	final JToolBar toolBar = panelBuilder//
-//    		.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")))//
-//    		//.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
-//    		.addButton(createRemoveAnalysisAction())
-//    		.buildActionPanel();
-//    	toolBar.setFloatable(false);
-//    	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-//    	return toolBar;
-//        }
+        @Override
+        protected JToolBar createToolBar() {
+    	ActionPanelBuilder panelBuilder = new ActionPanelBuilder();
+    	final JToolBar subToolBar = super.createToolBar();
+    	if(subToolBar != null){
+    	    panelBuilder = panelBuilder.addSubToolBar(subToolBar).addSeparator();
+    	}
+    	final JToolBar toolBar = panelBuilder//
+    		.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")))//
+    		//.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
+    		.addButton(createRemoveAnalysisAction())
+    		.buildActionPanel();
+    	toolBar.setFloatable(false);
+    	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+    	return toolBar;
+        }
 
     @Override
     protected List<Action> createCustomActionList() {
@@ -509,7 +512,7 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	    throw new IllegalArgumentException("The tab index can not be less then 0");
 	}
 	final AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?> analysis = (AbstractAnalysisConfigurationView<T, ICentreDomainTreeManagerAndEnhancer, ?, ?, ?>)tabPanel.getComponentAt(index);
-	analysis.close();
+	analysis.getModel().setAnalysisVisible(false);
 	tabPanel.removeTabAt(index);
 	return analysis;
     }

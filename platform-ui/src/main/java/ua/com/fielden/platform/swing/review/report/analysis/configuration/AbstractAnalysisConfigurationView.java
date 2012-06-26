@@ -110,11 +110,6 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 	return owner;
     }
 
-    @Override
-    public void close() {
-	getModel().setAnalysisVisible(false);
-    }
-
     /**
      * Returns the selection listener that is responsible for selecting the this analysis configurable view.
      *

@@ -46,7 +46,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.selectioncheckbox.SelectionCheckBoxPanel.IAction;
 import ua.com.fielden.platform.swing.categorychart.ActionChartPanel;
+import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
+import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
+import ua.com.fielden.platform.swing.categorychart.ChartAnalysisAggregationListDragToSupport;
 import ua.com.fielden.platform.swing.categorychart.ChartPanelChangedEventObject;
 import ua.com.fielden.platform.swing.categorychart.IChartPanelChangeListener;
 import ua.com.fielden.platform.swing.categorychart.MultipleChartPanel;
@@ -59,6 +62,7 @@ import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
 import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
+import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
@@ -123,8 +127,10 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	updateChart(new ArrayList<EntityAggregates>(), null);
 	layoutComponents();
 
-//	DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), new AnalysisChartDragToSupport<T, DAO, IAggregatedProperty, List<EntityAggregates>, CategoryChartTypes>(aggregationList, chartPanel, reportView.getModel()), true);
-//	DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), new AnalysisListDragToSupport(distributionList), true);
+	DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), //
+		new ChartAnalysisAggregationListDragToSupport<T, List<EntityAggregates>, CategoryChartTypes>(aggregationList, chartPanel, getModel()), true);
+	DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), //
+		new AnalysisListDragToSupport<T>(distributionList, getModel().getCriteria().getEntityClass(), getModel().adtme().getFirstTick()), true);
     }
 
     @SuppressWarnings("unchecked")

@@ -4,15 +4,17 @@ import java.awt.Point;
 
 import javax.swing.JComponent;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
 
-public class PivotListDragToSupport<T> extends AnalysisListDragToSupport {
+public class PivotListDragToSupport<T extends AbstractEntity<?>> extends AnalysisListDragToSupport<T> {
 
     private final IValueSwaper valueSwaper;
 
     public PivotListDragToSupport(final CheckboxList<T> list, final IValueSwaper valueSwaper) {
-	super(list);
+	//TODO Replace null parameters with proper one.
+	super(list, null, null);
 	this.valueSwaper = valueSwaper;
     }
 
