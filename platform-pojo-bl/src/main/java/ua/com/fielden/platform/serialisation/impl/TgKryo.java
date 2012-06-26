@@ -79,6 +79,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.Functions;
+import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
@@ -295,6 +296,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	register(ExpressionModel.class);
 	register(PrimitiveResultQueryModel.class);
 	register(QueryExecutionModel.class);
+	register(fetch.FetchCategory.class);
 	register(fetch.class);
 	register(OrderingModel.class);
 	register(TokenCategory.class);
@@ -304,6 +306,7 @@ public class TgKryo extends Kryo implements ISerialiser {
 	register(ArithmeticalOperator.class);
 	register(Functions.class);
 	register(DynamicallyTypedQueryContainer.class);
+	register(JoinType.class);
 
 	register(Class.class);
 	// register menu and configuration related

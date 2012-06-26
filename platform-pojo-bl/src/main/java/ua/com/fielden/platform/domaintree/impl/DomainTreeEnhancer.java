@@ -400,7 +400,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     protected final CalculatedProperty calculatedProperty(final Class<?> root, final String pathAndName) {
 	return calculatedProperty(calculatedProperties.get(root), pathAndName);
     }
-    
+
     /**
      * Iterates through the set of calculated properties to find appropriate calc property.
      *
@@ -489,7 +489,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
     @Override
     public Set<Class<?>> rootTypes() {
-	return originalAndEnhancedRootTypesAndArrays.keySet();
+	return new HashSet<Class<?>>(originalAndEnhancedRootTypesAndArrays.keySet());
     }
 
     /**

@@ -145,6 +145,37 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
 	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager$ITickManagerWithMutability"));
 	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager$TickManager"));
 	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer$TickManagerAndEnhancer"));
+
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager$SearchBy"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation$ListenedArrayList"));
+	utilityGeneratedClasses.add(findClass("java.util.LinkedHashMap"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.EnhancementSet"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer$ByteArray"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation$Ordering"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$1"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$2"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$3"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$4"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$5"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$6"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$7"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$8"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$9"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$10"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.Function$11"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.ICalculatedProperty$CalculatedPropertyCategory"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.ICalculatedProperty$CalculatedPropertyAttribute"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.ICalculatedProperty"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.IDomainTreeEnhancer"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.IDomainTreeRepresentation"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.IDomainTreeManager"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.IDomainTreeRepresentation$ITickRepresentation"));
+	utilityGeneratedClasses.add(findClass("ua.com.fielden.platform.domaintree.IDomainTreeManager$ITickManager"));
     }
 
     @Inject
