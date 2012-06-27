@@ -80,6 +80,9 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 	    return;
 	}
 	for(final String analysis : cdtm.analysisKeys()){
+	    if (cdtm.isFreezedAnalysisManager(analysis)) {
+		cdtm.acceptAnalysisManager(analysis);
+	    }
 	    cdtm.acceptAnalysisManager(analysis);
 	}
     }
@@ -93,6 +96,9 @@ public class CentreConfigurationModel<T extends AbstractEntity<?>> extends Abstr
 	    return;
 	}
 	for(final String analysis : cdtm.analysisKeys()){
+	    if (cdtm.isFreezedAnalysisManager(analysis)) {
+		cdtm.discardAnalysisManager(analysis);
+	    }
 	    cdtm.discardAnalysisManager(analysis);
 	}
     }
