@@ -33,14 +33,10 @@ public class TgFuelUsage extends AbstractEntity<DynamicEntityKey> {
     @CompositeKeyMember(2)
     private Date date;
 
-    @IsProperty @MapTo @Title(value = "Fuel Qty", desc = "Fuel Qty")
+    @IsProperty @Required @MapTo @Title(value = "Fuel Qty", desc = "Fuel Qty")
     private BigDecimal qty;
 
-
-    @IsProperty
-    @Required
-    @MapTo
-    @Title(value = "Fuel type", desc = "Fuel type")
+    @IsProperty @Required @MapTo @Title(value = "Fuel type", desc = "Fuel type")
     private TgFuelType fuelType;
 
     @Observable

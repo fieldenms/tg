@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -20,6 +21,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
@@ -38,6 +40,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagon;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
+import ua.com.fielden.platform.sample.domain.controller.ITgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogie;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgMakeCount;
@@ -82,6 +85,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final EntityWithMoneyDao entityWithMoneyDao = getInstance(EntityWithMoneyDao.class);
     private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
     private final ITgMakeCount makeCountDao = getInstance(ITgMakeCount.class);
+    private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
     @Test
@@ -96,6 +100,30 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
 	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class).with("finDetails")).model());
 	assertEquals("Incorrect key", "CAP_NO1", models.get(0).getFinDetails().getCapitalWorksNo());
+    }
+
+    @Test
+    public void test_retrieval_of_synthetic_entity5() {
+	final EntityResultQueryModel<TgAverageFuelUsage> qry = select(TgAverageFuelUsage.class).where().prop("key.key").eq().val("CAR2").model();
+	final List<TgAverageFuelUsage> models = averageFuelUsageDao.getAllEntities(from(qry). //
+		with("datePeriod.from", new DateTime(2008, 01, 01, 0, 0).toDate()). //
+		with("datePeriod.to", new DateTime(2010, 01, 01, 0, 0).toDate()). //
+		model());
+	assertEquals("Incorrect key", 1, models.size());
+	assertEquals("Incorrect key", "120", models.get(0).getQty().toString());
+	assertEquals("Incorrect key", "CAR2", models.get(0).getKey().getKey());
+    }
+
+    @Test
+    public void test_retrieval_of_synthetic_entity4() {
+	final EntityResultQueryModel<TgAverageFuelUsage> qry = select(TgAverageFuelUsage.class).where().prop("key.key").eq().val("CAR2").model();
+	final List<TgAverageFuelUsage> models = averageFuelUsageDao.getAllEntities(from(qry). //
+		with("datePeriod.from", null). //
+		with("datePeriod.to", null). //
+		model());
+	assertEquals("Incorrect key", 1, models.size());
+	assertEquals("Incorrect key", "220", models.get(0).getQty().toString());
+	assertEquals("Incorrect key", "CAR2", models.get(0).getKey().getKey());
     }
 
     @Test

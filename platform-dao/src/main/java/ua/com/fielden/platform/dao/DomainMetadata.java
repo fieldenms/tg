@@ -29,6 +29,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistedType;
@@ -48,7 +49,6 @@ import com.google.inject.Injector;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.PERSISTED;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.CALCULATED;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
@@ -189,12 +189,36 @@ public class DomainMetadata {
 	}
     }
 
-    private PropertyMetadata generateKeyPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
-	final PropertyColumn keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? new PropertyColumn(getMapEntityTo(entityType).keyColumn()) : key;
+    private PropertyMetadata generateVersionPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory) {
+	switch (entityCategory) {
+	case PERSISTED:
+	    return versionProperty;
+	default:
+	    return null;
+	}
+    }
+
+    private PropertyMetadata generateKeyPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory) throws Exception {
 	if (isOneToOne(entityType)) {
-	    return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(ENTITY_KEY).build();
+	    switch (entityCategory) {
+	    case PERSISTED:
+		return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(id).hibType(TypeFactory.basic("long")).type(ENTITY_KEY).build();
+	    case CALCULATED:
+		return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).hibType(TypeFactory.basic("long")).type(SYNTHETIC).build();
+	    default:
+		return null;
+	    }
 	} else if (!DynamicEntityKey.class.equals(getKeyType(entityType))) {
-	    return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PRIMITIVE_KEY).build();
+	    switch (entityCategory) {
+	    case PERSISTED:
+		final PropertyColumn keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? new PropertyColumn(getMapEntityTo(entityType).keyColumn()) : key;
+		return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PRIMITIVE_KEY).build();
+	    case CALCULATED:
+		return null;
+		//return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).hibType(TypeFactory.basic("long")).type(IMPLICITLY_CALCULATED).build();
+	    default:
+		return null;
+	    }
 	} else if (DynamicEntityKey.class.equals(getKeyType(entityType))) {
 	    return getVirtualPropInfoForDynamicEntityKey(Finder.getKeyMembers(entityType));
 	} else {
@@ -214,11 +238,11 @@ public class DomainMetadata {
     private Set<PropertyMetadata> generatePropertyMetadatasForEntity(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory) throws Exception {
 	final Map<String, PropertyMetadata> result = new HashMap<String, PropertyMetadata>();
 
-	if (PERSISTED.equals(entityCategory)) {
+	//if (PERSISTED.equals(entityCategory)) {
 	    safeMapAdd(result, generateIdPropertyMetadata(entityType, entityCategory));
-	    safeMapAdd(result, versionProperty);
-	    safeMapAdd(result, generateKeyPropertyMetadata(entityType));
-	}
+	    safeMapAdd(result, generateVersionPropertyMetadata(entityType, entityCategory));
+	    safeMapAdd(result, generateKeyPropertyMetadata(entityType, entityCategory));
+	//}
 
 	for (final Field field : getPersistedProperties(entityType)) {
 	    if (!specialPropNames.contains(field.getName())) {
@@ -230,8 +254,10 @@ public class DomainMetadata {
 		    safeMapAdd(result, getCommonPropHibInfo(entityType, field));
 		} else if (Finder.isOne2One_association(entityType, field.getName())) {
 		    safeMapAdd(result, getOneToOnePropInfo(entityType, field));
-		} else {
+		} else if (!field.isAnnotationPresent(CritOnly.class)){
 		    safeMapAdd(result, getSyntheticPropInfo(entityType, field));
+		} else {
+
 		}
 	    }
 	}
@@ -240,7 +266,9 @@ public class DomainMetadata {
     }
 
     private void safeMapAdd(final Map<String, PropertyMetadata> map, final PropertyMetadata addedItem) {
-	map.put(addedItem.getName(), addedItem);
+	if (addedItem != null) {
+	    map.put(addedItem.getName(), addedItem);
+	}
     }
 
     /**

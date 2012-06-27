@@ -16,6 +16,7 @@ import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.controller.ITgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogie;
 import ua.com.fielden.platform.sample.domain.controller.ITgBogieClass;
 import ua.com.fielden.platform.sample.domain.controller.ITgFuelType;
@@ -39,6 +40,7 @@ import ua.com.fielden.platform.sample.domain.controller.ITgWagonSlot;
 import ua.com.fielden.platform.sample.domain.controller.ITgWorkshop;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.test.domain.entities.daos.TgAverageFuelUsageDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgFuelTypeDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgMakeCountDao;
 import ua.com.fielden.platform.test.domain.entities.daos.TgMeterReadingDao;
@@ -128,6 +130,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 	bind(IMigrationHistoryDao.class).to(MigrationHistoryDao.class);
 
 	bind(ITgMakeCount.class).to(TgMakeCountDao.class);
+	bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
 
 	bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
 	}).to(EntityWithMoneyDao.class);
