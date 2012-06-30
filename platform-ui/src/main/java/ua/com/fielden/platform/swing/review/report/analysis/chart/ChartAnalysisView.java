@@ -39,6 +39,7 @@ import org.jfree.chart.ChartMouseEvent;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager.IPropertyUsageListener;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToDistributionTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisDomainTreeManagerAndEnhancer;
@@ -235,21 +236,34 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	if (usedProperties.size() == 1) {
 	    distributionList.setSelectedValue(usedProperties.get(0), true);
 	}
+	/**
+	 * Adds the listener that listens the property usage changes and synchronises them with ui model.
+	 */
+	firstTick.addPropertyUsageListener(new IPropertyUsageListener() {
+
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
+		final boolean isSelected = property.equals(distributionList.getSelectedValue());
+		if(isSelected != hasBeenUsed){
+		    distributionList.setSelectedValue(property, hasBeenUsed);
+		}
+	    }
+	});
 	distributionList.addListSelectionListener(new ListSelectionListener() {
 
 	    @Override
 	    public void valueChanged(final ListSelectionEvent e) {
 
 		if(!e.getValueIsAdjusting()){
-		    final Object selectionValues[] = distributionList.getSelectedValues();
-		    if(selectionValues.length == 0){
-			firstTick.use(root, distributionList.getModel().getElementAt(e.getLastIndex()).toString(), false);
-		    }else if (selectionValues.length == 1){
-			firstTick.use(root, selectionValues[0].toString(), true);
-		    } else {
-			throw new IllegalStateException("The list of distribution properties must be in single selection mode!");
+		    final Object selectedValue = distributionList.getSelectedValue();
+		    final boolean hasSelection = selectedValue != null;
+		    if(!hasSelection && firstTick.usedProperties(root).size() != 0){
+			for(final String usedProperty : firstTick.usedProperties(root)){
+			    firstTick.use(root, usedProperty, false);
+			}
+		    }else if(hasSelection && !firstTick.isUsed(root, selectedValue.toString())){
+			firstTick.use(root, selectedValue.toString(), true);
 		    }
-
 		}
 	    }
 	});
@@ -300,6 +314,24 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    sortParameters.add(new SortObject<String>(orderPair.getKey(), sortOrder(orderPair.getValue())));
 	}
 	aggregationList.getSortingModel().setSortObjects(sortParameters, true);
+
+
+
+	//TODO add property usage change listener and sorting listener. Also add checking listener to the second tick and sorting listener to the list.
+	secondTick.addPropertyUsageListener(new IPropertyUsageListener() {
+
+	    @Override
+	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
+		final boolean isChecked = aggregationList.isValueChecked(property);
+		if (isChecked != hasBeenUsed) {
+		    if (hasBeenUsed) {
+			aggregationList.addCheckingValue(property);
+		    } else {
+			aggregationList.removeCheckingValue(property);
+		    }
+		}
+	    }
+	});
 	aggregationList.getCheckingModel().addListCheckingListener(new ListCheckingListener<String>() {
 
 	    @Override

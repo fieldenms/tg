@@ -25,10 +25,11 @@ public class CheckboxListCellRenderer<T> extends JPanel implements CheckingListC
 	add(defaultRenderer);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
 	if (list instanceof CheckboxList) {
-	    final CheckboxList<T> checkboxList = (CheckboxList) list;
+	    final CheckboxList<T> checkboxList = (CheckboxList<T>) list;
 	    defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 	    setBackground(new Color(defaultRenderer.getBackground().getRGB()));
 	    setBorder(defaultRenderer.getBorder());

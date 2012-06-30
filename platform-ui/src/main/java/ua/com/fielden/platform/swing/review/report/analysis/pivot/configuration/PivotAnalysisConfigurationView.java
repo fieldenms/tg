@@ -48,6 +48,8 @@ public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends
 		    IPivotDomainTreeManagerAndEnhancer pdtme = (IPivotDomainTreeManagerAndEnhancer)getModel().getAnalysisManager();
 		    if(pdtme == null){
 			getModel().initAnalysisManager(AnalysisType.PIVOT);
+			getModel().save();
+			getModel().setAnalysisVisible(true);
 			pdtme = (IPivotDomainTreeManagerAndEnhancer)getModel().getAnalysisManager();
 		    }
 		    if(pdtme == null){

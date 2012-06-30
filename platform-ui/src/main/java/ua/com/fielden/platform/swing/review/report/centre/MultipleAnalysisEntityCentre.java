@@ -127,22 +127,22 @@ public class MultipleAnalysisEntityCentre<T extends AbstractEntity<?>> extends A
 	};
     }
 
-        @Override
-        protected JToolBar createToolBar() {
-    	ActionPanelBuilder panelBuilder = new ActionPanelBuilder();
-    	final JToolBar subToolBar = super.createToolBar();
-    	if(subToolBar != null){
-    	    panelBuilder = panelBuilder.addSubToolBar(subToolBar).addSeparator();
-    	}
-    	final JToolBar toolBar = panelBuilder//
-    		.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")))//
-    		//.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
-    		.addButton(createRemoveAnalysisAction())
-    		.buildActionPanel();
-    	toolBar.setFloatable(false);
-    	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-    	return toolBar;
-        }
+    @Override
+    protected JToolBar createToolBar() {
+	ActionPanelBuilder panelBuilder = new ActionPanelBuilder();
+	final JToolBar subToolBar = super.createToolBar();
+	if(subToolBar != null){
+	    panelBuilder = panelBuilder.addSubToolBar(subToolBar).addSeparator();
+	}
+	final JToolBar toolBar = panelBuilder//
+		.addButton(new AddAnalysisAction(AnalysisType.SIMPLE, "Add analysis", "Add analysis report", ResourceLoader.getIcon("images/chart-add.png"), ResourceLoader.getIcon("images/chart-add.png")))//
+		.addButton(new AddAnalysisAction(AnalysisType.PIVOT, "Add pivot analysis", "Add pivot analysis report", ResourceLoader.getIcon("images/table_add.png"), ResourceLoader.getIcon("images/table_add.png")))//
+		.addButton(createRemoveAnalysisAction())
+		.buildActionPanel();
+	toolBar.setFloatable(false);
+	toolBar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+	return toolBar;
+    }
 
     @Override
     protected List<Action> createCustomActionList() {

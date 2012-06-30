@@ -38,6 +38,8 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManage
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToDistributionTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.categorychart.AnalysisListDragFromSupport;
+import ua.com.fielden.platform.swing.categorychart.AnalysisListDragToSupport;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
@@ -48,8 +50,10 @@ import ua.com.fielden.platform.swing.checkboxlist.SorterChangedEvent;
 import ua.com.fielden.platform.swing.checkboxlist.SorterEventListener;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
+import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.menu.filter.IFilter;
 import ua.com.fielden.platform.swing.menu.filter.WordFilter;
+import ua.com.fielden.platform.swing.pivot.analysis.dnd.PivotListDragToSupport;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
@@ -61,6 +65,13 @@ import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
+/**
+ * {@link AbstractAnalysisReview} implementation for pivot analysis.
+ * 
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManagerAndEnhancer, Void> {
 
     private static final long serialVersionUID = 8295216779213506230L;
@@ -82,6 +93,12 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
      */
     private final JToolBar toolBar;
 
+    /**
+     * Initialises {@link PivotAnalysisView} with appropriate model and {@link PivotAnalysisConfigurationView} instance.
+     * 
+     * @param model
+     * @param owner
+     */
     public PivotAnalysisView(final PivotAnalysisModel<T> model, final PivotAnalysisConfigurationView<T> owner) {
 	super(model, owner);
 
@@ -90,8 +107,10 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	this.pivotTablePanel = createPivotTreeTablePanel();
 	this.toolBar = createPivotToolBar();
 
-	//DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), new PivotListDragToSupport<IDistributedProperty>(distributionList, createDistributionSwapper()), true);
-	//DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), new PivotListDragToSupport<IAggregatedProperty>(aggregationList, createAggregationSwapper()), true);
+	DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList),//
+		new AnalysisListDragToSupport<T>(distributionList, getModel().getCriteria().getEntityClass(), getModel().adtme().getFirstTick()), true);
+	DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), //
+		new PivotListDragToSupport<T>(aggregationList, pivotTablePanel.getTreeTable(), getModel()), true);
 	this.addSelectionEventListener(createPivotAnalysisSelectionListener());
 	layoutComponents();
     }
@@ -110,6 +129,11 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	getCentre().getRunAction().setEnabled(enable);
     }
 
+    /**
+     * Returns the {@link AbstractEntityCentre} that owns this analysis.
+     * 
+     * @return
+     */
     private AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> getCentre(){
 	return getOwner().getOwner();
     }
@@ -141,6 +165,11 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	};
     }
 
+    /**
+     * Creates the list of distribution properties. That list supports highlighting of the queried properties and drag&drop.
+     * 
+     * @return
+     */
     private CheckboxList<String> createDistributionList() {
 	final DefaultListModel listModel = new DefaultListModel();
 
@@ -185,14 +214,19 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	return distributionList;
     }
 
+    /**
+     * Creates the list of checked aggregation properties. That list supports Drag&Drop and highlighting of queried properties.
+     * 
+     * @return
+     */
     private SortingCheckboxList<String> createAggregationList() {
 	final DefaultListModel listModel = new DefaultListModel();
 
 	final Class<T> root = getModel().getCriteria().getEntityClass();
 	final IPivotAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
 
-	for (final String distributionProperty : secondTick.checkedProperties(root)) {
-	    listModel.addElement(distributionProperty);
+	for (final String aggregationProperty : secondTick.checkedProperties(root)) {
+	    listModel.addElement(aggregationProperty);
 	}
 	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel);
 	aggregationList.getSortingModel().setSingle(false);
@@ -235,7 +269,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    public void valueChanged(final ListCheckingEvent<String> e) {
 		secondTick.use(root, e.getValue(), e.isChecked());
 		refreshPivotTable(pivotTablePanel.getTreeTable());
-		//TODO implement review update after property usage was changed.
 	    }
 	});
 	aggregationList.getSortingModel().addSorterEventListener(new SorterEventListener<String>() {
@@ -302,8 +335,9 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		final Class<T> root = getModel().getCriteria().getEntityClass();
 		final IPivotAddToDistributionTickManager firstTick = getModel().adtme().getFirstTick();
 		final IPivotAddToAggregationTickManager secondTick = getModel().adtme().getSecondTick();
+		final List<String> firstTickUsed = firstTick.usedProperties(root);
 		int width = 0;
-		if(treeTable.isHierarchical(columnIndex)){
+		if(treeTable.isHierarchical(columnIndex) && firstTickUsed.size() > 0){
 		    width = firstTick.getWidth(root, firstTick.usedProperties(root).get(0));
 		}else if(columnIndex > 0){
 		    width = secondTick.getWidth(root, secondTick.usedProperties(root).get(columnIndex - 1));
@@ -461,7 +495,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	leftTopPanel.add(new JScrollPane(distributionList));
 
 	//Configuring controls those allows to choose aggregation properties.
-	final JPanel leftDownPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][grow,fill]"));
+	final JPanel leftDownPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][fill,grow]"));
 	final JLabel aggregationLabel = DummyBuilder.label("Aggregation properties");
 	leftDownPanel.add(aggregationLabel, "wrap");
 	leftDownPanel.add(new JScrollPane(aggregationList));

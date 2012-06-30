@@ -78,6 +78,7 @@ public class ChartAnalysisAggregationListDragToSupport<T extends AbstractEntity<
 	return selectedOrderedProperties;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected CheckboxList<String> getList() {
 	return (CheckboxList<String>) super.getList();

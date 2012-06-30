@@ -94,7 +94,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		for (final String columnEntry : categoryAliasMap.keySet()) {
 		    name += RIGHT_ARROW + columnEntry;
 		}
-		return name.isEmpty() ? name : name.substring(1);
+		return name.isEmpty() ? "<html><i>(Distribution properties)</i></html>" : name.substring(1);
 	    }
 	    final Class<T> root = getCriteria().getEntityClass();
 	    final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
