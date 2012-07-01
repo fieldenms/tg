@@ -127,15 +127,13 @@ public class EntQuery implements ISingleOperand {
 		for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(type())) {
 		    final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
 		    if (!skipProperty) {
-			final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn().getName() : null), ppi.getYieldDetailType());
-			yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
+			yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
 		    }
 		}
 	    } else {
 		final QueryBasedSource sourceModel = (QueryBasedSource) getSources().getMain();
 		for (final ResultQueryYieldDetails ppi : sourceModel.sourceItems.values()) {
-		    final ResultQueryYieldDetails rqyd = new ResultQueryYieldDetails(ppi.getName(), ppi.getJavaType(), ppi.getHibType(), (ppi.getColumn() != null ? ppi.getColumn() : null), ppi.getYieldDetailsType());
-		    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + rqyd.getName()), rqyd.getName(), rqyd));
+		    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
 		}
 	    }
 	} else if (idPropYieldEnhancementRequired()) {

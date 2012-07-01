@@ -7,14 +7,8 @@ public class Yield {
     private ResultQueryYieldDetails info;
 
     public Yield(final ISingleOperand operand, final String alias) {
-	this(operand, alias, null);
-    }
-
-    public Yield(final ISingleOperand operand, final String alias, final ResultQueryYieldDetails info) {
-	super();
 	this.operand = operand;
 	this.alias = alias;
-	this.info = info;
     }
 
     @Override
