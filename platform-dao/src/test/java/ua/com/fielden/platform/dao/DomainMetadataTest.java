@@ -35,7 +35,6 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
     }
 
     @Test
-    //@Ignore
     public void test_one_to_one_property_metadata_for_synthetic_entity() throws Exception {
 	final EntityMetadata entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgAverageFuelUsage.class);
 	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");
@@ -44,8 +43,20 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 		type(PropertyCategory.SYNTHETIC). //
 		//expression(expr().prop("key").model()). //
 		build();
-
 	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
     }
+
+    @Test
+    public void test_deduced_id_for_synthetic_entity() throws Exception {
+	final EntityMetadata entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgAverageFuelUsage.class);
+	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
+	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
+		hibType(Hibernate.LONG). //
+		type(PropertyCategory.CALCULATED). //
+		expression(expr().prop("key").model()). //
+		build();
+	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
+    }
+
 
 }

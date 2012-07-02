@@ -407,6 +407,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
 		yield().prop("lastFuelUsageQty").as("lastFuelUsageQty"). //
 		yield().prop("constValueProp").as("constValueProp"). //
 		yield().prop("calcModel").as("calcModel"). //
+		yield().prop("finDetails").as("finDetails"). //
 		modelAsEntity(VEHICLE);
     }
 

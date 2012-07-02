@@ -15,6 +15,7 @@ import java.util.TreeSet;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
@@ -134,6 +135,13 @@ public class EntQuery implements ISingleOperand {
 		final QueryBasedSource sourceModel = (QueryBasedSource) getSources().getMain();
 		for (final ResultQueryYieldDetails ppi : sourceModel.sourceItems.values()) {
 		    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
+		}
+		if (type() != EntityAggregates.class) {
+		    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(type())) {
+			if ((ppi.isCalculated() || ppi.isImplicitlyCalculated()) && yields.getYieldByAlias(ppi.getName()) == null) {
+			    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
+			}
+		    }
 		}
 	    }
 	} else if (idPropYieldEnhancementRequired()) {

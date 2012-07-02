@@ -48,18 +48,43 @@ public class QueryBasedSource extends AbstractSource {
 		return candidateResult;
 	    }
 	}
+
 	return null;
     }
 
     private Pair<PurePropInfo, PurePropInfo> validateCandidate(final String dotNotatedPropName, final String first, final String rest) {
 	final Yield firstLevelPropYield = model().getYields().getYieldByAlias(first);
 	if (firstLevelPropYield == null) { // there are no such first level prop at all within source query yields
-	    final PropertyMetadata propInfo = getDomainMetadataAnalyser().getInfoForDotNotatedProp(sourceType(), first);
-	    if (propInfo == null) {
+	    final PropertyMetadata explicitPropMetadata = getDomainMetadataAnalyser().getInfoForDotNotatedProp(sourceType(), first);
+	    if (explicitPropMetadata == null) {
 		return null;
 	    } else {
-		return null;
-		// FIXME throw new RuntimeException("Implementation pending!");
+		if (explicitPropMetadata.isCalculated()) {
+		    if (explicitPropMetadata.getJavaType() == null) {
+			return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true)) : null;
+		    } else if (!StringUtils.isEmpty(rest)) {
+			    final PropertyMetadata propInfo = getDomainMetadataAnalyser().getInfoForDotNotatedProp(explicitPropMetadata.getJavaType(), rest);
+			    if (propInfo == null) {
+
+				return null;
+			    } else {
+				final boolean propNullability = getDomainMetadataAnalyser().isNullable(explicitPropMetadata.getJavaType(), rest);
+				final boolean explicitPartNullability = explicitPropMetadata.isNullable() || isNullable();
+
+				return new Pair<PurePropInfo, PurePropInfo>(
+					new PurePropInfo(first, explicitPropMetadata.getJavaType(), explicitPropMetadata.getHibType(), explicitPartNullability),
+					new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || explicitPartNullability));
+			    }
+		    } else {
+
+			    final PurePropInfo ppi = new PurePropInfo(first, explicitPropMetadata.getJavaType(), explicitPropMetadata.getHibType(), explicitPropMetadata.isNullable() || isNullable());
+			    ppi.setExpressionModel(explicitPropMetadata.getExpressionModel());
+			    return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
+		    }
+//		    throw new RuntimeException("Implementation pending! Additional info: " + dotNotatedPropName + " " + explicitPropMetadata);
+		} else {
+		    return null;
+		}
 	    }
 	} else if (firstLevelPropYield.getInfo().getJavaType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
 	    return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true)) : null;

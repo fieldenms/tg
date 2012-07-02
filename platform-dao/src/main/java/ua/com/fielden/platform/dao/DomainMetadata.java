@@ -184,6 +184,8 @@ public class DomainMetadata {
 	switch (entityCategory) {
 	case PERSISTED:
 	    return isOneToOne(entityType) ? idPropertyInOne2One : idProperty;
+	case CALCULATED:
+	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(expr().prop("key").model()).type(CALCULATED).build();
 	default:
 	    return null;
 	}
@@ -214,7 +216,7 @@ public class DomainMetadata {
 		final PropertyColumn keyColumnOverride = isNotEmpty(getMapEntityTo(entityType).keyColumn()) ? new PropertyColumn(getMapEntityTo(entityType).keyColumn()) : key;
 		return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).column(keyColumnOverride).hibType(TypeFactory.basic(getKeyType(entityType).getName())).type(PRIMITIVE_KEY).build();
 	    case CALCULATED:
-		return null;
+		return null; //FIXME
 		//return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), false).hibType(TypeFactory.basic("long")).type(IMPLICITLY_CALCULATED).build();
 	    default:
 		return null;

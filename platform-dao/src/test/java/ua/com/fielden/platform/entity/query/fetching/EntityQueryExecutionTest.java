@@ -103,6 +103,17 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    public void test_retrieval_of_synthetic_entity6() {
+	final EntityResultQueryModel<TgAverageFuelUsage> qry = select(TgAverageFuelUsage.class).where().prop("key.key").eq().val("CAR2").model();
+	final List<TgAverageFuelUsage> models = averageFuelUsageDao.getAllEntities(from(qry). //
+		with("datePeriod.from", new DateTime(2008, 01, 01, 0, 0).toDate()). //
+		with("datePeriod.to", new DateTime(2010, 01, 01, 0, 0).toDate()). //
+		model());
+	assertEquals("Incorrect key", 1, models.size());
+	assertEquals("Incorrect key", vehicleDao.findByKey("CAR2").getId(), models.get(0).getId());
+    }
+
+    @Test
     public void test_retrieval_of_synthetic_entity5() {
 	final EntityResultQueryModel<TgAverageFuelUsage> qry = select(TgAverageFuelUsage.class).where().prop("key.key").eq().val("CAR2").model();
 	final List<TgAverageFuelUsage> models = averageFuelUsageDao.getAllEntities(from(qry). //
@@ -128,19 +139,26 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_retrieval_of_synthetic_entity3() {
-	final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).where().prop("make.key").in().values("MERC", "BMW").model();
+	final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).where().prop("key.key").in().values("MERC", "BMW").model();
 	final List<TgMakeCount> models = makeCountDao.getAllEntities(from(qry).model());
 	assertEquals("Incorrect key", 2, models.size());
     }
 
     @Test
     public void test_retrieval_of_synthetic_entity2() {
-	final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).where().prop("make.key").in().values("MERC", "BMW"). //
-	yield().prop("make").as("make").
+	final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).where().prop("key.key").in().values("MERC", "BMW"). //
+	yield().prop("key").as("key").
 	yield().prop("count").as("count").
 	modelAsEntity(TgMakeCount.class);
 
 	final List<TgMakeCount> models = makeCountDao.getAllEntities(from(qry).model());
+	assertEquals("Incorrect key", 2, models.size());
+    }
+
+    @Test
+    public void test_retrieval_of_synthetic_entity() {
+	final AggregatedResultQueryModel model = select(TgMakeCount.class).where().prop("key.key").in().values("MERC", "BMW").yield().prop("key").as("make").modelAsAggregate();
+	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).model());
 	assertEquals("Incorrect key", 2, models.size());
     }
 
@@ -156,13 +174,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 	    fail("Should have failed while trying to yield duplicates");
 	} catch (final Exception e) {
 	}
-    }
-
-    @Test
-    public void test_retrieval_of_synthetic_entity() {
-	final AggregatedResultQueryModel model = select(TgMakeCount.class).where().prop("make.key").in().values("MERC", "BMW").yield().prop("make").as("make").modelAsAggregate();
-	final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).model());
-	assertEquals("Incorrect key", 2, models.size());
     }
 
     @Test
@@ -320,7 +331,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    @Ignore
     public void test0_0b() {
 	// FIXME
 	final EntityResultQueryModel<TgVehicle> vehSubqry = select(TgVehicle.class).where().prop("lastFuelUsageQty").eq().val(120).//

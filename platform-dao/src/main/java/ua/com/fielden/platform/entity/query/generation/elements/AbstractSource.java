@@ -81,7 +81,7 @@ public abstract class AbstractSource implements ISource {
 	    }
 	}
 
-	if (prop.allExplicit()) {
+	if (prop.allExplicit() && prop.getProp().expressionModel == null) {
 	    // TODO implement more transparently
 	    prop.entProp.setSql(sourceItems.get((prop.prop.name.endsWith(".id") ? prop.prop.name.substring(0, prop.prop.name.length() - 3) : prop.prop.name)).getColumn());
 	}
