@@ -36,7 +36,6 @@ public class SortableCheckboxListExample {
 		listModel.add(2, "Blue");
 		listModel.add(3, "White");
 		final SortingCheckboxList<String> list = new SortingCheckboxList<String>(listModel);
-		list.getSortingModel().setSingle(false);
 		DnDSupport2.installDnDSupport(list, new DragFromSupportImplementation(list), new DragToSupportImplementation(list), true);
 		frame.add(new JScrollPane(list));
 		frame.pack();

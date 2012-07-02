@@ -24,7 +24,6 @@ import javax.swing.JSplitPane;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
-import javax.swing.SortOrder;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
@@ -38,7 +37,6 @@ import org.jfree.chart.ChartMouseEvent;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager.IPropertyUsageListener;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToDistributionTickManager;
@@ -58,7 +56,7 @@ import ua.com.fielden.platform.swing.categorychart.SwitchChartsModel;
 import ua.com.fielden.platform.swing.chartscroll.CategoryChartScrollPanel;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingListener;
-import ua.com.fielden.platform.swing.checkboxlist.SortObject;
+import ua.com.fielden.platform.swing.checkboxlist.ListCheckingModel;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgressLayer;
@@ -66,11 +64,12 @@ import ua.com.fielden.platform.swing.components.blocking.IBlockingLayerProvider;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.review.report.analysis.chart.configuration.ChartAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
+import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListCheckingModel;
+import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListSortingModel;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnalysisReview<T, ICentreDomainTreeManagerAndEnhancer ,IAnalysisDomainTreeManagerAndEnhancer, Void> {
@@ -155,21 +154,6 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	}
 	getCentre().getRunAction().setEnabled(enable);
     }
-
-    //    /**
-    //     * Enables or disables the paginator's actions without enabling or disabling blocking layer.
-    //     *
-    //     * @param enable
-    //     */
-    //    private void enablePaginatorActionsWithoutBlockingLayer(final boolean enable){
-    //	getOwner().getPaginator().getFirst().setEnabled(enable, false);
-    //	getOwner().getPaginator().getPrev().setEnabled(enable, false);
-    //	getOwner().getPaginator().getNext().setEnabled(enable, false);
-    //	getOwner().getPaginator().getLast().setEnabled(enable, false);
-    //	if(getOwner().getPaginator().getFeedback() != null){
-    //	    getOwner().getPaginator().getFeedback().enableFeedback(false);
-    //	}
-    //    }
 
     private AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> getCentre(){
 	return getOwner().getOwner();
@@ -287,12 +271,6 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
 		final Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-		if (secondTick.isUsed(root, value.toString())) {
-		    arrow.setVisible(true);
-		    if (aggregationList.getSortingModel().isSortable(value.toString())) {
-			arrow.setSortOrder(aggregationList.getSortingModel().getSortOrder(value.toString()));
-		    }
-		}
 		if (!isSelected) {
 		    if (getModel().getChartAnalysisDataProvider().aggregatedProperties().contains(value)) {
 			rendererComponent.setBackground(new Color(175, 240, 208));
@@ -306,52 +284,19 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	});
 	aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-	final List<String> usedProperties = secondTick.usedProperties(root);
-	aggregationList.setCheckingValues(usedProperties.toArray(new String[0]));
-
-	final List<SortObject<String>> sortParameters = new ArrayList<SortObject<String>>();
-	for(final Pair<String, Ordering> orderPair : secondTick.orderedProperties(root)){
-	    sortParameters.add(new SortObject<String>(orderPair.getKey(), sortOrder(orderPair.getValue())));
-	}
-	aggregationList.getSortingModel().setSortObjects(sortParameters, true);
-
-
-
-	//TODO add property usage change listener and sorting listener. Also add checking listener to the second tick and sorting listener to the list.
-	secondTick.addPropertyUsageListener(new IPropertyUsageListener() {
-
-	    @Override
-	    public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
-		final boolean isChecked = aggregationList.isValueChecked(property);
-		if (isChecked != hasBeenUsed) {
-		    if (hasBeenUsed) {
-			aggregationList.addCheckingValue(property);
-		    } else {
-			aggregationList.removeCheckingValue(property);
-		    }
-		}
-	    }
-	});
-	aggregationList.getCheckingModel().addListCheckingListener(new ListCheckingListener<String>() {
+	final ListCheckingModel<String> checkingModel = new DomainTreeListCheckingModel<T>(root, secondTick);
+	checkingModel.addListCheckingListener(new ListCheckingListener<String>() {
 
 	    @Override
 	    public void valueChanged(final ListCheckingEvent<String> e) {
-		secondTick.use(root, e.getValue(), e.isChecked());
 		updateChart(getModel().getChartAnalysisDataProvider().getLoadedData(), null);
 		chartScroller.resetScrollRanges();
 	    }
 	});
-	return aggregationList;
-    }
+	aggregationList.setCheckingModel(checkingModel);
+	aggregationList.setSortingModel(new DomainTreeListSortingModel<T>(root, secondTick, getModel().adtme().getRepresentation().getSecondTick()));
 
-    private SortOrder sortOrder(final Ordering value) {
-	switch (value) {
-	case ASCENDING:
-	    return SortOrder.ASCENDING;
-	case DESCENDING:
-	    return SortOrder.DESCENDING;
-	}
-	return null;
+	return aggregationList;
     }
 
     private JSpinner createColumnCounterSpinner() {
@@ -561,12 +506,6 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	setLayout(new MigLayout("fill, insets 0", "[fill,grow]", "[fill,grow]"));
 	final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 	final JSplitPane leftPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-	//	final TaskPanel leftPanel = new TaskPanel(new MigLayout("insets 3, fill", "[fill,grow,:190:]", "[:230:]"));
-	//	final TaskPanel downPanel = new TaskPanel(new MigLayout("insets 3, fill", "[fill,grow,:190:]", "[:100:]"));
-	//	leftPanel.setTitle("Distribution properties");
-	//	downPanel.setTitle("Aggregation properties");
-	//	leftPanel.setAnimated(false);
-	//	downPanel.setAnimated(false);
 
 	//Configuring controls those allows to choose distribution properties.
 	final JPanel leftTopPanel = new JPanel(new MigLayout("fill, insets 0", "[fill,grow]", "[][grow,fill]"));

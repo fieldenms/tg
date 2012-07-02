@@ -10,7 +10,6 @@ import javax.swing.SwingUtilities;
 
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxListCellRenderer;
-import ua.com.fielden.platform.swing.checkboxlist.ListCheckingModel.CheckingMode;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
@@ -39,7 +38,6 @@ public class RadiobuttonListExample {
 		listModel.add(2, "Blue");
 		listModel.add(3, "White");
 		final CheckboxList list = new CheckboxList(listModel);
-		list.getCheckingModel().setCheckingMode(CheckingMode.SINGLE);
 		list.setCellRenderer(new CheckboxListCellRenderer(new JRadioButton()));
 		DnDSupport2.installDnDSupport(list, new DragFromSupportImplementation(list), new DragToSupportImplementation(list), true);
 		frame.add(new JScrollPane(list));

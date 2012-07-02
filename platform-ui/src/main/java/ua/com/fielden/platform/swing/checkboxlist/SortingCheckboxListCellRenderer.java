@@ -5,11 +5,15 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.List;
 
 import javax.swing.JList;
 import javax.swing.JToggleButton;
+import javax.swing.SortOrder;
 
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.swing.review.OrderingArrow;
+import ua.com.fielden.platform.utils.Pair;
 
 public class SortingCheckboxListCellRenderer<T> extends CheckboxListCellRenderer<T> implements SortingCheckingListCellRenderer<T> {
 
@@ -22,7 +26,6 @@ public class SortingCheckboxListCellRenderer<T> extends CheckboxListCellRenderer
     public SortingCheckboxListCellRenderer(final SortingCheckboxList<T> list, final JToggleButton toggleButton) {
 	super(toggleButton);
 	arrow = new OrderingArrow();
-	arrow.setDrawNumber(!list.getSortingModel().isSingle());
 	removeAll();
 	add(toggleButton);
 	add(defaultRenderer);
@@ -41,20 +44,44 @@ public class SortingCheckboxListCellRenderer<T> extends CheckboxListCellRenderer
 	totalCellWidth = cellWidth + toggleButton.getPreferredSize().width + arrow.getMinimumSize().width + 10;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
 	if (list instanceof SortingCheckboxList) {
-	    final SortingCheckboxList<T> sortingList = (SortingCheckboxList) list;
+	    final SortingCheckboxList<T> sortingList = (SortingCheckboxList<T>) list;
 	    if (sortingList.isValueChecked((T) value) && sortingList.getSortingModel().isSortable((T) value)) {
 		arrow.setVisible(true);
-		arrow.setDrawNumber(!sortingList.getSortingModel().isSingle());
-		arrow.setOrder(sortingList.getSortingModel().getSortingOrder((T) value) + 1);
-		arrow.setSortOrder(sortingList.getSortingModel().getSortOrder(((T) value)));
+		arrow.setOrder(0);
+		arrow.setSortOrder(SortOrder.UNSORTED);
+		final List<Pair<T, Ordering>> sortItems = sortingList.getSortingModel().getSortObjects();
+		for(int sortIndex = 0; sortIndex < sortItems.size(); sortIndex++){
+		    final Pair<T, Ordering> orderItem = sortItems.get(sortIndex);
+		    if(orderItem.getKey().equals(value)){
+			arrow.setOrder(sortIndex + 1);
+			arrow.setSortOrder(sortOrder(orderItem.getValue()));
+		    }
+		}
 	    } else {
 		arrow.setVisible(false);
 	    }
 	}
 	return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+    }
+
+    /**
+     * Returns the {@link SortOrder} instance for specified {@link Ordering}.
+     *
+     * @param value
+     * @return
+     */
+    private SortOrder sortOrder(final Ordering value) {
+	switch (value) {
+	case ASCENDING:
+	    return SortOrder.ASCENDING;
+	case DESCENDING:
+	    return SortOrder.DESCENDING;
+	}
+	return SortOrder.UNSORTED;
     }
 
     @Override

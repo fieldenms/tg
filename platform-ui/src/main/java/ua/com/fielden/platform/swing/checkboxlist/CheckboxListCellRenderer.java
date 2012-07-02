@@ -40,11 +40,6 @@ public class CheckboxListCellRenderer<T> extends JPanel implements CheckingListC
 	    } else {
 		toggleButton.setSelected(false);
 	    }
-	    if (checkboxList.isValueEnabled((T) value)) {
-		toggleButton.setEnabled(true);
-	    } else {
-		toggleButton.setEnabled(false);
-	    }
 	    return this;
 	}
 	return defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);

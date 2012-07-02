@@ -1,35 +1,60 @@
 package ua.com.fielden.platform.swing.checkboxlist;
 
 import java.util.List;
-import java.util.Set;
 
-import javax.swing.SortOrder;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.utils.Pair;
 
+/**
+ * Model that handles sorting for check box list.
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public interface ListSortingModel<T> {
 
-    void setSortable(T value, boolean isSortable);
+    /**
+     * Toggles {@link Ordering} for specified item.
+     *
+     * @param item
+     */
+    void toggleSorter(T item);
 
-    boolean isSortable(T value);
+    /**
+     * Returns the list of ordered items with their {@link Ordering}s.
+     *
+     * @return
+     */
+    List<Pair<T, Ordering>> getSortObjects();
 
-    void toggleSorter(T value, boolean discardPrevious);
+    /**
+     * Sets the specified item sortable or unsortable.
+     *
+     * @param item
+     * @param sortable
+     */
+    void setItemUnsortable(T item);
 
-    SortOrder getSortOrder(T value);
+    /**
+     * Returns value that indicates whether specified item is sortable or not.
+     *
+     * @param item
+     * @return
+     */
+    boolean isSortable(T item);
 
-    int getSortingOrder(T value);
-
-    void setSortObjects(List<SortObject<T>> sortObjects, boolean discardPrevious);
-
-    List<SortObject<T>> getSortObjects();
-
-    void setSortable(Set<T> sortableMap);
-
-    Set<T> getSortableValues();
-
+    /**
+     * Registers the {@link SorterEventListener} instance, that listens the sorting change events.
+     *
+     * @param listener
+     */
     void addSorterEventListener(SorterEventListener<T> listener);
 
+    /**
+     * Unregisters the {@link SorterEventListener} instance.
+     *
+     * @param listener
+     */
     void removeSorterEventListener(SorterEventListener<T> listener);
-
-    boolean isSingle();
-
-    void setSingle(boolean single);
 }

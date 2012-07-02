@@ -8,6 +8,7 @@ import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.swing.Action;
@@ -21,7 +22,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
-import javax.swing.SortOrder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
@@ -32,8 +32,10 @@ import javax.swing.table.TableColumn;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
+
+import org.jdesktop.swingx.treetable.TreeTableNode;
+
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToDistributionTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
@@ -44,10 +46,8 @@ import ua.com.fielden.platform.swing.checkboxlist.CheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.CheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingEvent;
 import ua.com.fielden.platform.swing.checkboxlist.ListCheckingListener;
-import ua.com.fielden.platform.swing.checkboxlist.SortObject;
-import ua.com.fielden.platform.swing.checkboxlist.SortRangeChangedEvent;
-import ua.com.fielden.platform.swing.checkboxlist.SorterChangedEvent;
-import ua.com.fielden.platform.swing.checkboxlist.SorterEventListener;
+import ua.com.fielden.platform.swing.checkboxlist.ListCheckingModel;
+import ua.com.fielden.platform.swing.checkboxlist.ListSortingModel;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxList;
 import ua.com.fielden.platform.swing.checkboxlist.SortingCheckboxListCellRenderer;
 import ua.com.fielden.platform.swing.dnd.DnDSupport2;
@@ -56,6 +56,8 @@ import ua.com.fielden.platform.swing.menu.filter.WordFilter;
 import ua.com.fielden.platform.swing.pivot.analysis.dnd.PivotListDragToSupport;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.configuration.PivotAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReview;
+import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListCheckingModel;
+import ua.com.fielden.platform.swing.review.report.analysis.view.DomainTreeListSortingModel;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
@@ -67,7 +69,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
  * {@link AbstractAnalysisReview} implementation for pivot analysis.
- * 
+ *
  * @author TG Team
  *
  * @param <T>
@@ -95,7 +97,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     /**
      * Initialises {@link PivotAnalysisView} with appropriate model and {@link PivotAnalysisConfigurationView} instance.
-     * 
+     *
      * @param model
      * @param owner
      */
@@ -131,7 +133,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     /**
      * Returns the {@link AbstractEntityCentre} that owns this analysis.
-     * 
+     *
      * @return
      */
     private AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> getCentre(){
@@ -140,7 +142,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     /**
      * Returns the {@link ISelectionEventListener} that enables or disable appropriate actions when this analysis was selected.
-     * 
+     *
      * @return
      */
     private ISelectionEventListener createPivotAnalysisSelectionListener() {
@@ -167,7 +169,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     /**
      * Creates the list of distribution properties. That list supports highlighting of the queried properties and drag&drop.
-     * 
+     *
      * @return
      */
     private CheckboxList<String> createDistributionList() {
@@ -201,22 +203,21 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 	});
 	distributionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-	final List<String> usedProperties = firstTick.usedProperties(root);
-	distributionList.setCheckingValues(usedProperties.toArray(new String[0]));
-	distributionList.getCheckingModel().addListCheckingListener(new ListCheckingListener<String>() {
+	final ListCheckingModel<String> checkingModel = new DomainTreeListCheckingModel<T>(root, firstTick);
+	checkingModel.addListCheckingListener(new ListCheckingListener<String>() {
 
 	    @Override
 	    public void valueChanged(final ListCheckingEvent<String> e) {
-		firstTick.use(root, e.getValue(), e.isChecked());
 		refreshPivotTable(pivotTablePanel.getTreeTable());
 	    }
 	});
+	distributionList.setCheckingModel(checkingModel);
 	return distributionList;
     }
 
     /**
      * Creates the list of checked aggregation properties. That list supports Drag&Drop and highlighting of queried properties.
-     * 
+     *
      * @return
      */
     private SortingCheckboxList<String> createAggregationList() {
@@ -229,7 +230,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    listModel.addElement(aggregationProperty);
 	}
 	final SortingCheckboxList<String> aggregationList = new SortingCheckboxList<String>(listModel);
-	aggregationList.getSortingModel().setSingle(false);
 	aggregationList.setCellRenderer(new SortingCheckboxListCellRenderer<String>(aggregationList, new JCheckBox()) {
 
 	    private static final long serialVersionUID = -6751336113879821723L;
@@ -237,12 +237,6 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    @Override
 	    public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
 		final Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-		if (secondTick.isUsed(root, value.toString())) {
-		    arrow.setVisible(true);
-		    if (aggregationList.getSortingModel().isSortable(value.toString())) {
-			arrow.setSortOrder(aggregationList.getSortingModel().getSortOrder(value.toString()));
-		    }
-		}
 		if (!isSelected) {
 		    if (getModel().getPivotModel().aggregatedProperties().contains(value)) {
 			rendererComponent.setBackground(new Color(175, 240, 208));
@@ -255,47 +249,39 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
 	});
 	aggregationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-	final List<String> usedProperties = secondTick.usedProperties(root);
-	aggregationList.setCheckingValues(usedProperties.toArray(new String[0]));
-	final List<SortObject<String>> sortParameters = new ArrayList<SortObject<String>>();
-	for(final Pair<String, Ordering> orderPair : secondTick.orderedProperties(root)){
-	    sortParameters.add(new SortObject<String>(orderPair.getKey(), sortOrder(orderPair.getValue())));
-	}
-	aggregationList.getSortingModel().setSortObjects(sortParameters, true);
-	aggregationList.getCheckingModel().addListCheckingListener(new ListCheckingListener<String>() {
+	final ListCheckingModel<String> checkingModel= new DomainTreeListCheckingModel<T>(root, secondTick);
+	checkingModel.addListCheckingListener(new ListCheckingListener<String>() {
 
 	    @Override
 	    public void valueChanged(final ListCheckingEvent<String> e) {
-		secondTick.use(root, e.getValue(), e.isChecked());
 		refreshPivotTable(pivotTablePanel.getTreeTable());
 	    }
 	});
-	aggregationList.getSortingModel().addSorterEventListener(new SorterEventListener<String>() {
+	aggregationList.setCheckingModel(checkingModel);
+	final ListSortingModel<String> sortingModel = new DomainTreeListSortingModel<T>(root, secondTick, getModel().adtme().getRepresentation().getSecondTick());
+	aggregationList.setSortingModel(sortingModel);
+
+	getModel().getPivotModel().addSorterChangeListener(new PivotTableSorterListener() {
 
 	    @Override
-	    public void valueChanged(final SorterChangedEvent<String> e) {
-		secondTick.toggleOrdering(root, e.getSortObject());
-		//TODO this implementation doesn't take in to account the checking model. Please review and reimplement.
-	    }
-
-	    @Override
-	    public void sortingRangeChanged(final SortRangeChangedEvent e) {
-		// TODO Auto-generated method stub
-		//It seams that it won't be needed.
+	    public void sorterChanged(final PivotSorterChangeEvent event) {
+		final PivotTreeTable pivotTable = pivotTablePanel.getTreeTable();
+		final FilterableTreeTableModel filterableModel = (FilterableTreeTableModel) pivotTable.getModel();
+		final TreeTableNode rootNode = filterableModel.getOriginModel().getRoot();
+		final TreePath selectedPath = pivotTable.getPathForRow(pivotTable.getSelectedRow());
+		if (rootNode != null) {
+		    final Enumeration<?> expandedPaths = pivotTable.getExpandedDescendants(new TreePath(rootNode));
+		    filterableModel.reload();
+		    while (expandedPaths != null && expandedPaths.hasMoreElements()) {
+			final TreePath path = (TreePath) expandedPaths.nextElement();
+			pivotTable.expandPath(path);
+		    }
+		}
+		pivotTable.scrollPathToVisible(selectedPath);
+		pivotTable.getSelectionModel().setSelectionInterval(0, pivotTable.getRowForPath(selectedPath));
 	    }
 	});
 	return aggregationList;
-    }
-
-    private SortOrder sortOrder(final Ordering value) {
-	switch (value) {
-	case ASCENDING:
-	    return SortOrder.ASCENDING;
-	case DESCENDING:
-	    return SortOrder.DESCENDING;
-	}
-	return null;
     }
 
     private FilterableTreeTablePanel<PivotTreeTable> createPivotTreeTablePanel() {
@@ -309,7 +295,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     /**
      * Creates the table column listener for the tree table model that updates the column's width.
-     * 
+     *
      * @param columnWidthChangeListener
      * @return
      */
@@ -352,7 +338,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     /**
      * Creates the column's width property change listener. Updates model property's width.
-     * 
+     *
      * @param pivotTable
      * @return
      */
@@ -420,7 +406,7 @@ public class PivotAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     /**
      * Creates the tool bar with "configure analysis" button.
-     * 
+     *
      * @return
      */
     private JToolBar createPivotToolBar() {

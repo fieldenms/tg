@@ -5,7 +5,7 @@ import java.util.EventObject;
 /**
  * An event that characterizes a change in the current checking. The change is related to a single checked/unchecked value of the list. ListCheckingListeners will generally query
  * the source of the event for the new checked status of each potentially changed row.
- * 
+ *
  * @see ListCheckingListener
  * @see ListCheckingModel
  * @author oleh
@@ -17,37 +17,51 @@ public class ListCheckingEvent<T> extends EventObject {
     /**
      * The list value related to this event.
      */
-    private final T value;
-    private final boolean checked;
-
+    private final T item;
     /**
-     * Represents a change in the checking of a ListCheckingModel. The specified value identifies the value that have been either checked or unchecked.
-     * 
-     * @param source
-     *            - source of event.
-     * @param value
-     *            - the value that has changed in the checking.
-     * @param checked
-     *            - whether or not the value is checked, false means that value was removed from the checking.
+     * Determines the old and the new state of the item.
      */
-    public ListCheckingEvent(final Object source, final T value, final boolean checked) {
+    private final Boolean oldCheck;
+    private final Boolean newCheck;
+
+   /**
+    * Initiates the list checking event with item that changed it's checking and new and old checking values.
+    *
+    * @param source
+    * @param item
+    * @param oldCheck
+    * @param newCheck
+    */
+    public ListCheckingEvent(final Object source, final T item, final Boolean oldCheck, final Boolean newCheck) {
 	super(source);
-	this.value = value;
-	this.checked = checked;
+	this.item = item;
+	this.oldCheck = oldCheck;
+	this.newCheck = newCheck;
     }
 
     /**
      * Returns the value that was added or removed from the checking.
      */
-    public T getValue() {
-	return value;
+    public T getItem() {
+	return item;
     }
 
     /**
-     * Returns true if the value related to the event is checked otherwise returns false.
+     * Returns the old checking state.
+     *
+     * @return
      */
-    public boolean isChecked() {
-	return checked;
+    public Boolean getOldCheck() {
+	return oldCheck;
+    }
+
+    /**
+     * Returns the new checking state.
+     *
+     * @return
+     */
+    public Boolean getNewCheck() {
+	return newCheck;
     }
 
 }

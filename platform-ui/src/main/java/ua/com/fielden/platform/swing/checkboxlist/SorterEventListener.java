@@ -5,7 +5,4 @@ import java.util.EventListener;
 public interface SorterEventListener<T> extends EventListener {
 
     void valueChanged(SorterChangedEvent<T> e);
-
-    void sortingRangeChanged(SortRangeChangedEvent e);
-
 }

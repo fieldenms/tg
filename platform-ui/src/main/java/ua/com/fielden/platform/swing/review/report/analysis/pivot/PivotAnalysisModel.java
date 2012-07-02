@@ -13,6 +13,7 @@ import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrderingListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
@@ -64,6 +65,20 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	private final LinkedHashMap<String, String> aggregatedAliasMap = new LinkedHashMap<String, String>();
 
 	private final Comparator<MutableTreeTableNode> sorter = new AggregationSorter();
+
+	public PivotTreeTableModelEx() {
+	    adtme().getSecondTick().addPropertyOrderingListener(new IPropertyOrderingListener() {
+
+		    @SuppressWarnings("unchecked")
+		    @Override
+		    public void propertyStateChanged(final Class<?> root, final String property, final List<Pair<String, Ordering>> newOrderedProperties, final List<Pair<String, Ordering>> oldState) {
+			if (pivotModel.getRoot() != null) {
+			    ((PivotTreeTableNodeEx) pivotModel.getRoot()).sort();
+			    fireSorterChageEvent(new PivotSorterChangeEvent(PivotTreeTableModelEx.this));
+			}
+		    }
+		});
+	}
 
 	@Override
 	public int getColumnCount() {
@@ -117,6 +132,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    return Collections.unmodifiableList(new ArrayList<String>(aggregatedAliasMap.keySet()));
 	}
 
+	@SuppressWarnings("unchecked")
 	private final void loadData(final Map<String, List<EntityAggregates>> loadedData, final LinkedHashMap<String, String> categoryAliasMap, final LinkedHashMap<String, String> aggregatedAliasMap){
 
 	    //Loading the alias maps for the aggregation and category properties.
@@ -189,7 +205,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	    public Object getValueAt(final int column) {
 		if (column == 0) {
 		    if (getUserObject() instanceof AbstractEntity) {
-			final AbstractEntity entity = (AbstractEntity) getUserObject();
+			final AbstractEntity<?> entity = (AbstractEntity<?>) getUserObject();
 			return entity.getKey().toString() + " - " + entity.getDesc();
 		    }
 		    return getUserObject();
