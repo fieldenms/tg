@@ -355,7 +355,7 @@ public abstract class AbstractDomainTreeTest {
      * @param instance
      * @return
      */
-    protected static boolean allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(final Object instance, final Object originalInstance) {
+    public static boolean allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(final Object instance, final Object originalInstance) {
 	final List<Field> fields = getDomainTreeFields(instance.getClass());
 	try {
 	    for (final Field field : fields) {

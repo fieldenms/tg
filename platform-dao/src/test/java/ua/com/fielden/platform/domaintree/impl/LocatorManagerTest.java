@@ -22,9 +22,13 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ILocatorManager.Phase;
 import ua.com.fielden.platform.domaintree.ILocatorManager.Type;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.AnalysisType;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
+import ua.com.fielden.platform.domaintree.testing.MasterEntityForGlobalDomainTree;
+import ua.com.fielden.platform.domaintree.testing.MiMasterEntityForGlobalDomainTree;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -553,5 +557,55 @@ public class LocatorManagerTest extends GlobalDomainTreeRepresentationTest {
 	move4_and_change();
 	/* */lm.acceptLocatorManager(root, property);
 	state3_and_changed_with_freezing_changes();
+    }
+
+    @Test
+    public void test_that_serialisation_works() throws Exception {
+	final Class<?> ROOT = MasterEntityForGlobalDomainTree.class;
+	final Class<?> MENU_ITEM_TYPE = MiMasterEntityForGlobalDomainTree.class;
+	final String NON_BASE_USERS_SAVE_AS = "NON_BASE_USER'S_SAVE_AS";
+	final String property = "simpleEntityProp";
+	final Class<?> propertyType = EntityWithStringKeyType.class;
+
+	final GlobalDomainTreeManager managerForNonBaseUser = createManagerForNonBaseUser();
+	managerForNonBaseUser.initEntityCentreManager(MENU_ITEM_TYPE, null);
+	managerForNonBaseUser.saveAsEntityCentreManager(MENU_ITEM_TYPE, null, NON_BASE_USERS_SAVE_AS);
+
+	final ICentreDomainTreeManagerAndEnhancer dtm = managerForNonBaseUser.getEntityCentreManager(MENU_ITEM_TYPE, NON_BASE_USERS_SAVE_AS);
+	// initialise analysis to ensure that equals / serialisation / copying works
+	dtm.initAnalysisManagerByDefault("New Pivot analysis.", AnalysisType.PIVOT);
+	dtm.getAnalysisManager("New Pivot analysis.").getFirstTick().check(ROOT, "simpleEntityProp", true);
+	dtm.acceptAnalysisManager("New Pivot analysis.");
+
+	dtm.getFirstTick().check(ROOT, property, true);
+	dtm.getSecondTick().check(ROOT, property, true);
+
+	dtm.getFirstTick().refreshLocatorManager(ROOT, property);
+	dtm.getFirstTick().getLocatorManager(ROOT, property).getFirstTick().check(propertyType, "integerProp", true);
+	dtm.getFirstTick().getLocatorManager(ROOT, property).getSecondTick().check(propertyType, "integerProp", true);
+	dtm.getFirstTick().getLocatorManager(ROOT, property).getRepresentation().getFirstTick().disableImmutably(propertyType, "bigDecimalProp");
+	dtm.getFirstTick().acceptLocatorManager(ROOT, property);
+
+	dtm.analysisKeys(); // this method will lazily initialise "currentAnalyses" -- it is essential to fully initialise centre manager
+
+	// test that serialisation works
+	final byte[] array = managerForNonBaseUser.getSerialiser().serialise(dtm);
+
+	assertNotNull("Serialised byte array should not be null.", array);
+	final ICentreDomainTreeManagerAndEnhancer copy = managerForNonBaseUser.getSerialiser().deserialise(array, ICentreDomainTreeManagerAndEnhancer.class);
+
+	copy.analysisKeys(); // this method will lazily initialise "currentAnalyses" -- it is essen1tial to fully initialise centre manager
+	// after copying the instance should be fully defined (even for transient fields).
+	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
+	// So it should be checked:
+
+	// final ICriteriaDomainTreeManager copy = getSerialiser().deserialise(array, ICriteriaDomainTreeManager.class);
+	// final CriteriaDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, CriteriaDomainTreeManagerAndEnhancer.class);
+	assertNotNull("Deserialised instance should not be null.", copy);
+
+	// after deserialisation the instance should be fully defined (even for transient fields).
+	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
+	// So it should be checked:
+	assertTrue("After deserialisation of the manager all the fields should be initialised (including transient).", AbstractDomainTreeTest.allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm));
     }
 }

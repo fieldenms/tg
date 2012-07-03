@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.domaintree.ILocatorManager.Phase.USAGE_PHA
 import static ua.com.fielden.platform.domaintree.ILocatorManager.Type.GLOBAL;
 import static ua.com.fielden.platform.domaintree.ILocatorManager.Type.LOCAL;
 
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -39,10 +41,53 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     private final transient IGlobalDomainTreeRepresentation globalRepresentation;
     private final EnhancementLinkedRootsSet rootTypes;
     private final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> persistentLocators;
+    /** Do <b>NOT</b> use this field directly! Please use currentAnalyses() method instead. */
     private final transient EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> currentLocators;
     private final transient EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> freezedLocators;
     private final transient EnhancementSet locatorsInEditingMode;
+    /** Do <b>NOT</b> use this field directly! Please use currentAnalyses() method instead. */
     private final transient EnhancementSet locatorsWithLocalType;
+
+    /**
+     * Returns a current locators for locator manager. It is lazily loaded by the very first invocation from "persistentLocators" by copying them.
+     *
+     * @return
+     */
+    private EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> currentLocators() {
+	if (currentLocators == null) {
+	    try {
+		final Field currentLocatorsField = Finder.findFieldByName(LocatorManager.class, "currentLocators");
+		final boolean isAccessible = currentLocatorsField.isAccessible();
+		currentLocatorsField.setAccessible(true);
+		currentLocatorsField.set(this, AbstractDomainTree.<ILocatorDomainTreeManagerAndEnhancer>createPropertiesMap());
+		currentLocatorsField.setAccessible(isAccessible);
+	    } catch (final Exception e) {
+		e.printStackTrace();
+		throw new IllegalStateException(e);
+	    }
+	    for (final Entry<Pair<Class<?>, String>, ILocatorDomainTreeManagerAndEnhancer> entry : this.persistentLocators.entrySet()) {
+		persistent_to_current(entry.getKey().getKey(), entry.getKey().getValue()); // should be initialised with copies of persistent locators
+	    }
+	}
+	return currentLocators;
+    }
+
+    private EnhancementSet locatorsWithLocalType() {
+	if (locatorsWithLocalType == null) {
+	    try {
+		final Field locatorsWithLocalTypeField = LocatorManager.class.getDeclaredField("locatorsWithLocalType");
+		final boolean isAccessible = locatorsWithLocalTypeField.isAccessible();
+		locatorsWithLocalTypeField.setAccessible(true);
+		locatorsWithLocalTypeField.set(this, createSet());
+		locatorsWithLocalTypeField.setAccessible(isAccessible);
+	    } catch (final Exception e) {
+		e.printStackTrace();
+		throw new IllegalStateException(e);
+	    }
+	    locatorsWithLocalType.addAll(locatorKeys()); // all non-null locators are LOCAL
+	}
+	return locatorsWithLocalType;
+    }
 
     /**
      * A locator <i>manager</i> constructor (save, int, discard locators, etc.) for the first time instantiation.
@@ -67,16 +112,19 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	this.persistentLocators = createPropertiesMap();
 	this.persistentLocators.putAll(persistentLocators);
 
-	currentLocators = createPropertiesMap();
-	for (final Entry<Pair<Class<?>, String>, ILocatorDomainTreeManagerAndEnhancer> entry : this.persistentLocators.entrySet()) {
-	    persistent_to_current(entry.getKey().getKey(), entry.getKey().getValue()); // should be initialised with copies of persistent locators
-	}
+	// currentLocators = createPropertiesMap();
+
+	// VERY IMPORTANT : Please note that deepCopy operation is not applicable here, because deserialisation process cannot be mixed with serialisation.
+	// This constructor is explicitly used in deserialisation. That is why "currentAnalyses" initialisation (by copying "persistentAnalyses")
+	// should be performed after ALL deserialisation has been completed. In this case -- we will use lazy initialisation.
+	currentLocators = null; // this stuff will be initialised during the first invocation of currentAnalyses().
+
 	freezedLocators = createPropertiesMap();
 
 	locatorsInEditingMode = createSet();
 
-	locatorsWithLocalType = createSet();
-	locatorsWithLocalType.addAll(locatorKeys()); // all non-null locators are LOCAL
+	locatorsWithLocalType = null; // createSet();
+	// locatorsWithLocalType.addAll(locatorKeys()); // all non-null locators are LOCAL
     }
 
     /**
@@ -106,7 +154,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     @Override
     public ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property) {
 	nonEntityTypedPropertyError(root, property);
-	return currentLocators.get(key(root, property));
+	return currentLocators().get(key(root, property));
     }
 
     @Override
@@ -121,13 +169,13 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     }
 
     private Type type(final Class<?> root, final String property) {
-	return locatorsWithLocalType.contains(key(root, property)) ? LOCAL : GLOBAL;
+	return locatorsWithLocalType().contains(key(root, property)) ? LOCAL : GLOBAL;
     }
 
     @Override
     public boolean isChangedLocatorManager(final Class<?> root, final String property) {
 	nonEntityTypedPropertyError(root, property);
-	final boolean isChanged = !EntityUtils.equalsEx(currentLocators.get(key(root, property)), persistentLocators.get(key(root, property)));
+	final boolean isChanged = !EntityUtils.equalsEx(currentLocators().get(key(root, property)), persistentLocators.get(key(root, property)));
 	if (USAGE_PHASE == phase(root, property) && isChanged) {
 	    implementationError("Inner implementation error : locator isChanged == true in USAGE phase for some reason for property [" + property + "] in type [" + root.getSimpleName() + "].");
 	}
@@ -136,7 +184,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     @Override
     public List<Pair<Class<?>, String>> locatorKeys() {
-	return new ArrayList<Pair<Class<?>, String>>(currentLocators.keySet());
+	return new ArrayList<Pair<Class<?>, String>>(currentLocators().keySet());
     }
 
     private Class<?> propertyTypeForGlobalRepresentationLocator(final Class<?> root, final String property) {
@@ -164,15 +212,15 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     }
 
     private void current_to_current(final Class<?> root, final String property) {
-	moveMgrCopy(getSerialiser(), currentLocators, currentLocators, root, property);
+	moveMgrCopy(getSerialiser(), currentLocators(), currentLocators(), root, property);
     }
 
     private void current_to_persistent(final Class<?> root, final String property) {
-	moveMgrCopy(getSerialiser(), currentLocators, persistentLocators, root, property);
+	moveMgrCopy(getSerialiser(), currentLocators(), persistentLocators, root, property);
     }
 
     private void persistent_to_current(final Class<?> root, final String property) {
-	moveMgrCopy(getSerialiser(), persistentLocators, currentLocators, root, property);
+	moveMgrCopy(getSerialiser(), persistentLocators, currentLocators(), root, property);
     }
 
     private void moveToUSAGE_PHASE(final Class<?> root, final String property) {
@@ -184,11 +232,11 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
     }
 
     private void makeGLOBAL(final Class<?> root, final String property) {
-	locatorsWithLocalType.remove(key(root, property));
+	locatorsWithLocalType().remove(key(root, property));
     }
 
     private void makeLOCAL(final Class<?> root, final String property) {
-	locatorsWithLocalType.add(key(root, property));
+	locatorsWithLocalType().add(key(root, property));
     }
 
     @Override
@@ -197,7 +245,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	if (USAGE_PHASE == phase(root, property)) {
 	    if (GLOBAL == type(root, property)) {
 		checkEmptinessOfGlobalLocator(root, property);
-		currentLocators.put(key(root, property), produceByDefault(root, property));
+		currentLocators().put(key(root, property), produceByDefault(root, property));
 		current_to_persistent(root, property);
 	    } else { // LOCAL_PHASE
 		current_to_current(root, property);
@@ -213,7 +261,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	nonEntityTypedPropertyError(root, property);
 	if (USAGE_PHASE == phase(root, property)) {
 	    if (LOCAL == type(root, property)) {
-		currentLocators.remove(key(root, property));
+		currentLocators().remove(key(root, property));
 		current_to_persistent(root, property);
 		makeGLOBAL(root, property);
 	    } else {
@@ -308,6 +356,11 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 	public LocatorManager read(final ByteBuffer buffer) {
 	    final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
 	    final EnhancementPropertiesMap<ILocatorDomainTreeManagerAndEnhancer> persistentLocators = readValue(buffer, EnhancementPropertiesMap.class);
+
+//	    for (final ILocatorDomainTreeManagerAndEnhancer loc : persistentLocators.values()) {
+//		EntityUtils.deepCopy(loc, kryo());
+//	    }
+
 	    return new LocatorManager(kryo(), rootTypes, persistentLocators);
 	}
 

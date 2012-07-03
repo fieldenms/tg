@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -11,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -24,6 +26,7 @@ import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterSyntheticEntity;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -71,6 +74,13 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
 	final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CentreDomainTreeRepresentationTest());
 	manageTestingDTM_for_CentreDomainTreeRepresentationTest(dtm);
 	setDtmArray(serialiser().serialise(dtm));
+    }
+
+    @Override
+    @Before
+    public void initEachTest() throws Exception {
+	super.initEachTest();
+	dtm().analysisKeys(); // this method will lazily initialise "currentAnalyses" -- it is essential to fully initialise centre manager
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -475,5 +485,46 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
 
     @Override
     public void test_that_domain_changes_for_calc_property_modifications_are_correctly_reflected_in_Included_properties() {
+    }
+
+    @Override
+    @Test
+    public void test_that_serialisation_works() throws Exception {
+	final ICentreDomainTreeManagerAndEnhancer dtm = dtm();
+	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
+	test_that_manager_instantiation_works_for_inner_cross_references(dtm);
+
+	// test that serialisation works
+	final byte[] array = getSerialiser().serialise(dtm);
+	assertNotNull("Serialised byte array should not be null.", array);
+	final ICentreDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, ICentreDomainTreeManagerAndEnhancer.class);
+	// final ICriteriaDomainTreeManager copy = getSerialiser().deserialise(array, ICriteriaDomainTreeManager.class);
+	// final CriteriaDomainTreeManagerAndEnhancer copy = getSerialiser().deserialise(array, CriteriaDomainTreeManagerAndEnhancer.class);
+	assertNotNull("Deserialised instance should not be null.", copy);
+
+	copy.analysisKeys(); // this method will lazily initialise "currentAnalyses" -- it is essential to fully initialise centre manager
+	// after deserialisation the instance should be fully defined (even for transient fields).
+	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
+	// So it should be checked:
+	assertTrue("After deserialisation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm));
+	test_that_manager_instantiation_works_for_inner_cross_references(copy);
+    }
+
+    @Override
+    @Test
+    public void test_that_equality_and_copying_works() {
+	final ICentreDomainTreeManagerAndEnhancer dtm = dtm();
+	dtm.getEnhancer().apply();
+	assertTrue("After normal instantiation of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialised(dtm));
+
+	final ICentreDomainTreeManagerAndEnhancer copy = EntityUtils.deepCopy(dtm, getSerialiser());
+
+	copy.analysisKeys(); // this method will lazily initialise "currentAnalyses" -- it is essential to fully initialise centre manager
+	// after copying the instance should be fully defined (even for transient fields).
+	// for our convenience (in "Domain Trees" logic) all fields are "final" and should be not null after normal construction.
+	// So it should be checked:
+	assertTrue("After coping of the manager all the fields should be initialised (including transient).", allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(copy, dtm));
+	test_that_manager_instantiation_works_for_inner_cross_references(copy);
+	assertTrue("The copy instance should be equal to the original instance.", EntityUtils.equalsEx(copy, dtm));
     }
 }
