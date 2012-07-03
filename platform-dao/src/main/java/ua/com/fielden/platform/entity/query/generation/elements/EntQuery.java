@@ -15,6 +15,7 @@ import java.util.TreeSet;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -200,7 +201,8 @@ public class EntQuery implements ISingleOperand {
 
             if (yieldTypeAccordingToQuerySources != null && !yieldTypeAccordingToQuerySources.equals(yieldTypeAccordingToQueryResultType)) {
                 if (!(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQuerySources) && Long.class.equals(yieldTypeAccordingToQueryResultType)) && //
-                        !(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQueryResultType) && Long.class.equals(yieldTypeAccordingToQuerySources))) {
+                        !(EntityUtils.isPersistedEntityType(yieldTypeAccordingToQueryResultType) && Long.class.equals(yieldTypeAccordingToQuerySources)) && //
+                        !(yieldTypeAccordingToQueryResultType.equals(DynamicEntityKey.class) && yieldTypeAccordingToQuerySources.equals(String.class))) {
                     throw new IllegalStateException("Different types: from source = " + yieldTypeAccordingToQuerySources.getSimpleName() + " from result type = "
                             + yieldTypeAccordingToQueryResultType.getSimpleName());
                 }

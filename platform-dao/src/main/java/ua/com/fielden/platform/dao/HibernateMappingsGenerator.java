@@ -138,7 +138,7 @@ public class HibernateMappingsGenerator {
 	sb.append(generatePropertyMappingFromPropertyMetadata(entityMetadata.getProps().get(AbstractEntity.VERSION)));
 
 	final PropertyMetadata keyProp = entityMetadata.getProps().get(AbstractEntity.KEY);
-	if (!keyProp.isVirtual()) {
+	if (keyProp.affectsMapping()) {
 	    sb.append(generatePropertyMappingFromPropertyMetadata(keyProp));
 	}
 

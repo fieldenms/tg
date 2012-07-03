@@ -89,6 +89,12 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
     @Test
+    public void test_case_when_function() {
+	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").then().prop("key").end().isNotNull().model();
+    }
+
+
+    @Test
     public void test_condition_on_121_property() {
 	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").model();
 	final List<TgVehicle> models = vehicleDao.getAllEntities(from(qry).with(fetch(TgVehicle.class)).model());

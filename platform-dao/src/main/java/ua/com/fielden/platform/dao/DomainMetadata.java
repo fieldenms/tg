@@ -186,9 +186,16 @@ public class DomainMetadata {
 	    return isOneToOne(entityType) ? idPropertyInOne2One : idProperty;
 	case CALCULATED:
 	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(expr().prop("key").model()).type(CALCULATED).build();
+	case UNION:
+	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(generateUnionEntityIdExpression()).type(CALCULATED).build();
 	default:
 	    return null;
 	}
+    }
+
+    private ExpressionModel generateUnionEntityIdExpression() {
+	expr().prop("key").model();
+	return null;
     }
 
     private PropertyMetadata generateVersionPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory) {
