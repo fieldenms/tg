@@ -52,7 +52,6 @@ public class ChartAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
     @Override
     protected Void executeAnalysisQuery() {
-	// TODO Auto-generated method stub
 	//TODO Must implement data loading that returns the page and initialises alias map.
 	//chartAnalysisDataProvider.setAliasMap(aliasMap, aliasMap1);
 	//getPageHolder().newPage(/*newPage*/);

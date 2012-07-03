@@ -4,8 +4,10 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IAbstractAnalysisDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
@@ -15,16 +17,26 @@ import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigu
 import ua.com.fielden.platform.swing.review.report.events.SelectionEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.ISelectionEventListener;
 import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardView;
-import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
+import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTree2;
+import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2;
+import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreePanel;
 
 
 public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends AbstractWizardView<T> {
 
     private static final long serialVersionUID = 1664306691939896482L;
 
-    public AnalysisWizardView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> configurationOwner, final DomainTreeEditorModel<T> treeEditorModel) {
-	super(configurationOwner, treeEditorModel, "Choose distribution and aggregation properties");
+    private final EntitiesTreePanel entitiesTreePanel;
+
+    public AnalysisWizardView(final AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> configurationOwner, final IAbstractAnalysisDomainTreeManagerAndEnhancer domainTreeManager) {
+	super(configurationOwner, domainTreeManager, "Choose distribution and aggregation properties");
 	this.addSelectionEventListener(createWizardSelectionListener());
+
+	//Configuring the entities tree.
+	final EntitiesTreeModel2 treeModel = new EntitiesTreeModel2(domainTreeManager, "distribution properties", "aggregation properties");
+	final EntitiesTree2 tree = new EntitiesTree2(treeModel);
+	entitiesTreePanel = new EntitiesTreePanel(tree);
+
 	layoutComponents();
     }
 
@@ -32,6 +44,11 @@ public class AnalysisWizardView<T extends AbstractEntity<?>, CDTME extends ICent
     @Override
     public AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?> getOwner() {
 	return (AbstractAnalysisConfigurationView<T, CDTME, ?, ?, ?>)super.getOwner();
+    }
+
+    @Override
+    public JPanel getTreeView() {
+        return entitiesTreePanel;
     }
 
     @Override

@@ -8,6 +8,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.swing.menu.filter.IFilterListener;
 import ua.com.fielden.platform.swing.menu.filter.IFilterableModel;
 import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTree2;
+import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeCellEditor2;
 
 /**
  * A tree of entities with their properties.
@@ -60,9 +61,9 @@ public class EntitiesTree2 extends MultipleCheckboxTree2 {
 	// checking strategies and synchronization with blocks.
 	getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
-	// cell rendering with filtering issues
-	setCellRenderer(this.entitiesModel.getCellRenderer1());
-	setCellEditor(new EntitiesTreeCellEditor(this, this.entitiesModel.getCellRenderer2()));
+	setCellRenderer(new FilterableEntitiesTreeCellRenderer(entitiesTreeModel2));
+	setCellEditor(new MultipleCheckboxTreeCellEditor2(this, new FilterableEntitiesTreeCellRenderer(entitiesTreeModel2)));
+
 	setRootVisible(false);
 	expandRow(0);
     }

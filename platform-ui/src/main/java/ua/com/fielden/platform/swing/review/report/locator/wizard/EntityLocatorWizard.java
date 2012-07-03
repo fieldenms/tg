@@ -26,14 +26,21 @@ import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigu
 import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigurationView.CancelAction;
 import ua.com.fielden.platform.swing.review.wizard.development.AbstractWizardView;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
+import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorView;
+import ua.com.fielden.platform.swing.review.wizard.tree.editor.IPropertyEditListener;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 
 public class EntityLocatorWizard<T extends AbstractEntity<?>, R extends AbstractEntity<?>> extends AbstractWizardView<T> {
 
     private static final long serialVersionUID = -5516220498620289020L;
 
+    private final DomainTreeEditorView<T> treeEditorView;
+
     public EntityLocatorWizard(final LocatorConfigurationView<T, R> owner, final DomainTreeEditorModel<T> treeEditorModel) {
-	super(owner, treeEditorModel,  "Choose properties for selection criteria and result set");
+	super(owner, treeEditorModel.getDomainTreeManagerAndEnhancer(),  "Choose properties for selection criteria and result set");
+	//Initiates wizards main parts and components.
+	treeEditorModel.addPropertyEditListener(createDomainTreeEditListener());
+	this.treeEditorView = new DomainTreeEditorView<T>(treeEditorModel);
 	layoutComponents();
     }
 
@@ -46,6 +53,11 @@ public class EntityLocatorWizard<T extends AbstractEntity<?>, R extends Abstract
     @Override
     public ILocatorDomainTreeManager getDomainTreeManager() {
 	return (ILocatorDomainTreeManager)super.getDomainTreeManager();
+    }
+
+    @Override
+    public JPanel getTreeView() {
+        return treeEditorView;
     }
 
     @Override
@@ -125,6 +137,29 @@ public class EntityLocatorWizard<T extends AbstractEntity<?>, R extends Abstract
 	actionPanel.add(new JButton(getBuildAction()));
 	actionPanel.add(new JButton(getCancelAction()));
 	return actionPanel;
+    }
+
+    /**
+     * Creates the {@link IPropertyEditListener} that handles build and cancel action enabling and disabling. When the domain tree is in edit mode then build and cancel actions
+     * will be disable other wise they will be enable.
+     *
+     * @return
+     */
+    private IPropertyEditListener createDomainTreeEditListener() {
+	return new IPropertyEditListener() {
+
+	    @Override
+	    public void startEdit() {
+		getBuildAction().setEnabled(false, false);
+		getCancelAction().setEnabled(false, false);
+	    }
+
+	    @Override
+	    public void finishEdit() {
+		getBuildAction().setEnabled(true, false);
+		getCancelAction().setEnabled(true, false);
+	    }
+	};
     }
 
     private JCheckBox createAutoRunCheckBox() {

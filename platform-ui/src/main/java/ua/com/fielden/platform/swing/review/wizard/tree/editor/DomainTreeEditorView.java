@@ -15,13 +15,14 @@ import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.expression.editor.ExpressionEditorView;
 import ua.com.fielden.platform.swing.model.UmState;
+import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EditableEntitiesTree;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTree2;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreePanel;
 import ua.com.fielden.platform.swing.view.BasePanel;
 import ua.com.fielden.platform.utils.Pair;
 
-public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
+public class DomainTreeEditorView<T extends AbstractEntity<?>> extends BasePanel {
 
     private static final long serialVersionUID = 268187881676011630L;
 
@@ -35,7 +36,11 @@ public class DomainTreeEditorView<T extends AbstractEntity> extends BasePanel {
 
 	//Configuring the entities tree.
 	final EntitiesTreeModel2 treeModel = domainTreeEditorModel.createTreeModel();
-	final EntitiesTree2 tree = new EntitiesTree2(treeModel);
+	final EditableEntitiesTree tree = new EditableEntitiesTree(treeModel,//
+		domainTreeEditorModel.getExpressionModel().getNewAction(),//
+		domainTreeEditorModel.getExpressionModel().getEditAction(),//
+		domainTreeEditorModel.getCopyAction(),//
+		domainTreeEditorModel.getExpressionModel().getDeleteAction());
 	tree.addMouseListener(createPropertyChosenListener(tree));
 	tree.getSelectionModel().addTreeSelectionListener(createCalculatedPropertySelectionListener(tree));
 	final EntitiesTreePanel treePanel = new EntitiesTreePanel(tree);

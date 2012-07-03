@@ -18,8 +18,6 @@ import ua.com.fielden.platform.swing.review.report.configuration.AbstractConfigu
 import ua.com.fielden.platform.swing.review.report.events.LoadEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IWizard;
 import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorModel;
-import ua.com.fielden.platform.swing.review.wizard.tree.editor.DomainTreeEditorView;
-import ua.com.fielden.platform.swing.review.wizard.tree.editor.IPropertyEditListener;
 import ua.com.fielden.platform.swing.utils.DummyBuilder;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 
@@ -36,7 +34,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Se
 
     private final AbstractConfigurationView<?, ?> owner;
 
-    private final DomainTreeEditorView<T> treeEditorView;
+    private final IDomainTreeManager domainTreeManager;
 
     private final String domainEditorCaption;
 
@@ -53,12 +51,10 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Se
      * @param treeEditorModel
      * @param progressLayer
      */
-    public AbstractWizardView(final AbstractConfigurationView<?, ? extends AbstractWizardView<T>> owner, final DomainTreeEditorModel<T> treeEditorModel, final String domainEditorCaption){
+    public AbstractWizardView(final AbstractConfigurationView<?, ? extends AbstractWizardView<T>> owner, final IDomainTreeManager domainTreeManager, final String domainEditorCaption){
 	this.owner = owner;
 	this.domainEditorCaption = domainEditorCaption;
-	//Initiates wizards main parts and components.
-	treeEditorModel.addPropertyEditListener(createDomainTreeEditListener());
-	this.treeEditorView = new DomainTreeEditorView<T>(treeEditorModel);
+	this.domainTreeManager = domainTreeManager;
 	this.buildAction = createBuildAction();
 	this.cancelAction = createCancelAction();
 	this.actionPanel = createActionPanel();
@@ -67,45 +63,20 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Se
     }
 
     /**
-     * Creates the {@link IPropertyEditListener} that handles build and cancel action enabling and disabling. When the domain tree is in edit mode
-     * then build and cancel actions will be disable other wise they will be enable.
-     * 
-     * @return
-     */
-    private IPropertyEditListener createDomainTreeEditListener() {
-	return new IPropertyEditListener() {
-
-	    @Override
-	    public void startEdit() {
-		getBuildAction().setEnabled(false, false);
-		getCancelAction().setEnabled(false, false);
-	    }
-
-	    @Override
-	    public void finishEdit() {
-		getBuildAction().setEnabled(true, false);
-		getCancelAction().setEnabled(true, false);
-	    }
-	};
-    }
-
-    /**
      * Returns the {@link IDomainTreeManager} associated with {@link DomainTreeEditorModel}.
-     * 
-     * @return
-     */
-    public IDomainTreeManager getDomainTreeManager(){
-	return getTreeEditorView().getModel().getDomainTreeManagerAndEnhancer();
-    }
-
-    /**
-     * Returns the domain tree editor for this {@link AbstractWizardView}.
      *
      * @return
      */
-    public final DomainTreeEditorView<T> getTreeEditorView() {
-	return treeEditorView;
+    public IDomainTreeManager getDomainTreeManager(){
+	return domainTreeManager;
     }
+
+    /**
+     * Returns the domain tree view for this {@link AbstractWizardView}.
+     *
+     * @return
+     */
+    public abstract JPanel getTreeView();
 
     /**
      * Returns the action panel for this {@link AbstractWizardView}.
@@ -118,7 +89,7 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Se
 
     /**
      * Returns the {@link AbstractConfigurationView} instance that owns this wizard.
-     * 
+     *
      * @return
      */
     public AbstractConfigurationView<?, ?> getOwner() {
@@ -173,13 +144,13 @@ public abstract class AbstractWizardView<T extends AbstractEntity<?>> extends Se
 	setLayout(new MigLayout("fill, insets 5", "[fill, grow]", "[][fill, grow][]"));
 
 	add(DummyBuilder.label(domainEditorCaption), "wrap");
-	add(getTreeEditorView(), "wrap");
+	add(getTreeView(), "wrap");
 	add(getActionPanel());
     }
 
     /**
      * Creates the {@link HierarchyListener} that determines when the component was shown and it's size was determined.
-     * 
+     *
      * @return
      */
     private ComponentListener createComponentWasResized() {

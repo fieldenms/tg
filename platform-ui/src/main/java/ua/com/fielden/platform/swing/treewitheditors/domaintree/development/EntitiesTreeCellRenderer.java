@@ -2,24 +2,18 @@ package ua.com.fielden.platform.swing.treewitheditors.domaintree.development;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.JTree;
-import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.swing.treewitheditors.development.MultipleCheckboxTreeCellRenderer2;
 import ua.com.fielden.platform.swing.treewitheditors.domaintree.development.EntitiesTreeModel2.EntitiesTreeUserObject;
-import ua.com.fielden.platform.utils.EntityUtils;
 
-public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 {
+public class EntitiesTreeCellRenderer extends FilterableEntitiesTreeCellRenderer {
 
     private static final long serialVersionUID = 2940223267761789273L;
 
@@ -27,9 +21,6 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
     private static final int gapBetweenButtons = 5;
     private static final int buttonWidth =16;
     private static final int buttonHeight =16;
-
-    private final Font originalFont;
-    private final Font derivedFont;
 
     private final ActionImagePanel newPanel;
     private final ActionImagePanel editPanel;
@@ -60,12 +51,6 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 	for(final ActionImagePanel actionPanel : confPanel){
 	    actionPanel.setFocusable(true);
 	}
-
-	originalFont = label.getFont();
-	derivedFont = originalFont.deriveFont(Font.BOLD);
-	label.setLeafIcon(null);
-	label.setClosedIcon(null);
-	label.setOpenIcon(null);
     }
 
     @Override
@@ -99,7 +84,7 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 
     /**
      * Set specified visible flag for all configuration buttons : new, edit, copy, delete.
-     * 
+     *
      * @param visible
      */
     public void setButtonsVisible(final boolean visible){
@@ -110,36 +95,6 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 
     @Override
     public Component getTreeCellRendererComponent(final JTree tree, final Object value, final boolean selected, final boolean expanded, final boolean leaf, final int row, final boolean hasFocus) {
-
-	//Configuring the visibility of checking components.
-	setCheckingComponentsVisible(true);
-
-	final EntitiesTreeNode2 node = (EntitiesTreeNode2) value;
-	final Class<?> root = node.getUserObject().getKey();
-	final String property = node.getUserObject().getValue();
-
-	if (!getModel().isNotDummyAndNotCommonProperty(property)) {
-	    setCheckingComponentsVisible(false);
-	}
-
-	if (PropertyTypeDeterminator.isDotNotation(property)) {
-	    final String parentProperty = PropertyTypeDeterminator.penultAndLast(property).getKey();
-	    if (!AbstractDomainTree.isCommonBranch(parentProperty) && EntityUtils.isUnionEntityType(PropertyTypeDeterminator.determinePropertyType(root, AbstractDomainTree.reflectionProperty(parentProperty)))) {
-		setCheckingComponentVisible(1, false);
-	    }
-	}
-
-	// this action should make matched nodes to render bold.
-	if (getModel().getFilterableModel().matches((TreeNode) value)) {
-	    label.setFont(derivedFont);
-	} else {
-	    label.setFont(originalFont);
-	}
-
-	// "Entity" node distinguishing from property nodes :
-	if (node.getLevel() == 1) {
-	    label.setFont(label.getFont().deriveFont(label.getFont().getStyle() + Font.ITALIC));
-	}
 
 	//Adding visible configuration buttons to this cell renderer component.
 	removeButtons();
@@ -163,7 +118,7 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 
     /**
      * Returns {@link IDomainTreeManagerAndEnhancer}
-     * 
+     *
      * @return
      */
     protected IDomainTreeManagerAndEnhancer getManager() {
@@ -191,11 +146,6 @@ public class EntitiesTreeCellRenderer extends MultipleCheckboxTreeCellRenderer2 
 	    return super.getCheckingComponentToolTipText(index, treePath);
 	}
 	return null;
-    }
-
-    @Override
-    public EntitiesTreeModel2 getModel() {
-	return (EntitiesTreeModel2) super.getModel();
     }
 
     protected void setNewButtonVisible(final boolean visible){

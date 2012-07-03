@@ -9,7 +9,6 @@ import it.cnr.imaa.essi.lablib.gui.checkboxtree.TreeCheckingModel.CheckingMode;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.swing.Action;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.ExpandVetoException;
@@ -50,7 +49,6 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
     /** A cached map of nodes by its names (includes only real properties without "dummy" and "common" stuff). */
     private final EnhancementPropertiesMap<EntitiesTreeNode2> nodesForSimplePropertiesCache;
     private final TreeCheckingListener [] listeners;
-    private final EntitiesTreeCellRenderer cellRenderer1, cellRenderer2;
     private final FilterableTreeModel filterableModel;
     //private final Logger logger = Logger.getLogger(getClass());
     private final String firstTickCaption, secondTickCaption;
@@ -66,10 +64,6 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
      */
     public EntitiesTreeModel2(//
 	    final IDomainTreeManagerAndEnhancer manager,//
-	    final Action newAction,//
-	    final Action editAction,//
-	    final Action copyAction,//
-	    final Action removeAction,//
 	    final String firstTickCaption,//
 	    final String secondTickCaption) {
 	super(2);
@@ -85,10 +79,6 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	this.setRoot(this.rootNode = new EntitiesTreeNode2(createUserObject(EntitiesTreeModel2.class, ROOT_PROPERTY)));
 	this.nodesCache = AbstractDomainTree.createPropertiesMap();
 	this.nodesForSimplePropertiesCache = AbstractDomainTree.createPropertiesMap();
-	this.cellRenderer1 = new EntitiesTreeCellRenderer(this, //
-		newAction, editAction, copyAction, removeAction);
-	this.cellRenderer2 = new EntitiesTreeCellRenderer(this, //
-		newAction, editAction, copyAction, removeAction);
 
 	// initialise nodes according to included properties of the manager (these include "dummy" and "common properties" stuff)
 	for (final Class<?> root : this.manager.getRepresentation().rootTypes()) {
@@ -484,14 +474,6 @@ public class EntitiesTreeModel2 extends MultipleCheckboxTreeModel2 {
 	    }
 	    return "<html>Add/Remove <b>" + EntitiesTreeModel2.extractTitleAndDesc(root, managedRoot, property).getKey() + "</b> to/from " + secondTickCaption + "</html>";
 	}
-    }
-
-    public EntitiesTreeCellRenderer getCellRenderer1() {
-	return cellRenderer1;
-    }
-
-    public EntitiesTreeCellRenderer getCellRenderer2() {
-	return cellRenderer2;
     }
 
     public FilterableTreeModel getFilterableModel() {

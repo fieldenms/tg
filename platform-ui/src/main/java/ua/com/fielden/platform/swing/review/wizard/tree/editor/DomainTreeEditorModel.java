@@ -25,7 +25,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
  * @author TG Team
  *
  */
-public class DomainTreeEditorModel<T extends AbstractEntity> {
+public class DomainTreeEditorModel<T extends AbstractEntity<?>> {
 
     private final ExpressionEditorModelForWizard expressionModel;
 
@@ -92,9 +92,7 @@ public class DomainTreeEditorModel<T extends AbstractEntity> {
     }
 
     public EntitiesTreeModel2 createTreeModel() {
-	return new EntitiesTreeModel2(dtme, //
-		getExpressionModel().getNewAction(), getExpressionModel().getEditAction(),//
-		getCopyAction(), getExpressionModel().getDeleteAction(), "selection criteria", "result set");
+	return new EntitiesTreeModel2(dtme, "selection criteria", "result set");
     }
 
     /**

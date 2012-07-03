@@ -110,6 +110,11 @@ public abstract class AbstractAnalysisConfigurationView<T extends AbstractEntity
 	return owner;
     }
 
+    @Override
+    protected AnalysisWizardView<T, CDTME> createWizardView() {
+	return new AnalysisWizardView<T, CDTME>(this, getModel().getAnalysisManager());
+    }
+
     /**
      * Returns the selection listener that is responsible for selecting the this analysis configurable view.
      *

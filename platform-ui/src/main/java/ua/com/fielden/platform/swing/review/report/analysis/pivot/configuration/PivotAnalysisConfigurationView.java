@@ -9,7 +9,6 @@ import ua.com.fielden.platform.swing.components.blocking.BlockingIndefiniteProgr
 import ua.com.fielden.platform.swing.review.report.ReportMode;
 import ua.com.fielden.platform.swing.review.report.analysis.configuration.AbstractAnalysisConfigurationView;
 import ua.com.fielden.platform.swing.review.report.analysis.pivot.PivotAnalysisView;
-import ua.com.fielden.platform.swing.review.report.analysis.wizard.AnalysisWizardView;
 import ua.com.fielden.platform.swing.review.report.centre.AbstractEntityCentre;
 import ua.com.fielden.platform.swing.review.report.events.AbstractConfigurationViewEvent;
 import ua.com.fielden.platform.swing.review.report.interfaces.IAbstractConfigurationViewEventListener;
@@ -31,11 +30,6 @@ public class PivotAnalysisConfigurationView<T extends AbstractEntity<?>> extends
     @Override
     protected PivotAnalysisView<T> createConfigurableView() {
 	return new PivotAnalysisView<T>(getModel().createPivotAnalysisModel(), this);
-    }
-
-    @Override
-    protected AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer> createWizardView() {
-	return new AnalysisWizardView<T, ICentreDomainTreeManagerAndEnhancer>(this, getModel().createDomainTreeEditorModel());
     }
 
     private IAbstractConfigurationViewEventListener createOpenAnalysisEventListener() {
