@@ -39,7 +39,7 @@ public class EnhancedLocatorEntityQueryCriteria<T extends AbstractEntity<?>, DAO
 	final Class<?> root = getEntityClass();
 	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
 	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, tickManager, enhancer);
+	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, tickManager.orderedProperties(root), enhancer);
 	final SearchBy searchBy = getCentreDomainTreeMangerAndEnhancer().getSearchBy();
 	ICompoundCondition0<T> compondCondition = null;
 	switch(searchBy){

@@ -76,7 +76,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     private static final long serialVersionUID = -6505281133387254406L;
 
-    private final CategoryDataModel dataModel;
+    private final CategoryDataModel<T> dataModel;
     /**
      * The list of available distribution properties.
      */
@@ -89,7 +89,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     /**
      * The chart panel that holds one or more charts.
      */
-    private final MultipleChartPanel<List<EntityAggregates>, CategoryChartTypes> chartPanel;
+    private final MultipleChartPanel<List<T>, CategoryChartTypes> chartPanel;
     /**
      * The panel that allows to scroll charts placed on the {@link #chartPanel}.
      */
@@ -102,7 +102,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     /**
      * Allows one to switch between different types of charts.
      */
-    private final SwitchChartsModel<List<EntityAggregates>, CategoryChartTypes> switchChartModel;
+    private final SwitchChartsModel<List<T>, CategoryChartTypes> switchChartModel;
     /**
      * Tool bar that allows to configure charts: choose between different types of charts, choose the number of visible categories e. t. c.
      */
@@ -115,20 +115,21 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 
     public ChartAnalysisView(final ChartAnalysisModel<T> model, final ChartAnalysisConfigurationView<T> owner) {
 	super(model, owner);
-	this.dataModel = new CategoryDataModel(getModel().getChartAnalysisDataProvider());
-	this.chartPanel = new MultipleChartPanel<List<EntityAggregates>, CategoryChartTypes>();
+	this.dataModel = new CategoryDataModel<T>(getModel().getChartAnalysisDataProvider());
+	this.chartPanel = new MultipleChartPanel<List<T>, CategoryChartTypes>();
 	this.chartScroller = new CategoryChartScrollPanel(chartPanel, getModel().adtme().getVisibleDistributedValuesNumber());
 	this.distributionList = createDistributionList();
 	this.aggregationList = createAggregationList();
 	this.spinner = createColumnCounterSpinner();
-	this.switchChartModel = new SwitchChartsModel<List<EntityAggregates>, CategoryChartTypes>(chartPanel);
+	this.switchChartModel = new SwitchChartsModel<List<T>, CategoryChartTypes>(chartPanel);
 	this.toolBar = createChartToolBar();
 	this.addSelectionEventListener(createChartAnalysisSelectionListener());
-	updateChart(new ArrayList<EntityAggregates>(), null);
+	model.setAnalysisView(this);
+	updateChart(new ArrayList<T>(), null);
 	layoutComponents();
 
 	DnDSupport2.installDnDSupport(aggregationList, new AnalysisListDragFromSupport(aggregationList), //
-		new ChartAnalysisAggregationListDragToSupport<T, List<EntityAggregates>, CategoryChartTypes>(aggregationList, chartPanel, getModel()), true);
+		new ChartAnalysisAggregationListDragToSupport<T, List<T>, CategoryChartTypes>(aggregationList, chartPanel, getModel()), true);
 	DnDSupport2.installDnDSupport(distributionList, new AnalysisListDragFromSupport(distributionList), //
 		new AnalysisListDragToSupport<T>(distributionList, getModel().getCriteria().getEntityClass(), getModel().adtme().getFirstTick()), true);
     }
@@ -153,6 +154,34 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	    getCentre().getPaginator().setEnableActions(enable, !enable);
 	}
 	getCentre().getRunAction().setEnabled(enable);
+    }
+
+    /**
+     * Returns the page size (i.e. the number of {@link EntityAggregates}s to be retrieved at once).
+     *
+     * @return
+     */
+    final int getPageSize() {
+	final int groupSize = getAggregationsSize();
+	if (groupSize != 0) {
+	    final int size = chartPanel.getSize().width / (20 * groupSize);
+	    if (size < 1) {
+		return 1;
+	    } else {
+		return size;
+	    }
+	}
+	return 0;
+    }
+
+    /**
+     * Returns the number of series in the group.
+     *
+     * @return
+     */
+    private int getAggregationsSize() {
+	final int size = getModel().adtme().getSecondTick().usedProperties(getModel().getCriteria().getEntityClass()).size();
+	return size > 0 ? size : 1;
     }
 
     private AbstractEntityCentre<T, ICentreDomainTreeManagerAndEnhancer> getCentre(){
@@ -364,7 +393,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	return toolBar;
     }
 
-    private JToggleButton createToggleButtonFor(final SwitchChartsModel<List<EntityAggregates>, CategoryChartTypes> switchChartModel, final CategoryChartTypes type, final String toolTip, final Icon icon) {
+    private JToggleButton createToggleButtonFor(final SwitchChartsModel<List<T>, CategoryChartTypes> switchChartModel, final CategoryChartTypes type, final String toolTip, final Icon icon) {
 	final JToggleButton chartTogle = new JToggleButton(icon);
 	chartTogle.setToolTipText(toolTip);
 	chartTogle.addItemListener(switchChartModel.createListenerForChartType(type));
@@ -400,7 +429,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 	return selectedValuesOrder;
     }
 
-    private void updateChart(final List<EntityAggregates> data, final IAction postAction) {
+    private void updateChart(final List<T> data, final IAction postAction) {
 	final List<Integer> selectedOrder = getSeriesOrder();
 	if (split) {
 	    final int numOfSelectedWithoutNew = getNumOfSelectedWithoutNew();
@@ -421,7 +450,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		    @Override
 		    public void action() {
 			for (int index = 1; index < chartPanel.getChartPanelsCount(); index++) {
-			    final ActionChartPanel<List<EntityAggregates>, CategoryChartTypes> panel = chartPanel.getChartPanel(index);
+			    final ActionChartPanel<List<T>, CategoryChartTypes> panel = chartPanel.getChartPanel(index);
 			    panel.setPostAction(null);
 			    panel.setChart(data, false, selectedOrder.get(index));
 			}
@@ -434,7 +463,7 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
 		chartPanel.getChartPanel(0).setChart(data, false, selectedOrder.get(0));
 	    }
 	} else {
-	    ActionChartPanel<List<EntityAggregates>, CategoryChartTypes> panel = null;
+	    ActionChartPanel<List<T>, CategoryChartTypes> panel = null;
 	    if (chartPanel.getChartPanelsCount() > 0) {
 		panel = chartPanel.getChartPanel(0);
 		final int countToRemove = chartPanel.getChartPanelsCount();
@@ -458,8 +487,8 @@ public class ChartAnalysisView<T extends AbstractEntity<?>> extends AbstractAnal
     /////////////////////////Refactor the code below//////////////////////////////////////////
 
 
-    private ActionChartPanel<List<EntityAggregates>, CategoryChartTypes> createChartPanel(final boolean all, final int... indexes) {
-	final ActionChartPanel<List<EntityAggregates>, CategoryChartTypes> chartPanel = new ActionChartPanel<List<EntityAggregates>, CategoryChartTypes>(new CategoryChartFactory<T, IEntityDao<T>>(getModel().getChartAnalysisDataProvider(), dataModel, all, indexes), new IBlockingLayerProvider() {
+    private ActionChartPanel<List<T>, CategoryChartTypes> createChartPanel(final boolean all, final int... indexes) {
+	final ActionChartPanel<List<T>, CategoryChartTypes> chartPanel = new ActionChartPanel<List<T>, CategoryChartTypes>(new CategoryChartFactory<T, IEntityDao<T>>(getModel().getChartAnalysisDataProvider(), dataModel, all, indexes), new IBlockingLayerProvider() {
 	    @Override
 	    public BlockingIndefiniteProgressLayer getBlockingLayer() {
 		return getOwner().getProgressLayer();

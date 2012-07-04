@@ -2,15 +2,15 @@ package ua.com.fielden.platform.swing.review.report.analysis.chart;
 
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
 
 //TODO this class should be removed later on.
-class CategoryDataModel {
+class CategoryDataModel<T extends AbstractEntity<?>> {
 
-    private final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<EntityAggregates>> dataProvider;
+    private final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> dataProvider;
 
-    public CategoryDataModel(final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<EntityAggregates>> dataProvider) {
+    public CategoryDataModel(final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> dataProvider) {
 	this.dataProvider = dataProvider;
     }
 

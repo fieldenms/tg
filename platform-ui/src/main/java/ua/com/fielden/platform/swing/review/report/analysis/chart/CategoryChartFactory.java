@@ -40,7 +40,6 @@ import org.jfree.ui.TextAnchor;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.equery.lifecycle.IProgressUpdater;
 import ua.com.fielden.platform.swing.categorychart.CategoryChartTypes;
 import ua.com.fielden.platform.swing.categorychart.EntityWrapper;
@@ -49,23 +48,23 @@ import ua.com.fielden.platform.swing.categorychart.IChartFactory;
 import ua.com.fielden.platform.swing.chartscroll.ScrollableCategoryPlot;
 
 //TODO this class should be removed later on.
-class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> implements IChartFactory<List<EntityAggregates>, CategoryChartTypes> {
+class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> implements IChartFactory<List<T>, CategoryChartTypes> {
 
     private static final CommonCategoryRenderer commonRenderer = new CommonCategoryRenderer();
 
     private final String valueAxisLabel = "values";
 
-    private final CategoryDataModel chartEntryModel;
+    private final CategoryDataModel<T> chartEntryModel;
 
     private final List<Integer> seriesIndexes = new ArrayList<Integer>();
 
-    private final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<EntityAggregates>> dataProvider;
+    private final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> dataProvider;
 
     private final NumberFormat numberFormat;
 
     private DefaultCategoryDataset dataSet;
 
-    public CategoryChartFactory(final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<EntityAggregates>> dataProvider, final CategoryDataModel chartEntryModel, final boolean all, final int... indexes) {
+    public CategoryChartFactory(final ICategoryAnalysisDataProvider<Comparable<?>, Number, List<T>> dataProvider, final CategoryDataModel<T> chartEntryModel, final boolean all, final int... indexes) {
 	this.chartEntryModel = chartEntryModel;
 	this.dataProvider = dataProvider;
 	this.numberFormat = new DecimalFormat("#,##0.00");
@@ -207,7 +206,7 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
     }
 
     @Override
-    public void setModel(final List<EntityAggregates> model, final boolean all, final int... indexes) {
+    public void setModel(final List<T> model, final boolean all, final int... indexes) {
 	seriesIndexes.clear();
 	if (all) {
 	    for (int seriesIndex = 0; seriesIndex < chartEntryModel.getSeriesCount(); seriesIndex++) {
@@ -250,7 +249,7 @@ class CategoryChartFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T
     }
 
     @Override
-    public List<EntityAggregates> getModel() {
+    public List<T> getModel() {
 	return dataProvider.getLoadedData();
     }
 

@@ -113,7 +113,7 @@ public class EntityQueryUtilsTest {
 	expectedList.add(new Pair<Object, Ordering>("entityProp.entityProp.simpleEntityProp.integerProp", Ordering.ASCENDING));
 	expectedList.add(new Pair<Object, Ordering>(thirdCalc.getExpressionModel(), Ordering.ASCENDING));
 
-	assertEquals("The getOrderingList() method works incorrect", expectedList, EntityQueryCriteriaUtils.getOrderingList(MasterEntity.class, cdtme.getSecondTick(), cdtme.getEnhancer()));
+	assertEquals("The getOrderingList() method works incorrect", expectedList, EntityQueryCriteriaUtils.getOrderingList(MasterEntity.class, cdtme.getSecondTick().orderedProperties(MasterEntity.class), cdtme.getEnhancer()));
     }
 
     @Test

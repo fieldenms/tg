@@ -10,7 +10,6 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
-import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -29,13 +28,13 @@ public class EntityQueryCriteriaUtils {
      * Returns the ordered pair of object and ordering value for the specified ordering manager and enhancer. Object might be property name or expression model.
      *
      * @param root
-     * @param orderingManager
+     * @param orderingProperties
      * @param enhancer
      * @return
      */
-    public static List<Pair<Object, Ordering>> getOrderingList(final Class<?> root, final IOrderingManager orderingManager, final IDomainTreeEnhancer enhancer){
+    public static List<Pair<Object, Ordering>> getOrderingList(final Class<?> root, final List<Pair<String, Ordering>> orderingProperties, final IDomainTreeEnhancer enhancer){
 	final List<Pair<Object, Ordering>> orderingPairs = new ArrayList<Pair<Object,Ordering>>();
-	for(final Pair<String, Ordering> orderPair : orderingManager.orderedProperties(root)){
+	for(final Pair<String, Ordering> orderPair : orderingProperties){
 	    final ExpressionModel expression = getExpressionForProp(root, orderPair.getKey(), enhancer);
 	    orderingPairs.add(new Pair<Object, Ordering>((expression == null ? orderPair.getKey() : expression), orderPair.getValue()));
 	}
@@ -87,7 +86,7 @@ public class EntityQueryCriteriaUtils {
      * @param propName - the name of the calculated property.
      * @return
      */
-    private static ExpressionModel getExpressionForProp(final Class<?> root, final String propName, final IDomainTreeEnhancer enhancer) {
+    public static ExpressionModel getExpressionForProp(final Class<?> root, final String propName, final IDomainTreeEnhancer enhancer) {
 	try {
 	    return enhancer.getCalculatedProperty(root, propName).getExpressionModel();
 	} catch (final IncorrectCalcPropertyException e) {

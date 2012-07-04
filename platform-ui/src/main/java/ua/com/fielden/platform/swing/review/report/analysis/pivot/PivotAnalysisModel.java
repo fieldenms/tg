@@ -1,49 +1,65 @@
 package ua.com.fielden.platform.swing.review.report.analysis.pivot;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrderingListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager.IPivotDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.pagination.model.development.PageHolder;
+import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
+import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
+import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.swing.review.report.analysis.view.AbstractAnalysisReviewModel;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
 import ua.com.fielden.platform.utils.Pair;
 
 public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAnalysisReviewModel<T, ICentreDomainTreeManagerAndEnhancer, IPivotDomainTreeManagerAndEnhancer, Void> {
 
-    private final PivotTreeTableModel pivotModel;
+    private final PivotTreeTableModelEx pivotModel;
 
     public PivotAnalysisModel(final EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, IEntityDao<T>> criteria, final IPivotDomainTreeManagerAndEnhancer adtme, final PageHolder pageHolder) {
 	super(criteria, adtme, pageHolder);
 	pivotModel = new PivotTreeTableModelEx();
     }
 
-    //TODO Provide getConfigurationModel() that returns the specific configuration model for this analysis.T
-
     @Override
     protected Void executeAnalysisQuery() {
-	//TODO Auto-generated method stub
-	//TODO Must implement data loading that returns the page and initialises alias map.
-	//pivotAnalysisDataProvider.setAliasMap(/*aliasMap*/);
-	//pivotAnalysisDataProvider.setLoadedData(/*newPage*/);
+
+	final Class<T> root = getCriteria().getEntityClass();
+	final List<String> distributionProperties = adtme().getFirstTick().usedProperties(root);
+	final List<String> aggregationProperties = adtme().getSecondTick().usedProperties(root);
+
+	final List<String> groups = new ArrayList<String>();
+	final Map<String, List<T>> resultMap = new HashMap<String, List<T>>();
+	resultMap.put("Grand total", getGroupList(groups));
+	for(final String groupProperty : distributionProperties){
+	    groups.add(groupProperty);
+	    resultMap.put(groupProperty, getGroupList(groups));
+	}
+	pivotModel.loadData(resultMap, distributionProperties, aggregationProperties);
 	return null;
     }
 
@@ -57,12 +73,56 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	return null;
     }
 
+    /**
+     * Returns the page for the pivot analysis query grouped by specified list of properties.
+     *
+     * @param groups
+     * @return
+     */
+    private List<T> getGroupList(final List<String> groups){
+	final Class<T> root = getCriteria().getEntityClass();
+	final List<String> aggregationProperties = adtme().getSecondTick().usedProperties(root);
+
+	ICompleted<T> baseQuery = DynamicQueryBuilder.createQuery(getCriteria().getManagedType(), getCriteria().createQueryProperties());
+	for (final String groupProperty : groups) {
+	    baseQuery = getCriteria().groupBy(groupProperty, baseQuery);
+	}
+	final List<String> yieldProperties = new ArrayList<String>();
+	yieldProperties.addAll(groups);
+	yieldProperties.addAll(aggregationProperties);
+	ISubsequentCompletedAndYielded<T> yieldedQuery = null;
+	for (final String yieldProperty : yieldProperties){
+	    yieldedQuery = yieldedQuery == null //
+			? getCriteria().yield(yieldProperty, baseQuery) //
+			: getCriteria().yield(yieldProperty, yieldedQuery);
+	}
+	if(yieldedQuery == null){
+	    throw new IllegalStateException("The query was compound incorrectly!");
+	}
+	final EntityResultQueryModel<T> queryModel = yieldedQuery.modelAsEntity(getCriteria().getManagedType());
+
+	final List<Pair<String, Ordering>> orderingProperties = new ArrayList<Pair<String,Ordering>>(adtme().getSecondTick().orderedProperties(root));
+	if(orderingProperties.isEmpty()){
+	    for(final String groupOrder : groups){
+		orderingProperties.add(new Pair<String, Ordering>(groupOrder, Ordering.ASCENDING));
+	    }
+	}
+	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, //
+		orderingProperties, //
+		getCriteria().getCentreDomainTreeMangerAndEnhancer().getEnhancer());
+	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(queryModel)
+	.with(DynamicOrderingBuilder.createOrderingModel(getCriteria().getManagedType(), orderingPairs))//
+	.with(DynamicFetchBuilder.createFetchModel(getCriteria().getManagedType(), new HashSet<String>(groups))).model();
+
+	return getCriteria().run(resultQuery);
+    }
+
     private class PivotTreeTableModelEx extends PivotTreeTableModel {
 
 	private static final char RIGHT_ARROW = '\u2192';
 
-	private final LinkedHashMap<String, String> categoryAliasMap = new LinkedHashMap<String, String>();
-	private final LinkedHashMap<String, String> aggregatedAliasMap = new LinkedHashMap<String, String>();
+	private final List<String> distributionProperties = new ArrayList<String>();
+	private final List<String> aggregationProperties = new ArrayList<String>();
 
 	private final Comparator<MutableTreeTableNode> sorter = new AggregationSorter();
 
@@ -106,7 +166,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 	public String getColumnName(final int column) {
 	    if (column == 0) {
 		String name = "";
-		for (final String columnEntry : categoryAliasMap.keySet()) {
+		for (final String columnEntry : distributionProperties) {
 		    name += RIGHT_ARROW + columnEntry;
 		}
 		return name.isEmpty() ? "<html><i>(Distribution properties)</i></html>" : name.substring(1);
@@ -124,38 +184,37 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	@Override
 	List<String> categoryProperties() {
-	    return Collections.unmodifiableList(new ArrayList<String>(categoryAliasMap.keySet()));
+	    return Collections.unmodifiableList(distributionProperties);
 	}
 
 	@Override
 	List<String> aggregatedProperties() {
-	    return Collections.unmodifiableList(new ArrayList<String>(aggregatedAliasMap.keySet()));
+	    return Collections.unmodifiableList(aggregationProperties);
 	}
 
 	@SuppressWarnings("unchecked")
-	private final void loadData(final Map<String, List<EntityAggregates>> loadedData, final LinkedHashMap<String, String> categoryAliasMap, final LinkedHashMap<String, String> aggregatedAliasMap){
+	private final void loadData(final Map<String, List<T>> loadedData, final List<String> distributionProperties, final List<String> aggregationProperties){
 
 	    //Loading the alias maps for the aggregation and category properties.
-	    if(categoryAliasMap == null || aggregatedAliasMap == null){
+	    if(distributionProperties == null || aggregationProperties == null){
 		return;
 	    }
-	    this.categoryAliasMap.clear();
-	    this.categoryAliasMap.putAll(categoryAliasMap);
-	    this.aggregatedAliasMap.clear();
-	    this.aggregatedAliasMap.putAll(aggregatedAliasMap);
+	    this.distributionProperties.clear();
+	    this.distributionProperties.addAll(distributionProperties);
+	    this.aggregationProperties.clear();
+	    this.aggregationProperties.addAll(aggregationProperties);
 
-	    final PivotTreeTableNodeEx root = new PivotTreeTableNodeEx("root", new EntityAggregates());
+	    final PivotTreeTableNodeEx root = new PivotTreeTableNodeEx("root", null);
 	    final PivotTreeTableNodeEx grand = new PivotTreeTableNodeEx("Grand total", loadedData.get("Grand total").get(0));
 
-	    final List<String> categories = new ArrayList<String>(categoryAliasMap.keySet());
 	    final Map<Object, Pair<PivotTreeTableNodeEx,Map<?, ?>>> nodes = new HashMap<Object, Pair<PivotTreeTableNodeEx,Map<?, ?>>>();
-	    for(int categoryIndex = 0; categoryIndex < categories.size(); categoryIndex++){
-		final List<EntityAggregates> listToLoad = loadedData.get(categories.get(categoryIndex));
-		for(final EntityAggregates data : listToLoad){
+	    for(int categoryIndex = 0; categoryIndex < distributionProperties.size(); categoryIndex++){
+		final List<T> listToLoad = loadedData.get(distributionProperties.get(categoryIndex));
+		for(final T data : listToLoad){
 		    Map<Object, Pair<PivotTreeTableNodeEx,Map<?, ?>>> currentLevel = nodes;
 		    PivotTreeTableNodeEx currentNode = grand;
 		    for(int dataIndex = 0; dataIndex < categoryIndex; dataIndex++){
-			final Object key = data.get(categoryAliasMap.get(categories.get(dataIndex)));
+			final Object key = data.get(distributionProperties.get(dataIndex));
 			final Pair<PivotTreeTableNodeEx,Map<?, ?>> nodePair = currentLevel.get(key);
 			if(nodePair == null){
 			    throw new IllegalStateException("The node with " + key + " wasn't found!");
@@ -163,7 +222,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 			currentLevel = (Map<Object, Pair<PivotTreeTableNodeEx,Map<?, ?>>>)nodePair.getValue();
 			currentNode = nodePair.getKey();
 		    }
-		    final Object currentKey = data.get(categoryAliasMap.get(categories.get(categoryIndex)));
+		    final Object currentKey = data.get(distributionProperties.get(categoryIndex));
 		    final PivotTreeTableNodeEx child = new PivotTreeTableNodeEx(currentKey, data);
 		    final Pair<PivotTreeTableNodeEx, Map<?, ?>> childPair = new Pair<PivotTreeTableNodeEx, Map<?, ?>>(child, new HashMap<Object, Pair<PivotTreeTableNodeEx, Map<?, ?>>>());
 		    currentLevel.put(currentKey, childPair);
@@ -184,9 +243,9 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 
 	    //private final static String NULL_USER_OBJECT = "UNKNOWN";
 
-	    private final EntityAggregates aggregatedData;
+	    private final T aggregatedData;
 
-	    public PivotTreeTableNodeEx(final Object userObject, final EntityAggregates aggregatedData){
+	    public PivotTreeTableNodeEx(final Object userObject, final T aggregatedData){
 		super(userObject);
 		this.aggregatedData = aggregatedData;
 	    }
@@ -213,7 +272,7 @@ public class PivotAnalysisModel<T extends AbstractEntity<?>> extends AbstractAna
 		final Class<T> root = getCriteria().getEntityClass();
 		final IPivotAddToAggregationTickManager secondTick = adtme().getSecondTick();
 		final String property = secondTick.usedProperties(root).get(column - 1);
-		return aggregatedData.get(aggregatedAliasMap.get(property));
+		return aggregatedData.get(property);
 	    }
 
 

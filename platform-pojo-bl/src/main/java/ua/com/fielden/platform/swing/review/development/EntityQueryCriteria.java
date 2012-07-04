@@ -32,8 +32,11 @@ import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
@@ -133,7 +136,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
 	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
 	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
-	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, tickManager, enhancer);
+	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, tickManager.orderedProperties(root), enhancer);
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
 		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), orderingPairs))//
@@ -143,8 +146,29 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 		    .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue())).model();
 	    return firstPage(resultQuery, totalQuery, pageSize);
 	} else {
-	    return firstPage(resultQuery, pageSize);
+	    return run(resultQuery, pageSize);
 	}
+    }
+
+    /**
+     * Runs the specified query and returns result.
+     *
+     * @param queryModel
+     * @param pageSize
+     * @return
+     */
+    public final IPage<T> run(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final int pageSize){
+	return firstPage(queryModel, pageSize);
+    }
+
+    /**
+     * Runs the specified query model and returns the result list.
+     *
+     * @param queryModel
+     * @return
+     */
+    public final List<T> run(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel){
+	return getAllEntities(queryModel);
     }
 
     /**
@@ -159,7 +183,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
 	final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
 	final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
-	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, tickManager, enhancer);
+	final List<Pair<Object, Ordering>> orderingPairs = EntityQueryCriteriaUtils.getOrderingList(root, tickManager.orderedProperties(root), enhancer);
 	final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
 	final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
 		.with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), orderingPairs))//
@@ -229,6 +253,53 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
+     * Groups the given query by specified proerty.
+     *
+     * @param proeprtyName
+     * @param query
+     * @return
+     */
+    public final ICompleted<T> groupBy(final String propertyName, final ICompleted<T> query){
+	final ExpressionModel expression = EntityQueryCriteriaUtils.getExpressionForProp(getEntityClass(), //
+		propertyName, getCentreDomainTreeMangerAndEnhancer().getEnhancer());
+	if(expression == null){
+	    return query.groupBy().prop(propertyName);
+	}else{
+	    return query.groupBy().expr(expression);
+	}
+    }
+
+    /**
+     * Groups the given query by specified property.
+     *
+     * @param proeprtyName
+     * @param query
+     * @return
+     */
+    public final ISubsequentCompletedAndYielded<T> yield(final String propertyName, final ICompleted<T> query){
+	final ExpressionModel expression = EntityQueryCriteriaUtils.getExpressionForProp(getEntityClass(), //
+		propertyName, getCentreDomainTreeMangerAndEnhancer().getEnhancer());
+	return expression == null ? //
+	/*	*/query.yield().prop(propertyName).as(propertyName)//
+	/*    */: query.yield().expr(expression).as(propertyName);
+    }
+
+    /**
+     * Groups the given query by specified property.
+     *
+     * @param proeprtyName
+     * @param query
+     * @return
+     */
+    public final ISubsequentCompletedAndYielded<T> yield(final String propertyName, final ISubsequentCompletedAndYielded<T> query){
+	final ExpressionModel expression = EntityQueryCriteriaUtils.getExpressionForProp(getEntityClass(), //
+		propertyName, getCentreDomainTreeMangerAndEnhancer().getEnhancer());
+	return expression == null ? //
+	/*	*/query.yield().prop(propertyName).as(propertyName)//
+	/*    */: query.yield().expr(expression).as(propertyName);
+    }
+
+    /**
      * Returns the first result page for query model. The page size is specified with the second parameter.
      *
      * @param queryModel - query model for which the first result page must be returned.
@@ -241,6 +312,21 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 	}else{
 	    generatedEntityController.setEntityType(getManagedType());
 	    return generatedEntityController.firstPage(queryModel, pageSize, getByteArrayForManagedType());
+	}
+    }
+
+    /**
+     * Returns all entities those satisfies conditions of the specified {@link QueryExecutionModel}.
+     *
+     * @param queryModel - query model for which the first result page must be returned.
+     * @return
+     */
+    protected final List<T> getAllEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel){
+	if(getManagedType().equals(getEntityClass())){
+	    return dao.getAllEntities(queryModel);
+	}else{
+	    generatedEntityController.setEntityType(getManagedType());
+	    return generatedEntityController.getAllEntities(queryModel, getByteArrayForManagedType());
 	}
     }
 
