@@ -139,7 +139,7 @@ public class EntQuery implements ISingleOperand {
 		}
 		if (type() != EntityAggregates.class) {
 		    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(type())) {
-			if ((ppi.isCalculated() || ppi.isImplicitlyCalculated()) && yields.getYieldByAlias(ppi.getName()) == null) {
+			if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null) {
 			    yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
 			}
 		    }

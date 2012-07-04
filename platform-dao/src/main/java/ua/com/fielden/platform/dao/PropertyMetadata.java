@@ -25,7 +25,6 @@ import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTI
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ID;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.IMPLICITLY_CALCULATED;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_KEY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
@@ -34,7 +33,7 @@ import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNT
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_OVERRIDE;
 
 public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final String name;
@@ -68,10 +67,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public boolean isCalculated() {
 	return expressionModel != null;
-    }
-
-    public boolean isImplicitlyCalculated() {
-	return type.equals(IMPLICITLY_CALCULATED);
     }
 
     public boolean affectsMapping() {
@@ -129,7 +124,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
 
     public boolean isVirtual() {
-	return type.equals(VIRTUAL_COMPOSITE_KEY);
+	return type.equals(VIRTUAL_OVERRIDE);
     }
 
     public boolean isSynthetic() {
@@ -289,11 +284,10 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 	COMPONENT_HEADER, //
 	COMPONENT_DETAILS, //
 	CALCULATED, //
-	IMPLICITLY_CALCULATED, //
 	SYNTHETIC, //
 	UNION_ENTITY, //
 	UNION_DETAILS, //
-	VIRTUAL_COMPOSITE_KEY; // the case of virtual generation of composite entity key by concatenation of all members during eQuery processing.
+	VIRTUAL_OVERRIDE; // the case of virtual generation of composite entity key by concatenation of all members during eQuery processing.
     }
 
     public ExpressionModel getExpressionModel() {

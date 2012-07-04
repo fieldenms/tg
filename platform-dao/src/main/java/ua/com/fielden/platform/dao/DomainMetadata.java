@@ -26,6 +26,7 @@ import ua.com.fielden.platform.dao.EntityMetadata.EntityCategory;
 import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -49,6 +50,9 @@ import com.google.inject.Injector;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.PERSISTED;
+import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.PURE;
+import static ua.com.fielden.platform.dao.EntityMetadata.EntityCategory.UNION;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.CALCULATED;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.COMPONENT_HEADER;
@@ -63,7 +67,7 @@ import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.PROP
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.SYNTHETIC;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.UNION_ENTITY;
 import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VERSION;
-import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory.VIRTUAL_OVERRIDE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -119,7 +123,7 @@ public class DomainMetadata {
 
 	final String tableClase = getTableClause(entityType);
 	if (tableClase != null) {
-	    final Set<PropertyMetadata> ppis = generatePropertyMetadatasForEntity(entityType, EntityCategory.PERSISTED);
+	    final Set<PropertyMetadata> ppis = generatePropertyMetadatasForEntity(entityType, PERSISTED);
 	    final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
 	    result.addAll(ppis);
 	    result.addAll(generatePPIsForCompositeTypeProps(ppis));
@@ -135,7 +139,7 @@ public class DomainMetadata {
 	    return new EntityMetadata(entityModel, entityType, getMap(result));
 	}
 
-	final Set<PropertyMetadata> ppis = generatePropertyMetadatasForEntity(entityType, EntityCategory.PURE);
+	final Set<PropertyMetadata> ppis = generatePropertyMetadatasForEntity(entityType, EntityUtils.isUnionEntityType(entityType) ? UNION : PURE);
 	final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
 	result.addAll(ppis);
 	result.addAll(generatePPIsForCompositeTypeProps(ppis));
@@ -187,24 +191,27 @@ public class DomainMetadata {
 	case CALCULATED:
 	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(expr().prop("key").model()).type(CALCULATED).build();
 	case UNION:
-	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(generateUnionEntityIdExpression()).type(CALCULATED).build();
+	    return new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(TypeFactory.basic("long")).expression(generateUnionEntityIdExpression((Class<? extends AbstractUnionEntity>) entityType)).type(CALCULATED).build();
 	default:
 	    return null;
 	}
     }
 
-    private ExpressionModel generateUnionEntityIdExpression() {
-	expr().prop("key").model();
-	return null;
+    private ExpressionModel generateUnionEntityIdExpression(final Class<? extends AbstractUnionEntity> entityType) {
+	final List<Field> props = AbstractUnionEntity.unionProperties(entityType);
+
+	final Iterator<Field> iterator = props.iterator();
+	IStandAloneExprOperationAndClose expressionModelInProgress = expr().ifNull().prop(iterator.next().getName()).then().val(0);
+
+	for (; iterator.hasNext();) {
+	    expressionModelInProgress = expressionModelInProgress.add().ifNull().prop(iterator.next().getName()).then().val(0);
+	}
+
+	return expressionModelInProgress.model();
     }
 
     private PropertyMetadata generateVersionPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory) {
-	switch (entityCategory) {
-	case PERSISTED:
-	    return versionProperty;
-	default:
-	    return null;
-	}
+	return PERSISTED.equals(entityCategory) ? versionProperty : null;
     }
 
     private PropertyMetadata generateKeyPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory) throws Exception {
@@ -229,7 +236,7 @@ public class DomainMetadata {
 		return null;
 	    }
 	} else if (DynamicEntityKey.class.equals(getKeyType(entityType))) {
-	    return getVirtualPropInfoForDynamicEntityKey(Finder.getKeyMembers(entityType));
+	    return getVirtualPropInfoForDynamicEntityKey(entityType);
 	} else {
 	    return new PropertyMetadata.Builder(AbstractEntity.KEY, getKeyType(entityType), true).hibType(TypeFactory.basic(getKeyType(entityType).getName())).build();
 	}
@@ -390,14 +397,19 @@ public class DomainMetadata {
 	}
     }
 
-    private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final List<Field> keyMembers) throws Exception {
+    private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
+	return new PropertyMetadata.Builder("key", String.class, true).expression(getVirtualKeyPropForEntityWithCompositeKey(entityType)).hibType(Hibernate.STRING).type(VIRTUAL_OVERRIDE).build();
+    }
+
+    private ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<?>> entityType) {
+	final List<Field> keyMembers = Finder.getKeyMembers(entityType);
 	final Iterator<Field> iterator = keyMembers.iterator();
-	IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModel = expr().concat().prop(getKeyMemberConcatenationExpression(iterator.next()));
+	IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().concat().prop(getKeyMemberConcatenationExpression(iterator.next()));
 	for (; iterator.hasNext();) {
-	    expressionModel = expressionModel.with().val(DynamicEntityKey.KEY_MEMBERS_SEPARATOR);
-	    expressionModel = expressionModel.with().prop(getKeyMemberConcatenationExpression(iterator.next()));
+	    expressionModelInProgress = expressionModelInProgress.with().val(DynamicEntityKey.KEY_MEMBERS_SEPARATOR);
+	    expressionModelInProgress = expressionModelInProgress.with().prop(getKeyMemberConcatenationExpression(iterator.next()));
 	}
-	return new PropertyMetadata.Builder("key", String.class, true).expression(expressionModel.end().model()).hibType(Hibernate.STRING).type(VIRTUAL_COMPOSITE_KEY).build();
+	return expressionModelInProgress.end().model();
     }
 
     private PropertyMetadata getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
@@ -408,7 +420,6 @@ public class DomainMetadata {
 	final Object hibernateType = getHibernateType(javaType, persistedType, false);
 
 	final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
-	expressionModel.setContextPrefixNeeded(needsContextPrefix(entityType, calculatedPropfield));
 	return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(CALCULATED).aggregatedExpression(aggregatedExpression).build();
     }
 
@@ -418,8 +429,7 @@ public class DomainMetadata {
 	final Object hibernateType = getHibernateType(javaType, persistedType, true);
 
 	final ExpressionModel expressionModel = expr().prop("id").model();
-	expressionModel.setContextPrefixNeeded(needsContextPrefix(entityType, calculatedPropfield));
-	return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(PropertyCategory.IMPLICITLY_CALCULATED).build();
+	return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(PropertyCategory.CALCULATED).build();
     }
 
     private PropertyMetadata getSyntheticPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {

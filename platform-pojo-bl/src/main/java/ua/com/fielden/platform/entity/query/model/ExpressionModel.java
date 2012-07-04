@@ -14,29 +14,12 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class ExpressionModel {
     private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
-    private boolean contextPrefixNeeded;
+    private boolean contextPrefixNeeded = true;
 
     protected ExpressionModel() {}
 
     public ExpressionModel(final List<Pair<TokenCategory, Object>> tokens) {
 	this.tokens.addAll(tokens);
-    }
-
-    @Override
-    public int hashCode() {
-        return toString().hashCode() * 23;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (!(obj instanceof ExpressionModel)) {
-	    return false;
-	}
-
-	return toString().equals(obj.toString());
     }
 
     public List<Pair<TokenCategory, Object>> getTokens() {
@@ -54,5 +37,39 @@ public class ExpressionModel {
 
     public void setContextPrefixNeeded(final boolean contextPrefixNeeded) {
         this.contextPrefixNeeded = contextPrefixNeeded;
+    }
+
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + (contextPrefixNeeded ? 1231 : 1237);
+	result = prime * result + ((tokens == null) ? 0 : tokens.hashCode());
+	return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	if (this == obj) {
+	    return true;
+	}
+	if (obj == null) {
+	    return false;
+	}
+	if (!(obj instanceof ExpressionModel)) {
+	    return false;
+	}
+	final ExpressionModel other = (ExpressionModel) obj;
+	if (contextPrefixNeeded != other.contextPrefixNeeded) {
+	    return false;
+	}
+	if (tokens == null) {
+	    if (other.tokens != null) {
+		return false;
+	    }
+	} else if (!tokens.equals(other.tokens)) {
+	    return false;
+	}
+	return true;
     }
 }

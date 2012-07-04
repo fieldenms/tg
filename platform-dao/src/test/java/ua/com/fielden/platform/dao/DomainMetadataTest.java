@@ -6,6 +6,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.dao.PropertyMetadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import static org.junit.Assert.assertEquals;
@@ -20,10 +21,10 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("finDetails");
 
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("finDetails", TgVehicleFinDetails.class, true). //
-		hibType(Hibernate.LONG). //
-		type(PropertyCategory.IMPLICITLY_CALCULATED). //
-		expression(expr().prop("id").model()). //
-		build();
+	hibType(Hibernate.LONG). //
+	type(PropertyCategory.CALCULATED). //
+	expression(expr().prop("id").model()). //
+	build();
 
 	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
     }
@@ -39,10 +40,9 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 	final EntityMetadata entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgAverageFuelUsage.class);
 	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", TgVehicle.class, false). //
-		hibType(Hibernate.LONG). //
-		type(PropertyCategory.SYNTHETIC). //
-		//expression(expr().prop("key").model()). //
-		build();
+	hibType(Hibernate.LONG). //
+	type(PropertyCategory.SYNTHETIC). //
+	build();
 	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
     }
 
@@ -51,12 +51,23 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 	final EntityMetadata entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgAverageFuelUsage.class);
 	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
 	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
-		hibType(Hibernate.LONG). //
-		type(PropertyCategory.CALCULATED). //
-		expression(expr().prop("key").model()). //
-		build();
+	hibType(Hibernate.LONG). //
+	type(PropertyCategory.CALCULATED). //
+	expression(expr().prop("key").model()). //
+	build();
 	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
     }
 
+    @Test
+    public void test_deduced_id_for_union_entity() throws Exception {
+	final EntityMetadata entityMetadata = DOMAIN_METADATA.generateEntityMetadata(TgBogieLocation.class);
+	final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
 
+	final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
+	hibType(Hibernate.LONG). //
+	type(PropertyCategory.CALCULATED). //
+	expression(expr().ifNull().prop("wagonSlot").then().val(0).add().ifNull().prop("workshop").then().val(0).model()). //
+	build();
+	assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
+    }
 }
